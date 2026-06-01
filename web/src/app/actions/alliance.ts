@@ -531,6 +531,18 @@ export const requestToJoinAlliance = withActionContext('requestToJoinAlliance', 
         return { error: "Already in an alliance" };
     }
 
+    const alliance = await prisma.alliance.findUnique({
+        where: { id: allianceId },
+        select: { inviteOnly: true }
+    });
+    if (!alliance) {
+        return { error: "Alliance not found" };
+    }
+    if (alliance.inviteOnly) {
+        logger.warn({ userId: actingUser.id, allianceId }, "Attempted to request invite-only alliance");
+        return { error: "This alliance is invite only" };
+    }
+
     // Check for existing pending request
     const existing = await prisma.allianceMembershipRequest.findFirst({
         where: {
@@ -554,6 +566,8 @@ export const requestToJoinAlliance = withActionContext('requestToJoinAlliance', 
         }
     });
 
+    revalidatePath(`/alliance/${allianceId}`);
+    revalidatePath('/alliance/onboarding');
     return { success: true };
 });
 
@@ -596,6 +610,8 @@ export const invitePlayerToAlliance = withActionContext('invitePlayerToAlliance'
         }
     });
 
+    revalidatePath(`/player/${playerId}`);
+    revalidatePath('/search');
     return { success: true };
 });
 

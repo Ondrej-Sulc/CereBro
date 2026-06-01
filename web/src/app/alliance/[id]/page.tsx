@@ -27,7 +27,7 @@ export default async function AlliancePublicPage({ params }: Props) {
 
     const { id } = await params;
 
-    const [allianceData, players, screenshotUnlock] = await Promise.all([
+    const [allianceData, players, screenshotUnlock, pendingJoinRequest] = await Promise.all([
         prisma.alliance.findUnique({
             where: { id },
             select: {
@@ -57,6 +57,15 @@ export default async function AlliancePublicPage({ params }: Props) {
             },
         }),
         getAllianceScreenshotUnlockStatus(id),
+        currentUser.allianceId ? Promise.resolve(null) : prisma.allianceMembershipRequest.findFirst({
+            where: {
+                allianceId: id,
+                playerId: currentUser.id,
+                type: "REQUEST",
+                status: "PENDING",
+            },
+            select: { id: true },
+        }),
     ]);
 
     if (!allianceData) notFound();
@@ -77,5 +86,9 @@ export default async function AlliancePublicPage({ params }: Props) {
         })),
     };
 
-    return <AlliancePublicClient alliance={alliance} currentUser={currentUser} />;
+    return <AlliancePublicClient
+        alliance={alliance}
+        currentUser={{ id: currentUser.id, allianceId: currentUser.allianceId }}
+        pendingJoinRequestId={pendingJoinRequest?.id ?? null}
+    />;
 }

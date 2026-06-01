@@ -5,9 +5,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Crown, Heart, Shield, Sparkles, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ALLIANCE_UNLOCK_THRESHOLD_MINOR } from "@cerebro/core/services/rosterScreenshotQuotaService";
+import { requestToJoinAlliance } from "../../actions/alliance";
+import { useToast } from "@/hooks/use-toast";
 
 type PublicPlayer = {
     id: string;
@@ -25,6 +28,7 @@ interface AlliancePublicData {
     name: string;
     tag: string | null;
     description: string | null;
+    inviteOnly: boolean;
     battlegroup1Color: string;
     battlegroup2Color: string;
     battlegroup3Color: string;
@@ -38,13 +42,18 @@ interface AlliancePublicData {
 
 interface Props {
     alliance: AlliancePublicData;
-    currentUser: { allianceId: string | null };
+    currentUser: { id: string; allianceId: string | null };
+    pendingJoinRequestId?: string | null;
 }
 
-export function AlliancePublicClient({ alliance, currentUser }: Props) {
+export function AlliancePublicClient({ alliance, currentUser, pendingJoinRequestId = null }: Props) {
+    const { toast } = useToast();
     const [sortBy, setSortBy] = useState<'name' | 'prestige'>('name');
+    const [isRequestingJoin, setIsRequestingJoin] = useState(false);
+    const [hasPendingJoinRequest, setHasPendingJoinRequest] = useState(Boolean(pendingJoinRequestId));
 
     const isOwnAlliance = currentUser.allianceId === alliance.id;
+    const canRequestToJoin = !currentUser.allianceId && !alliance.inviteOnly && !hasPendingJoinRequest;
     const screenshotUnlock = alliance.screenshotUnlock ?? {
         currentMonthMinor: 0,
         thresholdMinor: ALLIANCE_UNLOCK_THRESHOLD_MINOR,
@@ -71,6 +80,24 @@ export function AlliancePublicClient({ alliance, currentUser }: Props) {
             return [...players].sort((a, b) => (b.championPrestige ?? 0) - (a.championPrestige ?? 0));
         }
         return [...players].sort((a, b) => a.ingameName.localeCompare(b.ingameName, undefined, { sensitivity: 'base' }));
+    };
+
+    const handleRequestToJoin = async () => {
+        setIsRequestingJoin(true);
+        try {
+            const result = await requestToJoinAlliance(alliance.id);
+            if (result && "error" in result) {
+                toast({ title: "Request failed", description: result.error, variant: "destructive" });
+                return;
+            }
+            setHasPendingJoinRequest(true);
+            toast({ title: "Request sent", description: "Alliance officers can review your request." });
+        } catch (error: unknown) {
+            const message = error instanceof Error ? error.message : "Failed to send join request";
+            toast({ title: "Request failed", description: message, variant: "destructive" });
+        } finally {
+            setIsRequestingJoin(false);
+        }
     };
 
     const groups = useMemo(() => ({
@@ -187,6 +214,16 @@ export function AlliancePublicClient({ alliance, currentUser }: Props) {
                                 </Badge>
                             </Link>
                         )}
+                        {!isOwnAlliance && alliance.inviteOnly && !currentUser.allianceId && (
+                            <Badge variant="outline" className="text-[10px] border-amber-800 text-amber-400">
+                                Invite Only
+                            </Badge>
+                        )}
+                        {hasPendingJoinRequest && (
+                            <Badge variant="outline" className="text-[10px] border-sky-800 text-sky-400">
+                                Request Pending
+                            </Badge>
+                        )}
                     </div>
                     {alliance.description && (
                         <p className="text-sm text-slate-400 mt-1 max-w-lg">{alliance.description}</p>
@@ -210,6 +247,17 @@ export function AlliancePublicClient({ alliance, currentUser }: Props) {
                         Prestige
                     </button>
                 </div>
+                {canRequestToJoin && (
+                    <Button
+                        variant="secondary"
+                        className="gap-2"
+                        disabled={isRequestingJoin}
+                        onClick={handleRequestToJoin}
+                    >
+                        <Users className="w-4 h-4" />
+                        {isRequestingJoin ? "Sending..." : "Request to Join"}
+                    </Button>
+                )}
             </div>
 
             <Card className={cn(

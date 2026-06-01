@@ -37,3 +37,13 @@ Quest Objectives are preset planning scopes layered over a base quest plan. They
 Website Observability is the domain rule set for turning website requests, server actions, client errors, and product interactions into searchable logs, PostHog events, error reports, and dashboard metrics.
 
 It owns correlation IDs, identity and alliance grouping, event naming, privacy-safe property shaping, slow-operation detection, and the adapter choices used by Railway logs, PostHog, Discord alerts, and admin usage views.
+
+## Website Directory Search
+
+Website Directory Search is the logged-in website experience for discovering Player Profiles and real Alliances in CereBro. It helps users find and inspect records; alliance membership actions happen from the destination Player Profile or Alliance pages.
+
+Player Profile is an MCOC account/profile stored in CereBro. A Discord user may own multiple Player Profiles.
+
+Active Player Profile is the Player Profile currently selected by its owning Discord user. It is not an activity, freshness, visibility, or status flag.
+
+Real Alliance is an Alliance intended to represent an actual MCOC alliance. Infrastructure records and empty orphan records are not Real Alliances.

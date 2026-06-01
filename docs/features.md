@@ -143,6 +143,13 @@ A dedicated system for planning fights across complex quests (e.g., Story conten
     *   **Default path:** Inviting the bot to a Discord server automatically creates the alliance record.
     *   **Fallback path:** If an alliance is created on the website first, officers can generate a `CB-XXXXXX` code and redeem via `/alliance link` in Discord to bridge the two platforms.
 
+### Directory Search
+*   **Search Page:** Logged-in users can search CereBro Player Profiles and real Alliances from `/search`.
+*   **Player Profiles:** Results include compact scouting signals such as alliance, battlegroup, roster size, officer status, and champion prestige.
+*   **Alliances:** Results include compact scouting signals such as tag, description, member count, invite-only state, average champion prestige, and battlegroup distribution.
+*   **Focused Filters:** Player search supports name, alliance name/tag, roster presence, battlegroup, and sorting. Alliance search supports name/tag, member buckets, invite-only state, and sorting.
+*   **Destination Actions:** Users request to join from Alliance overview pages and officers invite unaffiliated Player Profiles from Player Profile pages. Invite-only alliances reject join requests server-side.
+
 ### Admin Portal & Data Management
 A secure, web-based suite for managing core game data and system-wide alliance/player records.
 *   **Access Control:** Strictly protected via RBAC. Only users with the `BotUser.isBotAdmin` flag can access the portal.

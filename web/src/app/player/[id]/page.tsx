@@ -18,6 +18,8 @@ import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { cache } from "react";
 import { getYoutubeVideoId } from "@/lib/youtube";
 import { isPlayerSupporter } from "@/lib/support-status";
+import { canManageAllianceMembers } from "@/lib/alliance-permissions";
+import { InvitePlayerButton } from "./invite-player-button";
 
 interface PlayerProfilePageProps {
     params: Promise<{ id: string }>;
@@ -61,7 +63,14 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
 
     const currentUser = await getUserPlayerWithAlliance();
 
-    const [questPlans, roster, recentVideos, recentFights, rosterTotal, rosterByStars, rosterAscendedCount, videoTotal, fightAggregate, uniqueWarIds, supporter] = await Promise.all([
+    const canInvitePlayer = Boolean(
+        currentUser?.allianceId &&
+        !player.allianceId &&
+        currentUser.id !== player.id &&
+        canManageAllianceMembers(currentUser, currentUser.isBotAdmin)
+    );
+
+    const [questPlans, roster, recentVideos, recentFights, rosterTotal, rosterByStars, rosterAscendedCount, videoTotal, fightAggregate, uniqueWarIds, supporter, pendingInvite] = await Promise.all([
         getPlayerQuestPlansForProfile(id),
         prisma.roster.findMany({
             where: { playerId: id },
@@ -133,6 +142,15 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
         }),
         prisma.warFight.groupBy({ by: ['warId'], where: { playerId: id } }),
         isPlayerSupporter(player),
+        canInvitePlayer && currentUser?.allianceId ? prisma.allianceMembershipRequest.findFirst({
+            where: {
+                allianceId: currentUser.allianceId,
+                playerId: id,
+                status: "PENDING",
+                type: "INVITE",
+            },
+            select: { id: true },
+        }) : Promise.resolve(null),
     ]);
 
     const totalFights = fightAggregate._count.id;
@@ -202,6 +220,11 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                             )}
                         </div>
                     </div>
+                    {canInvitePlayer && (
+                        <div className="w-full sm:w-auto">
+                            <InvitePlayerButton playerId={player.id} initialPending={Boolean(pendingInvite)} />
+                        </div>
+                    )}
                 </div>
             </div>
 
