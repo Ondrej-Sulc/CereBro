@@ -8,6 +8,7 @@ import { getMonthlyTargetMinor, getCurrentMonthCoveredMinor } from "@/lib/suppor
 import { updateMonthlyCostAction } from "./actions";
 import { prisma } from "@/lib/prisma";
 import { DollarSign, TrendingUp, Users, AlertCircle, CreditCard } from "lucide-react";
+import { UnlinkedDonationLinker } from "./unlinked-donation-linker";
 
 export const metadata: Metadata = {
   title: "Support Config - CereBro Admin",
@@ -46,7 +47,7 @@ export default async function AdminSupportPage() {
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
   const monthLabel = now.toLocaleString("en-US", { month: "long", year: "numeric" });
 
-  const [targetMinor, coveredMinor, monthlyDonations, subscriptionDonations] = await Promise.all([
+  const [targetMinor, coveredMinor, monthlyDonations, subscriptionDonations, unlinkedDonations] = await Promise.all([
     getMonthlyTargetMinor(),
     getCurrentMonthCoveredMinor(),
     prisma.supportDonation.findMany({
@@ -82,6 +83,30 @@ export default async function AdminSupportPage() {
         player: { select: { ingameName: true } },
       },
       orderBy: { createdAt: "desc" },
+    }),
+    prisma.supportDonation.findMany({
+      where: {
+        status: "succeeded",
+        playerId: null,
+        botUserId: null,
+        discordId: null,
+        anonymizedAt: null,
+        deletedAt: null,
+        consentRevoked: false,
+      },
+      select: {
+        id: true,
+        amountMinor: true,
+        currency: true,
+        supporterName: true,
+        supporterEmail: true,
+        createdAt: true,
+        stripeCustomerId: true,
+        stripeSubscriptionId: true,
+        stripeSubscriptionStatus: true,
+      },
+      orderBy: { createdAt: "desc" },
+      take: 50,
     }),
   ]);
 
@@ -214,6 +239,31 @@ export default async function AdminSupportPage() {
               No target set — the funding bar will not be shown on the support page until you save a value.
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* Unlinked payments */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Unlinked Payments</CardTitle>
+          <CardDescription>
+            Succeeded donations without a linked Player, Discord user, or BotUser.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <UnlinkedDonationLinker
+            donations={unlinkedDonations.map((donation) => ({
+              id: donation.id,
+              amountMinor: donation.amountMinor,
+              currency: donation.currency,
+              supporterName: donation.supporterName,
+              supporterEmail: donation.supporterEmail,
+              createdAtIso: donation.createdAt.toISOString(),
+              stripeCustomerId: donation.stripeCustomerId,
+              stripeSubscriptionId: donation.stripeSubscriptionId,
+              stripeSubscriptionStatus: donation.stripeSubscriptionStatus,
+            }))}
+          />
         </CardContent>
       </Card>
 
