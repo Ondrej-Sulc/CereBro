@@ -66,6 +66,10 @@ function LinkDonationDialog({ donation }: { donation: UnlinkedSupportDonation })
     }
   }
 
+  async function linkDonationFormAction(formData: FormData) {
+    await linkSupportDonationToPlayerAction(formData);
+  }
+
   return (
     <Dialog open={open} onOpenChange={resetSelection}>
       <DialogTrigger asChild>
@@ -107,7 +111,7 @@ function LinkDonationDialog({ donation }: { donation: UnlinkedSupportDonation })
           </div>
         </div>
 
-        <form action={linkSupportDonationToPlayerAction} className="space-y-4">
+        <form action={linkDonationFormAction} className="space-y-4">
           <input type="hidden" name="donationId" value={donation.id} />
           <input type="hidden" name="playerId" value={selectedPlayerId} />
 
