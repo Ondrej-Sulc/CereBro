@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type React from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Search, Shield, Users, Trophy, LayoutGrid, Crown } from "lucide-react";
+import { Search, Shield, Users, Trophy, LayoutGrid, Crown, ArrowRight, UserRound, Swords } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -33,6 +33,7 @@ import {
 import { computePaginationWindow } from "@/lib/pagination";
 import { prisma } from "@/lib/prisma";
 import { buildSearchParams, cn } from "@/lib/utils";
+import { DirectorySearchBox } from "./directory-search-box";
 
 export const metadata: Metadata = {
   title: "Search - CereBro",
@@ -74,6 +75,12 @@ export default async function DirectorySearchPage({ searchParams }: SearchPagePr
           </div>
         </div>
       </div>
+
+      <DirectorySearchBox
+        key={`${tab}:${tab === "players" ? playerOptions.query : allianceOptions.query}`}
+        activeTab={tab}
+        initialValue={tab === "players" ? playerOptions.query : allianceOptions.query}
+      />
 
       <div className="grid grid-cols-2 gap-1 rounded-xl border border-slate-800 bg-slate-950/70 p-1 shadow-inner">
         <TabLink tab="players" activeTab={tab} params={params} icon={<Users className="h-4 w-4" />}>
@@ -236,9 +243,9 @@ function PlayerSearchPanel({
     <div className="space-y-5">
       <Card className="border-slate-800 bg-slate-900/50">
         <CardContent className="p-4">
-          <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[minmax(180px,1.3fr)_minmax(160px,1fr)_minmax(130px,.7fr)_minmax(110px,.55fr)_minmax(120px,.6fr)_minmax(100px,.5fr)_minmax(110px,auto)]" action="/search">
+          <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[minmax(160px,1fr)_minmax(130px,.7fr)_minmax(110px,.55fr)_minmax(120px,.6fr)_minmax(100px,.5fr)_minmax(110px,auto)]" action="/search">
             <input type="hidden" name="tab" value="players" />
-            <FilterInput name="playerQuery" label="Player" placeholder="Search player name" defaultValue={options.query} />
+            <input type="hidden" name="playerQuery" value={options.query} />
             <FilterInput name="playerAllianceQuery" label="Alliance" placeholder="Name or tag" defaultValue={options.allianceQuery} />
             <FilterSelect name="playerRoster" label="Roster" value={options.roster} options={[
               ["all", "All rosters"],
@@ -261,8 +268,9 @@ function PlayerSearchPanel({
               ["asc", "Asc"],
               ["desc", "Desc"],
             ]} />
-            <div className="flex items-end">
-              <Button className="w-full gap-2" type="submit">
+            <div className="flex flex-col justify-end">
+              <div className="h-[18px] hidden xl:block" />
+              <Button className="h-10 w-full gap-2" type="submit">
                 <Search className="h-4 w-4" />
                 Search
               </Button>
@@ -301,9 +309,9 @@ function AllianceSearchPanel({
     <div className="space-y-5">
       <Card className="border-slate-800 bg-slate-900/50">
         <CardContent className="p-4">
-          <form className="grid gap-3 lg:grid-cols-[1.4fr_170px_170px_150px_120px_auto]" action="/search">
+          <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[minmax(170px,.8fr)_minmax(170px,.8fr)_minmax(150px,.7fr)_minmax(120px,.55fr)_minmax(110px,auto)]" action="/search">
             <input type="hidden" name="tab" value="alliances" />
-            <FilterInput name="allianceQuery" label="Alliance" placeholder="Search name or tag" defaultValue={options.query} />
+            <input type="hidden" name="allianceQuery" value={options.query} />
             <FilterSelect name="allianceMembers" label="Members" value={options.members} options={[
               ["all", "All sizes"],
               ["1-10", "1-10"],
@@ -323,8 +331,9 @@ function AllianceSearchPanel({
               ["asc", "Asc"],
               ["desc", "Desc"],
             ]} />
-            <div className="flex items-end">
-              <Button className="w-full gap-2" type="submit">
+            <div className="flex flex-col justify-end">
+              <div className="h-[18px] hidden xl:block" />
+              <Button className="h-10 w-full gap-2" type="submit">
                 <Search className="h-4 w-4" />
                 Search
               </Button>
@@ -351,75 +360,136 @@ function AllianceSearchPanel({
 }
 
 function PlayerCard({ player }: { player: PlayerResult }) {
+  const initials = player.ingameName.substring(0, 2).toUpperCase();
   return (
-    <Card className="border-slate-800 bg-slate-900/50 transition-colors hover:border-slate-700">
-      <CardContent className="flex items-center gap-4 p-4">
-        <Avatar className="h-12 w-12 border border-slate-700">
-          <AvatarImage src={player.avatar ?? undefined} />
-          <AvatarFallback>{player.ingameName.substring(0, 2).toUpperCase()}</AvatarFallback>
-        </Avatar>
-        <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <Link href={`/player/${player.id}`} className="truncate font-semibold text-white hover:text-sky-300">
-              {player.ingameName}
-            </Link>
-            {player.isOfficer && <Crown className="h-3.5 w-3.5 shrink-0 text-amber-400" />}
+    <Link href={`/player/${player.id}`} className="group block h-full">
+      <Card className="h-full overflow-hidden border-slate-800 bg-slate-900/55 transition-colors hover:border-sky-700/60">
+        <CardContent className="p-0">
+          <div className="relative border-b border-slate-800 bg-slate-950/55 p-4">
+            <div className="absolute inset-x-0 top-0 h-1 bg-sky-500/60 opacity-0 transition-opacity group-hover:opacity-100" />
+            <div className="flex items-start gap-4">
+              <Avatar className="h-14 w-14 shrink-0 border border-slate-700 ring-4 ring-slate-950">
+                <AvatarImage src={player.avatar ?? undefined} />
+                <AvatarFallback className="bg-slate-800 text-sm font-black">{initials}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <div className="flex min-w-0 items-center gap-2">
+                  <h2 className="truncate text-lg font-black leading-tight text-white group-hover:text-sky-200">
+                    {player.ingameName}
+                  </h2>
+                  {player.isOfficer && (
+                    <Badge className="shrink-0 border border-amber-600/40 bg-amber-500/10 px-1.5 py-0 text-[9px] font-black text-amber-300">
+                      <Crown className="mr-1 h-3 w-3" />
+                      Officer
+                    </Badge>
+                  )}
+                </div>
+                <div className="mt-1 flex min-w-0 items-center gap-2 text-xs text-slate-400">
+                  {player.alliance ? (
+                    <span className="truncate">
+                      {player.alliance.tag ? `[${player.alliance.tag}] ` : ""}
+                      {player.alliance.name}
+                    </span>
+                  ) : (
+                    <span className="text-slate-500">Unaffiliated</span>
+                  )}
+                </div>
+              </div>
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-800 bg-slate-900 text-slate-500 transition-colors group-hover:border-sky-700/50 group-hover:text-sky-300">
+                <ArrowRight className="h-4 w-4" />
+              </div>
+            </div>
           </div>
-          <div className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400">
-            {player.alliance ? (
-              <Link href={`/alliance/${player.alliance.id}`} className="hover:text-sky-300">
-                {player.alliance.tag ? `[${player.alliance.tag}] ` : ""}
-                {player.alliance.name}
-              </Link>
-            ) : (
-              <span>Unaffiliated</span>
-            )}
-            <span className="text-slate-700">/</span>
-            <span>{player._count.roster.toLocaleString()} champs</span>
+
+          <div className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-3">
+            <Metric icon={<Trophy className="h-4 w-4" />} label="Prestige" value={player.championPrestige?.toLocaleString("en-US") ?? "N/A"} tone="amber" />
+            <Metric icon={<LayoutGrid className="h-4 w-4" />} label="Roster" value={player._count.roster.toLocaleString("en-US")} tone="sky" />
+            <Metric icon={<Swords className="h-4 w-4" />} label="Group" value={player.battlegroup ? `BG ${player.battlegroup}` : "No BG"} tone="slate" />
           </div>
-        </div>
-        <div className="flex shrink-0 flex-col items-end gap-2">
-          <Badge variant="outline" className="border-slate-700 text-slate-300">
-            {player.battlegroup ? `BG ${player.battlegroup}` : "No BG"}
-          </Badge>
-          <div className="flex items-center gap-1 text-xs text-amber-300">
-            <Trophy className="h-3.5 w-3.5" />
-            {player.championPrestige?.toLocaleString("en-US") ?? "N/A"}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+
+          {player.alliance && (
+            <div className="flex items-center justify-between gap-3 border-t border-slate-800 px-4 py-3 text-xs">
+              <span className="min-w-0 truncate text-slate-500">Alliance page</span>
+              <span className="shrink-0 text-sky-300">Open profile</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </Link>
   );
 }
 
 function AllianceCard({ alliance }: { alliance: AllianceResult }) {
+  const accessTone = alliance.inviteOnly ? "amber" : "emerald";
   return (
-    <Card className="border-slate-800 bg-slate-900/50 transition-colors hover:border-slate-700">
-      <CardContent className="space-y-4 p-4">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              {alliance.tag && <span className="font-mono text-sm font-bold text-slate-400">[{alliance.tag}]</span>}
-              <Link href={`/alliance/${alliance.id}`} className="truncate font-semibold text-white hover:text-sky-300">
-                {alliance.name}
-              </Link>
+    <Link href={`/alliance/${alliance.id}`} className="group block h-full">
+      <Card className="h-full overflow-hidden border-slate-800 bg-slate-900/55 transition-colors hover:border-emerald-700/50">
+        <CardContent className="p-0">
+          <div className="relative border-b border-slate-800 bg-slate-950/55 p-4">
+            <div className="absolute inset-y-0 left-0 w-1 bg-emerald-500/50 opacity-70" />
+            <div className="flex items-start gap-4 pl-1">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-emerald-300 ring-4 ring-slate-950">
+                <Shield className="h-6 w-6" />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="flex min-w-0 flex-wrap items-center gap-2">
+                  {alliance.tag && (
+                    <span className="rounded-md border border-slate-700 bg-slate-900 px-1.5 py-0.5 font-mono text-xs font-black text-slate-300">
+                      [{alliance.tag}]
+                    </span>
+                  )}
+                  <h2 className="truncate text-lg font-black leading-tight text-white group-hover:text-emerald-200">
+                    {alliance.name}
+                  </h2>
+                </div>
+                {alliance.description ? (
+                  <p className="mt-1 line-clamp-2 text-sm text-slate-400">{alliance.description}</p>
+                ) : (
+                  <p className="mt-1 text-sm text-slate-500">No public description</p>
+                )}
+              </div>
+              <AccessBadge inviteOnly={alliance.inviteOnly} />
             </div>
-            {alliance.description && (
-              <p className="mt-1 line-clamp-2 text-sm text-slate-400">{alliance.description}</p>
-            )}
           </div>
-          <Badge variant="outline" className={cn("shrink-0", alliance.inviteOnly ? "border-amber-700 text-amber-300" : "border-emerald-700 text-emerald-300")}>
-            {alliance.inviteOnly ? "Invite only" : "Open"}
-          </Badge>
-        </div>
-        <div className="grid grid-cols-2 gap-2 text-sm sm:grid-cols-4">
-          <Metric icon={<Users className="h-4 w-4" />} label="Members" value={alliance.memberCount.toLocaleString("en-US")} />
-          <Metric icon={<Trophy className="h-4 w-4" />} label="Avg prestige" value={alliance.averageChampionPrestige?.toLocaleString("en-US") ?? "N/A"} />
-          <Metric icon={<LayoutGrid className="h-4 w-4" />} label="BGs" value={`${alliance.bgCounts.bg1}/${alliance.bgCounts.bg2}/${alliance.bgCounts.bg3}`} />
-          <Metric icon={<Users className="h-4 w-4" />} label="No BG" value={alliance.bgCounts.unassigned.toLocaleString("en-US")} />
-        </div>
-      </CardContent>
-    </Card>
+
+          <div className="grid grid-cols-2 gap-2 p-4 sm:grid-cols-4">
+            <Metric icon={<Users className="h-4 w-4" />} label="Members" value={alliance.memberCount.toLocaleString("en-US")} tone="emerald" />
+            <Metric icon={<Trophy className="h-4 w-4" />} label="Avg prestige" value={alliance.averageChampionPrestige?.toLocaleString("en-US") ?? "N/A"} tone="amber" />
+            <Metric icon={<LayoutGrid className="h-4 w-4" />} label="BG split" value={`${alliance.bgCounts.bg1}/${alliance.bgCounts.bg2}/${alliance.bgCounts.bg3}`} tone="sky" />
+            <Metric icon={<UserRound className="h-4 w-4" />} label="No BG" value={alliance.bgCounts.unassigned.toLocaleString("en-US")} tone="slate" />
+          </div>
+
+          <div className="flex items-center justify-between gap-3 border-t border-slate-800 px-4 py-3 text-xs">
+            <span className={cn(
+              "font-semibold",
+              accessTone === "amber" ? "text-amber-300" : "text-emerald-300",
+            )}>
+              {alliance.inviteOnly ? "Officer invite required" : "Accepts join requests"}
+            </span>
+            <span className="flex items-center gap-1 text-emerald-300">
+              Open alliance
+              <ArrowRight className="h-3.5 w-3.5" />
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+    </Link>
+  );
+}
+
+function AccessBadge({ inviteOnly }: { inviteOnly: boolean }) {
+  return (
+    <Badge
+      variant="outline"
+      className={cn(
+        "shrink-0 font-bold",
+        inviteOnly
+          ? "border-amber-700/70 bg-amber-500/10 text-amber-300"
+          : "border-emerald-700/70 bg-emerald-500/10 text-emerald-300",
+      )}
+    >
+      {inviteOnly ? "Invite only" : "Open"}
+    </Badge>
   );
 }
 
@@ -472,14 +542,31 @@ function EmptyState({ label }: { label: string }) {
   );
 }
 
-function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
+function Metric({
+  icon,
+  label,
+  value,
+  tone = "slate",
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  tone?: "slate" | "sky" | "amber" | "emerald";
+}) {
+  const toneClass = {
+    slate: "border-slate-800 bg-slate-950/55 text-slate-400",
+    sky: "border-sky-900/50 bg-sky-950/20 text-sky-300",
+    amber: "border-amber-900/50 bg-amber-950/20 text-amber-300",
+    emerald: "border-emerald-900/50 bg-emerald-950/20 text-emerald-300",
+  }[tone];
+
   return (
-    <div className="rounded-md border border-slate-800 bg-slate-950/50 p-2">
-      <div className="flex items-center gap-1.5 text-slate-500">
+    <div className={cn("min-w-0 rounded-lg border p-2.5", toneClass)}>
+      <div className="flex items-center gap-1.5 opacity-80">
         {icon}
-        <span className="text-[10px] font-bold uppercase tracking-wide">{label}</span>
+        <span className="truncate text-[10px] font-black uppercase tracking-wide">{label}</span>
       </div>
-      <div className="mt-1 font-mono text-sm font-bold text-slate-200">{value}</div>
+      <div className="mt-1 truncate font-mono text-base font-black text-slate-100">{value}</div>
     </div>
   );
 }
