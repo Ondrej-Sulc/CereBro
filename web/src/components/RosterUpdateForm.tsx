@@ -312,7 +312,7 @@ export function RosterUpdateForm({ targetPlayerId, compact = false, quota = null
                 {quota.unlimitedReason ? (
                     <p className="mt-1 text-sm text-sky-200/80">
                         {quota.unlimitedReason === "alliance_unlocked"
-                            ? "Your alliance has unlocked roster screenshot uploads this month."
+                            ? "Your alliance has unlocked roster screenshot uploads from support in the last 30 days."
                             : quota.unlimitedReason === "personal_lifetime_supporter"
                                 ? "Your lifetime support unlocks roster screenshot uploads."
                                 : "Your supporter status unlocks roster screenshot uploads this month."}
@@ -328,7 +328,7 @@ export function RosterUpdateForm({ targetPlayerId, compact = false, quota = null
                             <Link href={quota.supportUrl} className="font-semibold underline underline-offset-4">
                                 Support CereBro
                             </Link>
-                            {" "}Donate any amount this month, or €10 total lifetime, to unlock your uploads; €25 total from your alliance unlocks uploads for everyone in it.
+                            {" "}Donate any amount this month, or €10 total lifetime, to unlock your uploads; €25 total from your alliance in the last 30 days unlocks uploads for everyone in it.
                         </p>
                     </div>
                 )}
@@ -645,7 +645,7 @@ export function RosterUpdateForm({ targetPlayerId, compact = false, quota = null
                                                 <Link href={quotaLimitError.supportUrl} className="font-semibold underline underline-offset-4">
                                                     Support CereBro
                                                 </Link>
-                                                {" "}Donate any amount this month, or €10 total lifetime, to unlock your uploads; €25 total from your alliance unlocks uploads for everyone in it.
+                                                {" "}Donate any amount this month, or €10 total lifetime, to unlock your uploads; €25 total from your alliance in the last 30 days unlocks uploads for everyone in it.
                                             </p>
                                         </div>
                                     ) : (

@@ -1,13 +1,10 @@
 import {
   ALLIANCE_UNLOCK_THRESHOLD_MINOR,
   ACTIVE_SUPPORT_SUBSCRIPTION_STATUSES,
+  getAllianceSupportUnlockWindowStart,
 } from "@cerebro/core/services/rosterScreenshotQuotaService";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
-
-function getCurrentMonthStart(now = new Date()) {
-  return new Date(now.getFullYear(), now.getMonth(), 1);
-}
 
 const visibleSucceededDonationWhere = {
   status: "succeeded",
@@ -116,14 +113,14 @@ export async function listSupporterPlayerIds(players: SupportStatusPlayerIdentit
 }
 
 export async function getAllianceScreenshotUnlockStatus(allianceId: string, now = new Date()) {
-  const monthStart = getCurrentMonthStart(now);
+  const supportWindowStart = getAllianceSupportUnlockWindowStart(now);
 
   const donations = await prisma.supportDonation.findMany({
     where: {
       ...visibleSucceededDonationWhere,
       player: { allianceId },
       OR: [
-        { createdAt: { gte: monthStart } },
+        { createdAt: { gte: supportWindowStart, lt: now } },
         {
           stripeSubscriptionId: { not: null },
           stripeSubscriptionStatus: { in: [...ACTIVE_SUPPORT_SUBSCRIPTION_STATUSES] },
@@ -137,13 +134,13 @@ export async function getAllianceScreenshotUnlockStatus(allianceId: string, now 
     },
   });
 
-  let currentMonthMinor = 0;
+  let supportWindowMinor = 0;
   const latestSubscriptions = new Map<string, { amountMinor: number; createdAt: Date }>();
 
   for (const donation of donations) {
     if (!donation.stripeSubscriptionId) {
-      if (donation.createdAt >= monthStart) {
-        currentMonthMinor += donation.amountMinor;
+      if (donation.createdAt >= supportWindowStart && donation.createdAt < now) {
+        supportWindowMinor += donation.amountMinor;
       }
       continue;
     }
@@ -158,12 +155,12 @@ export async function getAllianceScreenshotUnlockStatus(allianceId: string, now 
   }
 
   for (const donation of latestSubscriptions.values()) {
-    currentMonthMinor += donation.amountMinor;
+    supportWindowMinor += donation.amountMinor;
   }
 
   return {
-    currentMonthMinor,
+    currentMonthMinor: supportWindowMinor,
     thresholdMinor: ALLIANCE_UNLOCK_THRESHOLD_MINOR,
-    unlocked: currentMonthMinor >= ALLIANCE_UNLOCK_THRESHOLD_MINOR,
+    unlocked: supportWindowMinor >= ALLIANCE_UNLOCK_THRESHOLD_MINOR,
   };
 }

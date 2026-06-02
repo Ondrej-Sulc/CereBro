@@ -2,6 +2,7 @@ import type { PrismaClient } from "@prisma/client";
 
 export const FREE_SCREENSHOT_MONTHLY_LIMIT = 5;
 export const ALLIANCE_UNLOCK_THRESHOLD_MINOR = 2500;
+export const ALLIANCE_SUPPORT_UNLOCK_WINDOW_DAYS = 30;
 export const PERSONAL_LIFETIME_UNLOCK_THRESHOLD_MINOR = 1000;
 export const ROSTER_SCREENSHOT_SUPPORT_URL = "/support";
 export const ACTIVE_SUPPORT_SUBSCRIPTION_STATUSES = ["active", "trialing", "past_due"] as const;
@@ -35,6 +36,10 @@ export function getCurrentServerLocalMonthBounds(now = new Date()): { start: Dat
   return { start, end };
 }
 
+export function getAllianceSupportUnlockWindowStart(now = new Date()): Date {
+  return new Date(now.getTime() - ALLIANCE_SUPPORT_UNLOCK_WINDOW_DAYS * 24 * 60 * 60 * 1000);
+}
+
 function actorWhere(actor: RosterScreenshotQuotaActor) {
   const ors = [
     actor.playerId ? { actorPlayerId: actor.playerId } : null,
@@ -55,17 +60,18 @@ function supportActorWhere(actor: RosterScreenshotQuotaActor) {
   return ors.length > 0 ? { OR: ors } : null;
 }
 
-export async function getAllianceCurrentMonthSupportMinor(
+export async function getAllianceSupportWindowMinor(
   prisma: PrismaClient,
   allianceId: string,
-  monthStart: Date,
+  windowStart: Date,
+  windowEnd: Date,
 ): Promise<number> {
   const donations = await prisma.supportDonation.findMany({
     where: {
       status: "succeeded",
       player: { allianceId },
       OR: [
-        { createdAt: { gte: monthStart } },
+        { createdAt: { gte: windowStart, lt: windowEnd } },
         {
           stripeSubscriptionId: { not: null },
           stripeSubscriptionStatus: { in: [...ACTIVE_SUPPORT_SUBSCRIPTION_STATUSES] },
@@ -79,13 +85,13 @@ export async function getAllianceCurrentMonthSupportMinor(
     },
   });
 
-  let currentMonthMinor = 0;
+  let supportWindowMinor = 0;
   const latestSubscriptions = new Map<string, { amountMinor: number; createdAt: Date }>();
 
   for (const donation of donations) {
     if (!donation.stripeSubscriptionId) {
-      if (donation.createdAt >= monthStart) {
-        currentMonthMinor += donation.amountMinor;
+      if (donation.createdAt >= windowStart && donation.createdAt < windowEnd) {
+        supportWindowMinor += donation.amountMinor;
       }
       continue;
     }
@@ -100,10 +106,10 @@ export async function getAllianceCurrentMonthSupportMinor(
   }
 
   for (const donation of latestSubscriptions.values()) {
-    currentMonthMinor += donation.amountMinor;
+    supportWindowMinor += donation.amountMinor;
   }
 
-  return currentMonthMinor;
+  return supportWindowMinor;
 }
 
 export async function getRosterScreenshotQuota(
@@ -112,7 +118,9 @@ export async function getRosterScreenshotQuota(
   options: { now?: Date; prisma?: PrismaClient } = {}
 ): Promise<RosterScreenshotQuotaResult> {
   const prisma = options.prisma ?? (await import("./prismaService.js")).prisma;
-  const { start, end } = getCurrentServerLocalMonthBounds(options.now);
+  const now = options.now ?? new Date();
+  const { start, end } = getCurrentServerLocalMonthBounds(now);
+  const allianceSupportWindowStart = getAllianceSupportUnlockWindowStart(now);
   const actorFilter = actorWhere(actor);
   const supportActorFilter = supportActorWhere(actor);
 
@@ -146,7 +154,7 @@ export async function getRosterScreenshotQuota(
         })
       : Promise.resolve({ _sum: { amountMinor: 0 } }),
     actor.allianceId
-      ? getAllianceCurrentMonthSupportMinor(prisma, actor.allianceId, start)
+      ? getAllianceSupportWindowMinor(prisma, actor.allianceId, allianceSupportWindowStart, now)
       : Promise.resolve(0),
   ]);
 
@@ -178,5 +186,5 @@ export async function getRosterScreenshotQuota(
 }
 
 export function formatDiscordQuotaExceededMessage(quota: RosterScreenshotQuotaResult): string {
-  return `You have used ${quota.used}/${quota.limit} screenshots this month. This batch has ${quota.requested} screenshots. Donate any amount this month, or €10 total lifetime, to unlock your uploads; €25 total from your alliance unlocks uploads for everyone in it.`;
+  return `You have used ${quota.used}/${quota.limit} screenshots this month. This batch has ${quota.requested} screenshots. Donate any amount this month, or €10 total lifetime, to unlock your uploads; €25 total from your alliance in the last 30 days unlocks uploads for everyone in it.`;
 }

@@ -1208,8 +1208,8 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                         </div>
                         <p className="text-xs text-slate-400 mt-1">
                             {screenshotUnlock.unlocked
-                                ? "This alliance has unlimited roster screenshot uploads this month."
-                                : `${formatEuroMinor(screenshotUnlockRemainingMinor)} more support this month unlocks unlimited roster screenshot uploads for the alliance.`}
+                                ? "This alliance has unlimited roster screenshot uploads from support in the last 30 days."
+                                : `${formatEuroMinor(screenshotUnlockRemainingMinor)} more support in the last 30 days unlocks unlimited roster screenshot uploads for the alliance.`}
                         </p>
                     </div>
                     <div className="md:w-48">

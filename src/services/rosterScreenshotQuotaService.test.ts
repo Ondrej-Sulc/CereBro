@@ -214,13 +214,28 @@ describe("roster screenshot quota", () => {
     expect(quota.unlimitedReason).toBe("alliance_unlocked");
   });
 
-  it("does not count previous-month donations toward the current alliance unlock", async () => {
+  it("counts previous-month alliance donations made within the last 30 days", async () => {
     const quota = await getRosterScreenshotQuota(actor, 1, {
       now,
       prisma: createPrismaFake({
         uploadEvents: [{ fileCount: 5, createdAt: currentMonth, actorPlayerId: actor.playerId }],
         playerAlliance: { donor1: "alliance-1" },
         donations: [{ id: "donation-1", amountMinor: ALLIANCE_UNLOCK_THRESHOLD_MINOR, status: "succeeded", createdAt: previousMonth, playerId: "donor1" }],
+      }),
+    });
+
+    expect(quota.allowed).toBe(true);
+    expect(quota.unlimitedReason).toBe("alliance_unlocked");
+    expect(quota.allianceCurrentMonthMinor).toBe(ALLIANCE_UNLOCK_THRESHOLD_MINOR);
+  });
+
+  it("does not count alliance donations older than 30 days", async () => {
+    const quota = await getRosterScreenshotQuota(actor, 1, {
+      now,
+      prisma: createPrismaFake({
+        uploadEvents: [{ fileCount: 5, createdAt: currentMonth, actorPlayerId: actor.playerId }],
+        playerAlliance: { donor1: "alliance-1" },
+        donations: [{ id: "donation-1", amountMinor: ALLIANCE_UNLOCK_THRESHOLD_MINOR, status: "succeeded", createdAt: new Date(2026, 2, 25, 12), playerId: "donor1" }],
       }),
     });
 

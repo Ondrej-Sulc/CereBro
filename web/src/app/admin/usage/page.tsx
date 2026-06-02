@@ -4,7 +4,13 @@ import { Suspense } from "react";
 import { startOfDay, subDays } from "date-fns";
 import { Activity, AlertTriangle, Camera, CheckCircle2, Clock, ShieldCheck, UserCircle, Users } from "lucide-react";
 import type { Prisma } from "@prisma/client";
-import { ALLIANCE_UNLOCK_THRESHOLD_MINOR, FREE_SCREENSHOT_MONTHLY_LIMIT, PERSONAL_LIFETIME_UNLOCK_THRESHOLD_MINOR } from "@cerebro/core/services/rosterScreenshotQuotaService";
+import {
+  ACTIVE_SUPPORT_SUBSCRIPTION_STATUSES,
+  ALLIANCE_UNLOCK_THRESHOLD_MINOR,
+  FREE_SCREENSHOT_MONTHLY_LIMIT,
+  PERSONAL_LIFETIME_UNLOCK_THRESHOLD_MINOR,
+  getAllianceSupportUnlockWindowStart,
+} from "@cerebro/core/services/rosterScreenshotQuotaService";
 import { ensureAdmin } from "../actions";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -81,8 +87,7 @@ export default async function UsagePage({ searchParams }: UsagePageProps) {
   const days = parseDays(rawDays);
   const startDate = startOfDay(subDays(new Date(), days));
   const now = new Date();
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-  const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const allianceSupportWindowStart = getAllianceSupportUnlockWindowStart(now);
   const lastUpdated = new Date().toISOString();
   const playerUsageWhere: Prisma.RosterUploadEventWhereInput | null = playerId
     ? {
@@ -255,7 +260,7 @@ export default async function UsagePage({ searchParams }: UsagePageProps) {
   const allianceIds = topAllianceRows.map((row) => row.allianceId).filter((id): id is string => !!id);
   const actorIds = topActorRows.map((row) => row.actorPlayerId).filter((id): id is string => !!id);
 
-  const [alliances, actors, currentMonthAllianceDonations] = await Promise.all([
+  const [alliances, actors, allianceSupportWindowDonations] = await Promise.all([
     allianceIds.length
       ? prisma.alliance.findMany({
           where: { id: { in: allianceIds } },
@@ -272,11 +277,19 @@ export default async function UsagePage({ searchParams }: UsagePageProps) {
       ? prisma.supportDonation.findMany({
           where: {
             status: "succeeded",
-            createdAt: { gte: monthStart, lt: monthEnd },
             player: { allianceId: { in: allianceIds } },
+            OR: [
+              { createdAt: { gte: allianceSupportWindowStart, lt: now } },
+              {
+                stripeSubscriptionId: { not: null },
+                stripeSubscriptionStatus: { in: [...ACTIVE_SUPPORT_SUBSCRIPTION_STATUSES] },
+              },
+            ],
           },
           select: {
             amountMinor: true,
+            stripeSubscriptionId: true,
+            createdAt: true,
             player: { select: { allianceId: true } },
           },
         })
@@ -286,12 +299,31 @@ export default async function UsagePage({ searchParams }: UsagePageProps) {
   const allianceNameById = new Map(alliances.map((alliance) => [alliance.id, alliance.name]));
   const actorById = new Map(actors.map((actor) => [actor.id, actor]));
   const allianceDonationMinorById = new Map<string, number>();
-  for (const donation of currentMonthAllianceDonations) {
+  const latestSubscriptionByAlliance = new Map<string, { allianceId: string; amountMinor: number; createdAt: Date }>();
+  for (const donation of allianceSupportWindowDonations) {
     const allianceId = donation.player?.allianceId;
     if (!allianceId) continue;
+    if (donation.stripeSubscriptionId) {
+      const key = `${allianceId}:${donation.stripeSubscriptionId}`;
+      const existing = latestSubscriptionByAlliance.get(key);
+      if (!existing || donation.createdAt > existing.createdAt) {
+        latestSubscriptionByAlliance.set(key, {
+          allianceId,
+          amountMinor: donation.amountMinor,
+          createdAt: donation.createdAt,
+        });
+      }
+      continue;
+    }
     allianceDonationMinorById.set(
       allianceId,
       (allianceDonationMinorById.get(allianceId) ?? 0) + donation.amountMinor
+    );
+  }
+  for (const donation of latestSubscriptionByAlliance.values()) {
+    allianceDonationMinorById.set(
+      donation.allianceId,
+      (allianceDonationMinorById.get(donation.allianceId) ?? 0) + donation.amountMinor
     );
   }
 
@@ -660,15 +692,15 @@ export default async function UsagePage({ searchParams }: UsagePageProps) {
                   <TableHead>Alliance</TableHead>
                   <TableHead className="text-right">Screenshots</TableHead>
                   <TableHead className="text-right">Requests</TableHead>
-                  <TableHead className="text-right">Month Support</TableHead>
+                  <TableHead className="text-right">30-Day Support</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead className="text-right">Champions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {topAllianceRows.map((row) => {
-                  const currentMonthMinor = row.allianceId ? allianceDonationMinorById.get(row.allianceId) ?? 0 : 0;
-                  const isUnlocked = currentMonthMinor >= ALLIANCE_UNLOCK_THRESHOLD_MINOR;
+                  const supportWindowMinor = row.allianceId ? allianceDonationMinorById.get(row.allianceId) ?? 0 : 0;
+                  const isUnlocked = supportWindowMinor >= ALLIANCE_UNLOCK_THRESHOLD_MINOR;
                   return (
                     <TableRow key={row.allianceId}>
                       <TableCell className="font-medium">
@@ -682,7 +714,7 @@ export default async function UsagePage({ searchParams }: UsagePageProps) {
                       </TableCell>
                       <TableCell className="text-right tabular-nums">{formatNumber(row._sum.fileCount)}</TableCell>
                       <TableCell className="text-right tabular-nums">{formatNumber(row._sum.visionRequestCount)}</TableCell>
-                      <TableCell className="text-right tabular-nums">{formatEuroMinor(currentMonthMinor)}</TableCell>
+                      <TableCell className="text-right tabular-nums">{formatEuroMinor(supportWindowMinor)}</TableCell>
                       <TableCell>
                         <Badge variant={isUnlocked ? "secondary" : "outline"}>
                           {isUnlocked ? "Unlocked" : "Locked"}
