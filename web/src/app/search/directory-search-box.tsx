@@ -28,6 +28,11 @@ type DirectorySuggestionResponse = {
   }>;
 };
 
+type DirectorySuggestionItem = {
+  key: string;
+  href: string;
+};
+
 export function DirectorySearchBox({
   activeTab,
   initialValue,
@@ -40,11 +45,22 @@ export function DirectorySearchBox({
   const searchParams = useSearchParams();
   const [value, setValue] = useState(initialValue);
   const [open, setOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(-1);
   const [suggestions, setSuggestions] = useState<DirectorySuggestionResponse>({ players: [], alliances: [] });
   const debouncedValue = useDebounce(value, 250);
   const requestSeqRef = useRef(0);
-  const suppressedQueryRef = useRef("");
+  const suppressedQueryRef = useRef(initialValue.trim());
   const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const nextValue = initialValue.trim();
+    suppressedQueryRef.current = nextValue;
+    requestSeqRef.current += 1;
+    setValue(initialValue);
+    setSuggestions({ players: [], alliances: [] });
+    setOpen(false);
+    setActiveIndex(-1);
+  }, [initialValue]);
 
   useEffect(() => {
     const query = debouncedValue.trim();
@@ -62,7 +78,9 @@ export function DirectorySearchBox({
       })
       .then((data) => {
         if (seq === requestSeqRef.current && query !== suppressedQueryRef.current) {
-          setSuggestions({ players: data.players ?? [], alliances: data.alliances ?? [] });
+          const nextSuggestions = { players: data.players ?? [], alliances: data.alliances ?? [] };
+          setSuggestions(nextSuggestions);
+          setActiveIndex(-1);
           setOpen(true);
         }
       })
@@ -71,9 +89,10 @@ export function DirectorySearchBox({
         console.error(error);
         if (seq === requestSeqRef.current && query !== suppressedQueryRef.current) {
           setSuggestions({ players: [], alliances: [] });
+          setActiveIndex(-1);
           setOpen(true);
         }
-      })
+      });
 
     return () => controller.abort();
   }, [debouncedValue]);
@@ -83,6 +102,7 @@ export function DirectorySearchBox({
       if (!containerRef.current?.contains(event.target as Node)) {
         suppressedQueryRef.current = value.trim();
         setOpen(false);
+        setActiveIndex(-1);
       }
     };
 
@@ -90,15 +110,32 @@ export function DirectorySearchBox({
     return () => document.removeEventListener("pointerdown", handlePointerDown);
   }, [value]);
 
-  const suggestionCount = suggestions.players.length + suggestions.alliances.length;
+  const suggestionItems = useMemo<DirectorySuggestionItem[]>(() => [
+    ...suggestions.players.map((player) => ({ key: `player:${player.id}`, href: `/player/${player.id}` })),
+    ...suggestions.alliances.map((alliance) => ({ key: `alliance:${alliance.id}`, href: `/alliance/${alliance.id}` })),
+  ], [suggestions.alliances, suggestions.players]);
+  const suggestionCount = suggestionItems.length;
+  const activeSuggestionKey = activeIndex >= 0 ? suggestionItems[activeIndex]?.key : undefined;
   const hint = useMemo(() => activeTab === "players" ? "Search player profiles" : "Search alliances", [activeTab]);
 
-  const submitSearch = (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-    suppressedQueryRef.current = value.trim();
+  const closeSuggestions = (queryToSuppress = value.trim()) => {
+    suppressedQueryRef.current = queryToSuppress;
     requestSeqRef.current += 1;
     setSuggestions({ players: [], alliances: [] });
     setOpen(false);
+    setActiveIndex(-1);
+  };
+
+  const navigateToSuggestion = (item: DirectorySuggestionItem) => {
+    closeSuggestions();
+    router.push(item.href);
+  };
+
+  const getSuggestionIndex = (key: string) => suggestionItems.findIndex((item) => item.key === key);
+
+  const submitSearch = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    closeSuggestions();
     const params = new URLSearchParams(searchParams.toString());
     params.set("tab", activeTab);
     if (activeTab === "players") {
@@ -116,6 +153,7 @@ export function DirectorySearchBox({
     setValue("");
     setSuggestions({ players: [], alliances: [] });
     setOpen(false);
+    setActiveIndex(-1);
     const params = new URLSearchParams(searchParams.toString());
     if (activeTab === "players") {
       params.delete("playerQuery");
@@ -140,8 +178,10 @@ export function DirectorySearchBox({
                 suppressedQueryRef.current = "";
                 setValue(nextValue);
                 setOpen(true);
+                setActiveIndex(-1);
                 if (nextValue.trim().length < 2) {
                   setSuggestions({ players: [], alliances: [] });
+                  setActiveIndex(-1);
                 }
               }}
               onFocus={() => {
@@ -150,15 +190,28 @@ export function DirectorySearchBox({
               placeholder={hint}
               className="h-12 w-full rounded-xl border border-slate-800 bg-slate-950 pl-12 pr-11 text-base font-semibold text-white outline-none transition-colors placeholder:text-slate-600 focus:border-sky-700"
               onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  suppressedQueryRef.current = value.trim();
-                  requestSeqRef.current += 1;
-                  setSuggestions({ players: [], alliances: [] });
-                  setOpen(false);
+                if (event.key === "ArrowDown" && suggestionCount > 0) {
+                  event.preventDefault();
+                  setOpen(true);
+                  setActiveIndex((current) => current < 0 ? 0 : (current + 1) % suggestionCount);
+                  return;
                 }
+
+                if (event.key === "ArrowUp" && suggestionCount > 0) {
+                  event.preventDefault();
+                  setOpen(true);
+                  setActiveIndex((current) => current < 0 ? suggestionCount - 1 : (current - 1 + suggestionCount) % suggestionCount);
+                  return;
+                }
+
+                if (event.key === "Enter" && open && activeIndex >= 0 && suggestionItems[activeIndex]) {
+                  event.preventDefault();
+                  navigateToSuggestion(suggestionItems[activeIndex]);
+                  return;
+                }
+
                 if (event.key === "Escape") {
-                  suppressedQueryRef.current = value.trim();
-                  setOpen(false);
+                  closeSuggestions();
                 }
               }}
             />
@@ -190,8 +243,12 @@ export function DirectorySearchBox({
                     <button
                       key={player.id}
                       type="button"
-                      onClick={() => router.push(`/player/${player.id}`)}
-                      className="flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-slate-900"
+                      onClick={() => navigateToSuggestion({ key: `player:${player.id}`, href: `/player/${player.id}` })}
+                      onMouseEnter={() => setActiveIndex(getSuggestionIndex(`player:${player.id}`))}
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors",
+                        activeSuggestionKey === `player:${player.id}` ? "bg-slate-900" : "hover:bg-slate-900",
+                      )}
                     >
                       <Avatar className="h-9 w-9 border border-slate-800">
                         <AvatarImage src={player.avatar ?? undefined} />
@@ -217,8 +274,12 @@ export function DirectorySearchBox({
                     <button
                       key={alliance.id}
                       type="button"
-                      onClick={() => router.push(`/alliance/${alliance.id}`)}
-                      className="flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors hover:bg-slate-900"
+                      onClick={() => navigateToSuggestion({ key: `alliance:${alliance.id}`, href: `/alliance/${alliance.id}` })}
+                      onMouseEnter={() => setActiveIndex(getSuggestionIndex(`alliance:${alliance.id}`))}
+                      className={cn(
+                        "flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors",
+                        activeSuggestionKey === `alliance:${alliance.id}` ? "bg-slate-900" : "hover:bg-slate-900",
+                      )}
                     >
                       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-800 bg-slate-900 text-slate-400">
                         <Shield className="h-4 w-4" />

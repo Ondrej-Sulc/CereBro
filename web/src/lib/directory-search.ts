@@ -164,6 +164,73 @@ export function paginate<T>(items: T[], page: number, pageSize: number) {
   return items.slice(start, start + pageSize);
 }
 
+export function bestTextMatchRank(query: string, values: Array<string | null | undefined>) {
+  const normalizedQuery = normalizeSearchText(query);
+  if (!normalizedQuery) return 0;
+
+  let best = Number.POSITIVE_INFINITY;
+  for (const value of values) {
+    const normalizedValue = normalizeSearchText(value ?? "");
+    if (!normalizedValue) continue;
+    if (normalizedValue === normalizedQuery) best = Math.min(best, 0);
+    else if (normalizedValue.startsWith(normalizedQuery)) best = Math.min(best, 1);
+    else if (normalizedValue.includes(normalizedQuery)) best = Math.min(best, 2);
+  }
+
+  return Number.isFinite(best) ? best : 3;
+}
+
+export function rankPlayerDirectoryMatch({
+  query,
+  ingameName,
+  allianceName,
+  allianceTag,
+  rosterCount,
+  championPrestige,
+}: {
+  query: string;
+  ingameName: string;
+  allianceName?: string | null;
+  allianceTag?: string | null;
+  rosterCount: number;
+  championPrestige?: number | null;
+}) {
+  const matchRank = bestTextMatchRank(query, [ingameName]);
+  const contextRank = bestTextMatchRank(query, [allianceTag, allianceName]);
+  const boost =
+    Math.min(rosterCount, 300) * 6 +
+    (championPrestige ?? 0) / 20 +
+    (allianceName ? 250 : 0);
+
+  return matchRank * 1_000_000 + contextRank * 5_000 - boost;
+}
+
+export function rankAllianceDirectoryMatch({
+  query,
+  name,
+  tag,
+  memberCount,
+  inviteOnly,
+}: {
+  query: string;
+  name: string;
+  tag?: string | null;
+  memberCount: number;
+  inviteOnly: boolean;
+}) {
+  const tagRank = bestTextMatchRank(query, [tag]);
+  const nameRank = bestTextMatchRank(query, [name]);
+  const matchRank = Math.min(tagRank, nameRank);
+  const tagBoost = tagRank < nameRank ? 2_000 : 0;
+  const boost = tagBoost + Math.min(memberCount, 100) * 20 + (inviteOnly ? 0 : 350);
+
+  return matchRank * 1_000_000 - boost;
+}
+
+function normalizeSearchText(value: string) {
+  return value.trim().toLocaleLowerCase();
+}
+
 function readParam(params: DirectorySearchParams, key: string) {
   const value = params[key];
   if (Array.isArray(value)) return value[0];

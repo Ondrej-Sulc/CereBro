@@ -8,6 +8,8 @@ import {
   normalizeDirectoryTab,
   normalizePlayerSearch,
   paginate,
+  rankAllianceDirectoryMatch,
+  rankPlayerDirectoryMatch,
 } from "./directory-search";
 
 describe("directory search", () => {
@@ -127,5 +129,67 @@ describe("directory search", () => {
 
   it("paginates arrays with one-indexed pages", () => {
     expect(paginate([1, 2, 3, 4, 5], 2, 2)).toEqual([3, 4]);
+  });
+
+  it("ranks player name matches by exactness before profile strength", () => {
+    const exactMatch = rankPlayerDirectoryMatch({
+      query: "doom",
+      ingameName: "Doom",
+      rosterCount: 1,
+      championPrestige: 100,
+    });
+    const containsMatch = rankPlayerDirectoryMatch({
+      query: "doom",
+      ingameName: "The Doom Lord",
+      rosterCount: 300,
+      championPrestige: 100_000,
+    });
+
+    expect(exactMatch).toBeLessThan(containsMatch);
+  });
+
+  it("uses roster and prestige as player tie-breakers", () => {
+    const strongProfile = rankPlayerDirectoryMatch({
+      query: "doom",
+      ingameName: "Doom Jr",
+      allianceName: "Battle Realm",
+      rosterCount: 150,
+      championPrestige: 25_000,
+    });
+    const thinProfile = rankPlayerDirectoryMatch({
+      query: "doom",
+      ingameName: "Doom Sr",
+      rosterCount: 0,
+      championPrestige: null,
+    });
+
+    expect(strongProfile).toBeLessThan(thinProfile);
+  });
+
+  it("ranks alliance tag matches and open populated alliances higher", () => {
+    const tagMatch = rankAllianceDirectoryMatch({
+      query: "xmn",
+      name: "X-Men",
+      tag: "XMN",
+      memberCount: 30,
+      inviteOnly: false,
+    });
+    const nameContainsMatch = rankAllianceDirectoryMatch({
+      query: "xmn",
+      name: "Team XMN",
+      tag: null,
+      memberCount: 30,
+      inviteOnly: false,
+    });
+    const inviteOnlyMatch = rankAllianceDirectoryMatch({
+      query: "xmn",
+      name: "X-Men",
+      tag: "XMN",
+      memberCount: 1,
+      inviteOnly: true,
+    });
+
+    expect(tagMatch).toBeLessThan(nameContainsMatch);
+    expect(tagMatch).toBeLessThan(inviteOnlyMatch);
   });
 });

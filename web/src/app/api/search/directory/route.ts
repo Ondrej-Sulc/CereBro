@@ -3,6 +3,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import logger from "@/lib/logger";
 import { withRouteContext } from "@/lib/with-request-context";
+import { rankAllianceDirectoryMatch, rankPlayerDirectoryMatch } from "@/lib/directory-search";
 
 export const GET = withRouteContext(async (req: NextRequest) => {
   const session = await auth();
@@ -43,7 +44,7 @@ export const GET = withRouteContext(async (req: NextRequest) => {
           },
         },
         orderBy: { ingameName: "asc" },
-        take: 8,
+        take: 24,
       }),
       prisma.alliance.findMany({
         where: {
@@ -75,11 +76,52 @@ export const GET = withRouteContext(async (req: NextRequest) => {
           },
         },
         orderBy: { name: "asc" },
-        take: 8,
+        take: 24,
       }),
     ]);
 
-    return NextResponse.json({ players, alliances });
+    return NextResponse.json({
+      players: players
+        .sort((a, b) => {
+          const aRank = rankPlayerDirectoryMatch({
+            query,
+            ingameName: a.ingameName,
+            allianceName: a.alliance?.name,
+            allianceTag: a.alliance?.tag,
+            rosterCount: a._count.roster,
+            championPrestige: a.championPrestige,
+          });
+          const bRank = rankPlayerDirectoryMatch({
+            query,
+            ingameName: b.ingameName,
+            allianceName: b.alliance?.name,
+            allianceTag: b.alliance?.tag,
+            rosterCount: b._count.roster,
+            championPrestige: b.championPrestige,
+          });
+          return aRank - bRank || a.ingameName.localeCompare(b.ingameName, undefined, { sensitivity: "base" });
+        })
+        .slice(0, 8),
+      alliances: alliances
+        .sort((a, b) => {
+          const aRank = rankAllianceDirectoryMatch({
+            query,
+            name: a.name,
+            tag: a.tag,
+            memberCount: a._count.members,
+            inviteOnly: a.inviteOnly,
+          });
+          const bRank = rankAllianceDirectoryMatch({
+            query,
+            name: b.name,
+            tag: b.tag,
+            memberCount: b._count.members,
+            inviteOnly: b.inviteOnly,
+          });
+          return aRank - bRank || a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+        })
+        .slice(0, 8),
+    });
   } catch (error) {
     logger.error({ error, query }, "Error searching directory suggestions");
     return NextResponse.json({ players: [], alliances: [], error: "Search failed" }, { status: 500 });

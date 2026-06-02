@@ -25,6 +25,8 @@ import {
   normalizeDirectoryTab,
   normalizePlayerSearch,
   paginate,
+  rankAllianceDirectoryMatch,
+  rankPlayerDirectoryMatch,
   type DirectorySearchParams,
   type DirectorySearchTab,
   type NormalizedAllianceSearch,
@@ -46,6 +48,7 @@ type SearchPageProps = {
 
 type PlayerResult = Awaited<ReturnType<typeof getPlayerResults>>["players"][number];
 type AllianceResult = Awaited<ReturnType<typeof getAllianceResults>>["alliances"][number];
+type DiscoveryResult = Awaited<ReturnType<typeof getDefaultDiscovery>>;
 
 export default async function DirectorySearchPage({ searchParams }: SearchPageProps) {
   const currentUser = await getUserPlayerWithAlliance();
@@ -57,9 +60,14 @@ export default async function DirectorySearchPage({ searchParams }: SearchPagePr
   const tab = normalizeDirectoryTab(params);
   const playerOptions = normalizePlayerSearch(params);
   const allianceOptions = normalizeAllianceSearch(params);
-  const [playerResults, allianceResults] = await Promise.all([
+  const showPlayerDiscovery = shouldShowPlayerDiscovery(playerOptions);
+  const showAllianceDiscovery = shouldShowAllianceDiscovery(allianceOptions);
+  const [playerResults, allianceResults, discovery] = await Promise.all([
     tab === "players" ? getPlayerResults(playerOptions) : Promise.resolve(null),
     tab === "alliances" ? getAllianceResults(allianceOptions) : Promise.resolve(null),
+    (tab === "players" && showPlayerDiscovery) || (tab === "alliances" && showAllianceDiscovery)
+      ? getDefaultDiscovery()
+      : Promise.resolve(null),
   ]);
 
   return (
@@ -92,9 +100,9 @@ export default async function DirectorySearchPage({ searchParams }: SearchPagePr
       </div>
 
       {tab === "players" ? (
-        <PlayerSearchPanel params={params} options={playerOptions} result={playerResults!} />
+        <PlayerSearchPanel params={params} options={playerOptions} result={playerResults!} discovery={showPlayerDiscovery ? discovery : null} />
       ) : (
-        <AllianceSearchPanel params={params} options={allianceOptions} result={allianceResults!} />
+        <AllianceSearchPanel params={params} options={allianceOptions} result={allianceResults!} discovery={showAllianceDiscovery ? discovery : null} />
       )}
     </div>
   );
@@ -103,6 +111,7 @@ export default async function DirectorySearchPage({ searchParams }: SearchPagePr
 async function getPlayerResults(options: NormalizedPlayerSearch) {
   const where = buildPlayerSearchWhere(options);
   const orderBy = buildPlayerSearchOrderBy(options);
+  const shouldRank = options.query.length > 0;
   const [players, totalCount] = await Promise.all([
     prisma.player.findMany({
       where,
@@ -128,13 +137,36 @@ async function getPlayerResults(options: NormalizedPlayerSearch) {
           },
         },
       },
-      skip: (options.page - 1) * options.pageSize,
-      take: options.pageSize,
+      skip: shouldRank ? undefined : (options.page - 1) * options.pageSize,
+      take: shouldRank ? undefined : options.pageSize,
     }),
     prisma.player.count({ where }),
   ]);
 
-  return { players, totalCount };
+  if (!shouldRank) return { players, totalCount };
+
+  const rankedPlayers = players
+    .sort((a, b) => {
+      const aRank = rankPlayerDirectoryMatch({
+        query: options.query,
+        ingameName: a.ingameName,
+        allianceName: a.alliance?.name,
+        allianceTag: a.alliance?.tag,
+        rosterCount: a._count.roster,
+        championPrestige: a.championPrestige,
+      });
+      const bRank = rankPlayerDirectoryMatch({
+        query: options.query,
+        ingameName: b.ingameName,
+        allianceName: b.alliance?.name,
+        allianceTag: b.alliance?.tag,
+        rosterCount: b._count.roster,
+        championPrestige: b.championPrestige,
+      });
+      return aRank - bRank || a.ingameName.localeCompare(b.ingameName, undefined, { sensitivity: "base" });
+    });
+
+  return { players: paginate(rankedPlayers, options.page, options.pageSize), totalCount };
 }
 
 async function getAllianceResults(options: NormalizedAllianceSearch) {
@@ -187,6 +219,23 @@ async function getAllianceResults(options: NormalizedAllianceSearch) {
     })
     .filter((alliance) => allianceMemberFilterMatches(alliance.memberCount, options.members))
     .sort((a, b) => {
+      if (options.query) {
+        const aRank = rankAllianceDirectoryMatch({
+          query: options.query,
+          name: a.name,
+          tag: a.tag,
+          memberCount: a.memberCount,
+          inviteOnly: a.inviteOnly,
+        });
+        const bRank = rankAllianceDirectoryMatch({
+          query: options.query,
+          name: b.name,
+          tag: b.tag,
+          memberCount: b.memberCount,
+          inviteOnly: b.inviteOnly,
+        });
+        return aRank - bRank || a.name.localeCompare(b.name, undefined, { sensitivity: "base" });
+      }
       if (options.sort === "members") {
         const memberCompare = a.memberCount - b.memberCount;
         if (memberCompare !== 0) return options.order === "asc" ? memberCompare : -memberCompare;
@@ -198,6 +247,121 @@ async function getAllianceResults(options: NormalizedAllianceSearch) {
     alliances: paginate(alliances, options.page, options.pageSize),
     totalCount: alliances.length,
   };
+}
+
+async function getDefaultDiscovery() {
+  const [players, allianceRows] = await Promise.all([
+    prisma.player.findMany({
+      where: {
+        championPrestige: { not: null },
+        roster: { some: {} },
+      },
+      orderBy: [
+        { championPrestige: { sort: "desc", nulls: "last" } },
+        { ingameName: "asc" },
+      ],
+      select: {
+        id: true,
+        ingameName: true,
+        avatar: true,
+        championPrestige: true,
+        summonerPrestige: true,
+        battlegroup: true,
+        isOfficer: true,
+        alliance: {
+          select: {
+            id: true,
+            name: true,
+            tag: true,
+          },
+        },
+        _count: {
+          select: {
+            roster: true,
+          },
+        },
+      },
+      take: 4,
+    }),
+    prisma.alliance.findMany({
+      where: {
+        AND: [
+          { inviteOnly: false },
+          { members: { some: {} } },
+          {
+            NOT: [
+              { name: { equals: "GLOBAL", mode: "insensitive" } },
+              { tag: { equals: "GLOBAL", mode: "insensitive" } },
+            ],
+          },
+        ],
+      },
+      orderBy: [{ members: { _count: "desc" } }, { name: "asc" }],
+      select: {
+        id: true,
+        name: true,
+        tag: true,
+        description: true,
+        inviteOnly: true,
+        members: {
+          select: {
+            championPrestige: true,
+            battlegroup: true,
+          },
+        },
+      },
+      take: 4,
+    }),
+  ]);
+
+  return {
+    players,
+    alliances: allianceRows.map(toAllianceResult),
+  };
+}
+
+function toAllianceResult(alliance: {
+  id: string;
+  name: string;
+  tag: string | null;
+  description: string | null;
+  inviteOnly: boolean;
+  members: Array<{ championPrestige: number | null; battlegroup: number | null }>;
+}) {
+  const prestigeValues = alliance.members
+    .map((member) => member.championPrestige)
+    .filter((value): value is number => value != null);
+  const bgCounts = alliance.members.reduce(
+    (counts, member) => {
+      if (member.battlegroup === 1) counts.bg1 += 1;
+      else if (member.battlegroup === 2) counts.bg2 += 1;
+      else if (member.battlegroup === 3) counts.bg3 += 1;
+      else counts.unassigned += 1;
+      return counts;
+    },
+    { bg1: 0, bg2: 0, bg3: 0, unassigned: 0 },
+  );
+
+  return {
+    id: alliance.id,
+    name: alliance.name,
+    tag: alliance.tag,
+    description: alliance.description,
+    inviteOnly: alliance.inviteOnly,
+    memberCount: alliance.members.length,
+    averageChampionPrestige: prestigeValues.length
+      ? Math.round(prestigeValues.reduce((sum, value) => sum + value, 0) / prestigeValues.length)
+      : null,
+    bgCounts,
+  };
+}
+
+function shouldShowPlayerDiscovery(options: NormalizedPlayerSearch) {
+  return !options.query && !options.allianceQuery && options.roster === "all" && options.battlegroup === "all" && options.page === 1;
+}
+
+function shouldShowAllianceDiscovery(options: NormalizedAllianceSearch) {
+  return !options.query && options.members === "all" && options.access === "all" && options.page === 1;
 }
 
 function TabLink({
@@ -234,10 +398,12 @@ function PlayerSearchPanel({
   params,
   options,
   result,
+  discovery,
 }: {
   params: DirectorySearchParams;
   options: NormalizedPlayerSearch;
   result: { players: PlayerResult[]; totalCount: number };
+  discovery: DiscoveryResult | null;
 }) {
   return (
     <div className="space-y-5">
@@ -279,6 +445,10 @@ function PlayerSearchPanel({
         </CardContent>
       </Card>
 
+      {discovery && (
+        <DefaultDiscovery discovery={discovery} activeTab="players" />
+      )}
+
       <ResultHeader count={result.totalCount} label="player profile" />
 
       {result.players.length > 0 ? (
@@ -300,10 +470,12 @@ function AllianceSearchPanel({
   params,
   options,
   result,
+  discovery,
 }: {
   params: DirectorySearchParams;
   options: NormalizedAllianceSearch;
   result: { alliances: AllianceResult[]; totalCount: number };
+  discovery: DiscoveryResult | null;
 }) {
   return (
     <div className="space-y-5">
@@ -342,6 +514,10 @@ function AllianceSearchPanel({
         </CardContent>
       </Card>
 
+      {discovery && (
+        <DefaultDiscovery discovery={discovery} activeTab="alliances" />
+      )}
+
       <ResultHeader count={result.totalCount} label="alliance" />
 
       {result.alliances.length > 0 ? (
@@ -356,6 +532,83 @@ function AllianceSearchPanel({
 
       <DirectoryPagination params={params} pageParam="alliancePage" page={options.page} pageSize={options.pageSize} totalCount={result.totalCount} />
     </div>
+  );
+}
+
+function DefaultDiscovery({
+  discovery,
+  activeTab,
+}: {
+  discovery: NonNullable<DiscoveryResult>;
+  activeTab: DirectorySearchTab;
+}) {
+  return (
+    <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950/35 p-4">
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h2 className="text-lg font-black text-white">Discovery</h2>
+          <p className="text-sm text-slate-400">
+            Start with high-signal profiles and open alliances, or type above to search directly.
+          </p>
+        </div>
+        <Badge variant="outline" className="w-fit border-slate-700 text-slate-400">
+          {activeTab === "players" ? "Player focus" : "Alliance focus"}
+        </Badge>
+      </div>
+
+      <div className="grid gap-4 xl:grid-cols-2">
+        <DiscoveryColumn
+          title="Top player profiles"
+          description="Roster-backed profiles ranked by champion prestige."
+          icon={<Trophy className="h-4 w-4 text-amber-300" />}
+        >
+          <div className="grid gap-3">
+            {discovery.players.map((player) => (
+              <PlayerCard key={player.id} player={player} />
+            ))}
+          </div>
+        </DiscoveryColumn>
+
+        <DiscoveryColumn
+          title="Open alliances"
+          description="Real alliances that currently accept join requests."
+          icon={<Shield className="h-4 w-4 text-emerald-300" />}
+        >
+          <div className="grid gap-3">
+            {discovery.alliances.map((alliance) => (
+              <AllianceCard key={alliance.id} alliance={alliance} />
+            ))}
+          </div>
+        </DiscoveryColumn>
+      </div>
+    </div>
+  );
+}
+
+function DiscoveryColumn({
+  title,
+  description,
+  icon,
+  children,
+}: {
+  title: string;
+  description: string;
+  icon: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="space-y-3">
+      <div className="flex items-start gap-2">
+        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-800 bg-slate-900">
+          {icon}
+        </div>
+        <div>
+          <h3 className="text-sm font-black uppercase tracking-wide text-slate-200">{title}</h3>
+          <p className="text-xs text-slate-500">{description}</p>
+        </div>
+      </div>
+      {children}
+    </section>
   );
 }
 
