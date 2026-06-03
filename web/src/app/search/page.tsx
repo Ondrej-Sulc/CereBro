@@ -19,6 +19,7 @@ import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import {
   allianceMemberFilterMatches,
   buildAllianceSearchBaseWhere,
+  buildNonGlobalAllianceWhere,
   buildPlayerSearchOrderBy,
   buildPlayerSearchWhere,
   normalizeAllianceSearch,
@@ -288,12 +289,7 @@ async function getDefaultDiscovery() {
         AND: [
           { inviteOnly: false },
           { members: { some: {} } },
-          {
-            NOT: [
-              { name: { equals: "GLOBAL", mode: "insensitive" } },
-              { tag: { equals: "GLOBAL", mode: "insensitive" } },
-            ],
-          },
+          buildNonGlobalAllianceWhere(),
         ],
       },
       orderBy: [{ members: { _count: "desc" } }, { name: "asc" }],

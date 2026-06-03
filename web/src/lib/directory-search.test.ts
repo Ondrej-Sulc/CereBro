@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   allianceMemberFilterMatches,
   buildAllianceSearchBaseWhere,
+  buildNonGlobalAllianceWhere,
   buildPlayerSearchOrderBy,
   buildPlayerSearchWhere,
   normalizeAllianceSearch,
@@ -103,12 +104,7 @@ describe("directory search", () => {
     }))).toEqual({
       AND: [
         { members: { some: {} } },
-        {
-          NOT: [
-            { name: { equals: "GLOBAL", mode: "insensitive" } },
-            { tag: { equals: "GLOBAL", mode: "insensitive" } },
-          ],
-        },
+        buildNonGlobalAllianceWhere(),
         {
           OR: [
             { name: { contains: "xmn", mode: "insensitive" } },
@@ -116,6 +112,20 @@ describe("directory search", () => {
           ],
         },
         { inviteOnly: true },
+      ],
+    });
+  });
+
+  it("allows alliances with no tag while excluding GLOBAL infrastructure records", () => {
+    expect(buildNonGlobalAllianceWhere()).toEqual({
+      AND: [
+        { NOT: { name: { equals: "GLOBAL", mode: "insensitive" } } },
+        {
+          OR: [
+            { tag: null },
+            { NOT: { tag: { equals: "GLOBAL", mode: "insensitive" } } },
+          ],
+        },
       ],
     });
   });

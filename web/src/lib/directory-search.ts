@@ -126,12 +126,7 @@ export function buildPlayerSearchOrderBy(options: NormalizedPlayerSearch): Prism
 export function buildAllianceSearchBaseWhere(options: NormalizedAllianceSearch): Prisma.AllianceWhereInput {
   const conditions: Prisma.AllianceWhereInput[] = [
     { members: { some: {} } },
-    {
-      NOT: [
-        { name: { equals: "GLOBAL", mode: "insensitive" } },
-        { tag: { equals: "GLOBAL", mode: "insensitive" } },
-      ],
-    },
+    buildNonGlobalAllianceWhere(),
   ];
 
   if (options.query) {
@@ -150,6 +145,20 @@ export function buildAllianceSearchBaseWhere(options: NormalizedAllianceSearch):
   }
 
   return { AND: conditions };
+}
+
+export function buildNonGlobalAllianceWhere(): Prisma.AllianceWhereInput {
+  return {
+    AND: [
+      { NOT: { name: { equals: "GLOBAL", mode: "insensitive" } } },
+      {
+        OR: [
+          { tag: null },
+          { NOT: { tag: { equals: "GLOBAL", mode: "insensitive" } } },
+        ],
+      },
+    ],
+  };
 }
 
 export function allianceMemberFilterMatches(memberCount: number, filter: AllianceMemberFilter) {

@@ -3,7 +3,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import logger from "@/lib/logger";
 import { withRouteContext } from "@/lib/with-request-context";
-import { rankAllianceDirectoryMatch, rankPlayerDirectoryMatch } from "@/lib/directory-search";
+import { buildNonGlobalAllianceWhere, rankAllianceDirectoryMatch, rankPlayerDirectoryMatch } from "@/lib/directory-search";
 
 export const GET = withRouteContext(async (req: NextRequest) => {
   const session = await auth();
@@ -50,12 +50,7 @@ export const GET = withRouteContext(async (req: NextRequest) => {
         where: {
           AND: [
             { members: { some: {} } },
-            {
-              NOT: [
-                { name: { equals: "GLOBAL", mode: "insensitive" } },
-                { tag: { equals: "GLOBAL", mode: "insensitive" } },
-              ],
-            },
+            buildNonGlobalAllianceWhere(),
             {
               OR: [
                 { name: { contains: query, mode: "insensitive" } },
