@@ -23,6 +23,14 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string, isMan
 
   const alliance = alliances[0];
 
+  if (!alliance.syncRolesFromDiscord) {
+    loggerService.info(
+      { allianceId: alliance.id, guildId: guild.id },
+      'Skipping inbound alliance role sync because syncRolesFromDiscord is disabled.'
+    );
+    return { updated: 0, created: 0, removed: 0 };
+  }
+
   if (!alliance.officerRole && !alliance.plannerRole && !alliance.battlegroup1Role && !alliance.battlegroup2Role && !alliance.battlegroup3Role) {
     loggerService.warn({ guildId: guild.id }, 'Attempted to sync roles for an alliance with no roles configured.');
     return { updated: 0, created: 0, removed: 0 };

@@ -282,7 +282,7 @@ export const updateAlliancePalette = withActionContext('updateAlliancePalette', 
     return { success: true };
 });
 
-export const updateAllianceSettings = withActionContext('updateAllianceSettings', async (settings: { removeMissingMembers: boolean }) => {
+export const updateAllianceSettings = withActionContext('updateAllianceSettings', async (settings: { removeMissingMembers: boolean; syncRolesFromDiscord: boolean }) => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser || !actingUser.allianceId) {
         throw new Error("Unauthorized");
@@ -296,6 +296,7 @@ export const updateAllianceSettings = withActionContext('updateAllianceSettings'
         where: { id: actingUser.allianceId },
         data: {
             removeMissingMembers: settings.removeMissingMembers,
+            syncRolesFromDiscord: settings.syncRolesFromDiscord,
         }
     });
 

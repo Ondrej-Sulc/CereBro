@@ -88,6 +88,7 @@ interface AllianceWithRequests {
     linkCode: string | null;
     linkCodeExpires: Date | null;
     removeMissingMembers: boolean;
+    syncRolesFromDiscord: boolean;
     officerRole: string | null;
     plannerRole: string | null;
     battlegroup1Role: string | null;
@@ -224,6 +225,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
 
     // Discord Sync Settings
     const [removeMissingMembers, setRemoveMissingMembers] = useState(alliance.removeMissingMembers);
+    const [syncRolesFromDiscord, setSyncRolesFromDiscord] = useState(alliance.syncRolesFromDiscord);
     const [isUpdatingSettings, setIsUpdatingSettings] = useState(false);
     const [discordConfig, setDiscordConfig] = useState<AllianceDiscordConfig | null>(null);
     const [discordRoles, setDiscordRoles] = useState<DiscordRoleOption[]>([]);
@@ -262,17 +264,26 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         };
     }, [alliance.guildId, canManageAlliance, discordConfig, isSettingsOpen, toast]);
 
-    const handleUpdateSettings = async (checked: boolean) => {
-        setRemoveMissingMembers(checked);
+    const handleUpdateSettings = async (settings: { removeMissingMembers?: boolean; syncRolesFromDiscord?: boolean }) => {
+        const previousRemoveMissingMembers = removeMissingMembers;
+        const previousSyncRolesFromDiscord = syncRolesFromDiscord;
+        const nextRemoveMissingMembers = settings.removeMissingMembers ?? removeMissingMembers;
+        const nextSyncRolesFromDiscord = settings.syncRolesFromDiscord ?? syncRolesFromDiscord;
+
+        setRemoveMissingMembers(nextRemoveMissingMembers);
+        setSyncRolesFromDiscord(nextSyncRolesFromDiscord);
         setIsUpdatingSettings(true);
         try {
-            await updateAllianceSettings({ removeMissingMembers: checked });
+            await updateAllianceSettings({
+                removeMissingMembers: nextRemoveMissingMembers,
+                syncRolesFromDiscord: nextSyncRolesFromDiscord,
+            });
             toast({ title: "Settings Updated", description: "Alliance sync policy has been updated." });
         } catch (e: unknown) {
             const message = e instanceof Error ? e.message : "Failed to update settings";
             toast({ title: "Error", description: message, variant: "destructive" });
-            // Revert state on error
-            setRemoveMissingMembers(!checked);
+            setRemoveMissingMembers(previousRemoveMissingMembers);
+            setSyncRolesFromDiscord(previousSyncRolesFromDiscord);
         } finally {
             setIsUpdatingSettings(false);
         }
@@ -885,11 +896,38 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                                             </div>
                                                             
                                                             <div className="flex items-start gap-3">
+                                                                <Checkbox
+                                                                    id="syncRolesFromDiscord"
+                                                                    checked={syncRolesFromDiscord}
+                                                                    onCheckedChange={(checked) => handleUpdateSettings({ syncRolesFromDiscord: checked === true })}
+                                                                    disabled={isUpdatingSettings}
+                                                                    className="mt-1"
+                                                                />
+                                                                <div className="grid gap-1.5 leading-none">
+                                                                    <label
+                                                                        htmlFor="syncRolesFromDiscord"
+                                                                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                                                                    >
+                                                                        Sync CereBro roles from Discord
+                                                                    </label>
+                                                                    <p className="text-xs text-slate-500">
+                                                                        When enabled, configured Discord roles update CereBro officers, planners, battlegroups, and new role-based members.
+                                                                    </p>
+                                                                    {!syncRolesFromDiscord && (
+                                                                        <div className="flex items-center gap-1.5 mt-1 text-[10px] text-emerald-500 font-medium">
+                                                                            <Check className="w-3 h-3" />
+                                                                            Manual CereBro member roles stay authoritative.
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+
+                                                            <div className={cn("flex items-start gap-3", !syncRolesFromDiscord && "opacity-50")}>
                                                                 <Checkbox 
                                                                     id="removeMissingMembers" 
                                                                     checked={removeMissingMembers}
-                                                                    onCheckedChange={(checked) => handleUpdateSettings(checked === true)}
-                                                                    disabled={isUpdatingSettings}
+                                                                    onCheckedChange={(checked) => handleUpdateSettings({ removeMissingMembers: checked === true })}
+                                                                    disabled={isUpdatingSettings || !syncRolesFromDiscord}
                                                                     className="mt-1"
                                                                 />
                                                                 <div className="grid gap-1.5 leading-none">
@@ -900,8 +938,13 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                                                         Strict Discord Membership
                                                                     </label>
                                                                     <p className="text-xs text-slate-500">
-                                                                        When enabled, Discord roles are the absolute source of truth for who is in the alliance.
+                                                                        When inbound Discord sync is enabled, members missing relevant Discord roles are removed from the CereBro alliance.
                                                                     </p>
+                                                                    {!syncRolesFromDiscord && (
+                                                                        <div className="flex items-center gap-1.5 mt-1 text-[10px] text-slate-500 font-medium">
+                                                                            Disabled while CereBro is not syncing roles from Discord.
+                                                                        </div>
+                                                                    )}
                                                                     {removeMissingMembers ? (
                                                                         <div className="flex items-center gap-1.5 mt-1 text-[10px] text-amber-500 font-medium">
                                                                             <AlertTriangle className="w-3 h-3" />
@@ -910,7 +953,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                                                     ) : (
                                                                         <div className="flex items-center gap-1.5 mt-1 text-[10px] text-emerald-500 font-medium">
                                                                             <Check className="w-3 h-3" />
-                                                                            Hybrid Mode: Recommended if you add members via the website.
+                                                                            Website-added members are kept when they lack Discord roles.
                                                                         </div>
                                                                     )}
                                                                 </div>

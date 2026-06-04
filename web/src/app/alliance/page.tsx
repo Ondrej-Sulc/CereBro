@@ -52,6 +52,7 @@ export default async function AlliancePage() {
                 linkCode: true,
                 linkCodeExpires: true,
                 removeMissingMembers: true,
+                syncRolesFromDiscord: true,
                 officerRole: true,
                 plannerRole: true,
                 battlegroup1Role: true,
