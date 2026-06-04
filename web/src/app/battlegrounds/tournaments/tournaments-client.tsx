@@ -309,6 +309,115 @@ function buildStandings(tournament: TournamentSummary) {
   });
 }
 
+function BracketPlayerRow({
+  name,
+  score,
+  isWinner,
+  isBye,
+}: {
+  name: string;
+  score: number | null;
+  isWinner: boolean;
+  isBye?: boolean;
+}) {
+  return (
+    <div className={cn(
+      "flex items-center justify-between gap-3 rounded-md border px-3 py-2",
+      isWinner
+        ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-100"
+        : "border-slate-800 bg-slate-950/70 text-slate-300",
+      isBye && "text-slate-600"
+    )}>
+      <span className="min-w-0 truncate text-sm font-semibold">{name}</span>
+      <span className={cn("font-mono text-sm", isWinner ? "text-emerald-200" : "text-slate-500")}>
+        {score ?? "-"}
+      </span>
+    </div>
+  );
+}
+
+function BracketFlow({ tournament }: { tournament: TournamentSummary }) {
+  const rounds = groupMatchesByRound(tournament);
+
+  if (rounds.length === 0) return null;
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-cyan-500/20 bg-slate-950/80">
+      <div className="flex flex-col gap-3 border-b border-slate-800 bg-cyan-500/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div className="flex items-center gap-2">
+            <Trophy className="h-4 w-4 text-cyan-300" />
+            <h3 className="font-bold text-white">Spider Bracket</h3>
+          </div>
+          <p className="mt-1 text-sm text-slate-500">
+            A round-by-round tree view of match winners advancing through the tournament.
+          </p>
+        </div>
+        <Badge variant="outline" className="w-fit border-cyan-500/30 bg-cyan-500/10 text-cyan-200">
+          {rounds.length} rounds
+        </Badge>
+      </div>
+
+      <div className="overflow-x-auto">
+        <div className="grid min-w-max grid-flow-col auto-cols-[minmax(230px,260px)] gap-8 p-5">
+          {rounds.map(([round, matches], roundIndex) => (
+            <div key={round} className="space-y-4">
+              <div className="sticky left-0 z-10 mb-2 rounded-md border border-slate-800 bg-slate-950 px-3 py-2">
+                <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                  Round {round}
+                </p>
+                <p className="text-sm font-semibold text-slate-200">
+                  {matches.length} {matches.length === 1 ? "match" : "matches"}
+                </p>
+              </div>
+
+              <div
+                className="space-y-5"
+                style={{ paddingTop: `${roundIndex * 20}px` }}
+              >
+                {matches.map((match) => {
+                  const hasNextRound = roundIndex < rounds.length - 1;
+
+                  return (
+                    <div key={match.id} className="relative">
+                      {hasNextRound && (
+                        <div className="pointer-events-none absolute -right-8 top-1/2 hidden h-px w-8 bg-cyan-400/30 lg:block" />
+                      )}
+                      <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 shadow-lg shadow-black/20">
+                        <div className="mb-3 flex items-center justify-between gap-2">
+                          <span className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                            Match {match.matchNumber}
+                          </span>
+                          <Badge variant="outline" className={cn("text-[10px]", matchStatusTone(match.status))}>
+                            {matchStatusLabels[match.status]}
+                          </Badge>
+                        </div>
+                        <div className="space-y-2">
+                          <BracketPlayerRow
+                            name={match.homeParticipant?.player.ingameName ?? "TBD"}
+                            score={match.homeScore}
+                            isWinner={match.winnerParticipantId === match.homeParticipantId}
+                          />
+                          <BracketPlayerRow
+                            name={match.awayParticipant?.player.ingameName ?? "Bye"}
+                            score={match.awayScore}
+                            isWinner={match.winnerParticipantId === match.awayParticipantId}
+                            isBye={!match.awayParticipant}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function BattlegroundsTournamentsClient({
   allianceName,
   hasAlliance,
@@ -797,6 +906,12 @@ export function BattlegroundsTournamentsClient({
                         </Button>
                       )}
                     </div>
+
+                    {matchRounds.length > 0 && (
+                      <div className="mt-5">
+                        <BracketFlow tournament={selectedTournament} />
+                      </div>
+                    )}
 
                     {canManageSelected && (
                       <form
