@@ -2,6 +2,7 @@
 
 import {
   BattlegroundsTournamentFormat,
+  BattlegroundsMatchStatus,
   BattlegroundsTournamentScope,
   BattlegroundsTournamentStatus,
   TournamentParticipantStatus,
@@ -98,6 +99,222 @@ function parseParticipantStatus(value: FormDataEntryValue | null) {
   return Object.values(TournamentParticipantStatus).includes(value as TournamentParticipantStatus)
     ? value as TournamentParticipantStatus
     : TournamentParticipantStatus.CONFIRMED;
+}
+
+function readPositiveInteger(formData: FormData, key: string) {
+  const value = readTrimmedString(formData, key);
+  if (!value) return null;
+
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
+}
+
+function readOptionalScore(formData: FormData, key: string) {
+  const value = readTrimmedString(formData, key);
+  if (!value) return null;
+
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : undefined;
+}
+
+function parseMatchStatus(value: FormDataEntryValue | null) {
+  if (typeof value !== "string") return BattlegroundsMatchStatus.FINAL;
+  return Object.values(BattlegroundsMatchStatus).includes(value as BattlegroundsMatchStatus)
+    ? value as BattlegroundsMatchStatus
+    : BattlegroundsMatchStatus.FINAL;
+}
+
+type TournamentForMatches = Awaited<ReturnType<typeof loadManagedTournamentForMatches>>;
+
+async function loadManagedTournamentForMatches(
+  player: Awaited<ReturnType<typeof requireTournamentPlanner>>,
+  tournamentId: string
+) {
+  const tournament = await prisma.battlegroundsTournament.findUnique({
+    where: { id: tournamentId },
+    select: {
+      id: true,
+      allianceId: true,
+      createdById: true,
+      format: true,
+      participants: {
+        select: {
+          id: true,
+          seed: true,
+          createdAt: true,
+        },
+      },
+      matches: {
+        select: {
+          id: true,
+          round: true,
+          matchNumber: true,
+          status: true,
+          homeParticipantId: true,
+          awayParticipantId: true,
+          winnerParticipantId: true,
+          homeScore: true,
+          awayScore: true,
+        },
+        orderBy: [
+          { round: "asc" },
+          { matchNumber: "asc" },
+        ],
+      },
+    },
+  });
+
+  if (!tournament || !canManageTournament(player, tournament)) {
+    return null;
+  }
+
+  return tournament;
+}
+
+function sortedEntrants(tournament: NonNullable<TournamentForMatches>) {
+  return [...tournament.participants].sort((a, b) => {
+    const aSeed = a.seed ?? 9999;
+    const bSeed = b.seed ?? 9999;
+    if (aSeed !== bSeed) return aSeed - bSeed;
+    return a.createdAt.getTime() - b.createdAt.getTime();
+  });
+}
+
+function standingsOrder(tournament: NonNullable<TournamentForMatches>) {
+  const standings = new Map<string, { participantId: string; wins: number; losses: number; pointsFor: number; pointsAgainst: number; seed: number; createdAt: Date }>();
+
+  for (const entrant of tournament.participants) {
+    standings.set(entrant.id, {
+      participantId: entrant.id,
+      wins: 0,
+      losses: 0,
+      pointsFor: 0,
+      pointsAgainst: 0,
+      seed: entrant.seed ?? 9999,
+      createdAt: entrant.createdAt,
+    });
+  }
+
+  for (const match of tournament.matches) {
+    if (match.status !== BattlegroundsMatchStatus.FINAL || !match.homeParticipantId || !match.awayParticipantId) continue;
+
+    const home = standings.get(match.homeParticipantId);
+    const away = standings.get(match.awayParticipantId);
+    if (!home || !away) continue;
+
+    home.pointsFor += match.homeScore ?? 0;
+    home.pointsAgainst += match.awayScore ?? 0;
+    away.pointsFor += match.awayScore ?? 0;
+    away.pointsAgainst += match.homeScore ?? 0;
+
+    if (match.winnerParticipantId === home.participantId) {
+      home.wins += 1;
+      away.losses += 1;
+    } else if (match.winnerParticipantId === away.participantId) {
+      away.wins += 1;
+      home.losses += 1;
+    }
+  }
+
+  return [...standings.values()].sort((a, b) => {
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    const aDiff = a.pointsFor - a.pointsAgainst;
+    const bDiff = b.pointsFor - b.pointsAgainst;
+    if (bDiff !== aDiff) return bDiff - aDiff;
+    if (a.seed !== b.seed) return a.seed - b.seed;
+    return a.createdAt.getTime() - b.createdAt.getTime();
+  });
+}
+
+function pairHighLow(participantIds: string[]) {
+  const pairs: Array<[string, string | null]> = [];
+  let left = 0;
+  let right = participantIds.length - 1;
+
+  while (left <= right) {
+    if (left === right) {
+      pairs.push([participantIds[left], null]);
+    } else {
+      pairs.push([participantIds[left], participantIds[right]]);
+    }
+    left += 1;
+    right -= 1;
+  }
+
+  return pairs;
+}
+
+function pairAdjacent(participantIds: string[]) {
+  const pairs: Array<[string, string | null]> = [];
+
+  for (let index = 0; index < participantIds.length; index += 2) {
+    pairs.push([participantIds[index], participantIds[index + 1] ?? null]);
+  }
+
+  return pairs;
+}
+
+function roundRobinPairs(participantIds: string[]) {
+  const pairs: Array<{ round: number; homeParticipantId: string; awayParticipantId: string | null }> = [];
+
+  for (let homeIndex = 0; homeIndex < participantIds.length; homeIndex += 1) {
+    for (let awayIndex = homeIndex + 1; awayIndex < participantIds.length; awayIndex += 1) {
+      pairs.push({
+        round: homeIndex + 1,
+        homeParticipantId: participantIds[homeIndex],
+        awayParticipantId: participantIds[awayIndex],
+      });
+    }
+  }
+
+  return pairs;
+}
+
+function nextRound(tournament: NonNullable<TournamentForMatches>) {
+  return tournament.matches.reduce((round, match) => Math.max(round, match.round), 0) + 1;
+}
+
+function buildGeneratedMatches(tournament: NonNullable<TournamentForMatches>) {
+  const seededIds = sortedEntrants(tournament).map((entrant) => entrant.id);
+  const rankedIds = standingsOrder(tournament).map((standing) => standing.participantId);
+
+  if (seededIds.length < 2) {
+    return { error: "Add at least two participants before generating matches." };
+  }
+
+  if (tournament.format === BattlegroundsTournamentFormat.ROUND_ROBIN) {
+    if (tournament.matches.length > 0) {
+      return { error: "Round robin schedule already exists. Add manual matches for adjustments." };
+    }
+
+    return {
+      matches: roundRobinPairs(seededIds).map((pair, index) => ({
+        tournamentId: tournament.id,
+        round: pair.round,
+        matchNumber: index + 1,
+        homeParticipantId: pair.homeParticipantId,
+        awayParticipantId: pair.awayParticipantId,
+        status: BattlegroundsMatchStatus.READY,
+      })),
+    };
+  }
+
+  const round = nextRound(tournament);
+  const basePairs = tournament.format === BattlegroundsTournamentFormat.SINGLE_ELIMINATION ||
+    tournament.format === BattlegroundsTournamentFormat.DOUBLE_ELIMINATION
+    ? pairHighLow(round === 1 ? seededIds : rankedIds)
+    : pairAdjacent(rankedIds);
+
+  return {
+    matches: basePairs.map(([homeParticipantId, awayParticipantId], index) => ({
+      tournamentId: tournament.id,
+      round,
+      matchNumber: index + 1,
+      homeParticipantId,
+      awayParticipantId,
+      status: BattlegroundsMatchStatus.READY,
+    })),
+  };
 }
 
 export const createTournament = withActionContext(
@@ -283,6 +500,187 @@ export const joinTournament = withActionContext(
     } catch {
       return { success: false, error: "You are already in this tournament." };
     }
+
+    revalidatePath(TOURNAMENTS_PATH);
+    return { success: true };
+  }
+);
+
+export const generateTournamentMatches = withActionContext(
+  "generateBattlegroundsTournamentMatches",
+  async (tournamentId: string): Promise<TournamentActionResult> => {
+    const player = await requireTournamentPlanner();
+    const tournament = await loadManagedTournamentForMatches(player, tournamentId);
+
+    if (!tournament) {
+      return { success: false, error: "Tournament not found." };
+    }
+
+    const generated = buildGeneratedMatches(tournament);
+    if ("error" in generated) {
+      return { success: false, error: generated.error ?? "Unable to generate matches." };
+    }
+
+    try {
+      await prisma.battlegroundsTournamentMatch.createMany({
+        data: generated.matches,
+      });
+    } catch {
+      return { success: false, error: "Matches already exist for that generated round." };
+    }
+
+    revalidatePath(TOURNAMENTS_PATH);
+    return { success: true };
+  }
+);
+
+export const createTournamentMatch = withActionContext(
+  "createBattlegroundsTournamentMatch",
+  async (formData: FormData): Promise<TournamentActionResult> => {
+    const player = await requireTournamentPlanner();
+    const tournamentId = readTrimmedString(formData, "tournamentId");
+    const round = readPositiveInteger(formData, "round");
+    const matchNumber = readPositiveInteger(formData, "matchNumber");
+    const homeParticipantId = readTrimmedString(formData, "homeParticipantId");
+    const awayParticipantId = readTrimmedString(formData, "awayParticipantId") || null;
+    const notes = readTrimmedString(formData, "notes");
+
+    if (!tournamentId || !homeParticipantId || round === null || matchNumber === null) {
+      return { success: false, error: "Choose a tournament, round, match number, and home player." };
+    }
+
+    if (round === undefined || matchNumber === undefined) {
+      return { success: false, error: "Round and match number must be positive whole numbers." };
+    }
+
+    if (awayParticipantId && awayParticipantId === homeParticipantId) {
+      return { success: false, error: "A player cannot face themselves." };
+    }
+
+    const tournament = await loadManagedTournamentForMatches(player, tournamentId);
+    if (!tournament) {
+      return { success: false, error: "Tournament not found." };
+    }
+
+    const participantIds = new Set(tournament.participants.map((participant) => participant.id));
+    if (!participantIds.has(homeParticipantId) || (awayParticipantId && !participantIds.has(awayParticipantId))) {
+      return { success: false, error: "Both match players must be in this tournament." };
+    }
+
+    try {
+      await prisma.battlegroundsTournamentMatch.create({
+        data: {
+          tournamentId,
+          round,
+          matchNumber,
+          homeParticipantId,
+          awayParticipantId,
+          status: BattlegroundsMatchStatus.READY,
+          notes: notes || null,
+        },
+      });
+    } catch {
+      return { success: false, error: "A match already exists with that round and match number." };
+    }
+
+    revalidatePath(TOURNAMENTS_PATH);
+    return { success: true };
+  }
+);
+
+export const recordTournamentMatchResult = withActionContext(
+  "recordBattlegroundsTournamentMatchResult",
+  async (formData: FormData): Promise<TournamentActionResult> => {
+    const player = await requireTournamentPlanner();
+    const matchId = readTrimmedString(formData, "matchId");
+    const homeScore = readOptionalScore(formData, "homeScore");
+    const awayScore = readOptionalScore(formData, "awayScore");
+    const requestedWinnerId = readTrimmedString(formData, "winnerParticipantId") || null;
+    const status = parseMatchStatus(formData.get("status"));
+    const notes = readTrimmedString(formData, "notes");
+
+    if (!matchId) {
+      return { success: false, error: "Choose a match to report." };
+    }
+
+    if (homeScore === undefined || awayScore === undefined) {
+      return { success: false, error: "Scores must be whole numbers or left empty." };
+    }
+
+    const match = await prisma.battlegroundsTournamentMatch.findUnique({
+      where: { id: matchId },
+      select: {
+        id: true,
+        homeParticipantId: true,
+        awayParticipantId: true,
+        tournament: {
+          select: {
+            id: true,
+            allianceId: true,
+            createdById: true,
+          },
+        },
+      },
+    });
+
+    if (!match || !canManageTournament(player, match.tournament)) {
+      return { success: false, error: "Match not found." };
+    }
+
+    let winnerParticipantId = requestedWinnerId;
+    if (!winnerParticipantId && homeScore !== null && awayScore !== null && homeScore !== awayScore) {
+      winnerParticipantId = homeScore > awayScore ? match.homeParticipantId : match.awayParticipantId;
+    }
+
+    const validWinnerIds = new Set([match.homeParticipantId, match.awayParticipantId].filter(Boolean));
+    if (winnerParticipantId && !validWinnerIds.has(winnerParticipantId)) {
+      return { success: false, error: "Winner must be one of the match players." };
+    }
+
+    if (status === BattlegroundsMatchStatus.FINAL && !winnerParticipantId) {
+      return { success: false, error: "Final matches need a winner." };
+    }
+
+    await prisma.battlegroundsTournamentMatch.update({
+      where: { id: matchId },
+      data: {
+        homeScore,
+        awayScore,
+        winnerParticipantId,
+        status,
+        notes: notes || null,
+      },
+    });
+
+    revalidatePath(TOURNAMENTS_PATH);
+    return { success: true };
+  }
+);
+
+export const deleteTournamentMatch = withActionContext(
+  "deleteBattlegroundsTournamentMatch",
+  async (matchId: string): Promise<TournamentActionResult> => {
+    const player = await requireTournamentPlanner();
+
+    const match = await prisma.battlegroundsTournamentMatch.findUnique({
+      where: { id: matchId },
+      select: {
+        tournament: {
+          select: {
+            allianceId: true,
+            createdById: true,
+          },
+        },
+      },
+    });
+
+    if (!match || !canManageTournament(player, match.tournament)) {
+      return { success: false, error: "Match not found." };
+    }
+
+    await prisma.battlegroundsTournamentMatch.delete({
+      where: { id: matchId },
+    });
 
     revalidatePath(TOURNAMENTS_PATH);
     return { success: true };

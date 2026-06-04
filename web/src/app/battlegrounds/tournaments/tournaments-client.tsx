@@ -2,6 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import {
+  BattlegroundsMatchStatus,
   BattlegroundsTournamentFormat,
   BattlegroundsTournamentScope,
   BattlegroundsTournamentStatus,
@@ -45,7 +46,11 @@ import { cn } from "@/lib/utils";
 import {
   addTournamentParticipant,
   createTournament,
+  createTournamentMatch,
+  deleteTournamentMatch,
+  generateTournamentMatches,
   joinTournament,
+  recordTournamentMatchResult,
   removeTournamentParticipant,
   updateTournamentStatus,
   type TournamentActionResult,
@@ -79,6 +84,43 @@ export type TournamentSummary = {
     status: TournamentParticipantStatus;
     checkedInAt: string | null;
     player: TournamentMember;
+  }>;
+  matches: Array<{
+    id: string;
+    round: number;
+    matchNumber: number;
+    status: BattlegroundsMatchStatus;
+    homeParticipantId: string | null;
+    awayParticipantId: string | null;
+    winnerParticipantId: string | null;
+    homeScore: number | null;
+    awayScore: number | null;
+    scheduledAt: string | null;
+    notes: string | null;
+    homeParticipant: {
+      id: string;
+      seed: number | null;
+      battlegroup: number | null;
+      status: TournamentParticipantStatus;
+      checkedInAt: string | null;
+      player: TournamentMember;
+    } | null;
+    awayParticipant: {
+      id: string;
+      seed: number | null;
+      battlegroup: number | null;
+      status: TournamentParticipantStatus;
+      checkedInAt: string | null;
+      player: TournamentMember;
+    } | null;
+    winnerParticipant: {
+      id: string;
+      seed: number | null;
+      battlegroup: number | null;
+      status: TournamentParticipantStatus;
+      checkedInAt: string | null;
+      player: TournamentMember;
+    } | null;
   }>;
   _count: { matches: number };
 };
@@ -133,6 +175,30 @@ const participantLabels: Record<TournamentParticipantStatus, string> = {
   DROPPED: "Dropped",
 };
 
+const matchStatusLabels: Record<BattlegroundsMatchStatus, string> = {
+  PENDING: "Pending",
+  READY: "Ready",
+  PLAYING: "Playing",
+  REPORTED: "Reported",
+  DISPUTED: "Disputed",
+  FINAL: "Final",
+};
+
+function matchStatusTone(status: BattlegroundsMatchStatus) {
+  switch (status) {
+    case "FINAL":
+      return "border-emerald-500/30 bg-emerald-500/10 text-emerald-300";
+    case "DISPUTED":
+      return "border-red-500/30 bg-red-500/10 text-red-300";
+    case "REPORTED":
+      return "border-amber-500/30 bg-amber-500/10 text-amber-300";
+    case "PLAYING":
+      return "border-sky-500/30 bg-sky-500/10 text-sky-300";
+    default:
+      return "border-slate-700 bg-slate-900 text-slate-400";
+  }
+}
+
 function formatDate(value: string | null) {
   if (!value) return "Unscheduled";
   return new Intl.DateTimeFormat(undefined, {
@@ -179,6 +245,67 @@ function sortParticipants(tournament: TournamentSummary) {
     const bBg = b.battlegroup ?? 99;
     if (aBg !== bBg) return aBg - bBg;
     return a.player.ingameName.localeCompare(b.player.ingameName);
+  });
+}
+
+function groupMatchesByRound(tournament: TournamentSummary) {
+  const groups = new Map<number, TournamentSummary["matches"]>();
+
+  for (const match of tournament.matches) {
+    const roundMatches = groups.get(match.round) ?? [];
+    roundMatches.push(match);
+    groups.set(match.round, roundMatches);
+  }
+
+  return [...groups.entries()].sort(([a], [b]) => a - b);
+}
+
+function buildStandings(tournament: TournamentSummary) {
+  const standings = new Map<string, {
+    participant: TournamentSummary["participants"][number];
+    wins: number;
+    losses: number;
+    pointsFor: number;
+    pointsAgainst: number;
+  }>();
+
+  for (const participant of tournament.participants) {
+    standings.set(participant.id, {
+      participant,
+      wins: 0,
+      losses: 0,
+      pointsFor: 0,
+      pointsAgainst: 0,
+    });
+  }
+
+  for (const match of tournament.matches) {
+    if (match.status !== "FINAL" || !match.homeParticipantId || !match.awayParticipantId) continue;
+
+    const home = standings.get(match.homeParticipantId);
+    const away = standings.get(match.awayParticipantId);
+    if (!home || !away) continue;
+
+    home.pointsFor += match.homeScore ?? 0;
+    home.pointsAgainst += match.awayScore ?? 0;
+    away.pointsFor += match.awayScore ?? 0;
+    away.pointsAgainst += match.homeScore ?? 0;
+
+    if (match.winnerParticipantId === match.homeParticipantId) {
+      home.wins += 1;
+      away.losses += 1;
+    } else if (match.winnerParticipantId === match.awayParticipantId) {
+      away.wins += 1;
+      home.losses += 1;
+    }
+  }
+
+  return [...standings.values()].sort((a, b) => {
+    if (b.wins !== a.wins) return b.wins - a.wins;
+    const aDiff = a.pointsFor - a.pointsAgainst;
+    const bDiff = b.pointsFor - b.pointsAgainst;
+    if (bDiff !== aDiff) return bDiff - aDiff;
+    return sortParticipants({ ...tournament, participants: [a.participant, b.participant] })[0].id === a.participant.id ? -1 : 1;
   });
 }
 
@@ -242,6 +369,14 @@ export function BattlegroundsTournamentsClient({
     bg,
     count: participants.filter((entry) => entry.battlegroup === bg).length,
   }));
+  const standings = selectedTournament ? buildStandings(selectedTournament) : [];
+  const matchRounds = selectedTournament ? groupMatchesByRound(selectedTournament) : [];
+  const nextManualRound = selectedTournament
+    ? Math.max(1, ...selectedTournament.matches.map((match) => match.round))
+    : 1;
+  const nextManualMatchNumber = selectedTournament
+    ? selectedTournament.matches.filter((match) => match.round === nextManualRound).length + 1
+    : 1;
 
   return (
     <div className="space-y-6">
@@ -603,6 +738,181 @@ export function BattlegroundsTournamentsClient({
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                <div className="grid grid-cols-1 gap-0 border-t border-slate-800 xl:grid-cols-[320px_1fr]">
+                  <div className="border-b border-slate-800 p-5 xl:border-b-0 xl:border-r">
+                    <div className="flex items-center justify-between gap-3">
+                      <div>
+                        <h3 className="font-bold text-white">Standings</h3>
+                        <p className="text-xs text-slate-500">Ranked by wins, point differential, then seed.</p>
+                      </div>
+                      <Badge variant="outline" className="border-slate-700 text-slate-400">
+                        {selectedTournament.matches.filter((match) => match.status === "FINAL").length} final
+                      </Badge>
+                    </div>
+                    <div className="mt-4 space-y-2">
+                      {standings.length === 0 && (
+                        <p className="rounded-lg border border-dashed border-slate-800 p-4 text-sm text-slate-500">
+                          Add participants and matches to build standings.
+                        </p>
+                      )}
+                      {standings.map((standing, index) => (
+                        <div key={standing.participant.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-900/60 px-3 py-2">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-slate-200">
+                              #{index + 1} {standing.participant.player.ingameName}
+                            </p>
+                            <p className="text-xs text-slate-500">
+                              {standing.participant.battlegroup ? `BG${standing.participant.battlegroup}` : "Community"} · seed {standing.participant.seed ?? "-"}
+                            </p>
+                          </div>
+                          <div className="text-right font-mono text-sm text-slate-300">
+                            <p>{standing.wins}-{standing.losses}</p>
+                            <p className="text-xs text-slate-500">
+                              {standing.pointsFor - standing.pointsAgainst >= 0 ? "+" : ""}{standing.pointsFor - standing.pointsAgainst}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="min-w-0 p-5">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                      <div>
+                        <h3 className="font-bold text-white">Matches</h3>
+                        <p className="text-sm text-slate-500">
+                          Generate format-aware rounds, add manual pairings, and record results.
+                        </p>
+                      </div>
+                      {canManageSelected && (
+                        <Button
+                          disabled={isPending || participants.length < 2}
+                          onClick={() => runAction(() => generateTournamentMatches(selectedTournament.id))}
+                          className="bg-emerald-500 text-slate-950 hover:bg-emerald-400"
+                        >
+                          <Swords className="h-4 w-4" />
+                          Generate next matches
+                        </Button>
+                      )}
+                    </div>
+
+                    {canManageSelected && (
+                      <form
+                        className="mt-4 grid grid-cols-1 gap-3 rounded-lg border border-slate-800 bg-slate-950/70 p-3 lg:grid-cols-[80px_80px_1fr_1fr_auto]"
+                        action={(formData) => runAction(() => createTournamentMatch(formData))}
+                      >
+                        <input type="hidden" name="tournamentId" value={selectedTournament.id} />
+                        <Input name="round" inputMode="numeric" defaultValue={nextManualRound} className="border-slate-800 bg-slate-900" />
+                        <Input name="matchNumber" inputMode="numeric" defaultValue={nextManualMatchNumber} className="border-slate-800 bg-slate-900" />
+                        <select name="homeParticipantId" className="h-9 rounded-md border border-slate-800 bg-slate-900 px-3 text-sm text-slate-100">
+                          <option value="">Home player...</option>
+                          {participants.map((entry) => (
+                            <option key={entry.id} value={entry.id}>{entry.player.ingameName}</option>
+                          ))}
+                        </select>
+                        <select name="awayParticipantId" className="h-9 rounded-md border border-slate-800 bg-slate-900 px-3 text-sm text-slate-100">
+                          <option value="">Away player / bye...</option>
+                          {participants.map((entry) => (
+                            <option key={entry.id} value={entry.id}>{entry.player.ingameName}</option>
+                          ))}
+                        </select>
+                        <Button disabled={isPending} className="bg-slate-100 text-slate-950 hover:bg-white">
+                          <Plus className="h-4 w-4" />
+                          Add match
+                        </Button>
+                      </form>
+                    )}
+
+                    <div className="mt-4 space-y-5">
+                      {matchRounds.length === 0 && (
+                        <div className="rounded-lg border border-dashed border-slate-800 p-6 text-center">
+                          <Swords className="mx-auto h-8 w-8 text-slate-700" />
+                          <p className="mt-2 font-semibold text-slate-300">No matches yet</p>
+                          <p className="mt-1 text-sm text-slate-500">
+                            Generate the first round once the field is ready, or add pairings manually.
+                          </p>
+                        </div>
+                      )}
+
+                      {matchRounds.map(([round, matches]) => (
+                        <div key={round} className="space-y-3">
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-sm font-bold uppercase tracking-widest text-slate-400">Round {round}</h4>
+                            <div className="h-px flex-1 bg-slate-800" />
+                          </div>
+                          {matches.map((match) => (
+                            <div key={match.id} className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
+                              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                                <div className="min-w-0">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <Badge variant="outline" className="border-slate-700 text-slate-400">
+                                      Match {match.matchNumber}
+                                    </Badge>
+                                    <Badge variant="outline" className={cn(matchStatusTone(match.status))}>
+                                      {matchStatusLabels[match.status]}
+                                    </Badge>
+                                  </div>
+                                  <div className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-[1fr_auto_1fr] sm:items-center">
+                                    <p className={cn("font-semibold", match.winnerParticipantId === match.homeParticipantId ? "text-emerald-300" : "text-slate-200")}>
+                                      {match.homeParticipant?.player.ingameName ?? "TBD"}
+                                    </p>
+                                    <p className="text-center font-mono text-slate-500">
+                                      {match.homeScore ?? "-"} : {match.awayScore ?? "-"}
+                                    </p>
+                                    <p className={cn("font-semibold sm:text-right", match.winnerParticipantId === match.awayParticipantId ? "text-emerald-300" : "text-slate-200")}>
+                                      {match.awayParticipant?.player.ingameName ?? "Bye"}
+                                    </p>
+                                  </div>
+                                  {match.notes && <p className="mt-2 text-xs text-slate-500">{match.notes}</p>}
+                                </div>
+
+                                {canManageSelected && (
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    disabled={isPending}
+                                    onClick={() => runAction(() => deleteTournamentMatch(match.id))}
+                                    className="h-8 w-8 shrink-0 text-slate-500 hover:bg-red-950/30 hover:text-red-300"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                )}
+                              </div>
+
+                              {canManageSelected && (
+                                <form
+                                  className="mt-3 grid grid-cols-1 gap-2 border-t border-slate-800 pt-3 lg:grid-cols-[80px_80px_1fr_150px_auto]"
+                                  action={(formData) => runAction(() => recordTournamentMatchResult(formData))}
+                                >
+                                  <input type="hidden" name="matchId" value={match.id} />
+                                  <Input name="homeScore" inputMode="numeric" defaultValue={match.homeScore ?? ""} placeholder="Home" className="border-slate-800 bg-slate-950" />
+                                  <Input name="awayScore" inputMode="numeric" defaultValue={match.awayScore ?? ""} placeholder="Away" className="border-slate-800 bg-slate-950" />
+                                  <select name="winnerParticipantId" defaultValue={match.winnerParticipantId ?? ""} className="h-9 rounded-md border border-slate-800 bg-slate-950 px-3 text-sm text-slate-100">
+                                    <option value="">Auto / no winner</option>
+                                    {match.homeParticipant && <option value={match.homeParticipant.id}>{match.homeParticipant.player.ingameName}</option>}
+                                    {match.awayParticipant && <option value={match.awayParticipant.id}>{match.awayParticipant.player.ingameName}</option>}
+                                  </select>
+                                  <select name="status" defaultValue={match.status === "PENDING" || match.status === "READY" ? "FINAL" : match.status} className="h-9 rounded-md border border-slate-800 bg-slate-950 px-3 text-sm text-slate-100">
+                                    <option value="FINAL">Final</option>
+                                    <option value="REPORTED">Reported</option>
+                                    <option value="DISPUTED">Disputed</option>
+                                    <option value="PLAYING">Playing</option>
+                                    <option value="READY">Ready</option>
+                                  </select>
+                                  <Button disabled={isPending} className="bg-cyan-500 text-slate-950 hover:bg-cyan-400">
+                                    <CheckCircle2 className="h-4 w-4" />
+                                    Save result
+                                  </Button>
+                                </form>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               </Card>
 

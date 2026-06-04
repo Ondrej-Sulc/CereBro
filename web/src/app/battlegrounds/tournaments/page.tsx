@@ -85,6 +85,53 @@ export default async function BattlegroundsTournamentsPage() {
             { createdAt: "asc" },
           ],
         },
+        matches: {
+          include: {
+            homeParticipant: {
+              include: {
+                player: {
+                  select: {
+                    id: true,
+                    ingameName: true,
+                    battlegroup: true,
+                    championPrestige: true,
+                    avatar: true,
+                  },
+                },
+              },
+            },
+            awayParticipant: {
+              include: {
+                player: {
+                  select: {
+                    id: true,
+                    ingameName: true,
+                    battlegroup: true,
+                    championPrestige: true,
+                    avatar: true,
+                  },
+                },
+              },
+            },
+            winnerParticipant: {
+              include: {
+                player: {
+                  select: {
+                    id: true,
+                    ingameName: true,
+                    battlegroup: true,
+                    championPrestige: true,
+                    avatar: true,
+                  },
+                },
+              },
+            },
+          },
+          orderBy: [
+            { round: "asc" },
+            { matchNumber: "asc" },
+          ],
+        },
         _count: { select: { matches: true } },
       },
       orderBy: [
@@ -110,17 +157,28 @@ export default async function BattlegroundsTournamentsPage() {
     3: player.alliance?.battlegroup3Color || "#3b82f6",
   };
 
+  const serializeParticipant = (participant: typeof tournaments[number]["participants"][number]) => ({
+    ...participant,
+    checkedInAt: participant.checkedInAt?.toISOString() ?? null,
+    createdAt: participant.createdAt.toISOString(),
+    updatedAt: participant.updatedAt.toISOString(),
+  });
+
   const serializedTournaments = tournaments.map((tournament) => ({
     ...tournament,
     startsAt: tournament.startsAt?.toISOString() ?? null,
     checkInStartsAt: tournament.checkInStartsAt?.toISOString() ?? null,
     createdAt: tournament.createdAt.toISOString(),
     updatedAt: tournament.updatedAt.toISOString(),
-    participants: tournament.participants.map((participant) => ({
-      ...participant,
-      checkedInAt: participant.checkedInAt?.toISOString() ?? null,
-      createdAt: participant.createdAt.toISOString(),
-      updatedAt: participant.updatedAt.toISOString(),
+    participants: tournament.participants.map(serializeParticipant),
+    matches: tournament.matches.map((match) => ({
+      ...match,
+      scheduledAt: match.scheduledAt?.toISOString() ?? null,
+      createdAt: match.createdAt.toISOString(),
+      updatedAt: match.updatedAt.toISOString(),
+      homeParticipant: match.homeParticipant ? serializeParticipant(match.homeParticipant) : null,
+      awayParticipant: match.awayParticipant ? serializeParticipant(match.awayParticipant) : null,
+      winnerParticipant: match.winnerParticipant ? serializeParticipant(match.winnerParticipant) : null,
     })),
   }));
 
