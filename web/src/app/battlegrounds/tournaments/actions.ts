@@ -58,11 +58,30 @@ function readTrimmedString(formData: FormData, key: string) {
   return typeof value === "string" ? value.trim() : "";
 }
 
-function readOptionalDate(formData: FormData, key: string) {
+function readOptionalLocalDate(formData: FormData, key: string) {
   const value = readTrimmedString(formData, key);
   if (!value) return null;
 
-  const parsed = new Date(value);
+  const match = value.match(
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/
+  );
+  if (!match) return undefined;
+
+  const offsetMinutes = Number(readTrimmedString(formData, `${key}TimezoneOffsetMinutes`));
+  if (!Number.isInteger(offsetMinutes)) return undefined;
+
+  const [, year, month, day, hour, minute, second = "0"] = match;
+  const parsed = new Date(
+    Date.UTC(
+      Number(year),
+      Number(month) - 1,
+      Number(day),
+      Number(hour),
+      Number(minute),
+      Number(second)
+    ) + offsetMinutes * 60_000
+  );
+
   if (Number.isNaN(parsed.getTime())) return undefined;
   return parsed;
 }
@@ -87,8 +106,8 @@ export const createTournament = withActionContext(
     const player = await requireTournamentPlanner();
     const name = readTrimmedString(formData, "name");
     const description = readTrimmedString(formData, "description");
-    const startsAt = readOptionalDate(formData, "startsAt");
-    const checkInStartsAt = readOptionalDate(formData, "checkInStartsAt");
+    const startsAt = readOptionalLocalDate(formData, "startsAt");
+    const checkInStartsAt = readOptionalLocalDate(formData, "checkInStartsAt");
     const scope = parseScope(formData.get("scope"), !!player.allianceId);
 
     if (!name) {
@@ -96,7 +115,7 @@ export const createTournament = withActionContext(
     }
 
     if (startsAt === undefined || checkInStartsAt === undefined) {
-      return { success: false, error: "Use valid dates or leave date fields empty." };
+      return { success: false, error: "Use valid dates with a browser timezone or leave date fields empty." };
     }
 
     await prisma.battlegroundsTournament.create({

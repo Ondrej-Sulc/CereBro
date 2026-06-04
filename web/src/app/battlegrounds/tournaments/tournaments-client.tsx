@@ -112,6 +112,15 @@ const formatLabels: Record<BattlegroundsTournamentFormat, string> = {
   LADDER: "Ladder",
 };
 
+const formatDescriptions: Record<BattlegroundsTournamentFormat, string> = {
+  SINGLE_ELIMINATION: "Lose once and you are out. Fastest option for small one-night brackets.",
+  DOUBLE_ELIMINATION: "Players move to a lower bracket after one loss and are eliminated after the second loss.",
+  SWISS: "Everyone plays a fixed number of rounds against players with similar records. Best for ranking a larger field.",
+  SWISS_TOP_CUT: "Swiss rounds rank the field, then the top players advance to an elimination bracket.",
+  ROUND_ROBIN: "Every player faces every other player. Clear and fair, but match count grows quickly.",
+  LADDER: "Players climb by challenging nearby ranks. Best for longer-running flexible events.",
+};
+
 const scopeLabels: Record<BattlegroundsTournamentScope, string> = {
   COMMUNITY: "Community",
   ALLIANCE: "Alliance",
@@ -132,6 +141,16 @@ function formatDate(value: string | null) {
     hour: "2-digit",
     minute: "2-digit",
   }).format(new Date(value));
+}
+
+function appendTimezoneOffset(formData: FormData, key: string) {
+  const value = formData.get(key);
+  if (typeof value !== "string" || !value) return;
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return;
+
+  formData.set(`${key}TimezoneOffsetMinutes`, String(date.getTimezoneOffset()));
 }
 
 function statusTone(status: BattlegroundsTournamentStatus) {
@@ -177,6 +196,7 @@ export function BattlegroundsTournamentsClient({
   const [isPending, startTransition] = useTransition();
   const [selectedTournamentId, setSelectedTournamentId] = useState(tournaments[0]?.id ?? null);
   const [message, setMessage] = useState<string | null>(null);
+  const [formFormat, setFormFormat] = useState<BattlegroundsTournamentFormat>("SINGLE_ELIMINATION");
   const selectedTournament = tournaments.find((tournament) => tournament.id === selectedTournamentId) ?? tournaments[0] ?? null;
   const manageableTournamentIdSet = useMemo(
     () => new Set(manageableTournamentIds),
@@ -301,7 +321,11 @@ export function BattlegroundsTournamentsClient({
                   </DialogHeader>
                   <form
                     className="space-y-4"
-                    action={(formData) => runAction(() => createTournament(formData))}
+                    action={(formData) => {
+                      appendTimezoneOffset(formData, "startsAt");
+                      appendTimezoneOffset(formData, "checkInStartsAt");
+                      runAction(() => createTournament(formData));
+                    }}
                   >
                     <div className="space-y-2">
                       <Label htmlFor="name">Name</Label>
@@ -321,7 +345,13 @@ export function BattlegroundsTournamentsClient({
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor="format">Format</Label>
-                        <select id="format" name="format" className="h-9 w-full rounded-md border border-slate-800 bg-slate-900 px-3 text-sm text-slate-100">
+                        <select
+                          id="format"
+                          name="format"
+                          value={formFormat}
+                          onChange={(event) => setFormFormat(event.target.value as BattlegroundsTournamentFormat)}
+                          className="h-9 w-full rounded-md border border-slate-800 bg-slate-900 px-3 text-sm text-slate-100"
+                        >
                           <option value="SINGLE_ELIMINATION">Single Elimination</option>
                           <option value="DOUBLE_ELIMINATION">Double Elimination</option>
                           <option value="SWISS">Swiss</option>
@@ -329,17 +359,20 @@ export function BattlegroundsTournamentsClient({
                           <option value="ROUND_ROBIN">Round Robin</option>
                           <option value="LADDER">Ladder</option>
                         </select>
+                        <p className="text-xs leading-5 text-slate-500">{formatDescriptions[formFormat]}</p>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                       <div className="space-y-2">
                         <Label htmlFor="startsAt">Start time</Label>
                         <Input id="startsAt" name="startsAt" type="datetime-local" className="border-slate-800 bg-slate-900" />
+                        <p className="text-xs leading-5 text-slate-500">Saved using your device timezone.</p>
                       </div>
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="checkInStartsAt">Check-in opens</Label>
                       <Input id="checkInStartsAt" name="checkInStartsAt" type="datetime-local" className="border-slate-800 bg-slate-900" />
+                      <p className="text-xs leading-5 text-slate-500">Entrants will see this converted to their local time.</p>
                     </div>
                     <Button disabled={isPending} className="w-full bg-cyan-500 text-slate-950 hover:bg-cyan-400">
                       <Plus className="h-4 w-4" />
@@ -416,6 +449,9 @@ export function BattlegroundsTournamentsClient({
                       {selectedTournament.description && (
                         <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">{selectedTournament.description}</p>
                       )}
+                      <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-500">
+                        {formatDescriptions[selectedTournament.format]}
+                      </p>
                     </div>
                     <div className="flex flex-col gap-2 sm:flex-row">
                     {canJoinSelected && (
