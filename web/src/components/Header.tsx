@@ -69,6 +69,11 @@ export default function Header({ userButton, isInAlliance, hasPlayerProfile }: {
               Quest Planner
             </Link>
 
+            <Link href="/battlegrounds/tournaments" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors px-2 py-2">
+              <Trophy className="w-4 h-4" />
+              BG Tournaments
+            </Link>
+
             {isInAlliance ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -117,6 +122,7 @@ export default function Header({ userButton, isInAlliance, hasPlayerProfile }: {
                         <span>Season Stats</span>
                     </Link>
                   </DropdownMenuItem>
+
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
@@ -207,6 +213,13 @@ export default function Header({ userButton, isInAlliance, hasPlayerProfile }: {
                                         Quest Planner
                                       </Link>
                                       <Link
+                                          href="/battlegrounds/tournaments"
+                                          className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
+                                      >
+                                        <Trophy className="w-5 h-5" />
+                                        BG Tournaments
+                                      </Link>
+                                      <Link
                                           href="/war-videos"
                                           className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
                                       >
@@ -261,7 +274,7 @@ export default function Header({ userButton, isInAlliance, hasPlayerProfile }: {
                             <Trophy className="w-5 h-5 text-yellow-500" />
                             Season Stats
                         </Link>
-                        
+
                         <div className="h-px bg-slate-800/50 my-1" />
                       </>
                     ) : (

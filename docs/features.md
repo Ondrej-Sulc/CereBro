@@ -100,6 +100,14 @@ A unified suite of tools for managing Alliance War.
     *   **Defense:** Analyze performance by Node (lethality) or Defender (placement history).
     *   **Matchups:** Analyze Attacker success rates and find "Best Counters".
 
+### Battlegrounds Tournaments
+*   **Organizer Workspace:** `/battlegrounds/tournaments` gives players and alliance planners a dedicated tournament control surface for MCOC Battlegrounds events.
+*   **Community & Alliance Scope:** Tournaments can be community-hosted for players outside an alliance or alliance-scoped for internal friendly events.
+*   **Tournament Lifecycle:** Supports Draft, Registration, Check-in, Live, Finished, and Archived states so organizers can stage the event before matches begin.
+*   **Field Management:** Organizers can create tournaments, choose a format, add players, assign seeds, and keep battlegroup context visible when it exists.
+*   **Common Formats:** Supports single elimination, double elimination, Swiss, Swiss plus elimination top cut, round robin, and ladder tournament styles.
+*   **Bracket Foundation:** Match records are modeled separately from participants so bracket generation can be layered in without changing the organizer workflow.
+
 ### Quest Planning & Roster Integration
 A dedicated system for planning fights across complex quests (e.g., Story content, Everest runs).
 *   **Data Model:** `QuestCategory` -> `QuestPlan` -> `QuestEncounter` -> `QuestEncounterNode`.

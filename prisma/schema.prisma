@@ -306,6 +306,8 @@ model Player {
   rosterUploadsAsTarget RosterUploadEvent[]         @relation("RosterUploadTarget")
   submittedVideos    WarVideo[]                  @relation("SubmittedBy")
   supportDonations   SupportDonation[]
+  createdBattlegroundsTournaments BattlegroundsTournament[] @relation("BattlegroundsTournamentCreator")
+  battlegroundsTournamentEntries  BattlegroundsTournamentParticipant[]
 
   @@unique([discordId, ingameName])
   @@index([discordId])
@@ -397,6 +399,7 @@ model Alliance {
   rosterUploadEvents     RosterUploadEvent[]
   wars                   War[]
   defensePlans           WarDefensePlan[]
+  battlegroundsTournaments BattlegroundsTournament[]
 }
 
 model AllianceMembershipRequest {
@@ -532,6 +535,79 @@ model War {
 
   @@unique([allianceId, season, warNumber])
   @@index([allianceId])
+}
+
+model BattlegroundsTournament {
+  id              String                            @id @default(cuid())
+  allianceId      String?
+  createdById     String
+  name            String
+  description     String?
+  scope           BattlegroundsTournamentScope      @default(COMMUNITY)
+  format          BattlegroundsTournamentFormat     @default(SINGLE_ELIMINATION)
+  status          BattlegroundsTournamentStatus     @default(DRAFT)
+  checkInStartsAt DateTime?
+  startsAt        DateTime?
+  createdAt       DateTime                          @default(now())
+  updatedAt       DateTime                          @updatedAt
+  alliance        Alliance?                         @relation(fields: [allianceId], references: [id], onDelete: SetNull)
+  createdBy       Player                            @relation("BattlegroundsTournamentCreator", fields: [createdById], references: [id])
+  participants    BattlegroundsTournamentParticipant[]
+  matches         BattlegroundsTournamentMatch[]
+
+  @@index([allianceId, status])
+  @@index([createdById])
+  @@index([startsAt])
+}
+
+model BattlegroundsTournamentParticipant {
+  id           String                  @id @default(cuid())
+  tournamentId String
+  playerId     String
+  seed         Int?
+  battlegroup  Int?
+  status       TournamentParticipantStatus @default(INVITED)
+  checkedInAt  DateTime?
+  notes        String?
+  createdAt    DateTime                @default(now())
+  updatedAt    DateTime                @updatedAt
+  tournament   BattlegroundsTournament @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  player       Player                  @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  homeMatches  BattlegroundsTournamentMatch[] @relation("BattlegroundsMatchHome")
+  awayMatches  BattlegroundsTournamentMatch[] @relation("BattlegroundsMatchAway")
+  wonMatches   BattlegroundsTournamentMatch[] @relation("BattlegroundsMatchWinner")
+
+  @@unique([tournamentId, playerId])
+  @@unique([tournamentId, seed])
+  @@index([playerId])
+  @@index([tournamentId, battlegroup])
+}
+
+model BattlegroundsTournamentMatch {
+  id              String                         @id @default(cuid())
+  tournamentId    String
+  round           Int
+  matchNumber     Int
+  status          BattlegroundsMatchStatus       @default(PENDING)
+  homeParticipantId String?
+  awayParticipantId String?
+  winnerParticipantId String?
+  homeScore       Int?
+  awayScore       Int?
+  scheduledAt     DateTime?
+  notes           String?
+  createdAt       DateTime                       @default(now())
+  updatedAt       DateTime                       @updatedAt
+  tournament      BattlegroundsTournament        @relation(fields: [tournamentId], references: [id], onDelete: Cascade)
+  homeParticipant BattlegroundsTournamentParticipant? @relation("BattlegroundsMatchHome", fields: [homeParticipantId], references: [id], onDelete: SetNull)
+  awayParticipant BattlegroundsTournamentParticipant? @relation("BattlegroundsMatchAway", fields: [awayParticipantId], references: [id], onDelete: SetNull)
+  winnerParticipant BattlegroundsTournamentParticipant? @relation("BattlegroundsMatchWinner", fields: [winnerParticipantId], references: [id], onDelete: SetNull)
+
+  @@unique([tournamentId, round, matchNumber])
+  @@index([tournamentId, status])
+  @@index([homeParticipantId])
+  @@index([awayParticipantId])
+  @@index([winnerParticipantId])
 }
 
 model WarDefensePlan {
@@ -1173,6 +1249,45 @@ enum WarStatus {
 enum WarMapType {
   STANDARD
   BIG_THING
+}
+
+enum BattlegroundsTournamentFormat {
+  SINGLE_ELIMINATION
+  DOUBLE_ELIMINATION
+  SWISS
+  SWISS_TOP_CUT
+  ROUND_ROBIN
+  LADDER
+}
+
+enum BattlegroundsTournamentScope {
+  COMMUNITY
+  ALLIANCE
+}
+
+enum BattlegroundsTournamentStatus {
+  DRAFT
+  REGISTRATION
+  CHECK_IN
+  LIVE
+  FINISHED
+  ARCHIVED
+}
+
+enum TournamentParticipantStatus {
+  INVITED
+  CONFIRMED
+  CHECKED_IN
+  DROPPED
+}
+
+enum BattlegroundsMatchStatus {
+  PENDING
+  READY
+  PLAYING
+  REPORTED
+  DISPUTED
+  FINAL
 }
 
 enum DuelStatus {

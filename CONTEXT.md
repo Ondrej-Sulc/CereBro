@@ -47,3 +47,9 @@ Player Profile is an MCOC account/profile stored in CereBro. A Discord user may 
 Active Player Profile is the Player Profile currently selected by its owning Discord user. It is not an activity, freshness, visibility, or status flag.
 
 Real Alliance is an Alliance intended to represent an actual MCOC alliance. Infrastructure records and empty orphan records are not Real Alliances.
+
+## Battlegrounds Tournaments
+
+Battlegrounds Tournaments is the organizer workspace for creating and running MCOC Battlegrounds events.
+
+It owns tournament scope, status, format, registration/check-in timing, seeded participants, optional battlegroup-aware field organization, and match records used by the tournament control page. Tournament scope can be Community for open/friendly events outside an alliance or Alliance for internal alliance friendlies. Bracket generation and match reporting build on this organizer model instead of replacing it.
