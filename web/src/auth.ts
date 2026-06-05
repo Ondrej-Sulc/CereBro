@@ -4,6 +4,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 import { getFromCache } from "@/lib/cache"
 import logger from "@/lib/logger"
+import { syncDiscordProfileOnSignIn } from "@/lib/discord-profile-sync"
 
 if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
   logger.error("Missing Discord environment variables: DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET required for Auth.js");
@@ -44,73 +45,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           
           logger.info({ discordId, name: user.name }, "Processing sign in for Discord user");
 
-          const avatar = user.image || null;
-
-          // 1. Ensure BotUser exists and sync avatar
-          const botUser = await prisma.botUser.upsert({
-            where: { discordId },
-            update: { avatar },
-            create: { discordId, avatar }
+          await syncDiscordProfileOnSignIn({
+            prisma,
+            discordId,
+            profile,
+            authUserImage: user.image,
+            authUserName: user.name,
           });
-
-          // 2. Sync avatar to all player profiles that use the Discord avatar
-          await prisma.player.updateMany({
-              where: { 
-                  discordId,
-                  useDiscordAvatar: true
-              },
-              data: { avatar }
-          });
-
-          // 3. Check if user has any Player profiles
-          const existingPlayers = await prisma.player.findMany({
-            where: { discordId },
-            orderBy: { createdAt: 'asc' }
-          });
-
-          if (existingPlayers.length === 0) {
-            // Create a default profile if they don't have one
-            const discordProfile = profile as { global_name?: string; name?: string };
-            const ingameName = discordProfile.global_name || discordProfile.name || user.name || "New Player";
-
-            logger.info({ discordId, ingameName }, "Creating new player profile");
-            const newPlayer = await prisma.player.create({
-              data: {
-                discordId,
-                ingameName,
-                avatar,
-                useDiscordAvatar: true,
-                isActive: true,
-                botUserId: botUser.id
-              }
-            });
-
-            // Set as active profile if BotUser doesn't have one
-            if (!botUser.activeProfileId) {
-              await prisma.botUser.update({
-                where: { id: botUser.id },
-                data: { activeProfileId: newPlayer.id }
-              });
-            }
-          } else {
-              const unlinkedPlayers = existingPlayers.filter(p => !p.botUserId);
-              if (unlinkedPlayers.length > 0) {
-                  // Link existing players to botUser if they weren't linked (e.g. legacy data)
-                  logger.info({ discordId, count: unlinkedPlayers.length }, "Linking existing players to BotUser");
-                  await prisma.player.updateMany({
-                      where: { id: { in: unlinkedPlayers.map(p => p.id) } },
-                      data: { botUserId: botUser.id }
-                  });
-                  
-                  if (!botUser.activeProfileId) {
-                      const activeLegacy = unlinkedPlayers.find(p => p.isActive) || unlinkedPlayers[0];
-                      await prisma.botUser.update({
-                        where: { id: botUser.id },
-                        data: { activeProfileId: activeLegacy.id }
-                      });
-                  }
-              }
-          }
         }
         return true;
       } catch (error) {
