@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { VersionChecker } from "@/components/version-checker";
 import { QueryErrorToast } from "@/components/QueryErrorToast";
 import { getAppVersion } from "@/lib/app-version";
+import { getMetadataIcons } from "@/lib/app-icons";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -24,16 +25,7 @@ export const metadata: Metadata = {
   description: "CereBro is a comprehensive management platform for MCOC Alliances, offering advanced roster tracking via image processing, strategic war planning, automated AQ management, and deep champion insights.",
   applicationName: "CereBro",
   manifest: "/manifest.webmanifest",
-  icons: {
-    icon: [
-      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
-      { url: "/CereBro_logo_512.png", sizes: "512x512", type: "image/png" },
-    ],
-    apple: [
-      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
-    ],
-    shortcut: ["/icon-192.png"],
-  },
+  icons: getMetadataIcons(),
   appleWebApp: {
     capable: true,
     title: "CereBro",
