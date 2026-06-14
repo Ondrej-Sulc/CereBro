@@ -318,6 +318,9 @@ function MatchResultControls({
 }) {
   const firstPlayer = match.homeParticipant;
   const secondPlayer = match.awayParticipant;
+  const [firstScore, setFirstScore] = useState(match.homeScore?.toString() ?? "");
+  const [secondScore, setSecondScore] = useState(match.awayScore?.toString() ?? "");
+  const [winnerId, setWinnerId] = useState(match.winnerParticipantId ?? "");
 
   if (!firstPlayer) return null;
 
@@ -338,6 +341,21 @@ function MatchResultControls({
     );
   }
 
+  const inferWinner = (nextFirstScore: string, nextSecondScore: string) => {
+    const parsedFirstScore = Number(nextFirstScore);
+    const parsedSecondScore = Number(nextSecondScore);
+    if (!Number.isInteger(parsedFirstScore) || !Number.isInteger(parsedSecondScore)) return "";
+    if (parsedFirstScore === parsedSecondScore) return "";
+    return parsedFirstScore > parsedSecondScore ? firstPlayer.id : secondPlayer.id;
+  };
+
+  const updateScores = (nextFirstScore: string, nextSecondScore: string) => {
+    setFirstScore(nextFirstScore);
+    setSecondScore(nextSecondScore);
+    const inferredWinnerId = inferWinner(nextFirstScore, nextSecondScore);
+    if (inferredWinnerId) setWinnerId(inferredWinnerId);
+  };
+
   return (
     <form
       className="mt-3 space-y-3 border-t border-slate-800 pt-3"
@@ -354,7 +372,8 @@ function MatchResultControls({
             type="number"
             min={0}
             inputMode="numeric"
-            defaultValue={match.homeScore ?? ""}
+            value={firstScore}
+            onChange={(event) => updateScores(event.target.value, secondScore)}
             placeholder="0"
             aria-label={`${firstPlayer.player.ingameName} score`}
             className="h-9 border-slate-800 bg-slate-950 text-center font-mono text-base"
@@ -368,12 +387,33 @@ function MatchResultControls({
             type="number"
             min={0}
             inputMode="numeric"
-            defaultValue={match.awayScore ?? ""}
+            value={secondScore}
+            onChange={(event) => updateScores(firstScore, event.target.value)}
             placeholder="0"
             aria-label={`${secondPlayer.player.ingameName} score`}
             className="h-9 border-slate-800 bg-slate-950 text-center font-mono text-base"
           />
         </label>
+      </div>
+
+      <div className="grid grid-cols-4 gap-1.5">
+        {[
+          { label: "2-0", first: "2", second: "0" },
+          { label: "2-1", first: "2", second: "1" },
+          { label: "0-2", first: "0", second: "2" },
+          { label: "1-2", first: "1", second: "2" },
+        ].map((preset) => (
+          <Button
+            key={preset.label}
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => updateScores(preset.first, preset.second)}
+            className="h-8 border-slate-800 bg-slate-950 px-2 font-mono text-xs text-slate-300 hover:bg-slate-900 hover:text-white"
+          >
+            {preset.label}
+          </Button>
+        ))}
       </div>
 
       <div className="grid grid-cols-2 gap-2" aria-label="Winner">
@@ -383,7 +423,8 @@ function MatchResultControls({
               type="radio"
               name="winnerParticipantId"
               value={participant.id}
-              defaultChecked={match.winnerParticipantId === participant.id}
+              checked={winnerId === participant.id}
+              onChange={() => setWinnerId(participant.id)}
               className="peer sr-only"
             />
             <span className="flex min-w-0 items-center justify-center gap-1 rounded-md border border-slate-800 bg-slate-950 px-2 py-2 text-center text-xs font-semibold text-slate-400 transition-colors peer-checked:border-emerald-500/50 peer-checked:bg-emerald-500/15 peer-checked:text-emerald-200">
