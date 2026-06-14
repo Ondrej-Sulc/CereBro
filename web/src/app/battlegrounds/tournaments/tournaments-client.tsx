@@ -38,6 +38,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
   addTournamentParticipant,
+  checkInTournamentParticipant,
   createTournamentMatch,
   deleteTournamentMatch,
   generateTournamentMatches,
@@ -565,7 +566,8 @@ export function BattlegroundsTournamentsClient({
   };
 
   const participants = selectedTournament ? sortParticipants(selectedTournament) : [];
-  const isCurrentUserEntered = participants.some((entry) => entry.player.id === currentPlayerId);
+  const currentUserEntry = participants.find((entry) => entry.player.id === currentPlayerId) ?? null;
+  const isCurrentUserEntered = !!currentUserEntry;
   const canManageSelected = !!selectedTournament && (
     manageableTournamentIdSet.has(selectedTournament.id) ||
     selectedTournament.createdById === currentPlayerId
@@ -573,6 +575,10 @@ export function BattlegroundsTournamentsClient({
   const canJoinSelected = !!selectedTournament &&
     !isCurrentUserEntered &&
     ["REGISTRATION", "CHECK_IN"].includes(selectedTournament.status);
+  const canCheckInSelected = !!selectedTournament &&
+    !!currentUserEntry &&
+    currentUserEntry.status !== "CHECKED_IN" &&
+    selectedTournament.status === "CHECK_IN";
   const checkedInCount = participants.filter((entry) => entry.status === "CHECKED_IN").length;
   const bgCounts = [1, 2, 3].map((bg) => ({
     bg,
@@ -682,31 +688,41 @@ export function BattlegroundsTournamentsClient({
                       </p>
                     </div>
                     <div className="flex flex-col gap-2 sm:flex-row">
-                    {canJoinSelected && (
-                      <Button
-                        disabled={isPending}
-                        onClick={() => runAction(() => joinTournament(selectedTournament.id))}
-                        className="bg-emerald-500 text-slate-950 hover:bg-emerald-400"
-                      >
-                        <CheckCircle2 className="h-4 w-4" />
-                        Join
-                      </Button>
-                    )}
-                    {canManageSelected && (
-                      <Select
-                        value={selectedTournament.status}
-                        onValueChange={(value) => runAction(() => updateTournamentStatus(selectedTournament.id, value as BattlegroundsTournamentStatus))}
-                      >
-                        <SelectTrigger className="w-full border-slate-800 bg-slate-900 text-slate-100 sm:w-48">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="border-slate-800 bg-slate-950 text-slate-100">
-                          {Object.values(BattlegroundsTournamentStatus).map((status) => (
-                            <SelectItem key={status} value={status}>{statusLabels[status]}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
+                      {canJoinSelected && (
+                        <Button
+                          disabled={isPending}
+                          onClick={() => runAction(() => joinTournament(selectedTournament.id))}
+                          className="bg-emerald-500 text-slate-950 hover:bg-emerald-400"
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                          Join
+                        </Button>
+                      )}
+                      {canCheckInSelected && (
+                        <Button
+                          disabled={isPending}
+                          onClick={() => runAction(() => checkInTournamentParticipant(selectedTournament.id))}
+                          className="bg-cyan-500 text-slate-950 hover:bg-cyan-400"
+                        >
+                          <CheckCircle2 className="h-4 w-4" />
+                          Check in
+                        </Button>
+                      )}
+                      {canManageSelected && (
+                        <Select
+                          value={selectedTournament.status}
+                          onValueChange={(value) => runAction(() => updateTournamentStatus(selectedTournament.id, value as BattlegroundsTournamentStatus))}
+                        >
+                          <SelectTrigger className="w-full border-slate-800 bg-slate-900 text-slate-100 sm:w-48">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="border-slate-800 bg-slate-950 text-slate-100">
+                            {Object.values(BattlegroundsTournamentStatus).map((status) => (
+                              <SelectItem key={status} value={status}>{statusLabels[status]}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      )}
                     </div>
                   </div>
                 </div>

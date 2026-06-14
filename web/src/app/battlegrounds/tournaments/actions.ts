@@ -544,6 +544,60 @@ export const joinTournament = withActionContext(
   }
 );
 
+export const checkInTournamentParticipant = withActionContext(
+  "checkInBattlegroundsTournamentParticipant",
+  async (tournamentId: string): Promise<TournamentActionResult> => {
+    const player = await requireTournamentPlanner();
+
+    const participant = await prisma.battlegroundsTournamentParticipant.findUnique({
+      where: {
+        tournamentId_playerId: {
+          tournamentId,
+          playerId: player.id,
+        },
+      },
+      select: {
+        id: true,
+        status: true,
+        tournament: {
+          select: {
+            status: true,
+            scope: true,
+            allianceId: true,
+          },
+        },
+      },
+    });
+
+    if (!participant) {
+      return { success: false, error: "Join this tournament before checking in." };
+    }
+
+    if (participant.tournament.scope === BattlegroundsTournamentScope.ALLIANCE && participant.tournament.allianceId !== player.allianceId) {
+      return { success: false, error: "This tournament is limited to its alliance." };
+    }
+
+    if (participant.tournament.status !== BattlegroundsTournamentStatus.CHECK_IN) {
+      return { success: false, error: "Check-in is not open for this tournament." };
+    }
+
+    if (participant.status === TournamentParticipantStatus.CHECKED_IN) {
+      return { success: true };
+    }
+
+    await prisma.battlegroundsTournamentParticipant.update({
+      where: { id: participant.id },
+      data: {
+        status: TournamentParticipantStatus.CHECKED_IN,
+        checkedInAt: new Date(),
+      },
+    });
+
+    revalidatePath(TOURNAMENTS_PATH);
+    return { success: true };
+  }
+);
+
 export const generateTournamentMatches = withActionContext(
   "generateBattlegroundsTournamentMatches",
   async (tournamentId: string): Promise<TournamentActionResult> => {

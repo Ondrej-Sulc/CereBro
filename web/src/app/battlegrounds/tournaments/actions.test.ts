@@ -10,6 +10,10 @@ const prismaFake = vi.hoisted(() => ({
     findUnique: vi.fn(),
     update: vi.fn(),
   },
+  battlegroundsTournamentParticipant: {
+    findUnique: vi.fn(),
+    update: vi.fn(),
+  },
 }));
 
 const authHelpersFake = vi.hoisted(() => ({
@@ -34,6 +38,7 @@ vi.mock("@/lib/with-request-context", () => ({
 vi.mock("next/cache", () => cacheFake);
 
 import {
+  checkInTournamentParticipant,
   createTournament,
   generateTournamentMatches,
   recordTournamentMatchResult,
@@ -66,6 +71,7 @@ describe("battlegrounds tournament actions", () => {
     prismaFake.battlegroundsTournament.create.mockResolvedValue({ id: "tournament_1" });
     prismaFake.battlegroundsTournamentMatch.createMany.mockResolvedValue({ count: 2 });
     prismaFake.battlegroundsTournamentMatch.update.mockResolvedValue({ id: "match_1" });
+    prismaFake.battlegroundsTournamentParticipant.update.mockResolvedValue({ id: "participant_1" });
   });
 
   it("stores datetime-local values using the browser timezone offset", async () => {
@@ -200,6 +206,47 @@ describe("battlegrounds tournament actions", () => {
     });
 
     expect(prismaFake.battlegroundsTournamentMatch.createMany).not.toHaveBeenCalled();
+  });
+
+  it("checks in the current player during check-in", async () => {
+    prismaFake.battlegroundsTournamentParticipant.findUnique.mockResolvedValue({
+      id: "participant_1",
+      status: "CONFIRMED",
+      tournament: {
+        status: "CHECK_IN",
+        scope: "ALLIANCE",
+        allianceId: "alliance_1",
+      },
+    });
+
+    await expect(checkInTournamentParticipant("tournament_1")).resolves.toEqual({ success: true });
+
+    expect(prismaFake.battlegroundsTournamentParticipant.update).toHaveBeenCalledWith({
+      where: { id: "participant_1" },
+      data: expect.objectContaining({
+        status: "CHECKED_IN",
+        checkedInAt: expect.any(Date),
+      }),
+    });
+  });
+
+  it("does not check in before the check-in phase", async () => {
+    prismaFake.battlegroundsTournamentParticipant.findUnique.mockResolvedValue({
+      id: "participant_1",
+      status: "CONFIRMED",
+      tournament: {
+        status: "REGISTRATION",
+        scope: "COMMUNITY",
+        allianceId: null,
+      },
+    });
+
+    await expect(checkInTournamentParticipant("tournament_1")).resolves.toEqual({
+      success: false,
+      error: "Check-in is not open for this tournament.",
+    });
+
+    expect(prismaFake.battlegroundsTournamentParticipant.update).not.toHaveBeenCalled();
   });
 
   it("records a final result and infers the winner from scores", async () => {
