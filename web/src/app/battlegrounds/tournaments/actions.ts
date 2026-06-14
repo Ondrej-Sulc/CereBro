@@ -198,6 +198,37 @@ function pairHighLow(participantIds: string[]) {
   return pairs;
 }
 
+function nextPowerOfTwo(value: number) {
+  let size = 1;
+  while (size < value) size *= 2;
+  return size;
+}
+
+function singleEliminationFirstRoundPairs(participantIds: string[]) {
+  const bracketSize = nextPowerOfTwo(participantIds.length);
+  const byeCount = bracketSize - participantIds.length;
+
+  if (byeCount === 0) return pairHighLow(participantIds);
+
+  const byes = participantIds.slice(0, byeCount);
+  const contenders = participantIds.slice(byeCount);
+  const contenderPairs = pairHighLow(contenders);
+  const slotCount = bracketSize / 2;
+  const pairs: Array<[string, string | null]> = [];
+
+  for (let slot = 0; slot < slotCount; slot += 1) {
+    if (slot === 0 && byes.length > 0) {
+      pairs.push([byes.shift()!, null]);
+    } else if (contenderPairs.length > 0) {
+      pairs.push(contenderPairs.shift()!);
+    } else if (byes.length > 0) {
+      pairs.push([byes.shift()!, null]);
+    }
+  }
+
+  return pairs;
+}
+
 function pairAdjacent(participantIds: string[]) {
   const pairs: Array<[string, string | null]> = [];
 
@@ -235,7 +266,7 @@ function supportsAutomaticGeneration(format: BattlegroundsTournamentFormat) {
 
 function singleEliminationPairs(tournament: NonNullable<TournamentForMatches>, round: number) {
   if (round === 1) {
-    return { pairs: pairHighLow(sortedEntrants(tournament).map((entrant) => entrant.id)) };
+    return { pairs: singleEliminationFirstRoundPairs(sortedEntrants(tournament).map((entrant) => entrant.id)) };
   }
 
   const previousRoundMatches = tournament.matches

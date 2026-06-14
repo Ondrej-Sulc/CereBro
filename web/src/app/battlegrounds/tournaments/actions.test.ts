@@ -122,6 +122,59 @@ describe("battlegrounds tournament actions", () => {
     });
   });
 
+  it("places top-seed byes in the first single elimination round", async () => {
+    prismaFake.battlegroundsTournament.findUnique.mockResolvedValue({
+      id: "tournament_1",
+      allianceId: "alliance_1",
+      createdById: "player_1",
+      format: "SINGLE_ELIMINATION",
+      participants: [
+        { id: "p1", seed: 1, createdAt: new Date("2026-01-01T00:00:00Z") },
+        { id: "p2", seed: 2, createdAt: new Date("2026-01-02T00:00:00Z") },
+        { id: "p3", seed: 3, createdAt: new Date("2026-01-03T00:00:00Z") },
+        { id: "p4", seed: 4, createdAt: new Date("2026-01-04T00:00:00Z") },
+        { id: "p5", seed: 5, createdAt: new Date("2026-01-05T00:00:00Z") },
+        { id: "p6", seed: 6, createdAt: new Date("2026-01-06T00:00:00Z") },
+      ],
+      matches: [],
+    });
+
+    await expect(generateTournamentMatches("tournament_1")).resolves.toEqual({ success: true });
+
+    expect(prismaFake.battlegroundsTournamentMatch.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          round: 1,
+          matchNumber: 1,
+          homeParticipantId: "p1",
+          awayParticipantId: null,
+          status: "READY",
+        }),
+        expect.objectContaining({
+          round: 1,
+          matchNumber: 2,
+          homeParticipantId: "p3",
+          awayParticipantId: "p6",
+          status: "READY",
+        }),
+        expect.objectContaining({
+          round: 1,
+          matchNumber: 3,
+          homeParticipantId: "p4",
+          awayParticipantId: "p5",
+          status: "READY",
+        }),
+        expect.objectContaining({
+          round: 1,
+          matchNumber: 4,
+          homeParticipantId: "p2",
+          awayParticipantId: null,
+          status: "READY",
+        }),
+      ],
+    });
+  });
+
   it("generates the next single elimination round from previous winners", async () => {
     prismaFake.battlegroundsTournament.findUnique.mockResolvedValue({
       id: "tournament_1",
