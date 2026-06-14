@@ -279,4 +279,103 @@ describe("battlegrounds tournament actions", () => {
       }),
     });
   });
+
+  it("rejects a final result when the selected winner contradicts the score", async () => {
+    prismaFake.battlegroundsTournamentMatch.findUnique.mockResolvedValue({
+      id: "match_1",
+      homeParticipantId: "p1",
+      awayParticipantId: "p2",
+      tournament: {
+        id: "tournament_1",
+        allianceId: "alliance_1",
+        createdById: "player_1",
+      },
+    });
+
+    const formData = new FormData();
+    formData.set("matchId", "match_1");
+    formData.set("homeScore", "3");
+    formData.set("awayScore", "2");
+    formData.set("winnerParticipantId", "p2");
+    formData.set("status", "FINAL");
+
+    await expect(recordTournamentMatchResult(formData)).resolves.toEqual({
+      success: false,
+      error: "Winner must match the score.",
+    });
+
+    expect(prismaFake.battlegroundsTournamentMatch.update).not.toHaveBeenCalled();
+  });
+
+  it("rejects a scoreless final between two players", async () => {
+    prismaFake.battlegroundsTournamentMatch.findUnique.mockResolvedValue({
+      id: "match_1",
+      homeParticipantId: "p1",
+      awayParticipantId: "p2",
+      tournament: {
+        id: "tournament_1",
+        allianceId: "alliance_1",
+        createdById: "player_1",
+      },
+    });
+
+    const formData = new FormData();
+    formData.set("matchId", "match_1");
+    formData.set("winnerParticipantId", "p1");
+    formData.set("status", "FINAL");
+
+    await expect(recordTournamentMatchResult(formData)).resolves.toEqual({
+      success: false,
+      error: "Final matches need both scores.",
+    });
+
+    expect(prismaFake.battlegroundsTournamentMatch.update).not.toHaveBeenCalled();
+  });
+
+  it("allows a scoreless final for bye advancement", async () => {
+    prismaFake.battlegroundsTournamentMatch.findUnique.mockResolvedValue({
+      id: "match_1",
+      homeParticipantId: "p1",
+      awayParticipantId: null,
+      tournament: {
+        id: "tournament_1",
+        allianceId: "alliance_1",
+        createdById: "player_1",
+      },
+    });
+
+    const formData = new FormData();
+    formData.set("matchId", "match_1");
+    formData.set("winnerParticipantId", "p1");
+    formData.set("status", "FINAL");
+
+    await expect(recordTournamentMatchResult(formData)).resolves.toEqual({ success: true });
+
+    expect(prismaFake.battlegroundsTournamentMatch.update).toHaveBeenCalledWith({
+      where: { id: "match_1" },
+      data: expect.objectContaining({
+        homeScore: null,
+        awayScore: null,
+        winnerParticipantId: "p1",
+        status: "FINAL",
+      }),
+    });
+  });
+
+  it("rejects invalid match statuses", async () => {
+    const formData = new FormData();
+    formData.set("matchId", "match_1");
+    formData.set("homeScore", "3");
+    formData.set("awayScore", "2");
+    formData.set("winnerParticipantId", "p1");
+    formData.set("status", "BROKEN");
+
+    await expect(recordTournamentMatchResult(formData)).resolves.toEqual({
+      success: false,
+      error: "Choose a valid match status.",
+    });
+
+    expect(prismaFake.battlegroundsTournamentMatch.findUnique).not.toHaveBeenCalled();
+    expect(prismaFake.battlegroundsTournamentMatch.update).not.toHaveBeenCalled();
+  });
 });

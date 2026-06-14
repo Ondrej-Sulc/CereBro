@@ -118,10 +118,10 @@ function readOptionalScore(formData: FormData, key: string) {
 }
 
 function parseMatchStatus(value: FormDataEntryValue | null) {
-  if (typeof value !== "string") return BattlegroundsMatchStatus.FINAL;
+  if (typeof value !== "string") return null;
   return Object.values(BattlegroundsMatchStatus).includes(value as BattlegroundsMatchStatus)
     ? value as BattlegroundsMatchStatus
-    : BattlegroundsMatchStatus.FINAL;
+    : null;
 }
 
 type TournamentForMatches = Awaited<ReturnType<typeof loadManagedTournamentForMatches>>;
@@ -699,6 +699,10 @@ export const recordTournamentMatchResult = withActionContext(
       return { success: false, error: "Scores must be whole numbers or left empty." };
     }
 
+    if (!status) {
+      return { success: false, error: "Choose a valid match status." };
+    }
+
     const match = await prisma.battlegroundsTournamentMatch.findUnique({
       where: { id: matchId },
       select: {
@@ -731,6 +735,24 @@ export const recordTournamentMatchResult = withActionContext(
 
     if (status === BattlegroundsMatchStatus.FINAL && !winnerParticipantId) {
       return { success: false, error: "Final matches need a winner." };
+    }
+
+    const isByeMatch = !match.awayParticipantId;
+    if (status === BattlegroundsMatchStatus.FINAL && !isByeMatch) {
+      if (homeScore === null || awayScore === null) {
+        return { success: false, error: "Final matches need both scores." };
+      }
+
+      if (homeScore === awayScore) {
+        return { success: false, error: "Final matches cannot end tied." };
+      }
+
+      const scoreWinnerId = homeScore > awayScore ? match.homeParticipantId : match.awayParticipantId;
+      if (winnerParticipantId && winnerParticipantId !== scoreWinnerId) {
+        return { success: false, error: "Winner must match the score." };
+      }
+
+      winnerParticipantId = scoreWinnerId;
     }
 
     await prisma.battlegroundsTournamentMatch.update({
