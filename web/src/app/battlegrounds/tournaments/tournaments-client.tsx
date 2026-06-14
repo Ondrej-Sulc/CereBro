@@ -13,6 +13,8 @@ import {
   CheckCircle2,
   CircleDot,
   ClipboardList,
+  Crown,
+  Flag,
   Plus,
   Swords,
   Trash2,
@@ -134,6 +136,8 @@ type Props = {
 };
 
 type RunTournamentAction = (action: () => Promise<TournamentActionResult>) => void;
+type TournamentMatch = TournamentSummary["matches"][number];
+type TournamentMatchParticipant = NonNullable<TournamentMatch["homeParticipant"]>;
 
 function matchStatusTone(status: BattlegroundsMatchStatus) {
   switch (status) {
@@ -250,28 +254,53 @@ function buildStandings(tournament: TournamentSummary) {
   });
 }
 
+function participantMeta(participant: TournamentMatchParticipant | null) {
+  if (!participant) return null;
+
+  const parts = [];
+  if (participant.seed !== null) parts.push(`Seed ${participant.seed}`);
+  if (participant.battlegroup !== null) parts.push(`BG${participant.battlegroup}`);
+
+  return parts.join(" / ");
+}
+
 function BracketPlayerRow({
-  name,
+  participant,
+  fallbackName,
   score,
   isWinner,
   isBye,
 }: {
-  name: string;
+  participant: TournamentMatchParticipant | null;
+  fallbackName: string;
   score: number | null;
   isWinner: boolean;
   isBye?: boolean;
 }) {
+  const meta = participantMeta(participant);
+  const name = participant?.player.ingameName ?? fallbackName;
+
   return (
     <div className={cn(
-      "flex items-center justify-between gap-3 rounded-md border px-3 py-2",
+      "grid grid-cols-[1fr_auto] items-center gap-3 rounded-md border px-3 py-2.5 transition-colors",
       isWinner
-        ? "border-emerald-400/40 bg-emerald-500/15 text-emerald-100"
+        ? "border-emerald-400/50 bg-emerald-500/15 text-emerald-100 shadow-inner shadow-emerald-950/20"
         : "border-slate-800 bg-slate-950/70 text-slate-300",
       isBye && "text-slate-600"
     )}>
-      <span className="min-w-0 truncate text-sm font-semibold">{name}</span>
-      <span className={cn("font-mono text-sm", isWinner ? "text-emerald-200" : "text-slate-500")}>
-        {score ?? "-"}
+      <div className="min-w-0">
+        <div className="flex min-w-0 items-center gap-2">
+          {isWinner && <Crown className="h-3.5 w-3.5 shrink-0 text-emerald-300" />}
+          {isBye && <Flag className="h-3.5 w-3.5 shrink-0 text-slate-600" />}
+          <span className="truncate text-sm font-semibold">{name}</span>
+        </div>
+        {meta && <p className="mt-0.5 truncate text-[11px] font-medium uppercase tracking-wide text-slate-500">{meta}</p>}
+      </div>
+      <span className={cn(
+        "min-w-8 rounded border px-2 py-1 text-center font-mono text-sm",
+        isWinner ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-200" : "border-slate-800 bg-slate-900 text-slate-500"
+      )}>
+        {score ?? "--"}
       </span>
     </div>
   );
@@ -282,7 +311,7 @@ function MatchResultControls({
   isPending,
   runAction,
 }: {
-  match: TournamentSummary["matches"][number];
+  match: TournamentMatch;
   isPending: boolean;
   runAction: RunTournamentAction;
 }) {
@@ -300,9 +329,9 @@ function MatchResultControls({
         <input type="hidden" name="matchId" value={match.id} />
         <input type="hidden" name="winnerParticipantId" value={firstPlayer.id} />
         <input type="hidden" name="status" value="FINAL" />
-        <Button disabled={isPending} size="sm" className="w-full bg-emerald-500 text-slate-950 hover:bg-emerald-400">
+        <Button disabled={isPending || match.status === "FINAL"} size="sm" className="w-full bg-emerald-500 text-slate-950 hover:bg-emerald-400">
           <CheckCircle2 className="h-4 w-4" />
-          Advance
+          {match.status === "FINAL" ? "Advanced" : "Advance bye"}
         </Button>
       </form>
     );
@@ -321,26 +350,32 @@ function MatchResultControls({
           <span className="block truncate text-xs font-semibold text-slate-500">{firstPlayer.player.ingameName}</span>
           <Input
             name="homeScore"
+            type="number"
+            min={0}
             inputMode="numeric"
             defaultValue={match.homeScore ?? ""}
             placeholder="0"
-            className="h-9 border-slate-800 bg-slate-950 text-center font-mono"
+            aria-label={`${firstPlayer.player.ingameName} score`}
+            className="h-9 border-slate-800 bg-slate-950 text-center font-mono text-base"
           />
         </label>
-        <span className="pb-2 font-mono text-sm text-slate-600">vs</span>
+        <span className="pb-2 text-xs font-bold uppercase tracking-wide text-slate-600">vs</span>
         <label className="space-y-1">
           <span className="block truncate text-xs font-semibold text-slate-500">{secondPlayer.player.ingameName}</span>
           <Input
             name="awayScore"
+            type="number"
+            min={0}
             inputMode="numeric"
             defaultValue={match.awayScore ?? ""}
             placeholder="0"
-            className="h-9 border-slate-800 bg-slate-950 text-center font-mono"
+            aria-label={`${secondPlayer.player.ingameName} score`}
+            className="h-9 border-slate-800 bg-slate-950 text-center font-mono text-base"
           />
         </label>
       </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-2 gap-2" aria-label="Winner">
         {[firstPlayer, secondPlayer].map((participant) => (
           <label key={participant.id} className="cursor-pointer">
             <input
@@ -350,8 +385,9 @@ function MatchResultControls({
               defaultChecked={match.winnerParticipantId === participant.id}
               className="peer sr-only"
             />
-            <span className="block truncate rounded-md border border-slate-800 bg-slate-950 px-2 py-1.5 text-center text-xs font-semibold text-slate-400 transition-colors peer-checked:border-emerald-500/50 peer-checked:bg-emerald-500/15 peer-checked:text-emerald-200">
-              {participant.player.ingameName}
+            <span className="flex min-w-0 items-center justify-center gap-1 rounded-md border border-slate-800 bg-slate-950 px-2 py-2 text-center text-xs font-semibold text-slate-400 transition-colors peer-checked:border-emerald-500/50 peer-checked:bg-emerald-500/15 peer-checked:text-emerald-200">
+              <Crown className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate">{participant.player.ingameName}</span>
             </span>
           </label>
         ))}
@@ -359,7 +395,7 @@ function MatchResultControls({
 
       <Button disabled={isPending} size="sm" className="w-full bg-cyan-500 text-slate-950 hover:bg-cyan-400">
         <CheckCircle2 className="h-4 w-4" />
-        Save final
+        Save result
       </Button>
     </form>
   );
@@ -377,6 +413,8 @@ function BracketFlow({
   runAction: RunTournamentAction;
 }) {
   const rounds = groupMatchesByRound(tournament);
+  const completedMatches = tournament.matches.filter((match) => match.status === "FINAL").length;
+  const activeMatches = tournament.matches.filter((match) => match.status === "PLAYING" || match.status === "REPORTED").length;
 
   if (rounds.length === 0) return null;
 
@@ -386,10 +424,10 @@ function BracketFlow({
         <div>
           <div className="flex items-center gap-2">
             <Trophy className="h-4 w-4 text-cyan-300" />
-            <h3 className="font-bold text-white">Spider Bracket</h3>
+            <h3 className="font-bold text-white">Bracket</h3>
           </div>
           <p className="mt-1 text-sm text-slate-500">
-            A round-by-round tree view of match winners advancing through the tournament.
+            {completedMatches} final / {activeMatches} active / {tournament.matches.length} total
           </p>
         </div>
         <Badge variant="outline" className="w-fit border-cyan-500/30 bg-cyan-500/10 text-cyan-200">
@@ -416,13 +454,23 @@ function BracketFlow({
               >
                 {matches.map((match) => {
                   const hasNextRound = roundIndex < rounds.length - 1;
+                  const isFinal = match.status === "FINAL";
+                  const isDisputed = match.status === "DISPUTED";
+                  const isActive = match.status === "PLAYING" || match.status === "REPORTED";
+                  const winnerName = match.winnerParticipant?.player.ingameName;
 
                   return (
                     <div key={match.id} className="relative">
                       {hasNextRound && (
                         <div className="pointer-events-none absolute -right-8 top-1/2 hidden h-px w-8 bg-cyan-400/30 lg:block" />
                       )}
-                      <div className="rounded-lg border border-slate-800 bg-slate-900/70 p-3 shadow-lg shadow-black/20">
+                      <div className={cn(
+                        "rounded-lg border p-3 shadow-lg shadow-black/20",
+                        isFinal && "border-emerald-500/35 bg-emerald-950/20",
+                        isActive && "border-cyan-500/35 bg-cyan-950/20",
+                        isDisputed && "border-red-500/35 bg-red-950/20",
+                        !isFinal && !isActive && !isDisputed && "border-slate-800 bg-slate-900/70"
+                      )}>
                         <div className="mb-3 flex items-center justify-between gap-2">
                           <span className="text-xs font-bold uppercase tracking-widest text-slate-500">
                             Match {match.matchNumber}
@@ -433,17 +481,25 @@ function BracketFlow({
                         </div>
                         <div className="space-y-2">
                           <BracketPlayerRow
-                            name={match.homeParticipant?.player.ingameName ?? "TBD"}
+                            participant={match.homeParticipant}
+                            fallbackName="TBD"
                             score={match.homeScore}
                             isWinner={match.winnerParticipantId === match.homeParticipantId}
                           />
                           <BracketPlayerRow
-                            name={match.awayParticipant?.player.ingameName ?? "Bye"}
+                            participant={match.awayParticipant}
+                            fallbackName="Bye"
                             score={match.awayScore}
                             isWinner={match.winnerParticipantId === match.awayParticipantId}
                             isBye={!match.awayParticipant}
                           />
                         </div>
+                        {winnerName && (
+                          <div className="mt-3 flex items-center gap-2 rounded-md border border-emerald-500/20 bg-emerald-500/10 px-3 py-2 text-xs font-semibold text-emerald-200">
+                            <Crown className="h-3.5 w-3.5" />
+                            <span className="min-w-0 truncate">Winner: {winnerName}</span>
+                          </div>
+                        )}
                         {canManage && (
                           <MatchResultControls
                             match={match}
@@ -902,7 +958,7 @@ export function BattlegroundsTournamentsClient({
                       </form>
                     )}
 
-                    <div className="mt-4 space-y-5">
+                    <div className="mt-5 space-y-3">
                       {matchRounds.length === 0 && (
                         <div className="rounded-lg border border-dashed border-slate-800 p-6 text-center">
                           <Swords className="mx-auto h-8 w-8 text-slate-700" />
@@ -913,54 +969,58 @@ export function BattlegroundsTournamentsClient({
                         </div>
                       )}
 
-                      {matchRounds.map(([round, matches]) => (
-                        <div key={round} className="space-y-3">
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-sm font-bold uppercase tracking-widest text-slate-400">Round {round}</h4>
-                            <div className="h-px flex-1 bg-slate-800" />
+                      {matchRounds.length > 0 && (
+                        <div className="overflow-hidden rounded-lg border border-slate-800 bg-slate-950/60">
+                          <div className="flex items-center justify-between border-b border-slate-800 px-3 py-2">
+                            <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Match log</p>
+                            <Badge variant="outline" className="border-slate-700 text-slate-400">
+                              {selectedTournament.matches.length} total
+                            </Badge>
                           </div>
-                          {matches.map((match) => (
-                            <div key={match.id} className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
-                              <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                          <div className="divide-y divide-slate-800">
+                            {matchRounds.flatMap(([round, matches]) => matches.map((match) => (
+                              <div key={match.id} className="grid gap-3 px-3 py-2 text-sm md:grid-cols-[90px_1fr_88px_auto] md:items-center">
+                                <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-slate-500">
+                                  <span>R{round}</span>
+                                  <span>M{match.matchNumber}</span>
+                                </div>
                                 <div className="min-w-0">
-                                  <div className="flex flex-wrap items-center gap-2">
-                                    <Badge variant="outline" className="border-slate-700 text-slate-400">
-                                      Match {match.matchNumber}
-                                    </Badge>
-                                    <Badge variant="outline" className={cn(matchStatusTone(match.status))}>
-                                      {matchStatusLabels[match.status]}
-                                    </Badge>
-                                  </div>
-                                  <div className="mt-3 grid grid-cols-1 gap-2 text-sm sm:grid-cols-[1fr_auto_1fr] sm:items-center">
-                                    <p className={cn("font-semibold", match.winnerParticipantId === match.homeParticipantId ? "text-emerald-300" : "text-slate-200")}>
+                                  <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
+                                    <p className={cn("truncate font-semibold", match.winnerParticipantId === match.homeParticipantId ? "text-emerald-300" : "text-slate-200")}>
                                       {match.homeParticipant?.player.ingameName ?? "TBD"}
                                     </p>
-                                    <p className="text-center font-mono text-slate-500">
-                                      {match.homeScore ?? "-"} : {match.awayScore ?? "-"}
+                                    <p className="rounded border border-slate-800 bg-slate-900 px-2 py-1 text-center font-mono text-xs text-slate-400">
+                                      {match.homeScore ?? "--"} : {match.awayScore ?? "--"}
                                     </p>
-                                    <p className={cn("font-semibold sm:text-right", match.winnerParticipantId === match.awayParticipantId ? "text-emerald-300" : "text-slate-200")}>
+                                    <p className={cn("truncate text-right font-semibold", match.winnerParticipantId === match.awayParticipantId ? "text-emerald-300" : "text-slate-200")}>
                                       {match.awayParticipant?.player.ingameName ?? "Bye"}
                                     </p>
                                   </div>
-                                  {match.notes && <p className="mt-2 text-xs text-slate-500">{match.notes}</p>}
+                                  {match.notes && <p className="mt-1 truncate text-xs text-slate-500">{match.notes}</p>}
                                 </div>
+                                <Badge variant="outline" className={cn("w-fit text-[10px]", matchStatusTone(match.status))}>
+                                  {matchStatusLabels[match.status]}
+                                </Badge>
 
-                                {canManageSelected && (
+                                {canManageSelected ? (
                                   <Button
                                     size="icon"
                                     variant="ghost"
                                     disabled={isPending}
                                     onClick={() => runAction(() => deleteTournamentMatch(match.id))}
-                                    className="h-8 w-8 shrink-0 text-slate-500 hover:bg-red-950/30 hover:text-red-300"
+                                    className="h-8 w-8 justify-self-end text-slate-500 hover:bg-red-950/30 hover:text-red-300"
+                                    aria-label={`Delete round ${round} match ${match.matchNumber}`}
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
+                                ) : (
+                                  <div />
                                 )}
                               </div>
-                            </div>
-                          ))}
+                            )))}
+                          </div>
                         </div>
-                      ))}
+                      )}
                     </div>
                   </TabsContent>
                 </Tabs>
