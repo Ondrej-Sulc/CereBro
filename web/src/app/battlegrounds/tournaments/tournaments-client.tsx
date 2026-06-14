@@ -580,6 +580,8 @@ export function BattlegroundsTournamentsClient({
     currentUserEntry.status !== "CHECKED_IN" &&
     selectedTournament.status === "CHECK_IN";
   const checkedInCount = participants.filter((entry) => entry.status === "CHECKED_IN").length;
+  const supportsAutomaticGenerationSelected = selectedTournament?.format === "SINGLE_ELIMINATION" ||
+    selectedTournament?.format === "ROUND_ROBIN";
   const bgCounts = [1, 2, 3].map((bg) => ({
     bg,
     count: participants.filter((entry) => entry.battlegroup === bg).length,
@@ -926,7 +928,7 @@ export function BattlegroundsTournamentsClient({
                       </div>
                       {canManageSelected && (
                         <Button
-                          disabled={isPending || participants.length < 2}
+                          disabled={isPending || participants.length < 2 || !supportsAutomaticGenerationSelected}
                           onClick={() => runAction(() => generateTournamentMatches(selectedTournament.id))}
                           className="bg-emerald-500 text-slate-950 hover:bg-emerald-400"
                         >
@@ -935,6 +937,11 @@ export function BattlegroundsTournamentsClient({
                         </Button>
                       )}
                     </div>
+                    {canManageSelected && !supportsAutomaticGenerationSelected && (
+                      <div className="mt-3 rounded-md border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+                        Automatic generation is available for single elimination and round robin. Add pairings manually for this format.
+                      </div>
+                    )}
 
                     {matchRounds.length > 0 && (
                       <div className="mt-5">

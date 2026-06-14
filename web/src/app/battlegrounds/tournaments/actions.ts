@@ -180,52 +180,6 @@ function sortedEntrants(tournament: NonNullable<TournamentForMatches>) {
   });
 }
 
-function standingsOrder(tournament: NonNullable<TournamentForMatches>) {
-  const standings = new Map<string, { participantId: string; wins: number; losses: number; pointsFor: number; pointsAgainst: number; seed: number; createdAt: Date }>();
-
-  for (const entrant of tournament.participants) {
-    standings.set(entrant.id, {
-      participantId: entrant.id,
-      wins: 0,
-      losses: 0,
-      pointsFor: 0,
-      pointsAgainst: 0,
-      seed: entrant.seed ?? 9999,
-      createdAt: entrant.createdAt,
-    });
-  }
-
-  for (const match of tournament.matches) {
-    if (match.status !== BattlegroundsMatchStatus.FINAL || !match.homeParticipantId || !match.awayParticipantId) continue;
-
-    const home = standings.get(match.homeParticipantId);
-    const away = standings.get(match.awayParticipantId);
-    if (!home || !away) continue;
-
-    home.pointsFor += match.homeScore ?? 0;
-    home.pointsAgainst += match.awayScore ?? 0;
-    away.pointsFor += match.awayScore ?? 0;
-    away.pointsAgainst += match.homeScore ?? 0;
-
-    if (match.winnerParticipantId === home.participantId) {
-      home.wins += 1;
-      away.losses += 1;
-    } else if (match.winnerParticipantId === away.participantId) {
-      away.wins += 1;
-      home.losses += 1;
-    }
-  }
-
-  return [...standings.values()].sort((a, b) => {
-    if (b.wins !== a.wins) return b.wins - a.wins;
-    const aDiff = a.pointsFor - a.pointsAgainst;
-    const bDiff = b.pointsFor - b.pointsAgainst;
-    if (bDiff !== aDiff) return bDiff - aDiff;
-    if (a.seed !== b.seed) return a.seed - b.seed;
-    return a.createdAt.getTime() - b.createdAt.getTime();
-  });
-}
-
 function pairHighLow(participantIds: string[]) {
   const pairs: Array<[string, string | null]> = [];
   let left = 0;
@@ -274,6 +228,11 @@ function nextRound(tournament: NonNullable<TournamentForMatches>) {
   return tournament.matches.reduce((round, match) => Math.max(round, match.round), 0) + 1;
 }
 
+function supportsAutomaticGeneration(format: BattlegroundsTournamentFormat) {
+  return format === BattlegroundsTournamentFormat.SINGLE_ELIMINATION ||
+    format === BattlegroundsTournamentFormat.ROUND_ROBIN;
+}
+
 function singleEliminationPairs(tournament: NonNullable<TournamentForMatches>, round: number) {
   if (round === 1) {
     return { pairs: pairHighLow(sortedEntrants(tournament).map((entrant) => entrant.id)) };
@@ -307,10 +266,13 @@ function singleEliminationPairs(tournament: NonNullable<TournamentForMatches>, r
 
 function buildGeneratedMatches(tournament: NonNullable<TournamentForMatches>) {
   const seededIds = sortedEntrants(tournament).map((entrant) => entrant.id);
-  const rankedIds = standingsOrder(tournament).map((standing) => standing.participantId);
 
   if (seededIds.length < 2) {
     return { error: "Add at least two participants before generating matches." };
+  }
+
+  if (!supportsAutomaticGeneration(tournament.format)) {
+    return { error: "Automatic generation is only available for single elimination and round robin. Add pairings manually for this format." };
   }
 
   if (tournament.format === BattlegroundsTournamentFormat.ROUND_ROBIN) {
@@ -331,13 +293,7 @@ function buildGeneratedMatches(tournament: NonNullable<TournamentForMatches>) {
   }
 
   const round = nextRound(tournament);
-  const generatedPairs = tournament.format === BattlegroundsTournamentFormat.SINGLE_ELIMINATION
-    ? singleEliminationPairs(tournament, round)
-    : {
-        pairs: tournament.format === BattlegroundsTournamentFormat.DOUBLE_ELIMINATION
-          ? pairHighLow(round === 1 ? seededIds : rankedIds)
-          : pairAdjacent(rankedIds),
-      };
+  const generatedPairs = singleEliminationPairs(tournament, round);
 
   if ("error" in generatedPairs) {
     return { error: generatedPairs.error };

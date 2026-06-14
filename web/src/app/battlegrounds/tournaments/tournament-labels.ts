@@ -26,20 +26,20 @@ export const formatLabels: Record<BattlegroundsTournamentFormat, string> = {
 
 export const formatDescriptions: Record<BattlegroundsTournamentFormat, string> = {
   SINGLE_ELIMINATION: "Lose once and you are out. Fastest option for small one-night brackets.",
-  DOUBLE_ELIMINATION: "Players move to a lower bracket after one loss and are eliminated after the second loss.",
-  SWISS: "Everyone plays a fixed number of rounds against players with similar records. Best for ranking a larger field.",
-  SWISS_TOP_CUT: "Swiss rounds rank the field, then the top players advance to an elimination bracket.",
+  DOUBLE_ELIMINATION: "Manual pairing for now. Intended for events where players get a second chance after one loss.",
+  SWISS: "Manual pairing for now. Intended for fixed rounds against players with similar records.",
+  SWISS_TOP_CUT: "Manual pairing for now. Intended for Swiss rounds followed by an elimination playoff.",
   ROUND_ROBIN: "Every player faces every other player. Clear and fair, but match count grows quickly.",
-  LADDER: "Players climb by challenging nearby ranks. Best for longer-running flexible events.",
+  LADDER: "Manual pairing for now. Intended for longer-running events where players challenge nearby ranks.",
 };
 
 export const formatBadges: Record<BattlegroundsTournamentFormat, string> = {
-  SINGLE_ELIMINATION: "Fast bracket",
-  DOUBLE_ELIMINATION: "Second chance",
-  SWISS: "Ranked rounds",
-  SWISS_TOP_CUT: "Qualifier + playoff",
-  ROUND_ROBIN: "Everyone plays",
-  LADDER: "Long-running",
+  SINGLE_ELIMINATION: "Auto bracket",
+  DOUBLE_ELIMINATION: "Manual pairing",
+  SWISS: "Manual pairing",
+  SWISS_TOP_CUT: "Manual pairing",
+  ROUND_ROBIN: "Auto schedule",
+  LADDER: "Manual pairing",
 };
 
 export const scopeLabels: Record<BattlegroundsTournamentScope, string> = {

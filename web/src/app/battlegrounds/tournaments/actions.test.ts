@@ -175,6 +175,27 @@ describe("battlegrounds tournament actions", () => {
     });
   });
 
+  it("does not auto-generate matches for manual pairing formats", async () => {
+    prismaFake.battlegroundsTournament.findUnique.mockResolvedValue({
+      id: "tournament_1",
+      allianceId: "alliance_1",
+      createdById: "player_1",
+      format: "SWISS",
+      participants: [
+        { id: "p1", seed: 1, createdAt: new Date("2026-01-01T00:00:00Z") },
+        { id: "p2", seed: 2, createdAt: new Date("2026-01-02T00:00:00Z") },
+      ],
+      matches: [],
+    });
+
+    await expect(generateTournamentMatches("tournament_1")).resolves.toEqual({
+      success: false,
+      error: "Automatic generation is only available for single elimination and round robin. Add pairings manually for this format.",
+    });
+
+    expect(prismaFake.battlegroundsTournamentMatch.createMany).not.toHaveBeenCalled();
+  });
+
   it("does not generate a single elimination round until the previous round is final", async () => {
     prismaFake.battlegroundsTournament.findUnique.mockResolvedValue({
       id: "tournament_1",
