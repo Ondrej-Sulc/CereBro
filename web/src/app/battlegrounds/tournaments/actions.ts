@@ -274,6 +274,37 @@ function nextRound(tournament: NonNullable<TournamentForMatches>) {
   return tournament.matches.reduce((round, match) => Math.max(round, match.round), 0) + 1;
 }
 
+function singleEliminationPairs(tournament: NonNullable<TournamentForMatches>, round: number) {
+  if (round === 1) {
+    return { pairs: pairHighLow(sortedEntrants(tournament).map((entrant) => entrant.id)) };
+  }
+
+  const previousRoundMatches = tournament.matches
+    .filter((match) => match.round === round - 1)
+    .sort((a, b) => a.matchNumber - b.matchNumber);
+
+  if (previousRoundMatches.length === 0) {
+    return { error: "Generate the previous round before creating the next one." };
+  }
+
+  const unresolvedMatch = previousRoundMatches.find((match) => (
+    match.status !== BattlegroundsMatchStatus.FINAL || !match.winnerParticipantId
+  ));
+  if (unresolvedMatch) {
+    return { error: `Finish round ${round - 1} before generating round ${round}.` };
+  }
+
+  const winnerIds = previousRoundMatches
+    .map((match) => match.winnerParticipantId)
+    .filter((participantId): participantId is string => Boolean(participantId));
+
+  if (winnerIds.length < 2) {
+    return { error: "Single elimination bracket is complete." };
+  }
+
+  return { pairs: pairAdjacent(winnerIds) };
+}
+
 function buildGeneratedMatches(tournament: NonNullable<TournamentForMatches>) {
   const seededIds = sortedEntrants(tournament).map((entrant) => entrant.id);
   const rankedIds = standingsOrder(tournament).map((standing) => standing.participantId);
@@ -300,13 +331,20 @@ function buildGeneratedMatches(tournament: NonNullable<TournamentForMatches>) {
   }
 
   const round = nextRound(tournament);
-  const basePairs = tournament.format === BattlegroundsTournamentFormat.SINGLE_ELIMINATION ||
-    tournament.format === BattlegroundsTournamentFormat.DOUBLE_ELIMINATION
-    ? pairHighLow(round === 1 ? seededIds : rankedIds)
-    : pairAdjacent(rankedIds);
+  const generatedPairs = tournament.format === BattlegroundsTournamentFormat.SINGLE_ELIMINATION
+    ? singleEliminationPairs(tournament, round)
+    : {
+        pairs: tournament.format === BattlegroundsTournamentFormat.DOUBLE_ELIMINATION
+          ? pairHighLow(round === 1 ? seededIds : rankedIds)
+          : pairAdjacent(rankedIds),
+      };
+
+  if ("error" in generatedPairs) {
+    return { error: generatedPairs.error };
+  }
 
   return {
-    matches: basePairs.map(([homeParticipantId, awayParticipantId], index) => ({
+    matches: generatedPairs.pairs.map(([homeParticipantId, awayParticipantId], index) => ({
       tournamentId: tournament.id,
       round,
       matchNumber: index + 1,
