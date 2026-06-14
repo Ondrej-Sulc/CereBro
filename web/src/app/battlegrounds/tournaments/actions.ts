@@ -546,7 +546,7 @@ export const createTournamentMatch = withActionContext(
     const notes = readTrimmedString(formData, "notes");
 
     if (!tournamentId || !homeParticipantId || round === null || matchNumber === null) {
-      return { success: false, error: "Choose a tournament, round, match number, and home player." };
+      return { success: false, error: "Choose a tournament, round, match number, and first player." };
     }
 
     if (round === undefined || matchNumber === undefined) {

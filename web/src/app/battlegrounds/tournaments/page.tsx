@@ -206,7 +206,6 @@ export default async function BattlegroundsTournamentsPage() {
 
         <BattlegroundsTournamentsClient
           allianceName={player.alliance?.name ?? "Alliance"}
-          hasAlliance={!!player.allianceId}
           currentPlayerId={player.id}
           bgColors={bgColors}
           players={members}
