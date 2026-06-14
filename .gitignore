@@ -140,6 +140,7 @@ dist
 
 legacy/
 temp/
+scratch/
 backup/
 /src/generated/prisma
 temp_*.ts

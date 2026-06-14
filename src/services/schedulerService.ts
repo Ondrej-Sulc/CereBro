@@ -18,13 +18,15 @@ import { syncRolesForGuild } from "../commands/alliance/sync-roles";
 
 const jobs: Record<string, ScheduledTask[]> = {};
 
-async function syncAllAllianceRoles(client: Client) {
+export async function syncAllAllianceRoles(client: Client) {
   const { prisma } = await import("./prismaService.js");
   loggerService.info('Starting hourly alliance role sync...');
   const alliances = await prisma.alliance.findMany({
     where: {
+      syncRolesFromDiscord: true,
       OR: [
         { officerRole: { not: null } },
+        { plannerRole: { not: null } },
         { battlegroup1Role: { not: null } },
         { battlegroup2Role: { not: null } },
         { battlegroup3Role: { not: null } },

@@ -389,6 +389,7 @@ model Alliance {
   deathChannelId         String?
   activeDefensePlanId    String?                     @unique
   removeMissingMembers   Boolean                     @default(false)
+  syncRolesFromDiscord   Boolean                     @default(true)
   aqReminderSettings     AQReminderSettings?
   aqSchedules            AQSchedule[]
   aqSkip                 AQSkip?

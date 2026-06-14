@@ -57,6 +57,7 @@ export async function handleAllianceConfigRoles(interaction: ChatInputCommandInt
       replyMessage += `- Battlegroup 1 Role: ${alliance.battlegroup1Role ? `<@&${alliance.battlegroup1Role}>` : 'Not set'}\n`;
       replyMessage += `- Battlegroup 2 Role: ${alliance.battlegroup2Role ? `<@&${alliance.battlegroup2Role}>` : 'Not set'}\n`;
       replyMessage += `- Battlegroup 3 Role: ${alliance.battlegroup3Role ? `<@&${alliance.battlegroup3Role}>` : 'Not set'}\n`;
+      replyMessage += `- Sync Roles From Discord: ${alliance.syncRolesFromDiscord ? '✅ Enabled' : '❌ Disabled'}\n`;
       replyMessage += `- Remove Missing Members: ${alliance.removeMissingMembers ? '✅ Enabled' : '❌ Disabled'}\n`;
       
       await interaction.editReply(replyMessage);
@@ -74,6 +75,7 @@ export async function handleAllianceConfigRoles(interaction: ChatInputCommandInt
     if (alliance.battlegroup1Role) replyMessage += `- Battlegroup 1 Role: <@&${alliance.battlegroup1Role}>\n`;
     if (alliance.battlegroup2Role) replyMessage += `- Battlegroup 2 Role: <@&${alliance.battlegroup2Role}>\n`;
     if (alliance.battlegroup3Role) replyMessage += `- Battlegroup 3 Role: <@&${alliance.battlegroup3Role}>\n`;
+    replyMessage += `- Sync Roles From Discord: ${alliance.syncRolesFromDiscord ? '✅ Enabled' : '❌ Disabled'}\n`;
     replyMessage += `- Remove Missing Members: ${alliance.removeMissingMembers ? '✅ Enabled' : '❌ Disabled'}\n`;
 
     await interaction.editReply(replyMessage);
