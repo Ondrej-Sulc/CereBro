@@ -918,20 +918,23 @@ function DoubleEliminationLanes({
                         {matches.length} {matches.length === 1 ? "fight" : "fights"}
                       </p>
                     </div>
-                    {matches.map((match, matchIndex) => (
-                      <BracketMatchCard
-                        key={match.id}
-                        tournament={tournament}
-                        match={match}
-                        canManage={canManage}
-                        isPending={isPending}
-                        runAction={runAction}
-                        rowStart={matchIndex * 2 + 3}
-                        rowSpan={2}
-                        hasPreviousRound={roundIndex > 0}
-                        hasNextRound={roundIndex < rounds.length - 1}
-                      />
-                    ))}
+                    {matches.map((match, matchIndex) => {
+                      const rowSpan = bracket === "GRAND_FINAL" ? 2 : 2 ** (roundIndex + 1);
+                      return (
+                        <BracketMatchCard
+                          key={match.id}
+                          tournament={tournament}
+                          match={match}
+                          canManage={canManage}
+                          isPending={isPending}
+                          runAction={runAction}
+                          rowStart={matchIndex * rowSpan + 3}
+                          rowSpan={rowSpan}
+                          hasPreviousRound={roundIndex > 0}
+                          hasNextRound={roundIndex < rounds.length - 1}
+                        />
+                      );
+                    })}
                   </div>
                 ))}
               </div>
