@@ -15,11 +15,13 @@ import {
   ClipboardList,
   Crown,
   Flag,
+  Pencil,
   Plus,
   Swords,
   Trash2,
   Trophy,
   Users,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -475,10 +477,19 @@ function MatchResultControls({
   const [lastSavedKey, setLastSavedKey] = useState(initialSavedKey);
   const [savedLabel, setSavedLabel] = useState(initialSavedKey ? "Saved" : "");
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">(initialSavedKey ? "saved" : "idle");
+  const [isEditingFinalResult, setIsEditingFinalResult] = useState(false);
 
   if (!firstPlayer) return null;
 
-  const saveResult = (nextFirstScore: string, nextSecondScore: string, nextWinnerId?: string) => {
+  const isFinalResult = match.status === "FINAL";
+  const showEditor = !isFinalResult || isEditingFinalResult;
+
+  const saveResult = (
+    nextFirstScore: string,
+    nextSecondScore: string,
+    nextWinnerId?: string,
+    options?: { closeEditorOnSave?: boolean }
+  ) => {
     if (isPending) return;
     const nextSavedKey = `${nextFirstScore}:${nextSecondScore}:${nextWinnerId ?? ""}`;
     if (nextSavedKey === lastSavedKey) return;
@@ -494,15 +505,31 @@ function MatchResultControls({
     void runAction(() => recordTournamentMatchResult(formData)).then((result) => {
       if (!result.success) {
         setSaveState("error");
+        setSavedLabel(result.error ?? "Save failed");
         return;
       }
       setSaveState("saved");
       setLastSavedKey(nextSavedKey);
       setSavedLabel(nextFirstScore || nextSecondScore ? `Saved ${nextFirstScore}-${nextSecondScore}` : "Bye advanced");
+      if (options?.closeEditorOnSave) setIsEditingFinalResult(false);
     });
   };
 
   if (!secondPlayer) {
+    if (isFinalResult) {
+      return (
+        <div className="mt-2 flex items-center justify-between gap-2 border-t border-slate-800 pt-2">
+          <div className="min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Advanced</p>
+            <p className="truncate text-xs font-semibold text-slate-300">
+              {firstPlayer.player.ingameName} by bye
+            </p>
+          </div>
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-300" />
+        </div>
+      );
+    }
+
     return (
       <div className="mt-2 border-t border-slate-800 pt-2">
         {waitingForOpponent ? (
@@ -511,13 +538,13 @@ function MatchResultControls({
           </p>
         ) : (
         <Button
-          disabled={isPending || match.status === "FINAL"}
+          disabled={isPending}
           size="sm"
           onClick={() => saveResult("", "", firstPlayer.id)}
           className="h-8 w-full bg-emerald-500 text-slate-950 hover:bg-emerald-400"
         >
           <CheckCircle2 className="h-4 w-4" />
-          {match.status === "FINAL" ? "Advanced" : "Advance bye"}
+          Advance bye
         </Button>
         )}
         {saveState !== "idle" && (
@@ -527,7 +554,7 @@ function MatchResultControls({
             saveState === "saved" && "text-emerald-300",
             saveState === "error" && "text-red-300"
           )}>
-            {saveState === "saving" ? "Saving" : saveState === "saved" ? savedLabel : "Save failed"}
+            {saveState === "saving" ? "Saving" : saveState === "saved" ? savedLabel : savedLabel || "Save failed"}
           </p>
         )}
       </div>
@@ -557,6 +584,64 @@ function MatchResultControls({
     saveResult(nextFirstScore, nextSecondScore, inferredWinnerId);
   };
 
+  const currentWinnerId = inferWinner(firstScore, secondScore);
+  const currentSavedKey = `${firstScore}:${secondScore}:${currentWinnerId}`;
+  const hasScoreChange = currentSavedKey !== lastSavedKey;
+  const canSaveScore = Boolean(firstScore && secondScore && currentWinnerId && (!isFinalResult || hasScoreChange));
+  const resultHint = !firstScore || !secondScore
+    ? "Enter both scores"
+    : !currentWinnerId
+      ? "Scores cannot tie"
+      : isFinalResult && !hasScoreChange
+        ? "Change scores to edit result"
+      : isFinalResult
+        ? "Save correction"
+        : "Higher score advances";
+
+  const saveCurrentScore = () => {
+    const inferredWinnerId = inferWinner(firstScore, secondScore);
+    if (!firstScore || !secondScore || !inferredWinnerId) {
+      setSaveState("error");
+      setSavedLabel(!firstScore || !secondScore ? "Enter both scores" : "Scores cannot tie");
+      return;
+    }
+    saveResult(firstScore, secondScore, inferredWinnerId, { closeEditorOnSave: isFinalResult });
+  };
+
+  const cancelEdit = () => {
+    setFirstScore(match.homeScore?.toString() ?? "");
+    setSecondScore(match.awayScore?.toString() ?? "");
+    setSaveState(initialSavedKey ? "saved" : "idle");
+    setSavedLabel(initialSavedKey ? "Saved" : "");
+    setLastSavedKey(initialSavedKey);
+    setIsEditingFinalResult(false);
+  };
+
+  if (isFinalResult && !showEditor) {
+    return (
+      <div className="mt-2 flex items-center justify-between gap-2 border-t border-slate-800 pt-2">
+        <div className="min-w-0">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Result</p>
+          <p className="truncate text-xs font-semibold text-slate-300">
+            {match.homeScore ?? "--"}-{match.awayScore ?? "--"}
+            {match.winnerParticipant ? ` · ${match.winnerParticipant.player.ingameName}` : ""}
+          </p>
+        </div>
+        <Button
+          type="button"
+          size="icon"
+          variant="outline"
+          onClick={() => setIsEditingFinalResult(true)}
+          className="h-7 w-7 shrink-0"
+          title="Edit result"
+          aria-label="Edit result"
+        >
+          <Pencil className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="mt-2 space-y-2 border-t border-slate-800 pt-2">
 
@@ -570,7 +655,15 @@ function MatchResultControls({
             inputMode="numeric"
             value={firstScore}
             onChange={(event) => updateScores(event.target.value, secondScore)}
-            onBlur={() => saveIfReady(firstScore, secondScore)}
+            onBlur={() => {
+              if (!isFinalResult) saveIfReady(firstScore, secondScore);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                saveCurrentScore();
+              }
+            }}
             placeholder="0"
             aria-label={`${firstPlayer.player.ingameName} score`}
             className="h-8 border-slate-800 bg-slate-950 text-center font-mono text-sm"
@@ -586,12 +679,50 @@ function MatchResultControls({
             inputMode="numeric"
             value={secondScore}
             onChange={(event) => updateScores(firstScore, event.target.value)}
-            onBlur={() => saveIfReady(firstScore, secondScore)}
+            onBlur={() => {
+              if (!isFinalResult) saveIfReady(firstScore, secondScore);
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                saveCurrentScore();
+              }
+            }}
             placeholder="0"
             aria-label={`${secondPlayer.player.ingameName} score`}
             className="h-8 border-slate-800 bg-slate-950 text-center font-mono text-sm"
           />
         </label>
+      </div>
+      <div className="grid grid-cols-[1fr_auto] items-center gap-2">
+        <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+          {resultHint}
+        </p>
+        <div className="flex justify-end gap-1">
+          {isFinalResult && (
+            <Button
+              type="button"
+              size="icon"
+              variant="ghost"
+              onClick={cancelEdit}
+              className="h-7 w-7 text-slate-500 hover:text-slate-200"
+              title="Cancel edit"
+              aria-label="Cancel edit"
+            >
+              <X className="h-3.5 w-3.5" />
+            </Button>
+          )}
+          <Button
+            type="button"
+            size="sm"
+            disabled={isPending || !canSaveScore}
+            onClick={saveCurrentScore}
+            className="h-7 px-2 text-[11px]"
+            variant="outline"
+          >
+            Save
+          </Button>
+        </div>
       </div>
       {saveState !== "idle" && (
         <p className={cn(
@@ -600,7 +731,7 @@ function MatchResultControls({
           saveState === "saved" && "text-emerald-300",
           saveState === "error" && "text-red-300"
         )}>
-          {saveState === "saving" ? "Saving" : saveState === "saved" ? savedLabel : "Save failed"}
+          {saveState === "saving" ? "Saving" : saveState === "saved" ? savedLabel : savedLabel || "Save failed"}
         </p>
       )}
     </div>
@@ -759,7 +890,7 @@ function BracketFlow({
                           isBye={!match.awayParticipant && !waitingForOpponent}
                         />
                       </div>
-                      {winnerParticipant && (
+                      {winnerParticipant && (!canManage || !isFinal) && (
                         <div className="mt-2 flex items-center gap-1.5 rounded border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold text-emerald-200">
                           <Crown className="h-3 w-3" />
                           <SummonerLink
@@ -769,7 +900,7 @@ function BracketFlow({
                           />
                         </div>
                       )}
-                      {canManage && !isFinal && (
+                      {canManage && (
                         <MatchResultControls
                           match={match}
                           isPending={isPending}
