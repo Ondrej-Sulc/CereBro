@@ -226,6 +226,50 @@ function nextPowerOfTwo(value: number) {
   return size;
 }
 
+function isPowerOfTwo(value: number) {
+  return value > 0 && (value & (value - 1)) === 0;
+}
+
+function summonerCountGuidance(tournament: TournamentSummary) {
+  const count = tournament.participants.length;
+
+  if (count < 2) {
+    return {
+      tone: "border-amber-500/30 bg-amber-500/10 text-amber-200",
+      text: "Add at least 2 summoners to start fights.",
+    };
+  }
+
+  if (tournament.format === "SINGLE_ELIMINATION") {
+    if (isPowerOfTwo(count)) {
+      return {
+        tone: "border-emerald-500/30 bg-emerald-500/10 text-emerald-200",
+        text: `Clean ${count}-summoner bracket with no byes.`,
+      };
+    }
+
+    const target = nextPowerOfTwo(count);
+    const needed = target - count;
+    return {
+      tone: "border-cyan-500/30 bg-cyan-500/10 text-cyan-200",
+      text: `${count} works with ${needed} ${needed === 1 ? "bye" : "byes"}. Add ${needed} ${needed === 1 ? "summoner" : "summoners"} for a clean ${target}-summoner bracket.`,
+    };
+  }
+
+  if (tournament.format === "ROUND_ROBIN") {
+    const fightCount = count * (count - 1) / 2;
+    return {
+      tone: "border-emerald-500/30 bg-emerald-500/10 text-emerald-200",
+      text: `${count} summoners create ${fightCount} fights.`,
+    };
+  }
+
+  return {
+    tone: "border-slate-700 bg-slate-900 text-slate-300",
+    text: `${count} summoners. Pairings are manual for this format.`,
+  };
+}
+
 function buildSingleEliminationSlots(tournament: TournamentSummary) {
   const bracketSize = Math.max(2, nextPowerOfTwo(tournament.participants.length));
   const roundCount = Math.log2(bracketSize);
@@ -816,6 +860,7 @@ export function BattlegroundsTournamentsClient({
   }));
   const standings = selectedTournament ? buildStandings(selectedTournament) : [];
   const matchRounds = selectedTournament ? groupMatchesByRound(selectedTournament) : [];
+  const summonerGuidance = selectedTournament ? summonerCountGuidance(selectedTournament) : null;
   const nextManualRound = selectedTournament
     ? Math.max(1, ...selectedTournament.matches.map((match) => match.round))
     : 1;
@@ -976,7 +1021,7 @@ export function BattlegroundsTournamentsClient({
                     <p className="mt-1 font-semibold text-slate-200">{formatDate(selectedTournament.checkInStartsAt)}</p>
                   </div>
                   <div className="border-r border-slate-800 p-4">
-                    <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Entrants</p>
+                    <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Summoners</p>
                     <p className="mt-1 font-semibold text-slate-200">{participants.length} total</p>
                   </div>
                   <div className="p-4">
@@ -990,7 +1035,7 @@ export function BattlegroundsTournamentsClient({
                     <TabsList className="grid h-auto w-full grid-cols-3 bg-slate-900/80 p-1 text-slate-400 sm:w-fit">
                       <TabsTrigger value="entrants" className="gap-2 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-950">
                         <Users className="h-4 w-4" />
-                        Entrants
+                        Summoners
                       </TabsTrigger>
                       <TabsTrigger value="matches" className="gap-2 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-950">
                         <Swords className="h-4 w-4" />
@@ -1016,6 +1061,11 @@ export function BattlegroundsTournamentsClient({
                           <CheckCircle2 className="h-3.5 w-3.5" />
                           {checkedInCount} checked in
                         </span>
+                        {summonerGuidance && (
+                          <span className={cn("inline-flex items-center rounded-md border px-2 py-1 text-xs font-semibold", summonerGuidance.tone)}>
+                            {summonerGuidance.text}
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -1028,7 +1078,7 @@ export function BattlegroundsTournamentsClient({
                       >
                         <input type="hidden" name="tournamentId" value={selectedTournament.id} />
                         <select name="playerId" className="h-9 rounded-md border border-slate-800 bg-slate-900 px-3 text-sm text-slate-100">
-                          <option value="">Add player...</option>
+                          <option value="">Add summoner...</option>
                           {availableMembers.map((member) => (
                             <option key={member.id} value={member.id}>
                             {member.ingameName}{member.battlegroup ? ` - BG${member.battlegroup}` : " - Community"}
@@ -1053,7 +1103,7 @@ export function BattlegroundsTournamentsClient({
                     <thead className="border-b border-slate-800 bg-slate-950 text-xs uppercase tracking-widest text-slate-500">
                       <tr>
                         <th className="w-20 px-4 py-3 text-left">Seed</th>
-                        <th className="px-4 py-3 text-left">Player</th>
+                        <th className="px-4 py-3 text-left">Summoner</th>
                         <th className="px-4 py-3 text-left">Battlegroup</th>
                         <th className="px-4 py-3 text-left">Prestige</th>
                         <th className="px-4 py-3 text-left">Status</th>
@@ -1064,7 +1114,7 @@ export function BattlegroundsTournamentsClient({
                       {participants.length === 0 && (
                         <tr>
                           <td colSpan={canManageSelected ? 6 : 5} className="px-4 py-12 text-center text-slate-500">
-                            No entrants yet. Add alliance members to shape the field.
+                            No summoners yet. Add alliance members to shape the field.
                           </td>
                         </tr>
                       )}

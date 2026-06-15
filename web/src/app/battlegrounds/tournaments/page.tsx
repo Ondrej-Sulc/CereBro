@@ -111,7 +111,7 @@ export default async function BattlegroundsTournamentsPage() {
                   <span className="rounded border border-slate-800 bg-slate-900 px-2 py-1">{scopeLabels[tournament.scope]}</span>
                   <span className="inline-flex items-center gap-1 rounded border border-slate-800 bg-slate-900 px-2 py-1">
                     <Users className="h-3.5 w-3.5" />
-                    {tournament._count.participants} entrants
+                    {tournament._count.participants} summoners
                   </span>
                   <span className="inline-flex items-center gap-1 rounded border border-slate-800 bg-slate-900 px-2 py-1">
                     <Swords className="h-3.5 w-3.5" />

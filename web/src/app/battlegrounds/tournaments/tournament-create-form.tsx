@@ -285,7 +285,7 @@ export function TournamentCreateForm({ allianceName, hasAlliance }: Props) {
               <div className="space-y-2">
                 <Label htmlFor="checkInStartsAt">Check-in opens</Label>
                 <Input id="checkInStartsAt" name="checkInStartsAt" type="datetime-local" className="border-slate-800 bg-slate-900" />
-                <p className="text-xs leading-5 text-slate-500">Entrants see this in local time.</p>
+                <p className="text-xs leading-5 text-slate-500">Summoners see this in local time.</p>
               </div>
             </div>
           )}
