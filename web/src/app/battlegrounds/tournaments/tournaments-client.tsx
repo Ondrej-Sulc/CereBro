@@ -137,7 +137,7 @@ type Props = {
   showTournamentQueue?: boolean;
 };
 
-type RunTournamentAction = (action: () => Promise<TournamentActionResult>) => void;
+type RunTournamentAction = (action: () => Promise<TournamentActionResult>) => Promise<TournamentActionResult>;
 type TournamentMatch = TournamentSummary["matches"][number];
 type TournamentMatchParticipant = NonNullable<TournamentMatch["homeParticipant"]>;
 
@@ -335,11 +335,13 @@ function MatchResultControls({
   const [firstScore, setFirstScore] = useState(match.homeScore?.toString() ?? "");
   const [secondScore, setSecondScore] = useState(match.awayScore?.toString() ?? "");
   const [winnerId, setWinnerId] = useState(match.winnerParticipantId ?? "");
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
 
   if (!firstPlayer) return null;
 
   const saveResult = (nextFirstScore: string, nextSecondScore: string, nextWinnerId: string) => {
     if (isPending || !nextWinnerId) return;
+    setSaveState("saving");
 
     const formData = new FormData();
     formData.set("matchId", match.id);
@@ -347,7 +349,14 @@ function MatchResultControls({
     formData.set("winnerParticipantId", nextWinnerId);
     if (nextFirstScore) formData.set("homeScore", nextFirstScore);
     if (nextSecondScore) formData.set("awayScore", nextSecondScore);
-    runAction(() => recordTournamentMatchResult(formData));
+    void runAction(() => recordTournamentMatchResult(formData)).then((result) => {
+      if (!result.success) {
+        setSaveState("error");
+        return;
+      }
+      setSaveState("saved");
+      window.setTimeout(() => setSaveState("idle"), 1800);
+    });
   };
 
   if (!secondPlayer) {
@@ -367,6 +376,16 @@ function MatchResultControls({
           <CheckCircle2 className="h-4 w-4" />
           {match.status === "FINAL" ? "Advanced" : "Advance bye"}
         </Button>
+        )}
+        {saveState !== "idle" && (
+          <p className={cn(
+            "mt-1 text-center text-[11px] font-semibold uppercase tracking-wide",
+            saveState === "saving" && "text-cyan-300",
+            saveState === "saved" && "text-emerald-300",
+            saveState === "error" && "text-red-300"
+          )}>
+            {saveState === "saving" ? "Saving" : saveState === "saved" ? "Saved" : "Save failed"}
+          </p>
         )}
       </div>
     );
@@ -476,6 +495,16 @@ function MatchResultControls({
           </label>
         ))}
       </div>
+      {saveState !== "idle" && (
+        <p className={cn(
+          "text-center text-[11px] font-semibold uppercase tracking-wide",
+          saveState === "saving" && "text-cyan-300",
+          saveState === "saved" && "text-emerald-300",
+          saveState === "error" && "text-red-300"
+        )}>
+          {saveState === "saving" ? "Saving" : saveState === "saved" ? "Saved" : "Save failed"}
+        </p>
+      )}
     </div>
   );
 }
@@ -635,13 +664,17 @@ export function BattlegroundsTournamentsClient({
 
   const runAction = (action: () => Promise<TournamentActionResult>) => {
     setMessage(null);
-    startTransition(async () => {
-      const result = await action();
-      if (!result.success) {
-        setMessage(result.error);
-        return;
-      }
-      router.refresh();
+    return new Promise<TournamentActionResult>((resolve) => {
+      startTransition(async () => {
+        const result = await action();
+        if (!result.success) {
+          setMessage(result.error);
+          resolve(result);
+          return;
+        }
+        router.refresh();
+        resolve(result);
+      });
     });
   };
 
@@ -876,7 +909,9 @@ export function BattlegroundsTournamentsClient({
                     {canManageSelected && (
                       <form
                         className="grid grid-cols-1 gap-3 border-b border-slate-800 p-4 lg:grid-cols-[1fr_90px_150px_auto]"
-                        action={(formData) => runAction(() => addTournamentParticipant(formData))}
+                        action={(formData) => {
+                          void runAction(() => addTournamentParticipant(formData));
+                        }}
                       >
                         <input type="hidden" name="tournamentId" value={selectedTournament.id} />
                         <select name="playerId" className="h-9 rounded-md border border-slate-800 bg-slate-900 px-3 text-sm text-slate-100">
@@ -1048,7 +1083,9 @@ export function BattlegroundsTournamentsClient({
                     {canManageSelected && (
                       <form
                         className="mt-4 grid grid-cols-1 gap-3 rounded-lg border border-slate-800 bg-slate-950/70 p-3 lg:grid-cols-[80px_80px_1fr_1fr_auto]"
-                        action={(formData) => runAction(() => createTournamentMatch(formData))}
+                        action={(formData) => {
+                          void runAction(() => createTournamentMatch(formData));
+                        }}
                       >
                         <input type="hidden" name="tournamentId" value={selectedTournament.id} />
                         <Input name="round" inputMode="numeric" defaultValue={nextManualRound} className="border-slate-800 bg-slate-900" />

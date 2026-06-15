@@ -400,6 +400,29 @@ async function advanceSingleEliminationWinner(match: {
   });
 }
 
+async function hasFinalDownstreamSingleEliminationMatch(match: {
+  round: number;
+  matchNumber: number;
+  tournament: {
+    id: string;
+    format: BattlegroundsTournamentFormat;
+  };
+}) {
+  if (match.tournament.format !== BattlegroundsTournamentFormat.SINGLE_ELIMINATION) return false;
+
+  const downstreamMatch = await prisma.battlegroundsTournamentMatch.findFirst({
+    where: {
+      tournamentId: match.tournament.id,
+      round: match.round + 1,
+      matchNumber: Math.ceil(match.matchNumber / 2),
+      status: BattlegroundsMatchStatus.FINAL,
+    },
+    select: { id: true },
+  });
+
+  return !!downstreamMatch;
+}
+
 export const createTournament = withActionContext(
   "createBattlegroundsTournament",
   async (formData: FormData): Promise<TournamentActionResult> => {
@@ -841,6 +864,10 @@ export const recordTournamentMatchResult = withActionContext(
       }
 
       winnerParticipantId = scoreWinnerId;
+    }
+
+    if (status === BattlegroundsMatchStatus.FINAL && await hasFinalDownstreamSingleEliminationMatch(match)) {
+      return { success: false, error: "Cannot change this result after the next fight is final." };
     }
 
     await prisma.battlegroundsTournamentMatch.update({

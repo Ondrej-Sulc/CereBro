@@ -431,6 +431,36 @@ describe("battlegrounds tournament actions", () => {
     });
   });
 
+  it("rejects changing a result after its downstream fight is final", async () => {
+    prismaFake.battlegroundsTournamentMatch.findUnique.mockResolvedValue({
+      id: "match_1",
+      round: 1,
+      matchNumber: 1,
+      homeParticipantId: "p1",
+      awayParticipantId: "p4",
+      tournament: {
+        id: "tournament_1",
+        allianceId: "alliance_1",
+        createdById: "player_1",
+        format: "SINGLE_ELIMINATION",
+      },
+    });
+    prismaFake.battlegroundsTournamentMatch.findFirst.mockResolvedValue({ id: "match_3" });
+
+    const formData = new FormData();
+    formData.set("matchId", "match_1");
+    formData.set("homeScore", "2");
+    formData.set("awayScore", "1");
+    formData.set("status", "FINAL");
+
+    await expect(recordTournamentMatchResult(formData)).resolves.toEqual({
+      success: false,
+      error: "Cannot change this result after the next fight is final.",
+    });
+
+    expect(prismaFake.battlegroundsTournamentMatch.update).not.toHaveBeenCalled();
+  });
+
   it("rejects a final result when the selected winner contradicts the score", async () => {
     prismaFake.battlegroundsTournamentMatch.findUnique.mockResolvedValue({
       id: "match_1",
