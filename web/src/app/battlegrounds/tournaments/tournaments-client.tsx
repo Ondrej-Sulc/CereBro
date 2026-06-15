@@ -27,13 +27,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import {
@@ -180,6 +173,25 @@ function statusTone(status: BattlegroundsTournamentStatus) {
       return "border-slate-700 bg-slate-900 text-slate-400";
     default:
       return "border-slate-700 bg-slate-900 text-slate-300";
+  }
+}
+
+function nextLifecycleAction(status: BattlegroundsTournamentStatus, canStartAutomatically: boolean) {
+  switch (status) {
+    case "DRAFT":
+      return { label: "Open registration", status: BattlegroundsTournamentStatus.REGISTRATION };
+    case "REGISTRATION":
+      return { label: "Open check-in", status: BattlegroundsTournamentStatus.CHECK_IN };
+    case "CHECK_IN":
+      return canStartAutomatically
+        ? null
+        : { label: "Set live", status: BattlegroundsTournamentStatus.LIVE };
+    case "LIVE":
+      return { label: "Finish tournament", status: BattlegroundsTournamentStatus.FINISHED };
+    case "FINISHED":
+      return { label: "Archive", status: BattlegroundsTournamentStatus.ARCHIVED };
+    default:
+      return null;
   }
 }
 
@@ -694,6 +706,9 @@ export function BattlegroundsTournamentsClient({
     selectedTournament.status === "CHECK_IN";
   const checkedInCount = participants.filter((entry) => entry.status === "CHECKED_IN").length;
   const supportsStartSelected = selectedTournament?.format === "SINGLE_ELIMINATION";
+  const lifecycleAction = selectedTournament
+    ? nextLifecycleAction(selectedTournament.status, !!supportsStartSelected)
+    : null;
   const bgCounts = [1, 2, 3].map((bg) => ({
     bg,
     count: participants.filter((entry) => entry.battlegroup === bg).length,
@@ -834,20 +849,17 @@ export function BattlegroundsTournamentsClient({
                           Start tournament
                         </Button>
                       )}
-                      {canManageSelected && (
-                        <Select
-                          value={selectedTournament.status}
-                          onValueChange={(value) => runAction(() => updateTournamentStatus(selectedTournament.id, value as BattlegroundsTournamentStatus))}
+                      {canManageSelected && lifecycleAction && (
+                        <Button
+                          disabled={isPending}
+                          variant="outline"
+                          onClick={() => {
+                            void runAction(() => updateTournamentStatus(selectedTournament.id, lifecycleAction.status));
+                          }}
+                          className="border-slate-700 bg-slate-900 text-slate-100 hover:bg-slate-800 hover:text-white"
                         >
-                          <SelectTrigger className="w-full border-slate-800 bg-slate-900 text-slate-100 sm:w-48">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent className="border-slate-800 bg-slate-950 text-slate-100">
-                            {Object.values(BattlegroundsTournamentStatus).map((status) => (
-                              <SelectItem key={status} value={status}>{statusLabels[status]}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          {lifecycleAction.label}
+                        </Button>
                       )}
                     </div>
                   </div>
