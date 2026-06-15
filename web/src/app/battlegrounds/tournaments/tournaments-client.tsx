@@ -2,6 +2,7 @@
 
 import { type ReactNode, useMemo, useState, useTransition } from "react";
 import {
+  BattlegroundsMatchBracket,
   BattlegroundsMatchStatus,
   BattlegroundsTournamentFormat,
   BattlegroundsTournamentScope,
@@ -86,6 +87,7 @@ export type TournamentSummary = {
   }>;
   matches: Array<{
     id: string;
+    bracket: BattlegroundsMatchBracket;
     round: number;
     matchNumber: number;
     status: BattlegroundsMatchStatus;
@@ -138,6 +140,12 @@ type Props = {
 type RunTournamentAction = (action: () => Promise<TournamentActionResult>) => Promise<TournamentActionResult>;
 type TournamentMatch = TournamentSummary["matches"][number];
 type TournamentMatchParticipant = NonNullable<TournamentMatch["homeParticipant"]>;
+
+const matchBracketLabels: Record<BattlegroundsMatchBracket, string> = {
+  WINNERS: "Winners",
+  LOSERS: "Losers",
+  GRAND_FINAL: "Grand final",
+};
 
 function matchStatusTone(status: BattlegroundsMatchStatus) {
   switch (status) {
@@ -702,6 +710,11 @@ function BracketMatchCard({
             M{match.matchNumber}
           </span>
           <div className="flex items-center gap-1">
+            {tournament.format === "DOUBLE_ELIMINATION" && (
+              <Badge variant="outline" className="border-slate-700 px-1.5 py-0 text-[9px] text-slate-400">
+                {matchBracketLabels[match.bracket]}
+              </Badge>
+            )}
             {canManage && isFinal && secondPlayer && !showEditor && (
               <Button
                 type="button"
@@ -1035,7 +1048,9 @@ export function BattlegroundsTournamentsClient({
     currentUserEntry.status !== "CHECKED_IN" &&
     selectedTournament.status === "CHECK_IN";
   const checkedInCount = participants.filter((entry) => entry.status === "CHECKED_IN").length;
-  const supportsStartSelected = selectedTournament?.format === "SINGLE_ELIMINATION";
+  const supportsStartSelected = selectedTournament
+    ? ["SINGLE_ELIMINATION", "DOUBLE_ELIMINATION"].includes(selectedTournament.format)
+    : false;
   const hasFightsSelected = (selectedTournament?.matches.length ?? 0) > 0;
   const canStartSelected = !!selectedTournament &&
     !!supportsStartSelected &&
@@ -1424,7 +1439,7 @@ export function BattlegroundsTournamentsClient({
                     </div>
                     {canManageSelected && !supportsStartSelected && (
                       <div className="mt-3 rounded-md border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-                        Automated start is currently available for single elimination. Add pairings manually for this format.
+                        Automated start is currently available for single and double elimination. Add pairings manually for this format.
                       </div>
                     )}
 

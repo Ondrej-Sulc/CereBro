@@ -587,6 +587,7 @@ model BattlegroundsTournamentParticipant {
 model BattlegroundsTournamentMatch {
   id              String                         @id @default(cuid())
   tournamentId    String
+  bracket         BattlegroundsMatchBracket      @default(WINNERS)
   round           Int
   matchNumber     Int
   status          BattlegroundsMatchStatus       @default(PENDING)
@@ -604,8 +605,9 @@ model BattlegroundsTournamentMatch {
   awayParticipant BattlegroundsTournamentParticipant? @relation("BattlegroundsMatchAway", fields: [awayParticipantId], references: [id], onDelete: SetNull)
   winnerParticipant BattlegroundsTournamentParticipant? @relation("BattlegroundsMatchWinner", fields: [winnerParticipantId], references: [id], onDelete: SetNull)
 
-  @@unique([tournamentId, round, matchNumber])
+  @@unique([tournamentId, bracket, round, matchNumber])
   @@index([tournamentId, status])
+  @@index([tournamentId, bracket])
   @@index([homeParticipantId])
   @@index([awayParticipantId])
   @@index([winnerParticipantId])
@@ -1259,6 +1261,12 @@ enum BattlegroundsTournamentFormat {
   SWISS_TOP_CUT
   ROUND_ROBIN
   LADDER
+}
+
+enum BattlegroundsMatchBracket {
+  WINNERS
+  LOSERS
+  GRAND_FINAL
 }
 
 enum BattlegroundsTournamentScope {

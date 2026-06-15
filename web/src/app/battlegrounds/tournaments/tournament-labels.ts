@@ -26,7 +26,7 @@ export const formatLabels: Record<BattlegroundsTournamentFormat, string> = {
 
 export const formatDescriptions: Record<BattlegroundsTournamentFormat, string> = {
   SINGLE_ELIMINATION: "Lose once and you are out. Fastest option for small one-night brackets.",
-  DOUBLE_ELIMINATION: "Manual pairing for now. Intended for events where players get a second chance after one loss.",
+  DOUBLE_ELIMINATION: "Players drop into a losers bracket after their first loss. Lose twice and you are out.",
   SWISS: "Manual pairing for now. Intended for fixed rounds against players with similar records.",
   SWISS_TOP_CUT: "Manual pairing for now. Intended for Swiss rounds followed by an elimination playoff.",
   ROUND_ROBIN: "Every player faces every other player. Clear and fair, but match count grows quickly.",
@@ -35,7 +35,7 @@ export const formatDescriptions: Record<BattlegroundsTournamentFormat, string> =
 
 export const formatBadges: Record<BattlegroundsTournamentFormat, string> = {
   SINGLE_ELIMINATION: "Auto bracket",
-  DOUBLE_ELIMINATION: "Manual pairing",
+  DOUBLE_ELIMINATION: "Auto bracket",
   SWISS: "Manual pairing",
   SWISS_TOP_CUT: "Manual pairing",
   ROUND_ROBIN: "Auto schedule",

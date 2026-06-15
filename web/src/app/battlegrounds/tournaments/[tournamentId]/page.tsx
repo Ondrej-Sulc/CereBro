@@ -144,6 +144,7 @@ export default async function BattlegroundsTournamentDetailPage({
             },
           },
           orderBy: [
+            { bracket: "asc" },
             { round: "asc" },
             { matchNumber: "asc" },
           ],

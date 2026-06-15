@@ -1,6 +1,7 @@
 'use server';
 
 import {
+  BattlegroundsMatchBracket,
   BattlegroundsTournamentFormat,
   BattlegroundsMatchStatus,
   BattlegroundsTournamentScope,
@@ -147,6 +148,7 @@ async function loadManagedTournamentForMatches(
       matches: {
         select: {
           id: true,
+          bracket: true,
           round: true,
           matchNumber: true,
           status: true,
@@ -157,6 +159,7 @@ async function loadManagedTournamentForMatches(
           awayScore: true,
         },
         orderBy: [
+          { bracket: "asc" },
           { round: "asc" },
           { matchNumber: "asc" },
         ],
@@ -261,6 +264,7 @@ function nextRound(tournament: NonNullable<TournamentForMatches>) {
 
 function supportsAutomaticGeneration(format: BattlegroundsTournamentFormat) {
   return format === BattlegroundsTournamentFormat.SINGLE_ELIMINATION ||
+    format === BattlegroundsTournamentFormat.DOUBLE_ELIMINATION ||
     format === BattlegroundsTournamentFormat.ROUND_ROBIN;
 }
 
@@ -303,7 +307,7 @@ function buildGeneratedMatches(tournament: NonNullable<TournamentForMatches>) {
   }
 
   if (!supportsAutomaticGeneration(tournament.format)) {
-    return { error: "Automatic generation is only available for single elimination and round robin. Add pairings manually for this format." };
+    return { error: "Automatic generation is only available for single elimination, double elimination, and round robin. Add pairings manually for this format." };
   }
 
   if (tournament.format === BattlegroundsTournamentFormat.ROUND_ROBIN) {
@@ -318,6 +322,24 @@ function buildGeneratedMatches(tournament: NonNullable<TournamentForMatches>) {
         matchNumber: index + 1,
         homeParticipantId: pair.homeParticipantId,
         awayParticipantId: pair.awayParticipantId,
+        status: BattlegroundsMatchStatus.READY,
+      })),
+    };
+  }
+
+  if (tournament.format === BattlegroundsTournamentFormat.DOUBLE_ELIMINATION) {
+    if (tournament.matches.length > 0) {
+      return { error: "Double elimination bracket already exists. Record fight results to advance the bracket." };
+    }
+
+    return {
+      matches: singleEliminationFirstRoundPairs(seededIds).map(([homeParticipantId, awayParticipantId], index) => ({
+        tournamentId: tournament.id,
+        bracket: BattlegroundsMatchBracket.WINNERS,
+        round: 1,
+        matchNumber: index + 1,
+        homeParticipantId,
+        awayParticipantId,
         status: BattlegroundsMatchStatus.READY,
       })),
     };
@@ -400,6 +422,170 @@ async function advanceSingleEliminationWinner(match: {
   });
 }
 
+async function placeGeneratedParticipant({
+  tournamentId,
+  bracket,
+  round,
+  matchNumber,
+  participantField,
+  participantId,
+}: {
+  tournamentId: string;
+  bracket: BattlegroundsMatchBracket;
+  round: number;
+  matchNumber: number;
+  participantField: "homeParticipantId" | "awayParticipantId";
+  participantId: string | null;
+}) {
+  if (!participantId) return;
+
+  const existingMatch = await prisma.battlegroundsTournamentMatch.findFirst({
+    where: {
+      tournamentId,
+      bracket,
+      round,
+      matchNumber,
+    },
+    select: {
+      id: true,
+      status: true,
+    },
+  });
+
+  if (existingMatch) {
+    if (existingMatch.status === BattlegroundsMatchStatus.FINAL) return;
+
+    await prisma.battlegroundsTournamentMatch.update({
+      where: { id: existingMatch.id },
+      data: {
+        [participantField]: participantId,
+        status: BattlegroundsMatchStatus.READY,
+        homeScore: null,
+        awayScore: null,
+        winnerParticipantId: null,
+      },
+    });
+    return;
+  }
+
+  await prisma.battlegroundsTournamentMatch.create({
+    data: {
+      tournamentId,
+      bracket,
+      round,
+      matchNumber,
+      [participantField]: participantId,
+      status: BattlegroundsMatchStatus.READY,
+    },
+  });
+}
+
+function matchLoserParticipantId(match: {
+  homeParticipantId: string | null;
+  awayParticipantId: string | null;
+}, winnerParticipantId: string | null) {
+  if (!winnerParticipantId) return null;
+  if (match.homeParticipantId === winnerParticipantId) return match.awayParticipantId;
+  if (match.awayParticipantId === winnerParticipantId) return match.homeParticipantId;
+  return null;
+}
+
+async function doubleEliminationWinnerRoundCount(tournamentId: string, round: number) {
+  return prisma.battlegroundsTournamentMatch.count({
+    where: {
+      tournamentId,
+      bracket: BattlegroundsMatchBracket.WINNERS,
+      round,
+    },
+  });
+}
+
+async function doubleEliminationLosersFinalRound(tournamentId: string) {
+  const firstWinnerRoundMatchCount = await doubleEliminationWinnerRoundCount(tournamentId, 1);
+  const bracketSize = Math.max(2, firstWinnerRoundMatchCount * 2);
+  const winnerRoundCount = Math.ceil(Math.log2(bracketSize));
+  return Math.max(1, 2 * (winnerRoundCount - 1));
+}
+
+async function advanceDoubleEliminationResult(match: {
+  bracket: BattlegroundsMatchBracket;
+  round: number;
+  matchNumber: number;
+  homeParticipantId: string | null;
+  awayParticipantId: string | null;
+  tournament: {
+    id: string;
+    format: BattlegroundsTournamentFormat;
+  };
+}, winnerParticipantId: string | null) {
+  if (!winnerParticipantId || match.tournament.format !== BattlegroundsTournamentFormat.DOUBLE_ELIMINATION) return;
+
+  const tournamentId = match.tournament.id;
+
+  if (match.bracket === BattlegroundsMatchBracket.WINNERS) {
+    const currentRoundMatchCount = await doubleEliminationWinnerRoundCount(tournamentId, match.round);
+    if (currentRoundMatchCount > 1) {
+      await placeGeneratedParticipant({
+        tournamentId,
+        bracket: BattlegroundsMatchBracket.WINNERS,
+        round: match.round + 1,
+        matchNumber: Math.ceil(match.matchNumber / 2),
+        participantField: match.matchNumber % 2 === 1 ? "homeParticipantId" : "awayParticipantId",
+        participantId: winnerParticipantId,
+      });
+    } else {
+      await placeGeneratedParticipant({
+        tournamentId,
+        bracket: BattlegroundsMatchBracket.GRAND_FINAL,
+        round: 1,
+        matchNumber: 1,
+        participantField: "homeParticipantId",
+        participantId: winnerParticipantId,
+      });
+    }
+
+    const loserParticipantId = matchLoserParticipantId(match, winnerParticipantId);
+    if (!loserParticipantId) return;
+
+    const loserRound = match.round === 1 ? 1 : 2 * match.round - 2;
+    await placeGeneratedParticipant({
+      tournamentId,
+      bracket: BattlegroundsMatchBracket.LOSERS,
+      round: loserRound,
+      matchNumber: match.round === 1 ? Math.ceil(match.matchNumber / 2) : match.matchNumber,
+      participantField: match.round === 1 && match.matchNumber % 2 === 1 ? "homeParticipantId" : "awayParticipantId",
+      participantId: loserParticipantId,
+    });
+    return;
+  }
+
+  if (match.bracket === BattlegroundsMatchBracket.LOSERS) {
+    const finalLosersRound = await doubleEliminationLosersFinalRound(tournamentId);
+    if (match.round >= finalLosersRound) {
+      await placeGeneratedParticipant({
+        tournamentId,
+        bracket: BattlegroundsMatchBracket.GRAND_FINAL,
+        round: 1,
+        matchNumber: 1,
+        participantField: "awayParticipantId",
+        participantId: winnerParticipantId,
+      });
+      return;
+    }
+
+    await placeGeneratedParticipant({
+      tournamentId,
+      bracket: BattlegroundsMatchBracket.LOSERS,
+      round: match.round + 1,
+      matchNumber: match.round % 2 === 1 ? match.matchNumber : Math.ceil(match.matchNumber / 2),
+      participantField: match.round % 2 === 1
+        ? "homeParticipantId"
+        : match.matchNumber % 2 === 1 ? "homeParticipantId" : "awayParticipantId",
+      participantId: winnerParticipantId,
+    });
+  }
+}
+
 async function hasFinalDownstreamSingleEliminationMatch(match: {
   round: number;
   matchNumber: number;
@@ -423,6 +609,87 @@ async function hasFinalDownstreamSingleEliminationMatch(match: {
   return !!downstreamMatch;
 }
 
+async function hasFinalGeneratedMatch({
+  tournamentId,
+  bracket,
+  round,
+  matchNumber,
+}: {
+  tournamentId: string;
+  bracket: BattlegroundsMatchBracket;
+  round: number;
+  matchNumber: number;
+}) {
+  const downstreamMatch = await prisma.battlegroundsTournamentMatch.findFirst({
+    where: {
+      tournamentId,
+      bracket,
+      round,
+      matchNumber,
+      status: BattlegroundsMatchStatus.FINAL,
+    },
+    select: { id: true },
+  });
+
+  return !!downstreamMatch;
+}
+
+async function hasFinalDownstreamDoubleEliminationMatch(match: {
+  bracket: BattlegroundsMatchBracket;
+  round: number;
+  matchNumber: number;
+  tournament: {
+    id: string;
+    format: BattlegroundsTournamentFormat;
+  };
+}) {
+  if (match.tournament.format !== BattlegroundsTournamentFormat.DOUBLE_ELIMINATION) return false;
+
+  const tournamentId = match.tournament.id;
+
+  if (match.bracket === BattlegroundsMatchBracket.WINNERS) {
+    const currentRoundMatchCount = await doubleEliminationWinnerRoundCount(tournamentId, match.round);
+    const winnerDestination = currentRoundMatchCount > 1
+      ? {
+          bracket: BattlegroundsMatchBracket.WINNERS,
+          round: match.round + 1,
+          matchNumber: Math.ceil(match.matchNumber / 2),
+        }
+      : {
+          bracket: BattlegroundsMatchBracket.GRAND_FINAL,
+          round: 1,
+          matchNumber: 1,
+        };
+    const loserDestination = {
+      bracket: BattlegroundsMatchBracket.LOSERS,
+      round: match.round === 1 ? 1 : 2 * match.round - 2,
+      matchNumber: match.round === 1 ? Math.ceil(match.matchNumber / 2) : match.matchNumber,
+    };
+
+    return await hasFinalGeneratedMatch({ tournamentId, ...winnerDestination }) ||
+      await hasFinalGeneratedMatch({ tournamentId, ...loserDestination });
+  }
+
+  if (match.bracket === BattlegroundsMatchBracket.LOSERS) {
+    const finalLosersRound = await doubleEliminationLosersFinalRound(tournamentId);
+    const downstreamDestination = match.round >= finalLosersRound
+      ? {
+          bracket: BattlegroundsMatchBracket.GRAND_FINAL,
+          round: 1,
+          matchNumber: 1,
+        }
+      : {
+          bracket: BattlegroundsMatchBracket.LOSERS,
+          round: match.round + 1,
+          matchNumber: match.round % 2 === 1 ? match.matchNumber : Math.ceil(match.matchNumber / 2),
+        };
+
+    return hasFinalGeneratedMatch({ tournamentId, ...downstreamDestination });
+  }
+
+  return false;
+}
+
 async function autoAdvanceSingleEliminationByes(tournamentId: string) {
   const byeMatches = await prisma.battlegroundsTournamentMatch.findMany({
     where: {
@@ -432,8 +699,10 @@ async function autoAdvanceSingleEliminationByes(tournamentId: string) {
     },
     select: {
       id: true,
+      bracket: true,
       round: true,
       matchNumber: true,
+      awayParticipantId: true,
       homeParticipantId: true,
       tournament: {
         select: {
@@ -460,6 +729,7 @@ async function autoAdvanceSingleEliminationByes(tournamentId: string) {
     });
 
     await advanceSingleEliminationWinner(match, match.homeParticipantId);
+    await advanceDoubleEliminationResult(match, match.homeParticipantId);
   }
 }
 
@@ -744,8 +1014,11 @@ export const startTournament = withActionContext(
       return { success: false, error: "Tournament not found." };
     }
 
-    if (tournament.format !== BattlegroundsTournamentFormat.SINGLE_ELIMINATION) {
-      return { success: false, error: "Start is currently automated for single elimination tournaments only." };
+    if (
+      tournament.format !== BattlegroundsTournamentFormat.SINGLE_ELIMINATION &&
+      tournament.format !== BattlegroundsTournamentFormat.DOUBLE_ELIMINATION
+    ) {
+      return { success: false, error: "Start is currently automated for single and double elimination tournaments only." };
     }
 
     if (tournament.matches.length === 0) {
@@ -857,6 +1130,7 @@ export const recordTournamentMatchResult = withActionContext(
       where: { id: matchId },
       select: {
         id: true,
+        bracket: true,
         round: true,
         matchNumber: true,
         homeParticipantId: true,
@@ -908,7 +1182,11 @@ export const recordTournamentMatchResult = withActionContext(
       winnerParticipantId = scoreWinnerId;
     }
 
-    if (status === BattlegroundsMatchStatus.FINAL && await hasFinalDownstreamSingleEliminationMatch(match)) {
+    const hasFinalDownstreamMatch = status === BattlegroundsMatchStatus.FINAL && (
+      await hasFinalDownstreamSingleEliminationMatch(match) ||
+      await hasFinalDownstreamDoubleEliminationMatch(match)
+    );
+    if (hasFinalDownstreamMatch) {
       return { success: false, error: "Cannot change this result after the next fight is final." };
     }
 
@@ -925,6 +1203,7 @@ export const recordTournamentMatchResult = withActionContext(
 
     if (status === BattlegroundsMatchStatus.FINAL) {
       await advanceSingleEliminationWinner(match, winnerParticipantId);
+      await advanceDoubleEliminationResult(match, winnerParticipantId);
     }
 
     revalidatePath(TOURNAMENTS_PATH);

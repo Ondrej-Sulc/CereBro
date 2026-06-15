@@ -218,6 +218,49 @@ describe("battlegrounds tournament actions", () => {
     });
   });
 
+  it("starts a double elimination tournament by creating the winners bracket first round", async () => {
+    prismaFake.battlegroundsTournament.findUnique.mockResolvedValue({
+      id: "tournament_1",
+      allianceId: "alliance_1",
+      createdById: "player_1",
+      format: "DOUBLE_ELIMINATION",
+      participants: [
+        { id: "p1", seed: 1, createdAt: new Date("2026-01-01T00:00:00Z") },
+        { id: "p2", seed: 2, createdAt: new Date("2026-01-02T00:00:00Z") },
+        { id: "p3", seed: 3, createdAt: new Date("2026-01-03T00:00:00Z") },
+        { id: "p4", seed: 4, createdAt: new Date("2026-01-04T00:00:00Z") },
+      ],
+      matches: [],
+    });
+
+    await expect(startTournament("tournament_1")).resolves.toEqual({ success: true });
+
+    expect(prismaFake.battlegroundsTournamentMatch.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          bracket: "WINNERS",
+          round: 1,
+          matchNumber: 1,
+          homeParticipantId: "p1",
+          awayParticipantId: "p4",
+          status: "READY",
+        }),
+        expect.objectContaining({
+          bracket: "WINNERS",
+          round: 1,
+          matchNumber: 2,
+          homeParticipantId: "p2",
+          awayParticipantId: "p3",
+          status: "READY",
+        }),
+      ],
+    });
+    expect(prismaFake.battlegroundsTournament.update).toHaveBeenCalledWith({
+      where: { id: "tournament_1" },
+      data: { status: "LIVE" },
+    });
+  });
+
   it("auto-advances first-round byes when starting a single elimination tournament", async () => {
     prismaFake.battlegroundsTournament.findUnique.mockResolvedValue({
       id: "tournament_1",
@@ -356,7 +399,7 @@ describe("battlegrounds tournament actions", () => {
 
     await expect(generateTournamentMatches("tournament_1")).resolves.toEqual({
       success: false,
-      error: "Automatic generation is only available for single elimination and round robin. Add pairings manually for this format.",
+      error: "Automatic generation is only available for single elimination, double elimination, and round robin. Add pairings manually for this format.",
     });
 
     expect(prismaFake.battlegroundsTournamentMatch.createMany).not.toHaveBeenCalled();
@@ -498,6 +541,92 @@ describe("battlegrounds tournament actions", () => {
         round: 2,
         matchNumber: 1,
         homeParticipantId: "p1",
+        status: "READY",
+      }),
+    });
+  });
+
+  it("advances a double elimination winners bracket result into winners and losers lanes", async () => {
+    prismaFake.battlegroundsTournamentMatch.findUnique.mockResolvedValue({
+      id: "match_1",
+      bracket: "WINNERS",
+      round: 1,
+      matchNumber: 1,
+      homeParticipantId: "p1",
+      awayParticipantId: "p4",
+      tournament: {
+        id: "tournament_1",
+        allianceId: "alliance_1",
+        createdById: "player_1",
+        format: "DOUBLE_ELIMINATION",
+      },
+    });
+    prismaFake.battlegroundsTournamentMatch.count.mockResolvedValue(2);
+    prismaFake.battlegroundsTournamentMatch.findFirst.mockResolvedValue(null);
+
+    const formData = new FormData();
+    formData.set("matchId", "match_1");
+    formData.set("homeScore", "2");
+    formData.set("awayScore", "0");
+    formData.set("status", "FINAL");
+
+    await expect(recordTournamentMatchResult(formData)).resolves.toEqual({ success: true });
+
+    expect(prismaFake.battlegroundsTournamentMatch.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        tournamentId: "tournament_1",
+        bracket: "WINNERS",
+        round: 2,
+        matchNumber: 1,
+        homeParticipantId: "p1",
+        status: "READY",
+      }),
+    });
+    expect(prismaFake.battlegroundsTournamentMatch.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        tournamentId: "tournament_1",
+        bracket: "LOSERS",
+        round: 1,
+        matchNumber: 1,
+        homeParticipantId: "p4",
+        status: "READY",
+      }),
+    });
+  });
+
+  it("advances a double elimination losers final winner into the grand final", async () => {
+    prismaFake.battlegroundsTournamentMatch.findUnique.mockResolvedValue({
+      id: "match_5",
+      bracket: "LOSERS",
+      round: 2,
+      matchNumber: 1,
+      homeParticipantId: "p4",
+      awayParticipantId: "p2",
+      tournament: {
+        id: "tournament_1",
+        allianceId: "alliance_1",
+        createdById: "player_1",
+        format: "DOUBLE_ELIMINATION",
+      },
+    });
+    prismaFake.battlegroundsTournamentMatch.count.mockResolvedValue(2);
+    prismaFake.battlegroundsTournamentMatch.findFirst.mockResolvedValue(null);
+
+    const formData = new FormData();
+    formData.set("matchId", "match_5");
+    formData.set("homeScore", "1");
+    formData.set("awayScore", "2");
+    formData.set("status", "FINAL");
+
+    await expect(recordTournamentMatchResult(formData)).resolves.toEqual({ success: true });
+
+    expect(prismaFake.battlegroundsTournamentMatch.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        tournamentId: "tournament_1",
+        bracket: "GRAND_FINAL",
+        round: 1,
+        matchNumber: 1,
+        awayParticipantId: "p2",
         status: "READY",
       }),
     });
