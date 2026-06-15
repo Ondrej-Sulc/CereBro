@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -366,6 +367,43 @@ function participantMeta(participant: TournamentMatchParticipant | null) {
   return parts.join(" / ");
 }
 
+function SummonerAvatar({
+  player,
+  className,
+}: {
+  player: TournamentMember;
+  className?: string;
+}) {
+  return (
+    <Avatar className={cn("h-6 w-6 border border-slate-700 bg-slate-900", className)}>
+      <AvatarImage src={player.avatar || undefined} />
+      <AvatarFallback className="text-[10px] font-bold text-slate-300">
+        {player.ingameName.slice(0, 2).toUpperCase()}
+      </AvatarFallback>
+    </Avatar>
+  );
+}
+
+function SummonerLink({
+  player,
+  className,
+  avatarClassName,
+}: {
+  player: TournamentMember;
+  className?: string;
+  avatarClassName?: string;
+}) {
+  return (
+    <Link
+      href={`/player/${player.id}`}
+      className={cn("group inline-flex min-w-0 items-center gap-2 hover:text-cyan-300", className)}
+    >
+      <SummonerAvatar player={player} className={avatarClassName} />
+      <span className="truncate group-hover:underline group-hover:underline-offset-4">{player.ingameName}</span>
+    </Link>
+  );
+}
+
 function BracketPlayerRow({
   participant,
   fallbackName,
@@ -394,7 +432,15 @@ function BracketPlayerRow({
         <div className="flex min-w-0 items-center gap-2">
           {isWinner && <Crown className="h-3.5 w-3.5 shrink-0 text-emerald-300" />}
           {isBye && <Flag className="h-3.5 w-3.5 shrink-0 text-slate-600" />}
-          <span className="truncate text-sm font-semibold">{name}</span>
+          {participant ? (
+            <SummonerLink
+              player={participant.player}
+              className="text-sm font-semibold"
+              avatarClassName="h-5 w-5"
+            />
+          ) : (
+            <span className="truncate text-sm font-semibold">{name}</span>
+          )}
         </div>
         {meta && <p className="mt-0.5 truncate text-[11px] font-medium uppercase tracking-wide text-slate-500">{meta}</p>}
       </div>
@@ -712,7 +758,7 @@ function BracketFlow({
                 const isFinal = match.status === "FINAL";
                 const isDisputed = match.status === "DISPUTED";
                 const isActive = match.status === "PLAYING" || match.status === "REPORTED";
-                const winnerName = match.winnerParticipant?.player.ingameName;
+                const winnerParticipant = match.winnerParticipant;
                 const waitingForOpponent = isWaitingForOpponent(tournament, match);
 
                 return (
@@ -760,10 +806,14 @@ function BracketFlow({
                           isBye={!match.awayParticipant && !waitingForOpponent}
                         />
                       </div>
-                      {winnerName && (
+                      {winnerParticipant && (
                         <div className="mt-2 flex items-center gap-1.5 rounded border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold text-emerald-200">
                           <Crown className="h-3 w-3" />
-                          <span className="min-w-0 truncate">{winnerName}</span>
+                          <SummonerLink
+                            player={winnerParticipant.player}
+                            className="text-emerald-200 hover:text-emerald-100"
+                            avatarClassName="h-4 w-4"
+                          />
                         </div>
                       )}
                       {canManage && !isFinal && (
@@ -1129,12 +1179,11 @@ export function BattlegroundsTournamentsClient({
                         <tr key={entry.id} className="border-b border-slate-900/80">
                           <td className="px-4 py-3 font-mono font-bold text-slate-300">{entry.seed ?? "-"}</td>
                           <td className="px-4 py-3">
-                            <div className="flex items-center gap-3">
-                              <div className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-800 bg-slate-900 text-xs font-bold text-slate-300">
-                                {entry.player.ingameName.slice(0, 2).toUpperCase()}
-                              </div>
-                              <span className="font-semibold text-slate-200">{entry.player.ingameName}</span>
-                            </div>
+                            <SummonerLink
+                              player={entry.player}
+                              className="font-semibold text-slate-200"
+                              avatarClassName="h-8 w-8"
+                            />
                           </td>
                           <td className="px-4 py-3">
                             {entry.battlegroup ? (
@@ -1198,9 +1247,14 @@ export function BattlegroundsTournamentsClient({
                       {standings.map((standing, index) => (
                         <div key={standing.participant.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-900/60 px-3 py-2">
                           <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-slate-200">
-                              #{index + 1} {standing.participant.player.ingameName}
-                            </p>
+                            <div className="flex items-center gap-2 text-sm font-semibold text-slate-200">
+                              <span className="shrink-0 text-slate-500">#{index + 1}</span>
+                              <SummonerLink
+                                player={standing.participant.player}
+                                className="min-w-0 text-slate-200"
+                                avatarClassName="h-6 w-6"
+                              />
+                            </div>
                             <p className="text-xs text-slate-500">
                               {standing.participant.battlegroup ? `BG${standing.participant.battlegroup}` : "Community"} · seed {standing.participant.seed ?? "-"}
                             </p>
@@ -1307,15 +1361,31 @@ export function BattlegroundsTournamentsClient({
                                 </div>
                                 <div className="min-w-0">
                                   <div className="grid grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-2">
-                                    <p className={cn("truncate font-semibold", match.winnerParticipantId === match.homeParticipantId ? "text-emerald-300" : "text-slate-200")}>
-                                      {match.homeParticipant?.player.ingameName ?? "TBD"}
-                                    </p>
+                                    <div className={cn("min-w-0 font-semibold", match.winnerParticipantId === match.homeParticipantId ? "text-emerald-300" : "text-slate-200")}>
+                                      {match.homeParticipant ? (
+                                        <SummonerLink
+                                          player={match.homeParticipant.player}
+                                          className={match.winnerParticipantId === match.homeParticipantId ? "text-emerald-300" : "text-slate-200"}
+                                          avatarClassName="h-5 w-5"
+                                        />
+                                      ) : (
+                                        <span className="truncate">TBD</span>
+                                      )}
+                                    </div>
                                     <p className="rounded border border-slate-800 bg-slate-900 px-2 py-1 text-center font-mono text-xs text-slate-400">
                                       {match.homeScore ?? "--"} : {match.awayScore ?? "--"}
                                     </p>
-                                    <p className={cn("truncate text-right font-semibold", match.winnerParticipantId === match.awayParticipantId ? "text-emerald-300" : "text-slate-200")}>
-                                      {match.awayParticipant?.player.ingameName ?? "Bye"}
-                                    </p>
+                                    <div className={cn("flex min-w-0 justify-end font-semibold", match.winnerParticipantId === match.awayParticipantId ? "text-emerald-300" : "text-slate-200")}>
+                                      {match.awayParticipant ? (
+                                        <SummonerLink
+                                          player={match.awayParticipant.player}
+                                          className={match.winnerParticipantId === match.awayParticipantId ? "text-emerald-300" : "text-slate-200"}
+                                          avatarClassName="h-5 w-5"
+                                        />
+                                      ) : (
+                                        <span className="truncate">Bye</span>
+                                      )}
+                                    </div>
                                   </div>
                                   {match.notes && <p className="mt-1 truncate text-xs text-slate-500">{match.notes}</p>}
                                 </div>
