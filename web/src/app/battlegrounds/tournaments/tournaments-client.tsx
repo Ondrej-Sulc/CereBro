@@ -619,26 +619,17 @@ function MatchResultControls({
 
   if (isFinalResult && !showEditor) {
     return (
-      <div className="mt-2 flex items-center justify-between gap-2 border-t border-slate-800 pt-2">
-        <div className="min-w-0">
-          <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Result</p>
-          <p className="truncate text-xs font-semibold text-slate-300">
-            {match.homeScore ?? "--"}-{match.awayScore ?? "--"}
-            {match.winnerParticipant ? ` · ${match.winnerParticipant.player.ingameName}` : ""}
-          </p>
-        </div>
-        <Button
-          type="button"
-          size="icon"
-          variant="outline"
-          onClick={() => setIsEditingFinalResult(true)}
-          className="h-7 w-7 shrink-0"
-          title="Edit result"
-          aria-label="Edit result"
-        >
-          <Pencil className="h-3.5 w-3.5" />
-        </Button>
-      </div>
+      <Button
+        type="button"
+        size="icon"
+        variant="ghost"
+        onClick={() => setIsEditingFinalResult(true)}
+        className="absolute right-14 top-2 h-6 w-6 text-slate-400 hover:text-slate-100"
+        title="Edit result"
+        aria-label="Edit result"
+      >
+        <Pencil className="h-3.5 w-3.5" />
+      </Button>
     );
   }
 
@@ -861,7 +852,7 @@ function BracketFlow({
                       <div className="pointer-events-none absolute -right-4 top-1/2 hidden h-px w-4 bg-cyan-400/30 lg:block" />
                     )}
                     <div className={cn(
-                      "w-full rounded-md border p-2 shadow-lg shadow-black/20",
+                      "relative w-full rounded-md border p-2 shadow-lg shadow-black/20",
                       isFinal && "border-emerald-500/35 bg-emerald-950/20",
                       isActive && "border-cyan-500/35 bg-cyan-950/20",
                       isDisputed && "border-red-500/35 bg-red-950/20",
