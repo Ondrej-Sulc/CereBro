@@ -53,6 +53,7 @@ import {
 export type TournamentMember = {
   id: string;
   ingameName: string;
+  allianceId: string | null;
   battlegroup: number | null;
   championPrestige: number | null;
   avatar: string | null;
@@ -665,7 +666,7 @@ export function BattlegroundsTournamentsClient({
     const participantIds = new Set(selectedTournament?.participants.map((entry) => entry.player.id) ?? []);
     return players
       .filter((member) => !participantIds.has(member.id))
-      .filter((member) => selectedTournament?.scope !== "ALLIANCE" || member.battlegroup !== null)
+      .filter((member) => selectedTournament?.scope !== "ALLIANCE" || member.allianceId === selectedTournament.allianceId)
       .sort((a, b) => {
         const aBg = a.battlegroup ?? 99;
         const bBg = b.battlegroup ?? 99;
@@ -1100,16 +1101,16 @@ export function BattlegroundsTournamentsClient({
                         }}
                       >
                         <input type="hidden" name="tournamentId" value={selectedTournament.id} />
-                        <Input name="round" inputMode="numeric" defaultValue={nextManualRound} className="border-slate-800 bg-slate-900" />
-                        <Input name="matchNumber" inputMode="numeric" defaultValue={nextManualMatchNumber} className="border-slate-800 bg-slate-900" />
-                        <select name="homeParticipantId" className="h-9 rounded-md border border-slate-800 bg-slate-900 px-3 text-sm text-slate-100">
-                          <option value="">Player 1...</option>
+                        <Input name="round" inputMode="numeric" defaultValue={nextManualRound} aria-label="Round" className="border-slate-800 bg-slate-900" />
+                        <Input name="matchNumber" inputMode="numeric" defaultValue={nextManualMatchNumber} aria-label="Fight number" className="border-slate-800 bg-slate-900" />
+                        <select name="homeParticipantId" aria-label="First fighter" className="h-9 rounded-md border border-slate-800 bg-slate-900 px-3 text-sm text-slate-100">
+                          <option value="">First fighter...</option>
                           {participants.map((entry) => (
                             <option key={entry.id} value={entry.id}>{entry.player.ingameName}</option>
                           ))}
                         </select>
-                        <select name="awayParticipantId" className="h-9 rounded-md border border-slate-800 bg-slate-900 px-3 text-sm text-slate-100">
-                          <option value="">Player 2 / bye...</option>
+                        <select name="awayParticipantId" aria-label="Second fighter" className="h-9 rounded-md border border-slate-800 bg-slate-900 px-3 text-sm text-slate-100">
+                          <option value="">Second fighter / bye...</option>
                           {participants.map((entry) => (
                             <option key={entry.id} value={entry.id}>{entry.player.ingameName}</option>
                           ))}

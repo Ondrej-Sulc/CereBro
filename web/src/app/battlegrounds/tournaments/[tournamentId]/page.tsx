@@ -58,6 +58,7 @@ export default async function BattlegroundsTournamentDetailPage({
       select: {
         id: true,
         ingameName: true,
+        allianceId: true,
         battlegroup: true,
         championPrestige: true,
         avatar: true,
@@ -85,6 +86,7 @@ export default async function BattlegroundsTournamentDetailPage({
               select: {
                 id: true,
                 ingameName: true,
+                allianceId: true,
                 battlegroup: true,
                 championPrestige: true,
                 avatar: true,
@@ -104,6 +106,7 @@ export default async function BattlegroundsTournamentDetailPage({
                   select: {
                     id: true,
                     ingameName: true,
+                    allianceId: true,
                     battlegroup: true,
                     championPrestige: true,
                     avatar: true,
@@ -117,6 +120,7 @@ export default async function BattlegroundsTournamentDetailPage({
                   select: {
                     id: true,
                     ingameName: true,
+                    allianceId: true,
                     battlegroup: true,
                     championPrestige: true,
                     avatar: true,
@@ -130,6 +134,7 @@ export default async function BattlegroundsTournamentDetailPage({
                   select: {
                     id: true,
                     ingameName: true,
+                    allianceId: true,
                     battlegroup: true,
                     championPrestige: true,
                     avatar: true,
