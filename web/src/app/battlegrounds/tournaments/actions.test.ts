@@ -10,6 +10,7 @@ const prismaFake = vi.hoisted(() => ({
     count: vi.fn(),
     create: vi.fn(),
     createMany: vi.fn(),
+    deleteMany: vi.fn(),
     findFirst: vi.fn(),
     findMany: vi.fn(),
     findUnique: vi.fn(),
@@ -79,6 +80,7 @@ describe("battlegrounds tournament actions", () => {
     prismaFake.battlegroundsTournamentMatch.count.mockResolvedValue(1);
     prismaFake.battlegroundsTournamentMatch.create.mockResolvedValue({ id: "match_2" });
     prismaFake.battlegroundsTournamentMatch.createMany.mockResolvedValue({ count: 2 });
+    prismaFake.battlegroundsTournamentMatch.deleteMany.mockResolvedValue({ count: 1 });
     prismaFake.battlegroundsTournamentMatch.findFirst.mockResolvedValue(null);
     prismaFake.battlegroundsTournamentMatch.findMany.mockResolvedValue([]);
     prismaFake.battlegroundsTournamentMatch.update.mockResolvedValue({ id: "match_1" });
@@ -708,6 +710,42 @@ describe("battlegrounds tournament actions", () => {
     });
 
     expect(prismaFake.battlegroundsTournamentMatch.update).not.toHaveBeenCalled();
+  });
+
+  it("removes a pending reset final when the undefeated finalist wins grand final one", async () => {
+    prismaFake.battlegroundsTournamentMatch.findUnique.mockResolvedValue({
+      id: "match_gf_1",
+      bracket: "GRAND_FINAL",
+      round: 1,
+      matchNumber: 1,
+      homeParticipantId: "p1",
+      awayParticipantId: "p2",
+      tournament: {
+        id: "tournament_1",
+        allianceId: "alliance_1",
+        createdById: "player_1",
+        format: "DOUBLE_ELIMINATION",
+      },
+    });
+    prismaFake.battlegroundsTournamentMatch.findFirst.mockResolvedValue(null);
+
+    const formData = new FormData();
+    formData.set("matchId", "match_gf_1");
+    formData.set("homeScore", "2");
+    formData.set("awayScore", "1");
+    formData.set("status", "FINAL");
+
+    await expect(recordTournamentMatchResult(formData)).resolves.toEqual({ success: true });
+
+    expect(prismaFake.battlegroundsTournamentMatch.deleteMany).toHaveBeenCalledWith({
+      where: {
+        tournamentId: "tournament_1",
+        bracket: "GRAND_FINAL",
+        round: 2,
+        matchNumber: 1,
+        status: { not: "FINAL" },
+      },
+    });
   });
 
   it("rejects changing a result after its downstream fight is final", async () => {

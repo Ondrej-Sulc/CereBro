@@ -545,6 +545,16 @@ async function advanceDoubleEliminationResult(match: {
         participantField: "awayParticipantId",
         participantId: match.awayParticipantId,
       });
+    } else if (match.round === 1 && winnerParticipantId === match.homeParticipantId) {
+      await prisma.battlegroundsTournamentMatch.deleteMany({
+        where: {
+          tournamentId,
+          bracket: BattlegroundsMatchBracket.GRAND_FINAL,
+          round: 2,
+          matchNumber: 1,
+          status: { not: BattlegroundsMatchStatus.FINAL },
+        },
+      });
     }
     return;
   }
