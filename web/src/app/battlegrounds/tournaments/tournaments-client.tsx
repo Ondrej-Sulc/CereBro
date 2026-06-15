@@ -791,6 +791,16 @@ export function BattlegroundsTournamentsClient({
                           Check in
                         </Button>
                       )}
+                      {canManageSelected && selectedTournament.status !== "LIVE" && supportsStartSelected && participants.length >= 2 && (
+                        <Button
+                          disabled={isPending}
+                          onClick={() => runAction(() => startTournament(selectedTournament.id))}
+                          className="bg-emerald-500 text-slate-950 hover:bg-emerald-400"
+                        >
+                          <Swords className="h-4 w-4" />
+                          Start tournament
+                        </Button>
+                      )}
                       {canManageSelected && (
                         <Select
                           value={selectedTournament.status}
@@ -829,7 +839,7 @@ export function BattlegroundsTournamentsClient({
                   </div>
                 </div>
 
-                <Tabs defaultValue="entrants" className="w-full">
+                <Tabs defaultValue={showTournamentQueue || selectedTournament.matches.length === 0 ? "entrants" : "matches"} className="w-full">
                   <div className="border-b border-slate-800 px-4 pt-4">
                     <TabsList className="grid h-auto w-full grid-cols-3 bg-slate-900/80 p-1 text-slate-400 sm:w-fit">
                       <TabsTrigger value="entrants" className="gap-2 data-[state=active]:bg-slate-100 data-[state=active]:text-slate-950">
