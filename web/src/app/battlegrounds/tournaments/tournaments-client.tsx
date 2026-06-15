@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { type ReactNode, useMemo, useState, useTransition } from "react";
 import {
   BattlegroundsMatchStatus,
   BattlegroundsTournamentFormat,
@@ -15,6 +15,7 @@ import {
   ClipboardList,
   Crown,
   Flag,
+  Minus,
   Pencil,
   Plus,
   Swords,
@@ -412,12 +413,14 @@ function BracketPlayerRow({
   score,
   isWinner,
   isBye,
+  scoreSlot,
 }: {
   participant: TournamentMatchParticipant | null;
   fallbackName: string;
   score: number | null;
   isWinner: boolean;
   isBye?: boolean;
+  scoreSlot?: ReactNode;
 }) {
   const meta = participantMeta(participant);
   const name = participant?.player.ingameName ?? fallbackName;
@@ -446,29 +449,115 @@ function BracketPlayerRow({
         </div>
         {meta && <p className="mt-0.5 truncate text-[11px] font-medium uppercase tracking-wide text-slate-500">{meta}</p>}
       </div>
-      <span className={cn(
-        "min-w-7 rounded border px-1.5 py-0.5 text-center font-mono text-sm",
-        isWinner ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-200" : "border-slate-800 bg-slate-900 text-slate-500"
-      )}>
-        {score ?? "--"}
-      </span>
+      {scoreSlot ?? (
+        <span className={cn(
+          "min-w-7 rounded border px-1.5 py-0.5 text-center font-mono text-sm",
+          isWinner ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-200" : "border-slate-800 bg-slate-900 text-slate-500"
+        )}>
+          {score ?? "--"}
+        </span>
+      )}
     </div>
   );
 }
 
-function MatchResultControls({
-  match,
+function BracketScoreEditor({
+  label,
+  value,
+  isWinner,
   isPending,
-  waitingForOpponent,
-  runAction,
+  onChange,
+  onCommit,
+  onStep,
 }: {
-  match: TournamentMatch;
+  label: string;
+  value: string;
+  isWinner: boolean;
   isPending: boolean;
-  waitingForOpponent: boolean;
+  onChange: (value: string) => void;
+  onCommit: () => void;
+  onStep: (delta: number) => void;
+}) {
+  return (
+    <div className="flex items-center gap-0.5">
+      <Button
+        type="button"
+        size="icon"
+        variant="ghost"
+        disabled={isPending}
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => onStep(-1)}
+        className="h-6 w-4 text-slate-500 hover:text-slate-100"
+        title={`Decrease ${label} score`}
+        aria-label={`Decrease ${label} score`}
+      >
+        <Minus className="h-2.5 w-2.5" />
+      </Button>
+      <Input
+        type="number"
+        min={0}
+        inputMode="numeric"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        onBlur={onCommit}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            onCommit();
+          }
+        }}
+        placeholder="0"
+        aria-label={`${label} score`}
+        className={cn(
+          "h-7 w-8 border-slate-800 bg-slate-950 px-0 text-center font-mono text-sm",
+          isWinner && "border-emerald-400/40 bg-emerald-400/10 text-emerald-100"
+        )}
+      />
+      <Button
+        type="button"
+        size="icon"
+        variant="ghost"
+        disabled={isPending}
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => onStep(1)}
+        className="h-6 w-4 text-slate-500 hover:text-slate-100"
+        title={`Increase ${label} score`}
+        aria-label={`Increase ${label} score`}
+      >
+        <Plus className="h-2.5 w-2.5" />
+      </Button>
+    </div>
+  );
+}
+
+function BracketMatchCard({
+  tournament,
+  match,
+  canManage,
+  isPending,
+  runAction,
+  rowStart,
+  rowSpan,
+  hasPreviousRound,
+  hasNextRound,
+}: {
+  tournament: TournamentSummary;
+  match: TournamentMatch;
+  canManage: boolean;
+  isPending: boolean;
   runAction: RunTournamentAction;
+  rowStart: number;
+  rowSpan: number;
+  hasPreviousRound: boolean;
+  hasNextRound: boolean;
 }) {
   const firstPlayer = match.homeParticipant;
   const secondPlayer = match.awayParticipant;
+  const isFinal = match.status === "FINAL";
+  const isDisputed = match.status === "DISPUTED";
+  const isActive = match.status === "PLAYING" || match.status === "REPORTED";
+  const winnerParticipant = match.winnerParticipant;
+  const waitingForOpponent = isWaitingForOpponent(tournament, match);
   const [firstScore, setFirstScore] = useState(match.homeScore?.toString() ?? "");
   const [secondScore, setSecondScore] = useState(match.awayScore?.toString() ?? "");
   const initialSavedKey = match.status === "FINAL" && match.winnerParticipantId
@@ -479,10 +568,11 @@ function MatchResultControls({
   const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">(initialSavedKey ? "saved" : "idle");
   const [isEditingFinalResult, setIsEditingFinalResult] = useState(false);
 
-  if (!firstPlayer) return null;
+  if (!firstPlayer) {
+    return null;
+  }
 
-  const isFinalResult = match.status === "FINAL";
-  const showEditor = !isFinalResult || isEditingFinalResult;
+  const showEditor = !isFinal || isEditingFinalResult;
 
   const saveResult = (
     nextFirstScore: string,
@@ -515,53 +605,8 @@ function MatchResultControls({
     });
   };
 
-  if (!secondPlayer) {
-    if (isFinalResult) {
-      return (
-        <div className="mt-2 flex items-center justify-between gap-2 border-t border-slate-800 pt-2">
-          <div className="min-w-0">
-            <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500">Advanced</p>
-            <p className="truncate text-xs font-semibold text-slate-300">
-              {firstPlayer.player.ingameName} by bye
-            </p>
-          </div>
-          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-300" />
-        </div>
-      );
-    }
-
-    return (
-      <div className="mt-2 border-t border-slate-800 pt-2">
-        {waitingForOpponent ? (
-          <p className="rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-center text-xs font-semibold text-slate-500">
-            Waiting for opponent
-          </p>
-        ) : (
-        <Button
-          disabled={isPending}
-          size="sm"
-          onClick={() => saveResult("", "", firstPlayer.id)}
-          className="h-8 w-full bg-emerald-500 text-slate-950 hover:bg-emerald-400"
-        >
-          <CheckCircle2 className="h-4 w-4" />
-          Advance bye
-        </Button>
-        )}
-        {saveState !== "idle" && (
-          <p className={cn(
-            "mt-1 text-center text-[11px] font-semibold uppercase tracking-wide",
-            saveState === "saving" && "text-cyan-300",
-            saveState === "saved" && "text-emerald-300",
-            saveState === "error" && "text-red-300"
-          )}>
-            {saveState === "saving" ? "Saving" : saveState === "saved" ? savedLabel : savedLabel || "Save failed"}
-          </p>
-        )}
-      </div>
-    );
-  }
-
   const inferWinner = (nextFirstScore: string, nextSecondScore: string) => {
+    if (!secondPlayer) return "";
     const parsedFirstScore = Number(nextFirstScore);
     const parsedSecondScore = Number(nextSecondScore);
     if (!Number.isInteger(parsedFirstScore) || !Number.isInteger(parsedSecondScore)) return "";
@@ -587,14 +632,14 @@ function MatchResultControls({
   const currentWinnerId = inferWinner(firstScore, secondScore);
   const currentSavedKey = `${firstScore}:${secondScore}:${currentWinnerId}`;
   const hasScoreChange = currentSavedKey !== lastSavedKey;
-  const canSaveScore = Boolean(firstScore && secondScore && currentWinnerId && (!isFinalResult || hasScoreChange));
+  const canSaveScore = Boolean(firstScore && secondScore && currentWinnerId && (!isFinal || hasScoreChange));
   const resultHint = !firstScore || !secondScore
     ? "Enter both scores"
     : !currentWinnerId
       ? "Scores cannot tie"
-      : isFinalResult && !hasScoreChange
+      : isFinal && !hasScoreChange
         ? "Change scores to edit result"
-      : isFinalResult
+      : isFinal
         ? "Save correction"
         : "Higher score advances";
 
@@ -605,7 +650,7 @@ function MatchResultControls({
       setSavedLabel(!firstScore || !secondScore ? "Enter both scores" : "Scores cannot tie");
       return;
     }
-    saveResult(firstScore, secondScore, inferredWinnerId, { closeEditorOnSave: isFinalResult });
+    saveResult(firstScore, secondScore, inferredWinnerId, { closeEditorOnSave: isFinal });
   };
 
   const cancelEdit = () => {
@@ -617,114 +662,187 @@ function MatchResultControls({
     setIsEditingFinalResult(false);
   };
 
-  if (isFinalResult && !showEditor) {
-    return (
-      <Button
-        type="button"
-        size="icon"
-        variant="ghost"
-        onClick={() => setIsEditingFinalResult(true)}
-        className="absolute right-14 top-2 h-6 w-6 text-slate-400 hover:text-slate-100"
-        title="Edit result"
-        aria-label="Edit result"
-      >
-        <Pencil className="h-3.5 w-3.5" />
-      </Button>
-    );
-  }
+  const stepScore = (side: "first" | "second", delta: number) => {
+    const currentValue = side === "first" ? firstScore : secondScore;
+    const parsedScore = Number.parseInt(currentValue || "0", 10);
+    const nextScore = Math.max(0, (Number.isFinite(parsedScore) ? parsedScore : 0) + delta).toString();
+    if (side === "first") {
+      updateScores(nextScore, secondScore);
+    } else {
+      updateScores(firstScore, nextScore);
+    }
+  };
+
+  const showScoreEditors = canManage && !!secondPlayer && showEditor;
+  const showResultActions = canManage && !!secondPlayer && showEditor;
 
   return (
-    <div className="mt-2 space-y-2 border-t border-slate-800 pt-2">
-
-      <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
-        <label className="space-y-1">
-          <span className="block truncate text-xs font-semibold text-slate-500">{firstPlayer.player.ingameName}</span>
-          <Input
-            name="homeScore"
-            type="number"
-            min={0}
-            inputMode="numeric"
-            value={firstScore}
-            onChange={(event) => updateScores(event.target.value, secondScore)}
-            onBlur={() => {
-              if (!isFinalResult) saveIfReady(firstScore, secondScore);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                saveCurrentScore();
-              }
-            }}
-            placeholder="0"
-            aria-label={`${firstPlayer.player.ingameName} score`}
-            className="h-8 border-slate-800 bg-slate-950 text-center font-mono text-sm"
-          />
-        </label>
-        <span className="pb-2 text-xs font-bold uppercase tracking-wide text-slate-600">vs</span>
-        <label className="space-y-1">
-          <span className="block truncate text-xs font-semibold text-slate-500">{secondPlayer.player.ingameName}</span>
-          <Input
-            name="awayScore"
-            type="number"
-            min={0}
-            inputMode="numeric"
-            value={secondScore}
-            onChange={(event) => updateScores(firstScore, event.target.value)}
-            onBlur={() => {
-              if (!isFinalResult) saveIfReady(firstScore, secondScore);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                saveCurrentScore();
-              }
-            }}
-            placeholder="0"
-            aria-label={`${secondPlayer.player.ingameName} score`}
-            className="h-8 border-slate-800 bg-slate-950 text-center font-mono text-sm"
-          />
-        </label>
-      </div>
-      <div className="grid grid-cols-[1fr_auto] items-center gap-2">
-        <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-slate-500">
-          {resultHint}
-        </p>
-        <div className="flex justify-end gap-1">
-          {isFinalResult && (
-            <Button
-              type="button"
-              size="icon"
-              variant="ghost"
-              onClick={cancelEdit}
-              className="h-7 w-7 text-slate-500 hover:text-slate-200"
-              title="Cancel edit"
-              aria-label="Cancel edit"
-            >
-              <X className="h-3.5 w-3.5" />
-            </Button>
-          )}
-          <Button
-            type="button"
-            size="sm"
-            disabled={isPending || !canSaveScore}
-            onClick={saveCurrentScore}
-            className="h-7 px-2 text-[11px]"
-            variant="outline"
-          >
-            Save
-          </Button>
-        </div>
-      </div>
-      {saveState !== "idle" && (
-        <p className={cn(
-          "text-center text-[11px] font-semibold uppercase tracking-wide",
-          saveState === "saving" && "text-cyan-300",
-          saveState === "saved" && "text-emerald-300",
-          saveState === "error" && "text-red-300"
-        )}>
-          {saveState === "saving" ? "Saving" : saveState === "saved" ? savedLabel : savedLabel || "Save failed"}
-        </p>
+    <div
+      className="relative flex items-center"
+      style={{ gridRow: `${rowStart} / span ${rowSpan}` }}
+    >
+      {hasPreviousRound && (
+        <>
+          <div className="pointer-events-none absolute -left-4 top-1/2 hidden h-px w-4 bg-cyan-400/30 lg:block" />
+          <div className="pointer-events-none absolute -left-4 top-1/4 hidden h-1/2 w-px bg-cyan-400/30 lg:block" />
+        </>
       )}
+      {hasNextRound && (
+        <div className="pointer-events-none absolute -right-4 top-1/2 hidden h-px w-4 bg-cyan-400/30 lg:block" />
+      )}
+      <div className={cn(
+        "relative w-full rounded-md border p-2 shadow-lg shadow-black/20",
+        isFinal && "border-emerald-500/35 bg-emerald-950/20",
+        isActive && "border-cyan-500/35 bg-cyan-950/20",
+        isDisputed && "border-red-500/35 bg-red-950/20",
+        !isFinal && !isActive && !isDisputed && "border-slate-800 bg-slate-900/70"
+      )}>
+        <div className="mb-1.5 flex items-center justify-between gap-2">
+          <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+            M{match.matchNumber}
+          </span>
+          <div className="flex items-center gap-1">
+            {canManage && isFinal && secondPlayer && !showEditor && (
+              <Button
+                type="button"
+                size="icon"
+                variant="ghost"
+                onClick={() => setIsEditingFinalResult(true)}
+                className="h-6 w-6 text-slate-400 hover:text-slate-100"
+                title="Edit result"
+                aria-label="Edit result"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+              </Button>
+            )}
+            <Badge variant="outline" className={cn("px-1.5 py-0 text-[9px]", matchStatusTone(match.status))}>
+              {matchStatusLabels[match.status]}
+            </Badge>
+          </div>
+        </div>
+        <div className="space-y-1.5">
+          <BracketPlayerRow
+            participant={match.homeParticipant}
+            fallbackName="TBD"
+            score={match.homeScore}
+            isWinner={match.winnerParticipantId === match.homeParticipantId}
+            scoreSlot={showScoreEditors ? (
+              <BracketScoreEditor
+                label={firstPlayer.player.ingameName}
+                value={firstScore}
+                isWinner={currentWinnerId === firstPlayer.id}
+                isPending={isPending}
+                onChange={(value) => updateScores(value, secondScore)}
+                onCommit={() => {
+                  if (!isFinal) saveIfReady(firstScore, secondScore);
+                }}
+                onStep={(delta) => stepScore("first", delta)}
+              />
+            ) : undefined}
+          />
+          <BracketPlayerRow
+            participant={match.awayParticipant}
+            fallbackName={waitingForOpponent ? "TBD" : "Bye"}
+            score={match.awayScore}
+            isWinner={match.winnerParticipantId === match.awayParticipantId}
+            isBye={!match.awayParticipant && !waitingForOpponent}
+            scoreSlot={showScoreEditors && secondPlayer ? (
+              <BracketScoreEditor
+                label={secondPlayer.player.ingameName}
+                value={secondScore}
+                isWinner={currentWinnerId === secondPlayer.id}
+                isPending={isPending}
+                onChange={(value) => updateScores(firstScore, value)}
+                onCommit={() => {
+                  if (!isFinal) saveIfReady(firstScore, secondScore);
+                }}
+                onStep={(delta) => stepScore("second", delta)}
+              />
+            ) : undefined}
+          />
+        </div>
+        {winnerParticipant && (!canManage || !isFinal) && (
+          <div className="mt-2 flex items-center gap-1.5 rounded border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold text-emerald-200">
+            <Crown className="h-3 w-3" />
+            <SummonerLink
+              player={winnerParticipant.player}
+              className="text-emerald-200 hover:text-emerald-100"
+              avatarClassName="h-4 w-4"
+            />
+          </div>
+        )}
+        {canManage && !secondPlayer && !isFinal && (
+          <div className="mt-2 border-t border-slate-800 pt-2">
+            {waitingForOpponent ? (
+              <p className="rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-center text-xs font-semibold text-slate-500">
+                Waiting for opponent
+              </p>
+            ) : (
+              <Button
+                disabled={isPending}
+                size="sm"
+                onClick={() => saveResult("", "", firstPlayer.id)}
+                className="h-8 w-full bg-emerald-500 text-slate-950 hover:bg-emerald-400"
+              >
+                <CheckCircle2 className="h-4 w-4" />
+                Advance bye
+              </Button>
+            )}
+          </div>
+        )}
+        {showResultActions && (
+          <div className="mt-2 grid grid-cols-[1fr_auto] items-center gap-2 border-t border-slate-800 pt-2">
+            <p className="truncate text-[11px] font-semibold uppercase tracking-wide text-slate-500">
+              {resultHint}
+            </p>
+            <div className="flex justify-end gap-1">
+              {isFinal && (
+                <Button
+                  type="button"
+                  size="icon"
+                  variant="ghost"
+                  onMouseDown={(event) => event.preventDefault()}
+                  onClick={cancelEdit}
+                  className="h-7 w-7 text-slate-500 hover:text-slate-200"
+                  title="Cancel edit"
+                  aria-label="Cancel edit"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              )}
+              <Button
+                type="button"
+                size="sm"
+                disabled={isPending || !canSaveScore}
+                onMouseDown={(event) => event.preventDefault()}
+                onClick={saveCurrentScore}
+                className="h-7 px-2 text-[11px]"
+                variant="outline"
+              >
+                Save
+              </Button>
+            </div>
+          </div>
+        )}
+        {saveState !== "idle" && (
+          <p className={cn(
+            "mt-1 text-center text-[11px] font-semibold uppercase tracking-wide",
+            saveState === "saving" && "text-cyan-300",
+            saveState === "saved" && "text-emerald-300",
+            saveState === "error" && "text-red-300"
+          )}>
+            {saveState === "saving" ? "Saving" : saveState === "saved" ? savedLabel : savedLabel || "Save failed"}
+          </p>
+        )}
+        {canManage && !secondPlayer && isFinal && (
+          <div className="mt-2 flex items-center justify-between gap-2 border-t border-slate-800 pt-2">
+            <p className="truncate text-xs font-semibold text-slate-300">
+              {firstPlayer.player.ingameName} advanced by bye
+            </p>
+            <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-300" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -830,77 +948,19 @@ function BracketFlow({
                   );
                 }
 
-                const isFinal = match.status === "FINAL";
-                const isDisputed = match.status === "DISPUTED";
-                const isActive = match.status === "PLAYING" || match.status === "REPORTED";
-                const winnerParticipant = match.winnerParticipant;
-                const waitingForOpponent = isWaitingForOpponent(tournament, match);
-
                 return (
-                  <div
+                  <BracketMatchCard
                     key={match.id}
-                    className="relative flex items-center"
-                    style={{ gridRow: `${rowStart} / span ${rowSpan}` }}
-                  >
-                    {hasPreviousRound && (
-                      <>
-                        <div className="pointer-events-none absolute -left-4 top-1/2 hidden h-px w-4 bg-cyan-400/30 lg:block" />
-                        <div className="pointer-events-none absolute -left-4 top-1/4 hidden h-1/2 w-px bg-cyan-400/30 lg:block" />
-                      </>
-                    )}
-                    {hasNextRound && (
-                      <div className="pointer-events-none absolute -right-4 top-1/2 hidden h-px w-4 bg-cyan-400/30 lg:block" />
-                    )}
-                    <div className={cn(
-                      "relative w-full rounded-md border p-2 shadow-lg shadow-black/20",
-                      isFinal && "border-emerald-500/35 bg-emerald-950/20",
-                      isActive && "border-cyan-500/35 bg-cyan-950/20",
-                      isDisputed && "border-red-500/35 bg-red-950/20",
-                      !isFinal && !isActive && !isDisputed && "border-slate-800 bg-slate-900/70"
-                    )}>
-                      <div className="mb-1.5 flex items-center justify-between gap-2">
-                        <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
-                          M{match.matchNumber}
-                        </span>
-                        <Badge variant="outline" className={cn("px-1.5 py-0 text-[9px]", matchStatusTone(match.status))}>
-                          {matchStatusLabels[match.status]}
-                        </Badge>
-                      </div>
-                      <div className="space-y-1.5">
-                        <BracketPlayerRow
-                          participant={match.homeParticipant}
-                          fallbackName="TBD"
-                          score={match.homeScore}
-                          isWinner={match.winnerParticipantId === match.homeParticipantId}
-                        />
-                        <BracketPlayerRow
-                          participant={match.awayParticipant}
-                          fallbackName={waitingForOpponent ? "TBD" : "Bye"}
-                          score={match.awayScore}
-                          isWinner={match.winnerParticipantId === match.awayParticipantId}
-                          isBye={!match.awayParticipant && !waitingForOpponent}
-                        />
-                      </div>
-                      {winnerParticipant && (!canManage || !isFinal) && (
-                        <div className="mt-2 flex items-center gap-1.5 rounded border border-emerald-500/20 bg-emerald-500/10 px-2 py-1 text-[11px] font-semibold text-emerald-200">
-                          <Crown className="h-3 w-3" />
-                          <SummonerLink
-                            player={winnerParticipant.player}
-                            className="text-emerald-200 hover:text-emerald-100"
-                            avatarClassName="h-4 w-4"
-                          />
-                        </div>
-                      )}
-                      {canManage && (
-                        <MatchResultControls
-                          match={match}
-                          isPending={isPending}
-                          waitingForOpponent={waitingForOpponent}
-                          runAction={runAction}
-                        />
-                      )}
-                    </div>
-                  </div>
+                    tournament={tournament}
+                    match={match}
+                    canManage={canManage}
+                    isPending={isPending}
+                    runAction={runAction}
+                    rowStart={rowStart}
+                    rowSpan={rowSpan}
+                    hasPreviousRound={hasPreviousRound}
+                    hasNextRound={hasNextRound}
+                  />
                 );
               })}
             </div>
