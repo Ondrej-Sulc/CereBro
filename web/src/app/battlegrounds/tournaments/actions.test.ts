@@ -634,6 +634,88 @@ describe("battlegrounds tournament actions", () => {
     });
   });
 
+  it("auto-advances a lone double elimination lower bracket player when all feeders are final", async () => {
+    prismaFake.battlegroundsTournamentMatch.findUnique.mockResolvedValue({
+      id: "match_1",
+      bracket: "WINNERS",
+      round: 1,
+      matchNumber: 1,
+      homeParticipantId: "p1",
+      awayParticipantId: "p2",
+      tournament: {
+        id: "tournament_1",
+        allianceId: "alliance_1",
+        createdById: "player_1",
+        format: "DOUBLE_ELIMINATION",
+      },
+    });
+    prismaFake.battlegroundsTournamentMatch.count.mockResolvedValue(1);
+    prismaFake.battlegroundsTournamentMatch.findFirst
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce({ id: "match_gf_1", status: "READY" });
+    prismaFake.battlegroundsTournamentMatch.findMany.mockResolvedValue([
+      {
+        id: "match_1",
+        bracket: "WINNERS",
+        round: 1,
+        matchNumber: 1,
+        status: "FINAL",
+        homeParticipantId: "p1",
+        awayParticipantId: "p2",
+        winnerParticipantId: "p1",
+        tournament: { id: "tournament_1", format: "DOUBLE_ELIMINATION" },
+      },
+      {
+        id: "match_l1",
+        bracket: "LOSERS",
+        round: 1,
+        matchNumber: 1,
+        status: "READY",
+        homeParticipantId: "p2",
+        awayParticipantId: null,
+        winnerParticipantId: null,
+        tournament: { id: "tournament_1", format: "DOUBLE_ELIMINATION" },
+      },
+      {
+        id: "match_gf_1",
+        bracket: "GRAND_FINAL",
+        round: 1,
+        matchNumber: 1,
+        status: "READY",
+        homeParticipantId: "p1",
+        awayParticipantId: null,
+        winnerParticipantId: null,
+        tournament: { id: "tournament_1", format: "DOUBLE_ELIMINATION" },
+      },
+    ]);
+
+    const formData = new FormData();
+    formData.set("matchId", "match_1");
+    formData.set("homeScore", "2");
+    formData.set("awayScore", "0");
+    formData.set("status", "FINAL");
+
+    await expect(recordTournamentMatchResult(formData)).resolves.toEqual({ success: true });
+
+    expect(prismaFake.battlegroundsTournamentMatch.update).toHaveBeenCalledWith({
+      where: { id: "match_l1" },
+      data: {
+        status: "FINAL",
+        winnerParticipantId: "p2",
+      },
+    });
+    expect(prismaFake.battlegroundsTournamentMatch.update).toHaveBeenCalledWith({
+      where: { id: "match_gf_1" },
+      data: expect.objectContaining({
+        awayParticipantId: "p2",
+        status: "READY",
+      }),
+    });
+  });
+
   it("creates a reset grand final when the losers bracket finalist wins grand final one", async () => {
     prismaFake.battlegroundsTournamentMatch.findUnique.mockResolvedValue({
       id: "match_gf_1",

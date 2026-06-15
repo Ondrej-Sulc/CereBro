@@ -779,6 +779,115 @@ async function autoAdvanceSingleEliminationByes(tournamentId: string) {
   }
 }
 
+function doubleEliminationByeSources(match: {
+  bracket: BattlegroundsMatchBracket;
+  round: number;
+  matchNumber: number;
+}) {
+  if (match.bracket === BattlegroundsMatchBracket.WINNERS) {
+    if (match.round === 1) return [];
+    return [
+      { bracket: BattlegroundsMatchBracket.WINNERS, round: match.round - 1, matchNumber: match.matchNumber * 2 - 1 },
+      { bracket: BattlegroundsMatchBracket.WINNERS, round: match.round - 1, matchNumber: match.matchNumber * 2 },
+    ];
+  }
+
+  if (match.bracket === BattlegroundsMatchBracket.LOSERS) {
+    if (match.round === 1) {
+      return [
+        { bracket: BattlegroundsMatchBracket.WINNERS, round: 1, matchNumber: match.matchNumber * 2 - 1 },
+        { bracket: BattlegroundsMatchBracket.WINNERS, round: 1, matchNumber: match.matchNumber * 2 },
+      ];
+    }
+
+    if (match.round % 2 === 0) {
+      return [
+        { bracket: BattlegroundsMatchBracket.LOSERS, round: match.round - 1, matchNumber: match.matchNumber },
+        { bracket: BattlegroundsMatchBracket.WINNERS, round: match.round / 2 + 1, matchNumber: match.matchNumber },
+      ];
+    }
+
+    return [
+      { bracket: BattlegroundsMatchBracket.LOSERS, round: match.round - 1, matchNumber: match.matchNumber * 2 - 1 },
+      { bracket: BattlegroundsMatchBracket.LOSERS, round: match.round - 1, matchNumber: match.matchNumber * 2 },
+    ];
+  }
+
+  return null;
+}
+
+function sourceMatchIsFinal(
+  matches: Array<{
+    bracket: BattlegroundsMatchBracket;
+    round: number;
+    matchNumber: number;
+    status: BattlegroundsMatchStatus;
+  }>,
+  source: { bracket: BattlegroundsMatchBracket; round: number; matchNumber: number }
+) {
+  const sourceMatch = matches.find((match) => (
+    match.bracket === source.bracket &&
+    match.round === source.round &&
+    match.matchNumber === source.matchNumber
+  ));
+  if (sourceMatch) return sourceMatch.status === BattlegroundsMatchStatus.FINAL;
+
+  const sourceRoundMatchCount = matches.filter((match) => (
+    match.bracket === source.bracket &&
+    match.round === source.round
+  )).length;
+  return sourceRoundMatchCount > 0 && source.matchNumber > sourceRoundMatchCount;
+}
+
+async function autoAdvanceResolvableDoubleEliminationByes(tournamentId: string) {
+  const matches = await prisma.battlegroundsTournamentMatch.findMany({
+    where: {
+      tournamentId,
+    },
+    select: {
+      id: true,
+      bracket: true,
+      round: true,
+      matchNumber: true,
+      status: true,
+      homeParticipantId: true,
+      awayParticipantId: true,
+      winnerParticipantId: true,
+      tournament: {
+        select: {
+          id: true,
+          format: true,
+        },
+      },
+    },
+    orderBy: [
+      { bracket: "asc" },
+      { round: "asc" },
+      { matchNumber: "asc" },
+    ],
+  });
+
+  for (const match of matches) {
+    if (match.tournament.format !== BattlegroundsTournamentFormat.DOUBLE_ELIMINATION) continue;
+    if (!match.homeParticipantId) continue;
+    if (match.awayParticipantId || match.winnerParticipantId) continue;
+
+    const sources = doubleEliminationByeSources(match);
+    if (sources === null) continue;
+    if (!sources.every((source) => sourceMatchIsFinal(matches, source))) continue;
+
+    await prisma.battlegroundsTournamentMatch.update({
+      where: { id: match.id },
+      data: {
+        status: BattlegroundsMatchStatus.FINAL,
+        winnerParticipantId: match.homeParticipantId,
+      },
+    });
+
+    await advanceDoubleEliminationResult(match, match.homeParticipantId);
+  }
+}
+
 export const createTournament = withActionContext(
   "createBattlegroundsTournament",
   async (formData: FormData): Promise<TournamentActionResult> => {
@@ -1250,6 +1359,7 @@ export const recordTournamentMatchResult = withActionContext(
     if (status === BattlegroundsMatchStatus.FINAL) {
       await advanceSingleEliminationWinner(match, winnerParticipantId);
       await advanceDoubleEliminationResult(match, winnerParticipantId);
+      await autoAdvanceResolvableDoubleEliminationByes(match.tournament.id);
     }
 
     revalidatePath(TOURNAMENTS_PATH);
