@@ -423,6 +423,46 @@ async function hasFinalDownstreamSingleEliminationMatch(match: {
   return !!downstreamMatch;
 }
 
+async function autoAdvanceSingleEliminationByes(tournamentId: string) {
+  const byeMatches = await prisma.battlegroundsTournamentMatch.findMany({
+    where: {
+      tournamentId,
+      awayParticipantId: null,
+      winnerParticipantId: null,
+    },
+    select: {
+      id: true,
+      round: true,
+      matchNumber: true,
+      homeParticipantId: true,
+      tournament: {
+        select: {
+          id: true,
+          format: true,
+        },
+      },
+    },
+    orderBy: [
+      { round: "asc" },
+      { matchNumber: "asc" },
+    ],
+  });
+
+  for (const match of byeMatches) {
+    if (!match.homeParticipantId) continue;
+
+    await prisma.battlegroundsTournamentMatch.update({
+      where: { id: match.id },
+      data: {
+        status: BattlegroundsMatchStatus.FINAL,
+        winnerParticipantId: match.homeParticipantId,
+      },
+    });
+
+    await advanceSingleEliminationWinner(match, match.homeParticipantId);
+  }
+}
+
 export const createTournament = withActionContext(
   "createBattlegroundsTournament",
   async (formData: FormData): Promise<TournamentActionResult> => {
@@ -722,6 +762,8 @@ export const startTournament = withActionContext(
         return { success: false, error: "Matches already exist for that generated round." };
       }
     }
+
+    await autoAdvanceSingleEliminationByes(tournament.id);
 
     await prisma.battlegroundsTournament.update({
       where: { id: tournament.id },
