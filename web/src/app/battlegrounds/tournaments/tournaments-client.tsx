@@ -693,9 +693,12 @@ function BracketFlow({
                     >
                       {hasPreviousRound && (
                         <>
-                          <div className="pointer-events-none absolute -left-8 top-1/2 hidden h-px w-8 bg-slate-700 lg:block" />
-                          <div className="pointer-events-none absolute -left-8 top-1/4 hidden h-1/2 w-px bg-slate-700 lg:block" />
+                          <div className="pointer-events-none absolute -left-4 top-1/2 hidden h-px w-4 bg-slate-700 lg:block" />
+                          <div className="pointer-events-none absolute -left-4 top-1/4 hidden h-1/2 w-px bg-slate-700 lg:block" />
                         </>
+                      )}
+                      {hasNextRound && (
+                        <div className="pointer-events-none absolute -right-4 top-1/2 hidden h-px w-4 bg-slate-700 lg:block" />
                       )}
                       <div className="w-full rounded-md border border-dashed border-slate-800 bg-slate-950/60 p-2 text-xs text-slate-600">
                         <p className="font-bold uppercase tracking-widest">M{slot.matchNumber}</p>
@@ -719,12 +722,12 @@ function BracketFlow({
                   >
                     {hasPreviousRound && (
                       <>
-                        <div className="pointer-events-none absolute -left-8 top-1/2 hidden h-px w-8 bg-cyan-400/30 lg:block" />
-                        <div className="pointer-events-none absolute -left-8 top-1/4 hidden h-1/2 w-px bg-cyan-400/30 lg:block" />
+                        <div className="pointer-events-none absolute -left-4 top-1/2 hidden h-px w-4 bg-cyan-400/30 lg:block" />
+                        <div className="pointer-events-none absolute -left-4 top-1/4 hidden h-1/2 w-px bg-cyan-400/30 lg:block" />
                       </>
                     )}
                     {hasNextRound && (
-                      <div className="pointer-events-none absolute -right-8 top-1/2 hidden h-px w-8 bg-cyan-400/30 lg:block" />
+                      <div className="pointer-events-none absolute -right-4 top-1/2 hidden h-px w-4 bg-cyan-400/30 lg:block" />
                     )}
                     <div className={cn(
                       "w-full rounded-md border p-2 shadow-lg shadow-black/20",
