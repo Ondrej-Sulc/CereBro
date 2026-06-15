@@ -256,11 +256,12 @@ function summonerCountGuidance(tournament: TournamentSummary) {
     };
   }
 
-  if (tournament.format === "SINGLE_ELIMINATION") {
+  if (tournament.format === "SINGLE_ELIMINATION" || tournament.format === "DOUBLE_ELIMINATION") {
+    const bracketName = tournament.format === "DOUBLE_ELIMINATION" ? "double-elim" : "single-elim";
     if (isPowerOfTwo(count)) {
       return {
         tone: "border-emerald-500/30 bg-emerald-500/10 text-emerald-200",
-        text: `Clean ${count}-summoner bracket with no byes.`,
+        text: `Clean ${count}-summoner ${bracketName} bracket with no byes.`,
       };
     }
 
@@ -268,7 +269,7 @@ function summonerCountGuidance(tournament: TournamentSummary) {
     const needed = target - count;
     return {
       tone: "border-cyan-500/30 bg-cyan-500/10 text-cyan-200",
-      text: `${count} works with ${needed} ${needed === 1 ? "bye" : "byes"}. Add ${needed} ${needed === 1 ? "summoner" : "summoners"} for a clean ${target}-summoner bracket.`,
+      text: `${count} works with ${needed} ${needed === 1 ? "bye" : "byes"}. Add ${needed} ${needed === 1 ? "summoner" : "summoners"} for a clean ${target}-summoner ${bracketName} bracket.`,
     };
   }
 
