@@ -348,12 +348,20 @@ function MatchResultControls({
   const [firstScore, setFirstScore] = useState(match.homeScore?.toString() ?? "");
   const [secondScore, setSecondScore] = useState(match.awayScore?.toString() ?? "");
   const [winnerId, setWinnerId] = useState(match.winnerParticipantId ?? "");
-  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const initialSavedKey = match.status === "FINAL" && match.winnerParticipantId
+    ? `${match.homeScore ?? ""}:${match.awayScore ?? ""}:${match.winnerParticipantId}`
+    : "";
+  const [lastSavedKey, setLastSavedKey] = useState(initialSavedKey);
+  const [savedLabel, setSavedLabel] = useState(initialSavedKey ? "Saved" : "");
+  const [saveState, setSaveState] = useState<"idle" | "saving" | "saved" | "error">(initialSavedKey ? "saved" : "idle");
 
   if (!firstPlayer) return null;
 
   const saveResult = (nextFirstScore: string, nextSecondScore: string, nextWinnerId: string) => {
     if (isPending || !nextWinnerId) return;
+    const nextSavedKey = `${nextFirstScore}:${nextSecondScore}:${nextWinnerId}`;
+    if (nextSavedKey === lastSavedKey) return;
+
     setSaveState("saving");
 
     const formData = new FormData();
@@ -368,7 +376,8 @@ function MatchResultControls({
         return;
       }
       setSaveState("saved");
-      window.setTimeout(() => setSaveState("idle"), 1800);
+      setLastSavedKey(nextSavedKey);
+      setSavedLabel(nextFirstScore || nextSecondScore ? `Saved ${nextFirstScore}-${nextSecondScore}` : "Bye advanced");
     });
   };
 
@@ -397,7 +406,7 @@ function MatchResultControls({
             saveState === "saved" && "text-emerald-300",
             saveState === "error" && "text-red-300"
           )}>
-            {saveState === "saving" ? "Saving" : saveState === "saved" ? "Saved" : "Save failed"}
+            {saveState === "saving" ? "Saving" : saveState === "saved" ? savedLabel : "Save failed"}
           </p>
         )}
       </div>
@@ -415,6 +424,10 @@ function MatchResultControls({
   const updateScores = (nextFirstScore: string, nextSecondScore: string) => {
     setFirstScore(nextFirstScore);
     setSecondScore(nextSecondScore);
+    if (saveState !== "saving") {
+      setSaveState("idle");
+      setSavedLabel("");
+    }
     const inferredWinnerId = inferWinner(nextFirstScore, nextSecondScore);
     if (inferredWinnerId) setWinnerId(inferredWinnerId);
   };
@@ -515,7 +528,7 @@ function MatchResultControls({
           saveState === "saved" && "text-emerald-300",
           saveState === "error" && "text-red-300"
         )}>
-          {saveState === "saving" ? "Saving" : saveState === "saved" ? "Saved" : "Save failed"}
+          {saveState === "saving" ? "Saving" : saveState === "saved" ? savedLabel : "Save failed"}
         </p>
       )}
     </div>
