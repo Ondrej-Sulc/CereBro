@@ -851,8 +851,15 @@ export function BattlegroundsTournamentsClient({
     selectedTournament.status === "CHECK_IN";
   const checkedInCount = participants.filter((entry) => entry.status === "CHECKED_IN").length;
   const supportsStartSelected = selectedTournament?.format === "SINGLE_ELIMINATION";
+  const hasFightsSelected = (selectedTournament?.matches.length ?? 0) > 0;
+  const canStartSelected = !!selectedTournament &&
+    !!supportsStartSelected &&
+    participants.length >= 2 &&
+    (selectedTournament.status !== "LIVE" || !hasFightsSelected);
   const lifecycleAction = selectedTournament
-    ? nextLifecycleAction(selectedTournament.status, !!supportsStartSelected)
+    ? selectedTournament.status === "LIVE" && !hasFightsSelected
+      ? null
+      : nextLifecycleAction(selectedTournament.status, !!supportsStartSelected)
     : null;
   const bgCounts = [1, 2, 3].map((bg) => ({
     bg,
@@ -985,7 +992,7 @@ export function BattlegroundsTournamentsClient({
                           Check in
                         </Button>
                       )}
-                      {canManageSelected && selectedTournament.status !== "LIVE" && supportsStartSelected && participants.length >= 2 && (
+                      {canManageSelected && canStartSelected && (
                         <Button
                           disabled={isPending}
                           onClick={() => runAction(() => startTournament(selectedTournament.id))}
@@ -1215,9 +1222,9 @@ export function BattlegroundsTournamentsClient({
                         <h3 className="font-bold text-white">Matches</h3>
                         <p className="text-sm text-slate-500">{matchRounds.length} rounds</p>
                       </div>
-                      {canManageSelected && selectedTournament.status !== "LIVE" && (
+                      {canManageSelected && canStartSelected && (
                         <Button
-                          disabled={isPending || participants.length < 2 || !supportsStartSelected}
+                          disabled={isPending}
                           onClick={() => runAction(() => startTournament(selectedTournament.id))}
                           className="bg-emerald-500 text-slate-950 hover:bg-emerald-400"
                         >
@@ -1278,7 +1285,7 @@ export function BattlegroundsTournamentsClient({
                           <Swords className="mx-auto h-8 w-8 text-slate-700" />
                           <p className="mt-2 font-semibold text-slate-300">No matches yet</p>
                           <p className="mt-1 text-sm text-slate-500">
-                            Generate the first round once the field is ready, or add pairings manually.
+                            Start the tournament when the summoner list is ready, or add pairings manually.
                           </p>
                         </div>
                       )}
