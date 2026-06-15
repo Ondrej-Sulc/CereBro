@@ -522,6 +522,33 @@ async function advanceDoubleEliminationResult(match: {
 
   const tournamentId = match.tournament.id;
 
+  if (match.bracket === BattlegroundsMatchBracket.GRAND_FINAL) {
+    if (
+      match.round === 1 &&
+      match.homeParticipantId &&
+      match.awayParticipantId &&
+      winnerParticipantId === match.awayParticipantId
+    ) {
+      await placeGeneratedParticipant({
+        tournamentId,
+        bracket: BattlegroundsMatchBracket.GRAND_FINAL,
+        round: 2,
+        matchNumber: 1,
+        participantField: "homeParticipantId",
+        participantId: match.homeParticipantId,
+      });
+      await placeGeneratedParticipant({
+        tournamentId,
+        bracket: BattlegroundsMatchBracket.GRAND_FINAL,
+        round: 2,
+        matchNumber: 1,
+        participantField: "awayParticipantId",
+        participantId: match.awayParticipantId,
+      });
+    }
+    return;
+  }
+
   if (match.bracket === BattlegroundsMatchBracket.WINNERS) {
     const currentRoundMatchCount = await doubleEliminationWinnerRoundCount(tournamentId, match.round);
     if (currentRoundMatchCount > 1) {
@@ -685,6 +712,15 @@ async function hasFinalDownstreamDoubleEliminationMatch(match: {
         };
 
     return hasFinalGeneratedMatch({ tournamentId, ...downstreamDestination });
+  }
+
+  if (match.bracket === BattlegroundsMatchBracket.GRAND_FINAL && match.round === 1) {
+    return hasFinalGeneratedMatch({
+      tournamentId,
+      bracket: BattlegroundsMatchBracket.GRAND_FINAL,
+      round: 2,
+      matchNumber: 1,
+    });
   }
 
   return false;

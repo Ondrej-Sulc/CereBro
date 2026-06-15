@@ -967,9 +967,12 @@ function BracketFlow({
   const completedMatches = tournament.matches.filter((match) => match.status === "FINAL").length;
   const activeMatches = tournament.matches.filter((match) => match.status === "PLAYING" || match.status === "REPORTED").length;
   const finalRound = rounds.at(-1)?.[1] ?? [];
-  const grandFinal = tournament.matches.find((match) => match.bracket === "GRAND_FINAL" && match.round === 1 && match.matchNumber === 1) ?? null;
+  const grandFinals = tournament.matches
+    .filter((match) => match.bracket === "GRAND_FINAL")
+    .sort((a, b) => b.round - a.round || b.matchNumber - a.matchNumber);
+  const latestGrandFinal = grandFinals[0] ?? null;
   const champion = isDoubleElimination
-    ? grandFinal?.status === "FINAL" ? grandFinal.winnerParticipant?.player.ingameName : null
+    ? latestGrandFinal?.status === "FINAL" ? latestGrandFinal.winnerParticipant?.player.ingameName : null
     : finalRound.length === 1 && finalRound[0].status === "FINAL"
       ? finalRound[0].winnerParticipant?.player.ingameName
       : null;
