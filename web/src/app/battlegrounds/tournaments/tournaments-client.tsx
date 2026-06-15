@@ -469,7 +469,6 @@ function MatchResultControls({
   const secondPlayer = match.awayParticipant;
   const [firstScore, setFirstScore] = useState(match.homeScore?.toString() ?? "");
   const [secondScore, setSecondScore] = useState(match.awayScore?.toString() ?? "");
-  const [winnerId, setWinnerId] = useState(match.winnerParticipantId ?? "");
   const initialSavedKey = match.status === "FINAL" && match.winnerParticipantId
     ? `${match.homeScore ?? ""}:${match.awayScore ?? ""}:${match.winnerParticipantId}`
     : "";
@@ -479,9 +478,9 @@ function MatchResultControls({
 
   if (!firstPlayer) return null;
 
-  const saveResult = (nextFirstScore: string, nextSecondScore: string, nextWinnerId: string) => {
-    if (isPending || !nextWinnerId) return;
-    const nextSavedKey = `${nextFirstScore}:${nextSecondScore}:${nextWinnerId}`;
+  const saveResult = (nextFirstScore: string, nextSecondScore: string, nextWinnerId?: string) => {
+    if (isPending) return;
+    const nextSavedKey = `${nextFirstScore}:${nextSecondScore}:${nextWinnerId ?? ""}`;
     if (nextSavedKey === lastSavedKey) return;
 
     setSaveState("saving");
@@ -489,7 +488,7 @@ function MatchResultControls({
     const formData = new FormData();
     formData.set("matchId", match.id);
     formData.set("status", "FINAL");
-    formData.set("winnerParticipantId", nextWinnerId);
+    if (nextWinnerId) formData.set("winnerParticipantId", nextWinnerId);
     if (nextFirstScore) formData.set("homeScore", nextFirstScore);
     if (nextSecondScore) formData.set("awayScore", nextSecondScore);
     void runAction(() => recordTournamentMatchResult(formData)).then((result) => {
@@ -550,15 +549,12 @@ function MatchResultControls({
       setSaveState("idle");
       setSavedLabel("");
     }
-    const inferredWinnerId = inferWinner(nextFirstScore, nextSecondScore);
-    if (inferredWinnerId) setWinnerId(inferredWinnerId);
   };
 
-  const saveIfReady = (nextFirstScore: string, nextSecondScore: string, nextWinnerId = winnerId) => {
+  const saveIfReady = (nextFirstScore: string, nextSecondScore: string) => {
     const inferredWinnerId = inferWinner(nextFirstScore, nextSecondScore);
-    const finalWinnerId = inferredWinnerId || nextWinnerId;
-    if (!nextFirstScore || !nextSecondScore || !finalWinnerId) return;
-    saveResult(nextFirstScore, nextSecondScore, finalWinnerId);
+    if (!nextFirstScore || !nextSecondScore || !inferredWinnerId) return;
+    saveResult(nextFirstScore, nextSecondScore, inferredWinnerId);
   };
 
   return (
@@ -577,7 +573,7 @@ function MatchResultControls({
             onBlur={() => saveIfReady(firstScore, secondScore)}
             placeholder="0"
             aria-label={`${firstPlayer.player.ingameName} score`}
-            className="h-9 border-slate-800 bg-slate-950 text-center font-mono text-base"
+            className="h-8 border-slate-800 bg-slate-950 text-center font-mono text-sm"
           />
         </label>
         <span className="pb-2 text-xs font-bold uppercase tracking-wide text-slate-600">vs</span>
@@ -593,31 +589,9 @@ function MatchResultControls({
             onBlur={() => saveIfReady(firstScore, secondScore)}
             placeholder="0"
             aria-label={`${secondPlayer.player.ingameName} score`}
-            className="h-9 border-slate-800 bg-slate-950 text-center font-mono text-base"
+            className="h-8 border-slate-800 bg-slate-950 text-center font-mono text-sm"
           />
         </label>
-      </div>
-
-      <div className="grid grid-cols-2 gap-2" aria-label="Winner">
-        {[firstPlayer, secondPlayer].map((participant) => (
-          <label key={participant.id} className="cursor-pointer">
-            <input
-              type="radio"
-              name="winnerParticipantId"
-              value={participant.id}
-              checked={winnerId === participant.id}
-              onChange={() => {
-                setWinnerId(participant.id);
-                saveIfReady(firstScore, secondScore, participant.id);
-              }}
-              className="peer sr-only"
-            />
-            <span className="flex min-w-0 items-center justify-center gap-1 rounded-md border border-slate-800 bg-slate-950 px-2 py-2 text-center text-xs font-semibold text-slate-400 transition-colors peer-checked:border-emerald-500/50 peer-checked:bg-emerald-500/15 peer-checked:text-emerald-200">
-              <Crown className="h-3.5 w-3.5 shrink-0" />
-              <span className="truncate">{participant.player.ingameName}</span>
-            </span>
-          </label>
-        ))}
       </div>
       {saveState !== "idle" && (
         <p className={cn(
