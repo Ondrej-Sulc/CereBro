@@ -220,16 +220,20 @@ function sortParticipants(tournament: TournamentSummary) {
   });
 }
 
-function groupMatchesByRound(tournament: TournamentSummary) {
+function groupMatchListByRound(matches: TournamentSummary["matches"]) {
   const groups = new Map<number, TournamentSummary["matches"]>();
 
-  for (const match of tournament.matches) {
+  for (const match of matches) {
     const roundMatches = groups.get(match.round) ?? [];
     roundMatches.push(match);
     groups.set(match.round, roundMatches);
   }
 
   return [...groups.entries()].sort(([a], [b]) => a - b);
+}
+
+function groupMatchesByRound(tournament: TournamentSummary) {
+  return groupMatchListByRound(tournament.matches);
 }
 
 function nextPowerOfTwo(value: number) {
@@ -860,6 +864,83 @@ function BracketMatchCard({
   );
 }
 
+function DoubleEliminationLanes({
+  tournament,
+  canManage,
+  isPending,
+  runAction,
+}: {
+  tournament: TournamentSummary;
+  canManage: boolean;
+  isPending: boolean;
+  runAction: RunTournamentAction;
+}) {
+  const lanes: Array<{ bracket: BattlegroundsMatchBracket; tone: string }> = [
+    { bracket: "WINNERS", tone: "border-cyan-500/20 bg-cyan-500/5" },
+    { bracket: "LOSERS", tone: "border-amber-500/20 bg-amber-500/5" },
+    { bracket: "GRAND_FINAL", tone: "border-emerald-500/20 bg-emerald-500/5" },
+  ];
+
+  return (
+    <div className="space-y-4 p-4">
+      {lanes.map(({ bracket, tone }) => {
+        const laneMatches = tournament.matches.filter((match) => match.bracket === bracket);
+        const rounds = groupMatchListByRound(laneMatches);
+        if (rounds.length === 0) return null;
+
+        const laneSize = Math.max(2, Math.max(...rounds.map(([, matches]) => matches.length), 1) * 2);
+
+        return (
+          <section key={bracket} className={cn("overflow-hidden rounded-md border", tone)}>
+            <div className="border-b border-slate-800 px-3 py-2">
+              <p className="text-xs font-black uppercase tracking-widest text-slate-300">
+                {matchBracketLabels[bracket]}
+              </p>
+            </div>
+            <div className="overflow-x-auto">
+              <div
+                className="grid min-w-max grid-flow-col auto-cols-[minmax(210px,230px)] gap-8 p-3"
+                style={{ minHeight: `${laneSize * 58 + 48}px` }}
+              >
+                {rounds.map(([round, matches], roundIndex) => (
+                  <div
+                    key={`${bracket}:${round}`}
+                    className="grid gap-y-1"
+                    style={{ gridTemplateRows: `repeat(${laneSize + 2}, minmax(26px, 1fr))` }}
+                  >
+                    <div className="sticky left-0 z-10 row-start-1 h-fit rounded-md border border-slate-800 bg-slate-950 px-2 py-1">
+                      <p className="text-xs font-bold uppercase tracking-widest text-slate-500">
+                        Round {round}
+                      </p>
+                      <p className="text-xs font-semibold text-slate-200">
+                        {matches.length} {matches.length === 1 ? "fight" : "fights"}
+                      </p>
+                    </div>
+                    {matches.map((match, matchIndex) => (
+                      <BracketMatchCard
+                        key={match.id}
+                        tournament={tournament}
+                        match={match}
+                        canManage={canManage}
+                        isPending={isPending}
+                        runAction={runAction}
+                        rowStart={matchIndex * 2 + 3}
+                        rowSpan={2}
+                        hasPreviousRound={roundIndex > 0}
+                        hasNextRound={roundIndex < rounds.length - 1}
+                      />
+                    ))}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        );
+      })}
+    </div>
+  );
+}
+
 function BracketFlow({
   tournament,
   canManage,
@@ -872,6 +953,7 @@ function BracketFlow({
   runAction: RunTournamentAction;
 }) {
   const rounds = groupMatchesByRound(tournament);
+  const isDoubleElimination = tournament.format === "DOUBLE_ELIMINATION";
   const singleEliminationRounds = tournament.format === "SINGLE_ELIMINATION"
     ? buildSingleEliminationSlots(tournament)
     : null;
@@ -885,9 +967,12 @@ function BracketFlow({
   const completedMatches = tournament.matches.filter((match) => match.status === "FINAL").length;
   const activeMatches = tournament.matches.filter((match) => match.status === "PLAYING" || match.status === "REPORTED").length;
   const finalRound = rounds.at(-1)?.[1] ?? [];
-  const champion = finalRound.length === 1 && finalRound[0].status === "FINAL"
-    ? finalRound[0].winnerParticipant?.player.ingameName
-    : null;
+  const grandFinal = tournament.matches.find((match) => match.bracket === "GRAND_FINAL" && match.round === 1 && match.matchNumber === 1) ?? null;
+  const champion = isDoubleElimination
+    ? grandFinal?.status === "FINAL" ? grandFinal.winnerParticipant?.player.ingameName : null
+    : finalRound.length === 1 && finalRound[0].status === "FINAL"
+      ? finalRound[0].winnerParticipant?.player.ingameName
+      : null;
 
   if (visualRounds.length === 0) return null;
 
@@ -904,10 +989,18 @@ function BracketFlow({
           </p>
         </div>
         <Badge variant="outline" className="w-fit border-cyan-500/30 bg-cyan-500/10 text-cyan-200">
-          {champion ? `Champion: ${champion}` : `${visualRounds.length} rounds`}
+          {champion ? `Champion: ${champion}` : isDoubleElimination ? "3 lanes" : `${visualRounds.length} rounds`}
         </Badge>
       </div>
 
+      {isDoubleElimination ? (
+        <DoubleEliminationLanes
+          tournament={tournament}
+          canManage={canManage}
+          isPending={isPending}
+          runAction={runAction}
+        />
+      ) : (
       <div className="overflow-x-auto">
         <div
           className="grid min-w-max grid-flow-col auto-cols-[minmax(165px,185px)] gap-8 p-4"
@@ -980,6 +1073,7 @@ function BracketFlow({
           ))}
         </div>
       </div>
+      )}
     </div>
   );
 }
