@@ -536,6 +536,10 @@ function BracketFlow({
   const rounds = groupMatchesByRound(tournament);
   const completedMatches = tournament.matches.filter((match) => match.status === "FINAL").length;
   const activeMatches = tournament.matches.filter((match) => match.status === "PLAYING" || match.status === "REPORTED").length;
+  const finalRound = rounds.at(-1)?.[1] ?? [];
+  const champion = finalRound.length === 1 && finalRound[0].status === "FINAL"
+    ? finalRound[0].winnerParticipant?.player.ingameName
+    : null;
 
   if (rounds.length === 0) return null;
 
@@ -552,7 +556,7 @@ function BracketFlow({
           </p>
         </div>
         <Badge variant="outline" className="w-fit border-cyan-500/30 bg-cyan-500/10 text-cyan-200">
-          {rounds.length} rounds
+          {champion ? `Champion: ${champion}` : `${rounds.length} rounds`}
         </Badge>
       </div>
 
