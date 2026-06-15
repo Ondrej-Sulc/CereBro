@@ -509,7 +509,7 @@ function BracketScoreEditor({
         placeholder="0"
         aria-label={`${label} score`}
         className={cn(
-          "h-7 w-8 border-slate-800 bg-slate-950 px-0 text-center font-mono text-sm",
+          "h-7 w-8 border-slate-800 bg-slate-950 px-0 text-center font-mono text-sm [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none",
           isWinner && "border-emerald-400/40 bg-emerald-400/10 text-emerald-100"
         )}
       />
