@@ -4,9 +4,13 @@ const prismaFake = vi.hoisted(() => ({
   battlegroundsTournament: {
     create: vi.fn(),
     findUnique: vi.fn(),
+    update: vi.fn(),
   },
   battlegroundsTournamentMatch: {
+    count: vi.fn(),
+    create: vi.fn(),
     createMany: vi.fn(),
+    findFirst: vi.fn(),
     findUnique: vi.fn(),
     update: vi.fn(),
   },
@@ -42,6 +46,7 @@ import {
   createTournament,
   generateTournamentMatches,
   recordTournamentMatchResult,
+  startTournament,
 } from "./actions";
 
 function buildCreateTournamentForm(overrides: Record<string, string> = {}) {
@@ -69,7 +74,11 @@ describe("battlegrounds tournament actions", () => {
     });
     permissionsFake.canPlanAllianceWar.mockReturnValue(true);
     prismaFake.battlegroundsTournament.create.mockResolvedValue({ id: "tournament_1" });
+    prismaFake.battlegroundsTournament.update.mockResolvedValue({ id: "tournament_1" });
+    prismaFake.battlegroundsTournamentMatch.count.mockResolvedValue(1);
+    prismaFake.battlegroundsTournamentMatch.create.mockResolvedValue({ id: "match_2" });
     prismaFake.battlegroundsTournamentMatch.createMany.mockResolvedValue({ count: 2 });
+    prismaFake.battlegroundsTournamentMatch.findFirst.mockResolvedValue(null);
     prismaFake.battlegroundsTournamentMatch.update.mockResolvedValue({ id: "match_1" });
     prismaFake.battlegroundsTournamentParticipant.update.mockResolvedValue({ id: "participant_1" });
   });
@@ -172,6 +181,38 @@ describe("battlegrounds tournament actions", () => {
           status: "READY",
         }),
       ],
+    });
+  });
+
+  it("starts a single elimination tournament by creating the first round and setting it live", async () => {
+    prismaFake.battlegroundsTournament.findUnique.mockResolvedValue({
+      id: "tournament_1",
+      allianceId: "alliance_1",
+      createdById: "player_1",
+      format: "SINGLE_ELIMINATION",
+      participants: [
+        { id: "p1", seed: 1, createdAt: new Date("2026-01-01T00:00:00Z") },
+        { id: "p2", seed: 2, createdAt: new Date("2026-01-02T00:00:00Z") },
+      ],
+      matches: [],
+    });
+
+    await expect(startTournament("tournament_1")).resolves.toEqual({ success: true });
+
+    expect(prismaFake.battlegroundsTournamentMatch.createMany).toHaveBeenCalledWith({
+      data: [
+        expect.objectContaining({
+          round: 1,
+          matchNumber: 1,
+          homeParticipantId: "p1",
+          awayParticipantId: "p2",
+          status: "READY",
+        }),
+      ],
+    });
+    expect(prismaFake.battlegroundsTournament.update).toHaveBeenCalledWith({
+      where: { id: "tournament_1" },
+      data: { status: "LIVE" },
     });
   });
 
@@ -350,6 +391,42 @@ describe("battlegrounds tournament actions", () => {
         awayScore: 2,
         winnerParticipantId: "p1",
         status: "FINAL",
+      }),
+    });
+  });
+
+  it("advances a single elimination winner into the next fight slot", async () => {
+    prismaFake.battlegroundsTournamentMatch.findUnique.mockResolvedValue({
+      id: "match_1",
+      round: 1,
+      matchNumber: 1,
+      homeParticipantId: "p1",
+      awayParticipantId: "p4",
+      tournament: {
+        id: "tournament_1",
+        allianceId: "alliance_1",
+        createdById: "player_1",
+        format: "SINGLE_ELIMINATION",
+      },
+    });
+    prismaFake.battlegroundsTournamentMatch.count.mockResolvedValue(2);
+    prismaFake.battlegroundsTournamentMatch.findFirst.mockResolvedValue(null);
+
+    const formData = new FormData();
+    formData.set("matchId", "match_1");
+    formData.set("homeScore", "2");
+    formData.set("awayScore", "0");
+    formData.set("status", "FINAL");
+
+    await expect(recordTournamentMatchResult(formData)).resolves.toEqual({ success: true });
+
+    expect(prismaFake.battlegroundsTournamentMatch.create).toHaveBeenCalledWith({
+      data: expect.objectContaining({
+        tournamentId: "tournament_1",
+        round: 2,
+        matchNumber: 1,
+        homeParticipantId: "p1",
+        status: "READY",
       }),
     });
   });

@@ -342,6 +342,64 @@ function buildGeneratedMatches(tournament: NonNullable<TournamentForMatches>) {
   };
 }
 
+async function advanceSingleEliminationWinner(match: {
+  round: number;
+  matchNumber: number;
+  tournament: {
+    id: string;
+    format: BattlegroundsTournamentFormat;
+  };
+}, winnerParticipantId: string | null) {
+  if (!winnerParticipantId || match.tournament.format !== BattlegroundsTournamentFormat.SINGLE_ELIMINATION) return;
+
+  const currentRoundMatchCount = await prisma.battlegroundsTournamentMatch.count({
+    where: {
+      tournamentId: match.tournament.id,
+      round: match.round,
+    },
+  });
+
+  if (currentRoundMatchCount <= 1) return;
+
+  const nextRoundNumber = match.round + 1;
+  const nextMatchNumber = Math.ceil(match.matchNumber / 2);
+  const participantField = match.matchNumber % 2 === 1 ? "homeParticipantId" : "awayParticipantId";
+  const nextMatch = await prisma.battlegroundsTournamentMatch.findFirst({
+    where: {
+      tournamentId: match.tournament.id,
+      round: nextRoundNumber,
+      matchNumber: nextMatchNumber,
+    },
+    select: {
+      id: true,
+      status: true,
+    },
+  });
+
+  if (nextMatch) {
+    if (nextMatch.status === BattlegroundsMatchStatus.FINAL) return;
+
+    await prisma.battlegroundsTournamentMatch.update({
+      where: { id: nextMatch.id },
+      data: {
+        [participantField]: winnerParticipantId,
+        status: BattlegroundsMatchStatus.READY,
+      },
+    });
+    return;
+  }
+
+  await prisma.battlegroundsTournamentMatch.create({
+    data: {
+      tournamentId: match.tournament.id,
+      round: nextRoundNumber,
+      matchNumber: nextMatchNumber,
+      [participantField]: winnerParticipantId,
+      status: BattlegroundsMatchStatus.READY,
+    },
+  });
+}
+
 export const createTournament = withActionContext(
   "createBattlegroundsTournament",
   async (formData: FormData): Promise<TournamentActionResult> => {
@@ -613,6 +671,46 @@ export const generateTournamentMatches = withActionContext(
   }
 );
 
+export const startTournament = withActionContext(
+  "startBattlegroundsTournament",
+  async (tournamentId: string): Promise<TournamentActionResult> => {
+    const player = await requireTournamentPlanner();
+    const tournament = await loadManagedTournamentForMatches(player, tournamentId);
+
+    if (!tournament) {
+      return { success: false, error: "Tournament not found." };
+    }
+
+    if (tournament.format !== BattlegroundsTournamentFormat.SINGLE_ELIMINATION) {
+      return { success: false, error: "Start is currently automated for single elimination tournaments only." };
+    }
+
+    if (tournament.matches.length === 0) {
+      const generated = buildGeneratedMatches(tournament);
+      if ("error" in generated) {
+        return { success: false, error: generated.error ?? "Unable to start tournament." };
+      }
+
+      try {
+        await prisma.battlegroundsTournamentMatch.createMany({
+          data: generated.matches,
+        });
+      } catch {
+        return { success: false, error: "Matches already exist for that generated round." };
+      }
+    }
+
+    await prisma.battlegroundsTournament.update({
+      where: { id: tournament.id },
+      data: { status: BattlegroundsTournamentStatus.LIVE },
+    });
+
+    revalidatePath(TOURNAMENTS_PATH);
+    revalidatePath(`${TOURNAMENTS_PATH}/${tournament.id}`);
+    return { success: true };
+  }
+);
+
 export const createTournamentMatch = withActionContext(
   "createBattlegroundsTournamentMatch",
   async (formData: FormData): Promise<TournamentActionResult> => {
@@ -694,6 +792,8 @@ export const recordTournamentMatchResult = withActionContext(
       where: { id: matchId },
       select: {
         id: true,
+        round: true,
+        matchNumber: true,
         homeParticipantId: true,
         awayParticipantId: true,
         tournament: {
@@ -701,6 +801,7 @@ export const recordTournamentMatchResult = withActionContext(
             id: true,
             allianceId: true,
             createdById: true,
+            format: true,
           },
         },
       },
@@ -753,7 +854,12 @@ export const recordTournamentMatchResult = withActionContext(
       },
     });
 
+    if (status === BattlegroundsMatchStatus.FINAL) {
+      await advanceSingleEliminationWinner(match, winnerParticipantId);
+    }
+
     revalidatePath(TOURNAMENTS_PATH);
+    revalidatePath(`${TOURNAMENTS_PATH}/${match.tournament.id}`);
     return { success: true };
   }
 );

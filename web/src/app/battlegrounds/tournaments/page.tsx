@@ -1,10 +1,11 @@
 import type { Metadata } from "next";
-import { Swords, Trophy } from "lucide-react";
+import Link from "next/link";
+import { Plus, Swords, Trophy, Users } from "lucide-react";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
-import { canPlanAllianceWar } from "@/lib/alliance-permissions";
+import { Button } from "@/components/ui/button";
 import { prisma } from "@/lib/prisma";
 import logger from "@/lib/logger";
-import { BattlegroundsTournamentsClient } from "./tournaments-client";
+import { formatLabels, scopeLabels, statusLabels } from "./tournament-labels";
 
 export const metadata: Metadata = {
   title: "Battlegrounds Tournaments - CereBro",
@@ -35,152 +36,25 @@ export default async function BattlegroundsTournamentsPage() {
     "User accessing Battlegrounds Tournaments page"
   );
 
-  const [members, tournaments] = await Promise.all([
-    prisma.player.findMany({
-      where: player.allianceId
-        ? {
-            OR: [
-              { allianceId: player.allianceId },
-              { allianceId: null },
-            ],
-          }
-        : { allianceId: null },
-      select: {
-        id: true,
-        ingameName: true,
-        battlegroup: true,
-        championPrestige: true,
-        avatar: true,
-      },
-      orderBy: [
-        { battlegroup: "asc" },
-        { ingameName: "asc" },
+  const tournaments = await prisma.battlegroundsTournament.findMany({
+    where: {
+      OR: [
+        { scope: "COMMUNITY" },
+        ...(player.allianceId ? [{ allianceId: player.allianceId }] : []),
+        { createdById: player.id },
       ],
-    }),
-    prisma.battlegroundsTournament.findMany({
-      where: {
-        OR: [
-          { scope: "COMMUNITY" },
-          ...(player.allianceId ? [{ allianceId: player.allianceId }] : []),
-          { createdById: player.id },
-        ],
-      },
-      include: {
-        createdBy: { select: { ingameName: true } },
-        alliance: { select: { name: true } },
-        participants: {
-          include: {
-            player: {
-              select: {
-                id: true,
-                ingameName: true,
-                battlegroup: true,
-                championPrestige: true,
-                avatar: true,
-              },
-            },
-          },
-          orderBy: [
-            { seed: "asc" },
-            { createdAt: "asc" },
-          ],
-        },
-        matches: {
-          include: {
-            homeParticipant: {
-              include: {
-                player: {
-                  select: {
-                    id: true,
-                    ingameName: true,
-                    battlegroup: true,
-                    championPrestige: true,
-                    avatar: true,
-                  },
-                },
-              },
-            },
-            awayParticipant: {
-              include: {
-                player: {
-                  select: {
-                    id: true,
-                    ingameName: true,
-                    battlegroup: true,
-                    championPrestige: true,
-                    avatar: true,
-                  },
-                },
-              },
-            },
-            winnerParticipant: {
-              include: {
-                player: {
-                  select: {
-                    id: true,
-                    ingameName: true,
-                    battlegroup: true,
-                    championPrestige: true,
-                    avatar: true,
-                  },
-                },
-              },
-            },
-          },
-          orderBy: [
-            { round: "asc" },
-            { matchNumber: "asc" },
-          ],
-        },
-        _count: { select: { matches: true } },
-      },
-      orderBy: [
-        { status: "asc" },
-        { startsAt: "asc" },
-        { createdAt: "desc" },
-      ],
-    }),
-  ]);
-
-  const canManageAllianceTournaments = canPlanAllianceWar(player, player.isBotAdmin);
-  const manageableTournamentIds = tournaments
-    .filter((tournament) => {
-      if (player.isBotAdmin || tournament.createdById === player.id) return true;
-      return !!tournament.allianceId &&
-        tournament.allianceId === player.allianceId &&
-        canManageAllianceTournaments;
-    })
-    .map((tournament) => tournament.id);
-  const bgColors = {
-    1: player.alliance?.battlegroup1Color || "#ef4444",
-    2: player.alliance?.battlegroup2Color || "#22c55e",
-    3: player.alliance?.battlegroup3Color || "#3b82f6",
-  };
-
-  const serializeParticipant = (participant: typeof tournaments[number]["participants"][number]) => ({
-    ...participant,
-    checkedInAt: participant.checkedInAt?.toISOString() ?? null,
-    createdAt: participant.createdAt.toISOString(),
-    updatedAt: participant.updatedAt.toISOString(),
+    },
+    include: {
+      createdBy: { select: { ingameName: true } },
+      alliance: { select: { name: true } },
+      _count: { select: { participants: true, matches: true } },
+    },
+    orderBy: [
+      { status: "asc" },
+      { startsAt: "asc" },
+      { createdAt: "desc" },
+    ],
   });
-
-  const serializedTournaments = tournaments.map((tournament) => ({
-    ...tournament,
-    startsAt: tournament.startsAt?.toISOString() ?? null,
-    checkInStartsAt: tournament.checkInStartsAt?.toISOString() ?? null,
-    createdAt: tournament.createdAt.toISOString(),
-    updatedAt: tournament.updatedAt.toISOString(),
-    participants: tournament.participants.map(serializeParticipant),
-    matches: tournament.matches.map((match) => ({
-      ...match,
-      scheduledAt: match.scheduledAt?.toISOString() ?? null,
-      createdAt: match.createdAt.toISOString(),
-      updatedAt: match.updatedAt.toISOString(),
-      homeParticipant: match.homeParticipant ? serializeParticipant(match.homeParticipant) : null,
-      awayParticipant: match.awayParticipant ? serializeParticipant(match.awayParticipant) : null,
-      winnerParticipant: match.winnerParticipant ? serializeParticipant(match.winnerParticipant) : null,
-    })),
-  }));
 
   return (
     <div className="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(14,165,233,0.12),transparent_32%),radial-gradient(circle_at_top_right,rgba(16,185,129,0.10),transparent_30%)]">
@@ -198,21 +72,56 @@ export default async function BattlegroundsTournamentsPage() {
               Build the field, stage registration, manage check-ins, and keep alliance context visible while your BG event comes together.
             </p>
           </div>
-          <div className="rounded-lg border border-slate-800 bg-slate-950/70 px-4 py-3">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Alliance</p>
-            <p className="font-semibold text-slate-200">{player.alliance?.name ?? "Alliance"}</p>
-          </div>
+          <Button asChild className="w-fit bg-cyan-500 text-slate-950 hover:bg-cyan-400">
+            <Link href="/battlegrounds/tournaments/new">
+              <Plus className="h-4 w-4" />
+              Create tournament
+            </Link>
+          </Button>
         </div>
 
-        <BattlegroundsTournamentsClient
-          allianceName={player.alliance?.name ?? "Alliance"}
-          currentPlayerId={player.id}
-          bgColors={bgColors}
-          players={members}
-          tournaments={serializedTournaments}
-          canCreate={true}
-          manageableTournamentIds={manageableTournamentIds}
-        />
+        {tournaments.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-slate-800 bg-slate-950/60 p-10 text-center">
+            <Trophy className="mx-auto h-12 w-12 text-slate-700" />
+            <h2 className="mt-4 text-xl font-bold text-white">No tournaments yet</h2>
+            <p className="mx-auto mt-2 max-w-md text-sm text-slate-400">
+              Create a Battlegrounds tournament to start building the field.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 xl:grid-cols-3">
+            {tournaments.map((tournament) => (
+              <Link
+                key={tournament.id}
+                href={`/battlegrounds/tournaments/${tournament.id}`}
+                className="rounded-lg border border-slate-800 bg-slate-950/70 p-4 transition-colors hover:border-cyan-500/50 hover:bg-cyan-500/10"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h2 className="truncate text-lg font-bold text-white">{tournament.name}</h2>
+                    <p className="mt-1 text-xs text-slate-500">
+                      {formatLabels[tournament.format]} by {tournament.createdBy.ingameName}
+                    </p>
+                  </div>
+                  <span className="shrink-0 rounded-md border border-slate-700 px-2 py-1 text-xs font-semibold text-slate-300">
+                    {statusLabels[tournament.status]}
+                  </span>
+                </div>
+                <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-slate-400">
+                  <span className="rounded border border-slate-800 bg-slate-900 px-2 py-1">{scopeLabels[tournament.scope]}</span>
+                  <span className="inline-flex items-center gap-1 rounded border border-slate-800 bg-slate-900 px-2 py-1">
+                    <Users className="h-3.5 w-3.5" />
+                    {tournament._count.participants} entrants
+                  </span>
+                  <span className="inline-flex items-center gap-1 rounded border border-slate-800 bg-slate-900 px-2 py-1">
+                    <Swords className="h-3.5 w-3.5" />
+                    {tournament._count.matches} fights
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

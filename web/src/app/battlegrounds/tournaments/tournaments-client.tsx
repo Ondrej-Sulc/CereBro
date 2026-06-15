@@ -41,10 +41,10 @@ import {
   checkInTournamentParticipant,
   createTournamentMatch,
   deleteTournamentMatch,
-  generateTournamentMatches,
   joinTournament,
   recordTournamentMatchResult,
   removeTournamentParticipant,
+  startTournament,
   updateTournamentStatus,
   type TournamentActionResult,
 } from "./actions";
@@ -134,6 +134,7 @@ type Props = {
   tournaments: TournamentSummary[];
   canCreate: boolean;
   manageableTournamentIds: string[];
+  showTournamentQueue?: boolean;
 };
 
 type RunTournamentAction = (action: () => Promise<TournamentActionResult>) => void;
@@ -204,6 +205,17 @@ function groupMatchesByRound(tournament: TournamentSummary) {
   }
 
   return [...groups.entries()].sort(([a], [b]) => a - b);
+}
+
+function isWaitingForOpponent(tournament: TournamentSummary, match: TournamentMatch) {
+  if (match.round === 1 || (match.homeParticipantId && match.awayParticipantId)) return false;
+
+  const feederMatchNumbers = [match.matchNumber * 2 - 1, match.matchNumber * 2];
+  return tournament.matches.some((candidate) => (
+    candidate.round === match.round - 1 &&
+    feederMatchNumbers.includes(candidate.matchNumber) &&
+    candidate.status !== "FINAL"
+  ));
 }
 
 function buildStandings(tournament: TournamentSummary) {
@@ -283,7 +295,7 @@ function BracketPlayerRow({
 
   return (
     <div className={cn(
-      "grid grid-cols-[1fr_auto] items-center gap-3 rounded-md border px-3 py-2.5 transition-colors",
+      "grid grid-cols-[1fr_auto] items-center gap-2 rounded-md border px-2 py-1.5 transition-colors",
       isWinner
         ? "border-emerald-400/50 bg-emerald-500/15 text-emerald-100 shadow-inner shadow-emerald-950/20"
         : "border-slate-800 bg-slate-950/70 text-slate-300",
@@ -298,7 +310,7 @@ function BracketPlayerRow({
         {meta && <p className="mt-0.5 truncate text-[11px] font-medium uppercase tracking-wide text-slate-500">{meta}</p>}
       </div>
       <span className={cn(
-        "min-w-8 rounded border px-2 py-1 text-center font-mono text-sm",
+        "min-w-7 rounded border px-1.5 py-0.5 text-center font-mono text-sm",
         isWinner ? "border-emerald-400/40 bg-emerald-400/10 text-emerald-200" : "border-slate-800 bg-slate-900 text-slate-500"
       )}>
         {score ?? "--"}
@@ -310,10 +322,12 @@ function BracketPlayerRow({
 function MatchResultControls({
   match,
   isPending,
+  waitingForOpponent,
   runAction,
 }: {
   match: TournamentMatch;
   isPending: boolean;
+  waitingForOpponent: boolean;
   runAction: RunTournamentAction;
 }) {
   const firstPlayer = match.homeParticipant;
@@ -324,20 +338,37 @@ function MatchResultControls({
 
   if (!firstPlayer) return null;
 
+  const saveResult = (nextFirstScore: string, nextSecondScore: string, nextWinnerId: string) => {
+    if (isPending || !nextWinnerId) return;
+
+    const formData = new FormData();
+    formData.set("matchId", match.id);
+    formData.set("status", "FINAL");
+    formData.set("winnerParticipantId", nextWinnerId);
+    if (nextFirstScore) formData.set("homeScore", nextFirstScore);
+    if (nextSecondScore) formData.set("awayScore", nextSecondScore);
+    runAction(() => recordTournamentMatchResult(formData));
+  };
+
   if (!secondPlayer) {
     return (
-      <form
-        className="mt-3 border-t border-slate-800 pt-3"
-        action={(formData) => runAction(() => recordTournamentMatchResult(formData))}
-      >
-        <input type="hidden" name="matchId" value={match.id} />
-        <input type="hidden" name="winnerParticipantId" value={firstPlayer.id} />
-        <input type="hidden" name="status" value="FINAL" />
-        <Button disabled={isPending || match.status === "FINAL"} size="sm" className="w-full bg-emerald-500 text-slate-950 hover:bg-emerald-400">
+      <div className="mt-2 border-t border-slate-800 pt-2">
+        {waitingForOpponent ? (
+          <p className="rounded border border-slate-800 bg-slate-950 px-2 py-1.5 text-center text-xs font-semibold text-slate-500">
+            Waiting for opponent
+          </p>
+        ) : (
+        <Button
+          disabled={isPending || match.status === "FINAL"}
+          size="sm"
+          onClick={() => saveResult("", "", firstPlayer.id)}
+          className="h-8 w-full bg-emerald-500 text-slate-950 hover:bg-emerald-400"
+        >
           <CheckCircle2 className="h-4 w-4" />
           {match.status === "FINAL" ? "Advanced" : "Advance bye"}
         </Button>
-      </form>
+        )}
+      </div>
     );
   }
 
@@ -356,13 +387,15 @@ function MatchResultControls({
     if (inferredWinnerId) setWinnerId(inferredWinnerId);
   };
 
+  const saveIfReady = (nextFirstScore: string, nextSecondScore: string, nextWinnerId = winnerId) => {
+    const inferredWinnerId = inferWinner(nextFirstScore, nextSecondScore);
+    const finalWinnerId = inferredWinnerId || nextWinnerId;
+    if (!nextFirstScore || !nextSecondScore || !finalWinnerId) return;
+    saveResult(nextFirstScore, nextSecondScore, finalWinnerId);
+  };
+
   return (
-    <form
-      className="mt-3 space-y-3 border-t border-slate-800 pt-3"
-      action={(formData) => runAction(() => recordTournamentMatchResult(formData))}
-    >
-      <input type="hidden" name="matchId" value={match.id} />
-      <input type="hidden" name="status" value="FINAL" />
+    <div className="mt-2 space-y-2 border-t border-slate-800 pt-2">
 
       <div className="grid grid-cols-[1fr_auto_1fr] items-end gap-2">
         <label className="space-y-1">
@@ -374,6 +407,7 @@ function MatchResultControls({
             inputMode="numeric"
             value={firstScore}
             onChange={(event) => updateScores(event.target.value, secondScore)}
+            onBlur={() => saveIfReady(firstScore, secondScore)}
             placeholder="0"
             aria-label={`${firstPlayer.player.ingameName} score`}
             className="h-9 border-slate-800 bg-slate-950 text-center font-mono text-base"
@@ -389,6 +423,7 @@ function MatchResultControls({
             inputMode="numeric"
             value={secondScore}
             onChange={(event) => updateScores(firstScore, event.target.value)}
+            onBlur={() => saveIfReady(firstScore, secondScore)}
             placeholder="0"
             aria-label={`${secondPlayer.player.ingameName} score`}
             className="h-9 border-slate-800 bg-slate-950 text-center font-mono text-base"
@@ -408,7 +443,11 @@ function MatchResultControls({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => updateScores(preset.first, preset.second)}
+            disabled={isPending}
+            onClick={() => {
+              updateScores(preset.first, preset.second);
+              saveResult(preset.first, preset.second, inferWinner(preset.first, preset.second));
+            }}
             className="h-8 border-slate-800 bg-slate-950 px-2 font-mono text-xs text-slate-300 hover:bg-slate-900 hover:text-white"
           >
             {preset.label}
@@ -424,7 +463,10 @@ function MatchResultControls({
               name="winnerParticipantId"
               value={participant.id}
               checked={winnerId === participant.id}
-              onChange={() => setWinnerId(participant.id)}
+              onChange={() => {
+                setWinnerId(participant.id);
+                saveIfReady(firstScore, secondScore, participant.id);
+              }}
               className="peer sr-only"
             />
             <span className="flex min-w-0 items-center justify-center gap-1 rounded-md border border-slate-800 bg-slate-950 px-2 py-2 text-center text-xs font-semibold text-slate-400 transition-colors peer-checked:border-emerald-500/50 peer-checked:bg-emerald-500/15 peer-checked:text-emerald-200">
@@ -434,12 +476,7 @@ function MatchResultControls({
           </label>
         ))}
       </div>
-
-      <Button disabled={isPending} size="sm" className="w-full bg-cyan-500 text-slate-950 hover:bg-cyan-400">
-        <CheckCircle2 className="h-4 w-4" />
-        Save result
-      </Button>
-    </form>
+    </div>
   );
 }
 
@@ -478,7 +515,7 @@ function BracketFlow({
       </div>
 
       <div className="overflow-x-auto">
-        <div className="grid min-w-max grid-flow-col auto-cols-[minmax(230px,260px)] gap-8 p-5">
+        <div className="grid min-w-max grid-flow-col auto-cols-[minmax(190px,220px)] gap-5 p-4">
           {rounds.map(([round, matches], roundIndex) => (
             <div key={round} className="space-y-4">
               <div className="sticky left-0 z-10 mb-2 rounded-md border border-slate-800 bg-slate-950 px-3 py-2">
@@ -507,15 +544,15 @@ function BracketFlow({
                         <div className="pointer-events-none absolute -right-8 top-1/2 hidden h-px w-8 bg-cyan-400/30 lg:block" />
                       )}
                       <div className={cn(
-                        "rounded-lg border p-3 shadow-lg shadow-black/20",
+                        "rounded-lg border p-2 shadow-lg shadow-black/20",
                         isFinal && "border-emerald-500/35 bg-emerald-950/20",
                         isActive && "border-cyan-500/35 bg-cyan-950/20",
                         isDisputed && "border-red-500/35 bg-red-950/20",
                         !isFinal && !isActive && !isDisputed && "border-slate-800 bg-slate-900/70"
                       )}>
                         <div className="mb-3 flex items-center justify-between gap-2">
-                          <span className="text-xs font-bold uppercase tracking-widest text-slate-500">
-                            Match {match.matchNumber}
+                          <span className="text-[11px] font-bold uppercase tracking-widest text-slate-500">
+                            M{match.matchNumber}
                           </span>
                           <Badge variant="outline" className={cn("text-[10px]", matchStatusTone(match.status))}>
                             {matchStatusLabels[match.status]}
@@ -530,10 +567,10 @@ function BracketFlow({
                           />
                           <BracketPlayerRow
                             participant={match.awayParticipant}
-                            fallbackName="Bye"
+                            fallbackName={isWaitingForOpponent(tournament, match) ? "TBD" : "Bye"}
                             score={match.awayScore}
                             isWinner={match.winnerParticipantId === match.awayParticipantId}
-                            isBye={!match.awayParticipant}
+                            isBye={!match.awayParticipant && !isWaitingForOpponent(tournament, match)}
                           />
                         </div>
                         {winnerName && (
@@ -546,6 +583,7 @@ function BracketFlow({
                           <MatchResultControls
                             match={match}
                             isPending={isPending}
+                            waitingForOpponent={isWaitingForOpponent(tournament, match)}
                             runAction={runAction}
                           />
                         )}
@@ -570,6 +608,7 @@ export function BattlegroundsTournamentsClient({
   tournaments,
   canCreate,
   manageableTournamentIds,
+  showTournamentQueue = true,
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -621,8 +660,7 @@ export function BattlegroundsTournamentsClient({
     currentUserEntry.status !== "CHECKED_IN" &&
     selectedTournament.status === "CHECK_IN";
   const checkedInCount = participants.filter((entry) => entry.status === "CHECKED_IN").length;
-  const supportsAutomaticGenerationSelected = selectedTournament?.format === "SINGLE_ELIMINATION" ||
-    selectedTournament?.format === "ROUND_ROBIN";
+  const supportsStartSelected = selectedTournament?.format === "SINGLE_ELIMINATION";
   const bgCounts = [1, 2, 3].map((bg) => ({
     bg,
     count: participants.filter((entry) => entry.battlegroup === bg).length,
@@ -644,7 +682,8 @@ export function BattlegroundsTournamentsClient({
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[360px_1fr]">
+      <div className={cn("grid grid-cols-1 gap-6", showTournamentQueue && "xl:grid-cols-[360px_1fr]")}>
+        {showTournamentQueue && (
         <section className="space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div>
@@ -698,6 +737,7 @@ export function BattlegroundsTournamentsClient({
             ))}
           </div>
         </section>
+        )}
 
         <section className="min-w-0">
           {!selectedTournament ? (
@@ -967,20 +1007,20 @@ export function BattlegroundsTournamentsClient({
                         <h3 className="font-bold text-white">Matches</h3>
                         <p className="text-sm text-slate-500">{matchRounds.length} rounds</p>
                       </div>
-                      {canManageSelected && (
+                      {canManageSelected && selectedTournament.status !== "LIVE" && (
                         <Button
-                          disabled={isPending || participants.length < 2 || !supportsAutomaticGenerationSelected}
-                          onClick={() => runAction(() => generateTournamentMatches(selectedTournament.id))}
+                          disabled={isPending || participants.length < 2 || !supportsStartSelected}
+                          onClick={() => runAction(() => startTournament(selectedTournament.id))}
                           className="bg-emerald-500 text-slate-950 hover:bg-emerald-400"
                         >
                           <Swords className="h-4 w-4" />
-                          Generate
+                          Start tournament
                         </Button>
                       )}
                     </div>
-                    {canManageSelected && !supportsAutomaticGenerationSelected && (
+                    {canManageSelected && !supportsStartSelected && (
                       <div className="mt-3 rounded-md border border-amber-500/20 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
-                        Automatic generation is available for single elimination and round robin. Add pairings manually for this format.
+                        Automated start is currently available for single elimination. Add pairings manually for this format.
                       </div>
                     )}
 
