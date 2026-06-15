@@ -598,30 +598,6 @@ function MatchResultControls({
         </label>
       </div>
 
-      <div className="grid grid-cols-4 gap-1.5">
-        {[
-          { label: "2-0", first: "2", second: "0" },
-          { label: "2-1", first: "2", second: "1" },
-          { label: "0-2", first: "0", second: "2" },
-          { label: "1-2", first: "1", second: "2" },
-        ].map((preset) => (
-          <Button
-            key={preset.label}
-            type="button"
-            variant="outline"
-            size="sm"
-            disabled={isPending}
-            onClick={() => {
-              updateScores(preset.first, preset.second);
-              saveResult(preset.first, preset.second, inferWinner(preset.first, preset.second));
-            }}
-            className="h-8 border-slate-800 bg-slate-950 px-2 font-mono text-xs text-slate-300 hover:bg-slate-900 hover:text-white"
-          >
-            {preset.label}
-          </Button>
-        ))}
-      </div>
-
       <div className="grid grid-cols-2 gap-2" aria-label="Winner">
         {[firstPlayer, secondPlayer].map((participant) => (
           <label key={participant.id} className="cursor-pointer">
