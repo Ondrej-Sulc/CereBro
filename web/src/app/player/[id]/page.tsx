@@ -20,9 +20,18 @@ import { getYoutubeVideoId } from "@/lib/youtube";
 import { isPlayerSupporter } from "@/lib/support-status";
 import { canManageAllianceMembers } from "@/lib/alliance-permissions";
 import { InvitePlayerButton } from "./invite-player-button";
+import {
+    getAvailablePlayerWarInsightSeasons,
+    getPlayerWarInsights,
+    normalizePlayerWarInsightScope,
+} from "@/lib/player-war-insights";
+import { PlayerWarInsightsSection } from "./player-war-insights-section";
 
 interface PlayerProfilePageProps {
     params: Promise<{ id: string }>;
+    searchParams: Promise<{
+        warSeason?: string | string[];
+    }>;
 }
 
 const getPlayerProfile = cache(async (id: string) => {
@@ -54,8 +63,9 @@ export async function generateMetadata({ params }: PlayerProfilePageProps): Prom
     };
 }
 
-export default async function PlayerProfilePage({ params }: PlayerProfilePageProps) {
+export default async function PlayerProfilePage({ params, searchParams }: PlayerProfilePageProps) {
     const { id } = await params;
+    const resolvedSearchParams = await searchParams;
 
     const player = await getPlayerProfile(id);
 
@@ -70,7 +80,34 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
         canManageAllianceMembers(currentUser, currentUser.isBotAdmin)
     );
 
-    const [questPlans, roster, recentVideos, recentFights, rosterTotal, rosterByStars, rosterAscendedCount, videoTotal, fightAggregate, uniqueWarIds, supporter, pendingInvite] = await Promise.all([
+    const canViewWarInsights = Boolean(
+        currentUser?.isBotAdmin ||
+        (
+            currentUser?.allianceId &&
+            player.allianceId &&
+            currentUser.allianceId === player.allianceId
+        )
+    );
+
+    const warInsightsPromise = canViewWarInsights && player.allianceId
+        ? (async () => {
+            const availableSeasons = await getAvailablePlayerWarInsightSeasons({
+                playerId: id,
+                allianceId: player.allianceId!,
+            });
+
+            if (availableSeasons.length === 0) return null;
+
+            const scope = normalizePlayerWarInsightScope(resolvedSearchParams.warSeason, availableSeasons);
+            return getPlayerWarInsights({
+                playerId: id,
+                allianceId: player.allianceId!,
+                scope,
+            });
+        })()
+        : Promise.resolve(null);
+
+    const [questPlans, roster, recentVideos, recentFights, rosterTotal, rosterByStars, rosterAscendedCount, videoTotal, fightAggregate, uniqueWarIds, supporter, pendingInvite, warInsights] = await Promise.all([
         getPlayerQuestPlansForProfile(id),
         prisma.roster.findMany({
             where: { playerId: id },
@@ -151,6 +188,7 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
             },
             select: { id: true },
         }) : Promise.resolve(null),
+        warInsightsPromise,
     ]);
 
     const totalFights = fightAggregate._count.id;
@@ -310,6 +348,13 @@ export default async function PlayerProfilePage({ params }: PlayerProfilePagePro
                     </div>
                 )}
             </div>
+
+            {warInsights && (
+                <PlayerWarInsightsSection
+                    playerName={player.ingameName}
+                    insights={warInsights}
+                />
+            )}
 
             {/* Top Roster Section */}
             <div>
