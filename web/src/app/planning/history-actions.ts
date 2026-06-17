@@ -3,7 +3,7 @@
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { ChampionImages } from "@/types/champion";
-import { Prisma, WarMapType } from "@prisma/client";
+import { ChampionClass, Prisma, WarMapType } from "@prisma/client";
 import { withActionContext } from "@/lib/with-request-context";
 
 export type HistoricalFightStat = {
@@ -25,6 +25,15 @@ export type HistoricalFightStat = {
     videoId?: string;
     prefightChampions: { name: string; images: ChampionImages }[];
   }[];
+};
+
+export type HistoricalNodeDefenseStat = {
+  defenderId: number;
+  defenderName: string;
+  defenderClass: ChampionClass;
+  defenderImages: ChampionImages;
+  fights: number;
+  deaths: number;
 };
 
 interface RawStatRow {
@@ -174,6 +183,67 @@ export const getBatchHistoricalCounters = withActionContext('getBatchHistoricalC
   }
 
   return resultsByNode;
+});
+
+export const getHistoricalNodeDefenseStats = withActionContext('getHistoricalNodeDefenseStats', async (
+  nodeNumber: number,
+  options: {
+      minSeason?: number;
+      maxTier?: number;
+      minTier?: number;
+      seasons?: number[];
+      allianceId?: string;
+      mapType?: WarMapType;
+  } = {}
+): Promise<HistoricalNodeDefenseStat[]> => {
+  const session = await auth();
+  if (!session?.user?.id) return [];
+
+  const { minSeason, maxTier, minTier, seasons, allianceId, mapType } = options;
+
+  const fights = await prisma.warFight.findMany({
+    where: {
+      node: { nodeNumber },
+      defenderId: { not: null },
+      attackerId: { not: null },
+      war: {
+        AND: [
+          { status: 'FINISHED' },
+          minSeason ? { season: { gte: minSeason } } : {},
+          maxTier ? { warTier: { lte: maxTier } } : {},
+          minTier ? { warTier: { gte: minTier } } : {},
+          seasons && seasons.length > 0 ? { season: { in: seasons } } : {},
+          allianceId ? { allianceId } : {},
+          mapType ? { mapType } : {},
+        ]
+      }
+    },
+    select: {
+      death: true,
+      defender: { select: { id: true, name: true, class: true, images: true } },
+    },
+  });
+
+  const statsMap = new Map<number, HistoricalNodeDefenseStat>();
+
+  for (const fight of fights) {
+    if (!fight.defender) continue;
+
+    const existing = statsMap.get(fight.defender.id) ?? {
+      defenderId: fight.defender.id,
+      defenderName: fight.defender.name,
+      defenderClass: fight.defender.class,
+      defenderImages: fight.defender.images as unknown as ChampionImages,
+      fights: 0,
+      deaths: 0,
+    };
+
+    existing.fights += 1;
+    existing.deaths += fight.death;
+    statsMap.set(fight.defender.id, existing);
+  }
+
+  return Array.from(statsMap.values()).sort((a, b) => b.deaths - a.deaths || b.fights - a.fights);
 });
 
 export const getHistoricalCounters = withActionContext('getHistoricalCounters', async (

@@ -15,6 +15,11 @@ interface WarTabsProps {
   warId?: string; // Optional for Defense
   war?: War; // Optional for Defense
   mapType: WarMapType; // Required
+  historyContext?: {
+      warTier?: number | null;
+      allianceId?: string | null;
+      mapType?: WarMapType | null;
+  };
   selectedNodeId: number | null;
   historyFilters: {
       onlyCurrentTier: boolean;
@@ -43,6 +48,7 @@ export const WarTabs = memo(function WarTabs({
   warId,
   war,
   mapType,
+  historyContext,
   selectedNodeId,
   historyFilters,
   activeTactic,
@@ -125,6 +131,7 @@ export const WarTabs = memo(function WarTabs({
                     selectedNodeId={selectedNodeId} 
                     mapType={mapType}
                     currentWar={war}
+                    historyContext={historyContext}
                     historyFilters={historyFilters}
                     fights={currentFights} 
                     activeTactic={activeTactic}

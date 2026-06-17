@@ -15,6 +15,8 @@ import { ActiveModifiers } from "./active-modifiers";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { cn } from "@/lib/utils";
 import { WarTacticWithTags } from "../hooks/use-war-planning";
+import type { HistoricalNodeDefenseStat } from "@/app/planning/history-actions";
+import { NodeDefenseHistory } from "./node-history";
 
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { AlertTriangle } from "lucide-react";
@@ -73,6 +75,22 @@ interface DefenseEditorProps {
   nodeData?: WarNodeWithAllocations;
   isReadOnly?: boolean;
   bgPlacements?: PlacementWithNode[];
+  historyContext?: {
+    warTier?: number | null;
+    allianceId?: string | null;
+    mapType?: WarMapType | null;
+  };
+  historyFilters?: {
+    onlyCurrentTier: boolean;
+    onlyAlliance: boolean;
+    minSeason: number | undefined;
+  };
+  onHistoryFiltersChange?: React.Dispatch<React.SetStateAction<{
+    onlyCurrentTier: boolean;
+    onlyAlliance: boolean;
+    minSeason: number | undefined;
+  }>>;
+  historyCache?: React.MutableRefObject<Map<string, HistoricalNodeDefenseStat[]>>;
 }
 
 export default function DefenseEditor({
@@ -92,6 +110,10 @@ export default function DefenseEditor({
   nodeData,
   isReadOnly = false,
   bgPlacements = [],
+  historyContext,
+  historyFilters,
+  onHistoryFiltersChange,
+  historyCache,
 }: DefenseEditorProps) {
   const [defenderId, setDefenderId] = useState<number | undefined>(currentPlacement?.defenderId || undefined);
   const [playerId, setPlayerId] = useState<string | undefined>(currentPlacement?.playerId || undefined);
@@ -509,6 +531,17 @@ export default function DefenseEditor({
                  )}
              </div>
           </div>
+
+          {historyFilters && onHistoryFiltersChange && historyCache && (
+            <NodeDefenseHistory
+              nodeId={nodeId}
+              historyContext={historyContext}
+              filters={historyFilters}
+              onFiltersChange={onHistoryFiltersChange}
+              cache={historyCache}
+              tierFilterLabel="Plan Tier Only"
+            />
+          )}
         </div>
       </div>
     </div>

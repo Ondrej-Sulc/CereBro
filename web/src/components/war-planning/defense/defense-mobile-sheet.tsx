@@ -1,13 +1,14 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence, useAnimation, useMotionValue } from "framer-motion";
 import { RightPanelState } from "../hooks/use-war-planning";
-import { WarDefensePlan, WarDefensePlacement, WarMapType, Tag } from "@prisma/client";
+import { WarDefensePlacement, WarMapType, Tag } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { PlayerWithRoster, PlacementWithNode } from "@cerebro/core/data/war-planning/types";
 import DefenseEditor from "../node-editor/defense-editor";
 import type { WarNodeWithAllocations } from "../node-editor/defense-editor";
 import PlanningToolsPanel from "../planning-tools-panel";
 import DefenseStatsPanel from "../defense-stats-panel";
+import type { HistoricalNodeDefenseStat } from "@/app/planning/history-actions";
 
 interface DefenseMobileSheetProps {
   isDesktop: boolean;
@@ -34,6 +35,22 @@ interface DefenseMobileSheetProps {
   handleAddFromTool: (playerId: string, championId: number, starLevel?: number) => Promise<void>;
   selectedPlayerId: string | null;
   activeTag: Tag | null;
+  historyContext?: {
+    warTier?: number | null;
+    allianceId?: string | null;
+    mapType?: WarMapType | null;
+  };
+  historyFilters: {
+    onlyCurrentTier: boolean;
+    onlyAlliance: boolean;
+    minSeason: number | undefined;
+  };
+  onHistoryFiltersChange: React.Dispatch<React.SetStateAction<{
+    onlyCurrentTier: boolean;
+    onlyAlliance: boolean;
+    minSeason: number | undefined;
+  }>>;
+  historyCache: React.MutableRefObject<Map<string, HistoricalNodeDefenseStat[]>>;
 }
 
 export function DefenseMobileSheet({
@@ -57,7 +74,11 @@ export function DefenseMobileSheet({
   allianceId,
   handleAddFromTool,
   selectedPlayerId,
-  activeTag
+  activeTag,
+  historyContext,
+  historyFilters,
+  onHistoryFiltersChange,
+  historyCache
 }: DefenseMobileSheetProps) {
   const controls = useAnimation();
   const sheetRef = useRef<HTMLDivElement>(null);
@@ -216,6 +237,10 @@ export function DefenseMobileSheet({
                         nodeData={selectedNodeId ? nodesMap.get(selectedNodeId) : undefined}
                         isReadOnly={isReadOnly}
                         bgPlacements={currentPlacements}
+                        historyContext={historyContext}
+                        historyFilters={historyFilters}
+                        onHistoryFiltersChange={onHistoryFiltersChange}
+                        historyCache={historyCache}
                      />
                  )}
                  {rightPanelState === 'tools' && (

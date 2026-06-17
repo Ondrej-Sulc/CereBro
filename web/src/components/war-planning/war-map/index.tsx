@@ -22,6 +22,11 @@ interface WarMapProps {
   selectedNodeId?: number | null;
   mapType: WarMapType;
   currentWar?: War;
+  historyContext?: {
+    warTier?: number | null;
+    allianceId?: string | null;
+    mapType?: WarMapType | null;
+  };
   historyFilters: {
     onlyCurrentTier: boolean;
     onlyAlliance: boolean;
@@ -43,6 +48,7 @@ const WarMap = memo(function WarMap({
   selectedNodeId,
   mapType,
   currentWar,
+  historyContext,
   historyFilters,
   fights,
   activeTactic,
@@ -61,6 +67,10 @@ const WarMap = memo(function WarMap({
   // Conditionally define history states and effects
   const [showHistory, setShowHistory] = useState(false);
   const [historyData, setHistoryData] = useState<Map<number, HistoricalFightStat[]>>(new Map());
+  const historyWarTier = historyContext?.warTier ?? currentWar?.warTier;
+  const historyAllianceId = historyContext?.allianceId ?? currentWar?.allianceId;
+  const historyMapType = historyContext?.mapType ?? currentWar?.mapType;
+  const hasHistoryContext = Boolean(warId || historyContext);
 
   const isFull = isFullscreen !== undefined ? isFullscreen : internalFullscreen;
   const stageRef = useRef<Konva.Stage>(null);
@@ -150,10 +160,10 @@ const WarMap = memo(function WarMap({
     }
   };
 
-  // Fetch history - only if warId is present
+  // Fetch historical counters when this map has a war or defense-plan context.
   useEffect(() => {
     async function fetchAllHistory() {
-      if (!warId || !showHistory || fights.length === 0) return; // Add warId check here
+      if (!hasHistoryContext || !showHistory || fights.length === 0) return;
 
       const nodesWithDefenders = fights.filter(f => f.defenderId);
       if (nodesWithDefenders.length === 0) return;
@@ -165,11 +175,11 @@ const WarMap = memo(function WarMap({
 
       try {
         const options = {
-          minTier: historyFilters.onlyCurrentTier && currentWar?.warTier ? currentWar.warTier : undefined,
-          maxTier: historyFilters.onlyCurrentTier && currentWar?.warTier ? currentWar.warTier : undefined,
-          allianceId: historyFilters.onlyAlliance && currentWar?.allianceId ? currentWar.allianceId : undefined,
+          minTier: historyFilters.onlyCurrentTier && historyWarTier ? historyWarTier : undefined,
+          maxTier: historyFilters.onlyCurrentTier && historyWarTier ? historyWarTier : undefined,
+          allianceId: historyFilters.onlyAlliance && historyAllianceId ? historyAllianceId : undefined,
           minSeason: historyFilters.minSeason,
-          mapType: currentWar?.mapType,
+          mapType: historyMapType ?? undefined,
         };
 
         const batchResults = await getBatchHistoricalCounters(requests, options);
@@ -183,10 +193,10 @@ const WarMap = memo(function WarMap({
       }
     }
 
-    if (warId && showHistory) { // Only fetch history if warId is present and showHistory is true
+    if (hasHistoryContext && showHistory) {
       fetchAllHistory();
     }
-  }, [warId, showHistory, fights, historyFilters, currentWar]); // Add warId to dependency array
+  }, [hasHistoryContext, showHistory, fights, historyFilters, historyWarTier, historyAllianceId, historyMapType]);
 
 
 
@@ -420,7 +430,7 @@ const WarMap = memo(function WarMap({
       )}
 
       <div className="absolute top-4 right-4 z-10 flex gap-2">
-        {warId && ( // Only show history button for attack planning
+        {hasHistoryContext && (
             <Button
               variant={showHistory ? "default" : "secondary"}
               size="icon"

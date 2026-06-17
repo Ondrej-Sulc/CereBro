@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { WarDefensePlan, WarDefensePlacement, WarMapType, Tag } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { cn } from "@/lib/utils";
@@ -42,6 +42,7 @@ import { Label } from "@/components/ui/label";
 import DefenseStatsPanel from "./defense-stats-panel";
 import { parseMissingDiscordChannelMessage } from "@/lib/discord-config-validation";
 import { MissingDiscordConfigDialog } from "@/components/alliance/missing-discord-config-dialog";
+import type { HistoricalNodeDefenseStat } from "@/app/planning/history-actions";
 
 interface DefenseDetailsClientProps {
   plan: WarDefensePlan;
@@ -158,6 +159,12 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
   const [viewMode, setViewMode] = useState<'roster' | 'map'>('roster');
   const [activeTagId, setActiveTagId] = useState<number | null>(props.plan.highlightTagId);
   const [activeTier, setActiveTier] = useState<number | null>(props.plan.tier ?? null);
+  const [historyFilters, setHistoryFilters] = useState({
+    onlyCurrentTier: true,
+    onlyAlliance: true,
+    minSeason: undefined as number | undefined,
+  });
+  const historyCache = useRef(new Map<string, HistoricalNodeDefenseStat[]>());
 
   const [isRenaming, setIsRenaming] = useState(false);
   const [isRenameOpen, setIsRenameOpen] = useState(false);
@@ -186,7 +193,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
         try {
             const fetched = await getGuildChannels(props.plan.allianceId);
             setChannels(fetched);
-        } catch (e) {
+        } catch {
             toast({ title: "Failed to fetch channels", description: "Could not load Discord channels.", variant: "destructive" });
         } finally {
             setIsLoadingChannels(false);
@@ -938,7 +945,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                   currentFights={currentPlacements}
                   mapType={props.plan.mapType}
                   selectedNodeId={selectedNodeId}
-                  historyFilters={{ onlyCurrentTier: false, onlyAlliance: false, minSeason: undefined }}
+                  historyFilters={historyFilters}
                   activeTactic={null}
                   activeTag={activeTag || null} // Pass activeTag
                   onNodeClick={handleNodeClick}
@@ -996,6 +1003,14 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                     nodeData={selectedNodeId ? nodesMap.get(selectedNodeId) : undefined}
                     isReadOnly={isReadOnly}
                     bgPlacements={currentPlacements}
+                    historyContext={{
+                        warTier: activeTier,
+                        allianceId: props.plan.allianceId,
+                        mapType: props.plan.mapType,
+                    }}
+                    historyFilters={historyFilters}
+                    onHistoryFiltersChange={setHistoryFilters}
+                    historyCache={historyCache}
                  />
              )}
              {(isDesktop && rightPanelState === 'tools') && (
@@ -1049,6 +1064,14 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
             handleAddFromTool={handleAddFromTool}
             selectedPlayerId={selectedPlayerId}
             activeTag={activeTag || null}
+            historyContext={{
+                warTier: activeTier,
+                allianceId: props.plan.allianceId,
+                mapType: props.plan.mapType,
+            }}
+            historyFilters={historyFilters}
+            onHistoryFiltersChange={setHistoryFilters}
+            historyCache={historyCache}
         />
 
       </div>

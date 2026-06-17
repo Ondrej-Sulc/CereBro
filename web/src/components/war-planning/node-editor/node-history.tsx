@@ -1,7 +1,13 @@
 import { useState, useEffect, memo } from "react";
 import { War } from "@prisma/client";
-import { HistoricalFightStat, getHistoricalCounters } from "@/app/planning/history-actions";
-import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
+import type { WarMapType } from "@prisma/client";
+import {
+  HistoricalFightStat,
+  HistoricalNodeDefenseStat,
+  getHistoricalCounters,
+  getHistoricalNodeDefenseStats,
+} from "@/app/planning/history-actions";
+import { getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +21,11 @@ interface NodeHistoryProps {
   nodeId: number | null;
   defenderId?: number;
   currentWar?: War;
+  historyContext?: {
+    warTier?: number | null;
+    allianceId?: string | null;
+    mapType?: WarMapType | null;
+  };
   filters: {
     onlyCurrentTier: boolean;
     onlyAlliance: boolean;
@@ -26,18 +37,46 @@ interface NodeHistoryProps {
     minSeason: number | undefined;
   }>>;
   cache: React.MutableRefObject<Map<string, HistoricalFightStat[]>>;
+  tierFilterLabel?: string;
+}
+
+interface NodeDefenseHistoryProps {
+  nodeId: number | null;
+  historyContext?: {
+    warTier?: number | null;
+    allianceId?: string | null;
+    mapType?: WarMapType | null;
+  };
+  filters: {
+    onlyCurrentTier: boolean;
+    onlyAlliance: boolean;
+    minSeason: number | undefined;
+  };
+  onFiltersChange: React.Dispatch<React.SetStateAction<{
+    onlyCurrentTier: boolean;
+    onlyAlliance: boolean;
+    minSeason: number | undefined;
+  }>>;
+  cache: React.MutableRefObject<Map<string, HistoricalNodeDefenseStat[]>>;
+  tierFilterLabel?: string;
 }
 
 export function NodeHistory({
   nodeId,
   defenderId,
   currentWar,
+  historyContext,
   filters,
   onFiltersChange,
   cache,
+  tierFilterLabel = "Current Tier Only",
 }: NodeHistoryProps) {
   const [history, setHistory] = useState<HistoricalFightStat[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const warTier = historyContext?.warTier ?? currentWar?.warTier;
+  const allianceId = historyContext?.allianceId ?? currentWar?.allianceId;
+  const mapType = historyContext?.mapType ?? currentWar?.mapType;
 
   // Fetch history when defender changes (with debounce and cache)
   useEffect(() => {
@@ -47,10 +86,12 @@ export function NodeHistory({
     }
 
     const filtersKey = JSON.stringify(filters);
+    const contextKey = JSON.stringify({ warTier, allianceId, mapType });
     const cacheKey = `${nodeId}-${defenderId}-${filtersKey}`;
+    const scopedCacheKey = `${cacheKey}-${contextKey}`;
 
-    if (cache.current.has(cacheKey)) {
-      setHistory(cache.current.get(cacheKey)!);
+    if (cache.current.has(scopedCacheKey)) {
+      setHistory(cache.current.get(scopedCacheKey)!);
       return;
     }
 
@@ -58,13 +99,13 @@ export function NodeHistory({
     const timer = setTimeout(async () => {
       try {
         const stats = await getHistoricalCounters(nodeId, defenderId, {
-          minTier: filters.onlyCurrentTier && currentWar?.warTier ? currentWar.warTier : undefined,
-          maxTier: filters.onlyCurrentTier && currentWar?.warTier ? currentWar.warTier : undefined,
-          allianceId: filters.onlyAlliance && currentWar?.allianceId ? currentWar.allianceId : undefined,
+          minTier: filters.onlyCurrentTier && warTier ? warTier : undefined,
+          maxTier: filters.onlyCurrentTier && warTier ? warTier : undefined,
+          allianceId: filters.onlyAlliance && allianceId ? allianceId : undefined,
           minSeason: filters.minSeason,
-          mapType: currentWar?.mapType,
+          mapType: mapType ?? undefined,
         });
-        cache.current.set(cacheKey, stats);
+        cache.current.set(scopedCacheKey, stats);
         setHistory(stats);
       } catch (error) {
         console.error("Failed to fetch history:", error);
@@ -76,7 +117,7 @@ export function NodeHistory({
     return () => {
       clearTimeout(timer);
     };
-  }, [nodeId, defenderId, filters, currentWar, cache]);
+  }, [nodeId, defenderId, filters, cache, warTier, allianceId, mapType]);
 
   if (!defenderId) return null;
 
@@ -103,7 +144,7 @@ export function NodeHistory({
                     onCheckedChange={(c) => onFiltersChange(prev => ({ ...prev, onlyCurrentTier: !!c }))}
                   />
                   <Label htmlFor="tier-filter" className="text-sm font-normal cursor-pointer">
-                    Current Tier Only {currentWar?.warTier ? `(T${currentWar.warTier})` : ''}
+                    {tierFilterLabel} {warTier ? `(T${warTier})` : ''}
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -148,6 +189,168 @@ export function NodeHistory({
     </div>
   );
 }
+
+export function NodeDefenseHistory({
+  nodeId,
+  historyContext,
+  filters,
+  onFiltersChange,
+  cache,
+  tierFilterLabel = "Plan Tier Only",
+}: NodeDefenseHistoryProps) {
+  const [history, setHistory] = useState<HistoricalNodeDefenseStat[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const warTier = historyContext?.warTier;
+  const allianceId = historyContext?.allianceId;
+  const mapType = historyContext?.mapType;
+
+  useEffect(() => {
+    if (!nodeId) {
+      setHistory([]);
+      return;
+    }
+
+    const filtersKey = JSON.stringify(filters);
+    const contextKey = JSON.stringify({ warTier, allianceId, mapType });
+    const cacheKey = `${nodeId}-${filtersKey}-${contextKey}`;
+
+    if (cache.current.has(cacheKey)) {
+      setHistory(cache.current.get(cacheKey)!);
+      return;
+    }
+
+    setIsLoading(true);
+    const timer = setTimeout(async () => {
+      try {
+        const stats = await getHistoricalNodeDefenseStats(nodeId, {
+          minTier: filters.onlyCurrentTier && warTier ? warTier : undefined,
+          maxTier: filters.onlyCurrentTier && warTier ? warTier : undefined,
+          allianceId: filters.onlyAlliance && allianceId ? allianceId : undefined,
+          minSeason: filters.minSeason,
+          mapType: mapType ?? undefined,
+        });
+        cache.current.set(cacheKey, stats);
+        setHistory(stats);
+      } catch (error) {
+        console.error("Failed to fetch node defense history:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [nodeId, filters, cache, warTier, allianceId, mapType]);
+
+  if (!nodeId) return null;
+
+  return (
+    <div className="mt-4 border-t border-slate-800 pt-4">
+      <div className="flex items-center justify-between mb-3">
+        <h4 className="text-sm font-semibold">Historical Node Results</h4>
+        <div className="flex items-center gap-2">
+          {isLoading && <span className="text-xs text-muted-foreground font-normal">Loading...</span>}
+
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="icon" className="h-6 w-6">
+                <Settings2 className="h-4 w-4 text-slate-400" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-64 bg-slate-950 border-slate-800 p-4" align="end">
+              <h5 className="font-semibold mb-3 text-sm">History Filters</h5>
+              <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="node-tier-filter"
+                    checked={filters.onlyCurrentTier}
+                    onCheckedChange={(c) => onFiltersChange(prev => ({ ...prev, onlyCurrentTier: !!c }))}
+                  />
+                  <Label htmlFor="node-tier-filter" className="text-sm font-normal cursor-pointer">
+                    {tierFilterLabel} {warTier ? `(T${warTier})` : ''}
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="node-alliance-filter"
+                    checked={filters.onlyAlliance}
+                    onCheckedChange={(c) => onFiltersChange(prev => ({ ...prev, onlyAlliance: !!c }))}
+                  />
+                  <Label htmlFor="node-alliance-filter" className="text-sm font-normal cursor-pointer">
+                    My Alliance Only
+                  </Label>
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="node-min-season" className="text-xs text-muted-foreground">Min Season</Label>
+                  <Input
+                    id="node-min-season"
+                    type="number"
+                    placeholder="All time"
+                    className="h-8 bg-slate-900 border-slate-800 text-xs no-spin-buttons"
+                    value={filters.minSeason || ''}
+                    onChange={(e) => {
+                      const val = e.target.value ? parseInt(e.target.value) : undefined;
+                      onFiltersChange(prev => ({ ...prev, minSeason: val }));
+                    }}
+                  />
+                </div>
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+      </div>
+
+      {history.length === 0 && !isLoading ? (
+        <p className="text-xs text-muted-foreground">No defender history found for this node.</p>
+      ) : (
+        <div className="space-y-2 max-h-[600px] overflow-y-auto pr-1">
+          {history.map((stat) => (
+            <NodeDefenseHistoryRow key={stat.defenderId} stat={stat} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+const NodeDefenseHistoryRow = memo(function NodeDefenseHistoryRow({ stat }: { stat: HistoricalNodeDefenseStat }) {
+  const deathsPerFight = stat.fights > 0 ? stat.deaths / stat.fights : 0;
+
+  return (
+    <div className="bg-slate-900/50 border border-slate-800 rounded-md p-2">
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <div className="relative h-9 w-9 rounded-full overflow-hidden bg-slate-800 flex-shrink-0">
+            <Image
+              src={getChampionImageUrlOrPlaceholder(stat.defenderImages, '64')}
+              alt={stat.defenderName}
+              fill
+              unoptimized
+              className="object-cover"
+            />
+          </div>
+          <div className="truncate">
+            <div className="font-bold truncate text-xs">{stat.defenderName}</div>
+            <div className="text-[10px] text-muted-foreground">{stat.fights} Fights</div>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 shrink-0">
+          <div className="flex flex-col items-center w-10">
+            <span className="font-bold text-red-400 text-xs">{stat.deaths}</span>
+            <span className="text-[8px] text-muted-foreground uppercase">Deaths</span>
+          </div>
+          <div className="flex flex-col items-center w-12">
+            <span className="font-bold text-amber-400 text-xs">{deathsPerFight.toFixed(1)}</span>
+            <span className="text-[8px] text-muted-foreground uppercase">D/F</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+});
 
 const HistoricalRow = memo(function HistoricalRow({ stat }: { stat: HistoricalFightStat }) {
   const [expanded, setExpanded] = useState(false);
