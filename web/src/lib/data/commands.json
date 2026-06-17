@@ -395,69 +395,6 @@
             ]
           }
         ]
-      },
-      {
-        "type": 2,
-        "name": "duel",
-        "description": "Admin commands for managing duels.",
-        "options": [
-          {
-            "type": 1,
-            "name": "upload",
-            "description": "Uploads duel data from a CSV file.",
-            "options": [
-              {
-                "name": "csv",
-                "description": "The CSV file to upload.",
-                "required": true,
-                "type": 11
-              },
-              {
-                "type": 3,
-                "choices": [
-                  {
-                    "name": "GuiaMTC",
-                    "value": "GUIA_MTC"
-                  },
-                  {
-                    "name": "CoCPit",
-                    "value": "COCPIT"
-                  },
-                  {
-                    "name": "MCOCHUB",
-                    "value": "MCOCHUB"
-                  }
-                ],
-                "name": "source",
-                "description": "The source of the duel data.",
-                "required": true
-              }
-            ]
-          },
-          {
-            "type": 1,
-            "name": "review",
-            "description": "Reviews duel suggestions and reports.",
-            "options": [
-              {
-                "type": 3,
-                "choices": [
-                  {
-                    "name": "Suggested",
-                    "value": "SUGGESTED"
-                  },
-                  {
-                    "name": "Outdated",
-                    "value": "OUTDATED"
-                  }
-                ],
-                "name": "status",
-                "description": "The status of the duels to review.",
-                "required": true
-              }
-            ]
-          }
-        ]
       }
     ],
     "subcommands": {}

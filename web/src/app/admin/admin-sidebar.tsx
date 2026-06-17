@@ -9,6 +9,7 @@ import {
   Bug,
   ChevronLeft,
   ChevronRight,
+  Crosshair,
   Hash,
   Heart,
   LayoutDashboard,
@@ -67,6 +68,7 @@ const groups: SidebarGroup[] = [
     label: "Game Data",
     items: [
       { title: "Champions", href: "/admin/champions", icon: Sword, permission: "MANAGE_CHAMPIONS" },
+      { title: "Duels", href: "/admin/duels", icon: Crosshair, permission: "MANAGE_CHAMPIONS" },
       { title: "Abilities", href: "/admin/abilities", icon: Target, permission: "MANAGE_CHAMPIONS" },
       { title: "Quests", href: "/admin/quests", icon: Map, permission: "MANAGE_QUESTS" },
     ],

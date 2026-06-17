@@ -9,10 +9,8 @@ import { handleAdminAutocomplete } from "./autocomplete";
 import { handleChampionAdd, handleChampionUpdateImages, handleChampionUpdateTags, handleChampionSyncSheet, handleChampionUploadTagsCsv } from "./champion/handlers";
 import { handleAbilityAdd, handleAbilityRemove, handleAbilityDraft } from "./ability/handlers";
 import { showAttackModal } from "./attack/add";
-import { AbilityLinkType, DuelSource } from "@prisma/client";
+import { AbilityLinkType } from "@prisma/client";
 import { handleGlossaryLink, handleGlossaryUnlink, handleGlossaryUpdateAbility, handleGlossaryUpdateCategory, handleSetEmoji, handleRemoveEmoji } from "./glossary/handlers";
-import { handleDuelUpload } from "./duel/upload";
-import { handleDuelReview } from "./duel/review";
 import { handleBotAdminAdd, handleBotAdminRemove } from "./bot-admin/handlers";
 
 export const command: Command = {
@@ -359,48 +357,6 @@ export const command: Command = {
                 .setRequired(true)
             )
         )
-    )
-    .addSubcommandGroup((group) =>
-      group
-        .setName("duel")
-        .setDescription("Admin commands for managing duels.")
-        .addSubcommand((subcommand) =>
-          subcommand
-            .setName("upload")
-            .setDescription("Uploads duel data from a CSV file.")
-            .addAttachmentOption((option) =>
-              option
-                .setName("csv")
-                .setDescription("The CSV file to upload.")
-                .setRequired(true)
-            )
-            .addStringOption((option) =>
-              option
-                .setName("source")
-                .setDescription("The source of the duel data.")
-                .setRequired(true)
-                .addChoices(
-                  { name: "GuiaMTC", value: DuelSource.GUIA_MTC },
-                  { name: "CoCPit", value: DuelSource.COCPIT },
-                  { name: "MCOCHUB", value: DuelSource.MCOCHUB }
-                )
-            )
-        )
-        .addSubcommand((subcommand) =>
-          subcommand
-            .setName("review")
-            .setDescription("Reviews duel suggestions and reports.")
-            .addStringOption((option) =>
-              option
-                .setName("status")
-                .setDescription("The status of the duels to review.")
-                .setRequired(true)
-                .addChoices(
-                  { name: "Suggested", value: "SUGGESTED" },
-                  { name: "Outdated", value: "OUTDATED" }
-                )
-            )
-        )
     ),
   access: CommandAccess.BOT_ADMIN,
   help: {
@@ -465,12 +421,6 @@ export const command: Command = {
         await handleSetEmoji(interaction);
       } else if (subcommand === "emoji-remove") {
         await handleRemoveEmoji(interaction);
-      }
-    } else if (group === "duel") {
-      if (subcommand === "upload") {
-        await handleDuelUpload(interaction);
-      } else if (subcommand === "review") {
-        await handleDuelReview(interaction);
       }
     } else if (group === "bot-admin") {
       if (subcommand === "add") {
