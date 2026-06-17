@@ -2,7 +2,7 @@
 
 import { ComponentType, CSSProperties, useTransition } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { BarChart3, MapPinned, Shield, Skull, Swords, Target, Trophy } from "lucide-react";
+import { BarChart3, MapPinned, Shield, Skull, Swords, Target } from "lucide-react";
 import {
   PlayerWarAttackerInsight,
   PlayerWarInsights,
@@ -80,18 +80,7 @@ export function PlayerWarInsightsSection({
         </Select>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-        <InsightStat icon={Trophy} label="Scope" value={scopeLabel} tone="amber" />
-        <InsightStat icon={Shield} label="Wars" value={insights.totalWars.toLocaleString()} tone="slate" />
-        <InsightStat icon={Swords} label="Fights" value={insights.totalFights.toLocaleString()} tone="sky" />
-        <InsightStat
-          icon={BarChart3}
-          label="Solo Rate"
-          value={`${insights.soloRate.toFixed(1)}%`}
-          tone={insights.soloRate >= 80 ? "emerald" : insights.soloRate >= 60 ? "amber" : "red"}
-        />
-        <InsightStat icon={Skull} label="Deaths" value={insights.totalDeaths.toLocaleString()} tone="red" />
-      </div>
+      <ScopeSummary insights={insights} scopeLabel={scopeLabel} />
 
       {!hasData ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-slate-800/60 bg-slate-950/40 p-8 text-center">
@@ -115,36 +104,6 @@ export function PlayerWarInsightsSection({
         </div>
       )}
     </section>
-  );
-}
-
-function InsightStat({
-  icon: Icon,
-  label,
-  value,
-  tone,
-}: {
-  icon: ComponentType<{ className?: string }>;
-  label: string;
-  value: string;
-  tone: "amber" | "emerald" | "red" | "sky" | "slate";
-}) {
-  const toneClasses = {
-    amber: "border-amber-900/30 bg-amber-950/20 text-amber-300",
-    emerald: "border-emerald-900/30 bg-emerald-950/20 text-emerald-300",
-    red: "border-red-900/30 bg-red-950/20 text-red-300",
-    sky: "border-sky-900/30 bg-sky-950/20 text-sky-300",
-    slate: "border-slate-800/60 bg-slate-900/40 text-slate-300",
-  }[tone];
-
-  return (
-    <div className={cn("rounded-xl border p-4", toneClasses)}>
-      <div className="mb-2 flex items-center gap-1.5 opacity-80">
-        <Icon className="h-3.5 w-3.5" />
-        <span className="text-[10px] font-black uppercase tracking-widest">{label}</span>
-      </div>
-      <div className="truncate font-mono text-2xl font-black leading-none">{value}</div>
-    </div>
   );
 }
 
@@ -173,12 +132,12 @@ function RouteUsagePanel({
           {routes.map((route, index) => (
             <div
               key={route.key}
-              className="rounded-lg border border-slate-800/50 bg-slate-950/60 p-3"
+              className="rounded-lg border border-slate-800/50 bg-slate-950/60 p-3 transition-colors hover:border-amber-500/30"
             >
               <div className="flex items-center gap-3">
                 <div className="flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-lg border border-amber-500/25 bg-amber-500/10 text-amber-300">
                   <span className="text-[9px] font-black uppercase text-amber-500/70">#{index + 1}</span>
-                  <span className="font-mono text-sm font-black leading-none">{formatRouteCode(route)}</span>
+                  <span className="font-mono text-[11px] font-black leading-none">{formatRouteBadge(route.category)}</span>
                 </div>
 
                 <div className="min-w-0 flex-1">
@@ -187,8 +146,12 @@ function RouteUsagePanel({
                       <div className="truncate text-sm font-black uppercase tracking-tight text-slate-200">
                         {route.label}
                       </div>
-                      <div className="mt-0.5 truncate text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                        {formatCategory(route.category)} · Nodes {formatNodeList(route.nodeNumbers)}
+                      <div className="mt-1 flex flex-wrap items-center gap-2">
+                        <span className="min-w-0 truncate text-[10px] font-bold uppercase tracking-wider text-slate-500">
+                          {formatCategory(route.category)} - Nodes {formatNodeList(route.nodeNumbers)}
+                        </span>
+                        <MiniMetric label="Solo" value={`${route.soloRate.toFixed(1)}%`} tone="emerald" />
+                        <MiniMetric label="Deaths" value={route.deaths.toLocaleString()} tone="red" />
                       </div>
                     </div>
                     <div className="shrink-0 text-right">
@@ -204,13 +167,9 @@ function RouteUsagePanel({
                   <UsageBar
                     value={route.fights}
                     total={totalFights}
-                    className="mt-3 bg-amber-500"
+                    containerClassName="mt-2"
+                    className="bg-amber-500"
                   />
-
-                  <div className="mt-2 flex flex-wrap items-center gap-2">
-                    <MiniMetric label="Solo" value={`${route.soloRate.toFixed(1)}%`} tone="emerald" />
-                    <MiniMetric label="Deaths" value={route.deaths.toLocaleString()} tone="red" />
-                  </div>
                 </div>
               </div>
             </div>
@@ -248,7 +207,7 @@ function AttackerUsagePanel({
             return (
               <div
                 key={attacker.championId}
-                className="rounded-lg border border-slate-800/50 bg-slate-950/60 p-3"
+                className="rounded-lg border border-slate-800/50 bg-slate-950/60 p-3 transition-colors hover:border-sky-500/30"
                 style={{ borderLeftColor: index < 3 ? `${classColors.color}80` : undefined, borderLeftWidth: index < 3 ? 3 : undefined }}
               >
                 <div className="flex items-center gap-3">
@@ -268,8 +227,12 @@ function AttackerUsagePanel({
                         <div className="truncate text-sm font-black uppercase tracking-tight text-slate-200">
                           {attacker.name}
                         </div>
-                        <div className={cn("mt-0.5 text-[10px] font-black uppercase tracking-wider", classColors.text)}>
-                          {attacker.class}
+                        <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <span className={cn("text-[10px] font-black uppercase tracking-wider", classColors.text)}>
+                            {attacker.class}
+                          </span>
+                          <MiniMetric label="Solo" value={`${attacker.soloRate.toFixed(1)}%`} tone="emerald" />
+                          <MiniMetric label="Deaths" value={attacker.deaths.toLocaleString()} tone="red" />
                         </div>
                       </div>
                       <div className="shrink-0 text-right">
@@ -285,14 +248,9 @@ function AttackerUsagePanel({
                     <UsageBar
                       value={attacker.fights}
                       total={totalFights}
-                      className="mt-3"
+                      containerClassName="mt-2"
                       style={{ backgroundColor: classColors.color }}
                     />
-
-                    <div className="mt-2 flex flex-wrap items-center gap-2">
-                      <MiniMetric label="Solo" value={`${attacker.soloRate.toFixed(1)}%`} tone="emerald" />
-                      <MiniMetric label="Deaths" value={attacker.deaths.toLocaleString()} tone="red" />
-                    </div>
                   </div>
                 </div>
               </div>
@@ -330,22 +288,60 @@ function InsightPanelHeader({
   );
 }
 
+function ScopeSummary({
+  insights,
+  scopeLabel,
+}: {
+  insights: PlayerWarInsights;
+  scopeLabel: string;
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-lg border border-slate-800/60 bg-slate-950/40 px-3 py-2 text-[10px] font-black uppercase tracking-wider text-slate-500">
+      <span className="text-amber-300">{scopeLabel}</span>
+      <SummaryItem icon={Shield} label="Wars" value={insights.totalWars.toLocaleString()} />
+      <SummaryItem icon={Swords} label="Fights" value={insights.totalFights.toLocaleString()} />
+      <SummaryItem icon={BarChart3} label="Solo" value={`${insights.soloRate.toFixed(1)}%`} />
+      <SummaryItem icon={Skull} label="Deaths" value={insights.totalDeaths.toLocaleString()} />
+    </div>
+  );
+}
+
+function SummaryItem({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: ComponentType<{ className?: string }>;
+  label: string;
+  value: string;
+}) {
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <Icon className="h-3 w-3 text-slate-600" />
+      <span>{label}</span>
+      <span className="font-mono text-slate-300">{value}</span>
+    </span>
+  );
+}
+
 function UsageBar({
   value,
   total,
+  containerClassName,
   className,
   style,
 }: {
   value: number;
   total: number;
+  containerClassName?: string;
   className?: string;
   style?: CSSProperties;
 }) {
   const percent = total > 0 ? Math.min(100, (value / total) * 100) : 0;
 
   return (
-    <div className="flex items-center gap-2">
-      <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-900">
+    <div className={cn("flex items-center gap-2", containerClassName)}>
+      <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-800/70">
         <div
           className={cn("h-full rounded-full", className)}
           style={{
@@ -354,7 +350,7 @@ function UsageBar({
           }}
         />
       </div>
-      <span className="w-10 text-right font-mono text-[10px] font-black text-slate-500">
+      <span className="w-10 text-right font-mono text-[10px] font-black text-slate-400">
         {percent.toFixed(0)}%
       </span>
     </div>
@@ -375,7 +371,7 @@ function MiniMetric({
     : "border-red-500/20 bg-red-500/10 text-red-300";
 
   return (
-    <span className={cn("rounded border px-2 py-0.5 text-[10px] font-black uppercase tracking-wider", toneClass)}>
+    <span className={cn("rounded border px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider", toneClass)}>
       {label} {value}
     </span>
   );
@@ -400,8 +396,8 @@ function formatNodeList(nodeNumbers: number[]) {
   return `${nodeNumbers.slice(0, 4).join(", ")} +${nodeNumbers.length - 4}`;
 }
 
-function formatRouteCode(route: PlayerWarNodeGroupInsight) {
-  if (route.category === "boss") return "B";
-  if (route.category === "mini-boss") return "MB";
-  return route.label.replace(/\s+/g, "");
+function formatRouteBadge(category: PlayerWarNodeGroupInsight["category"]) {
+  if (category === "boss") return "BOSS";
+  if (category === "mini-boss") return "MB";
+  return "PATH";
 }

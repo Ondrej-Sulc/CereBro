@@ -13,7 +13,7 @@ import { ChampionImages } from "@/types/champion";
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
-import { ChampionClass } from "@prisma/client";
+import { ChampionClass, Prisma } from "@prisma/client";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { cache } from "react";
 import { getYoutubeVideoId } from "@/lib/youtube";
@@ -107,6 +107,15 @@ export default async function PlayerProfilePage({ params, searchParams }: Player
         })()
         : Promise.resolve(null);
 
+    const eligibleWarFightWhere = {
+        playerId: id,
+        war: {
+            status: { not: "PLANNING" },
+            warNumber: { not: null },
+            season: { not: 0 },
+        },
+    } satisfies Prisma.WarFightWhereInput;
+
     const [questPlans, roster, recentVideos, recentFights, rosterTotal, rosterByStars, rosterAscendedCount, videoTotal, fightAggregate, uniqueWarIds, supporter, pendingInvite, warInsights] = await Promise.all([
         getPlayerQuestPlansForProfile(id),
         prisma.roster.findMany({
@@ -173,11 +182,11 @@ export default async function PlayerProfilePage({ params, searchParams }: Player
         prisma.roster.count({ where: { playerId: id, isAscended: true } }),
         prisma.warVideo.count({ where: { submittedById: id, status: 'PUBLISHED' } }),
         prisma.warFight.aggregate({
-            where: { playerId: id },
+            where: eligibleWarFightWhere,
             _count: { id: true },
             _sum: { death: true }
         }),
-        prisma.warFight.groupBy({ by: ['warId'], where: { playerId: id } }),
+        prisma.warFight.groupBy({ by: ['warId'], where: eligibleWarFightWhere }),
         isPlayerSupporter(player),
         canInvitePlayer && currentUser?.allianceId ? prisma.allianceMembershipRequest.findFirst({
             where: {
