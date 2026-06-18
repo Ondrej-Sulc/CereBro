@@ -1,7 +1,7 @@
 "use server";
 
 import { DuelSource, DuelStatus, Prisma } from "@prisma/client";
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { requireBotAdmin } from "@/lib/auth-helpers";
 import { withActionContext } from "@/lib/with-request-context";
@@ -41,6 +41,7 @@ function uniquePositiveIds(ids: number[]) {
 
 function revalidateDuels() {
   revalidatePath("/admin/duels");
+  revalidateTag("champion-details", "default");
 }
 
 export const countMatchingDuels = withActionContext(

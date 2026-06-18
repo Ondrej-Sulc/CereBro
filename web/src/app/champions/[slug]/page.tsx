@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation"
 import { Metadata } from "next"
-import { AbilityLinkType } from "@prisma/client"
+import { AbilityLinkType, DuelStatus } from "@prisma/client"
 import { unstable_cache } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { collectChampionAbilityTextGlossaryIds } from "@/lib/champion-ability-text"
@@ -119,6 +119,20 @@ const getChampionDetails = unstable_cache(
         },
         orderBy: [{ rarity: "desc" }, { rank: "desc" }, { sig: "asc" }],
       },
+      duels: {
+        where: {
+          status: { in: [DuelStatus.ACTIVE, DuelStatus.OUTDATED] },
+        },
+        select: {
+          id: true,
+          playerName: true,
+          rank: true,
+          status: true,
+          source: true,
+          updatedAt: true,
+        },
+        orderBy: [{ status: "asc" }, { playerName: "asc" }],
+      },
     },
   }),
   ["champion-details"],
@@ -204,6 +218,11 @@ export default async function ChampionDetailsPage({ params }: PageProps) {
         abilities: champion.abilities.map(link => ({
           ...link,
           type: link.type === AbilityLinkType.IMMUNITY ? "IMMUNITY" : "ABILITY",
+        })),
+        duels: champion.duels.map(duel => ({
+          ...duel,
+          status: duel.status === DuelStatus.OUTDATED ? "OUTDATED" : "ACTIVE",
+          updatedAt: duel.updatedAt.toISOString(),
         })),
       }}
       glossaryTerms={glossaryTerms}

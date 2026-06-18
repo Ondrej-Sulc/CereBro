@@ -4,9 +4,10 @@ import Image from "next/image"
 import Link from "next/link"
 import dynamic from "next/dynamic"
 import { useMemo, useState, type CSSProperties, type ReactNode } from "react"
-import { ArrowLeft, BarChart3, BookOpenText, Dumbbell, Gauge, Hash, HeartPulse, Shield, Sparkles, Star, Sword, Zap } from "lucide-react"
+import { ArrowLeft, BarChart3, BookOpenText, Dumbbell, Gauge, Hash, HeartPulse, Shield, Sparkles, Star, Sword, Target, Zap } from "lucide-react"
 import { ChampionClass } from "@prisma/client"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 import { Slider } from "@/components/ui/slider"
@@ -24,6 +25,7 @@ import {
 } from "@/lib/champion-ability-text"
 import { cn } from "@/lib/utils"
 import { ChampionImages } from "@/types/champion"
+import { getExternalDuelSourceCredits, prepareDuelTargets } from "./duel-targets"
 
 const CurvePanel = dynamic(
   () => import("./champion-curve-panel").then(module => module.CurvePanel),
@@ -76,6 +78,14 @@ export type ChampionDetailsPayload = {
     rank: number
     sig: number
     prestige: number
+  }>
+  duels: Array<{
+    id: number
+    playerName: string
+    rank: string | null
+    status: "ACTIVE" | "OUTDATED"
+    source: "USER_SUGGESTION" | "GUIA_MTC" | "COCPIT" | "MCOCHUB"
+    updatedAt: Date | string
   }>
 }
 
@@ -366,6 +376,7 @@ export function ChampionDetailsClient({
                     <AbilitySummary title="Immunities" icon={<Shield className="h-4 w-4" />} items={immunities} tone="sky" glossaryById={glossaryById} accent={classColors.color} />
                   )}
                   <AbilitySummary title="Abilities" icon={<Zap className="h-4 w-4" />} items={abilities} tone="amber" glossaryById={glossaryById} accent={classColors.color} />
+                  <DuelTargetsPanel duels={champion.duels} accent={classColors.color} />
                 </TabsContent>
 
                 {activeTab === "descriptions" && (
@@ -652,6 +663,101 @@ function renderNode(
     return <span key={index} style={{ color: normalizeHexColor(node.color) }}>{node.children.map((child, childIndex) => renderNode(child, childIndex, glossaryById))}</span>
   }
   return null
+}
+
+function DuelTargetsPanel({ duels, accent }: { duels: ChampionDetailsPayload["duels"]; accent: string }) {
+  const [showAll, setShowAll] = useState(false)
+  const prepared = useMemo(() => prepareDuelTargets(duels), [duels])
+  const credits = useMemo(() => getExternalDuelSourceCredits(duels), [duels])
+
+  if (prepared.totalCount === 0) return null
+
+  const hasOverflow = prepared.targets.length > 8
+  const visibleTargets = showAll ? prepared.targets : prepared.targets.slice(0, 8)
+
+  return (
+    <section className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/70 p-4 backdrop-blur">
+      <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
+      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.12em] text-white">
+            <Target className="h-4 w-4" style={{ color: accent }} />
+            Duel Targets
+          </h2>
+          <Badge variant="outline" className="border-slate-700 bg-slate-900/70 text-slate-300">
+            {prepared.totalCount.toLocaleString("en-US")} {prepared.totalCount === 1 ? "target" : "targets"}
+          </Badge>
+          {prepared.outdatedCount > 0 && (
+            <Badge variant="outline" className="border-amber-500/40 bg-amber-950/30 text-amber-200">
+              {prepared.outdatedCount.toLocaleString("en-US")} outdated
+            </Badge>
+          )}
+        </div>
+        {hasOverflow && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="h-8 w-fit border border-slate-800 bg-slate-900/40 px-3 text-xs text-slate-300 hover:bg-slate-800 hover:text-white"
+            onClick={() => setShowAll((current) => !current)}
+          >
+            {showAll ? "Show fewer" : "Show all"}
+          </Button>
+        )}
+      </div>
+
+      <div className="grid gap-2">
+        {visibleTargets.map((target) => (
+          <div
+            key={target.id}
+            className={cn(
+              "flex flex-col gap-2 rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between",
+              target.status === "OUTDATED" && "border-amber-500/20 bg-amber-950/10"
+            )}
+            style={{ boxShadow: `inset 3px 0 0 ${target.status === "ACTIVE" ? accent : "#f59e0b"}88` }}
+          >
+            <div className="flex min-w-0 items-center gap-2">
+              <span className="truncate text-sm font-bold text-white">{target.playerName}</span>
+              {target.rank && (
+                <span className="shrink-0 rounded border border-slate-700 bg-slate-900 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-slate-300">
+                  {target.rank}
+                </span>
+              )}
+            </div>
+            <div className="flex shrink-0 flex-wrap items-center gap-2">
+              <Badge variant="outline" className="border-slate-700 bg-slate-900/70 text-slate-300">
+                {target.sourceLabel}
+              </Badge>
+              {target.status === "OUTDATED" && (
+                <Badge variant="outline" className="border-amber-500/40 bg-amber-950/40 text-amber-200">
+                  Outdated
+                </Badge>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {credits.length > 0 && (
+        <p className="mt-3 text-xs leading-5 text-slate-500">
+          Sources:{" "}
+          {credits.map((credit, index) => (
+            <span key={credit.source}>
+              {index > 0 && <span className="text-slate-600">, </span>}
+              <a
+                href={credit.url}
+                target="_blank"
+                rel="noreferrer"
+                className="font-medium text-slate-400 underline decoration-slate-700 underline-offset-2 hover:text-slate-200"
+              >
+                {credit.label}
+              </a>
+            </span>
+          ))}
+        </p>
+      )}
+    </section>
+  )
 }
 
 function AbilitySummary({

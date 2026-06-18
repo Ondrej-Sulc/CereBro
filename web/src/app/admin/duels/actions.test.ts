@@ -17,6 +17,7 @@ const authFake = vi.hoisted(() => ({
 
 const cacheFake = vi.hoisted(() => ({
   revalidatePath: vi.fn(),
+  revalidateTag: vi.fn(),
 }));
 
 vi.mock("@/lib/prisma", () => ({ prisma: prismaFake }));
@@ -70,6 +71,7 @@ describe("admin duel actions", () => {
       data: { status: DuelStatus.ACTIVE },
     });
     expect(cacheFake.revalidatePath).toHaveBeenCalledWith("/admin/duels");
+    expect(cacheFake.revalidateTag).toHaveBeenCalledWith("champion-details", "default");
   });
 
   it("updates all duels matching the filter and source status", async () => {
