@@ -3,6 +3,7 @@ import {
   getExternalDuelSourceCredits,
   getDuelSourceLabel,
   prepareDuelTargets,
+  serializeDuelUpdatedAt,
   type DuelTargetInput,
 } from "./duel-targets"
 
@@ -79,5 +80,12 @@ describe("duel target display helpers", () => {
     expect(getDuelSourceLabel("GUIA_MTC")).toBe("GuiaMTC")
     expect(getDuelSourceLabel("COCPIT")).toBe("CoCPit")
     expect(getDuelSourceLabel("MCOCHUB")).toBe("MCOCHUB")
+  })
+
+  it("serializes fresh and cached duel update timestamps", () => {
+    const isoTimestamp = "2026-06-18T00:00:00.000Z"
+
+    expect(serializeDuelUpdatedAt(new Date(isoTimestamp))).toBe(isoTimestamp)
+    expect(serializeDuelUpdatedAt(isoTimestamp)).toBe(isoTimestamp)
   })
 })

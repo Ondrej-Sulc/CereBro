@@ -5,6 +5,7 @@ import { unstable_cache } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { collectChampionAbilityTextGlossaryIds } from "@/lib/champion-ability-text"
 import { ChampionDetailsClient } from "./champion-details-client"
+import { serializeDuelUpdatedAt } from "./duel-targets"
 
 type PageProps = {
   params: Promise<{ slug: string }>
@@ -222,7 +223,7 @@ export default async function ChampionDetailsPage({ params }: PageProps) {
         duels: champion.duels.map(duel => ({
           ...duel,
           status: duel.status === DuelStatus.OUTDATED ? "OUTDATED" : "ACTIVE",
-          updatedAt: duel.updatedAt.toISOString(),
+          updatedAt: serializeDuelUpdatedAt(duel.updatedAt),
         })),
       }}
       glossaryTerms={glossaryTerms}

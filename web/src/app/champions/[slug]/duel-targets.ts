@@ -42,6 +42,10 @@ export function getDuelSourceLabel(source: DuelTargetSource) {
   return sourceLabels[source]
 }
 
+export function serializeDuelUpdatedAt(updatedAt: Date | string) {
+  return typeof updatedAt === "string" ? updatedAt : updatedAt.toISOString()
+}
+
 export function prepareDuelTargets(duels: DuelTargetInput[]) {
   const targets = duels
     .map((duel) => ({

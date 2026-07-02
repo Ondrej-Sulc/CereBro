@@ -138,6 +138,9 @@ importers:
       '@google-cloud/vision':
         specifier: ^5.3.4
         version: 5.3.4
+      '@prisma/client':
+        specifier: 6.19.0
+        version: 6.19.0(prisma@6.19.0(typescript@5.9.3))(typescript@5.9.3)
       '@radix-ui/react-accordion':
         specifier: ^1.2.12
         version: 1.2.12(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
