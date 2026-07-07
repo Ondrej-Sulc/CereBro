@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { Player, Alliance, Prisma } from "@prisma/client";
 import { Permission } from "./permissions";
 import { cache } from "react";
+import { resolveActivePlayerIdForDiscord } from "@cerebro/core/utils/activeProfileResolver";
 
 export type UserPlayerWithAlliance = Omit<Player, "isBotAdmin"> & {
   alliance: Alliance | null;
@@ -43,25 +44,14 @@ export const getUserPlayerWithAlliance = cache(async (): Promise<UserPlayerWithA
     where: { discordId: account.providerAccountId }
   });
 
-  // 2. Fetch the Player (Profile)
-  // First try to find one marked as isActive: true
-  let player = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId, isActive: true },
-    include: { alliance: true },
-  });
+  const activePlayerId = await resolveActivePlayerIdForDiscord(prisma, account.providerAccountId);
+  let player = activePlayerId
+    ? await prisma.player.findUnique({
+        where: { id: activePlayerId },
+        include: { alliance: true },
+      })
+    : null;
 
-  // Fallback 1: Use the BotUser's activeProfileId if set
-  if (!player && botUser?.activeProfileId) {
-    player = await prisma.player.findUnique({
-      where: { 
-          id: botUser.activeProfileId,
-          discordId: account.providerAccountId 
-      },
-      include: { alliance: true },
-    });
-  }
-
-  // Fallback 2: If still no profile found, try to find the most recently updated one for this Discord ID
   if (!player) {
     player = await prisma.player.findFirst({
       where: { discordId: account.providerAccountId },
@@ -108,18 +98,13 @@ export async function getUserProfiles() {
 
   let profiles = botUser?.profiles || [];
 
-  // Resolution logic to find the active profile if it's not in the botUser's linked profiles
-  let activeProfile = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId, isActive: true },
-    include: { alliance: true },
-  });
-
-  if (!activeProfile && botUser?.activeProfileId) {
-    activeProfile = await prisma.player.findUnique({
-      where: { id: botUser.activeProfileId },
-      include: { alliance: true },
-    });
-  }
+  const activePlayerId = await resolveActivePlayerIdForDiscord(prisma, account.providerAccountId);
+  let activeProfile = activePlayerId
+    ? await prisma.player.findUnique({
+        where: { id: activePlayerId },
+        include: { alliance: true },
+      })
+    : null;
 
   if (!activeProfile) {
     activeProfile = await prisma.player.findFirst({

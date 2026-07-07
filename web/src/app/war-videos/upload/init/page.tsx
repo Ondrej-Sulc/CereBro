@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import crypto from 'crypto';
 import { add } from 'date-fns';
+import { resolveActivePlayerIdForDiscord } from "@cerebro/core/utils/activeProfileResolver";
 
 export const metadata: Metadata = {
   title: "Start War Video Upload - CereBro",
@@ -28,9 +29,10 @@ export default async function InitUploadPage() {
     redirect("/");
   }
 
-  const player = await prisma.player.findFirst({
-    where: { discordId: account.providerAccountId }
-  });
+  const activePlayerId = await resolveActivePlayerIdForDiscord(prisma, account.providerAccountId);
+  const player = activePlayerId
+    ? await prisma.player.findUnique({ where: { id: activePlayerId } })
+    : null;
 
   if (!player) {
     // Handle case where player is not registered in the bot yet

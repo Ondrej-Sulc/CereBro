@@ -5,6 +5,7 @@ import { auth } from "@/auth";
 import crypto from 'crypto';
 import { add } from 'date-fns';
 import { withActionContext } from "@/lib/with-request-context";
+import { resolveActivePlayerIdForDiscord } from "@cerebro/core/utils/activeProfileResolver";
 
 export const createUploadSession = withActionContext('createUploadSession', async (fightId: string) => {
   const session = await auth();
@@ -15,10 +16,13 @@ export const createUploadSession = withActionContext('createUploadSession', asyn
   });
   if (!account) throw new Error("No linked account");
 
-  const currentUser = await prisma.player.findFirst({
-      where: { discordId: account.providerAccountId },
-      include: { botUser: true }
-  });
+  const activePlayerId = await resolveActivePlayerIdForDiscord(prisma, account.providerAccountId);
+  const currentUser = activePlayerId
+    ? await prisma.player.findUnique({
+        where: { id: activePlayerId },
+        include: { botUser: true },
+      })
+    : null;
   if (!currentUser) throw new Error("Player not found");
 
   const fight = await prisma.warFight.findUnique({

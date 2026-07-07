@@ -9,6 +9,7 @@ import {
 } from 'discord.js';
 import loggerService from '../../services/loggerService';
 import crypto from 'crypto';
+import { resolveActivePlayerIdForDiscord } from '../../utils/activeProfileResolver';
 
 export async function handleUploadSubcommand(interaction: CommandInteraction) {
   if (!interaction.isChatInputCommand()) return;
@@ -21,9 +22,10 @@ export async function handleUploadSubcommand(interaction: CommandInteraction) {
   const discordId = interaction.user.id;
 
   try {
-    const player = await prisma.player.findFirst({
-      where: { discordId: discordId },
-    });
+    const activePlayerId = await resolveActivePlayerIdForDiscord(prisma, discordId);
+    const player = activePlayerId
+      ? await prisma.player.findUnique({ where: { id: activePlayerId } })
+      : null;
 
     if (!player) {
       const errorContainer = new ContainerBuilder()
