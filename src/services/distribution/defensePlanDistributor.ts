@@ -246,18 +246,27 @@ export async function distributeDefensePlan(
 
             // Build Legend
             const legend: LegendItem[] = [];
-            const distinctPlayerNames = Array.from(new Set(bgPlacements.map(p => p.player?.ingameName))).filter(Boolean);
-            
-            distinctPlayerNames.sort().forEach((name) => {
-                const pObj = bgPlacements.find(p => p.player?.ingameName === name)?.player;
-                if (pObj && globalColorMap.has(pObj.id)) {
+            const bgPlayerIds = new Set(bgPlacements.map(p => p.player?.id).filter(Boolean));
+
+            sortedPlayers
+                .filter(player => bgPlayerIds.has(player.id))
+                .forEach((player) => {
+                    const playerPlacements = bgPlacements
+                        .filter(p => p.playerId === player.id && p.defender?.images)
+                        .sort((a, b) => a.node.nodeNumber - b.node.nodeNumber);
+
                     legend.push({
-                        name: name!,
-                        color: globalColorMap.get(pObj.id)!,
-                        championImage: pObj.avatar || undefined
+                        name: player.name,
+                        color: globalColorMap.get(player.id)!,
+                        variant: 'defense',
+                        championImage: playerPlacements[0]?.player?.avatar || undefined,
+                        assignedChampions: playerPlacements.map(p => ({
+                            url: getChampionImageUrl(p.defender!.images, '64', 'primary'),
+                            class: p.defender!.class,
+                            nodeNumber: p.node.nodeNumber
+                        }))
                     });
-                }
-            });
+                });
 
             // Build assignments with colors
             const bgMap = bgNodeMaps.get(bg);

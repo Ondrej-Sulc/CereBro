@@ -9,6 +9,9 @@ import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { canPlanAllianceWar } from "@/lib/alliance-permissions";
 import { withActionContext } from "@/lib/with-request-context";
 import { createMissingDiscordChannelMessage, findMissingBattlegroupChannels } from "@/lib/discord-config-validation";
+import { MapImageService, NodeAssignment, LegendItem } from "@cerebro/core/services/mapImageService";
+import { warNodesData, warNodesDataBig } from "@cerebro/core/data/war-planning/nodes-data";
+import { getChampionImageUrl } from "@/lib/championHelper";
 
 export type DistributeDefensePlanResult =
   | { success: true }
@@ -341,6 +344,140 @@ export const distributeDefensePlanToDiscord = withActionContext('distributeDefen
   });
 
   return { success: true };
+});
+
+export const getDefensePlanMapPng = withActionContext('getDefensePlanMapPng', async (planId: string, battlegroup: number): Promise<string> => {
+  const player = await getUserPlayerWithAlliance();
+
+  if (!player) {
+    throw new Error("Unauthorized: Player profile not found.");
+  }
+
+  const isBotAdmin = player.isBotAdmin;
+
+  if (!canPlanAllianceWar(player, player.isBotAdmin) || (!isBotAdmin && !player.allianceId)) {
+    throw new Error("Unauthorized");
+  }
+
+  const plan = await prisma.warDefensePlan.findUnique({
+    where: { id: planId },
+    include: {
+      alliance: true,
+      highlightTag: true,
+      tactic: {
+        include: {
+          defenseTag: true,
+        },
+      },
+      placements: {
+        where: { battlegroup },
+        include: {
+          defender: {
+            include: {
+              tags: true,
+            },
+          },
+          player: true,
+          node: true,
+        },
+      },
+    },
+  });
+
+  if (!plan) throw new Error("Plan not found");
+
+  if (!isBotAdmin && plan.allianceId !== player.allianceId) {
+    throw new Error("Unauthorized");
+  }
+
+  const allianceMembers = await prisma.player.findMany({
+    where: { allianceId: plan.allianceId },
+    select: { id: true, ingameName: true, battlegroup: true, avatar: true },
+  });
+
+  const sortedPlayers = [...allianceMembers].sort((a, b) => {
+    const bgA = a.battlegroup ?? 999;
+    const bgB = b.battlegroup ?? 999;
+    if (bgA !== bgB) return bgA - bgB;
+    return a.ingameName.localeCompare(b.ingameName);
+  });
+
+  const palette = MapImageService.getPlayerPalette(plan.alliance.playerColorPalette ?? undefined);
+  const globalColorMap = new Map<string, string>();
+  const uniqueImageUrls = new Set<string>();
+
+  sortedPlayers.forEach((member, index) => {
+    globalColorMap.set(member.id, palette[index % palette.length]);
+    if (member.avatar) uniqueImageUrls.add(member.avatar);
+  });
+
+  const activeDefenseTag = plan.highlightTag ?? plan.tactic?.defenseTag ?? null;
+  const assignments = new Map<number, NodeAssignment>();
+
+  for (const placement of plan.placements) {
+    let defenderImage: string | undefined;
+    if (placement.defender?.images) {
+      defenderImage = getChampionImageUrl(placement.defender.images, "128", "primary");
+      uniqueImageUrls.add(defenderImage);
+    }
+
+    assignments.set(placement.node.nodeNumber, {
+      defenderName: placement.defender?.name,
+      defenderImage,
+      defenderClass: placement.defender?.class,
+      assignedColor: placement.playerId ? globalColorMap.get(placement.playerId) : undefined,
+      isTarget: false,
+      isDefenderTactic: !!(
+        activeDefenseTag &&
+        placement.defender?.tags?.some((tag) => tag.id === activeDefenseTag.id)
+      ),
+    });
+  }
+
+  const legend: LegendItem[] = [];
+  const bgPlayerIds = new Set(plan.placements.map((placement) => placement.playerId).filter(Boolean));
+  sortedPlayers
+    .filter((member) => bgPlayerIds.has(member.id))
+    .forEach((member) => {
+      const color = globalColorMap.get(member.id);
+      if (!color) return;
+
+      const playerPlacements = plan.placements
+        .filter((placement) => placement.playerId === member.id && placement.defender?.images)
+        .sort((a, b) => a.node.nodeNumber - b.node.nodeNumber);
+
+      legend.push({
+        name: member.ingameName,
+        color,
+        variant: "defense",
+        championImage: member.avatar || undefined,
+        assignedChampions: playerPlacements.map((placement) => ({
+          url: getChampionImageUrl(placement.defender!.images, "64", "primary"),
+          class: placement.defender!.class,
+          nodeNumber: placement.node.nodeNumber,
+        })),
+      });
+    });
+
+  const mapType = plan.mapType || WarMapType.STANDARD;
+  const nodesData = mapType === WarMapType.BIG_THING ? warNodesDataBig : warNodesData;
+  const bgColors: Record<number, string> = {
+    1: plan.alliance.battlegroup1Color || "#ef4444",
+    2: plan.alliance.battlegroup2Color || "#22c55e",
+    3: plan.alliance.battlegroup3Color || "#3b82f6",
+  };
+
+  const imageCache = await MapImageService.preloadImages(Array.from(uniqueImageUrls));
+  const mapBuffer = await MapImageService.generateMapImage(
+    mapType,
+    nodesData,
+    assignments,
+    imageCache,
+    legend,
+    bgColors[battlegroup] ?? "#6366f1",
+  );
+
+  return mapBuffer.toString("base64");
 });
 
 export const setDefensePlanActive = withActionContext('setDefensePlanActive', async (planId: string) => {

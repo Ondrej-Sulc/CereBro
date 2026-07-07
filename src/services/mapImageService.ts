@@ -20,9 +20,10 @@ export interface NodeAssignment {
 export interface LegendItem {
     name: string;
     color: string;
+    variant?: 'attack' | 'defense';
     championImage?: string; // Optional avatar
     pathLabel?: string; // e.g. "P1 / P2"
-    assignedChampions?: { url: string; class: ChampionClass }[]; // Array of champion image URLs with class
+    assignedChampions?: { url: string; class: ChampionClass; nodeNumber?: number }[]; // Array of champion image URLs with class
 }
 
 export class MapImageService {
@@ -542,10 +543,12 @@ export class MapImageService {
             const contentX = legendX + 40;
             let currentY = 60;
 
+            const legendVariant = legend.some(item => item.variant === 'defense') ? 'defense' : 'attack';
+
             // 4a. Title
             legendSvg += `
                 <text x="${contentX}" y="${currentY}" font-family="sans-serif" font-weight="bold" font-size="32" fill="#f8fafc">
-                    Battlegroup Assignments
+                    ${legendVariant === 'defense' ? 'Defense Assignments' : 'Battlegroup Assignments'}
                 </text>
             `;
             currentY += 60;
@@ -554,15 +557,26 @@ export class MapImageService {
             const colPlayer = 0;
             const colPath = 360; // Shifted right
             const colTeam = 480; // Compacted path column
+            const colDefenders = 360;
 
-            legendSvg += `
-                <g font-family="sans-serif" font-weight="bold" font-size="20" fill="#64748b" letter-spacing="1">
-                    <text x="${contentX + colPlayer}" y="${currentY}">PLAYER</text>
-                    <text x="${contentX + colPath}" y="${currentY}">PATH</text>
-                    <text x="${contentX + colTeam}" y="${currentY}">TEAM</text>
-                </g>
-                <line x1="${contentX}" y1="${currentY + 15}" x2="${width - 40}" y2="${currentY + 15}" stroke="${this.LINE_COLOR}" stroke-width="1" opacity="0.5" />
-            `;
+            if (legendVariant === 'defense') {
+                legendSvg += `
+                    <g font-family="sans-serif" font-weight="bold" font-size="20" fill="#64748b" letter-spacing="1">
+                        <text x="${contentX + colPlayer}" y="${currentY}">PLAYER</text>
+                        <text x="${contentX + colDefenders}" y="${currentY}">DEFENDERS</text>
+                    </g>
+                    <line x1="${contentX}" y1="${currentY + 15}" x2="${width - 40}" y2="${currentY + 15}" stroke="${this.LINE_COLOR}" stroke-width="1" opacity="0.5" />
+                `;
+            } else {
+                legendSvg += `
+                    <g font-family="sans-serif" font-weight="bold" font-size="20" fill="#64748b" letter-spacing="1">
+                        <text x="${contentX + colPlayer}" y="${currentY}">PLAYER</text>
+                        <text x="${contentX + colPath}" y="${currentY}">PATH</text>
+                        <text x="${contentX + colTeam}" y="${currentY}">TEAM</text>
+                    </g>
+                    <line x1="${contentX}" y1="${currentY + 15}" x2="${width - 40}" y2="${currentY + 15}" stroke="${this.LINE_COLOR}" stroke-width="1" opacity="0.5" />
+                `;
+            }
             currentY += 40;
 
             // 4c. Rows
@@ -611,17 +625,17 @@ export class MapImageService {
                 `;
 
                 // --- Col 2: Path ---
-                if (item.pathLabel) {
+                if (legendVariant === 'attack' && item.pathLabel) {
                     legendSvg += `
                         <text x="${contentX + colPath}" y="${centerY}" font-family="sans-serif" font-weight="500" font-size="22" fill="#94a3b8" dominant-baseline="central">${item.pathLabel}</text>
                     `;
                 }
 
-                // --- Col 3: Team (Champions) ---
+                // --- Col 3: Team/Defenders (Champions) ---
                 if (item.assignedChampions && item.assignedChampions.length > 0) {
-                    const champSize = 48;
-                    const champGap = 16;
-                    let startX = contentX + colTeam;
+                    const champSize = legendVariant === 'defense' ? 46 : 48;
+                    const champGap = legendVariant === 'defense' ? 14 : 16;
+                    let startX = contentX + (legendVariant === 'defense' ? colDefenders : colTeam);
 
                     item.assignedChampions.forEach((champ, cIndex) => {
                         const classColor = MapImageService.CLASS_COLORS[champ.class] || '#94a3b8';
@@ -648,6 +662,12 @@ export class MapImageService {
                                     
                                     <!-- Border -->
                                     <circle cx="${champSize / 2}" cy="${champSize / 2}" r="${champSize / 2}" fill="none" stroke="${classColor}" stroke-width="2" />
+                                    ${champ.nodeNumber ? `
+                                    <g transform="translate(${champSize - 21}, ${champSize - 16})">
+                                        <rect x="0" y="0" width="24" height="18" rx="4" fill="#020617" stroke="${classColor}" stroke-width="1.5" />
+                                        <text x="12" y="9" text-anchor="middle" dominant-baseline="central" font-family="monospace" font-size="11" font-weight="bold" fill="#f8fafc">${champ.nodeNumber}</text>
+                                    </g>
+                                    ` : ''}
                                 </g>
                             `;
                         } else {
@@ -656,6 +676,12 @@ export class MapImageService {
                                 <g transform="translate(${startX}, ${centerY - champSize / 2})">
                                     <circle cx="${champSize / 2}" cy="${champSize / 2}" r="${champSize / 2}" fill="${classColor}" opacity="0.2" />
                                     <circle cx="${champSize / 2}" cy="${champSize / 2}" r="${champSize / 2}" fill="none" stroke="${classColor}" stroke-width="2" stroke-dasharray="4 2" />
+                                    ${champ.nodeNumber ? `
+                                    <g transform="translate(${champSize - 21}, ${champSize - 16})">
+                                        <rect x="0" y="0" width="24" height="18" rx="4" fill="#020617" stroke="${classColor}" stroke-width="1.5" />
+                                        <text x="12" y="9" text-anchor="middle" dominant-baseline="central" font-family="monospace" font-size="11" font-weight="bold" fill="#f8fafc">${champ.nodeNumber}</text>
+                                    </g>
+                                    ` : ''}
                                 </g>
                             `;
                         }

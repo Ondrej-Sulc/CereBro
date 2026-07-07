@@ -1,5 +1,5 @@
-import { War } from "@prisma/client";
-import { FightWithNode, PlayerWithRoster } from "@cerebro/core/data/war-planning/types";
+import { War, WarDefensePlan, WarMapType } from "@prisma/client";
+import { FightWithNode, PlacementWithNode, PlayerWithRoster } from "@cerebro/core/data/war-planning/types";
 import { getPathInfo, getPathLabel } from "@cerebro/core/data/war-planning/path-logic";
 
 // ─── Shared helpers ───────────────────────────────────────────────────────────
@@ -371,6 +371,89 @@ export function exportPlayerMarkdown(
       lines.push(`| \`${nodeNum}\` | ${label} | ${mdCell(pfName)} | ${mdCell(forPlayer)} |`);
     }
     lines.push("");
+  }
+
+  return lines.join("\n");
+}
+
+function getPlacementRank(placement: PlacementWithNode, players: PlayerWithRoster[]): string {
+  if (!placement.starLevel) return "-";
+
+  const rosterEntry = players
+    .find((player) => player.id === placement.playerId)
+    ?.roster
+    .filter((entry) => entry.championId === placement.defenderId && entry.stars === placement.starLevel)
+    .sort((a, b) => {
+      if (a.rank !== b.rank) return b.rank - a.rank;
+      return b.sigLevel - a.sigLevel;
+    })[0];
+
+  const awakened = rosterEntry ? (rosterEntry.isAwakened || rosterEntry.sigLevel > 0) : false;
+  const sig = rosterEntry && rosterEntry.sigLevel > 0 ? ` S${rosterEntry.sigLevel}` : "";
+  const ascension = rosterEntry?.isAscended
+    ? rosterEntry.ascensionLevel > 0
+      ? ` A${rosterEntry.ascensionLevel}`
+      : " ASC"
+    : "";
+  const rank = rosterEntry ? `R${rosterEntry.rank}` : "";
+
+  return `${placement.starLevel}${awakened ? "*" : ""}${rank ? ` ${rank}` : ""}${sig}${ascension}`;
+}
+
+function getDefensePlanSubtitle(plan: WarDefensePlan): string {
+  const mapName = plan.mapType === WarMapType.BIG_THING ? "Big Thing" : "Standard";
+  return plan.tier ? `${mapName} map, Tier ${plan.tier}` : `${mapName} map`;
+}
+
+export function exportDefenseBattlegroupText(
+  placements: PlacementWithNode[],
+  plan: WarDefensePlan,
+  battlegroup: number,
+  players: PlayerWithRoster[],
+): string {
+  const sorted = [...placements].sort((a, b) => a.node.nodeNumber - b.node.nodeNumber);
+
+  const lines: string[] = [
+    `BG${battlegroup} Defense Plan - ${plan.name}`,
+    getDefensePlanSubtitle(plan),
+    "",
+    "Node | Player | Defender | Rank",
+    "-----|--------|----------|-----",
+  ];
+
+  for (const placement of sorted) {
+    const node = String(placement.node.nodeNumber).padStart(2, "0");
+    const playerName = placement.player?.ingameName ?? "-";
+    const defenderName = placement.defender?.name ?? "-";
+    const rank = getPlacementRank(placement, players);
+    lines.push(`${node} | ${playerName} | ${defenderName} | ${rank}`);
+  }
+
+  return lines.join("\n");
+}
+
+export function exportDefenseBattlegroupMarkdown(
+  placements: PlacementWithNode[],
+  plan: WarDefensePlan,
+  battlegroup: number,
+  players: PlayerWithRoster[],
+): string {
+  const sorted = [...placements].sort((a, b) => a.node.nodeNumber - b.node.nodeNumber);
+
+  const lines: string[] = [
+    `# BG${battlegroup} Defense Plan - ${mdCell(plan.name)}`,
+    getDefensePlanSubtitle(plan),
+    "",
+    "| Node | Player | Defender | Rank |",
+    "|------|--------|----------|------|",
+  ];
+
+  for (const placement of sorted) {
+    const node = `\`${String(placement.node.nodeNumber).padStart(2, "0")}\``;
+    const playerName = mdCell(placement.player?.ingameName ?? "-");
+    const defenderName = mdCell(placement.defender?.name ?? "-");
+    const rank = mdCell(getPlacementRank(placement, players));
+    lines.push(`| ${node} | ${playerName} | ${defenderName} | ${rank} |`);
   }
 
   return lines.join("\n");

@@ -12,13 +12,14 @@ import { DefensePlayerListPanel } from "./details/defense-player-list-panel";
 import PlanningToolsPanel from "./planning-tools-panel";
 import { DefenseRosterView } from "./roster-view/defense-roster-view";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Loader2, Shield, Wrench, LayoutGrid, Map as MapIcon, PieChart, Pencil, Share2, MoreVertical } from "lucide-react";
+import { ArrowLeft, Loader2, Shield, Wrench, LayoutGrid, Map as MapIcon, PieChart, Pencil, Share2, MoreVertical, AlertTriangle, Download, Copy, Send, Hash, Users, FileOutput } from "lucide-react";
 import Link from "next/link";
 import { PlayerColorProvider } from "./player-color-context";
 import { PlayerPaletteStyle } from "@/lib/player-colors";
 import { useToast } from "@/hooks/use-toast";
-import { updateDefensePlanHighlightTag, updateDefensePlanTier, renameDefensePlan, distributeDefensePlanToDiscord } from "@/app/planning/defense-actions";
+import { updateDefensePlanHighlightTag, updateDefensePlanTier, renameDefensePlan, distributeDefensePlanToDiscord, getDefensePlanMapPng } from "@/app/planning/defense-actions";
 import { getGuildChannels } from "@/app/planning/actions";
+import { exportDefenseBattlegroupText, exportDefenseBattlegroupMarkdown } from "@/lib/war-plan-export";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
     Dialog,
@@ -34,6 +35,7 @@ import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
+    DropdownMenuLabel,
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -183,6 +185,10 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
     battlegroup?: number;
     targetChannelId?: string;
   } | null>(null);
+  const [isWarningDialogOpen, setIsWarningDialogOpen] = useState(false);
+  const [pendingShare, setPendingShare] = useState<{ bg?: number; channelId?: string } | null>(null);
+  const [warningMessage, setWarningMessage] = useState<React.ReactNode>("");
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleOpenShareDialog = async () => {
     setIsShareDialogOpen(true);
@@ -203,8 +209,8 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
 
   const handleShareToChannel = () => {
       if (!selectedChannel) return;
-      handleDistribute(currentBattlegroup, selectedChannel);
       setIsShareDialogOpen(false);
+      checkProgressAndShare(currentBattlegroup, selectedChannel);
   };
 
   // Sync name from props
@@ -492,6 +498,99 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
       await handleMoveDefender(placementId, targetNode.id);
   }, [nodesMap, handleMoveDefender, toast]);
 
+  function checkProgressAndShare(bg?: number, channelId?: string) {
+      const battlegroups = bg ? [bg] : [1, 2, 3];
+      const incompleteBgs = battlegroups
+          .map((targetBg) => {
+              const bgPlacements = allPlacements.filter((placement) => placement.battlegroup === targetBg);
+              const missing = bgPlacements
+                  .filter((placement) => !placement.playerId || !placement.defenderId)
+                  .map((placement) => placement.node.nodeNumber)
+                  .sort((a, b) => a - b);
+
+              return { bg: targetBg, missing };
+          })
+          .filter((info) => info.missing.length > 0);
+
+      if (incompleteBgs.length === 0) {
+          handleDistribute(bg, channelId);
+          return;
+      }
+
+      setWarningMessage(
+          <div className="space-y-4">
+              <p>You are about to share an incomplete defense plan. The following battlegroups have nodes without assigned defenders or players:</p>
+              <ul className="list-disc pl-5 space-y-1">
+                  {incompleteBgs.map((info) => (
+                      <li key={info.bg}>
+                          <strong>BG{info.bg}:</strong> Missing on nodes {info.missing.slice(0, 10).join(", ")}
+                          {info.missing.length > 10 ? "..." : ""}
+                      </li>
+                  ))}
+              </ul>
+              <p>Are you sure you want to distribute it anyway?</p>
+          </div>
+      );
+      setPendingShare({ bg, channelId });
+      setIsWarningDialogOpen(true);
+  }
+
+  const confirmShare = () => {
+      if (pendingShare) {
+          handleDistribute(pendingShare.bg, pendingShare.channelId);
+      }
+      setIsWarningDialogOpen(false);
+      setPendingShare(null);
+      setWarningMessage("");
+  };
+
+  const handleCopyBgText = useCallback(async () => {
+      const text = exportDefenseBattlegroupText(currentPlacements, props.plan, currentBattlegroup, props.players);
+      try {
+          await navigator.clipboard.writeText(text);
+          toast({ title: `BG${currentBattlegroup} Defense Plan Copied`, description: "Text plan copied to clipboard." });
+      } catch {
+          toast({ title: "Copy Failed", description: "Could not write to clipboard.", variant: "destructive" });
+      }
+  }, [currentPlacements, props.plan, currentBattlegroup, props.players, toast]);
+
+  const handleCopyBgMarkdown = useCallback(async () => {
+      const text = exportDefenseBattlegroupMarkdown(currentPlacements, props.plan, currentBattlegroup, props.players);
+      try {
+          await navigator.clipboard.writeText(text);
+          toast({ title: `BG${currentBattlegroup} Defense Plan Copied`, description: "Markdown plan copied to clipboard." });
+      } catch {
+          toast({ title: "Copy Failed", description: "Could not write to clipboard.", variant: "destructive" });
+      }
+  }, [currentPlacements, props.plan, currentBattlegroup, props.players, toast]);
+
+  const handleDownloadMap = async () => {
+      try {
+          setIsDownloading(true);
+          const base64 = await getDefensePlanMapPng(props.planId, currentBattlegroup);
+
+          const link = document.createElement("a");
+          link.href = `data:image/png;base64,${base64}`;
+          link.download = `defense-plan-bg${currentBattlegroup}.png`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+
+          toast({
+              title: "Map Downloaded",
+              description: `Battlegroup ${currentBattlegroup} defense overview map has been generated and downloaded.`,
+          });
+      } catch {
+          toast({
+              title: "Download Failed",
+              description: "Could not generate defense map image.",
+              variant: "destructive",
+          });
+      } finally {
+          setIsDownloading(false);
+      }
+  };
+
   const handleDistribute = async (battlegroup?: number, targetChannelId?: string) => {
       try {
           const result = await distributeDefensePlanToDiscord(props.planId, battlegroup, targetChannelId);
@@ -752,23 +851,58 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                             {!isReadOnly && (
                                 <>
                                     <DropdownMenuSeparator className="bg-slate-800" />
-                                    <DropdownMenuItem onClick={() => handleDistribute()} className="cursor-pointer focus:bg-slate-900 focus:text-white">
-                                        <Share2 className="mr-2 h-4 w-4" />
-                                        <span>Share All</span>
+                                    <DropdownMenuLabel className="flex items-center gap-1.5 text-indigo-400 text-xs font-semibold py-1.5">
+                                        <Share2 className="h-3.5 w-3.5 shrink-0" />
+                                        Discord
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuItem onClick={() => checkProgressAndShare()} className="cursor-pointer focus:bg-slate-900 focus:text-white">
+                                        <Users className="mr-2 h-4 w-4 text-indigo-400" />
+                                        <span>Distribute to All Members</span>
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleDistribute(1)} className="cursor-pointer focus:bg-slate-900 focus:text-white pl-8">
-                                        <span>Share BG1</span>
+                                    <DropdownMenuSeparator className="bg-slate-800" />
+                                    <DropdownMenuItem onClick={() => checkProgressAndShare(1)} className="cursor-pointer focus:bg-slate-900 focus:text-white">
+                                        <Send className="mr-2 h-4 w-4 text-indigo-400" />
+                                        <span>Distribute BG1</span>
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleDistribute(2)} className="cursor-pointer focus:bg-slate-900 focus:text-white pl-8">
-                                        <span>Share BG2</span>
+                                    <DropdownMenuItem onClick={() => checkProgressAndShare(2)} className="cursor-pointer focus:bg-slate-900 focus:text-white">
+                                        <Send className="mr-2 h-4 w-4 text-indigo-400" />
+                                        <span>Distribute BG2</span>
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => handleDistribute(3)} className="cursor-pointer focus:bg-slate-900 focus:text-white pl-8">
-                                        <span>Share BG3</span>
+                                    <DropdownMenuItem onClick={() => checkProgressAndShare(3)} className="cursor-pointer focus:bg-slate-900 focus:text-white">
+                                        <Send className="mr-2 h-4 w-4 text-indigo-400" />
+                                        <span>Distribute BG3</span>
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator className="bg-slate-800" />
                                     <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleOpenShareDialog(); }} className="cursor-pointer focus:bg-slate-900 focus:text-white">
-                                        <Share2 className="mr-2 h-4 w-4" />
-                                        <span>Share to Channel...</span>
+                                        <Hash className="mr-2 h-4 w-4 text-indigo-400" />
+                                        <span>Post to Channel...</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator className="bg-slate-800" />
+                                    <DropdownMenuLabel className="flex items-center gap-1.5 text-slate-400 text-xs font-semibold py-1.5">
+                                        <FileOutput className="h-3.5 w-3.5 shrink-0" />
+                                        Export
+                                    </DropdownMenuLabel>
+                                    <DropdownMenuItem onClick={handleCopyBgText} className="cursor-pointer focus:bg-slate-900 focus:text-white">
+                                        <Copy className="mr-2 h-4 w-4" />
+                                        <span>Copy BG{currentBattlegroup} Plan (Text)</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={handleCopyBgMarkdown} className="cursor-pointer focus:bg-slate-900 focus:text-white">
+                                        <Copy className="mr-2 h-4 w-4" />
+                                        <span>Copy BG{currentBattlegroup} Plan (Markdown)</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator className="bg-slate-800" />
+                                    <DropdownMenuItem onClick={handleDownloadMap} disabled={isDownloading} className="cursor-pointer focus:bg-slate-900 focus:text-white">
+                                        {isDownloading ? (
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin text-sky-400" />
+                                                <span>Generating Map...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Download className="mr-2 h-4 w-4" />
+                                                <span>Download BG{currentBattlegroup} Map (PNG)</span>
+                                            </>
+                                        )}
                                     </DropdownMenuItem>
                                 </>
                             )}
@@ -867,23 +1001,59 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                                 <span className="hidden lg:inline">Share</span>
                              </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleDistribute()}>
-                                Share All
+                        <DropdownMenuContent align="end" className="w-56">
+                            <DropdownMenuLabel className="flex items-center gap-1.5 text-indigo-400 text-xs font-semibold py-1.5">
+                                <Share2 className="h-3.5 w-3.5 shrink-0" />
+                                Discord
+                            </DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => checkProgressAndShare()}>
+                                <Users className="h-4 w-4 mr-2 text-indigo-400" />
+                                Distribute to All Members
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem onClick={() => handleDistribute(1)}>
-                                Share BG1
+                            <DropdownMenuItem onClick={() => checkProgressAndShare(1)}>
+                                <Send className="h-4 w-4 mr-2 text-indigo-400" />
+                                Distribute BG1
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDistribute(2)}>
-                                Share BG2
+                            <DropdownMenuItem onClick={() => checkProgressAndShare(2)}>
+                                <Send className="h-4 w-4 mr-2 text-indigo-400" />
+                                Distribute BG2
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDistribute(3)}>
-                                Share BG3
+                            <DropdownMenuItem onClick={() => checkProgressAndShare(3)}>
+                                <Send className="h-4 w-4 mr-2 text-indigo-400" />
+                                Distribute BG3
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleOpenShareDialog(); }}>
-                                Share to Channel...
+                                <Hash className="h-4 w-4 mr-2 text-indigo-400" />
+                                Post to Channel...
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuLabel className="flex items-center gap-1.5 text-slate-400 text-xs font-semibold py-1.5">
+                                <FileOutput className="h-3.5 w-3.5 shrink-0" />
+                                Export
+                            </DropdownMenuLabel>
+                            <DropdownMenuItem onClick={handleCopyBgText}>
+                                <Copy className="h-4 w-4 mr-2" />
+                                Copy BG{currentBattlegroup} Plan (Text)
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={handleCopyBgMarkdown}>
+                                <Copy className="h-4 w-4 mr-2" />
+                                Copy BG{currentBattlegroup} Plan (Markdown)
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={handleDownloadMap} disabled={isDownloading}>
+                                {isDownloading ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 mr-2 animate-spin text-sky-400" />
+                                        Generating Map...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Download className="h-4 w-4 mr-2" />
+                                        Download BG{currentBattlegroup} Map (PNG)
+                                    </>
+                                )}
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                      </DropdownMenu>
@@ -900,6 +1070,24 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
                  </Button>
                  {loadingPlacements && <Loader2 className="h-4 w-4 animate-spin text-slate-500" />}
              </div>
+
+             <Dialog open={isWarningDialogOpen} onOpenChange={setIsWarningDialogOpen}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-amber-500">
+                            <AlertTriangle className="h-5 w-5" />
+                            Incomplete Plan Warning
+                        </DialogTitle>
+                    </DialogHeader>
+                    <div className="py-2 text-sm text-slate-300">
+                        {warningMessage}
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setIsWarningDialogOpen(false)}>Cancel</Button>
+                        <Button variant="destructive" onClick={confirmShare}>Distribute Anyway</Button>
+                    </DialogFooter>
+                </DialogContent>
+             </Dialog>
 
              <Dialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
                 <DialogContent>
