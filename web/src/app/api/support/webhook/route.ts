@@ -3,15 +3,11 @@ import Stripe from "stripe";
 import logger from "@/lib/logger";
 import { upsertSupportDonation } from "@/lib/support-donations";
 import { prisma } from "@/lib/prisma";
+import {
+  getInvoiceSubscriptionId,
+  getInvoiceSubscriptionMetadata,
+} from "@/lib/stripe-support-invoice";
 import { withRouteContext } from "@/lib/with-request-context";
-
-type InvoiceWithSubscriptionDetails = Stripe.Invoice & {
-  subscription?: string | Stripe.Subscription | null;
-  subscription_details?: {
-    subscription?: string | Stripe.Subscription | null;
-    metadata?: Record<string, string> | null;
-  } | null;
-};
 
 function getPaymentIntentId(paymentIntent: string | Stripe.PaymentIntent | null): string | null {
   if (!paymentIntent) return null;
@@ -26,12 +22,6 @@ function getCustomerId(customer: string | Stripe.Customer | Stripe.DeletedCustom
 function getSubscriptionId(subscription: string | Stripe.Subscription | null | undefined): string | null {
   if (!subscription) return null;
   return typeof subscription === "string" ? subscription : subscription.id;
-}
-
-function getInvoiceSubscriptionId(invoice: Stripe.Invoice): string | null {
-  const invoiceWithDetails = invoice as InvoiceWithSubscriptionDetails;
-  const sub = invoiceWithDetails.subscription ?? invoiceWithDetails.subscription_details?.subscription;
-  return getSubscriptionId(sub);
 }
 
 async function updateStoredSubscriptionStatus(subscription: Stripe.Subscription) {
@@ -202,7 +192,7 @@ async function handleInvoicePaymentSucceeded(invoice: Stripe.Invoice): Promise<N
   const paymentIntentId: string | null = null;
 
   // Pull metadata from subscription_details (populated from subscription_data.metadata at checkout)
-  const meta = (invoice as InvoiceWithSubscriptionDetails).subscription_details?.metadata ?? {};
+  const meta = getInvoiceSubscriptionMetadata(invoice);
 
   let playerId: string | null = meta.playerId || null;
   let botUserId: string | null = meta.botUserId || null;
