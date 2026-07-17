@@ -10,7 +10,13 @@ import { ChampionImages } from "@/types/champion"
 import { withActionContext } from "@/lib/with-request-context"
 import { OpenRouterService } from "@cerebro/core/services/openRouterService"
 import { abilityDraftPrompt } from "@cerebro/core/prompts/abilityDraft"
-import { matchGameChampionIdentity } from "@cerebro/core/services/mcocGameStatsImportService"
+import {
+  importMcocGameTags,
+  parseMcocChampionTagsJson,
+  parseMcocGameTagsJson,
+  parseMcocHeroTiersJson,
+  type McocGameTagsImportReport,
+} from "@cerebro/core/services/mcocGameTagsImportService"
 import { generateChampionSlug } from "@/lib/championHelper"
 
 type AbilityDraftItem = { name: string; source: string }
@@ -409,71 +415,7 @@ export const redraftChampionAbilities = withActionContext('redraftChampionAbilit
     return JSON.parse(response.choices[0].message.content) as AbilityDraft
 });
 
-export type SyncTagsResult = {
-  sourceChampions: number
-  dedupedChampions: number
-  sourceTags: number
-  sourceGenderTiers: number
-  genderTagged: number
-  genderMissing: number
-  updated: number
-  skipped: string[]
-  blocked: string[]
-  deletedTags: number
-}
-
-const HERO_TIER_SUFFIXES = ["_mls", "_cm", "_un", "_rar", "_ep", "_leg", "_t6", "_t7"].sort((a, b) => b.length - a.length)
-const GENDER_CATEGORY = "Gender"
-
-interface HeroTierEntry {
-  id?: string
-  size?: string
-  tags?: string[]
-}
-
-function splitHeroTierId(tierId: string) {
-  for (const suffix of HERO_TIER_SUFFIXES) {
-    if (tierId.endsWith(suffix)) {
-      return tierId.slice(0, -suffix.length)
-    }
-  }
-  return tierId
-}
-
-function inferGenderFromTier(entry: HeroTierEntry): "Male" | "Female" | null {
-  const tags = new Set(entry.tags ?? [])
-  if (entry.size === "female" || tags.has("female") || tags.has("fem")) return "Female"
-  if (tags.has("male")) return "Male"
-  return null
-}
-
-function buildGenderMapFromHeroTiers(heroTiersData: Record<string, HeroTierEntry>) {
-  const countsByGameId = new Map<string, Map<"Male" | "Female", number>>()
-
-  for (const [tierId, tier] of Object.entries(heroTiersData)) {
-    const gender = inferGenderFromTier(tier)
-    if (!gender) continue
-    const gameId = splitHeroTierId(tier.id || tierId)
-    const counts = countsByGameId.get(gameId) ?? new Map<"Male" | "Female", number>()
-    counts.set(gender, (counts.get(gender) ?? 0) + 1)
-    countsByGameId.set(gameId, counts)
-  }
-
-  const genderByGameId = new Map<string, "Male" | "Female">()
-  for (const [gameId, counts] of countsByGameId) {
-    const male = counts.get("Male") ?? 0
-    const female = counts.get("Female") ?? 0
-    if (female > male) {
-      genderByGameId.set(gameId, "Female")
-    } else if (male > female) {
-      genderByGameId.set(gameId, "Male")
-    } else if (female > 0) {
-      genderByGameId.set(gameId, "Female")
-    }
-  }
-
-  return { genderByGameId, sourceGenderTiers: Object.keys(heroTiersData).length }
-}
+export type SyncTagsResult = McocGameTagsImportReport
 
 export const syncTagsFromGameData = withActionContext('syncTagsFromGameData', async (
   formData: FormData
@@ -486,115 +428,14 @@ export const syncTagsFromGameData = withActionContext('syncTagsFromGameData', as
 
   if (!championsFile || !tagsFile || !heroTiersFile) throw new Error("champion_display.json, tags.json, and hero_tiers.json are required")
 
-  interface TagEntry { name: string; category_name: string }
-  interface ChampionEntry { id?: string; full_name: string; short_name?: string; champion_tags: string[] }
-
-  const tagsData: { tags: Record<string, TagEntry> } = JSON.parse(await tagsFile.text())
-  const champsData: Record<string, ChampionEntry> = JSON.parse(await championsFile.text())
-  const heroTiersData: Record<string, HeroTierEntry> = JSON.parse(await heroTiersFile.text())
-  const tagMap = new Map(Object.entries(tagsData.tags))
-  const { genderByGameId, sourceGenderTiers } = buildGenderMapFromHeroTiers(heroTiersData)
-  const sourceChampions = Object.keys(champsData).length
-
-  const dbChampions = await prisma.champion.findMany({
-    select: { id: true, name: true, shortName: true, gameId: true },
-  })
-  const dbGameIds = new Set(dbChampions.map(champion => champion.gameId).filter(Boolean))
-
-  // Deduplicate by full_name. Prefer the playable game ID we already know, then the entry with the most tags.
-  const dedupedChamps = new Map<string, ChampionEntry>()
-  for (const champ of Object.values(champsData)) {
-    const key = champ.full_name
-    const existing = dedupedChamps.get(key)
-    const existingHasKnownGameId = !!existing?.id && dbGameIds.has(existing.id)
-    const currentHasKnownGameId = !!champ.id && dbGameIds.has(champ.id)
-    if (
-      !existing ||
-      (!existingHasKnownGameId && currentHasKnownGameId) ||
-      (existingHasKnownGameId === currentHasKnownGameId && champ.champion_tags.length > existing.champion_tags.length)
-    ) {
-      dedupedChamps.set(key, champ)
-    }
-  }
-
-  let updated = 0
-  let genderTagged = 0
-  let genderMissing = 0
-  const skipped: string[] = []
-  const blocked: string[] = []
-
-  for (const champ of dedupedChamps.values()) {
-    const match = matchGameChampionIdentity(
-      {
-        gameId: champ.id || "",
-        gameFullName: champ.full_name,
-        gameShortName: "",
-      },
-      dbChampions
-    )
-    if (match.status === "unmatched") {
-      skipped.push(`${champ.id || champ.full_name}: ${champ.full_name}`)
-      continue
-    }
-    if (match.status !== "matched") {
-      blocked.push(`${champ.id || champ.full_name}: ${champ.full_name} (${match.reason})`)
-      continue
-    }
-
-    await prisma.$transaction(async (tx) => {
-      const tagConnections: { id: number }[] = []
-      for (const tagId of champ.champion_tags) {
-        const entry = tagMap.get(tagId)
-        if (!entry) continue
-        const name = entry.name.replace(/\[[^\]]*\]/g, "").trim()
-        const tag = await tx.tag.upsert({
-          where: { name_category: { name, category: entry.category_name } },
-          update: {},
-          create: { name, category: entry.category_name },
-        })
-        tagConnections.push({ id: tag.id })
-      }
-
-      const gender = genderByGameId.get(champ.id || match.champion.gameId || "")
-      if (gender) {
-        const genderTag = await tx.tag.upsert({
-          where: { name_category: { name: gender, category: GENDER_CATEGORY } },
-          update: {},
-          create: { name: gender, category: GENDER_CATEGORY },
-        })
-        tagConnections.push({ id: genderTag.id })
-        genderTagged++
-      } else {
-        genderMissing++
-      }
-
-      const dedupedConnections = [...new Map(tagConnections.map(tag => [tag.id, tag])).values()]
-      await tx.champion.update({
-        where: { id: match.champion.id },
-        data: { tags: { set: dedupedConnections } },
-      })
-    })
-
-    updated++
-  }
-
-  const { count: deletedTags } = await prisma.tag.deleteMany({
-    where: { champions: { none: {} } },
-  })
+  const result = await importMcocGameTags(prisma, {
+    champions: parseMcocChampionTagsJson(await championsFile.text()),
+    tags: parseMcocGameTagsJson(await tagsFile.text()),
+    heroTiers: parseMcocHeroTiersJson(await heroTiersFile.text()),
+  }, { write: true, pruneUnusedTags: true })
 
   revalidateChampionData()
-  return {
-    sourceChampions,
-    dedupedChampions: dedupedChamps.size,
-    sourceTags: tagMap.size,
-    sourceGenderTiers,
-    genderTagged,
-    genderMissing,
-    updated,
-    skipped,
-    blocked,
-    deletedTags,
-  }
+  return result
 })
 
 export const confirmAbilityDraft = withActionContext('confirmAbilityDraft', async (
