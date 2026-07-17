@@ -26,6 +26,14 @@ export interface Config {
   POSTHOG_HOST?: string;
   botBaseUrl: string;
   CHANGELOG_CHANNEL_ID: string;
+  googleVision: {
+    transport: "grpc" | "rest";
+    timeoutMs: number;
+    retryDelayMs: number;
+    retryJitterMs: number;
+    circuitBreakerFailureThreshold: number;
+    circuitBreakerCooldownMs: number;
+  };
 
   // Alliance War Settings
   allianceWar: {
@@ -73,6 +81,31 @@ function getEnv(key: string, defaultValue?: string): string {
     throw new Error(`❌ Missing required environment variable: ${key}`);
   }
   return value;
+}
+
+function getNonNegativeIntegerEnv(
+  key: string,
+  defaultValue: number,
+  minimum = 0
+): number {
+  const rawValue = getEnv(key, String(defaultValue));
+  const value = Number.parseInt(rawValue, 10);
+  if (!Number.isInteger(value) || value < minimum) {
+    throw new Error(
+      `❌ ${key} must be an integer greater than or equal to ${minimum}`
+    );
+  }
+  return value;
+}
+
+function getGoogleVisionTransport(): "grpc" | "rest" {
+  const transport = getEnv("GOOGLE_VISION_TRANSPORT", "rest").toLowerCase();
+  if (transport !== "grpc" && transport !== "rest") {
+    throw new Error(
+      "❌ GOOGLE_VISION_TRANSPORT must be either 'grpc' or 'rest'"
+    );
+  }
+  return transport;
 }
 
 const createConfig = (): Config => {
@@ -151,6 +184,32 @@ const createConfig = (): Config => {
     POSTHOG_HOST: getEnv("POSTHOG_HOST", ""),
     botBaseUrl: getEnv("BOT_BASE_URL"),
     CHANGELOG_CHANNEL_ID: getEnv("CHANGELOG_CHANNEL_ID", "1449771844474503199"),
+    googleVision: {
+      transport: getGoogleVisionTransport(),
+      timeoutMs: getNonNegativeIntegerEnv(
+        "GOOGLE_VISION_TIMEOUT_MS",
+        15_000,
+        1
+      ),
+      retryDelayMs: getNonNegativeIntegerEnv(
+        "GOOGLE_VISION_RETRY_DELAY_MS",
+        100
+      ),
+      retryJitterMs: getNonNegativeIntegerEnv(
+        "GOOGLE_VISION_RETRY_JITTER_MS",
+        150
+      ),
+      circuitBreakerFailureThreshold: getNonNegativeIntegerEnv(
+        "GOOGLE_VISION_CIRCUIT_FAILURE_THRESHOLD",
+        1,
+        1
+      ),
+      circuitBreakerCooldownMs: getNonNegativeIntegerEnv(
+        "GOOGLE_VISION_CIRCUIT_COOLDOWN_MS",
+        30_000,
+        1
+      ),
+    },
 
     // Alliance War Settings
     allianceWar: {
