@@ -12,7 +12,7 @@ import { prisma } from "../../services/prismaService";
 import { add } from "date-fns";
 
 export async function handleGenerateUploadLink(interaction: ButtonInteraction) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const [_, warId, playerId] = interaction.customId.split(":");
 

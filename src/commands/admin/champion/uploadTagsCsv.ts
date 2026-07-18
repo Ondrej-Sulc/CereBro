@@ -1,4 +1,4 @@
-import { CommandInteraction } from "discord.js";
+import { CommandInteraction, MessageFlags } from "discord.js";
 import logger from "../../../services/loggerService";
 import { prisma } from "../../../services/prismaService";
 import { championList } from "../../../services/championService";
@@ -14,7 +14,7 @@ export async function handleChampionUploadTagsCsv(interaction: CommandInteractio
   logger.info(`Starting champion tags CSV upload process for ${interaction.user.tag}`);
 
   try {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const attachment = interaction.options.getAttachment("csv", true);
     if (!attachment.contentType?.startsWith("text/csv")) {

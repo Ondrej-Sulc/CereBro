@@ -40,7 +40,7 @@ export function PlayerTeamSummary({ user, picks, quest, scrollToEncounter }: {
             <div className="p-4 border-b border-slate-800 bg-slate-900/80 flex items-center gap-4">
                 <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-sky-500/30 shadow-lg">
                     {user.avatar ? (
-                        <Image src={user.avatar} alt={user.name} fill className="object-cover" />
+                        <Image src={user.avatar} alt={user.name} fill unoptimized className="object-cover" />
                     ) : (
                         <div className="w-full h-full flex items-center justify-center bg-slate-800 text-slate-400 font-bold text-lg">
                             {user.name.charAt(0)}
@@ -201,7 +201,7 @@ export function MultiPlayerPopover({
                     >
                         <div className="relative w-8 h-8 rounded-full overflow-hidden bg-slate-800 border border-slate-700 group-hover:border-sky-500/50 transition-colors">
                             {user.avatar ? (
-                                <Image src={user.avatar} alt={user.name} fill className="object-cover" />
+                                <Image src={user.avatar} alt={user.name} fill unoptimized className="object-cover" />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-slate-400">
                                     {user.name.charAt(0)}

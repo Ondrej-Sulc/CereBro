@@ -8,6 +8,7 @@ import {
   StringSelectMenuInteraction,
   ModalSubmitInteraction,
   EmbedBuilder,
+  MessageFlags,
 } from "discord.js";
 import { prisma } from "../../services/prismaService";
 import { DuelStatus, DuelSource } from "@prisma/client";
@@ -44,7 +45,7 @@ export async function handleDuelSuggestButton(interaction: ButtonInteraction) {
 }
 
 export async function handleDuelReportButton(interaction: ButtonInteraction) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const championId = parseInt(interaction.customId.split("_")[1], 10);
 
   const activeDuels = await prisma.duel.findMany({
@@ -84,7 +85,7 @@ export async function handleDuelReportButton(interaction: ButtonInteraction) {
 export async function handleDuelSuggestModalSubmit(
   interaction: ModalSubmitInteraction
 ) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const championId = parseInt(interaction.customId.split("_")[1], 10);
   const playerName = interaction.fields.getTextInputValue(DUEL_PLAYER_NAME_ID);
 
@@ -141,7 +142,7 @@ export async function handleDuelSuggestModalSubmit(
 export async function handleDuelReportSelect(
   interaction: StringSelectMenuInteraction
 ) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
   const duelId = parseInt(interaction.values[0], 10);
 
   try {

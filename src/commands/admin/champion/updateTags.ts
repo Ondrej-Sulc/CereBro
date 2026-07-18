@@ -1,4 +1,4 @@
-import { CommandInteraction } from "discord.js";
+import { CommandInteraction, MessageFlags } from "discord.js";
 import logger from "../../../services/loggerService";
 import { prisma } from "../../../services/prismaService";
 import { processTags } from "./addChampion";
@@ -10,7 +10,7 @@ export async function handleChampionUpdateTags(interaction: CommandInteraction) 
     );
 
     try {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       await interaction.editReply("Starting tags update process...");
 
       const name = interaction.options.getString("name", true);

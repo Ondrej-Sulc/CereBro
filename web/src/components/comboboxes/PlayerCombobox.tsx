@@ -126,6 +126,7 @@ export const PlayerCombobox = React.memo(function PlayerCombobox({
                                 src={selectedPlayer.avatar}
                                 alt={selectedPlayer.ingameName}
                                 fill
+                                unoptimized
                                 sizes="24px"
                                 className="object-cover"
                             />
@@ -203,6 +204,7 @@ export const PlayerCombobox = React.memo(function PlayerCombobox({
                                                src={p.avatar}
                                                alt={p.ingameName}
                                                fill
+                                               unoptimized
                                                sizes="24px"
                                                className="object-cover"
                                            />

@@ -137,8 +137,7 @@ export const getQuestPlans = withActionContext('getQuestPlans', async (categoryI
     }));
 });
 
-export const getQuestPlanById = unstable_cache(
-    async (id: string): Promise<QuestWithRelations | null> => {
+export async function getQuestPlanById(id: string): Promise<QuestWithRelations | null> {
         const quest = await prisma.questPlan.findUnique({
             where: { id },
             include: {
@@ -275,10 +274,7 @@ export const getQuestPlanById = unstable_cache(
             ...quest,
             creators: creatorsWithUsers
         };
-    },
-    ['quest-plan-detail'],
-    { tags: ['quest-plan-detail'] }
-);
+}
 
 /**
  * Aggregate champion pick counts per encounter for a quest plan.

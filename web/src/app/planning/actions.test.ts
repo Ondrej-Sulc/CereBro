@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { Prisma, WarMapType } from "@prisma/client";
+import { Prisma, WarMapType, WarResult, WarStatus } from "@prisma/client";
 
 const txFake = vi.hoisted(() => ({
   war: {
@@ -17,6 +17,13 @@ const prismaFake = vi.hoisted(() => ({
   $transaction: vi.fn(),
   war: {
     findUnique: vi.fn(),
+    update: vi.fn(),
+  },
+  warBan: {
+    deleteMany: vi.fn(),
+  },
+  warExtraChampion: {
+    deleteMany: vi.fn(),
   },
 }));
 
@@ -33,7 +40,10 @@ const cacheFake = vi.hoisted(() => ({
 }));
 
 vi.mock("@/auth", () => ({ auth: vi.fn() }));
-vi.mock("@/lib/prisma", () => ({ prisma: prismaFake, WarStatus: { PLANNING: "PLANNING" } }));
+vi.mock("@/lib/prisma", () => ({
+  prisma: prismaFake,
+  WarStatus: { PLANNING: "PLANNING", FINISHED: "FINISHED" },
+}));
 vi.mock("@/lib/auth-helpers", () => authHelpersFake);
 vi.mock("@/lib/alliance-permissions", () => permissionsFake);
 vi.mock("@/lib/logger", () => ({ default: { debug: vi.fn(), error: vi.fn(), info: vi.fn(), warn: vi.fn() } }));
@@ -49,7 +59,7 @@ vi.mock("@cerebro/core/config", () => ({ config: { BOT_TOKEN: "test-token" } }))
 vi.mock("@cerebro/core/services/mapImageService", () => ({ MapImageService: vi.fn() }));
 vi.mock("next/cache", () => cacheFake);
 
-import { createWar } from "./actions";
+import { createWar, removeExtraChampion, removeWarBan, updateWarStatus } from "./actions";
 
 function buildCreateWarForm(overrides: {
   season?: string;
@@ -99,6 +109,9 @@ describe("planning actions createWar", () => {
     txFake.war.create.mockResolvedValue({ id: "war_1" });
     txFake.warNode.findMany.mockResolvedValue([{ id: "node_1", nodeNumber: 1 }]);
     txFake.warFight.createMany.mockResolvedValue({ count: 3 });
+    prismaFake.war.update.mockResolvedValue({ id: "war_1" });
+    prismaFake.warBan.deleteMany.mockResolvedValue({ count: 1 });
+    prismaFake.warExtraChampion.deleteMany.mockResolvedValue({ count: 1 });
   });
 
   it("returns validation failure when a numbered war already exists", async () => {
@@ -202,5 +215,89 @@ describe("planning actions createWar", () => {
     });
     expect(prismaFake.war.findUnique).not.toHaveBeenCalled();
     expect(prismaFake.$transaction).not.toHaveBeenCalled();
+  });
+});
+
+describe("planning action error handling", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    authHelpersFake.getUserPlayerWithAlliance.mockResolvedValue({
+      id: "player_1",
+      allianceId: "alliance_1",
+      isBotAdmin: false,
+      isOfficer: true,
+      isPlanner: false,
+    });
+    permissionsFake.canPlanAllianceWar.mockReturnValue(true);
+    prismaFake.warBan.deleteMany.mockResolvedValue({ count: 0 });
+    prismaFake.warExtraChampion.deleteMany.mockResolvedValue({ count: 0 });
+  });
+
+  it("treats removing an already-absent war ban as success", async () => {
+    await expect(removeWarBan("missing_ban")).resolves.toEqual({ success: true });
+    expect(prismaFake.warBan.deleteMany).toHaveBeenCalledWith({
+      where: {
+        id: "missing_ban",
+        war: { allianceId: "alliance_1" },
+      },
+    });
+  });
+
+  it("treats removing an already-absent extra champion as success", async () => {
+    await expect(removeExtraChampion("missing_extra")).resolves.toEqual({ success: true });
+    expect(prismaFake.warExtraChampion.deleteMany).toHaveBeenCalledWith({
+      where: {
+        id: "missing_extra",
+        war: { allianceId: "alliance_1" },
+      },
+    });
+  });
+
+  it("returns a controlled permission failure without attempting a removal", async () => {
+    permissionsFake.canPlanAllianceWar.mockReturnValue(false);
+
+    await expect(removeWarBan("ban_1")).resolves.toEqual({
+      success: false,
+      error: "You must be an Alliance Planner, Officer, or Bot Admin to manage war bans.",
+    });
+    expect(prismaFake.warBan.deleteMany).not.toHaveBeenCalled();
+  });
+
+  it("returns useful validation when a war is missing its result", async () => {
+    prismaFake.war.findUnique.mockResolvedValue({
+      id: "war_1",
+      allianceId: "alliance_1",
+      result: WarResult.UNKNOWN,
+      enemyDeaths: null,
+    });
+
+    await expect(updateWarStatus("war_1", WarStatus.FINISHED)).resolves.toEqual({
+      success: false,
+      error: "Set the war result and enemy deaths before finishing the war.",
+    });
+    expect(prismaFake.war.update).not.toHaveBeenCalled();
+  });
+
+  it("updates a finished war when the result and deaths are supplied", async () => {
+    prismaFake.war.findUnique.mockResolvedValue({
+      id: "war_1",
+      allianceId: "alliance_1",
+      result: WarResult.UNKNOWN,
+      enemyDeaths: null,
+    });
+    prismaFake.war.update.mockResolvedValue({ id: "war_1" });
+
+    await expect(updateWarStatus("war_1", WarStatus.FINISHED, {
+      result: WarResult.WIN,
+      enemyDeaths: 4,
+    })).resolves.toEqual({ success: true });
+    expect(prismaFake.war.update).toHaveBeenCalledWith({
+      where: { id: "war_1" },
+      data: {
+        status: WarStatus.FINISHED,
+        result: WarResult.WIN,
+        enemyDeaths: 4,
+      },
+    });
   });
 });

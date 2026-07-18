@@ -2306,7 +2306,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                             {videos.map((v, i) => (
                                                 <div key={i} className="flex items-center gap-3 px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg group">
                                                     {v.playerAvatar ? (
-                                                        <Image src={v.playerAvatar} alt={v.playerName || "Player"} width={28} height={28} className="w-7 h-7 rounded-full border border-slate-700 shrink-0" />
+                                                        <Image src={v.playerAvatar} alt={v.playerName || "Player"} width={28} height={28} unoptimized className="w-7 h-7 rounded-full border border-slate-700 shrink-0" />
                                                     ) : (
                                                         <div className="w-7 h-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs font-bold text-slate-500 shrink-0">
                                                             {(v.playerName || "?").charAt(0).toUpperCase()}

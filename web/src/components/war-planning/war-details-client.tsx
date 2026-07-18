@@ -14,7 +14,7 @@ import { MobileSheet } from "./details/mobile-sheet";
 import { CloseWarDialog } from "./close-war-dialog";
 import { PlayerBriefingModal } from "./details/player-briefing-modal";
 import { useToast } from "@/hooks/use-toast";
-import { distributePlan } from "@/app/planning/actions";
+import { distributePlan, type WarMutationResult } from "@/app/planning/actions";
 import { exportBattlegroupText, exportBattlegroupMarkdown } from "@/lib/war-plan-export";
 import { PlayerColorProvider } from "./player-color-context";
 import { PlayerPaletteStyle } from "@/lib/player-colors";
@@ -27,7 +27,7 @@ interface WarDetailsClientProps {
   updateWarFight: (updatedFight: Partial<WarFight> & { 
     prefightUpdates?: { championId: number; playerId?: string | null }[] 
   }) => Promise<{ success: boolean; error?: string }>;
-  updateWarStatus: (warId: string, status: WarStatus) => Promise<void>;
+  updateWarStatus: (warId: string, status: WarStatus) => Promise<WarMutationResult>;
   champions: Champion[];
   players: PlayerWithRoster[];
   seasonBans: SeasonBanWithChampion[];

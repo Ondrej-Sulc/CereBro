@@ -40,7 +40,7 @@ const CLASS_ICONS: Record<ChampionClass, string> = {
   COSMIC: "/assets/icons/Cosmic.png",
   TECH: "/assets/icons/Tech.png",
   MUTANT: "/assets/icons/Mutant.png",
-  SUPERIOR: "/assets/icons/superior.png" // Fallback if needed, though likely not in filter list
+  SUPERIOR: "/assets/icons/Superior.png" // Fallback if needed, though likely not in filter list
 };
 
 const CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"];
@@ -215,6 +215,7 @@ export default function PlanningToolsPanel({
                             src={selectedPlayer.avatar}
                             alt={selectedPlayer.ingameName}
                             fill
+                            unoptimized
                             sizes="32px"
                             className="object-cover"
                           />
@@ -246,6 +247,7 @@ export default function PlanningToolsPanel({
                               src={p.avatar}
                               alt={p.ingameName}
                               fill
+                              unoptimized
                               sizes="32px"
                               className="object-cover"
                             />
@@ -417,6 +419,7 @@ export default function PlanningToolsPanel({
                             alt={item.player.ingameName ?? "Player Avatar"}
                             width={32}
                             height={32}
+                            unoptimized
                             className="rounded-full border"
                             style={{ borderColor: getPlayerColor(item.player.id) }}
                           />

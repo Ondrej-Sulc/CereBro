@@ -37,6 +37,10 @@ export type DistributePlanResult =
   | { success: true }
   | { success: false; error: string };
 
+export type WarMutationResult =
+  | { success: true }
+  | { success: false; error: string };
+
 export type CreateWarField = "season" | "warNumber" | "tier" | "opponent" | "mapType";
 
 export type CreateWarResult =
@@ -568,26 +572,33 @@ export const getOwnersOfChampion = withActionContext('getOwnersOfChampion', asyn
   });
 });
 
-export const updateWarStatus = withActionContext('updateWarStatus', async (warId: string, status: WarStatus, data?: { result?: WarResult; enemyDeaths?: number }) => {
+export const updateWarStatus = withActionContext('updateWarStatus', async (
+  warId: string,
+  status: WarStatus,
+  data?: { result?: WarResult; enemyDeaths?: number }
+): Promise<WarMutationResult> => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player || (!player.allianceId && !player.isBotAdmin)) {
-      throw new Error("Unauthorized");
+      return { success: false, error: "You must be signed in to update a war." };
   }
 
   if (!canPlanAllianceWar(player, player.isBotAdmin)) {
-    throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to update war status.");
+    return {
+      success: false,
+      error: "You must be an Alliance Planner, Officer, or Bot Admin to update war status.",
+    };
   }
 
   if (data?.enemyDeaths !== undefined && (typeof data.enemyDeaths !== 'number' || data.enemyDeaths < 0)) {
-    throw new Error("enemyDeaths must be a non-negative number");
+    return { success: false, error: "Enemy deaths must be a non-negative number." };
   }
 
   const war = await prisma.war.findUnique({ where: { id: warId } });
-  if (!war) throw new Error("War not found.");
+  if (!war) return { success: false, error: "War not found." };
 
   if (!player.isBotAdmin && war.allianceId !== player.allianceId) {
-      throw new Error("Unauthorized.");
+      return { success: false, error: "You cannot update a war outside your alliance." };
   }
 
   if (status === WarStatus.FINISHED) {
@@ -595,7 +606,10 @@ export const updateWarStatus = withActionContext('updateWarStatus', async (warId
       const effectiveDeaths = data?.enemyDeaths !== undefined ? data.enemyDeaths : war.enemyDeaths;
 
       if (effectiveResult === WarResult.UNKNOWN || effectiveDeaths === null) {
-          throw new Error("A war result and enemy deaths must be set before finishing the war.");
+          return {
+            success: false,
+            error: "Set the war result and enemy deaths before finishing the war.",
+          };
       }
   }
 
@@ -610,6 +624,7 @@ export const updateWarStatus = withActionContext('updateWarStatus', async (warId
 
   revalidatePath("/planning");
   revalidatePath(`/planning/${warId}`);
+  return { success: true };
 });
 
 export const deleteWar = withActionContext('deleteWar', async (warId: string) => {
@@ -669,31 +684,31 @@ export const addExtraChampion = withActionContext('addExtraChampion', async (war
   return newExtra;
 });
 
-export const removeExtraChampion = withActionContext('removeExtraChampion', async (id: string) => {
+export const removeExtraChampion = withActionContext('removeExtraChampion', async (id: string): Promise<WarMutationResult> => {
   const player = await getUserPlayerWithAlliance();
 
   if (!player || (!player.allianceId && !player.isBotAdmin)) {
-      throw new Error("Unauthorized");
+      return { success: false, error: "You must be signed in to manage extra champions." };
   }
 
   if (!canPlanAllianceWar(player, player.isBotAdmin)) {
-    throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to manage extra champions.");
+    return {
+      success: false,
+      error: "You must be an Alliance Planner, Officer, or Bot Admin to manage extra champions.",
+    };
   }
 
-  const extraChampionToDelete = await prisma.warExtraChampion.findUnique({
-      where: { id },
-      include: { war: true }
+  await prisma.warExtraChampion.deleteMany({
+    where: {
+      id,
+      ...(!player.isBotAdmin && player.allianceId
+        ? { war: { allianceId: player.allianceId } }
+        : {}),
+    },
   });
 
-  if (!extraChampionToDelete) {
-      throw new Error("Extra Champion not found.");
-  }
-
-  if (!player.isBotAdmin && extraChampionToDelete.war.allianceId !== player.allianceId) {
-      throw new Error("Unauthorized: Cannot delete extra champions from another alliance's war.");
-  }
-
-  await prisma.warExtraChampion.delete({ where: { id } });
+  // Deleting something that is already absent is a successful, idempotent operation.
+  return { success: true };
 });
 
 export const addWarBan = withActionContext('addWarBan', async (warId: string, championId: number) => {
@@ -728,29 +743,31 @@ export const addWarBan = withActionContext('addWarBan', async (warId: string, ch
     return newBan;
 });
 
-export const removeWarBan = withActionContext('removeWarBan', async (id: string) => {
+export const removeWarBan = withActionContext('removeWarBan', async (id: string): Promise<WarMutationResult> => {
     const player = await getUserPlayerWithAlliance();
 
     if (!player || (!player.allianceId && !player.isBotAdmin)) {
-        throw new Error("Unauthorized");
+        return { success: false, error: "You must be signed in to manage war bans." };
     }
 
     if (!canPlanAllianceWar(player, player.isBotAdmin)) {
-        throw new Error("You must be an Alliance Planner, Officer, or Bot Admin to manage war bans.");
+        return {
+          success: false,
+          error: "You must be an Alliance Planner, Officer, or Bot Admin to manage war bans.",
+        };
     }
 
-    const banToDelete = await prisma.warBan.findUnique({
-        where: { id },
-        include: { war: true }
+    await prisma.warBan.deleteMany({
+      where: {
+        id,
+        ...(!player.isBotAdmin && player.allianceId
+          ? { war: { allianceId: player.allianceId } }
+          : {}),
+      },
     });
 
-    if (!banToDelete) throw new Error("Ban not found.");
-
-    if (!player.isBotAdmin && banToDelete.war.allianceId !== player.allianceId) {
-        throw new Error("Unauthorized: Cannot delete bans from another alliance's war.");
-    }
-
-    await prisma.warBan.delete({ where: { id } });
+    // A repeated click or stale client has the same desired end state.
+    return { success: true };
 });
 
 export const getExtraChampions = withActionContext('getExtraChampions', async (warId: string, battlegroup: number): Promise<ExtraChampion[]> => {

@@ -7,6 +7,7 @@ import {
   TextInputBuilder,
   TextInputStyle,
   ModalSubmitInteraction,
+  MessageFlags,
 } from "discord.js";
 import { prisma } from "../../../services/prismaService";
 import {
@@ -22,7 +23,7 @@ import { registerButtonHandler } from "../../../utils/buttonHandlerRegistry";
 export async function handleAttackAddModal(
   interaction: ModalSubmitInteraction
 ) {
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const championName = interaction.customId.split("_")[3];
   const champion = await getChampionByName(championName);
@@ -142,7 +143,7 @@ export async function handleAttackAddMore(interaction: ButtonInteraction) {
   const champion = await getChampionById(championId);
 
   if (!champion) {
-    await interaction.reply({ content: "Champion not found.", ephemeral: true });
+    await interaction.reply({ content: "Champion not found.", flags: MessageFlags.Ephemeral });
     return;
   }
 

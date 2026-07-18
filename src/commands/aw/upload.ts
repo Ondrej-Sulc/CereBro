@@ -17,7 +17,7 @@ export async function handleUploadSubcommand(interaction: CommandInteraction) {
   const { prisma } = await import('../../services/prismaService.js');
   const { config } = await import('../../config.js');
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const discordId = interaction.user.id;
 

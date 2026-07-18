@@ -1,4 +1,4 @@
-import { CommandInteraction } from "discord.js";
+import { CommandInteraction, MessageFlags } from "discord.js";
 import logger from "../../../services/loggerService";
 import { prisma } from "../../../services/prismaService";
 
@@ -7,7 +7,7 @@ export async function handleGlossaryUpdateCategory(interaction: CommandInteracti
     logger.info(`Starting glossary update category process for ${interaction.user.tag}`);
 
     try {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const categoryName = interaction.options.getString("category", true);
         const description = interaction.options.getString("description", true);
 

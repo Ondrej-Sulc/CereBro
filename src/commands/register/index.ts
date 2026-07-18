@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction } from "discord.js";
+import { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import { Command, CommandAccess } from "../../types/command";
 import { safeReply } from "../../utils/errorHandler";
 
@@ -21,7 +21,7 @@ export const command: Command = {
 
   async execute(interaction: ChatInputCommandInteraction) {
     const { prisma } = await import("../../services/prismaService.js");
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const ingameName = interaction.options.getString("name", true);
     const discordId = interaction.user.id;
     const avatar = interaction.user.displayAvatarURL({ extension: 'png', size: 256 });

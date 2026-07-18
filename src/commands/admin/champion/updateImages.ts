@@ -1,4 +1,4 @@
-import { CommandInteraction, Routes } from "discord.js";
+import { CommandInteraction, Routes, MessageFlags } from "discord.js";
 import logger from "../../../services/loggerService";
 import { prisma } from "../../../services/prismaService";
 import { getChampionImageUrl } from "../../../utils/championHelper";
@@ -12,7 +12,7 @@ export async function handleChampionUpdateImages(interaction: CommandInteraction
     );
 
     try {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       await interaction.editReply("Starting image update process...");
 
       const name = interaction.options.getString("name", true);

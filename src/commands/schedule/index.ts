@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, ChatInputCommandInteraction } from "discord.js";
+import { SlashCommandBuilder, ChatInputCommandInteraction, MessageFlags } from "discord.js";
 import { Command, CommandAccess } from "../../types/command";
 import { handleScheduleAdd } from "./add";
 import { handleScheduleList } from "./list";
@@ -114,7 +114,7 @@ export const command: Command = {
     color: "emerald",
   },
   async execute(interaction: ChatInputCommandInteraction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
     const subcommand = interaction.options.getSubcommand(true);
     switch (subcommand) {
       case "add":

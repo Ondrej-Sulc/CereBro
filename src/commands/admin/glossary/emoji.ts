@@ -1,5 +1,5 @@
 
-import { AutocompleteInteraction, ChatInputCommandInteraction, Routes } from "discord.js";
+import { AutocompleteInteraction, ChatInputCommandInteraction, Routes, MessageFlags } from "discord.js";
 import { prisma } from "../../../services/prismaService";
 import logger from "../../../services/loggerService";
 import { createDiscordEmoji } from "../../../utils/emojiHelper";
@@ -21,7 +21,7 @@ export async function getAbilityAutocomplete(query: string) {
 }
 
 export async function handleSetEmoji(interaction: ChatInputCommandInteraction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const abilityName = interaction.options.getString("ability", true);
     const image = interaction.options.getAttachment("image", true);
@@ -68,7 +68,7 @@ export async function handleSetEmoji(interaction: ChatInputCommandInteraction) {
 }
 
 export async function handleRemoveEmoji(interaction: ChatInputCommandInteraction) {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const abilityName = interaction.options.getString("ability", true);
 

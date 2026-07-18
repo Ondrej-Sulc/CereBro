@@ -200,6 +200,7 @@ export function AsyncPlayerSearchCombobox({
                                      src={p.avatar}
                                      alt={p.ingameName}
                                      fill
+                                     unoptimized
                                      sizes="24px"
                                      className="object-cover"
                                  />

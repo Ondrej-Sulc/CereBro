@@ -1,4 +1,4 @@
-import { SlashCommandBuilder, CommandInteraction, PermissionFlagsBits } from 'discord.js';
+import { SlashCommandBuilder, CommandInteraction, PermissionFlagsBits, MessageFlags } from 'discord.js';
 import loggerService from '../../services/loggerService';
 import { getYouTubeService } from '../../services/youtubeService';
 import { WarVideo, Player, WarVideoStatus } from '@prisma/client';
@@ -36,7 +36,7 @@ export async function execute(interaction: CommandInteraction) {
   const subcommand = interaction.options.getSubcommand();
   const videoId = interaction.options.getString('video_id', true);
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   try {
     const warVideo: (WarVideo & { submittedBy: Player }) | null = await prisma.warVideo.findUnique({

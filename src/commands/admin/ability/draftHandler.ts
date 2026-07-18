@@ -5,6 +5,7 @@ import {
   TextInputStyle,
   ActionRowBuilder,
   ModalSubmitInteraction,
+  MessageFlags,
 } from "discord.js";
 import {
   buildDraftContainerV2,
@@ -34,7 +35,7 @@ export async function handleConfirmAbilityDraft(
       // This should be an ephemeral error container
       await interaction.reply({
         content: "Could not find the draft.",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
       return;
     }
@@ -105,7 +106,7 @@ export async function handleConfirmAbilityDraft(
     await interaction.followUp({
       ...errorContainer,
 
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 }
@@ -126,7 +127,7 @@ export async function handleSuggestEdits(interaction: ButtonInteraction) {
   if (!championId) {
     await interaction.reply({
       content: "Invalid champion ID.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
 
     return;
@@ -157,7 +158,7 @@ export async function handleSuggestEditsModal(
   const { prisma } = await import("../../../services/prismaService.js");
   const { config } = await import("../../../config.js");
   const openRouterService = new OpenRouterService(config.OPEN_ROUTER_API_KEY!);
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const championId = parseInt(interaction.customId.split("_")[1]);
   logger.info(`Handling suggest edits modal for champion ${championId}`);

@@ -1,8 +1,16 @@
 import pino from 'pino';
 import { getRequestContext } from './request-context';
+import { isExpectedFrameworkInterruption } from './expected-framework-errors';
+
+export { isAbortedResponse } from './expected-framework-errors';
 
 const logger = pino({
   level: process.env.LOG_LEVEL || 'info',
+  formatters: {
+    level(label) {
+      return { level: label };
+    },
+  },
   base: {
     env: process.env.NODE_ENV,
     component: 'web-server',
@@ -24,15 +32,6 @@ const logger = pino({
 declare global {
   var __LOGGER_INITIALIZED__: boolean | undefined;
 }
-
-export const isAbortedResponse = (error: unknown): boolean => {
-  if (!error) return false;
-  const err = error as { name?: unknown; message?: unknown };
-  return (
-    err?.name === 'ResponseAborted' ||
-    (typeof err?.message === 'string' && err.message.includes('ResponseAborted'))
-  );
-};
 
 // Intercept console.error and console.warn on server to ensure they are logged in JSON
 if (typeof window === 'undefined' && !globalThis.__LOGGER_INITIALIZED__) {
@@ -64,8 +63,8 @@ if (typeof window === 'undefined' && !globalThis.__LOGGER_INITIALIZED__) {
 
   // Capture unhandled rejections and uncaught exceptions on the server
   process.on('unhandledRejection', (reason, promise) => {
-    if (isAbortedResponse(reason)) {
-      logger.trace({ reason }, 'Unhandled Rejection (Aborted Response)');
+    if (isExpectedFrameworkInterruption(reason)) {
+      logger.trace({ reason }, 'Expected framework interruption');
     } else {
       logger.error({ reason, promise }, 'Unhandled Rejection');
       getDiscordAlert()

@@ -246,7 +246,7 @@ export function createQuestTimelinePickRenderers({
                                             title={`Suggested by ${user.name} - Click to see their plan`}
                                         >
                                             {user.avatar ? (
-                                                <Image src={user.avatar} alt={user.name} fill className="object-cover" />
+                                                <Image src={user.avatar} alt={user.name} fill unoptimized className="object-cover" />
                                             ) : (
                                                 <div className="flex h-full w-full items-center justify-center text-[10px] font-bold text-slate-400">
                                                     {user.name.charAt(0)}

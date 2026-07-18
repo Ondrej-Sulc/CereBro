@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import { War, WarFight, WarStatus, WarResult, WarTactic, ChampionClass, WarMapType, WarNode, WarNodeAllocation, NodeModifier, Tag } from "@prisma/client";
 import { Champion, ChampionImages } from "@/types/champion";
 import { HistoricalFightStat } from "@/app/planning/history-actions";
-import { getActiveTactic, addExtraChampion, removeExtraChampion, getExtraChampions, addWarBan, removeWarBan, getWarProgress, type WarProgress, type ExtraChampion } from "@/app/planning/actions";
+import { getActiveTactic, addExtraChampion, removeExtraChampion, getExtraChampions, addWarBan, removeWarBan, getWarProgress, type WarProgress, type ExtraChampion, type WarMutationResult } from "@/app/planning/actions";
 
 export type { WarProgress };
 import { FightWithNode, PlayerWithRoster, SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/war-planning/types";
@@ -43,7 +43,7 @@ interface UseWarPlanningProps {
   updateWarFight: (updatedFight: Partial<WarFight> & {
     prefightUpdates?: { championId: number; playerId?: string | null }[]
   }) => Promise<{ success: boolean; error?: string }>;
-  updateWarStatus: (warId: string, status: WarStatus) => Promise<void>;
+  updateWarStatus: (warId: string, status: WarStatus) => Promise<WarMutationResult>;
   seasonBans: SeasonBanWithChampion[];
   warBans: WarBanWithChampion[];
   userBattlegroup?: number | null;
@@ -312,7 +312,11 @@ export function useWarPlanning({
     try {
       setIsUpdatingStatus(true);
       const newStatus = status === WarStatus.PLANNING ? WarStatus.FINISHED : WarStatus.PLANNING;
-      await updateWarStatus(warId, newStatus);
+      const result = await updateWarStatus(warId, newStatus);
+      if (!result.success) {
+        setFightsError(result.error);
+        return;
+      }
       setStatus(newStatus);
       router.refresh();
     } catch (err: unknown) {
@@ -446,7 +450,11 @@ export function useWarPlanning({
     setExtraChampions((prev: ExtraChampion[]) => prev.filter((x: ExtraChampion) => x.id !== extraId));
 
     try {
-      await removeExtraChampion(extraId);
+      const result = await removeExtraChampion(extraId);
+      if (!result.success) {
+        setExtraChampions((prev: ExtraChampion[]) => [...prev, toRemove]);
+        setFightsError(result.error);
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       reportClientError("war_planning_remove_extra_champion", err, { extra_id: extraId });
@@ -491,7 +499,11 @@ export function useWarPlanning({
     setWarBans((prev: WarBanWithChampion[]) => prev.filter((x: WarBanWithChampion) => x.id !== banId));
 
     try {
-      await removeWarBan(banId);
+      const result = await removeWarBan(banId);
+      if (!result.success) {
+        setWarBans((prev: WarBanWithChampion[]) => [...prev, toRemove]);
+        setFightsError(result.error);
+      }
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : String(err);
       reportClientError("war_planning_remove_war_ban", err, { ban_id: banId });

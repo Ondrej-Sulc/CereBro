@@ -1,4 +1,4 @@
-import { CommandInteraction } from "discord.js";
+import { CommandInteraction, MessageFlags } from "discord.js";
 import logger from "../../../services/loggerService";
 import { getChampionImageUrl } from "../../../utils/championHelper";
 
@@ -10,7 +10,7 @@ export async function handleChampionSyncSheet(interaction: CommandInteraction) {
     logger.info(`Starting sheet sync process for ${interaction.user.tag}`);
 
     try {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       await interaction.editReply("Starting sheet sync process...");
 
       logger.info("Fetching all champions from database...");

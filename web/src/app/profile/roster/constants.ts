@@ -7,7 +7,7 @@ export const CLASS_ICONS: Record<ChampionClass, string> = {
     COSMIC: "/assets/icons/Cosmic.png",
     TECH: "/assets/icons/Tech.png",
     MUTANT: "/assets/icons/Mutant.png",
-    SUPERIOR: "/assets/icons/superior.png",
+    SUPERIOR: "/assets/icons/Superior.png",
 };
 
 export const CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"];

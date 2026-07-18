@@ -1,4 +1,4 @@
-import { CommandInteraction } from "discord.js";
+import { CommandInteraction, MessageFlags } from "discord.js";
 import logger from "../../../services/loggerService";
 import { prisma } from "../../../services/prismaService";
 
@@ -7,7 +7,7 @@ export async function handleGlossaryUnlink(interaction: CommandInteraction) {
     logger.info(`Starting glossary unlink process for ${interaction.user.tag}`);
 
     try {
-        await interaction.deferReply({ ephemeral: true });
+        await interaction.deferReply({ flags: MessageFlags.Ephemeral });
         const abilityName = interaction.options.getString("ability", true);
         const categoryName = interaction.options.getString("category", true);
 

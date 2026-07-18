@@ -1,4 +1,4 @@
-import { CommandInteraction } from "discord.js";
+import { CommandInteraction, MessageFlags } from "discord.js";
 import { AbilityLinkType, Champion, ChampionAbilitySynergy, ChampionAbilityLink } from "@prisma/client";
 import logger from "../../../services/loggerService";
 import { prisma } from "../../../services/prismaService";
@@ -18,7 +18,7 @@ export async function handleAbilityRemove(interaction: CommandInteraction) {
     );
 
     try {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const championName = interaction.options.getString("champion", true);
       const type = interaction.options.getString(
         "type",

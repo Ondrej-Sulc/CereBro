@@ -55,10 +55,14 @@ export function CloseWarDialog({
       
       try {
           // Update Status to FINISHED and record result/deaths in a single transaction
-          await updateWarStatus(war.id, WarStatus.FINISHED, {
+          const result = await updateWarStatus(war.id, WarStatus.FINISHED, {
               result: data.result,
               enemyDeaths: data.enemyDeaths
           });
+          if (!result.success) {
+              toast({ title: "Update Failed", description: result.error, variant: "destructive" });
+              return;
+          }
 
           toast({ title: "War Finished", description: "War has been closed and results recorded." });
           onOpenChange(false);

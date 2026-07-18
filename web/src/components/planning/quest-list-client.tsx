@@ -414,7 +414,7 @@ const QuestCard = memo(function QuestCard({ quest }: { quest: QuestSummary }) {
                                         <TooltipTrigger asChild>
                                             <div className="relative w-6 h-6 rounded-full border-2 border-slate-950 overflow-hidden bg-slate-800 cursor-help hover:z-20 hover:scale-110 transition-all">
                                                 {p.avatar ? (
-                                                    <Image src={p.avatar} alt={p.ingameName} fill className="object-cover" />
+                                                    <Image src={p.avatar} alt={p.ingameName} fill unoptimized className="object-cover" />
                                                 ) : (
                                                     <div className="w-full h-full flex items-center justify-center text-[8px] font-black text-white uppercase">
                                                         {p.ingameName.charAt(0)}

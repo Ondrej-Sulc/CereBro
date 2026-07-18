@@ -45,7 +45,7 @@ export async function handleChampionModalPart1(interaction: ModalSubmitInteracti
       content:
         "Part 1 of champion creation complete. Click continue to proceed to Part 2.",
       components: [row],
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   } catch (error) {
     logger.error(error, "Error handling champion modal submission part 1");
@@ -53,7 +53,7 @@ export async function handleChampionModalPart1(interaction: ModalSubmitInteracti
       content: `An error occurred: ${
         error instanceof Error ? error.message : "Unknown error"
       }`,
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
   }
 }
@@ -64,7 +64,7 @@ export async function handleChampionModalPart2(interaction: ModalSubmitInteracti
     try {
       await interaction.reply({
         content: "Processing part 2...",
-        ephemeral: true,
+        flags: MessageFlags.Ephemeral,
       });
 
       const partialChampionData = pendingChampions.get(interaction.user.id);
