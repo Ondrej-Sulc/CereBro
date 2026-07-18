@@ -105,8 +105,8 @@ A unified suite of tools for managing Alliance War.
 *   **Community & Alliance Scope:** Tournaments can be community-hosted for players outside an alliance or alliance-scoped for internal friendly events.
 *   **Tournament Lifecycle:** Supports Draft, Registration, Check-in, Live, Finished, and Archived states so organizers can stage the event before matches begin.
 *   **Field Management:** Organizers can create tournaments, choose a format, add players, assign seeds, and keep battlegroup context visible when it exists.
-*   **Common Formats:** Supports single elimination, double elimination, Swiss, Swiss plus elimination top cut, round robin, and ladder tournament styles.
-*   **Bracket Foundation:** Match records are modeled separately from participants so bracket generation can be layered in without changing the organizer workflow.
+*   **Elimination Formats:** Supports complete single- and double-elimination tournament flows, including seeded brackets, byes, winner/loser advancement, and double-elimination reset finals.
+*   **Bracket Foundation:** Match records are modeled separately from participants so additional tournament formats can be added without changing the organizer workflow.
 
 ### Quest Planning & Roster Integration
 A dedicated system for planning fights across complex quests (e.g., Story content, Everest runs).

@@ -1,10 +1,21 @@
-import type {
-  BattlegroundsMatchStatus,
+import {
   BattlegroundsTournamentFormat,
-  BattlegroundsTournamentScope,
-  BattlegroundsTournamentStatus,
-  TournamentParticipantStatus,
+  type BattlegroundsMatchStatus,
+  type BattlegroundsTournamentScope,
+  type BattlegroundsTournamentStatus,
+  type TournamentParticipantStatus,
 } from "@prisma/client";
+
+export const supportedTournamentFormats: readonly BattlegroundsTournamentFormat[] = [
+  BattlegroundsTournamentFormat.SINGLE_ELIMINATION,
+  BattlegroundsTournamentFormat.DOUBLE_ELIMINATION,
+];
+
+export function isSupportedTournamentFormat(
+  value: string
+): value is BattlegroundsTournamentFormat {
+  return supportedTournamentFormats.some((format) => format === value);
+}
 
 export const statusLabels: Record<BattlegroundsTournamentStatus, string> = {
   DRAFT: "Draft",

@@ -53,3 +53,16 @@ Real Alliance is an Alliance intended to represent an actual MCOC alliance. Infr
 Battlegrounds Tournaments is the organizer workspace for creating and running MCOC Battlegrounds events.
 
 It owns tournament scope, status, format, registration/check-in timing, seeded participants, optional battlegroup-aware field organization, and match records used by the tournament control page. Tournament scope can be Community for open/friendly events outside an alliance or Alliance for internal alliance friendlies. Bracket generation and match reporting build on this organizer model instead of replacing it.
+
+**Bracket Operation**:
+A single atomic change to an elimination bracket, such as starting the tournament or reporting a fight result together with every resulting advancement, bye, or reset final.
+
+**Tournament Control Projection**:
+The render-ready view of one Battlegrounds Tournament, including ordered participants, bracket layout, standings, outcome, and the operations available to the current organizer or participant.
+
+Example dialogue:
+
+- Organizer: "I reported the winners-final result. Did the loser enter the lower bracket?"
+- Developer: "Yes. That report and every downstream placement are one Bracket Operation, so they either all succeeded or none did."
+- Designer: "Should the control page calculate whether the reset final is required?"
+- Developer: "No. The Tournament Control Projection supplies that outcome and the operations the page may render."

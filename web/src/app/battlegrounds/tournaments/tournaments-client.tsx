@@ -1,13 +1,10 @@
 "use client";
 
-import { type ReactNode, useMemo, useState, useTransition } from "react";
+import { type ReactNode, useState, useTransition } from "react";
 import {
   BattlegroundsMatchBracket,
   BattlegroundsMatchStatus,
-  BattlegroundsTournamentFormat,
-  BattlegroundsTournamentScope,
   BattlegroundsTournamentStatus,
-  TournamentParticipantStatus,
 } from "@prisma/client";
 import {
   CalendarClock,
@@ -54,86 +51,17 @@ import {
   scopeLabels,
   statusLabels,
 } from "./tournament-labels";
-
-export type TournamentMember = {
-  id: string;
-  ingameName: string;
-  allianceId: string | null;
-  battlegroup: number | null;
-  championPrestige: number | null;
-  avatar: string | null;
-};
-
-export type TournamentSummary = {
-  id: string;
-  name: string;
-  description: string | null;
-  scope: BattlegroundsTournamentScope;
-  format: BattlegroundsTournamentFormat;
-  status: BattlegroundsTournamentStatus;
-  startsAt: string | null;
-  checkInStartsAt: string | null;
-  createdAt: string;
-  allianceId: string | null;
-  createdById: string;
-  createdBy: { ingameName: string };
-  participants: Array<{
-    id: string;
-    seed: number | null;
-    battlegroup: number | null;
-    status: TournamentParticipantStatus;
-    checkedInAt: string | null;
-    player: TournamentMember;
-  }>;
-  matches: Array<{
-    id: string;
-    bracket: BattlegroundsMatchBracket;
-    round: number;
-    matchNumber: number;
-    status: BattlegroundsMatchStatus;
-    homeParticipantId: string | null;
-    awayParticipantId: string | null;
-    winnerParticipantId: string | null;
-    homeScore: number | null;
-    awayScore: number | null;
-    scheduledAt: string | null;
-    notes: string | null;
-    homeParticipant: {
-      id: string;
-      seed: number | null;
-      battlegroup: number | null;
-      status: TournamentParticipantStatus;
-      checkedInAt: string | null;
-      player: TournamentMember;
-    } | null;
-    awayParticipant: {
-      id: string;
-      seed: number | null;
-      battlegroup: number | null;
-      status: TournamentParticipantStatus;
-      checkedInAt: string | null;
-      player: TournamentMember;
-    } | null;
-    winnerParticipant: {
-      id: string;
-      seed: number | null;
-      battlegroup: number | null;
-      status: TournamentParticipantStatus;
-      checkedInAt: string | null;
-      player: TournamentMember;
-    } | null;
-  }>;
-  _count: { matches: number };
-};
+import type {
+  ProjectedTournament as TournamentSummary,
+  TournamentControlProjection,
+  TournamentMember,
+} from "./tournament-control-projection";
 
 type Props = {
   allianceName: string;
-  currentPlayerId: string;
   bgColors: Record<number, string>;
-  players: TournamentMember[];
-  tournaments: TournamentSummary[];
+  projections: TournamentControlProjection[];
   canCreate: boolean;
-  manageableTournamentIds: string[];
   showTournamentQueue?: boolean;
 };
 
@@ -190,189 +118,12 @@ function statusTone(status: BattlegroundsTournamentStatus) {
   }
 }
 
-function nextLifecycleAction(status: BattlegroundsTournamentStatus, canStartAutomatically: boolean) {
-  switch (status) {
-    case "DRAFT":
-      return { label: "Open registration", status: BattlegroundsTournamentStatus.REGISTRATION };
-    case "REGISTRATION":
-      return { label: "Open check-in", status: BattlegroundsTournamentStatus.CHECK_IN };
-    case "CHECK_IN":
-      return canStartAutomatically
-        ? null
-        : { label: "Set live", status: BattlegroundsTournamentStatus.LIVE };
-    case "LIVE":
-      return { label: "Finish tournament", status: BattlegroundsTournamentStatus.FINISHED };
-    case "FINISHED":
-      return { label: "Archive", status: BattlegroundsTournamentStatus.ARCHIVED };
-    default:
-      return null;
-  }
-}
-
-function sortParticipants(tournament: TournamentSummary) {
-  return [...tournament.participants].sort((a, b) => {
-    const aSeed = a.seed ?? 9999;
-    const bSeed = b.seed ?? 9999;
-    if (aSeed !== bSeed) return aSeed - bSeed;
-    const aBg = a.battlegroup ?? 99;
-    const bBg = b.battlegroup ?? 99;
-    if (aBg !== bBg) return aBg - bBg;
-    return a.player.ingameName.localeCompare(b.player.ingameName);
-  });
-}
-
-function groupMatchListByRound(matches: TournamentSummary["matches"]) {
-  const groups = new Map<number, TournamentSummary["matches"]>();
-
-  for (const match of matches) {
-    const roundMatches = groups.get(match.round) ?? [];
-    roundMatches.push(match);
-    groups.set(match.round, roundMatches);
-  }
-
-  return [...groups.entries()].sort(([a], [b]) => a - b);
-}
-
-function groupMatchesByRound(tournament: TournamentSummary) {
-  return groupMatchListByRound(tournament.matches);
-}
-
-function nextPowerOfTwo(value: number) {
-  let size = 1;
-  while (size < value) size *= 2;
-  return size;
-}
-
-function isPowerOfTwo(value: number) {
-  return value > 0 && (value & (value - 1)) === 0;
-}
-
-function summonerCountGuidance(tournament: TournamentSummary) {
-  const count = tournament.participants.length;
-
-  if (count < 2) {
-    return {
-      tone: "border-amber-500/30 bg-amber-500/10 text-amber-200",
-      text: "Add at least 2 summoners to start fights.",
-    };
-  }
-
-  if (tournament.format === "SINGLE_ELIMINATION" || tournament.format === "DOUBLE_ELIMINATION") {
-    const bracketName = tournament.format === "DOUBLE_ELIMINATION" ? "double-elim" : "single-elim";
-    if (isPowerOfTwo(count)) {
-      return {
-        tone: "border-emerald-500/30 bg-emerald-500/10 text-emerald-200",
-        text: `Clean ${count}-summoner ${bracketName} bracket with no byes.`,
-      };
-    }
-
-    const target = nextPowerOfTwo(count);
-    const needed = target - count;
-    return {
-      tone: "border-cyan-500/30 bg-cyan-500/10 text-cyan-200",
-      text: `${count} works with ${needed} ${needed === 1 ? "bye" : "byes"}. Add ${needed} ${needed === 1 ? "summoner" : "summoners"} for a clean ${target}-summoner ${bracketName} bracket.`,
-    };
-  }
-
-  if (tournament.format === "ROUND_ROBIN") {
-    const fightCount = count * (count - 1) / 2;
-    return {
-      tone: "border-emerald-500/30 bg-emerald-500/10 text-emerald-200",
-      text: `${count} summoners create ${fightCount} fights.`,
-    };
-  }
-
-  return {
-    tone: "border-slate-700 bg-slate-900 text-slate-300",
-    text: `${count} summoners. Pairings are manual for this format.`,
-  };
-}
-
-function buildSingleEliminationSlots(tournament: TournamentSummary) {
-  const bracketSize = Math.max(2, nextPowerOfTwo(tournament.participants.length));
-  const roundCount = Math.log2(bracketSize);
-  const matchesByRoundAndNumber = new Map<string, TournamentMatch>();
-
-  for (const match of tournament.matches) {
-    matchesByRoundAndNumber.set(`${match.round}:${match.matchNumber}`, match);
-  }
-
-  return Array.from({ length: roundCount }, (_, roundIndex) => {
-    const round = roundIndex + 1;
-    const slotCount = bracketSize / 2 ** round;
-
-    return {
-      round,
-      slots: Array.from({ length: slotCount }, (_, slotIndex) => {
-        const matchNumber = slotIndex + 1;
-        return {
-          matchNumber,
-          match: matchesByRoundAndNumber.get(`${round}:${matchNumber}`) ?? null,
-        };
-      }),
-    };
-  });
-}
-
-function isWaitingForOpponent(tournament: TournamentSummary, match: TournamentMatch) {
-  if (match.round === 1 || (match.homeParticipantId && match.awayParticipantId)) return false;
-
-  const feederMatchNumbers = [match.matchNumber * 2 - 1, match.matchNumber * 2];
-  return tournament.matches.some((candidate) => (
-    candidate.round === match.round - 1 &&
-    feederMatchNumbers.includes(candidate.matchNumber) &&
-    candidate.status !== "FINAL"
-  ));
-}
-
-function buildStandings(tournament: TournamentSummary) {
-  const standings = new Map<string, {
-    participant: TournamentSummary["participants"][number];
-    wins: number;
-    losses: number;
-    pointsFor: number;
-    pointsAgainst: number;
-  }>();
-
-  for (const participant of tournament.participants) {
-    standings.set(participant.id, {
-      participant,
-      wins: 0,
-      losses: 0,
-      pointsFor: 0,
-      pointsAgainst: 0,
-    });
-  }
-
-  for (const match of tournament.matches) {
-    if (match.status !== "FINAL" || !match.homeParticipantId || !match.awayParticipantId) continue;
-
-    const home = standings.get(match.homeParticipantId);
-    const away = standings.get(match.awayParticipantId);
-    if (!home || !away) continue;
-
-    home.pointsFor += match.homeScore ?? 0;
-    home.pointsAgainst += match.awayScore ?? 0;
-    away.pointsFor += match.awayScore ?? 0;
-    away.pointsAgainst += match.homeScore ?? 0;
-
-    if (match.winnerParticipantId === match.homeParticipantId) {
-      home.wins += 1;
-      away.losses += 1;
-    } else if (match.winnerParticipantId === match.awayParticipantId) {
-      away.wins += 1;
-      home.losses += 1;
-    }
-  }
-
-  return [...standings.values()].sort((a, b) => {
-    if (b.wins !== a.wins) return b.wins - a.wins;
-    const aDiff = a.pointsFor - a.pointsAgainst;
-    const bDiff = b.pointsFor - b.pointsAgainst;
-    if (bDiff !== aDiff) return bDiff - aDiff;
-    return sortParticipants({ ...tournament, participants: [a.participant, b.participant] })[0].id === a.participant.id ? -1 : 1;
-  });
-}
+const lifecycleActionLabels: Partial<Record<BattlegroundsTournamentStatus, string>> = {
+  REGISTRATION: "Open registration",
+  CHECK_IN: "Open check-in",
+  FINISHED: "Finish tournament",
+  ARCHIVED: "Archive",
+};
 
 function participantMeta(participant: TournamentMatchParticipant | null) {
   if (!participant) return null;
@@ -571,7 +322,7 @@ function BracketMatchCard({
   const isDisputed = match.status === "DISPUTED";
   const isActive = match.status === "PLAYING" || match.status === "REPORTED";
   const winnerParticipant = match.winnerParticipant;
-  const waitingForOpponent = isWaitingForOpponent(tournament, match);
+  const waitingForOpponent = match.waitingForOpponent;
   const [firstScore, setFirstScore] = useState(match.homeScore?.toString() ?? "");
   const [secondScore, setSecondScore] = useState(match.awayScore?.toString() ?? "");
   const initialSavedKey = match.status === "FINAL" && match.winnerParticipantId
@@ -867,16 +618,17 @@ function BracketMatchCard({
 }
 
 function DoubleEliminationLanes({
-  tournament,
+  projection,
   canManage,
   isPending,
   runAction,
 }: {
-  tournament: TournamentSummary;
+  projection: TournamentControlProjection;
   canManage: boolean;
   isPending: boolean;
   runAction: RunTournamentAction;
 }) {
+  const tournament = projection.tournament;
   const lanes: Array<{ bracket: BattlegroundsMatchBracket; tone: string }> = [
     { bracket: "WINNERS", tone: "border-cyan-500/20 bg-cyan-500/5" },
     { bracket: "LOSERS", tone: "border-amber-500/20 bg-amber-500/5" },
@@ -886,8 +638,7 @@ function DoubleEliminationLanes({
   return (
     <div className="space-y-4 p-4">
       {lanes.map(({ bracket, tone }) => {
-        const laneMatches = tournament.matches.filter((match) => match.bracket === bracket);
-        const rounds = groupMatchListByRound(laneMatches);
+        const rounds = projection.bracketRounds[bracket];
         if (rounds.length === 0) return null;
 
         const laneSize = Math.max(2, Math.max(...rounds.map(([, matches]) => matches.length), 1) * 2);
@@ -947,40 +698,32 @@ function DoubleEliminationLanes({
 }
 
 function BracketFlow({
-  tournament,
+  projection,
   canManage,
   isPending,
   runAction,
 }: {
-  tournament: TournamentSummary;
+  projection: TournamentControlProjection;
   canManage: boolean;
   isPending: boolean;
   runAction: RunTournamentAction;
 }) {
-  const rounds = groupMatchesByRound(tournament);
+  const tournament = projection.tournament;
+  const rounds = projection.matchRounds;
   const isDoubleElimination = tournament.format === "DOUBLE_ELIMINATION";
   const singleEliminationRounds = tournament.format === "SINGLE_ELIMINATION"
-    ? buildSingleEliminationSlots(tournament)
+    ? projection.singleEliminationRounds
     : null;
   const visualRounds = singleEliminationRounds ?? rounds.map(([round, matches]) => ({
     round,
     slots: matches.map((match) => ({ matchNumber: match.matchNumber, match })),
   }));
   const bracketSize = singleEliminationRounds
-    ? Math.max(2, nextPowerOfTwo(tournament.participants.length))
+    ? projection.bracketSize
     : Math.max(2, Math.max(...rounds.map(([, matches]) => matches.length), 1) * 2);
   const completedMatches = tournament.matches.filter((match) => match.status === "FINAL").length;
   const activeMatches = tournament.matches.filter((match) => match.status === "PLAYING" || match.status === "REPORTED").length;
-  const finalRound = rounds.at(-1)?.[1] ?? [];
-  const grandFinals = tournament.matches
-    .filter((match) => match.bracket === "GRAND_FINAL")
-    .sort((a, b) => b.round - a.round || b.matchNumber - a.matchNumber);
-  const latestGrandFinal = grandFinals[0] ?? null;
-  const champion = isDoubleElimination
-    ? latestGrandFinal?.status === "FINAL" ? latestGrandFinal.winnerParticipant?.player.ingameName : null
-    : finalRound.length === 1 && finalRound[0].status === "FINAL"
-      ? finalRound[0].winnerParticipant?.player.ingameName
-      : null;
+  const champion = projection.championName;
 
   if (visualRounds.length === 0) return null;
 
@@ -1003,7 +746,7 @@ function BracketFlow({
 
       {isDoubleElimination ? (
         <DoubleEliminationLanes
-          tournament={tournament}
+          projection={projection}
           canManage={canManage}
           isPending={isPending}
           runAction={runAction}
@@ -1088,36 +831,21 @@ function BracketFlow({
 
 export function BattlegroundsTournamentsClient({
   allianceName,
-  currentPlayerId,
   bgColors,
-  players,
-  tournaments,
+  projections,
   canCreate,
-  manageableTournamentIds,
   showTournamentQueue = true,
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const tournaments = projections.map((projection) => projection.tournament);
   const [selectedTournamentId, setSelectedTournamentId] = useState(tournaments[0]?.id ?? null);
   const [message, setMessage] = useState<string | null>(null);
-  const selectedTournament = tournaments.find((tournament) => tournament.id === selectedTournamentId) ?? tournaments[0] ?? null;
-  const manageableTournamentIdSet = useMemo(
-    () => new Set(manageableTournamentIds),
-    [manageableTournamentIds]
-  );
-
-  const availableMembers = useMemo(() => {
-    const participantIds = new Set(selectedTournament?.participants.map((entry) => entry.player.id) ?? []);
-    return players
-      .filter((member) => !participantIds.has(member.id))
-      .filter((member) => selectedTournament?.scope !== "ALLIANCE" || member.allianceId === selectedTournament.allianceId)
-      .sort((a, b) => {
-        const aBg = a.battlegroup ?? 99;
-        const bBg = b.battlegroup ?? 99;
-        if (aBg !== bBg) return aBg - bBg;
-        return a.ingameName.localeCompare(b.ingameName);
-      });
-  }, [players, selectedTournament]);
+  const selectedProjection = projections.find(
+    (projection) => projection.tournament.id === selectedTournamentId
+  ) ?? projections[0] ?? null;
+  const selectedTournament = selectedProjection?.tournament ?? null;
+  const availableMembers = selectedProjection?.availablePlayers ?? [];
 
   const runAction = (action: () => Promise<TournamentActionResult>) => {
     setMessage(null);
@@ -1135,41 +863,30 @@ export function BattlegroundsTournamentsClient({
     });
   };
 
-  const participants = selectedTournament ? sortParticipants(selectedTournament) : [];
-  const currentUserEntry = participants.find((entry) => entry.player.id === currentPlayerId) ?? null;
-  const isCurrentUserEntered = !!currentUserEntry;
-  const canManageSelected = !!selectedTournament && (
-    manageableTournamentIdSet.has(selectedTournament.id) ||
-    selectedTournament.createdById === currentPlayerId
-  );
-  const canJoinSelected = !!selectedTournament &&
-    !isCurrentUserEntered &&
-    ["REGISTRATION", "CHECK_IN"].includes(selectedTournament.status);
-  const canCheckInSelected = !!selectedTournament &&
-    !!currentUserEntry &&
-    currentUserEntry.status !== "CHECKED_IN" &&
-    selectedTournament.status === "CHECK_IN";
+  const participants = selectedTournament?.participants ?? [];
+  const canManageSelected = !!selectedProjection?.viewer.canManage;
+  const selectedStatus = selectedProjection?.status ?? null;
+  const canJoinSelected = !!selectedProjection?.viewer.canJoin;
+  const canCheckInSelected = !!selectedProjection?.viewer.canCheckIn;
   const checkedInCount = participants.filter((entry) => entry.status === "CHECKED_IN").length;
   const supportsStartSelected = selectedTournament
     ? ["SINGLE_ELIMINATION", "DOUBLE_ELIMINATION"].includes(selectedTournament.format)
     : false;
-  const hasFightsSelected = (selectedTournament?.matches.length ?? 0) > 0;
-  const canStartSelected = !!selectedTournament &&
-    !!supportsStartSelected &&
-    participants.length >= 2 &&
-    (selectedTournament.status !== "LIVE" || !hasFightsSelected);
-  const lifecycleAction = selectedTournament
-    ? selectedTournament.status === "LIVE" && !hasFightsSelected
-      ? null
-      : nextLifecycleAction(selectedTournament.status, !!supportsStartSelected)
+  const canStartSelected = !!selectedProjection?.viewer.canStart;
+  const canEditField = !!selectedProjection?.viewer.canEditField;
+  const lifecycleAction = selectedStatus?.nextStatus
+    ? {
+        status: selectedStatus.nextStatus,
+        label: lifecycleActionLabels[selectedStatus.nextStatus] ?? "Continue",
+      }
     : null;
   const bgCounts = [1, 2, 3].map((bg) => ({
     bg,
     count: participants.filter((entry) => entry.battlegroup === bg).length,
   }));
-  const standings = selectedTournament ? buildStandings(selectedTournament) : [];
-  const matchRounds = selectedTournament ? groupMatchesByRound(selectedTournament) : [];
-  const summonerGuidance = selectedTournament ? summonerCountGuidance(selectedTournament) : null;
+  const standings = selectedProjection?.standings ?? [];
+  const matchRounds = selectedProjection?.matchRounds ?? [];
+  const summonerGuidance = selectedProjection?.summonerGuidance ?? null;
   const nextManualRound = selectedTournament
     ? Math.max(1, ...selectedTournament.matches.map((match) => match.round))
     : 1;
@@ -1378,7 +1095,7 @@ export function BattlegroundsTournamentsClient({
                       </div>
                     </div>
 
-                    {canManageSelected && (
+                    {canEditField && (
                       <form
                         className="grid grid-cols-1 gap-3 border-b border-slate-800 p-4 lg:grid-cols-[1fr_90px_150px_auto]"
                         action={(formData) => {
@@ -1416,13 +1133,13 @@ export function BattlegroundsTournamentsClient({
                         <th className="px-4 py-3 text-left">Battlegroup</th>
                         <th className="px-4 py-3 text-left">Prestige</th>
                         <th className="px-4 py-3 text-left">Status</th>
-                        {canManageSelected && <th className="w-16 px-4 py-3 text-right">Ops</th>}
+                        {canEditField && <th className="w-16 px-4 py-3 text-right">Ops</th>}
                       </tr>
                     </thead>
                     <tbody>
                       {participants.length === 0 && (
                         <tr>
-                          <td colSpan={canManageSelected ? 6 : 5} className="px-4 py-12 text-center text-slate-500">
+                          <td colSpan={canEditField ? 6 : 5} className="px-4 py-12 text-center text-slate-500">
                             No summoners yet. Add alliance members to shape the field.
                           </td>
                         </tr>
@@ -1460,7 +1177,7 @@ export function BattlegroundsTournamentsClient({
                               {participantLabels[entry.status]}
                             </span>
                           </td>
-                          {canManageSelected && (
+                          {canEditField && (
                             <td className="px-4 py-3 text-right">
                               <Button
                                 size="icon"
@@ -1548,15 +1265,15 @@ export function BattlegroundsTournamentsClient({
                     {matchRounds.length > 0 && (
                       <div className="mt-5">
                         <BracketFlow
-                          tournament={selectedTournament}
-                          canManage={canManageSelected}
+                          projection={selectedProjection}
+                          canManage={!!selectedProjection.viewer.canReportResults}
                           isPending={isPending}
                           runAction={runAction}
                         />
                       </div>
                     )}
 
-                    {canManageSelected && (
+                    {canManageSelected && selectedStatus?.canEditManualMatches && (
                       <form
                         className="mt-4 grid grid-cols-1 gap-3 rounded-lg border border-slate-800 bg-slate-950/70 p-3 lg:grid-cols-[80px_80px_1fr_1fr_auto]"
                         action={(formData) => {
@@ -1645,7 +1362,7 @@ export function BattlegroundsTournamentsClient({
                                   {matchStatusLabels[match.status]}
                                 </Badge>
 
-                                {canManageSelected ? (
+                                {canManageSelected && selectedStatus?.canEditManualMatches ? (
                                   <Button
                                     size="icon"
                                     variant="ghost"

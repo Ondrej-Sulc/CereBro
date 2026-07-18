@@ -22,6 +22,7 @@ import {
   formatLabels,
   scopeDescriptions,
   scopeLabels,
+  supportedTournamentFormats,
 } from "./tournament-labels";
 
 type Props = {
@@ -217,7 +218,7 @@ export function TournamentCreateForm({ allianceName, hasAlliance }: Props) {
             <h2 className="font-bold text-white">Format</h2>
           </div>
           <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
-            {Object.values(BattlegroundsTournamentFormat).map((option) => (
+            {supportedTournamentFormats.map((option) => (
               <button
                 key={option}
                 type="button"
