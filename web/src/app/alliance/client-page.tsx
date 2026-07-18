@@ -56,6 +56,7 @@ import { useRouter } from "next/navigation";
 import { ALLIANCE_UNLOCK_THRESHOLD_MINOR } from "@cerebro/core/services/rosterScreenshotQuotaService";
 import { DiscordConfigForm } from "@/components/alliance/discord-config-form";
 import type { UserPlayerWithAlliance } from "@/lib/auth-helpers";
+import { getActionErrorMessage } from "@/lib/action-errors";
 
 interface MembershipRequest {
     id: string;
@@ -244,12 +245,24 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         getAllianceDiscordOptions()
             .then((result) => {
                 if (cancelled) return;
+                if (!result.success) {
+                    setDiscordConfigError(result.error.message);
+                    toast({
+                        title: "Failed to load Discord configuration",
+                        description: result.error.message,
+                        variant: "destructive",
+                    });
+                    return;
+                }
                 setDiscordConfig(result.config);
                 setDiscordRoles(result.roles);
                 setDiscordChannels(result.channels);
             })
             .catch((error: unknown) => {
-                const message = error instanceof Error ? error.message : "Could not load Discord configuration.";
+                const message = getActionErrorMessage(
+                    error,
+                    "Could not load Discord configuration. Please try again."
+                );
                 if (!cancelled) {
                     setDiscordConfigError(message);
                     toast({ title: "Failed to load Discord configuration", description: message, variant: "destructive" });
@@ -397,16 +410,21 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         setIsSavingDiscordConfig(true);
         try {
             const result = await updateAllianceDiscordConfig(config);
+            if (!result.success) {
+                toast({ title: "Error", description: result.error.message, variant: "destructive" });
+                return;
+            }
             setDiscordConfig(config);
             toast({
                 title: "Discord configuration saved",
                 description: result.queuedRoleSync ? "Role sync has been queued." : undefined,
             });
-            return { queuedRoleSync: result.queuedRoleSync };
         } catch (error: unknown) {
-            const message = error instanceof Error ? error.message : "Failed to save Discord configuration.";
+            const message = getActionErrorMessage(
+                error,
+                "Failed to save Discord configuration. Please try again."
+            );
             toast({ title: "Error", description: message, variant: "destructive" });
-            throw error;
         } finally {
             setIsSavingDiscordConfig(false);
         }

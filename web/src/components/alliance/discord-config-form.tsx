@@ -11,7 +11,7 @@ type DiscordConfigFormProps = {
   initialConfig: AllianceDiscordConfig;
   roles: DiscordRoleOption[];
   channels: DiscordChannelOption[];
-  onSave: (config: AllianceDiscordConfig) => Promise<{ queuedRoleSync: boolean }>;
+  onSave: (config: AllianceDiscordConfig) => Promise<void>;
   saving?: boolean;
 };
 
@@ -113,7 +113,7 @@ export function DiscordConfigForm({ initialConfig, roles, channels, onSave, savi
       </section>
 
       <div className="flex justify-end">
-        <Button onClick={() => onSave(config)} disabled={saving} className="gap-2">
+        <Button onClick={() => void onSave(config)} disabled={saving} className="gap-2">
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
           Save Discord Configuration
         </Button>

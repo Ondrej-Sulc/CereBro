@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { getActionErrorMessage } from "@/lib/action-errors";
 
 type MissingDiscordConfigDialogProps = {
   open: boolean;
@@ -63,6 +64,15 @@ export function MissingDiscordConfigDialog({
     getAllianceDiscordOptions()
       .then((result) => {
         if (cancelled) return;
+        if (!result.success) {
+          setLoadError(result.error.message);
+          toast({
+            title: "Failed to load Discord setup",
+            description: result.error.message,
+            variant: "destructive",
+          });
+          return;
+        }
         if (!result.guildLinked) {
           setLoadError("Discord is not linked for this alliance.");
           return;
@@ -71,7 +81,10 @@ export function MissingDiscordConfigDialog({
         setChannels(result.channels);
       })
       .catch((error: unknown) => {
-        const message = error instanceof Error ? error.message : "Could not load Discord channels.";
+        const message = getActionErrorMessage(
+          error,
+          "Could not load Discord channels. Please try again."
+        );
         if (!cancelled) {
           setLoadError(message);
           toast({ title: "Failed to load Discord setup", description: message, variant: "destructive" });
@@ -97,7 +110,32 @@ export function MissingDiscordConfigDialog({
     if (!config) return;
     setIsSaving(true);
     try {
-      await updateAllianceDiscordConfig(config);
+      const result = await updateAllianceDiscordConfig(config);
+      if (!result.success) {
+        toast({
+          title: "Save failed",
+          description: result.error.message,
+          variant: "destructive",
+        });
+
+        if (
+          result.error.code === "INVALID_DISCORD_CHANNELS" ||
+          result.error.code === "INVALID_DISCORD_ROLES"
+        ) {
+          try {
+            const refreshed = await getAllianceDiscordOptions();
+            if (refreshed.success && refreshed.guildLinked) {
+              setConfig(refreshed.config);
+              setChannels(refreshed.channels);
+            }
+          } catch {
+            // Keep the specific save error visible. Unexpected refresh failures
+            // are still recorded by the Server Action observability wrapper.
+          }
+        }
+        return;
+      }
+
       toast({ title: "Discord channels saved" });
       if (onConfigured) {
         onConfigured();
@@ -105,7 +143,10 @@ export function MissingDiscordConfigDialog({
         onOpenChange(false);
       }
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : "Could not save Discord channels.";
+      const message = getActionErrorMessage(
+        error,
+        "Could not save Discord channels. Please try again."
+      );
       toast({ title: "Save failed", description: message, variant: "destructive" });
     } finally {
       setIsSaving(false);

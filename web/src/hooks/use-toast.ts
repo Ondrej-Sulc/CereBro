@@ -8,6 +8,7 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 import { captureDeploymentMismatchReload } from "@/lib/observability/client"
+import { isSanitizedServerActionErrorMessage } from "@/lib/action-errors"
 
 const TOAST_LIMIT = 1
 const TOAST_REMOVE_DELAY = 1000000
@@ -144,6 +145,13 @@ function dispatch(action: Action) {
 type Toast = Omit<ToasterToast, "id">
 
 function toast({ ...props }: Toast) {
+  if (
+    typeof props.description === "string" &&
+    isSanitizedServerActionErrorMessage(props.description)
+  ) {
+    props.description = "Something went wrong. Please try again.";
+  }
+
   if (
     typeof props.description === 'string' && 
     (props.description.includes('Failed to find Server Action') ||
