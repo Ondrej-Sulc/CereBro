@@ -17,6 +17,7 @@ vi.mock("@/lib/cache", () => ({
 
 import {
   aggregatePlayerWarInsights,
+  canViewPlayerWarInsights,
   getAvailablePlayerWarInsightSeasons,
   getPlayerWarInsights,
   normalizePlayerWarInsightScope,
@@ -51,6 +52,33 @@ describe("player war insights", () => {
     expect(normalizePlayerWarInsightScope("not-a-season", [38, 37])).toEqual({ type: "all" });
     expect(normalizePlayerWarInsightScope("36", [38, 37])).toEqual({ type: "all" });
     expect(normalizePlayerWarInsightScope("37", [38, 37])).toEqual({ type: "season", season: 37 });
+  });
+
+  it("allows owners, bot admins, and current alliance members to view full insights", () => {
+    const target = { discordId: "target-discord", allianceId: "alliance-1" };
+
+    expect(canViewPlayerWarInsights({
+      viewer: { discordId: "target-discord", allianceId: null, isBotAdmin: false },
+      target: { ...target, allianceId: null },
+    })).toBe(true);
+    expect(canViewPlayerWarInsights({
+      viewer: { discordId: "admin-discord", allianceId: null, isBotAdmin: true },
+      target,
+    })).toBe(true);
+    expect(canViewPlayerWarInsights({
+      viewer: { discordId: "alliance-mate", allianceId: "alliance-1", isBotAdmin: false },
+      target,
+    })).toBe(true);
+  });
+
+  it("hides full insights from viewers outside the player's current alliance", () => {
+    const target = { discordId: "target-discord", allianceId: "alliance-1" };
+
+    expect(canViewPlayerWarInsights({ viewer: null, target })).toBe(false);
+    expect(canViewPlayerWarInsights({
+      viewer: { discordId: "outsider", allianceId: "alliance-2", isBotAdmin: false },
+      target,
+    })).toBe(false);
   });
 
   it("aggregates totals, nodes, attackers, battlegroups, and solo rate", () => {
@@ -165,32 +193,30 @@ describe("player war insights", () => {
     expect(insights.topAttackers[0]).toMatchObject({ championId: 1, fights: 1 });
   });
 
-  it("loads available seasons from qualifying numbered non-planning player wars", async () => {
+  it("loads available seasons across alliances from qualifying numbered non-planning player wars", async () => {
     prismaFake.war.findMany.mockResolvedValueOnce([{ season: 38 }, { season: 37 }]);
 
     await expect(getAvailablePlayerWarInsightSeasons({
       playerId: "player-1",
-      allianceId: "alliance-1",
     })).resolves.toEqual([38, 37]);
 
     expect(prismaFake.war.findMany).toHaveBeenCalledWith(expect.objectContaining({
       where: {
-        allianceId: "alliance-1",
         status: { not: "PLANNING" },
         warNumber: { not: null },
         season: { not: 0 },
         fights: { some: { playerId: "player-1" } },
       },
     }));
+    expect(prismaFake.war.findMany.mock.calls[0][0].where).not.toHaveProperty("allianceId");
   });
 
-  it("restricts all-season insight queries to numbered non-planning wars", async () => {
+  it("loads all-season insights across alliances from numbered non-planning wars", async () => {
     prismaFake.war.findMany.mockResolvedValueOnce([{ season: 38 }]);
     prismaFake.warFight.findMany.mockResolvedValueOnce([]);
 
     await getPlayerWarInsights({
       playerId: "player-1",
-      allianceId: "alliance-1",
       scope: { type: "all" },
     });
 
@@ -198,13 +224,13 @@ describe("player war insights", () => {
       where: {
         playerId: "player-1",
         war: {
-          allianceId: "alliance-1",
           status: { not: "PLANNING" },
           warNumber: { not: null },
           season: { not: 0 },
         },
       },
     }));
+    expect(prismaFake.warFight.findMany.mock.calls[0][0].where.war).not.toHaveProperty("allianceId");
   });
 
   it("adds a season constraint for season-scoped insight queries", async () => {
@@ -213,7 +239,6 @@ describe("player war insights", () => {
 
     await getPlayerWarInsights({
       playerId: "player-1",
-      allianceId: "alliance-1",
       scope: { type: "season", season: 38 },
     });
 

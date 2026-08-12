@@ -21,6 +21,7 @@ import { isPlayerSupporter } from "@/lib/support-status";
 import { canManageAllianceMembers } from "@/lib/alliance-permissions";
 import { InvitePlayerButton } from "./invite-player-button";
 import {
+    canViewPlayerWarInsights,
     getAvailablePlayerWarInsightSeasons,
     getPlayerWarInsights,
     normalizePlayerWarInsightScope,
@@ -80,20 +81,15 @@ export default async function PlayerProfilePage({ params, searchParams }: Player
         canManageAllianceMembers(currentUser, currentUser.isBotAdmin)
     );
 
-    const canViewWarInsights = Boolean(
-        currentUser?.isBotAdmin ||
-        (
-            currentUser?.allianceId &&
-            player.allianceId &&
-            currentUser.allianceId === player.allianceId
-        )
-    );
+    const canViewWarInsights = canViewPlayerWarInsights({
+        viewer: currentUser,
+        target: player,
+    });
 
-    const warInsightsPromise = canViewWarInsights && player.allianceId
+    const warInsightsPromise = canViewWarInsights
         ? (async () => {
             const availableSeasons = await getAvailablePlayerWarInsightSeasons({
                 playerId: id,
-                allianceId: player.allianceId!,
             });
 
             if (availableSeasons.length === 0) return null;
@@ -101,7 +97,6 @@ export default async function PlayerProfilePage({ params, searchParams }: Player
             const scope = normalizePlayerWarInsightScope(resolvedSearchParams.warSeason, availableSeasons);
             return getPlayerWarInsights({
                 playerId: id,
-                allianceId: player.allianceId!,
                 scope,
             });
         })()

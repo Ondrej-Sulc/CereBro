@@ -53,6 +53,17 @@ export interface PlayerWarInsights {
   topAttackers: PlayerWarAttackerInsight[];
 }
 
+interface PlayerWarInsightViewer {
+  discordId: string;
+  allianceId: string | null;
+  isBotAdmin: boolean;
+}
+
+interface PlayerWarInsightTarget {
+  discordId: string;
+  allianceId: string | null;
+}
+
 interface RawPlayerWarInsightFight {
   warId: string;
   battlegroup: number;
@@ -107,16 +118,31 @@ export function normalizePlayerWarInsightScope(
   return { type: "season", season };
 }
 
+export function canViewPlayerWarInsights(input: {
+  viewer: PlayerWarInsightViewer | null;
+  target: PlayerWarInsightTarget;
+}): boolean {
+  const { viewer, target } = input;
+  if (!viewer) return false;
+
+  const ownsProfile = viewer.discordId === target.discordId;
+  const sharesCurrentAlliance = Boolean(
+    viewer.allianceId &&
+    target.allianceId &&
+    viewer.allianceId === target.allianceId,
+  );
+
+  return viewer.isBotAdmin || ownsProfile || sharesCurrentAlliance;
+}
+
 export async function getAvailablePlayerWarInsightSeasons(input: {
   playerId: string;
-  allianceId: string;
 }): Promise<number[]> {
-  const { playerId, allianceId } = input;
+  const { playerId } = input;
 
-  return getFromCache(`player-war-insight-seasons-${playerId}-${allianceId}`, PLAYER_WAR_INSIGHTS_TTL_SECONDS, async () => {
+  return getFromCache(`player-war-insight-seasons-all-alliances-${playerId}`, PLAYER_WAR_INSIGHTS_TTL_SECONDS, async () => {
     const seasons = await prisma.war.findMany({
       where: {
-        allianceId,
         status: { not: "PLANNING" },
         warNumber: { not: null },
         season: { not: 0 },
@@ -133,20 +159,18 @@ export async function getAvailablePlayerWarInsightSeasons(input: {
 
 export async function getPlayerWarInsights(input: {
   playerId: string;
-  allianceId: string;
   scope: PlayerWarInsightScope;
 }): Promise<PlayerWarInsights> {
-  const { playerId, allianceId, scope } = input;
+  const { playerId, scope } = input;
   const scopeKey = scope.type === "all" ? "all" : `season-${scope.season}`;
 
-  return getFromCache(`player-war-insights-${playerId}-${allianceId}-${scopeKey}`, PLAYER_WAR_INSIGHTS_TTL_SECONDS, async () => {
+  return getFromCache(`player-war-insights-all-alliances-${playerId}-${scopeKey}`, PLAYER_WAR_INSIGHTS_TTL_SECONDS, async () => {
     const [availableSeasons, fights] = await Promise.all([
-      getAvailablePlayerWarInsightSeasons({ playerId, allianceId }),
+      getAvailablePlayerWarInsightSeasons({ playerId }),
       prisma.warFight.findMany({
         where: {
           playerId,
           war: {
-            allianceId,
             status: { not: "PLANNING" },
             warNumber: { not: null },
             season: scope.type === "season" ? scope.season : { not: 0 },
