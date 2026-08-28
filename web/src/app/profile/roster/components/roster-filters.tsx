@@ -32,6 +32,8 @@ interface RosterFiltersProps {
     onFilterStarsChange: (val: number[]) => void;
     filterRanks: number[];
     onFilterRanksChange: (val: number[]) => void;
+    filterAscensionLevels: number[];
+    onFilterAscensionLevelsChange: (val: number[]) => void;
     filterClasses: ChampionClass[];
     onFilterClassesChange: (classes: ChampionClass[]) => void;
     tagFilter: string[];
@@ -60,6 +62,7 @@ interface RosterFiltersProps {
     onShowAttackReservationControlsChange?: (value: boolean) => void;
     showOwnershipFilter?: boolean;
     showRankFilter?: boolean;
+    showAscensionFilter?: boolean;
     showPrestigeSort?: boolean;
 }
 
@@ -67,6 +70,7 @@ export function RosterFilters({
     search, onSearchChange, viewMode, onViewModeChange, onAddClick,
     showUnowned, onShowUnownedChange,
     sortBy, onSortByChange, sortDirection, onSortDirectionChange, filterStars, onFilterStarsChange, filterRanks, onFilterRanksChange,
+    filterAscensionLevels, onFilterAscensionLevelsChange,
     countLabel,
     filterClasses, onFilterClassesChange, tagFilter, onTagFilterChange, tagLogic, onTagLogicChange,
     abilityCategoryFilter, onAbilityCategoryFilterChange, abilityCategoryLogic, onAbilityCategoryLogicChange,
@@ -79,6 +83,7 @@ export function RosterFilters({
     onShowAttackReservationControlsChange,
     showOwnershipFilter = true,
     showRankFilter = true,
+    showAscensionFilter = true,
     showPrestigeSort = true,
 }: RosterFiltersProps) {
     const activeFilters = useMemo(() => {
@@ -95,6 +100,12 @@ export function RosterFilters({
         if (showRankFilter) {
             filterRanks.forEach(rank => {
                 filters.push({ label: `R${rank}`, type: 'Rank', onRemove: () => onFilterRanksChange(filterRanks.filter(r => r !== rank)) });
+            });
+        }
+
+        if (showAscensionFilter) {
+            filterAscensionLevels.forEach(level => {
+                filters.push({ label: `A${level}`, type: 'Ascension', onRemove: () => onFilterAscensionLevelsChange(filterAscensionLevels.filter(a => a !== level)) });
             });
         }
 
@@ -123,7 +134,7 @@ export function RosterFilters({
         }
 
         return filters;
-    }, [search, filterStars, filterRanks, filterClasses, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter, showUnowned, showOwnershipFilter, showRankFilter, onSearchChange, onFilterStarsChange, onFilterRanksChange, onFilterClassesChange, onTagFilterChange, onAbilityCategoryFilterChange, onAbilityFilterChange, onImmunityFilterChange, onShowUnownedChange]);
+    }, [search, filterStars, filterRanks, filterAscensionLevels, filterClasses, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter, showUnowned, showOwnershipFilter, showRankFilter, showAscensionFilter, onSearchChange, onFilterStarsChange, onFilterRanksChange, onFilterAscensionLevelsChange, onFilterClassesChange, onTagFilterChange, onAbilityCategoryFilterChange, onAbilityFilterChange, onImmunityFilterChange, onShowUnownedChange]);
 
     return (
         <Card className="bg-slate-900/50 border-slate-800 p-2.5 z-40 backdrop-blur-md shadow-lg">
@@ -249,6 +260,14 @@ export function RosterFilters({
                                 className="flex-1 sm:flex-initial"
                             />
                         )}
+                        {showAscensionFilter && (
+                            <MultiFilterGroup
+                                options={[0, 1, 2, 3, 4, 5].map(level => ({ value: String(level), label: `A${level}` }))}
+                                values={filterAscensionLevels.map(String)}
+                                onChange={(vals) => onFilterAscensionLevelsChange(vals.map(Number))}
+                                className="flex-1 sm:flex-initial"
+                            />
+                        )}
                     </div>
 
                     <div className="w-full sm:w-auto overflow-x-auto no-scrollbar">
@@ -296,6 +315,7 @@ export function RosterFilters({
                                 if (showOwnershipFilter) onShowUnownedChange(true);
                                 onFilterStarsChange([]);
                                 if (showRankFilter) onFilterRanksChange([]);
+                                if (showAscensionFilter) onFilterAscensionLevelsChange([]);
                                 onFilterClassesChange([]);
                                 onTagFilterChange([]);
                                 onAbilityCategoryFilterChange([]);

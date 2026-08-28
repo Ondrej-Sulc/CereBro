@@ -32,6 +32,7 @@ import { PrestigeChartModal } from "./components/modals/prestige-chart-modal";
 import { useDeepMemo } from "@/hooks/use-deep-memo";
 import { switchProfile } from "../actions";
 import { reportClientError } from "@/lib/observability/client";
+import { matchesRosterAscensionFilter } from "./roster-ascension-filter";
 
 function buildRosterQueryParams(params: {
   simulationTargetRank: number;
@@ -194,6 +195,7 @@ export function RosterView({
   const [filterClasses, setFilterClasses] = useState<ChampionClass[]>([]);
   const [filterStars, setFilterStars] = useState<number[]>([]);
   const [filterRanks, setFilterRanks] = useState<number[]>([]);
+  const [filterAscensionLevels, setFilterAscensionLevels] = useState<number[]>([]);
   const [sortBy, setSortBy] = useState<RosterSortField>(enablePrestigeInsights ? "PRESTIGE" : "NAME");
   const [sortDirection, setSortDirection] = useState<SortDirection>(enablePrestigeInsights ? "DESC" : "ASC");
   const [showUnowned, setShowUnowned] = useState(true);
@@ -500,8 +502,9 @@ export function RosterView({
       const matchesClass = filterClasses.length === 0 || filterClasses.includes(item.champion.class);
       const matchesStars = filterStars.length === 0 || item.isUnowned || filterStars.includes(item.stars);
       const matchesRank = filterRanks.length === 0 || item.isUnowned || filterRanks.includes(item.rank);
+      const matchesAscension = matchesRosterAscensionFilter(item, filterAscensionLevels);
 
-      if (!matchesSearch || !matchesClass || !matchesStars || !matchesRank) return false;
+      if (!matchesSearch || !matchesClass || !matchesStars || !matchesRank || !matchesAscension) return false;
 
       // Pre-compute sets once per item for performance
       const abilityEntries = (item.champion.abilities || []).filter(a => a.type === 'ABILITY');
@@ -538,7 +541,7 @@ export function RosterView({
       prestigeMap,
       catalogPrestigeByChampionId,
     }));
-  }, [roster, search, filterClasses, filterStars, filterRanks, sortBy, sortDirection, prestigeMap, catalogPrestigeByChampionId, tagFilter, tagLogic, abilityCategoryFilter, abilityCategoryLogic, abilityFilter, abilityLogic, immunityFilter, immunityLogic, showUnowned, allChampions]);
+  }, [roster, search, filterClasses, filterStars, filterRanks, filterAscensionLevels, sortBy, sortDirection, prestigeMap, catalogPrestigeByChampionId, tagFilter, tagLogic, abilityCategoryFilter, abilityCategoryLogic, abilityFilter, abilityLogic, immunityFilter, immunityLogic, showUnowned, allChampions]);
 
   const visibleChampionCount = filteredRoster.length;
   const totalChampionCount = isChampionsCatalog
@@ -773,6 +776,7 @@ export function RosterView({
             totalChampionCount={totalChampionCount}
             countLabel={countLabel}
             filterRanks={filterRanks} onFilterRanksChange={setFilterRanks} filterClasses={filterClasses} onFilterClassesChange={setFilterClasses}
+            filterAscensionLevels={filterAscensionLevels} onFilterAscensionLevelsChange={setFilterAscensionLevels}
             tagFilter={tagFilter} onTagFilterChange={setTagFilter} tagLogic={tagLogic} onTagLogicChange={setTagLogic}
             abilityCategoryFilter={abilityCategoryFilter} onAbilityCategoryFilterChange={setAbilityCategoryFilter} abilityCategoryLogic={abilityCategoryLogic} onAbilityCategoryLogicChange={setAbilityCategoryLogic}
             abilityFilter={abilityFilter} onAbilityFilterChange={setAbilityFilter} abilityLogic={abilityLogic} onAbilityLogicChange={setAbilityLogic}
@@ -784,6 +788,7 @@ export function RosterView({
             onShowAttackReservationControlsChange={setShowAttackReservationControls}
             showOwnershipFilter={!isChampionsCatalog}
             showRankFilter={!isChampionsCatalog}
+            showAscensionFilter={!isChampionsCatalog}
             showPrestigeSort={true}
           />
 
