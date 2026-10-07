@@ -48,6 +48,7 @@ model Champion {
   abilityTexts                 ChampionAbilityText[]
   abilityCurves                ChampionAbilityCurve[]
   synergyProviderFor           ChampionAbilitySynergy[]
+  gameSynergyMembers           GameSynergyMember[]
   prestigeData                 ChampionPrestige[]
   stats                        ChampionStats[]
   duels                        Duel[]
@@ -139,6 +140,45 @@ model ChampionAbilityCurve {
   minSig     Int?
   maxSig     Int?
   champion   Champion? @relation(fields: [championId], references: [id], onDelete: Cascade)
+}
+
+// Authoritative game snapshot, independent of curated ChampionAbilitySynergy.
+model GameSynergy {
+  id                  String              @id
+  name                String
+  description         String
+  descriptionTemplate String
+  descriptionValue    Float
+  descriptionArgument Float
+  enabled             Boolean
+  unique              Boolean
+  requiredHeroGroups  Boolean
+  targetTags          String[]
+  effectIds           String[]
+  sourceHash          String
+  raw                 Json
+  importedAt          DateTime            @default(now())
+  members             GameSynergyMember[]
+}
+
+enum GameSynergyRole {
+  OWNER
+  REQUIRED
+}
+
+// Only obtainable, known champions are linked for navigation. The full source
+// tier lists, including NPCs and template rarities, remain in GameSynergy.raw.
+model GameSynergyMember {
+  synergyId  String
+  championId Int
+  role       GameSynergyRole
+  tierId     String
+  rarity     Int
+  synergy    GameSynergy     @relation(fields: [synergyId], references: [id], onDelete: Cascade)
+  champion   Champion        @relation(fields: [championId], references: [id], onDelete: Cascade)
+
+  @@id([synergyId, role, tierId])
+  @@index([championId, role, rarity])
 }
 
 model GameGlossaryTerm {

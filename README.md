@@ -46,6 +46,23 @@ Handles high-frequency user interactions, notifications, and quick data lookups.
 - **AI Integration:** OpenRouter (LLMs) used for drafting glossary terms and parsing complex abilities.
 - **Analytics:** Deep integration with **PostHog** for feature usage tracking and error analysis.
 
+### Importing game synergies
+
+Champion pages include a Synergies tab filtered by the selected star level, with partner links, game descriptions, glossary tooltips, and separate sections for owned and incoming synergies.
+
+Before deploying code that reads synergies, apply the database migrations with `pnpm exec prisma migrate deploy` and generate the client with `pnpm prisma:generate`. Refresh the champion catalog first so its game IDs and obtainable rarities are current.
+
+Use the resolved `mcoc_synergies.json` snapshot produced by `export_mcoc_synergies.py`. Admins with `MANAGE_CHAMPIONS` can preview and import it under **Admin > Champions > Bulk Imports > Game Synergies**, or run:
+
+```sh
+pnpm import:mcoc-synergies --file=/path/to/mcoc_synergies.json
+pnpm import:mcoc-synergies --file=/path/to/mcoc_synergies.json --write
+```
+
+The first command previews the import. Review unmatched tiers before writing. Each write atomically replaces the entire game synergy snapshot; curated champion ability links are preserved. Original records, numeric arguments, effect IDs, and target tags remain available in the database. Only playable champions at obtainable rarities are linked for display. Grouped partner requirements currently block import because their activation rules are not implemented.
+
+The admin import invalidates champion page caches immediately. After a CLI import, allow the one-hour champion cache to expire; use the admin import when immediate page refresh is needed.
+
 ---
 
 ## 🚀 Key Feature Modules

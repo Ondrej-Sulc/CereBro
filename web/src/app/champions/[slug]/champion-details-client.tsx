@@ -26,6 +26,8 @@ import {
 import { cn } from "@/lib/utils"
 import { ChampionImages } from "@/types/champion"
 import { getExternalDuelSourceCredits, prepareDuelTargets } from "./duel-targets"
+import { buildChampionSynergyView, type ChampionSynergy } from "@/lib/champion-synergies"
+import { ChampionSynergiesPanel } from "./champion-synergies-panel"
 
 const CurvePanel = dynamic(
   () => import("./champion-curve-panel").then(module => module.CurvePanel),
@@ -47,6 +49,7 @@ export type ChampionDetailsPayload = {
   gameId: string | null
   class: ChampionClass
   images: unknown
+  gameSynergies: ChampionSynergy[]
   tags: Array<{ id: number; name: string; category: string | null }>
   abilities: Array<{
     id: number
@@ -166,6 +169,7 @@ export function ChampionDetailsClient({
   const effectiveAscensionLevel = selectedStat?.rarity === 7 ? ascensionLevel : 0
 
   const glossaryById = useMemo(() => new Map(glossaryTerms.map(term => [term.id, term])), [glossaryTerms])
+  const synergyView = useMemo(() => buildChampionSynergyView(champion.gameSynergies, champion.id, selectedRarity ? Number(selectedRarity) : null), [champion.gameSynergies, champion.id, selectedRarity])
   const immunities = champion.abilities.filter(link => link.type === "IMMUNITY")
   const abilities = champion.abilities.filter(link => link.type === "ABILITY")
   const selectedRarityLabel = selectedStat?.rarityLabel ?? (selectedRarity ? `${selectedRarity}-star` : "No stats")
@@ -362,12 +366,15 @@ export function ChampionDetailsClient({
 
             <div className="min-w-0">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
-                <TabsList className="grid w-full grid-cols-2 bg-slate-950/80 border border-slate-800 p-1 h-11 rounded-lg">
+                <TabsList className="grid w-full grid-cols-3 bg-slate-950/80 border border-slate-800 p-1 h-11 rounded-lg">
                   <TabsTrigger value="overview" className="rounded-md font-semibold data-[state=active]:bg-slate-800 data-[state=active]:text-white">
                     Overview
                   </TabsTrigger>
                   <TabsTrigger value="descriptions" className="rounded-md font-semibold data-[state=active]:bg-slate-800 data-[state=active]:text-white">
-                    Full Descriptions
+                    <span className="sm:hidden">Descriptions</span><span className="hidden sm:inline">Full Descriptions</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="synergies" className="rounded-md font-semibold data-[state=active]:bg-slate-800 data-[state=active]:text-white">
+                    Synergies
                   </TabsTrigger>
                 </TabsList>
 
@@ -404,6 +411,9 @@ export function ChampionDetailsClient({
                     ))}
                   </TabsContent>
                 )}
+                <TabsContent value="synergies" className="mt-0 outline-none">
+                  <ChampionSynergiesPanel {...synergyView} rarity={selectedRarity ? Number(selectedRarity) : null} glossaryById={glossaryById} />
+                </TabsContent>
               </Tabs>
             </div>
           </section>

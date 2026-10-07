@@ -18,6 +18,16 @@ Champion Ability Text is the domain rule set for validating imported game abilit
 
 It owns template shape, curve matching, static value resolution, game-stat value conversion, unresolved placeholder reporting, and chart-ready ability curve points used by Champion Details.
 
+## Game Synergies
+
+Game Synergies are the game's imported team bonus definitions. A complete snapshot preserves the source synergy ID, localized description and numeric values, stacking flag, targeting tags, effect IDs, and original rules.
+
+An Owner is a champion at a specific obtainable star level that brings a synergy. A Required Partner is a champion at a specific obtainable star level that can activate it. For the supported ungrouped rules, any one listed required partner is sufficient. Targeting tags describe who receives effects and are distinct from activation partners.
+
+Game Synergy Members link these roles to collectible champions for navigation and rarity filtering. NPC definitions and unavailable template rarities remain in the raw snapshot without player-facing links. Champion Details shows outgoing synergies and incoming synergies from teammates for the selected rarity; this is a catalog, not a team activation simulator.
+
+Game Synergies are independent of manually curated Champion Ability Synergy links. Importing a validated full snapshot atomically replaces only the game synergy tables. Grouped activation rules are preserved in the source format but blocked from import until their semantics are supported.
+
 ## Quest Planning
 
 Quest Planning is the domain rule set for turning quest plans, route choices, fight restrictions, player rosters, selected counters, prefight champions, synergy champions, and revive counts into a player's saved quest plan.

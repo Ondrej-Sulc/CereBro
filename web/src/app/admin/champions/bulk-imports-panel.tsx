@@ -1,6 +1,7 @@
 "use client"
 
-import { BookOpenText, Database, Gauge, Sparkles, Tags } from "lucide-react"
+import { BookOpenText, Database, Gauge, Sparkles, Tags, Users } from "lucide-react"
+import { ImportSynergiesButton } from "./import-synergies-button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { ImportGameStatsButton } from "./import-game-stats-button"
 import { SyncTagsButton } from "./sync-tags-button"
@@ -13,6 +14,13 @@ import { ImportGlossaryIconsButton } from "./import-glossary-icons-button"
 export function BulkImportsPanel() {
   return (
     <div className="grid gap-4 lg:grid-cols-2">
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-base"><Users className="h-4 w-4" />Game Synergies</CardTitle>
+          <CardDescription>Upload mcoc_synergies.json to refresh descriptions, partners, rarity requirements, and stacking rules.</CardDescription>
+        </CardHeader>
+        <CardContent><ImportSynergiesButton /></CardContent>
+      </Card>
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-base">

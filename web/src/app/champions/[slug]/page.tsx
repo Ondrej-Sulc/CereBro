@@ -1,3 +1,4 @@
+import { collectSynergyGlossaryIds } from "@/lib/champion-synergies"
 import { notFound } from "next/navigation"
 import { Metadata } from "next"
 import { AbilityLinkType, DuelStatus } from "@prisma/client"
@@ -188,6 +189,22 @@ const getMaxStatsByTier = unstable_cache(
   { revalidate: 3600, tags: [CHAMPION_DETAILS_SHARED_TAG] }
 )
 
+const getChampionSynergies = unstable_cache(
+  async (championId: number) => prisma.gameSynergy.findMany({
+    where: { enabled: true, members: { some: { championId } } },
+    select: {
+      id: true, name: true, description: true, enabled: true, unique: true, requiredHeroGroups: true,
+      members: { select: {
+        role: true, rarity: true,
+        champion: { select: { id: true, name: true, slug: true, images: true } },
+      } },
+    },
+    orderBy: [{ name: "asc" }, { id: "asc" }],
+  }),
+  ["champion-game-synergies"],
+  { revalidate: 3600, tags: [CHAMPION_DETAILS_TAG] }
+)
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
   const champion = await getChampionMetadata(slug)
@@ -209,13 +226,15 @@ export default async function ChampionDetailsPage({ params }: PageProps) {
 
   if (!champion) notFound()
 
-  const glossaryIds = collectChampionGlossaryIds(champion)
+  const gameSynergies = await getChampionSynergies(champion.id)
+  const glossaryIds = [...new Set([...collectChampionGlossaryIds(champion), ...collectSynergyGlossaryIds(gameSynergies)])].sort()
   const glossaryTerms = glossaryIds.length ? await getGlossaryTerms(glossaryIds) : []
 
   return (
     <ChampionDetailsClient
       champion={{
         ...champion,
+        gameSynergies,
         abilities: champion.abilities.map(link => ({
           ...link,
           type: link.type === AbilityLinkType.IMMUNITY ? "IMMUNITY" : "ABILITY",
