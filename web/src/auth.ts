@@ -33,6 +33,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   providers: [
     Discord({
+      // Validate Discord's callback `iss` against its published issuer.
+      // Without this, Auth.js falls back to https://authjs.dev and rejects it.
+      issuer: "https://discord.com",
       clientId: process.env.DISCORD_CLIENT_ID,
       clientSecret: process.env.DISCORD_CLIENT_SECRET,
     }),
