@@ -117,7 +117,6 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
   type DraftStep = 'idle' | 'loading' | 'review' | 'applying' | 'confirming'
   const [draftStep, setDraftStep] = useState<DraftStep>('idle')
   const [draft, setDraft] = useState<AbilityDraft | null>(null)
-  const [draftInitialPrompt, setDraftInitialPrompt] = useState<string>("")
   const [draftSuggestions, setDraftSuggestions] = useState<string>("")
   const [showSuggestForm, setShowSuggestForm] = useState(false)
   const [draftModel, setDraftModel] = useState("google/gemini-2.5-pro")
@@ -147,7 +146,6 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
     setFullAbilitiesJson(champion.fullAbilities ? JSON.stringify(champion.fullAbilities, null, 2) : "{}")
     setDraftStep('idle')
     setDraft(null)
-    setDraftInitialPrompt("")
     setDraftSuggestions("")
     setShowSuggestForm(false)
     setNewSource("")
@@ -333,7 +331,6 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
     try {
       const result = await draftChampionAbilities(champion.id, draftModel)
       setDraft(result.draft)
-      setDraftInitialPrompt(result.initialUserPrompt)
       setDraftStep('review')
     } catch (error) {
       toast({ title: "AI draft failed", description: error instanceof Error ? error.message : "Unknown error", variant: "destructive" })
@@ -345,7 +342,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
     if (!draft || !draftSuggestions.trim()) return
     setDraftStep('applying')
     try {
-      const newDraft = await redraftChampionAbilities(draftInitialPrompt, draft, draftSuggestions, draftModel)
+      const newDraft = await redraftChampionAbilities(champion.id, draft, draftSuggestions, draftModel)
       setDraft(newDraft)
       setDraftSuggestions("")
       setShowSuggestForm(false)
@@ -690,14 +687,16 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                 </div>
 
                                 <div className="p-4 space-y-4 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700">
+                                    <p className="text-xs text-slate-400">Includes innate and synergy effects. Check each effect belongs to this champion. Synergy entries show this champion’s star levels and the teammates needed to activate them.</p>
                                     {(draft.abilities?.length ?? 0) > 0 && (
                                         <div>
                                             <p className="text-[10px] font-bold uppercase tracking-widest text-amber-500/80 mb-2">Abilities ({draft.abilities!.length})</p>
                                             <div className="flex flex-wrap gap-1.5">
                                                 {draft.abilities!.map((item, i) => (
-                                                    <div key={i} className="flex items-baseline gap-1 text-xs bg-slate-800/60 border border-slate-700/50 rounded-lg px-2.5 py-1.5">
+                                                    <div key={i} className="flex flex-wrap items-baseline gap-1 text-xs bg-slate-800/60 border border-slate-700/50 rounded-lg px-2.5 py-1.5">
                                                         <span className="font-semibold text-amber-400">{item.name}</span>
                                                         {item.source && <span className="text-slate-400">— {item.source}</span>}
+                                                        {item.synergy && <span className="basis-full text-violet-300">{item.synergy.requirement}</span>}
                                                     </div>
                                                 ))}
                                             </div>
@@ -709,9 +708,10 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                             <p className="text-[10px] font-bold uppercase tracking-widest text-sky-500/80 mb-2">Immunities ({draft.immunities!.length})</p>
                                             <div className="flex flex-wrap gap-1.5">
                                                 {draft.immunities!.map((item, i) => (
-                                                    <div key={i} className="flex items-baseline gap-1 text-xs bg-slate-800/60 border border-slate-700/50 rounded-lg px-2.5 py-1.5">
+                                                    <div key={i} className="flex flex-wrap items-baseline gap-1 text-xs bg-slate-800/60 border border-slate-700/50 rounded-lg px-2.5 py-1.5">
                                                         <span className="font-semibold text-sky-400">{item.name}</span>
                                                         {item.source && <span className="text-slate-400">— {item.source}</span>}
+                                                        {item.synergy && <span className="basis-full text-violet-300">{item.synergy.requirement}</span>}
                                                     </div>
                                                 ))}
                                             </div>
