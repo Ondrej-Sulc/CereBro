@@ -82,10 +82,23 @@ export function parseMcocGameDescriptionsJson(text: string): GameDescriptionsFil
 
 export function parseMcocGameGlossaryJson(text: string): GameGlossaryFile {
   const data = JSON.parse(text) as GameGlossaryFile;
+  validateGlossaryFile(data);
+  return data;
+}
+
+function validateGlossaryFile(data: GameGlossaryFile) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
     throw new Error('Invalid glossary file: expected object keyed by glossary ID');
   }
-  return data;
+  for (const [id, entry] of Object.entries(data)) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)
+      || 'base_id' in entry || 'tiers' in entry || 'base_abilities' in entry
+      || (entry.name !== undefined && typeof entry.name !== 'string')
+      || (entry.description !== undefined && typeof entry.description !== 'string')
+      || (!('name' in entry) && !('description' in entry) && !('hud_id' in entry))) {
+      throw new Error(`Invalid glossary entry ${id}: expected an effect definition, not champion data`);
+    }
+  }
 }
 
 function pushText(nodes: GameDescriptionTemplateNode[], value: string) {
@@ -366,6 +379,7 @@ export async function importMcocGameDescriptions(
   glossary: GameGlossaryFile,
   options: { write?: boolean } = {}
 ): Promise<McocGameDescriptionsImportReport> {
+  validateGlossaryFile(glossary);
   const dbChampions = await prisma.champion.findMany({
     select: { id: true, name: true, shortName: true, gameId: true },
   });
@@ -401,8 +415,9 @@ export async function importMcocGameDescriptions(
     await prisma.gameGlossaryTerm.upsert({
       where: { id },
       update: {
-        name: entry.name ?? '',
-        description: entry.description || null,
+        // An unresolved reference must not erase previously verified text.
+        ...(entry.name?.trim() ? { name: entry.name } : {}),
+        ...(entry.description?.trim() ? { description: entry.description } : {}),
         category: entry.category ?? entry.category_name ?? null,
         raw: entry as Prisma.InputJsonValue,
       },

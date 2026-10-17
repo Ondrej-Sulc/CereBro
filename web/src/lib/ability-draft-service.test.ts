@@ -37,6 +37,15 @@ function router(draft: unknown, finishReason = 'stop') {
 }
 
 describe('ability draft generation and confirmation', () => {
+  it('recognizes legacy blank sources when saving an unconditional effect', async () => {
+    const { db, boundary } = database();
+    boundary.championAbilityLink.findFirst.mockResolvedValue({ id: 99 });
+    await saveAbilityDraft(db, 2, { immunities: [{ name: 'Bleed', source: '' }] });
+    expect(boundary.championAbilityLink.findFirst).toHaveBeenCalledWith({ where: {
+      championId: 2, abilityId: 5, type: 'IMMUNITY', OR: [{ source: null }, { source: '' }],
+    } });
+    expect(boundary.championAbilityLink.create).not.toHaveBeenCalled();
+  });
   it('sends current game synergy evidence on both generation and revisions', async () => {
     const { db } = database();
     const ai = router({ abilities: [innate, synergy], immunities: [] });

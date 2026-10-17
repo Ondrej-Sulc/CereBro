@@ -68,7 +68,10 @@ export async function saveAbilityDraft(db: PrismaClient, championId: number, inp
         where: { name: item.name }, update: {}, create: { name: item.name, description: '' },
       });
       const data = { championId, abilityId: ability.id, type: item.type, source: abilityDraftSource(item) || null };
-      const existing = await tx.championAbilityLink.findFirst({ where: data });
+      const existing = await tx.championAbilityLink.findFirst({ where: {
+        championId, abilityId: ability.id, type: item.type,
+        ...(data.source ? { source: data.source } : { OR: [{ source: null }, { source: '' }] }),
+      } });
       const link = existing ?? await tx.championAbilityLink.create({ data });
       if (item.synergy) {
         await tx.championAbilitySynergy.createMany({
