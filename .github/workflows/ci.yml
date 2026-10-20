@@ -43,6 +43,9 @@ jobs:
       - name: Generate Prisma client
         run: pnpm run prisma:generate
 
+      - name: Verify portable reviewed summary hashes
+        run: pnpm exec vitest run src/domain/champion-overview-summary.test.ts --maxWorkers=1
+
       - name: Build Bot (src)
         run: pnpm run build-only
 

@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { artifactHash } from './champion-effect-enrichment';
 import { overviewSourceHash, validateOverviewSummaries, getCurrentOverviewSummary } from './champion-overview-summary';
 
@@ -11,6 +11,18 @@ function draft(summary = 'Heavy Attacks grant Fury.') {
     sourceHash: overviewSourceHash(source), summary, evidence: [{ documentId: 'text:1', quote: documents[0].text }], retainedValues: [] }] };
 }
 describe('champion overview summaries', () => {
+  it('keeps the reviewed V1 source hash when the host uses English collation', () => {
+    // Literal from the existing reviewed format, authored on a Czech-locale host.
+    const sourceHash = '38683200c3cc24e10a81e407af1ff593993379a3ca2209958f5b7b8ef24ba719';
+    const english = new Intl.Collator('en-US');
+    const hostCollation = vi.spyOn(String.prototype, 'localeCompare')
+      .mockImplementation(function (this: string, other: string) { return english.compare(this, other); });
+    try {
+      expect(overviewSourceHash(source)).toBe(sourceHash);
+      expect(getCurrentOverviewSummary(source, { text: 'Reviewed copy.', sourceHash })).toBe('Reviewed copy.');
+      expect(getCurrentOverviewSummary({ ...source, effectDirection: 'INFLICT' }, { text: 'Reviewed copy.', sourceHash })).toBeNull();
+    } finally { hostCollation.mockRestore(); }
+  });
   it('requires complete source coverage and an independent review bound to the exact draft', () => {
     const proposal = draft();
     const review = { schemaVersion: 1, reviewer: 'reviewer', snapshotHash: artifactHash(snapshot), draftHash: artifactHash(proposal), decision: 'approve', findings: [] };

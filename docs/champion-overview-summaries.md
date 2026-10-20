@@ -4,6 +4,11 @@
 
 The summary source hash binds link/champion/ability identity, canonical name, detailed source, form, direction and sorted required partner IDs. Champion Details serves the summary only when this hash still matches. Summary rows are fetched separately from the long-lived champion cache so new reviewed copy appears without waiting for cache expiry.
 
+The V1 source-hash serializer uses an explicit field order matching the original
+reviewed format, rather than the host's locale-dependent object-key sort. This
+keeps the same hashes on Windows and Linux. Existing stored hashes, review
+receipts and the generic historical artifact serializer remain unchanged.
+
 The portable deployment migration and source-bound long-summary allowances are
 documented in [champion-data-release.md](champion-data-release.md). The standard
 limit remains 360 characters; exactly 68 user-authorized source identities permit
