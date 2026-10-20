@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma"
 import { getFromCache } from "@/lib/cache"
 import logger from "@/lib/logger"
 import { syncDiscordProfileOnSignIn } from "@/lib/discord-profile-sync"
+import { getSafeAuthErrorDetails } from "@/lib/observability/auth-errors"
 
 if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
   logger.error("Missing Discord environment variables: DISCORD_CLIENT_ID and DISCORD_CLIENT_SECRET required for Auth.js");
@@ -15,13 +16,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   logger: {
     error(error) {
-      const authError = error as { type?: string; cause?: unknown };
+      const details = getSafeAuthErrorDetails(error);
       // InvalidCheck (PKCE/state mismatch) is expected: abandoned flows, multiple tabs, browser cookie restrictions.
       // Log at warn to avoid noise; everything else is a real error.
-      if (authError?.type === "InvalidCheck") {
-        logger.warn({ errorType: authError.type, cause: authError.cause }, "Auth.js InvalidCheck — user likely abandoned or retried login flow");
+      if (details.errorType === "InvalidCheck") {
+        logger.warn(details, "Auth.js sign-in check failed");
       } else {
-        logger.error({ error, cause: authError.cause }, "Auth.js error");
+        logger.error(details, "Auth.js error");
       }
     },
     warn(code) {
@@ -30,6 +31,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   },
   pages: {
     error: "/auth/error",
+    // OAuthAccountNotLinked is a SignInError; pages.error does not receive it.
+    signIn: "/auth/signin",
   },
   providers: [
     Discord({
@@ -58,7 +61,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
         return true;
       } catch (error) {
-        logger.error({ error, userId: user.id }, "Error in signIn callback");
+        logger.error({ ...getSafeAuthErrorDetails(error), userId: user.id }, "Error in signIn callback");
         return false;
       }
     },
@@ -96,7 +99,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
                 }
             }
           } catch (error) {
-              logger.error({ error, userId: user.id }, "Error in session callback");
+              logger.error({ ...getSafeAuthErrorDetails(error), userId: user.id }, "Error in session callback");
           }
         }
         return session;

@@ -1,6 +1,7 @@
 import { handlers } from "@/auth";
 import logger, { isAbortedResponse } from "@/lib/logger";
 import { withRouteContext } from "@/lib/with-request-context";
+import { getSafeAuthErrorDetails } from "@/lib/observability/auth-errors";
 
 const { GET: _GET, POST: _POST } = handlers;
 
@@ -15,7 +16,9 @@ const wrapHandler = <Req extends Request, Args extends unknown[], R>(
   try {
     return await handler(req, ...args);
   } catch (error: unknown) {
-    const authError = error as { message?: unknown; digest?: unknown; stack?: unknown; name?: unknown };
+    const authError = typeof error === "object" && error !== null
+      ? error as { message?: unknown; digest?: unknown }
+      : {};
     if (
       (typeof authError.message === "string" && authError.message.includes('next_redirect')) ||
       (typeof authError.digest === "string" && authError.digest.startsWith('NEXT_REDIRECT'))
@@ -26,21 +29,19 @@ const wrapHandler = <Req extends Request, Args extends unknown[], R>(
     if (isAbortedResponse(error)) {
       // For aborted responses (common during redirects), we log at trace/debug level
       // and return a 204 No Content to satisfy the request.
-      logger.trace({ url: req.url }, "Auth handler response aborted (expected during redirect)");
+      logger.trace({ path: new URL(req.url).pathname }, "Auth handler response aborted (expected during redirect)");
       return new Response(null, { status: 204 });
     }
 
     // Log the error in JSON format before re-throwing
-    logger.error({ 
-      error: {
-        message: authError.message,
-        stack: authError.stack,
-        name: authError.name,
-      }, 
-      url: req.url 
+    logger.error({
+      ...getSafeAuthErrorDetails(error),
+      path: new URL(req.url).pathname,
     }, "Critical error in Auth handler");
     
-    throw error;
+    // withRouteContext also reports rethrown errors. Keep the raw OAuth error
+    // (including its cause) out of that outer logging/exception boundary.
+    throw new Error("Auth handler failed; see the correlated Auth.js error log.");
   }
 };
 
