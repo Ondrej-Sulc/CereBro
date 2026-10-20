@@ -1,767 +1,409 @@
 "use client"
 
 import Image from "next/image"
-import Link from "next/link"
-import dynamic from "next/dynamic"
-import { useMemo, useState, type CSSProperties, type ReactNode } from "react"
-import { ArrowLeft, BarChart3, BookOpenText, Dumbbell, Gauge, Hash, HeartPulse, Shield, Sparkles, Star, Sword, Target, Zap } from "lucide-react"
-import { ChampionClass } from "@prisma/client"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
-import { Slider } from "@/components/ui/slider"
-import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
+import { useSearchParams } from "next/navigation"
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
+import { BookOpen, Check, ChevronDown, Copy, Crosshair, Layers3, Link2, SlidersHorizontal, Swords, Target, Users } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { TooltipProvider } from "@/components/ui/tooltip"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { getChampionClassColors } from "@/lib/championClassHelper"
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
 import { applyAscensionToStatValue, maxSigForRarity, projectMcocPrestige } from "@/lib/mcoc-prestige"
-import {
-  abilityTextGroupTitle,
-  prepareChampionAbilityTextView,
-  type PreparedChampionAbilityText,
-  type PreparedChampionAbilityTextPanel,
-  type PreparedChampionAbilityTextNode,
-} from "@/lib/champion-ability-text"
+import { prepareChampionAbilityTextView } from "@/lib/champion-ability-text"
+import { buildChampionSynergyView } from "@/lib/champion-synergies"
 import { cn } from "@/lib/utils"
-import { ChampionImages } from "@/types/champion"
+import { championPageSearchParams, readChampionPageState, type ChampionPageState } from "@/lib/champion-page-state"
+import { useToast } from "@/hooks/use-toast"
+import type { ChampionImages } from "@/types/champion"
+import type { ChampionDetailsProps, ChampionDetailsView } from "./champion-details-types"
 import { getExternalDuelSourceCredits, prepareDuelTargets } from "./duel-targets"
-import { buildChampionSynergyView, type ChampionSynergy } from "@/lib/champion-synergies"
 import { ChampionSynergiesPanel } from "./champion-synergies-panel"
+import { BuildReadout, ChampionAbilityReader } from "./champion-ability-reader"
+import { ChampionKitOverview } from "./champion-kit-overview"
+import { ChampionStatsPanel } from "./champion-stats-panel"
+import styles from "./champion-dossier.module.css"
 
-const CurvePanel = dynamic(
-  () => import("./champion-curve-panel").then(module => module.CurvePanel),
-  {
-    ssr: false,
-    loading: () => (
-      <section className="rounded-lg border border-slate-800 bg-slate-950/70 p-4 backdrop-blur">
-        <div className="h-56 animate-pulse rounded-md bg-slate-900/50" />
-      </section>
-    ),
+export type { ChampionDetailsPayload, ChampionStatRow } from "./champion-details-types"
+
+export function ChampionDetailsClient(props: ChampionDetailsProps) {
+  const { champion, maxStatsByTier } = props
+  const searchParams = useSearchParams()
+  const stats = useMemo(() => champion.stats.filter(row => row.rarity), [champion.stats])
+  const pageState = readChampionPageState(searchParams, stats)
+  const rankByRarity = useRef<Record<string, string>>({})
+  const updatePageState = (patch: Partial<ChampionPageState>, push = false) => {
+    const url = new URL(window.location.href)
+    const current = readChampionPageState(url.searchParams, stats)
+    const next = readChampionPageState(championPageSearchParams(url.search, { ...current, ...patch }), stats)
+    url.search = championPageSearchParams(url.search, next).toString()
+    const href = `${url.pathname}${url.search}${url.hash}`
+    if (push) window.history.pushState(null, "", href)
+    else window.history.replaceState(null, "", href)
   }
-)
-
-export type ChampionDetailsPayload = {
-  id: number
-  name: string
-  shortName: string
-  slug: string | null
-  gameId: string | null
-  class: ChampionClass
-  images: unknown
-  gameSynergies: ChampionSynergy[]
-  tags: Array<{ id: number; name: string; category: string | null }>
-  abilities: Array<{
-    id: number
-    type: "ABILITY" | "IMMUNITY"
-    source: string | null
-    ability: { name: string; categories: Array<{ name: string }>; iconUrl?: string | null; gameGlossaryTermId?: string | null }
-    synergyChampions: Array<{ champion: { name: string; slug: string | null; images: unknown } }>
-  }>
-  abilityTexts: Array<{
-    id: number
-    group: string
-    title: string | null
-    sortOrder: number
-    template: unknown
-  }>
-  abilityCurves: Array<{
-    id: number
-    curveId: string
-    kind: string
-    formula: string
-    params: unknown
-    minSig: number | null
-    maxSig: number | null
-  }>
-  stats: ChampionStatRow[]
-  prestigeData: Array<{
-    id: number
-    rarity: number
-    rank: number
-    sig: number
-    prestige: number
-  }>
-  duels: Array<{
-    id: number
-    playerName: string
-    rank: string | null
-    status: "ACTIVE" | "OUTDATED"
-    source: "USER_SUGGESTION" | "GUIA_MTC" | "COCPIT" | "MCOCHUB"
-    updatedAt: Date | string
-  }>
-}
-
-export type ChampionStatRow = {
-  id: number
-  tierId: string
-  rarity: number | null
-  rarityLabel: string | null
-  rank: number
-  level: number | null
-  challengeRating: number
-  health: number | null
-  attack: number | null
-  healthRating: number | null
-  attackRating: number | null
-  prestige: number | null
-  armorRating: number | null
-  armorPenetration: number | null
-  criticalRating: number | null
-  criticalResistance: number | null
-  criticalDamageRating: number | null
-  blockProficiency: number | null
-  blockPenetration: number | null
-  specialDamageMultiplier: number | null
-  energyResistance: number | null
-  physicalResistance: number | null
-  baseAbilityIds: string[]
-  sigAbilityIds: string[]
-}
-
-type GlossaryTerm = {
-  id: string
-  name: string
-  description: string | null
-  category: string | null
-  iconUrl: string | null
-  raw: unknown
-}
-
-type GroupedAbilityLink = {
-  name: string
-  iconUrl?: string | null
-  gameGlossaryTermId?: string | null
-  sources: Array<{
-    label: string
-    synergyChampions: Array<{ name: string; slug: string | null; images: unknown }>
-  }>
-}
-
-export function ChampionDetailsClient({
-  champion,
-  glossaryTerms,
-  maxStatsByTier,
-}: {
-  champion: ChampionDetailsPayload
-  glossaryTerms: GlossaryTerm[]
-  maxStatsByTier: Record<string, Record<string, number | null>>
-}) {
-  const classColors = getChampionClassColors(champion.class)
-  const heroUrl = getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "full", "hero")
-  const portraitUrl = getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "full")
-  const secondaryUrl = getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "full", "secondary")
-  const stats = champion.stats.filter(row => row.rarity)
-  const rarityOptions = Array.from(new Set(stats.map(row => row.rarity).filter(Boolean) as number[])).sort((a, b) => b - a)
-  const [selectedRarity, setSelectedRarity] = useState(String(rarityOptions[0] ?? ""))
-  const rankOptions = stats
+  const rarityOptions = useMemo(
+    () => Array.from(new Set(stats.map(row => row.rarity).filter(Boolean) as number[])).sort((a, b) => b - a),
+    [stats]
+  )
+  const selectedRarity = pageState.rarity
+  const rankOptions = Array.from(new Set(stats
     .filter(row => String(row.rarity) === selectedRarity)
-    .map(row => row.rank)
-    .sort((a, b) => b - a)
-  const [selectedRankByRarity, setSelectedRankByRarity] = useState<Record<string, string>>({})
-  const selectedRank = selectedRankByRarity[selectedRarity] ?? String(rankOptions[0] ?? "")
+    .map(row => row.rank))).sort((a, b) => b - a)
+  const selectedRank = pageState.rank
   const selectedStat = stats.find(row => String(row.rarity) === selectedRarity && String(row.rank) === selectedRank) ?? stats[0]
   const currentMaxSig = maxSigForRarity(selectedStat?.rarity)
-  const [sigLevel, setSigLevel] = useState(200)
-  const [ascensionLevel, setAscensionLevel] = useState(0)
-  const [activeTab, setActiveTab] = useState("overview")
-  const cappedSigLevel = Math.min(sigLevel, currentMaxSig)
-  const effectiveAscensionLevel = selectedStat?.rarity === 7 ? ascensionLevel : 0
-
-  const glossaryById = useMemo(() => new Map(glossaryTerms.map(term => [term.id, term])), [glossaryTerms])
-  const synergyView = useMemo(() => buildChampionSynergyView(champion.gameSynergies, champion.id, selectedRarity ? Number(selectedRarity) : null), [champion.gameSynergies, champion.id, selectedRarity])
-  const immunities = champion.abilities.filter(link => link.type === "IMMUNITY")
-  const abilities = champion.abilities.filter(link => link.type === "ABILITY")
-  const selectedRarityLabel = selectedStat?.rarityLabel ?? (selectedRarity ? `${selectedRarity}-star` : "No stats")
-  const selectedPrestige = projectMcocPrestige({
-    prestigeData: champion.prestigeData,
-    stat: selectedStat,
-    sigLevel: cappedSigLevel,
-    ascensionLevel: effectiveAscensionLevel,
-  })
-  const displayStat = applyAscensionToStat(selectedStat, effectiveAscensionLevel)
-  const abilityTextView = prepareChampionAbilityTextView({
+  const effectiveAscension = pageState.ascension
+  const cappedSig = pageState.sig
+  const tierKey = selectedStat?.rarity && selectedStat.rank ? `${selectedStat.rarity}-${selectedStat.rank}` : ""
+  const accent = getChampionClassColors(champion.class).color
+  const health = applyAscensionToStatValue(selectedStat?.health, selectedStat?.rarity, effectiveAscension)
+  const attack = applyAscensionToStatValue(selectedStat?.attack, selectedStat?.rarity, effectiveAscension)
+  const descriptionView = prepareChampionAbilityTextView({
     records: champion.abilityTexts,
     curves: champion.abilityCurves,
     maxSig: currentMaxSig,
-    sigLevel: cappedSigLevel,
-    stat: displayStat,
+    sigLevel: cappedSig,
+    stat: selectedStat ? { ...selectedStat, health, attack } : undefined,
   })
-
-  const tierKey = selectedStat?.rarity && selectedStat?.rank ? `${selectedStat.rarity}-${selectedStat.rank}` : "";
-  const maxStats = maxStatsByTier[tierKey] || {};
-  const displayMaxStats = {
-    ...maxStats,
-    health: applyAscensionToStatValue(maxStats.health, selectedStat?.rarity, effectiveAscensionLevel),
-    attack: applyAscensionToStatValue(maxStats.attack, selectedStat?.rarity, effectiveAscensionLevel),
+  const view: ChampionDetailsView = {
+    champion,
+    portraitUrl: getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "full"),
+    heroUrl: getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "full", "hero"),
+    secondaryUrl: getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "full", "secondary"),
+    accent,
+    selectedStat,
+    selectedRarity,
+    selectedRank,
+    rarityOptions,
+    rankOptions,
+    sigLevel: cappedSig,
+    maxSig: currentMaxSig,
+    ascensionLevel: effectiveAscension,
+    prestige: projectMcocPrestige({
+      prestigeData: champion.prestigeData,
+      stat: selectedStat,
+      sigLevel: cappedSig,
+      ascensionLevel: effectiveAscension,
+    }),
+    health,
+    attack,
+    maxStats: maxStatsByTier[tierKey] ?? {},
+    abilities: champion.abilities.filter(item => item.type === "ABILITY"),
+    immunities: champion.abilities.filter(item => item.type === "IMMUNITY"),
+    glossaryById: new Map(props.glossaryTerms.map(term => [term.id, term])),
+    descriptionView,
+    setRarity: value => {
+      if (value === selectedRarity) return
+      rankByRarity.current[selectedRarity] = selectedRank
+      const nextStat = stats.find(row => String(row.rarity) === value)
+      updatePageState({ rarity: value, rank: rankByRarity.current[value] ?? "", sig: maxSigForRarity(nextStat?.rarity), ascension: 0 })
+    },
+    setRank: value => updatePageState({ rank: value }),
+    setSigLevel: value => updatePageState({ sig: Math.round(value) }),
+    setAscensionLevel: value => updatePageState({ ascension: value }),
   }
 
-  return (
-    <TooltipProvider>
-      <main className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
-        <div className="pointer-events-none absolute inset-0">
-          <Image src={heroUrl} alt="" fill sizes="100vw" className="object-cover object-center opacity-24 blur-2xl scale-110 saturate-50" />
-          <div className="absolute inset-0 bg-slate-950/70" />
-          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/35 via-slate-950/85 to-slate-950" />
-          <div className="absolute inset-x-0 top-0 h-px opacity-80" style={{ backgroundColor: classColors.color }} />
-          <div className="absolute -right-32 top-12 h-96 w-96 rounded-full blur-[120px] opacity-25" style={{ backgroundColor: classColors.color }} />
-        </div>
-
-        <div className="relative mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6 sm:px-6 lg:px-8">
-          <Link href="/profile/roster" className="inline-flex w-fit items-center gap-2 text-sm text-slate-400 transition-colors hover:text-slate-100">
-            <ArrowLeft className="h-4 w-4" />
-            Back to roster
-          </Link>
-
-          <section className="grid min-h-[420px] gap-6 lg:grid-cols-[minmax(260px,360px)_1fr] lg:items-end">
-            <div className="relative mx-auto aspect-square w-full max-w-[360px] overflow-hidden rounded-lg border border-slate-700/80 bg-slate-950/50 shadow-2xl shadow-black/40">
-              <Image src={heroUrl} alt="" fill sizes="(max-width: 1024px) 80vw, 360px" className="object-cover object-center opacity-25 blur-md scale-110" />
-              <Image src={portraitUrl} alt={champion.name} fill priority sizes="(max-width: 1024px) 80vw, 360px" className="object-cover object-center p-2" />
-              <div className="absolute inset-0 shadow-[inset_0_0_30px_20px_rgba(2,6,23,1)] pointer-events-none" />
-              <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-slate-950/90 to-transparent pointer-events-none" />
-            </div>
-
-            <div className="space-y-5 pb-2">
-              <div className="space-y-2">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge className={cn("border-transparent px-2 py-1 text-xs font-bold uppercase", classColors.bg, classColors.text)}>
-                    {champion.class}
-                  </Badge>
-                </div>
-                <h1 className="text-5xl font-black tracking-tight text-white sm:text-6xl lg:text-7xl">
-                  {champion.name}
-                </h1>
-                {champion.shortName && champion.shortName !== champion.name && (
-                  <p className="text-base text-slate-400">{champion.shortName}</p>
-                )}
-              </div>
-
-              <div className="flex flex-wrap gap-2 pt-1">
-                {champion.tags.map(tag => (
-                  <Badge key={tag.id} variant="outline" className="border-slate-700 bg-slate-900/50 text-slate-300">
-                    <Hash className="mr-1 h-3 w-3 text-slate-500" />
-                    {tag.name}
-                  </Badge>
-                ))}
-              </div>
-
-              <div className="grid gap-3 sm:grid-cols-3">
-                <HeroMetric icon={<Star className="fill-current text-yellow-300" />} label={selectedRarityLabel} value={`R${selectedStat?.rank ?? "-"} / L${selectedStat?.level ?? "-"}`} accent={classColors.color} />
-                <HeroMetric icon={<Gauge />} label="Prestige" value={formatNumber(selectedPrestige)} accent={classColors.color} />
-                <HeroMetric icon={<Dumbbell />} label="Challenge Rating" value={formatNumber(selectedStat?.challengeRating)} accent={classColors.color} />
-              </div>
-            </div>
-          </section>
-
-          {!!abilityTextView.bioRecords.length && (
-            <section className="rounded-lg border border-slate-800 bg-slate-950/70 p-5 backdrop-blur flex flex-col md:flex-row gap-6 items-center">
-              <div className="flex-1 space-y-4">
-                <div className="flex items-center gap-2">
-                  <BookOpenText className="h-5 w-5" style={{ color: classColors.color }} />
-                  <h2 className="text-lg font-black text-white">Bio</h2>
-                </div>
-                {abilityTextView.bioRecords.map(record => (
-                  <div key={record.id} className="text-sm leading-7 text-slate-300">
-                    <RenderedTemplate prepared={record.prepared} glossaryById={glossaryById} />
-                  </div>
-                ))}
-              </div>
-              {secondaryUrl && (
-                <div className="relative h-40 w-40 overflow-hidden rounded-lg border border-slate-700/50 bg-slate-900/50 shadow-inner shrink-0 hidden md:block">
-                  <Image src={secondaryUrl} alt="Secondary portrait" fill sizes="160px" className="object-cover object-center opacity-80 mix-blend-lighten" />
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 to-transparent" />
-                </div>
-              )}
-            </section>
-          )}
-
-          <section className="grid items-start gap-6 lg:grid-cols-[330px_1fr]">
-            <div className="sticky top-4 space-y-6">
-              <div className="rounded-lg border border-slate-800 bg-slate-950/70 p-4 backdrop-blur">
-                <h2 className="mb-4 flex items-center gap-2 text-sm font-bold uppercase text-slate-300">
-                  <Gauge className="h-4 w-4" />
-                  Stat View
-                </h2>
-                <div className="grid gap-4">
-                  <div className="grid grid-cols-2 gap-3">
-                    <label className="grid gap-1.5 text-xs font-semibold uppercase text-slate-500">
-                      Star
-                      <Select value={selectedRarity} onValueChange={value => setSelectedRarity(value)}>
-                        <SelectTrigger className="border-slate-700 bg-slate-900 text-slate-100">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="border-slate-800 bg-slate-950 text-slate-100">
-                          {rarityOptions.map(rarity => (
-                            <SelectItem key={rarity} value={String(rarity)}>{rarity} Star</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </label>
-                    <label className="grid gap-1.5 text-xs font-semibold uppercase text-slate-500">
-                      Rank
-                      <Select
-                        value={selectedRank}
-                        onValueChange={value => setSelectedRankByRarity(prev => ({ ...prev, [selectedRarity]: value }))}
-                      >
-                        <SelectTrigger className="border-slate-700 bg-slate-900 text-slate-100">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent className="border-slate-800 bg-slate-950 text-slate-100">
-                          {rankOptions.map(rank => (
-                            <SelectItem key={rank} value={String(rank)}>Rank {rank}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </label>
-                  </div>
-                  <label className="grid gap-3 text-xs font-semibold uppercase text-slate-500">
-                    Signature Level
-                    <div className="flex items-center gap-4">
-                      <Slider
-                        min={0}
-                        max={currentMaxSig}
-                        step={1}
-                        value={[cappedSigLevel]}
-                        onValueChange={(val: number[]) => setSigLevel(val[0])}
-                        className="flex-1"
-                      />
-                      <span className="w-12 rounded border border-slate-700 bg-slate-900 px-2 py-1 text-center font-mono text-sm text-slate-100">
-                        {cappedSigLevel}
-                      </span>
-                    </div>
-                  </label>
-                  {selectedStat?.rarity === 7 && (
-                    <label className="grid gap-2 text-xs font-semibold uppercase text-slate-500">
-                      Ascension
-                      <div className="grid grid-cols-6 gap-1">
-                        {[0, 1, 2, 3, 4, 5].map(level => (
-                          <button
-                            key={level}
-                            type="button"
-                            onClick={() => setAscensionLevel(level)}
-                            className={cn(
-                              "h-9 rounded border text-xs font-black transition-colors",
-                              effectiveAscensionLevel === level
-                                ? "border-amber-400/40 bg-amber-500/20 text-amber-200"
-                                : "border-slate-700 bg-slate-900 text-slate-500 hover:border-slate-600 hover:text-slate-300"
-                            )}
-                          >
-                            {level === 0 ? "0" : `A${level}`}
-                          </button>
-                        ))}
-                      </div>
-                    </label>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid gap-4 grid-cols-2">
-                <StatTile icon={<HeartPulse />} label="Health" value={displayStat?.health} max={displayMaxStats.health} accent={classColors.color} />
-                <StatTile icon={<Sword />} label="Attack" value={displayStat?.attack} max={displayMaxStats.attack} accent={classColors.color} />
-              </div>
-
-              <StatsPanel stat={selectedStat} maxStatsByTier={maxStatsByTier} accent={classColors.color} />
-
-            </div>
-
-            <div className="min-w-0">
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-5">
-                <TabsList className="grid w-full grid-cols-3 bg-slate-950/80 border border-slate-800 p-1 h-11 rounded-lg">
-                  <TabsTrigger value="overview" className="rounded-md font-semibold data-[state=active]:bg-slate-800 data-[state=active]:text-white">
-                    Overview
-                  </TabsTrigger>
-                  <TabsTrigger value="descriptions" className="rounded-md font-semibold data-[state=active]:bg-slate-800 data-[state=active]:text-white">
-                    <span className="sm:hidden">Descriptions</span><span className="hidden sm:inline">Full Descriptions</span>
-                  </TabsTrigger>
-                  <TabsTrigger value="synergies" className="rounded-md font-semibold data-[state=active]:bg-slate-800 data-[state=active]:text-white">
-                    Synergies
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="overview" className="mt-0 space-y-6 outline-none">
-                  {immunities.length > 0 && (
-                    <AbilitySummary title="Immunities" icon={<Shield className="h-4 w-4" />} items={immunities} tone="sky" glossaryById={glossaryById} accent={classColors.color} />
-                  )}
-                  <AbilitySummary title="Abilities" icon={<Zap className="h-4 w-4" />} items={abilities} tone="amber" glossaryById={glossaryById} accent={classColors.color} />
-                  <DuelTargetsPanel duels={champion.duels} accent={classColors.color} />
-                </TabsContent>
-
-                {activeTab === "descriptions" && (
-                  <TabsContent value="descriptions" className="mt-0 space-y-6 outline-none">
-                    <section className="rounded-lg border border-amber-500/30 bg-amber-950/20 px-4 py-3 backdrop-blur">
-                      <p className="text-sm leading-relaxed text-amber-100">
-                        Full descriptions are still a work in progress. Some exact numeric values may be inaccurate while the parsing and value resolution logic is being refined.
-                      </p>
-                    </section>
-                    <TextPanel
-                      panel={abilityTextView.signaturePanel}
-                      icon={<Sparkles className="h-5 w-5" />}
-                      glossaryById={glossaryById}
-                      accent={classColors.color}
-                      chart={<CurvePanel curveView={abilityTextView.curveView} sigLevel={cappedSigLevel} accent={classColors.color} />}
-                    />
-                    {abilityTextView.descriptionPanels.map(panel => (
-                      <TextPanel
-                        key={panel.group}
-                        panel={panel}
-                        icon={<BookOpenText className="h-5 w-5" />}
-                        glossaryById={glossaryById}
-                        accent={classColors.color}
-                      />
-                    ))}
-                  </TabsContent>
-                )}
-                <TabsContent value="synergies" className="mt-0 outline-none">
-                  <ChampionSynergiesPanel {...synergyView} rarity={selectedRarity ? Number(selectedRarity) : null} glossaryById={glossaryById} />
-                </TabsContent>
-              </Tabs>
-            </div>
-          </section>
-        </div>
-      </main>
-    </TooltipProvider>
-  )
+  return <TooltipProvider><ChampionDossier view={view} pageState={pageState} updatePageState={updatePageState} /></TooltipProvider>
 }
 
-function HeroMetric({ icon, label, value, accent }: { icon: ReactNode; label: string; value: string; accent?: string }) {
-  return (
-    <div className="relative overflow-hidden rounded-lg border border-slate-800 bg-slate-950/70 p-4 backdrop-blur">
-      {accent && <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundColor: accent }} />}
-      <div className="relative z-10 flex items-center gap-2 text-xs font-bold uppercase text-slate-500">{icon}{label}</div>
-      <div className="relative z-10 mt-2 font-mono text-2xl font-black text-white">{value}</div>
-    </div>
-  )
-}
+const DOSSIER_TABS = [
+  { value: "overview", label: "Kit overview", detail: "Effects & immunities", icon: Layers3 },
+  { value: "abilities", label: "Full abilities", detail: "Read the complete kit", icon: BookOpen },
+  { value: "synergies", label: "Synergies", detail: "Partners & team bonuses", icon: Users },
+  { value: "stats", label: "Stats & attacks", detail: "Ratings & hit breakdowns", icon: Swords },
+] as const
 
-function applyAscensionToStat(stat: ChampionStatRow | undefined, ascensionLevel: number): ChampionStatRow | undefined {
-  if (!stat) return stat
-  return {
-    ...stat,
-    health: applyAscensionToStatValue(stat.health, stat.rarity, ascensionLevel),
-    attack: applyAscensionToStatValue(stat.attack, stat.rarity, ascensionLevel),
-  }
-}
-
-function StatTile({ icon, label, value, max, accent }: { icon: ReactNode; label: string; value: number | null | undefined; max?: number | null; accent: string }) {
-  const percentage = value != null && max != null ? Math.min(100, Math.max(0, (value / max) * 100)) : null;
-
-  return (
-    <div className="relative overflow-hidden rounded-lg border border-slate-800 bg-slate-950/70 p-4 backdrop-blur md:p-5">
-      <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundColor: accent }} />
-      <div className="relative z-10 flex flex-col gap-1.5">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase text-slate-500" style={{ color: accent }}>{icon}{label}</div>
-        <div className="font-mono text-2xl font-black text-white truncate" title={formatNumber(value)}>{formatNumber(value)}</div>
-      </div>
-      {percentage != null && (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <div onClick={(e) => e.preventDefault()} className="relative z-10 mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-900 cursor-help">
-              <div className="h-full rounded-full opacity-80" style={{ width: `${percentage}%`, backgroundColor: accent }} />
-            </div>
-          </TooltipTrigger>
-          <TooltipContent className="border-slate-700 bg-slate-950 text-xs text-slate-200">
-            {percentage.toFixed(1)}% of maximum ({formatNumber(max)})
-          </TooltipContent>
-        </Tooltip>
-      )}
-    </div>
-  )
-}
-
-function StatsPanel({ stat, maxStatsByTier, accent }: { stat?: ChampionStatRow; maxStatsByTier: Record<string, Record<string, number | null>>; accent: string }) {
-  const tierKey = stat?.rarity && stat?.rank ? `${stat.rarity}-${stat.rank}` : "";
-  const maxStats = maxStatsByTier[tierKey] || {};
-
-  const rows = [
-    ["Armor Rating", stat?.armorRating, maxStats.armorRating ?? 3000],
-    ["Armor Penetration", stat?.armorPenetration, maxStats.armorPenetration ?? 300],
-    ["Critical Rating", stat?.criticalRating, maxStats.criticalRating ?? 3500],
-    ["Critical Resistance", stat?.criticalResistance, maxStats.criticalResistance ?? 1500],
-    ["Critical Damage Rating", stat?.criticalDamageRating, maxStats.criticalDamageRating ?? 4000],
-    ["Block Proficiency", stat?.blockProficiency, maxStats.blockProficiency ?? 10500],
-    ["Block Penetration", stat?.blockPenetration, maxStats.blockPenetration ?? 700],
-    ["Special Damage Multiplier", stat?.specialDamageMultiplier, maxStats.specialDamageMultiplier ?? 1.5],
-    ["Energy Resistance", stat?.energyResistance, maxStats.energyResistance ?? 6500],
-    ["Physical Resistance", stat?.physicalResistance, maxStats.physicalResistance ?? 1500],
-  ] as const
-
-  return (
-    <section className="rounded-lg border border-slate-800 bg-slate-950/70 p-5 backdrop-blur">
-      <div className="mb-4 flex items-center gap-2">
-        <BarChart3 className="h-5 w-5" style={{ color: accent }} />
-        <h2 className="text-lg font-black text-white">Advanced Stats</h2>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-        {rows.map(([label, value, max]) => {
-          if (value == null) return null;
-          const numValue = typeof value === 'number' ? value : 0;
-          const percentage = Math.min(100, Math.max(0, (numValue / (max || 1)) * 100));
-          return (
-            <div key={label} className="grid gap-1.5 rounded-md border border-slate-800/80 bg-slate-900/50 px-3 py-2">
-              <div className="flex items-center justify-between text-[11px] font-bold uppercase text-slate-400">
-                <span>{label}</span>
-                <span className="font-mono text-slate-200">{formatStatValue(value)}{label.includes("Multiplier") && value !== null ? "x" : ""}</span>
-              </div>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div onClick={(e) => e.preventDefault()} className="h-1.5 w-full overflow-hidden rounded-full bg-slate-950 cursor-help">
-                    <div className="h-full rounded-full opacity-80" style={{ width: `${percentage}%`, backgroundColor: accent }} />
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent className="border-slate-700 bg-slate-950 text-xs text-slate-200">
-                  {percentage.toFixed(1)}% of maximum ({formatNumber(max)})
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          )
-        })}
-      </div>
-    </section>
-  )
-}
-
-function TextPanel({
-  panel,
-  icon,
-  glossaryById,
-  accent,
-  chart,
-}: {
-  panel: PreparedChampionAbilityTextPanel<ChampionDetailsPayload["abilityTexts"][number]>
-  icon: ReactNode
-  glossaryById: Map<string, GlossaryTerm>
-  accent: string
-  chart?: ReactNode
+function ChampionDossier({ view, pageState, updatePageState }: {
+  view: ChampionDetailsView
+  pageState: ChampionPageState
+  updatePageState: (patch: Partial<ChampionPageState>, push?: boolean) => void
 }) {
+  const dossierRef = useRef<HTMLDivElement>(null)
+  const tabsRef = useRef<HTMLDivElement>(null)
+  const sectionsRef = useRef<HTMLDivElement>(null)
+  const [synergyTarget, setSynergyTarget] = useState<string | null>(null)
+  useEffect(() => {
+    const bar = tabsRef.current
+    if (!bar) return
+    const observer = new ResizeObserver(() => dossierRef.current?.style.setProperty("--champion-tabs-height", `${bar.getBoundingClientRect().height}px`))
+    observer.observe(bar)
+    return () => observer.disconnect()
+  }, [])
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.has("tab") && !params.has("ability")) {
+      sectionsRef.current?.scrollIntoView({ block: "start" })
+    }
+    // Restore a shared section on entry; later tab changes scroll in selectSection.
+  }, [])
+  const selectSection = (value: string) => {
+    setSynergyTarget(null)
+    updatePageState({ tab: value as ChampionPageState["tab"], ability: null }, true)
+    window.requestAnimationFrame(() => sectionsRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }))
+  }
+  const openAbility = (recordId: string) => updatePageState({ tab: "abilities", ability: recordId }, true)
+  const openSynergy = (synergyId?: string) => {
+    setSynergyTarget(synergyId ?? null)
+    updatePageState({ tab: "synergies", ability: null }, true)
+    if (!synergyId) window.requestAnimationFrame(() => sectionsRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }))
+  }
+  const openChapter = (chapter: string) => {
+    updatePageState({ tab: "abilities", chapter: chapter === "all" ? null : chapter, ability: null }, true)
+    window.requestAnimationFrame(() => document.getElementById("champion-descriptions")?.scrollIntoView({ block: "start", behavior: "smooth" }))
+  }
+
   return (
-    <Accordion type="multiple" defaultValue={[panel.title]} className="w-full">
-      <AccordionItem value={panel.title} className="rounded-lg border border-slate-800 bg-slate-950/70 backdrop-blur px-4 border-none">
-        <AccordionTrigger className="hover:no-underline py-3 border-none text-left">
-          <div className="flex items-center gap-2">
-            <span style={{ color: accent }}>{icon}</span>
-            <h2 className="text-lg font-black text-white">{panel.title}</h2>
+    <div ref={dossierRef} className={cn(styles.dossier, "relative min-h-screen overflow-x-clip bg-[#080b10] pb-16 text-slate-200")} style={{ "--champion-accent": view.accent } as CSSProperties}>
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[900px] bg-[radial-gradient(circle_at_76%_22%,rgba(255,255,255,.05),transparent_42%)]" />
+      <div className="relative w-full px-5 py-7 sm:px-8 lg:px-10 2xl:px-12">
+        <section className="relative min-h-[660px] overflow-hidden border-y border-white/10 sm:min-h-[720px] lg:min-h-[700px]">
+          <div className={styles.heroArt}>
+            <Image src={view.heroUrl} alt="" fill priority sizes="(max-width: 1024px) 100vw, 78vw" className="object-cover object-center" />
           </div>
-        </AccordionTrigger>
-        <AccordionContent className="pb-3">
-          {chart && <div className="mb-6">{chart}</div>}
-          {panel.introRecord && (
-            <div className="mb-4 rounded-lg border border-slate-800/80 bg-slate-900/30 p-3 italic text-slate-300">
-              <RenderedTemplate prepared={panel.introRecord.prepared} glossaryById={glossaryById} />
-            </div>
-          )}
+          <div className={styles.heroShade} />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[#080b10] via-[#080b10]/70 to-transparent" />
+          <div className="pointer-events-none absolute inset-0 opacity-[.045] [background-image:linear-gradient(rgba(255,255,255,.5)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.5)_1px,transparent_1px)] [background-size:88px_88px]" />
+          <div className="pointer-events-none absolute bottom-0 left-0 h-1 w-32" style={{ background: view.accent }} />
 
-          {panel.recordGroups.length ? (
-            <div className="space-y-3">
-              {panel.recordGroups.map(group => (
-                <div key={group.id} className="rounded-lg border border-slate-800/80 bg-slate-900/30 p-3 space-y-2">
-                  {group.title && (
-                    <h3 className="text-sm font-bold text-white/90">{group.title}</h3>
-                  )}
-                  <div className="space-y-3 text-slate-300">
-                    {group.records.map(record => (
-                      <RenderedTemplate key={record.id} prepared={record.prepared} glossaryById={glossaryById} />
-                    ))}
-                  </div>
+          <div className="relative z-10 flex min-h-[660px] flex-col justify-between px-5 py-7 sm:min-h-[720px] sm:px-8 sm:py-9 lg:min-h-[700px] lg:px-10">
+            <div className="flex items-start justify-between gap-5">
+              <div className="flex items-center gap-4">
+                <div className="relative h-20 w-20 shrink-0 overflow-hidden border border-white/20 bg-black/40 shadow-2xl sm:h-24 sm:w-24">
+                  <Image src={view.portraitUrl} alt={`${view.champion.name} portrait`} fill sizes="96px" className="object-cover" />
+                  <span className="pointer-events-none absolute inset-1 border border-white/10" />
+                  <span className="pointer-events-none absolute bottom-0 left-0 h-1 w-8" style={{ background: view.accent }} />
                 </div>
-              ))}
+                <div>
+                  <div className="text-xs font-semibold uppercase tracking-[.18em] text-white/50">Champion dossier</div>
+                  <div className="mt-2 flex items-center gap-2 text-xs font-black uppercase tracking-[.2em]" style={{ color: view.accent }}><span className="h-1.5 w-1.5 rounded-full" style={{ background: view.accent, boxShadow: `0 0 14px ${view.accent}` }} />{view.champion.class} class</div>
+                  {view.champion.shortName && view.champion.shortName !== view.champion.name && <div className="mt-2 text-xs font-bold text-white/40">{view.champion.shortName}</div>}
+                </div>
+              </div>
             </div>
-          ) : (
-            <p className="text-sm text-slate-500">{panel.emptyText}</p>
-          )}
-        </AccordionContent>
-      </AccordionItem>
-    </Accordion>
-  )
-}
 
-function RenderedTemplate({
-  prepared,
-  glossaryById,
-}: {
-  prepared: PreparedChampionAbilityText
-  glossaryById: Map<string, GlossaryTerm>
-}) {
-  if (prepared.status === "error") {
-    return (
-      <div className="rounded border border-amber-500/40 bg-amber-950/30 px-2 py-1 text-sm text-amber-100">
-        {prepared.error.message}
-      </div>
-    )
-  }
+            <div className="my-auto py-10 sm:py-14">
+              <ChampionHeroWordmark name={view.champion.name} accent={view.accent} />
+              <div className="mt-7 h-1 w-24" style={{ background: view.accent }} />
+            </div>
 
-  return (
-    <div className="space-y-1.5 text-sm leading-6 text-slate-300">
-      {prepared.blocks.map((block, index) => (
-        <div key={index} className="inline-block w-full">{block.children.map((node, nodeIndex) => renderNode(node, nodeIndex, glossaryById))}</div>
-      ))}
-    </div>
-  )
-}
-
-function renderNode(
-  node: PreparedChampionAbilityTextNode,
-  index: number,
-  glossaryById: Map<string, GlossaryTerm>
-): ReactNode {
-  if (node.type === "text") return <span key={index}>{node.value}</span>
-  if (node.type === "value") {
-    const resolved = node.resolution
-    return (
-      <Tooltip key={index}>
-        <TooltipTrigger asChild>
-          <span
-            onClick={(e) => e.preventDefault()}
-            className={cn(
-              "inline-flex cursor-help items-center rounded px-1.5 py-0.5 text-xs font-semibold",
-              resolved.status === "resolved"
-                ? "bg-slate-800 text-slate-100"
-                : "border border-amber-500/40 bg-amber-950/40 text-amber-100"
-            )}
-          >
-            {resolved.status === "resolved" ? resolved.displayValue : `Error ${node.placeholderIndex}`}
-          </span>
-        </TooltipTrigger>
-        <TooltipContent className="border-slate-700 bg-slate-950 text-xs text-slate-300">
-          {resolved.detail}
-        </TooltipContent>
-      </Tooltip>
-    )
-  }
-  if (node.type === "glossary") {
-    const term = glossaryById.get(node.id)
-    const description = term?.description?.trim() || rawGlossaryDescription(term?.raw) || "No glossary description imported yet."
-    const raw = term?.raw as Record<string, unknown> | undefined;
-    const primaryColor = typeof raw?.color_primary === "string" ? normalizeHexColor(raw.color_primary) : undefined;
-    
-    return (
-      <Tooltip key={index}>
-        <TooltipTrigger asChild>
-          <button onClick={(e) => e.preventDefault()} type="button" className="inline-flex items-center gap-1 font-semibold text-sky-300 underline decoration-sky-300/40 underline-offset-2 hover:text-sky-200">
-            {node.label}
-          </button>
-        </TooltipTrigger>
-        <TooltipContent className="max-w-sm border-slate-700 bg-slate-950 p-4 shadow-xl">
-          <div className="flex items-start gap-3.5">
-            {term?.iconUrl && (
-              <div 
-                className="mt-0.5 shrink-0 h-6 w-6" 
-                style={{
-                  backgroundColor: primaryColor || "currentColor",
-                  maskImage: `url(${term.iconUrl})`,
-                  maskSize: 'contain',
-                  maskRepeat: 'no-repeat',
-                  maskPosition: 'center',
-                  WebkitMaskImage: `url(${term.iconUrl})`,
-                  WebkitMaskSize: 'contain',
-                  WebkitMaskRepeat: 'no-repeat',
-                  WebkitMaskPosition: 'center',
-                }}
-              />
-            )}
-            <div className="space-y-1.5">
-              <p className="font-black text-base text-white" style={{ color: primaryColor || "inherit" }}>
-                {term?.name?.trim() || node.label}
-              </p>
-              <p className="text-sm leading-relaxed text-slate-300">{description}</p>
+            <div className="flex max-w-5xl flex-col gap-4 border-y border-white/15 bg-black/20 py-5 backdrop-blur-sm sm:py-6 lg:flex-row lg:items-center lg:gap-6">
+              <div className="grid min-w-0 flex-1 grid-cols-3">
+                <DossierPrestigeMetric view={view} />
+                <DossierMetric label="Health" value={format(view.health)} />
+                <DossierMetric label="Attack" value={format(view.attack)} />
+              </div>
+              <DossierBuildControls view={view} />
             </div>
           </div>
-        </TooltipContent>
-      </Tooltip>
-    )
-  }
-  if (node.type === "color") {
-    return <span key={index} style={{ color: normalizeHexColor(node.color) }}>{node.children.map((child, childIndex) => renderNode(child, childIndex, glossaryById))}</span>
-  }
-  return null
+        </section>
+
+
+        <Tabs ref={sectionsRef} value={pageState.tab} onValueChange={selectSection} className="mt-5 scroll-mt-[var(--champion-header-height)]">
+          <div ref={tabsRef} className={styles.tabsBar}>
+            <TabsList aria-label="Champion sections" className={styles.tabsList}>
+              {DOSSIER_TABS.map(tab => <TabsTrigger key={tab.value} value={tab.value} className={styles.tab}>
+                <tab.icon aria-hidden="true" className={styles.tabIcon} />
+                <span><span className={styles.tabLabel}>{tab.label}</span><span className={styles.tabDetail}>{tab.detail}</span></span>
+              </TabsTrigger>)}
+            </TabsList>
+          </div>
+          <TabsContent value="overview" className="mt-0 pb-8 pt-10">
+            <ChampionKitOverview view={view} onViewAbility={openAbility} onViewSynergies={openSynergy} sideContent={view.champion.duels.length > 0 ? <DossierDuelTargets view={view} /> : undefined} />
+            <DossierTraits view={view} />
+          </TabsContent>
+          <TabsContent value="abilities" className="mt-0 pb-8 pt-10"><ChampionAbilityReader key={pageState.ability ?? "all"} view={view} targetRecordId={pageState.ability} chapter={pageState.chapter} onSelectChapter={openChapter} onClearTarget={() => updatePageState({ ability: null, chapter: null })} /></TabsContent>
+          <TabsContent value="synergies" className="mt-0 pb-8 pt-10"><DossierSynergies view={view} targetSynergyId={synergyTarget} /></TabsContent>
+          <TabsContent value="stats" className="mt-0 pb-8 pt-10"><ChampionStatsPanel view={view} onViewAbility={openChapter} /></TabsContent>
+        </Tabs>
+      </div>
+    </div>
+  )
 }
 
-function DuelTargetsPanel({ duels, accent }: { duels: ChampionDetailsPayload["duels"]; accent: string }) {
-  const [showAll, setShowAll] = useState(false)
-  const prepared = useMemo(() => prepareDuelTargets(duels), [duels])
-  const credits = useMemo(() => getExternalDuelSourceCredits(duels), [duels])
-
-  if (prepared.totalCount === 0) return null
-
-  const hasOverflow = prepared.targets.length > 8
-  const visibleTargets = showAll ? prepared.targets : prepared.targets.slice(0, 8)
+function ChampionHeroWordmark({ name, accent }: { name: string; accent: string }) {
+  const variantMatch = name.match(/^(.+?)\s*\(([^)]+)\)\s*$/)
+  const primaryName = (variantMatch?.[1] ?? name).trim()
+  const variantName = variantMatch?.[2]?.trim()
+  const sizeClass = primaryName.length <= 8
+    ? "text-[clamp(5rem,13vw,12rem)]"
+    : primaryName.length <= 16
+      ? "text-[clamp(4rem,10vw,9rem)]"
+      : "text-[clamp(3.1rem,7.6vw,6.75rem)]"
+  const wordmarkClass = cn("block max-w-5xl text-balance break-words font-black uppercase leading-[.74] tracking-[-.075em]", sizeClass)
 
   return (
-    <section className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/70 p-4 backdrop-blur">
-      <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 flex-wrap items-center gap-2">
-          <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.12em] text-white">
-            <Target className="h-4 w-4" style={{ color: accent }} />
-            Duel Targets
-          </h2>
-          <Badge variant="outline" className="border-slate-700 bg-slate-900/70 text-slate-300">
-            {prepared.totalCount.toLocaleString("en-US")} {prepared.totalCount === 1 ? "target" : "targets"}
-          </Badge>
-          {prepared.outdatedCount > 0 && (
-            <Badge variant="outline" className="border-amber-500/40 bg-amber-950/30 text-amber-200">
-              {prepared.outdatedCount.toLocaleString("en-US")} outdated
-            </Badge>
-          )}
-        </div>
-        {hasOverflow && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            className="h-8 w-fit border border-slate-800 bg-slate-900/40 px-3 text-xs text-slate-300 hover:bg-slate-800 hover:text-white"
-            onClick={() => setShowAll((current) => !current)}
-          >
-            {showAll ? "Show fewer" : "Show all"}
-          </Button>
-        )}
-      </div>
+    <div className="relative w-fit max-w-full">
+      <span aria-hidden className={cn("pointer-events-none absolute left-1.5 top-[-6px] w-full text-transparent opacity-45", wordmarkClass)} style={{ WebkitTextStroke: "1px rgba(255,255,255,.38)" }}>{primaryName}</span>
+      <h1 className="relative w-full max-w-5xl">
+        <span className={cn("text-white [text-shadow:0_12px_50px_rgba(0,0,0,.55)]", wordmarkClass)} style={{ maskImage: "linear-gradient(90deg,#000 0%,#000 88%,rgba(0,0,0,.48) 100%)", WebkitMaskImage: "linear-gradient(90deg,#000 0%,#000 88%,rgba(0,0,0,.48) 100%)" }}>{primaryName}</span>
+        {variantName && <span className="mt-4 block max-w-3xl text-balance text-[clamp(1rem,2.4vw,2rem)] font-black uppercase leading-tight tracking-[.12em]" style={{ color: accent }}>{variantName}</span>}
+      </h1>
+    </div>
+  )
+}
 
-      <div className="grid gap-2">
-        {visibleTargets.map((target) => (
-          <div
-            key={target.id}
-            className={cn(
-              "flex flex-col gap-2 rounded-lg border border-slate-800 bg-slate-950/80 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between",
-              target.status === "OUTDATED" && "border-amber-500/20 bg-amber-950/10"
-            )}
-            style={{ boxShadow: `inset 3px 0 0 ${target.status === "ACTIVE" ? accent : "#f59e0b"}88` }}
-          >
-            <div className="flex min-w-0 items-center gap-2">
-              <span className="truncate text-sm font-bold text-white">{target.playerName}</span>
-              {target.rank && (
-                <span className="shrink-0 rounded border border-slate-700 bg-slate-900 px-1.5 py-0.5 font-mono text-[11px] font-semibold text-slate-300">
-                  {target.rank}
-                </span>
-              )}
+function DossierBuildControls({ view }: { view: ChampionDetailsView }) {
+  const [open, setOpen] = useState(false)
+  const { toast } = useToast()
+  const copyLink = async () => {
+    try {
+      const url = new URL(window.location.href)
+      url.searchParams.set("rarity", view.selectedRarity)
+      url.searchParams.set("rank", view.selectedRank)
+      url.searchParams.set("sig", String(view.sigLevel))
+      url.searchParams.set("ascension", String(view.ascensionLevel))
+      await navigator.clipboard.writeText(url.href)
+      toast({ title: "Link copied", description: "Includes this section and champion build." })
+    } catch {
+      toast({ title: "Could not copy link", description: "Copy the page address from your browser.", variant: "destructive" })
+    }
+  }
+  if (!view.selectedStat) return null
+  return (
+    <div aria-label="Champion build" className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4 lg:shrink-0 lg:flex-col lg:items-start lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+      <BuildReadout view={view} className="text-white/55" />
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild><button type="button" className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-white/15 bg-white/[.035] px-3 text-sm font-medium text-slate-200 transition-colors hover:border-white/30 hover:bg-white/[.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"><SlidersHorizontal aria-hidden="true" className="h-4 w-4" />Adjust build</button></PopoverTrigger>
+        <PopoverContent align="end" sideOffset={12} collisionPadding={16} aria-label="Adjust champion build" aria-describedby="champion-build-description" className="w-[min(420px,calc(100vw-2rem))] max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-xl border-white/15 bg-[#101620] p-5 text-slate-200 shadow-2xl">
+          <div className="mb-5"><h2 className="text-lg font-semibold text-white">Adjust build</h2><p id="champion-build-description" className="mt-1 text-sm leading-6 text-slate-400">Stats and abilities update as you adjust.</p></div>
+          <div className="grid grid-cols-2 items-end gap-4">
+            <BuildSelect label="Rarity" value={view.selectedRarity} onChange={view.setRarity} options={view.rarityOptions.map(rarity => ({ value: String(rarity), label: `${rarity} ★` }))} />
+            <BuildSelect label="Rank" value={view.selectedRank} onChange={view.setRank} options={view.rankOptions.map(rank => ({ value: String(rank), label: `Rank ${rank}` }))} />
+            <div className="col-span-2">
+              <label htmlFor="champion-signature-value" className="mb-1.5 block text-xs font-medium text-slate-400">Signature</label>
+              <div className="flex h-10 items-center gap-4">
+                <input aria-label="Signature level" type="range" min={0} max={view.maxSig} value={view.sigLevel} onChange={event => view.setSigLevel(Number(event.target.value))} className="h-1.5 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-white/10" style={{ accentColor: view.accent }} />
+                <input id="champion-signature-value" aria-label="Signature level value" type="number" min={0} max={view.maxSig} value={view.sigLevel} onChange={event => { if (Number.isFinite(event.target.valueAsNumber)) view.setSigLevel(event.target.valueAsNumber) }} className="h-10 w-16 rounded-lg border border-white/10 bg-white/[.035] px-2 text-center text-sm tabular-nums text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400" />
+              </div>
             </div>
-            <div className="flex shrink-0 flex-wrap items-center gap-2">
-              <Badge variant="outline" className="border-slate-700 bg-slate-900/70 text-slate-300">
-                {target.sourceLabel}
-              </Badge>
-              {target.status === "OUTDATED" && (
-                <Badge variant="outline" className="border-amber-500/40 bg-amber-950/40 text-amber-200">
-                  Outdated
-                </Badge>
-              )}
+            {view.selectedStat.rarity === 7 && <BuildSelect label="Ascension" value={String(view.ascensionLevel)} onChange={value => view.setAscensionLevel(Number(value))} options={[0, 1, 2, 3, 4, 5].map(level => ({ value: String(level), label: `A${level}` }))} />}
+          </div>
+          <div className="mt-5 flex items-center justify-between gap-3 border-t border-white/10 pt-4"><CopyPageLink onClick={copyLink} /><button type="button" onClick={() => setOpen(false)} className="min-h-10 rounded-lg bg-slate-200 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#101620]">Done</button></div>
+        </PopoverContent>
+      </Popover>
+    </div>
+  )
+}
+
+function BuildSelect({ label, value, options, onChange }: {
+  label: string
+  value: string
+  options: Array<{ value: string; label: string }>
+  onChange: (value: string) => void
+}) {
+  return <label className="block min-w-0"><span className="mb-1.5 block text-xs font-medium text-slate-400">{label}</span><span className="relative block"><select aria-label={label} value={value} onChange={event => onChange(event.target.value)} className="h-10 w-full appearance-none rounded-lg border border-white/10 bg-[#151c27] pl-3 pr-8 text-sm font-semibold text-slate-100 transition-colors hover:border-white/25 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">{options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}</select><ChevronDown aria-hidden="true" className="pointer-events-none absolute right-2.5 top-3 h-4 w-4 text-slate-500" /></span></label>
+}
+
+function CopyPageLink({ onClick }: { onClick: () => void }) {
+  return <button type="button" onClick={onClick} aria-label="Copy page link" title="Copy link to this section and build" className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-white/10 px-3 text-sm text-slate-400 transition-colors hover:border-white/25 hover:bg-white/5 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400"><Link2 aria-hidden="true" className="h-4 w-4" />Copy link</button>
+}
+
+function DossierTraits({ view }: { view: ChampionDetailsView }) {
+  if (!view.champion.tags.length) return null
+  return <section aria-label="Champion tags" className="mt-10 border-t border-white/10 pt-6"><h3 className="mb-4 text-sm font-medium text-slate-400">Champion tags</h3><div className="flex flex-wrap gap-2">{view.champion.tags.map(tag => <span key={tag.id} className="rounded-md border border-white/[.08] bg-white/[.025] px-3 py-1.5 text-xs text-slate-400">{tag.name}</span>)}</div></section>
+}
+
+function DossierMetric({ label, value }: { label: string; value: string }) {
+  return <div className="border-r border-white/10 px-2 first:pl-0 last:border-0 sm:px-4"><div className="text-lg font-black min-[380px]:text-2xl sm:text-3xl">{value}</div><div className="mt-1 text-[10px] font-bold uppercase tracking-[.18em] text-white/55">{label}</div></div>
+}
+
+function DossierPrestigeMetric({ view }: { view: ChampionDetailsView }) {
+  const points = view.champion.prestigeData
+    .filter(point => String(point.rarity) === view.selectedRarity && String(point.rank) === view.selectedRank)
+    .map(point => ({ sig: point.sig, value: point.prestige }))
+    .filter(point => Number.isFinite(point.sig) && Number.isFinite(point.value))
+    .sort((a, b) => a.sig - b.sig)
+
+  if (points.length < 2) {
+    return <DossierMetric label="Prestige" value={format(view.prestige)} />
+  }
+
+  const width = 88
+  const height = 32
+  const padding = 3
+  const sigValues = points.map(point => point.sig)
+  const curveValues = points.map(point => point.value)
+  const minSig = Math.min(...sigValues)
+  const maxSig = Math.max(...sigValues)
+  const minValue = Math.min(...curveValues)
+  const maxValue = Math.max(...curveValues)
+  const x = (sig: number) => padding + ((sig - minSig) / Math.max(1, maxSig - minSig)) * (width - padding * 2)
+  const y = (value: number) => height - padding - ((value - minValue) / Math.max(1, maxValue - minValue)) * (height - padding * 2)
+  const path = points.map((point, index) => `${index ? "L" : "M"}${x(point.sig).toFixed(1)} ${y(point.value).toFixed(1)}`).join(" ")
+  const selectedPoint = points.reduce((nearest, point) => Math.abs(point.sig - view.sigLevel) < Math.abs(nearest.sig - view.sigLevel) ? point : nearest)
+
+  return (
+    <div className="border-r border-white/10 pr-2 sm:pr-4">
+      <div className="sm:flex sm:items-end sm:justify-between sm:gap-2">
+        <div className="text-lg font-black min-[380px]:text-2xl sm:text-3xl">{format(view.prestige)}</div>
+        <svg role="img" aria-label="Prestige by signature level" viewBox={`0 0 ${width} ${height}`} className="mt-1 h-3 w-[76px] max-w-full overflow-visible sm:mb-1 sm:mt-0 sm:h-8 sm:w-[88px]">
+          <path d={path} fill="none" stroke={view.accent} strokeWidth="1.6" vectorEffect="non-scaling-stroke" opacity=".55" />
+          <circle cx={x(selectedPoint.sig)} cy={y(selectedPoint.value)} r="3" fill={view.accent} />
+        </svg>
+      </div>
+      <div className="mt-1 flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[.18em] text-white/55">
+        <span>Prestige</span>
+        <span className="hidden truncate text-right text-[10px] tracking-[.1em] text-white/20 sm:block">Sig curve</span>
+      </div>
+    </div>
+  )
+}
+
+function DossierDuelTargets({ view }: { view: ChampionDetailsView }) {
+  const [copiedId, setCopiedId] = useState<number | null>(null)
+  const copyTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const { toast } = useToast()
+  useEffect(() => () => {
+    if (copyTimer.current) clearTimeout(copyTimer.current)
+  }, [])
+  const prepared = useMemo(() => prepareDuelTargets(view.champion.duels), [view.champion.duels])
+  const credits = useMemo(() => getExternalDuelSourceCredits(view.champion.duels), [view.champion.duels])
+  if (!view.champion.duels.length) return null
+  const featuredId = prepared.activeTargets[0]?.id
+
+  const copyTarget = async (id: number, playerName: string) => {
+    try {
+      await navigator.clipboard.writeText(playerName)
+      if (copyTimer.current) clearTimeout(copyTimer.current)
+      setCopiedId(id)
+      copyTimer.current = setTimeout(() => setCopiedId(null), 1600)
+    } catch {
+      toast({ title: "Couldn't copy the duel target", description: `Select and copy the name: ${playerName}`, variant: "destructive" })
+    }
+  }
+
+  return (
+    <section className="rounded-xl border border-white/[.08] bg-[#0e131c] p-5">
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="flex items-center gap-2 text-lg font-semibold tracking-tight text-white"><Crosshair className="h-4 w-4" style={{ color: view.accent }} />Duel targets</h2>
+          <p className="mt-2 text-xs leading-5 text-white/55">Copy a player name and search for it in-game.</p>
+        </div>
+        <span className="rounded-full border border-white/10 px-2 py-1 font-mono text-xs text-white/55">{view.champion.duels.length}</span>
+      </div>
+      <div className="mt-5 max-h-[520px] overflow-y-auto border-y border-white/10">
+        {prepared.targets.map(duel => (
+          <div key={duel.id} className={cn("group relative flex items-center gap-3 border-b border-white/10 px-2 py-3.5 last:border-0", duel.id === featuredId && "bg-white/[.035]")}>
+            {duel.id === featuredId ? <Target className="h-4 w-4 shrink-0" style={{ color: view.accent }} /> : <span className={cn("ml-1 h-2 w-2 shrink-0 rounded-full", duel.status === "ACTIVE" ? "bg-emerald-400" : "bg-amber-400")} />}
+            <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 flex-wrap items-center gap-2"><span className="select-text break-all text-sm font-bold text-white/80 group-hover:text-white">{duel.playerName}</span>{duel.id === featuredId && <span className="shrink-0 text-xs font-semibold" style={{ color: view.accent }}>Recommended</span>}</div>
+              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-normal text-white/50"><span>{duel.sourceLabel}</span><span>{formatDuelDate(duel.updatedAt)}</span>{duel.status === "OUTDATED" && <span className="text-amber-300/70">Outdated</span>}</div>
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <span className="font-mono text-xs text-white/40">{duel.rank ?? "—"}</span>
+              <button type="button" onClick={() => copyTarget(duel.id, duel.playerName)} aria-label={copiedId === duel.id ? `Copied ${duel.playerName}` : `Copy ${duel.playerName}`} className="grid h-9 w-9 place-items-center rounded-md border border-white/10 text-white/55 transition-colors hover:border-white/25 hover:bg-white/[.06] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/60">
+                {copiedId === duel.id ? <Check className="h-3.5 w-3.5 text-emerald-300" /> : <Copy className="h-3.5 w-3.5" />}
+              </button>
             </div>
           </div>
         ))}
       </div>
-
       {credits.length > 0 && (
-        <p className="mt-3 text-xs leading-5 text-slate-500">
-          Sources:{" "}
-          {credits.map((credit, index) => (
+        <p className="mt-3 text-xs leading-5 text-white/50">
+          Sources: {credits.map((credit, index) => (
             <span key={credit.source}>
-              {index > 0 && <span className="text-slate-600">, </span>}
-              <a
-                href={credit.url}
-                target="_blank"
-                rel="noreferrer"
-                className="font-medium text-slate-400 underline decoration-slate-700 underline-offset-2 hover:text-slate-200"
-              >
-                {credit.label}
-              </a>
+              {index > 0 && <span aria-hidden> · </span>}
+              <a href={credit.url} target="_blank" rel="noreferrer" className="underline decoration-white/20 underline-offset-4 transition-colors hover:text-white/70">{credit.label}</a>
             </span>
           ))}
         </p>
@@ -770,273 +412,17 @@ function DuelTargetsPanel({ duels, accent }: { duels: ChampionDetailsPayload["du
   )
 }
 
-function AbilitySummary({
-  title,
-  icon,
-  items,
-  tone,
-  glossaryById,
-  accent,
-}: {
-  title: string
-  icon: ReactNode
-  items: ChampionDetailsPayload["abilities"]
-  tone: "sky" | "amber"
-  glossaryById: Map<string, GlossaryTerm>
-  accent?: string
-}) {
-  const grouped = groupAbilityLinks(items)
-  const defaultIconColor = tone === "sky" ? "#38bdf8" : "#fbbf24"
-
-  return (
-    <section className="relative overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/70 p-4 backdrop-blur">
-      <div className="pointer-events-none absolute inset-x-6 top-0 h-px bg-gradient-to-r from-transparent via-white/15 to-transparent" />
-      <div className="mb-4 flex items-center justify-between gap-3">
-        <h2 className="flex items-center gap-2 text-sm font-black uppercase tracking-[0.12em] text-white">
-          <span style={{ color: accent ?? defaultIconColor }}>{icon}</span>
-          {title}
-        </h2>
-      </div>
-      {grouped.length ? (
-        <div className="grid gap-3">
-          {grouped.map(item => {
-            const term = item.gameGlossaryTermId ? glossaryById.get(item.gameGlossaryTermId) : undefined
-            const raw = term?.raw as Record<string, unknown> | undefined
-            const primaryColor = typeof raw?.color_primary === "string" ? normalizeHexColor(raw.color_primary) : undefined
-            const description = term?.description?.trim() || rawGlossaryDescription(term?.raw)
-            const displayColor = primaryColor || accent || defaultIconColor
-
-            const cardContent = (
-              <button
-                type="button"
-                onClick={(e) => e.preventDefault()}
-                className={cn(
-                  "group relative w-full overflow-hidden rounded-xl border border-slate-800 bg-slate-950/80 text-left transition-colors hover:border-slate-600 hover:bg-slate-900/70"
-                )}
-                style={{
-                  boxShadow: `inset 3px 0 0 ${displayColor}88`,
-                }}
-              >
-                <div className="absolute -left-10 top-1/2 h-24 w-24 -translate-y-1/2 rounded-full opacity-10 blur-2xl transition-opacity group-hover:opacity-20" style={{ backgroundColor: displayColor }} />
-                <div className="relative px-4 py-3.5">
-                  <div className="flex items-center gap-3">
-                    {item.iconUrl ? (
-                      <div
-                        className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 shadow-inner"
-                        style={{
-                          backgroundColor: displayColor,
-                          boxShadow: `inset 0 1px 0 rgba(255,255,255,0.34), inset 0 -10px 16px rgba(0,0,0,0.22), 0 0 24px ${displayColor}24`,
-                        }}
-                        >
-                        <div className="absolute left-1.5 top-1.5 h-4 w-4 rounded-full bg-white/35 blur-[2px]" />
-                        <div className="absolute inset-x-1 bottom-0 h-4 rounded-full bg-black/15 blur-sm" />
-                        <div
-                          className="relative h-8 w-8"
-                          style={{
-                            backgroundColor: "#ffffff",
-                            maskImage: `url(${item.iconUrl})`,
-                            maskSize: "contain",
-                            maskRepeat: "no-repeat",
-                            maskPosition: "center",
-                            WebkitMaskImage: `url(${item.iconUrl})`,
-                            WebkitMaskSize: "contain",
-                            WebkitMaskRepeat: "no-repeat",
-                            WebkitMaskPosition: "center",
-                          }}
-                        />
-                      </div>
-                    ) : null}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="min-w-0">
-                          <div className="truncate text-base font-black text-white" style={{ color: primaryColor || undefined }}>
-                            {item.name}
-                          </div>
-                        </div>
-                      </div>
-                      {item.sources.length > 0 && (
-                        <div className="mt-3 flex flex-wrap items-center gap-2">
-                          {item.sources.map(source => (
-                            <span key={`${item.name}-${source.label}`} className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900/70 px-2.5 py-1.5 text-xs font-medium leading-tight text-slate-300">
-                              {source.label}
-                              {source.synergyChampions.length > 0 && (
-                                <span className="flex -space-x-1">
-                                  {source.synergyChampions.slice(0, 3).map(champion => (
-                                    <span
-                                      key={`${item.name}-${source.label}-${champion.name}`}
-                                      className="relative h-5 w-5 overflow-hidden rounded-full border border-slate-950 ring-1 ring-slate-700"
-                                      title={champion.name}
-                                    >
-                                      <Image
-                                        src={getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "64")}
-                                        alt={champion.name}
-                                        fill
-                                        sizes="20px"
-                                        className="object-cover"
-                                      />
-                                    </span>
-                                  ))}
-                                </span>
-                              )}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </button>
-            )
-
-            if (!description) {
-              return <div key={`${title}-${item.name}`}>{cardContent}</div>
-            }
-
-            return (
-              <Tooltip key={`${title}-${item.name}`}>
-                <TooltipTrigger asChild>
-                  {cardContent}
-                </TooltipTrigger>
-                <TooltipContent className="max-w-sm border-slate-700 bg-slate-950 p-4 shadow-xl">
-                  <AbilityTooltipContent item={item} description={description} color={displayColor} />
-                </TooltipContent>
-              </Tooltip>
-            )
-          })}
-        </div>
-      ) : (
-        <p className="text-sm text-slate-500">No {title.toLowerCase()} recorded.</p>
-      )}
-    </section>
-  )
+function formatDuelDate(value: Date | string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return "Date unknown"
+  return `Updated ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}`
 }
 
-function AbilityTooltipContent({ item, description, color }: { item: GroupedAbilityLink; description: string; color: string }) {
-  return (
-    <div className="flex items-start gap-3.5">
-      {item.iconUrl && (
-        <div
-          className="relative mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15"
-          style={{
-            backgroundColor: color,
-            boxShadow: `inset 0 1px 0 rgba(255,255,255,0.34), inset 0 -8px 12px rgba(0,0,0,0.2), 0 0 20px ${color}24`,
-          }}
-        >
-          <div className="absolute left-1 top-1 h-3 w-3 rounded-full bg-white/35 blur-[2px]" />
-          <div className="absolute inset-x-1 bottom-0 h-3 rounded-full bg-black/15 blur-sm" />
-          <div
-            className="relative h-6 w-6"
-            style={{
-              backgroundColor: "#ffffff",
-              maskImage: `url(${item.iconUrl})`,
-              maskSize: "contain",
-              maskRepeat: "no-repeat",
-              maskPosition: "center",
-              WebkitMaskImage: `url(${item.iconUrl})`,
-              WebkitMaskSize: "contain",
-              WebkitMaskRepeat: "no-repeat",
-              WebkitMaskPosition: "center",
-            }}
-          />
-        </div>
-      )}
-      <div className="space-y-1.5">
-        <p className="text-base font-black text-white" style={{ color }}>
-          {item.name}
-        </p>
-        <p className="text-sm leading-relaxed text-slate-300">
-          {description}
-        </p>
-      </div>
-    </div>
-  )
+function format(value: number | null | undefined) {
+  return value == null ? "—" : Math.round(value).toLocaleString("en-US")
 }
 
-function groupAbilityLinks<
-  T extends {
-    source: string | null
-    ability: { name: string; iconUrl?: string | null; gameGlossaryTermId?: string | null }
-    synergyChampions?: Array<{ champion: { name: string; slug: string | null; images: unknown } }>
-  }
->(items: T[]): GroupedAbilityLink[] {
-  const names = new Map<string, GroupedAbilityLink>()
-
-  for (const item of items) {
-    const name = item.ability.name
-    const existing = names.get(name)
-    const normalizedSource = normalizeAbilitySource(item.source)
-    const sourceSynergies = dedupeSynergyChampions(item.synergyChampions ?? [])
-
-    if (!existing) {
-      names.set(name, {
-        name,
-        iconUrl: item.ability.iconUrl,
-        gameGlossaryTermId: item.ability.gameGlossaryTermId,
-        sources: normalizedSource ? [{ label: normalizedSource, synergyChampions: sourceSynergies }] : [],
-      })
-      continue
-    }
-
-    if (!normalizedSource) {
-      continue
-    }
-
-    const existingSource = existing.sources.find(source => source.label === normalizedSource)
-    if (!existingSource) {
-      existing.sources.push({ label: normalizedSource, synergyChampions: sourceSynergies })
-      continue
-    }
-
-    existingSource.synergyChampions = dedupeSynergyChampions([
-      ...existingSource.synergyChampions.map(champion => ({ champion })),
-      ...(item.synergyChampions ?? []),
-    ])
-  }
-
-  return Array.from(names.values())
-    .map(item => ({
-      ...item,
-      sources: item.sources.sort((a, b) => a.label.localeCompare(b.label)),
-    }))
-    .sort((a, b) => a.name.localeCompare(b.name))
-}
-
-function dedupeSynergyChampions(
-  items: Array<{ champion: { name: string; slug: string | null; images: unknown } }>
-): Array<{ name: string; slug: string | null; images: unknown }> {
-  const champions = new Map<string, { name: string; slug: string | null; images: unknown }>()
-  for (const item of items) {
-    champions.set(item.champion.slug ?? item.champion.name, item.champion)
-  }
-  return Array.from(champions.values()).sort((a, b) => a.name.localeCompare(b.name))
-}
-
-function normalizeAbilitySource(source: string | null) {
-  if (!source) return null
-  const trimmed = source.trim()
-  if (!trimmed) return null
-  const normalized = trimmed.toLowerCase().replace(/\s+/g, "_")
-  return abilityTextGroupTitle(normalized)
-}
-
-function rawGlossaryDescription(raw: unknown) {
-  if (!raw || typeof raw !== "object") return null
-  const description = (raw as { description?: unknown }).description
-  return typeof description === "string" && description.trim() ? description : null
-}
-
-function normalizeHexColor(color: string): CSSProperties["color"] {
-  if (/^[0-9a-fA-F]{6}$/.test(color)) return `#${color}`
-  if (/^[0-9a-fA-F]{8}$/.test(color)) return `#${color.slice(0, 6)}`
-  return undefined
-}
-
-function formatNumber(value: number | null | undefined) {
-  return value == null ? "-" : value.toLocaleString("en-US")
-}
-
-function formatStatValue(value: number | string | null | undefined) {
-  if (value == null || value === "") return "-"
-  if (typeof value === "number") return value.toLocaleString("en-US")
-  return value
+function DossierSynergies({ view, targetSynergyId }: { view: ChampionDetailsView; targetSynergyId: string | null }) {
+  const synergyView = useMemo(() => buildChampionSynergyView(view.champion.gameSynergies, view.champion.id, view.selectedStat?.rarity ?? null), [view.champion.gameSynergies, view.champion.id, view.selectedStat?.rarity])
+  return <section id="champion-synergies" aria-labelledby="champion-synergies-heading"><div className="mb-8"><h2 id="champion-synergies-heading" className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Team synergies</h2><p className="mt-3 text-base leading-7 text-slate-400">Find partners and explore the bonuses they bring to your team.</p></div><ChampionSynergiesPanel {...synergyView} rarity={view.selectedStat?.rarity ?? null} glossaryById={view.glossaryById} targetSynergyId={targetSynergyId} /></section>
 }

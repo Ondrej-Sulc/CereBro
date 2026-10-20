@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect, useMemo } from "react"
+import { EFFECT_FORMS, EFFECT_DIRECTIONS, EFFECT_FORM_LABELS, EFFECT_DIRECTION_LABELS, readAbilitySource, type EffectSourceMetadata } from "@cerebro/core/domain/ability-source"
 import { ChampionAbilityLink, AbilityLinkType, Ability, AttackType, ChampionClass } from "@prisma/client"
 import { updateChampionAbility, removeChampionAbility, updateChampionDetails, addSynergy, removeSynergy, saveChampionAttacks, updateChampionFullAbilities, draftChampionAbilities, redraftChampionAbilities, confirmAbilityDraft, fetchDraftModels, AbilityDraft, ModelOption } from "./actions"
 import { AdminChampionData } from "./champion-card"
@@ -117,7 +118,6 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
   type DraftStep = 'idle' | 'loading' | 'review' | 'applying' | 'confirming'
   const [draftStep, setDraftStep] = useState<DraftStep>('idle')
   const [draft, setDraft] = useState<AbilityDraft | null>(null)
-  const [draftInitialPrompt, setDraftInitialPrompt] = useState<string>("")
   const [draftSuggestions, setDraftSuggestions] = useState<string>("")
   const [showSuggestForm, setShowSuggestForm] = useState(false)
   const [draftModel, setDraftModel] = useState("google/gemini-2.5-pro")
@@ -147,7 +147,6 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
     setFullAbilitiesJson(champion.fullAbilities ? JSON.stringify(champion.fullAbilities, null, 2) : "{}")
     setDraftStep('idle')
     setDraft(null)
-    setDraftInitialPrompt("")
     setDraftSuggestions("")
     setShowSuggestForm(false)
     setNewSource("")
@@ -293,13 +292,13 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
     }
   }
 
-  const handleUpdateSource = async (linkId: number, source: string, type: AbilityLinkType) => {
+  const handleUpdateSource = async (linkId: number, source: string, type: AbilityLinkType, metadata: EffectSourceMetadata) => {
       try {
           // Find the link to get current values
           const link = champion.abilities.find(a => a.id === linkId)
           if (!link) return
 
-          await updateChampionAbility(linkId, champion.id, link.abilityId, type, source || undefined)
+          await updateChampionAbility(linkId, champion.id, link.abilityId, type, source || undefined, metadata)
           toast({ title: "Source updated" })
       } catch (error) {
           toast({ title: "Failed to update source", variant: "destructive" })
@@ -333,7 +332,6 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
     try {
       const result = await draftChampionAbilities(champion.id, draftModel)
       setDraft(result.draft)
-      setDraftInitialPrompt(result.initialUserPrompt)
       setDraftStep('review')
     } catch (error) {
       toast({ title: "AI draft failed", description: error instanceof Error ? error.message : "Unknown error", variant: "destructive" })
@@ -345,7 +343,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
     if (!draft || !draftSuggestions.trim()) return
     setDraftStep('applying')
     try {
-      const newDraft = await redraftChampionAbilities(draftInitialPrompt, draft, draftSuggestions, draftModel)
+      const newDraft = await redraftChampionAbilities(champion.id, draft, draftSuggestions, draftModel)
       setDraft(newDraft)
       setDraftSuggestions("")
       setShowSuggestForm(false)
@@ -690,14 +688,18 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                 </div>
 
                                 <div className="p-4 space-y-4 max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700">
+                                    <p className="text-xs text-slate-400">Includes innate and synergy effects. Check each effect belongs to this champion. Synergy entries show this champion’s star levels and the teammates needed to activate them.</p>
                                     {(draft.abilities?.length ?? 0) > 0 && (
                                         <div>
                                             <p className="text-[10px] font-bold uppercase tracking-widest text-amber-500/80 mb-2">Abilities ({draft.abilities!.length})</p>
                                             <div className="flex flex-wrap gap-1.5">
                                                 {draft.abilities!.map((item, i) => (
-                                                    <div key={i} className="flex items-baseline gap-1 text-xs bg-slate-800/60 border border-slate-700/50 rounded-lg px-2.5 py-1.5">
+                                                    <div key={i} className="flex flex-wrap items-baseline gap-1 text-xs bg-slate-800/60 border border-slate-700/50 rounded-lg px-2.5 py-1.5">
                                                         <span className="font-semibold text-amber-400">{item.name}</span>
+                                                        {item.effectForm && item.effectForm !== "UNKNOWN" && <span className="rounded border border-violet-400/20 px-1 text-[10px] text-violet-200">{EFFECT_FORM_LABELS[item.effectForm]}</span>}
+                                                        {item.effectDirection && item.effectDirection !== "UNKNOWN" && <span className="rounded border border-sky-400/20 px-1 text-[10px] text-sky-200">{EFFECT_DIRECTION_LABELS[item.effectDirection]}</span>}
                                                         {item.source && <span className="text-slate-400">— {item.source}</span>}
+                                                        {item.synergy && <span className="basis-full text-violet-300">{item.synergy.requirement}</span>}
                                                     </div>
                                                 ))}
                                             </div>
@@ -709,9 +711,12 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                             <p className="text-[10px] font-bold uppercase tracking-widest text-sky-500/80 mb-2">Immunities ({draft.immunities!.length})</p>
                                             <div className="flex flex-wrap gap-1.5">
                                                 {draft.immunities!.map((item, i) => (
-                                                    <div key={i} className="flex items-baseline gap-1 text-xs bg-slate-800/60 border border-slate-700/50 rounded-lg px-2.5 py-1.5">
+                                                    <div key={i} className="flex flex-wrap items-baseline gap-1 text-xs bg-slate-800/60 border border-slate-700/50 rounded-lg px-2.5 py-1.5">
                                                         <span className="font-semibold text-sky-400">{item.name}</span>
+                                                        {item.effectForm && item.effectForm !== "UNKNOWN" && <span className="rounded border border-violet-400/20 px-1 text-[10px] text-violet-200">{EFFECT_FORM_LABELS[item.effectForm]}</span>}
+                                                        {item.effectDirection && item.effectDirection !== "UNKNOWN" && <span className="rounded border border-sky-400/20 px-1 text-[10px] text-sky-200">{EFFECT_DIRECTION_LABELS[item.effectDirection]}</span>}
                                                         {item.source && <span className="text-slate-400">— {item.source}</span>}
+                                                        {item.synergy && <span className="basis-full text-violet-300">{item.synergy.requirement}</span>}
                                                     </div>
                                                 ))}
                                             </div>
@@ -822,7 +827,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                                                 key={link.id} 
                                                                 link={link} 
                                                                 allChampions={allChampions}
-                                                                onUpdateSource={(source) => handleUpdateSource(link.id, source, link.type)}
+                                                                onUpdateSource={(source, metadata) => handleUpdateSource(link.id, source, link.type, metadata)}
                                                                 onAddSynergy={(champId) => handleAddSynergy(link.id, champId)}
                                                                 onRemoveSynergy={(champId) => handleRemoveSynergy(link.id, champId)}
                                                                 onDelete={() => handleRemoveLink(link.id)}
@@ -898,7 +903,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                                                 key={link.id} 
                                                                 link={link} 
                                                                 allChampions={allChampions}
-                                                                onUpdateSource={(source) => handleUpdateSource(link.id, source, link.type)}
+                                                                onUpdateSource={(source, metadata) => handleUpdateSource(link.id, source, link.type, metadata)}
                                                                 onAddSynergy={(champId) => handleAddSynergy(link.id, champId)}
                                                                 onRemoveSynergy={(champId) => handleRemoveSynergy(link.id, champId)}
                                                                 onDelete={() => handleRemoveLink(link.id)}
@@ -1090,23 +1095,27 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
 function AbilityLinkRow({ link, allChampions, onUpdateSource, onAddSynergy, onRemoveSynergy, onDelete }: {
     link: AdminChampionData['abilities'][number],
     allChampions: ChampionListItem[],
-    onUpdateSource: (val: string) => Promise<void>,
+    onUpdateSource: (val: string, metadata: EffectSourceMetadata) => Promise<void>,
     onAddSynergy: (id: number) => void,
     onRemoveSynergy: (id: number) => void,
     onDelete: () => void
 }) {
-    const [source, setSource] = useState(link.source || "")
-    const [prevSource, setPrevSource] = useState(link.source || "")
+    const normalized = readAbilitySource(link)
+    const snapshot = JSON.stringify(normalized)
+    const [source, setSource] = useState(normalized.condition)
+    const [metadata, setMetadata] = useState<EffectSourceMetadata>(normalized)
+    const [prevSource, setPrevSource] = useState(snapshot)
     const [isSavingSource, setIsSavingSource] = useState(false)
     const [synergyOpen, setSynergyOpen] = useState(false)
 
-    const normalizedSource = link.source || ""
-    if (normalizedSource !== prevSource) {
-        setSource(normalizedSource)
-        setPrevSource(normalizedSource)
+    if (snapshot !== prevSource) {
+        setSource(normalized.condition)
+        setMetadata(normalized)
+        setPrevSource(snapshot)
     }
 
-    const isDirty = source !== normalizedSource
+    const isDirty = source !== normalized.condition || metadata.effectForm !== normalized.effectForm || metadata.effectDirection !== normalized.effectDirection
+    const resetSource = () => { setSource(normalized.condition); setMetadata(normalized) }
 
     const availableChampions = useMemo(() => {
         const existingIds = new Set(link.synergyChampions.map(s => s.champion.id))
@@ -1116,33 +1125,40 @@ function AbilityLinkRow({ link, allChampions, onUpdateSource, onAddSynergy, onRe
     const handleSaveSource = async () => {
         setIsSavingSource(true)
         try {
-            await onUpdateSource(source)
+            await onUpdateSource(source, { effectForm: metadata.effectForm, effectDirection: metadata.effectDirection })
         } finally {
             setIsSavingSource(false)
         }
     }
 
     return (
-        <div className="flex items-center gap-2 px-3 py-1.5 hover:bg-slate-800/20 transition-colors group min-w-0">
+        <div className="flex flex-wrap items-center gap-2 px-3 py-1.5 hover:bg-slate-800/20 transition-colors group min-w-0">
             {/* Inline source input — always editable */}
             <Input
                 value={source}
                 onChange={e => setSource(e.target.value)}
                 onKeyDown={e => {
                     if (e.key === 'Enter' && isDirty) handleSaveSource()
-                    if (e.key === 'Escape' && isDirty) setSource(normalizedSource)
+                    if (e.key === 'Escape' && isDirty) resetSource()
                 }}
+                aria-label={`Source condition for ${link.ability.name}`}
                 placeholder="No specific source"
                 className="flex-1 h-7 text-xs bg-transparent border-transparent hover:border-slate-700/60 hover:bg-slate-800/40 focus:bg-slate-800/60 focus:border-slate-600 focus-visible:ring-0 focus-visible:ring-offset-0 px-2 min-w-0 transition-colors"
             />
+            <select aria-label={`Effect form for ${link.ability.name}`} value={metadata.effectForm} disabled={isSavingSource} onChange={event => setMetadata({ ...metadata, effectForm: event.target.value as EffectSourceMetadata['effectForm'] })} className="h-7 rounded border border-slate-700/60 bg-slate-900 px-1.5 text-xs text-slate-300 focus:ring-1 focus:ring-primary">
+                {EFFECT_FORMS.map(form => <option key={form} value={form}>{form === 'UNKNOWN' ? 'Form not recorded' : EFFECT_FORM_LABELS[form]}</option>)}
+            </select>
+            {link.type === 'ABILITY' && <select aria-label={`Effect direction for ${link.ability.name}`} value={metadata.effectDirection} disabled={isSavingSource} onChange={event => setMetadata({ ...metadata, effectDirection: event.target.value as EffectSourceMetadata['effectDirection'] })} className="h-7 rounded border border-slate-700/60 bg-slate-900 px-1.5 text-xs text-slate-300 focus:ring-1 focus:ring-primary">
+                {EFFECT_DIRECTIONS.map(direction => <option key={direction} value={direction}>{direction === 'GAIN' ? 'Gains · Self' : direction === 'INFLICT' ? 'Inflicts · Opponent' : 'Direction not recorded'}</option>)}
+            </select>}
 
             {/* Save / cancel shown only when dirty */}
             {isDirty && (
                 <>
-                    <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0 text-primary hover:bg-primary/10" onClick={handleSaveSource} disabled={isSavingSource}>
+                    <Button aria-label={`Save ${link.ability.name} source`} size="icon" variant="ghost" className="h-6 w-6 shrink-0 text-primary hover:bg-primary/10" onClick={handleSaveSource} disabled={isSavingSource}>
                         {isSavingSource ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
                     </Button>
-                    <Button size="icon" variant="ghost" className="h-6 w-6 shrink-0 text-slate-500 hover:text-slate-300" onClick={() => setSource(normalizedSource)}>
+                    <Button aria-label={`Cancel ${link.ability.name} source changes`} size="icon" variant="ghost" className="h-6 w-6 shrink-0 text-slate-500 hover:text-slate-300" onClick={resetSource}>
                         <X className="w-3 h-3" />
                     </Button>
                 </>

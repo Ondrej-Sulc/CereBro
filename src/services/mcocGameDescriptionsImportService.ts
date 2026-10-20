@@ -8,7 +8,12 @@ import type {
   ChampionAbilityTextTemplate,
   ChampionAbilityTextTemplateNode,
   ChampionAbilityTextTemplateValueSource,
+  ChampionAbilityTextDisplay,
 } from '../domain/champion-ability-text/types';
+import { readAbilityTextDisplay } from '../domain/champion-ability-text/display';
+import { attachAbilityDisplay, type AbilityDisplayEntry } from './championAbilityDisplayService';
+import { attachAbilityBindings, type AbilityBindingEntry } from './championAbilityBindingService';
+import { readGameDisplayBinding } from '../domain/champion-ability-text/game-binding';
 
 export type GameDescriptionChampion = {
   base_id?: string;
@@ -42,6 +47,7 @@ export type GameDescriptionTextSource = {
   component_id?: string;
   hud_id?: string;
   placeholder_sources?: Record<string, GameDescriptionValueSource>;
+  display?: ChampionAbilityTextDisplay;
 };
 
 export type GameDescriptionTemplate = ChampionAbilityTextTemplate;
@@ -55,6 +61,7 @@ export type McocGameDescriptionsImportReport = {
   textRecords: number;
   glossaryTerms: number;
   canWrite: boolean;
+  bindingIssues?: string[];
   written?: {
     textRecordsDeleted: number;
     textRecordsCreated: number;
@@ -82,10 +89,23 @@ export function parseMcocGameDescriptionsJson(text: string): GameDescriptionsFil
 
 export function parseMcocGameGlossaryJson(text: string): GameGlossaryFile {
   const data = JSON.parse(text) as GameGlossaryFile;
+  validateGlossaryFile(data);
+  return data;
+}
+
+function validateGlossaryFile(data: GameGlossaryFile) {
   if (!data || typeof data !== 'object' || Array.isArray(data)) {
     throw new Error('Invalid glossary file: expected object keyed by glossary ID');
   }
-  return data;
+  for (const [id, entry] of Object.entries(data)) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)
+      || 'base_id' in entry || 'tiers' in entry || 'base_abilities' in entry
+      || (entry.name !== undefined && typeof entry.name !== 'string')
+      || (entry.description !== undefined && typeof entry.description !== 'string')
+      || (!('name' in entry) && !('description' in entry) && !('hud_id' in entry))) {
+      throw new Error(`Invalid glossary entry ${id}: expected an effect definition, not champion data`);
+    }
+  }
 }
 
 function pushText(nodes: GameDescriptionTemplateNode[], value: string) {
@@ -244,6 +264,7 @@ export function buildDescriptionTemplate(text: string, source?: GameDescriptionT
   const placeholderSources = enrichPlaceholderSources(text, source?.placeholder_sources ?? {});
   return {
     raw: text,
+    ...(source?.display ? { display: readAbilityTextDisplay(source.display) } : {}),
     blocks: (paragraphs.length ? paragraphs : ['']).map(paragraph => ({
       type: 'paragraph',
       children: parseInline(paragraph, placeholderSources),
@@ -364,13 +385,16 @@ export async function importMcocGameDescriptions(
   prisma: PrismaClient,
   descriptions: GameDescriptionsFile,
   glossary: GameGlossaryFile,
-  options: { write?: boolean } = {}
+  options: { write?: boolean; displayMetadata?: AbilityDisplayEntry[]; abilityBindings?: AbilityBindingEntry[] } = {}
 ): Promise<McocGameDescriptionsImportReport> {
+  validateGlossaryFile(glossary);
   const dbChampions = await prisma.champion.findMany({
     select: { id: true, name: true, shortName: true, gameId: true },
   });
   const matches = new Map<string, MatchResult>();
 
+  const displayBySource = new Map((options.displayMetadata ?? []).map(entry => [JSON.stringify([entry.gameId, entry.sourceId]), entry]));
+  const bindingsBySource = new Map((options.abilityBindings ?? []).map(entry => [JSON.stringify([entry.gameId, entry.sourceId]), entry]));
   for (const [gameId, champion] of Object.entries(descriptions)) {
     matches.set(
       gameId,
@@ -391,6 +415,31 @@ export async function importMcocGameDescriptions(
     glossaryTerms: Object.keys(glossary).length,
   };
 
+  // Enforce the contract here as well as in the CLI: the admin upload route
+  // uses this service directly and must not restore legacy guessed bindings.
+  const preparedByGameId = new Map<string, PreparedTextRecord[]>();
+  const bindingIssues: string[] = [];
+  for (const [gameId, champion] of Object.entries(descriptions)) {
+    if (matches.get(gameId)?.status !== 'matched') continue;
+    const records = buildTextRecords(champion).map(record => ({ ...record,
+      template: attachAbilityBindings(record.template, bindingsBySource.get(JSON.stringify([gameId, record.sourceId]))) }));
+    const check = (nodes: GameDescriptionTemplateNode[], sourceId: string) => {
+      for (const node of nodes) {
+        if (node.type === 'color') check(node.children, sourceId);
+        if (node.type !== 'value') continue;
+        const binding = node.source?.kind === 'abilityParam' ? node.source.gameBinding : undefined;
+        if (!binding || readGameDisplayBinding(binding).slot !== node.placeholderIndex) bindingIssues.push(`${gameId}/${sourceId}/{${node.placeholderIndex}}`);
+      }
+    };
+    records.forEach(record => record.template.blocks?.forEach(block => check(block.children, record.sourceId)));
+    preparedByGameId.set(gameId, records);
+  }
+  if (bindingIssues.length) {
+    report.bindingIssues = [...new Set(bindingIssues)];
+    report.canWrite = false;
+    if (options.write) throw new Error(`Missing verified game display bindings (${report.bindingIssues.length} slots). Regenerate with extract-mcoc-ability-bindings.py and supply --ability-bindings or the regenerated champions file.`);
+  }
+
   if (!options.write) return report;
 
   let textRecordsDeleted = 0;
@@ -401,8 +450,9 @@ export async function importMcocGameDescriptions(
     await prisma.gameGlossaryTerm.upsert({
       where: { id },
       update: {
-        name: entry.name ?? '',
-        description: entry.description || null,
+        // An unresolved reference must not erase previously verified text.
+        ...(entry.name?.trim() ? { name: entry.name } : {}),
+        ...(entry.description?.trim() ? { description: entry.description } : {}),
         category: entry.category ?? entry.category_name ?? null,
         raw: entry as Prisma.InputJsonValue,
       },
@@ -421,7 +471,7 @@ export async function importMcocGameDescriptions(
     const match = matches.get(gameId);
     if (match?.status !== 'matched') continue;
 
-    const records = buildTextRecords(champion);
+    const records = preparedByGameId.get(gameId)!;
     await prisma.$transaction(async tx => {
       const deleted = await tx.championAbilityText.deleteMany({
         where: {
@@ -438,7 +488,8 @@ export async function importMcocGameDescriptions(
           group: record.group,
           title: record.title,
           sortOrder: record.sortOrder,
-          template: record.template as unknown as Prisma.InputJsonValue,
+          template: attachAbilityBindings(attachAbilityDisplay(record.template, displayBySource.get(JSON.stringify([gameId, record.sourceId]))),
+            bindingsBySource.get(JSON.stringify([gameId, record.sourceId]))) as unknown as Prisma.InputJsonValue,
         })),
       });
       textRecordsCreated += records.length;

@@ -48,9 +48,15 @@ Handles high-frequency user interactions, notifications, and quick data lookups.
 
 ### Importing game synergies
 
-Champion pages include a Synergies tab filtered by the selected star level, with partner links, game descriptions, glossary tooltips, and separate sections for owned and incoming synergies.
+Champion pages use the Dossier artwork banner with four prominent tabs: Kit overview, Full abilities, Synergies, and Stats & attacks. Effect colors come from the imported game glossary; source conditions and required teammates are visible in the overview, with effect definitions on hover, focus, or tap. The ability reader includes chapter navigation and signature charts. Synergies follow the selected star level and can be searched by bonus, partner, or description, with partner rarity requirements on hover/focus. Build selections carry across all four tabs; the build controls collapse on narrow screens.
 
 Before deploying code that reads synergies, apply the database migrations with `pnpm exec prisma migrate deploy` and generate the client with `pnpm prisma:generate`. Refresh the champion catalog first so its game IDs and obtainable rarities are current.
+
+For an agent-led promotion of the complete reviewed local champion data, use
+[the champion data release handoff](docs/champion-data-release.md) and the
+read-only `src/scripts/export-champion-release.ts` exporter. The older GCS sync
+table list is incomplete for these pages. The release migration preserves the
+68 exact source-bound long-summary allowances across remapped database IDs.
 
 Use the resolved `mcoc_synergies.json` snapshot produced by `export_mcoc_synergies.py`. Admins with `MANAGE_CHAMPIONS` can preview and import it under **Admin > Champions > Bulk Imports > Game Synergies**, or run:
 

@@ -24,6 +24,7 @@ import {
   type GlobalPrestigeListOptions,
 } from "@/lib/global-prestige-list";
 import { ChampionCard } from "./components/champion-card";
+import { QuickChampionDialog } from "./components/quick-champion-dialog";
 import { RosterFilters } from "./components/roster-filters";
 import { RosterInsights } from "./components/roster-insights";
 import { EditChampionModal } from "./components/modals/edit-champion-modal";
@@ -33,6 +34,8 @@ import { useDeepMemo } from "@/hooks/use-deep-memo";
 import { switchProfile } from "../actions";
 import { reportClientError } from "@/lib/observability/client";
 import { matchesRosterAscensionFilter } from "./roster-ascension-filter";
+import { matchesRosterKitFilters } from "@/lib/roster-kit";
+import type { EffectForm, EffectDirection } from "@cerebro/core/domain/ability-source";
 
 function buildRosterQueryParams(params: {
   simulationTargetRank: number;
@@ -200,6 +203,7 @@ export function RosterView({
   const [sortDirection, setSortDirection] = useState<SortDirection>(enablePrestigeInsights ? "DESC" : "ASC");
   const [showUnowned, setShowUnowned] = useState(true);
   const [editingItem, setEditingItem] = useState<ProfileRosterEntry | null>(null);
+  const [quickItem, setQuickItem] = useState<ProfileRosterEntry | null>(null);
   const [showInsights, setShowInsights] = useState(enablePrestigeInsights ? initialShowInsights : false);
   const [sigBudget, setSigBudget] = useState(initialSigBudget);
   const [sigAwakenedOnly, setSigAwakenedOnly] = useState(initialSigAwakenedOnly);
@@ -224,6 +228,8 @@ export function RosterView({
   const [abilityCategoryLogic, setAbilityCategoryLogic] = useState<'AND' | 'OR'>('OR');
   const [abilityFilter, setAbilityFilter] = useState<string[]>([]);
   const [abilityLogic, setAbilityLogic] = useState<'AND' | 'OR'>('AND');
+  const [effectForms, setEffectForms] = useState<EffectForm[]>([]);
+  const [effectDirections, setEffectDirections] = useState<EffectDirection[]>([]);
   const [immunityFilter, setImmunityFilter] = useState<string[]>([]);
   const [immunityLogic, setImmunityLogic] = useState<'AND' | 'OR'>('AND');
 
@@ -507,8 +513,6 @@ export function RosterView({
       if (!matchesSearch || !matchesClass || !matchesStars || !matchesRank || !matchesAscension) return false;
 
       // Pre-compute sets once per item for performance
-      const abilityEntries = (item.champion.abilities || []).filter(a => a.type === 'ABILITY');
-      const immunityEntries = (item.champion.abilities || []).filter(a => a.type === 'IMMUNITY');
       const champTags = (item.champion.tags || []).map(t => t.name);
 
       if (tagFilter.length > 0) {
@@ -516,32 +520,17 @@ export function RosterView({
         else { if (!tagFilter.some(t => champTags.includes(t))) return false; }
       }
 
-      if (abilityCategoryFilter.length > 0) {
-        const championCategories = new Set(abilityEntries.flatMap(a => a.ability.categories.map(c => c.name)));
-        if (abilityCategoryLogic === 'AND') { if (!abilityCategoryFilter.every(c => championCategories.has(c))) return false; }
-        else { if (!abilityCategoryFilter.some(c => championCategories.has(c))) return false; }
-      }
-
-      if (abilityFilter.length > 0) {
-        const champAbilities = new Set(abilityEntries.map(a => a.ability.name));
-        if (abilityLogic === 'AND') { if (!abilityFilter.every(req => champAbilities.has(req))) return false; }
-        else { if (!abilityFilter.some(req => champAbilities.has(req))) return false; }
-      }
-
-      if (immunityFilter.length > 0) {
-        const champImmunities = new Set(immunityEntries.map(a => a.ability.name));
-        if (immunityLogic === 'AND') { if (!immunityFilter.every(req => champImmunities.has(req))) return false; }
-        else { if (!immunityFilter.some(req => champImmunities.has(req))) return false; }
-      }
-
-      return true;
+      return matchesRosterKitFilters(item.champion.abilities || [], {
+        abilities: abilityFilter, categories: abilityCategoryFilter, immunities: immunityFilter,
+        abilityLogic, categoryLogic: abilityCategoryLogic, immunityLogic, effectForms, effectDirections,
+      }, item.stars || undefined);
     });
 
     return filtered.sort((a, b) => compareRosterEntries(a, b, sortBy, sortDirection, {
       prestigeMap,
       catalogPrestigeByChampionId,
     }));
-  }, [roster, search, filterClasses, filterStars, filterRanks, filterAscensionLevels, sortBy, sortDirection, prestigeMap, catalogPrestigeByChampionId, tagFilter, tagLogic, abilityCategoryFilter, abilityCategoryLogic, abilityFilter, abilityLogic, immunityFilter, immunityLogic, showUnowned, allChampions]);
+  }, [roster, search, filterClasses, filterStars, filterRanks, filterAscensionLevels, sortBy, sortDirection, prestigeMap, catalogPrestigeByChampionId, tagFilter, tagLogic, abilityCategoryFilter, abilityCategoryLogic, abilityFilter, abilityLogic, immunityFilter, immunityLogic, effectForms, effectDirections, showUnowned, allChampions]);
 
   const visibleChampionCount = filteredRoster.length;
   const totalChampionCount = isChampionsCatalog
@@ -627,13 +616,13 @@ export function RosterView({
     return (
       <ChampionCard
         item={item} prestige={isChampionsCatalog ? undefined : prestigeMap[item.id]} onClick={effectiveCanEdit ? setEditingItem : () => {}} mode={effectiveCanEdit ? viewMode : 'view'}
-        filters={{ tags: tagFilter, categories: abilityCategoryFilter, abilities: abilityFilter, immunities: immunityFilter }}
+        onQuickView={setQuickItem}
         catalogMode={isChampionsCatalog}
         canManageAttackReservations={effectiveCanManageAttackReservations && showAttackReservationControls}
         onToggleAttackReservation={handleToggleAttackReservation}
       />
     );
-  }, [filteredRoster, prestigeMap, viewMode, effectiveCanEdit, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter, isChampionsCatalog, effectiveCanManageAttackReservations, showAttackReservationControls, handleToggleAttackReservation]);
+  }, [filteredRoster, prestigeMap, viewMode, effectiveCanEdit, isChampionsCatalog, effectiveCanManageAttackReservations, showAttackReservationControls, handleToggleAttackReservation]);
 
   return (
     <div className="space-y-6">
@@ -780,6 +769,7 @@ export function RosterView({
             tagFilter={tagFilter} onTagFilterChange={setTagFilter} tagLogic={tagLogic} onTagLogicChange={setTagLogic}
             abilityCategoryFilter={abilityCategoryFilter} onAbilityCategoryFilterChange={setAbilityCategoryFilter} abilityCategoryLogic={abilityCategoryLogic} onAbilityCategoryLogicChange={setAbilityCategoryLogic}
             abilityFilter={abilityFilter} onAbilityFilterChange={setAbilityFilter} abilityLogic={abilityLogic} onAbilityLogicChange={setAbilityLogic}
+            effectForms={effectForms} onEffectFormsChange={setEffectForms} effectDirections={effectDirections} onEffectDirectionsChange={setEffectDirections}
             immunityFilter={immunityFilter} onImmunityFilterChange={setImmunityFilter} immunityLogic={immunityLogic} onImmunityLogicChange={setImmunityLogic}
             initialTags={initialTags} initialAbilityCategories={initialAbilityCategories} initialAbilities={initialAbilities} initialImmunities={initialImmunities}
             canEdit={effectiveCanEdit}
@@ -811,6 +801,7 @@ export function RosterView({
         </>
       )}
 
+      {quickItem && <QuickChampionDialog key={quickItem.id} item={quickItem} prestige={isChampionsCatalog ? undefined : prestigeMap[quickItem.id]} open onOpenChange={open => { if (!open) setQuickItem(null); }} filters={{ tags: tagFilter, categories: abilityCategoryFilter, abilities: abilityFilter, immunities: immunityFilter, effectForms, effectDirections }} showUnownedState={!!quickItem.isUnowned && !isChampionsCatalog} />}
       {effectiveCanEdit && <EditChampionModal item={editingItem} prestige={editingItem ? prestigeMap[editingItem.id] : undefined} onClose={() => setEditingItem(null)} onUpdate={handleUpdate} onDelete={handleDelete} onItemChange={setEditingItem} />}
       {effectiveCanEdit && <AddChampionModal open={isAddingChampion} onOpenChange={setIsAddingChampion} allChampions={allChampions} onAdd={handleAddChampion} newChampion={newChampion} onNewChampionChange={setNewChampion} />}
       <PrestigeChartModal chartData={chartData} loading={loadingChart} onClose={() => setChartData(null)} />

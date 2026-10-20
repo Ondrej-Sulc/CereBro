@@ -31,9 +31,19 @@ export type ChampionAbilityTextTemplateValueSource =
       f24?: number;
       f27?: number;
       display?: { multiplier?: number; precision?: number };
+      gameBinding?: import('./game-binding').GameDisplayBinding;
     };
+
+export type ChampionAbilityTextDisplay = {
+  kind: "ability" | "glossary";
+  section?: { id: string; title: string };
+  panelId?: string;
+  componentId?: string;
+  hudId?: string;
+};
 
 export type ChampionAbilityTextTemplate = {
   raw: string;
   blocks?: Array<{ type: "paragraph"; children: ChampionAbilityTextTemplateNode[] }>;
+  display?: ChampionAbilityTextDisplay;
 };

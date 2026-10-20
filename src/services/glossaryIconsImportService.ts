@@ -1,158 +1,83 @@
 import { PrismaClient } from '@prisma/client';
 
-export type GlossaryIconUpdate = {
-  glossaryKey: string;
-  iconUrl: string;
+export type GlossaryIconUpdate = { glossaryKey: string; iconUrl: string };
+export type GlossaryIconsImportReport = {
+  totalUpdates: number; termsFound: number; termsUpdated: number;
+  abilitiesLinked: number; abilitiesCreated: number;
+  unmatchedTerms: string[]; skippedAbilityTerms: string[]; conflicts: string[];
+  canWrite: boolean;
+  written?: { termsUpdated: number; abilitiesLinked: number; abilitiesCreated: number };
 };
 
-export type GlossaryIconsImportReport = {
-  totalUpdates: number;
-  termsFound: number;
-  termsUpdated: number;
-  abilitiesLinked: number;
-  abilitiesCreated: number;
-  unmatchedTerms: string[];
-  canWrite: boolean;
-  written?: {
-    termsUpdated: number;
-    abilitiesLinked: number;
-    abilitiesCreated: number;
-  };
+const nameAliases: Record<string, string[]> = {
+  degen: ['Degeneration'], evade: ['Evasion'], glance: ['Glancing'],
+  phys_res: ['Physical Resistance'], energy_res: ['Energy Resistance'],
+  block_pen: ['Block Penetration'], physical_pen: ['Physical Penetration'],
+  energy_pen: ['Energy Penetration'], power_timebomb: ['Power Detonation'],
+  guaranteed_crit: ['Guaranteed Critical'], placebo: ['Placebo Buff'],
+  austere: ['Austere Armor Up'], banished: ['Banished Effects:'],
 };
+function identity(value: string) {
+  return value.replace(/\[[^\]]*\]/g, '').toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+export function isGlossaryIdentityMatch(id: string, name: string) {
+  return Boolean(name.trim()) && [id, ...(nameAliases[id] ?? [])]
+    .some(candidate => identity(candidate) === identity(name));
+}
 
 export async function importGlossaryIcons(
-  prisma: PrismaClient,
-  updates: GlossaryIconUpdate[],
-  options: { write?: boolean } = {}
+  prisma: PrismaClient, updates: GlossaryIconUpdate[], options: { write?: boolean } = {}
 ): Promise<GlossaryIconsImportReport> {
-  let termsFound = 0;
-  let termsUpdated = 0;
-  let abilitiesLinked = 0;
-  let abilitiesCreated = 0;
-  const unmatchedTerms: string[] = [];
-
-  for (const update of updates) {
-    const glossaryKey = update.glossaryKey;
-    const iconUrl = update.iconUrl;
-
-    await prisma.$transaction(async (tx) => {
-      const term = await tx.gameGlossaryTerm.findUnique({
-        where: { id: glossaryKey },
-      });
-
-      if (!term) {
-        unmatchedTerms.push(glossaryKey);
-        return;
-      }
-
+  let termsFound = 0, termsUpdated = 0, abilitiesLinked = 0, abilitiesCreated = 0;
+  const unmatchedTerms: string[] = [], skippedAbilityTerms: string[] = [], conflicts: string[] = [];
+  for (const { glossaryKey, iconUrl } of updates) {
+    await prisma.$transaction(async tx => {
+      const term = await tx.gameGlossaryTerm.findUnique({ where: { id: glossaryKey } });
+      if (!term) { unmatchedTerms.push(glossaryKey); return; }
       termsFound++;
-
-      const snakeCase = term.name.toLowerCase().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '');
-      const duplicates = await tx.gameGlossaryTerm.findMany({
-        where: { name: { equals: term.name, mode: 'insensitive' }, iconUrl: { not: null } },
-        select: { id: true },
-      });
-
-      let isCanonical = true;
-      if (duplicates.length > 1) {
-        isCanonical =
-          glossaryKey === snakeCase ||
-          glossaryKey.includes(snakeCase) ||
-          glossaryKey === duplicates.map(d => d.id).sort()[0];
-      }
-
       termsUpdated++;
-      if (options.write) {
-        await tx.gameGlossaryTerm.update({
-          where: { id: glossaryKey },
-          data: { iconUrl },
-        });
-      }
-
-      if (!isCanonical) {
+      if (options.write) await tx.gameGlossaryTerm.update({ where: { id: glossaryKey }, data: { iconUrl } });
+      // Unresolved names must not create blank abilities. A partial key such as
+      // "severe" must not claim the canonical Armor Break ability either.
+      if (!isGlossaryIdentityMatch(term.id, term.name)) {
+        skippedAbilityTerms.push(glossaryKey);
         return;
       }
-
-      let ability = await tx.ability.findUnique({
-        where: { gameGlossaryTermId: glossaryKey },
+      const sameName = await tx.gameGlossaryTerm.findMany({
+        where: { name: { equals: term.name, mode: 'insensitive' } }, select: { id: true, name: true },
       });
-
-      if (!ability) {
-        const alreadyLinked = await tx.ability.findFirst({
-          where: {
-            name: { equals: term.name, mode: 'insensitive' },
-            gameGlossaryTermId: { not: null },
-          },
-        });
-
-        if (alreadyLinked) {
-          abilitiesLinked++;
-          // We determined this glossaryKey is the "canonical" term. If another term already
-          // claimed this ability, we intentionally overwrite gameGlossaryTermId to re-point to us.
-          if (options.write) {
-            await tx.ability.update({
-              where: { id: alreadyLinked.id },
-              data: { gameGlossaryTermId: glossaryKey, iconUrl },
-            });
-          }
-        } else {
-          ability = await tx.ability.findFirst({
-            where: { name: { equals: term.name, mode: 'insensitive' } },
-          });
-
-          if (ability) {
-            abilitiesLinked++;
-            if (options.write) {
-              await tx.ability.update({
-                where: { id: ability.id },
-                data: { gameGlossaryTermId: glossaryKey, iconUrl },
-              });
-            }
-          } else {
-            if (term.description || term.name !== term.id) {
-              abilitiesCreated++;
-              if (options.write) {
-                await tx.ability.create({
-                  data: {
-                    name: term.name,
-                    description: term.description,
-                    gameGlossaryTermId: glossaryKey,
-                    iconUrl,
-                  },
-                });
-              }
-            }
-          }
-        }
-      } else {
+      const canonical = sameName.filter(candidate => isGlossaryIdentityMatch(candidate.id, candidate.name))
+        .sort((a, b) => Number(identity(b.id) === identity(term.name)) - Number(identity(a.id) === identity(term.name))
+          || a.id.localeCompare(b.id))[0];
+      if (canonical?.id !== term.id) { skippedAbilityTerms.push(glossaryKey); return; }
+      const linked = await tx.ability.findUnique({ where: { gameGlossaryTermId: term.id } });
+      if (linked && identity(linked.name) !== identity(term.name)) {
+        conflicts.push(`${term.id}: already linked to ${linked.name}`);
+        return;
+      }
+      const ability = linked ?? await tx.ability.findFirst({
+        where: { name: { equals: term.name, mode: 'insensitive' } },
+      });
+      if (ability?.gameGlossaryTermId && ability.gameGlossaryTermId !== term.id) {
+        conflicts.push(`${ability.name}: already linked to ${ability.gameGlossaryTermId}`);
+        return;
+      }
+      if (ability) {
         abilitiesLinked++;
-        if (options.write) {
-          await tx.ability.update({
-            where: { id: ability.id },
-            data: { iconUrl },
-          });
-        }
+        if (options.write) await tx.ability.update({
+          where: { id: ability.id }, data: { gameGlossaryTermId: term.id, iconUrl },
+        });
+      } else {
+        abilitiesCreated++;
+        if (options.write) await tx.ability.create({ data: {
+          name: term.name, description: term.description, gameGlossaryTermId: term.id, iconUrl,
+        } });
       }
     });
   }
-
-  const report: GlossaryIconsImportReport = {
-    totalUpdates: updates.length,
-    termsFound,
-    termsUpdated,
-    abilitiesLinked,
-    abilitiesCreated,
-    unmatchedTerms,
-    canWrite: true,
+  return {
+    totalUpdates: updates.length, termsFound, termsUpdated, abilitiesLinked, abilitiesCreated,
+    unmatchedTerms, skippedAbilityTerms, conflicts, canWrite: true,
+    ...(options.write ? { written: { termsUpdated, abilitiesLinked, abilitiesCreated } } : {}),
   };
-
-  if (options.write) {
-    report.written = {
-      termsUpdated,
-      abilitiesLinked,
-      abilitiesCreated,
-    };
-  }
-
-  return report;
 }

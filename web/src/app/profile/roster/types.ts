@@ -1,13 +1,16 @@
 import { Champion as PrismaChampion, ChampionClass } from "@prisma/client";
 import { RosterWithChampion } from "@cerebro/core/services/rosterService";
 import { ChampionImages } from "@/types/champion";
+import type { EffectSourceMetadata } from "@cerebro/core/domain/ability-source";
+import type { RosterKitFilters } from "@/lib/roster-kit";
 
 export type ProfileRosterEntry = Omit<RosterWithChampion, 'champion'> & {
     isUnowned?: boolean;
     champion: Omit<PrismaChampion, 'images'> & {
         images: ChampionImages;
         tags: { id: string | number, name: string }[];
-        abilities: {
+        abilities: (Partial<EffectSourceMetadata> & {
+            id: number;
             type: string;
             source: string | null;
             ability: {
@@ -24,7 +27,7 @@ export type ProfileRosterEntry = Omit<RosterWithChampion, 'champion'> & {
                     images: ChampionImages;
                 };
             }[];
-        }[];
+        })[];
     }
 };
 
@@ -89,11 +92,8 @@ export type RosterSortField = "NAME" | "RELEASE_DATE" | "PRESTIGE";
 
 export type SortDirection = "ASC" | "DESC";
 
-export interface FilterState {
+export interface FilterState extends RosterKitFilters {
     tags: string[];
-    categories: string[];
-    abilities: string[];
-    immunities: string[];
 }
 
 export interface PrestigePoint {

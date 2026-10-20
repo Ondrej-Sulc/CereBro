@@ -14,6 +14,12 @@ export function getObtainableStarLevels(champion: Pick<Champion, "obtainable">) 
   return STAR_LEVELS.filter((stars) => isChampionObtainableAs(champion, stars));
 }
 
+export function getObtainableChampionStats<T extends { rarity: number | null }>(
+  champion: Pick<Champion, "obtainable"> & { stats: T[] }
+) {
+  return champion.stats.filter((stat) => stat.rarity != null && isChampionObtainableAs(champion, stat.rarity));
+}
+
 export function hasObtainableStarInRange(
   champion: Pick<Champion, "obtainable">,
   minStarLevel?: number | null,

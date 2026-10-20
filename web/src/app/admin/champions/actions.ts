@@ -9,7 +9,10 @@ import { AdminChampionData } from "./champion-card"
 import { ChampionImages } from "@/types/champion"
 import { withActionContext } from "@/lib/with-request-context"
 import { OpenRouterService } from "@cerebro/core/services/openRouterService"
-import { abilityDraftPrompt } from "@cerebro/core/prompts/abilityDraft"
+import { generateAbilityDraft, saveAbilityDraft } from "@/lib/ability-draft-service"
+import type { AbilityDraft } from "@/lib/ability-draft"
+import { EFFECT_FORMS, EFFECT_DIRECTIONS, readAbilitySource, type EffectSourceMetadata } from "@cerebro/core/domain/ability-source"
+export type { AbilityDraft } from "@/lib/ability-draft"
 import {
   importMcocGameTags,
   parseMcocChampionTagsJson,
@@ -18,9 +21,6 @@ import {
   type McocGameTagsImportReport,
 } from "@cerebro/core/services/mcocGameTagsImportService"
 import { generateChampionSlug } from "@/lib/championHelper"
-
-type AbilityDraftItem = { name: string; source: string }
-export type AbilityDraft = { abilities?: AbilityDraftItem[]; immunities?: AbilityDraftItem[] }
 
 export type ModelOption = { id: string; name: string }
 
@@ -187,15 +187,22 @@ export const updateChampionAbility = withActionContext('updateChampionAbility', 
     championId: number,
     abilityId: number,
     type: AbilityLinkType,
-    source?: string
+    source?: string,
+    metadata?: EffectSourceMetadata
 ) => {
     await ensureAdmin("MANAGE_CHAMPIONS")
+    if (metadata && (!EFFECT_FORMS.includes(metadata.effectForm) || !EFFECT_DIRECTIONS.includes(metadata.effectDirection))) {
+        throw new Error("Invalid effect source tags.")
+    }
+    const normalized = readAbilitySource({ source, ...metadata })
+    const sourceData = { source: normalized.condition || null, effectForm: normalized.effectForm,
+        effectDirection: type === 'IMMUNITY' ? 'UNKNOWN' as const : normalized.effectDirection }
     if (linkId !== undefined) {
         await prisma.championAbilityLink.update({
             where: { id: linkId },
             data: {
                 type,
-                source
+                ...sourceData
             }
         })
     } else {
@@ -205,7 +212,7 @@ export const updateChampionAbility = withActionContext('updateChampionAbility', 
                 championId,
                 abilityId,
                 type,
-                source: source || null
+                ...sourceData
             }
         })
 
@@ -215,7 +222,7 @@ export const updateChampionAbility = withActionContext('updateChampionAbility', 
                     championId,
                     abilityId,
                     type,
-                    source
+                    ...sourceData
                 }
             })
         }
@@ -362,35 +369,18 @@ export const fetchDraftModels = withActionContext('fetchDraftModels', async (): 
 export const draftChampionAbilities = withActionContext('draftChampionAbilities', async (
     championId: number,
     model: string = "google/gemini-2.5-pro"
-): Promise<{ draft: AbilityDraft; initialUserPrompt: string }> => {
+): Promise<{ draft: AbilityDraft }> => {
     await ensureAdmin("MANAGE_CHAMPIONS")
-
-    const champion = await prisma.champion.findUnique({ where: { id: championId } })
-    if (!champion || !champion.fullAbilities) {
-        throw new Error("Champion not found or has no Descriptions (fullAbilities) set.")
-    }
 
     const apiKey = process.env.OPEN_ROUTER_API_KEY
     if (!apiKey) throw new Error("OpenRouter API Key not configured on the server.")
 
-    const openRouter = new OpenRouterService(apiKey)
-    const userPrompt = `Champion Name: ${champion.name}\n"full_abilities" JSON:\n\`\`\`json\n${JSON.stringify(champion.fullAbilities, null, 2)}\n\`\`\`\n\n**Generate ONLY the JSON object for this new champion, strictly following all rules and examples provided.**`
-
-    const response = await openRouter.chat({
-        model,
-        messages: [
-            { role: "system", content: abilityDraftPrompt },
-            { role: "user", content: userPrompt },
-        ],
-        response_format: { type: "json_object" },
-    })
-
-    const draft = JSON.parse(response.choices[0].message.content) as AbilityDraft
-    return { draft, initialUserPrompt: userPrompt }
+    const draft = await generateAbilityDraft(prisma, new OpenRouterService(apiKey), championId, model)
+    return { draft }
 });
 
 export const redraftChampionAbilities = withActionContext('redraftChampionAbilities', async (
-    initialUserPrompt: string,
+    championId: number,
     originalDraft: AbilityDraft,
     suggestions: string,
     model: string = "google/gemini-2.5-pro"
@@ -400,19 +390,9 @@ export const redraftChampionAbilities = withActionContext('redraftChampionAbilit
     const apiKey = process.env.OPEN_ROUTER_API_KEY
     if (!apiKey) throw new Error("OpenRouter API Key not configured on the server.")
 
-    const openRouter = new OpenRouterService(apiKey)
-    const response = await openRouter.chat({
-        model,
-        messages: [
-            { role: "system", content: abilityDraftPrompt },
-            { role: "user", content: initialUserPrompt },
-            { role: "assistant", content: JSON.stringify(originalDraft, null, 2) },
-            { role: "user", content: `User Suggestions: "${suggestions}"\n\nPlease apply these suggestions and return the complete, updated JSON object. Remember to strictly follow all the rules. Generate ONLY the updated JSON object.` },
-        ],
-        response_format: { type: "json_object" },
+    return generateAbilityDraft(prisma, new OpenRouterService(apiKey), championId, model, {
+        draft: originalDraft, suggestions,
     })
-
-    return JSON.parse(response.choices[0].message.content) as AbilityDraft
 });
 
 export type SyncTagsResult = McocGameTagsImportReport
@@ -444,28 +424,7 @@ export const confirmAbilityDraft = withActionContext('confirmAbilityDraft', asyn
 ) => {
     await ensureAdmin("MANAGE_CHAMPIONS")
 
-    const abilities = (draft.abilities ?? []).map(a => ({ ...a, type: 'ABILITY' as const }))
-    const immunities = (draft.immunities ?? []).map(i => ({ ...i, type: 'IMMUNITY' as const }))
-
-    for (const link of [...abilities, ...immunities]) {
-        const ability = await prisma.ability.upsert({
-            where: { name: link.name },
-            update: { name: link.name },
-            create: { name: link.name, description: "" },
-        })
-
-        const normalizedSource = link.source || null
-
-        const existing = await prisma.championAbilityLink.findFirst({
-            where: { championId, abilityId: ability.id, type: link.type, source: normalizedSource }
-        })
-
-        if (!existing) {
-            await prisma.championAbilityLink.create({
-                data: { championId, abilityId: ability.id, type: link.type, source: normalizedSource }
-            })
-        }
-    }
+    await saveAbilityDraft(prisma, championId, draft)
 
     revalidateChampionData()
 });

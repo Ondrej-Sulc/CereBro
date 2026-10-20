@@ -52,6 +52,9 @@ export const CONFIG = {
   // Recognition Thresholds
   CLASS_RMSE_THRESHOLD: 80,
   CHAMPION_MATCH_THRESHOLD: 90,
+  CHAMPION_SHAPE_AMBIGUITY_RATIO: 0.95,
+  // Root mean square RGB error on the 0–255 channel scale (only used for shape ties).
+  CHAMPION_COLOR_RMSE_THRESHOLD: 90,
 
   // Touched cell detection: minimum PI deviation (px) above the row median to flag a cell
   // as compressed due to the user touching it during screenshot capture.
