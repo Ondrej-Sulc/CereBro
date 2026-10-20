@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 
 const boundary = vi.hoisted(() => ({
   player: { findMany: vi.fn() },
+  war: { findMany: vi.fn() },
   warDefensePlan: { findFirst: vi.fn() },
   tag: { findMany: vi.fn() },
   getUserPlayerWithAlliance: vi.fn(),
@@ -25,6 +26,8 @@ import { clearCache } from "../../../../lib/cache";
 beforeEach(() => {
   vi.clearAllMocks();
   clearCache("alliance-members-", true);
+  clearCache("distinct-seasons-", true);
+  boundary.war.findMany.mockResolvedValue([]);
   boundary.getUserPlayerWithAlliance.mockResolvedValue({ allianceId: "alliance-1", battlegroup: 1, isOfficer: true, isBotAdmin: false });
   boundary.warDefensePlan.findFirst.mockResolvedValue({ id: "plan", allianceId: "alliance-1", alliance: {} });
   boundary.tag.findMany.mockResolvedValue([]);
