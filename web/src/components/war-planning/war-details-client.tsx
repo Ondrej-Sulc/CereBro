@@ -1,6 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import Link from "next/link";
+import { Skull } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { summarizeWarDeaths } from "@/lib/war-death-summary";
+import { WarDeathSummaryPanel } from "./war-death-summary";
 import { WarFight, War, WarStatus } from "@prisma/client";
 import { Champion } from "@/types/champion";
 import { cn } from "@/lib/utils";
@@ -38,6 +44,9 @@ interface WarDetailsClientProps {
   activeDefensePlan?: { placements: { defenderId: number | null; playerId: string | null }[] } | null;
   userBattlegroup?: number | null;
   paletteStyle?: PlayerPaletteStyle;
+  initialBattlegroup?: number;
+  initialNodeNumber?: number;
+  latestHistorySeason: number | null;
 }
 
 export default function WarDetailsClient(props: WarDetailsClientProps) {
@@ -87,6 +96,10 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     handleRemoveWarBan,
     fightsError
   } = useWarPlanning(props);
+
+  const [isDeathSummaryOpen, setIsDeathSummaryOpen] = useState(false);
+  const deathSummaries = useMemo(() => summarizeWarDeaths([{ ...props.war, fights: currentFights }]), [props.war, currentFights]);
+  const bgDeaths = deathSummaries[0].battlegroups.find(bg => bg.battlegroup === currentBattlegroup)?.deaths ?? 0;
 
   const [isDesktop, setIsDesktop] = useState(true);
   const [isPlayerPanelOpen, setIsPlayerPanelOpen] = useState(true); // Default open
@@ -338,6 +351,19 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
             onDistributePlayer={handleDistributePlayer}
         />
 
+        <Dialog open={isDeathSummaryOpen} onOpenChange={setIsDeathSummaryOpen}>
+          <DialogContent className="max-h-[85dvh] overflow-y-auto border-slate-800 bg-slate-950 sm:max-w-3xl">
+            <DialogHeader>
+              <DialogTitle>BG{currentBattlegroup} recorded deaths</DialogTitle>
+              <DialogDescription>Recorded deaths for the current war and battlegroup.</DialogDescription>
+            </DialogHeader>
+            {loadingFights ? <p className="text-sm text-slate-400">Loading deaths…</p> : fightsError ? <p className="text-sm text-red-400">{fightsError}</p> : (
+              <WarDeathSummaryPanel key={currentBattlegroup} summaries={deathSummaries} battlegroup={currentBattlegroup} onSelectNode={node => { setIsDeathSummaryOpen(false); handleNodeClick(node); }} />
+            )}
+            <Link href={`/analysis/season-overview?season=${props.war.season}&war=${props.war.id}&bg=${currentBattlegroup}#war-deaths`} className="text-sm text-sky-400 hover:underline">View season death statistics</Link>
+          </DialogContent>
+        </Dialog>
+
         {/* Close War Dialog */}
         <CloseWarDialog 
           war={props.war}
@@ -403,6 +429,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
               warProgress={warProgress}
               onCopyBgText={handleCopyBgText}
               onCopyBgMarkdown={handleCopyBgMarkdown}
+              deathSummaryTrigger={<Button variant="outline" size="sm" onClick={() => setIsDeathSummaryOpen(true)} className="gap-2" disabled={loadingFights || !!fightsError}><Skull className="h-4 w-4 text-red-400" /> BG{currentBattlegroup} deaths: {loadingFights ? "…" : fightsError ? "Unavailable" : bgDeaths}</Button>}
             />
             
             <WarTabs 
