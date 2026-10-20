@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { createHash } from 'node:crypto';
 import { artifactHash } from './champion-effect-enrichment';
 import type { EffectSourceMetadata } from './ability-source';
 
@@ -24,9 +25,21 @@ export type OverviewSummaryDraft = z.infer<typeof overviewSummaryDraftSchema>;
 export type OverviewSummaryValidationOptions = { summaryLengthOverrides?: Readonly<Record<number, number>> };
 
 export function overviewSourceHash(source: OverviewSource): string {
-  return artifactHash({ id: source.id, championId: source.championId, abilityId: source.abilityId, name: source.name,
-    type: source.type, source: source.source, effectForm: source.effectForm, effectDirection: source.effectDirection,
-    synergyChampionIds: [...source.synergyChampionIds].sort((a, b) => a - b) });
+  // Preserve the reviewed V1 byte format explicitly. It was authored with Czech
+  // collation (where "ch" follows "h"); host-locale sorting makes Linux reject it.
+  // These fixed fields contain only JSON primitives and the sorted numeric IDs.
+  // Do not change generic artifact hashing or rewrite historical review receipts.
+  return createHash('sha256').update(JSON.stringify({
+    abilityId: source.abilityId,
+    effectDirection: source.effectDirection,
+    effectForm: source.effectForm,
+    championId: source.championId,
+    id: source.id,
+    name: source.name,
+    source: source.source,
+    synergyChampionIds: [...source.synergyChampionIds].sort((a, b) => a - b),
+    type: source.type,
+  })).digest('hex');
 }
 
 export function getCurrentOverviewSummary(source: OverviewSource, saved: { text: string; sourceHash: string } | null | undefined, currentSource = source): string | null {
