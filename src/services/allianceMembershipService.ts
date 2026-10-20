@@ -13,6 +13,8 @@ export async function changePlayerAlliance(
   data: Omit<Prisma.PlayerUncheckedUpdateInput, "allianceId"> = {},
 ) {
   const changedAlliance = previousAllianceId !== allianceId;
+  // Lock Player before placements, matching defense assignment's SELECT FOR UPDATE.
+  // Assignment then either commits before cleanup or sees the new membership.
   const player = await tx.player.update({
     // Reject a stale removal/transfer rather than detaching a newly joined member.
     where: { id: playerId, allianceId: previousAllianceId },

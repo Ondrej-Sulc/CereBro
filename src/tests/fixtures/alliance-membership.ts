@@ -30,12 +30,34 @@ type State = {
 };
 
 type MemberWhere = Partial<Pick<Member, "id" | "allianceId" | "isOfficer">>;
+type PlacementWhere = {
+  id?: string;
+  playerId?: string | null;
+  planId_battlegroup_nodeId?: Pick<Placement, "planId" | "battlegroup" | "nodeId">;
+};
 
 /** Stateful database boundary: public actions operate on rows, with rollback on failure. */
 export function createMembershipDatabase() {
   let state: State = { members: [], plans: [], placements: [], wars: [], fights: [], roster: [] };
   const matches = (member: Member, where: MemberWhere) =>
     Object.entries(where).every(([key, value]) => member[key as keyof Member] === value);
+  const matchesPlacement = (placement: Placement, where: PlacementWhere) =>
+    (where.id === undefined || placement.id === where.id) &&
+    (where.playerId === undefined || placement.playerId === where.playerId) &&
+    (!where.planId_battlegroup_nodeId || Object.entries(where.planId_battlegroup_nodeId)
+      .every(([key, value]) => placement[key as keyof Placement] === value));
+  const applyPlacementData = (placement: Placement, data: Partial<Placement>) => {
+    for (const [key, value] of Object.entries(data)) {
+      if (value !== undefined) Object.assign(placement, { [key]: value });
+    }
+    return placement;
+  };
+  const warDefensePlan = {
+    findUnique: vi.fn(async ({ where }: { where: { id: string } }) => {
+      const plan = state.plans.find((entry) => entry.id === where.id);
+      return plan ? { ...plan, alliance: { id: plan.allianceId } } : null;
+    }),
+  };
 
   const player = {
     findUnique: vi.fn(async ({ where }: { where: MemberWhere }) =>
@@ -52,6 +74,33 @@ export function createMembershipDatabase() {
     }),
   };
   const warDefensePlacement = {
+    findUnique: vi.fn(async ({ where }: { where: PlacementWhere }) => {
+      const placement = state.placements.find((entry) => matchesPlacement(entry, where));
+      const plan = state.plans.find((entry) => entry.id === placement?.planId);
+      return placement && plan ? { ...placement, plan: { ...plan, alliance: { id: plan.allianceId } } } : null;
+    }),
+    update: vi.fn(async ({ where, data }: { where: PlacementWhere; data: Partial<Placement> }) => {
+      const placement = state.placements.find((entry) => matchesPlacement(entry, where));
+      if (!placement) throw new Error("Placement changed. Refresh and try again.");
+      return applyPlacementData(placement, data);
+    }),
+    upsert: vi.fn(async ({ where, update, create }: {
+      where: PlacementWhere;
+      update: Partial<Placement>;
+      create: Pick<Placement, "planId" | "battlegroup" | "nodeId"> & Partial<Placement>;
+    }) => {
+      const placement = state.placements.find((entry) => matchesPlacement(entry, where));
+      if (placement) return applyPlacementData(placement, update);
+      if (state.placements.some((entry) => matchesPlacement(entry, { planId_battlegroup_nodeId: create }))) {
+        throw new Error("Placement changed. Refresh and try again.");
+      }
+      const created: Placement = {
+        id: "created-placement", ...create,
+        playerId: create.playerId ?? null, defenderId: create.defenderId ?? null, starLevel: create.starLevel ?? null,
+      };
+      state.placements.push(created);
+      return created;
+    }),
     updateMany: vi.fn(async ({ where, data }: {
       where: { playerId: string; plan: { allianceId: string } };
       data: Partial<Placement>;
@@ -71,13 +120,14 @@ export function createMembershipDatabase() {
           player: state.members.find((member) => member.id === placement.playerId) ?? null,
         }))),
   };
-  const tx = { player, warDefensePlacement };
+  const tx = {
+    player, warDefensePlacement, warDefensePlan,
+    $queryRaw: vi.fn(async (_query: TemplateStringsArray, playerId: string) =>
+      state.members.filter((member) => member.id === playerId)
+        .map(({ id, allianceId }) => ({ id, allianceId }))),
+  };
   const prisma = {
     ...tx,
-    warDefensePlan: {
-      findUnique: vi.fn(async ({ where }: { where: { id: string } }) =>
-        state.plans.find((plan) => plan.id === where.id) ?? null),
-    },
     $transaction: vi.fn(async <T>(callback: (transaction: typeof tx) => Promise<T>) => {
       const previous = structuredClone(state);
       try {
