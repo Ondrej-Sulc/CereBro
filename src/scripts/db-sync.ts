@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient, type Prisma } from "@prisma/client";
 import { gcpStorageService } from "../services/gcpStorageService";
 import logger from "../services/loggerService";
 
@@ -86,14 +86,18 @@ export async function importFromGCS() {
             },
           };
         } else if (table === "championAbilityLink") {
-          where = {
-            championId_abilityId_type_source: {
+          const identity = {
               championId: record.championId,
               abilityId: record.abilityId,
               type: record.type,
               source: record.source,
-            },
+              effectForm: record.effectForm ?? "UNKNOWN",
+              effectDirection: record.effectDirection ?? "UNKNOWN",
           };
+          // PostgreSQL compound unique keys cannot locate a nullable source.
+          const existing = record.source == null
+            ? await prisma.championAbilityLink.findFirst({ where: identity as Prisma.ChampionAbilityLinkWhereInput }) : null;
+          where = record.source == null ? { id: existing?.id ?? record.id } : { sourceIdentity: identity };
         } else if (table === "championAbilitySynergy") {
           where = {
             championAbilityLinkId_championId: {

@@ -21,6 +21,7 @@ import { abilityDraftPrompt } from "../../../prompts/abilityDraft";
 import { registerButtonHandler } from "../../../utils/buttonHandlerRegistry";
 import { registerModalHandler } from "../../../utils/modalHandlerRegistry";
 import { pendingDrafts } from "./draftState";
+import { EFFECT_FORMS, EFFECT_DIRECTIONS, readAbilitySource } from "../../../domain/ability-source";
 
 export async function handleConfirmAbilityDraft(
   interaction: ButtonInteraction
@@ -54,6 +55,12 @@ export async function handleConfirmAbilityDraft(
     const allLinks = [...abilities, ...immunities];
 
     for (const link of allLinks) {
+      if ((link.effectForm && !EFFECT_FORMS.includes(link.effectForm)) || (link.effectDirection && !EFFECT_DIRECTIONS.includes(link.effectDirection))) {
+        throw new Error("Invalid effect source tags in draft.");
+      }
+      const metadata = readAbilitySource(link);
+      const sourceData = { source: metadata.condition, effectForm: metadata.effectForm,
+        effectDirection: link.type === "IMMUNITY" ? "UNKNOWN" as const : metadata.effectDirection };
       const ability = await prisma.ability.upsert({
         where: { name: link.name },
         update: { name: link.name },
@@ -62,11 +69,11 @@ export async function handleConfirmAbilityDraft(
 
       await prisma.championAbilityLink.upsert({
         where: {
-          championId_abilityId_type_source: {
+          sourceIdentity: {
             championId: championId,
             abilityId: ability.id,
             type: link.type as any,
-            source: link.source,
+            ...sourceData,
           },
         },
         update: {},
@@ -74,7 +81,7 @@ export async function handleConfirmAbilityDraft(
           championId: championId,
           abilityId: ability.id,
           type: link.type as any,
-          source: link.source,
+          ...sourceData,
         },
       });
     }

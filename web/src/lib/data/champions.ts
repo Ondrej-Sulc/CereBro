@@ -6,8 +6,11 @@ import { Champion } from "@/types/champion";
 const CACHE_TTL = 3600;
 
 const ABILITY_SELECT = {
+  id: true,
   type: true,
   source: true,
+  effectForm: true,
+  effectDirection: true,
   ability: {
     select: {
       name: true,
@@ -26,7 +29,7 @@ const ABILITY_SELECT = {
 } as const;
 
 export async function getCachedChampions(): Promise<Champion[]> {
-  return await getFromCache("all-champions-full-v3", CACHE_TTL, async () => {
+  return await getFromCache("all-champions-full-v4", CACHE_TTL, async () => {
     const champions = await prisma.champion.findMany({
       where: { isPlayable: true },
       orderBy: { name: "asc" },
@@ -53,7 +56,7 @@ export async function getCachedChampions(): Promise<Champion[]> {
 }
 
 export async function getCachedAllChampions(): Promise<Champion[]> {
-  return await getFromCache("all-champions-full-total-v2", CACHE_TTL, async () => {
+  return await getFromCache("all-champions-full-total-v3", CACHE_TTL, async () => {
     const champions = await prisma.champion.findMany({
       orderBy: { name: "asc" },
       select: {

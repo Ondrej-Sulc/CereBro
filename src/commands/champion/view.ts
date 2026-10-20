@@ -1,4 +1,5 @@
 import { ChampionClass, Hit, Tag } from "@prisma/client";
+import { formatAbilitySource } from "../../domain/ability-source";
 import {
   AttackWithHits,
   ChampionAbilityLinkWithRelations,
@@ -186,7 +187,7 @@ export function formatLinkedAbilitySection(
   for (const link of links) {
     const name = link.ability.name;
     const key = name.toLowerCase();
-    let source = (link.source || "").trim();
+    let source = formatAbilitySource(link);
 
     if (link.synergyChampions && link.synergyChampions.length > 0) {
       const synergyPart = link.synergyChampions

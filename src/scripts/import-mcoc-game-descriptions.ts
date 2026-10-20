@@ -6,6 +6,8 @@ import {
   parseMcocGameDescriptionsJson,
   parseMcocGameGlossaryJson,
 } from '../services/mcocGameDescriptionsImportService';
+import { parseAbilityDisplayFile } from '../services/championAbilityDisplayService';
+import { parseAbilityBindingFile } from '../services/championAbilityBindingService';
 
 const DEFAULT_SCRIPTS_DIR = 'C:\\Games\\Marvel Contest of Champions\\default\\game\\Scripts';
 
@@ -19,13 +21,17 @@ async function main() {
   const championsPath = readArg('champions', path.join(DEFAULT_SCRIPTS_DIR, 'champions.json'));
   const glossaryPath = readArg('glossary', path.join(DEFAULT_SCRIPTS_DIR, 'glossary.json'));
   const write = process.argv.includes('--write');
+  const displayPath = readArg('display-metadata', '');
+  const displayMetadata = displayPath ? parseAbilityDisplayFile(fs.readFileSync(displayPath, 'utf8')).entries : undefined;
+  const bindingsPath = readArg('ability-bindings', '');
+  const abilityBindings = bindingsPath ? parseAbilityBindingFile(fs.readFileSync(bindingsPath, 'utf8')).entries : undefined;
 
   const descriptions = parseMcocGameDescriptionsJson(fs.readFileSync(championsPath, 'utf8'));
   const glossary = parseMcocGameGlossaryJson(fs.readFileSync(glossaryPath, 'utf8'));
 
   const prisma = new PrismaClient();
   try {
-    const report = await importMcocGameDescriptions(prisma, descriptions, glossary, { write });
+    const report = await importMcocGameDescriptions(prisma, descriptions, glossary, { write, displayMetadata, abilityBindings });
 
     console.log(`Mode: ${write ? 'write' : 'dry-run'}`);
     console.log(`Champions in file: ${report.championCount}`);
@@ -35,6 +41,7 @@ async function main() {
     console.log(`Skipped: ${report.unmatched.length}`);
     console.log(`Ambiguous: ${report.ambiguous.length}`);
     console.log(`Conflicts: ${report.conflicts.length}`);
+    if (report.bindingIssues?.length) console.log(`Missing verified numeric bindings: ${report.bindingIssues.length}. Regenerate with extract-mcoc-ability-bindings.py.`);
 
     if (report.written) {
       console.log(`Text records deleted: ${report.written.textRecordsDeleted}`);

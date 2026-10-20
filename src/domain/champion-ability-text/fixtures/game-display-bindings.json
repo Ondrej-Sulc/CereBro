@@ -1,0 +1,1148 @@
+{
+  "provenance": {
+    "schema": "a844f24861dae1d5ac637f382b74b0a149dd7603a7ea06d6135eba8eefce7a9a",
+    "bcg": "463812a72b7e31ea101288f7b5750f2bc61fd2a6391a83a8e5c20d47d0d77578",
+    "descriptions": "1b922007889c8fcd910a065d211f42d8f99370d303496c80089c951876fc6912",
+    "debug": "4850dc25e7cbee3a4076385385f179bf7642533467fa625a943505a1296421b0"
+  },
+  "formulas": {
+    "standard": {
+      "id": "standard",
+      "type": "standard",
+      "a": 5.0,
+      "b": 1500.0,
+      "c": 1.0
+    },
+    "mod_x_atk": {
+      "id": "mod_x_atk",
+      "type": "mod_x_attk",
+      "a": 1.0,
+      "b": 1.0,
+      "c": 1.0
+    },
+    "mod_x_hp": {
+      "id": "mod_x_hp",
+      "type": "mod_x_hp",
+      "a": 1.0,
+      "b": 1.0,
+      "c": 1.0
+    },
+    "standard_critdam": {
+      "id": "standard_critdam",
+      "type": "standard_critdam",
+      "a": 5.0,
+      "b": 1500.0,
+      "c": 5.0
+    },
+    "var_x_a": {
+      "id": "var_x_a",
+      "type": "mod_x_vara",
+      "a": 100.0,
+      "b": 0.0,
+      "c": 0.0
+    }
+  },
+  "cases": [
+    {
+      "componentId": "adam_ui_pwr_mana",
+      "raw": "Adam passively gains {1}% of a Bar of Power each second, but his Combat Power Rate is reduced by {0}%.",
+      "row": {
+        "ability_id": "adam_ui_pwr_mana",
+        "hud_id": "adam_ui_pwr_mana",
+        "buff_type": "dummy_ui",
+        "raw_fields": {
+          "7": {
+            "strings": [
+              "var_x_a"
+            ]
+          },
+          "13": {
+            "floats": [
+              -0.25
+            ]
+          },
+          "14": {
+            "floats": [
+              0.02500000037252903
+            ]
+          },
+          "15": {
+            "floats": [
+              0.0
+            ]
+          },
+          "18": {
+            "strings": [
+              ""
+            ]
+          },
+          "19": {
+            "strings": [
+              "none"
+            ]
+          },
+          "24": {
+            "ints": [
+              1
+            ]
+          }
+        }
+      },
+      "sources": {
+        "0": {
+          "kind": "abilityParam",
+          "componentId": "adam_ui_pwr_mana",
+          "buffType": "dummy_ui",
+          "paramName": "chance",
+          "field": "base_val",
+          "rawValue": -0.25,
+          "curveId": "none",
+          "baseVal": -0.25,
+          "chance": 0.02500000037252903,
+          "duration": 0.0,
+          "f24": 1,
+          "gameBinding": {
+            "version": 1,
+            "slot": 0,
+            "value": -0.25
+          },
+          "display": {
+            "multiplier": 100,
+            "precision": 2
+          }
+        },
+        "1": {
+          "kind": "abilityParam",
+          "componentId": "adam_ui_pwr_mana",
+          "buffType": "dummy_ui",
+          "paramName": "modifier",
+          "field": "chance",
+          "rawValue": 0.02500000037252903,
+          "curveId": "none",
+          "baseVal": -0.25,
+          "chance": 0.02500000037252903,
+          "duration": 0.0,
+          "f24": 1,
+          "gameBinding": {
+            "version": 1,
+            "slot": 1,
+            "value": 0.02500000037252903,
+            "formula": {
+              "id": "var_x_a",
+              "type": "mod_x_vara",
+              "a": 100.0,
+              "b": 0.0,
+              "c": 0.0
+            }
+          },
+          "display": {
+            "multiplier": 1,
+            "precision": 2
+          }
+        }
+      },
+      "expected": [
+        2.5,
+        -25
+      ]
+    },
+    {
+      "componentId": "agth_mgclthft_info",
+      "raw": "Agatha’s [k=glossary/combat_power_rate]Combat Power Rate[/k] is reduced by {0}%, but when striking with or when struck by Basic Attacks, she [k=glossary/power_steal]Power Steals[/k] {1}% of the Opponent’s Max Power. This effect does not trigger against an Opponent at {2} Bars of Power.",
+      "row": {
+        "ability_id": "agth_mgclthft_info",
+        "hud_id": "agth_magical_theft_1",
+        "buff_type": "dummy_info",
+        "raw_fields": {
+          "7": {
+            "strings": [
+              "var_x_a"
+            ]
+          },
+          "13": {
+            "floats": [
+              0.30000001192092896
+            ]
+          },
+          "14": {
+            "floats": [
+              0.009999999776482582
+            ]
+          },
+          "15": {
+            "floats": [
+              3.0
+            ]
+          },
+          "18": {
+            "strings": [
+              ""
+            ]
+          },
+          "19": {
+            "strings": [
+              "none"
+            ]
+          },
+          "24": {
+            "ints": [
+              1
+            ]
+          }
+        }
+      },
+      "sources": {
+        "0": {
+          "kind": "abilityParam",
+          "componentId": "agth_mgclthft_info",
+          "buffType": "dummy_info",
+          "paramName": "chance",
+          "field": "base_val",
+          "rawValue": 0.30000001192092896,
+          "curveId": "none",
+          "baseVal": 0.30000001192092896,
+          "chance": 0.009999999776482582,
+          "duration": 3.0,
+          "f24": 1,
+          "gameBinding": {
+            "version": 1,
+            "slot": 0,
+            "value": 0.30000001192092896
+          },
+          "display": {
+            "multiplier": 100,
+            "precision": 2
+          }
+        },
+        "1": {
+          "kind": "abilityParam",
+          "componentId": "agth_mgclthft_info",
+          "buffType": "dummy_info",
+          "paramName": "modifier",
+          "field": "chance",
+          "rawValue": 0.009999999776482582,
+          "curveId": "none",
+          "baseVal": 0.30000001192092896,
+          "chance": 0.009999999776482582,
+          "duration": 3.0,
+          "f24": 1,
+          "gameBinding": {
+            "version": 1,
+            "slot": 1,
+            "value": 0.009999999776482582,
+            "formula": {
+              "id": "var_x_a",
+              "type": "mod_x_vara",
+              "a": 100.0,
+              "b": 0.0,
+              "c": 0.0
+            }
+          },
+          "display": {
+            "multiplier": 1,
+            "precision": 2
+          }
+        },
+        "2": {
+          "kind": "abilityParam",
+          "componentId": "agth_mgclthft_info",
+          "buffType": "dummy_info",
+          "paramName": "duration",
+          "field": "duration",
+          "rawValue": 3.0,
+          "curveId": "none",
+          "baseVal": 0.30000001192092896,
+          "chance": 0.009999999776482582,
+          "duration": 3.0,
+          "f24": 1,
+          "gameBinding": {
+            "version": 1,
+            "slot": 2,
+            "value": 3.0
+          },
+          "display": {
+            "multiplier": 1,
+            "precision": 2
+          }
+        }
+      },
+      "expected": [
+        30,
+        1,
+        3
+      ]
+    },
+    {
+      "componentId": "karrie_sun_sl_loop",
+      "raw": "Karolina gains {1} Iridescence Buff every {2} seconds.",
+      "row": {
+        "ability_id": "karrie_sun_sl_loop",
+        "hud_id": "karrie_sun_3",
+        "buff_type": "dummy_timer",
+        "raw_fields": {
+          "13": {
+            "floats": [
+              1.0
+            ]
+          },
+          "14": {
+            "floats": [
+              1.0
+            ]
+          },
+          "15": {
+            "floats": [
+              0.6499999761581421
+            ]
+          },
+          "18": {
+            "strings": [
+              ""
+            ]
+          },
+          "19": {
+            "strings": [
+              "none"
+            ]
+          },
+          "24": {
+            "ints": [
+              1
+            ]
+          }
+        }
+      },
+      "sources": {
+        "1": {
+          "kind": "abilityParam",
+          "componentId": "karrie_sun_sl_loop",
+          "buffType": "dummy_timer",
+          "paramName": "modifier",
+          "field": "chance",
+          "rawValue": 1.0,
+          "curveId": "none",
+          "baseVal": 1.0,
+          "chance": 1.0,
+          "duration": 0.6499999761581421,
+          "f24": 1,
+          "gameBinding": {
+            "version": 1,
+            "slot": 1,
+            "value": 1.0,
+            "formula": {
+              "id": "",
+              "type": "identity",
+              "a": 1,
+              "b": 0,
+              "c": 0
+            }
+          },
+          "display": {
+            "multiplier": 1,
+            "precision": 2
+          }
+        },
+        "2": {
+          "kind": "abilityParam",
+          "componentId": "karrie_sun_sl_loop",
+          "buffType": "dummy_timer",
+          "paramName": "duration",
+          "field": "duration",
+          "rawValue": 0.6499999761581421,
+          "curveId": "none",
+          "baseVal": 1.0,
+          "chance": 1.0,
+          "duration": 0.6499999761581421,
+          "f24": 1,
+          "gameBinding": {
+            "version": 1,
+            "slot": 2,
+            "value": 0.6499999761581421
+          },
+          "display": {
+            "multiplier": 1,
+            "precision": 2
+          }
+        }
+      },
+      "expected": [
+        1,
+        0.65
+      ]
+    },
+    {
+      "componentId": "karrie_sun_power_gain",
+      "raw": "Karolina gains a [k=glossary/power_gain]Power Gain[/k] Buff, granting {1}% of a Bar of Power each second for each Iridescence Buff, up to {3}.",
+      "row": {
+        "ability_id": "karrie_sun_power_gain",
+        "hud_id": "karrie_sun_4",
+        "buff_type": "mana_gain",
+        "raw_fields": {
+          "7": {
+            "strings": [
+              "var_x_a"
+            ]
+          },
+          "13": {
+            "floats": [
+              1.0
+            ]
+          },
+          "14": {
+            "floats": [
+              0.019999999552965164
+            ]
+          },
+          "15": {
+            "floats": [
+              -1.0
+            ]
+          },
+          "18": {
+            "strings": [
+              ""
+            ]
+          },
+          "19": {
+            "strings": [
+              "none"
+            ]
+          },
+          "24": {
+            "ints": [
+              6
+            ]
+          }
+        }
+      },
+      "sources": {
+        "1": {
+          "kind": "abilityParam",
+          "componentId": "karrie_sun_power_gain",
+          "buffType": "mana_gain",
+          "paramName": "modifier",
+          "field": "chance",
+          "rawValue": 0.019999999552965164,
+          "curveId": "none",
+          "baseVal": 1.0,
+          "chance": 0.019999999552965164,
+          "duration": -1.0,
+          "f24": 6,
+          "gameBinding": {
+            "version": 1,
+            "slot": 1,
+            "value": 0.019999999552965164,
+            "formula": {
+              "id": "var_x_a",
+              "type": "mod_x_vara",
+              "a": 100.0,
+              "b": 0.0,
+              "c": 0.0
+            }
+          },
+          "display": {
+            "multiplier": 1,
+            "precision": 2
+          }
+        },
+        "3": {
+          "kind": "abilityParam",
+          "componentId": "karrie_sun_power_gain",
+          "buffType": "mana_gain",
+          "paramName": "maxStacks",
+          "field": "f24",
+          "rawValue": 6,
+          "curveId": "none",
+          "baseVal": 1.0,
+          "chance": 0.019999999552965164,
+          "duration": -1.0,
+          "f24": 6,
+          "gameBinding": {
+            "version": 1,
+            "slot": 3,
+            "value": 6
+          },
+          "display": {
+            "multiplier": 1,
+            "precision": 0
+          }
+        }
+      },
+      "expected": [
+        2,
+        6
+      ]
+    },
+    {
+      "componentId": "karrie_shield_l_m",
+      "raw": "Light and Medium Attacks - {1} Buff.",
+      "row": {
+        "ability_id": "karrie_shield_l_m",
+        "hud_id": "karrie_shield_3",
+        "buff_type": "sequence",
+        "raw_fields": {
+          "13": {
+            "floats": [
+              1.0
+            ]
+          },
+          "14": {
+            "floats": [
+              1.0
+            ]
+          },
+          "15": {
+            "floats": [
+              0.800000011920929
+            ]
+          },
+          "18": {
+            "strings": [
+              ""
+            ]
+          },
+          "19": {
+            "strings": [
+              "none"
+            ]
+          },
+          "24": {
+            "ints": [
+              1
+            ]
+          }
+        }
+      },
+      "sources": {
+        "1": {
+          "kind": "abilityParam",
+          "componentId": "karrie_shield_l_m",
+          "buffType": "sequence",
+          "paramName": "modifier",
+          "field": "chance",
+          "rawValue": 1.0,
+          "curveId": "none",
+          "baseVal": 1.0,
+          "chance": 1.0,
+          "duration": 0.800000011920929,
+          "f24": 1,
+          "gameBinding": {
+            "version": 1,
+            "slot": 1,
+            "value": 1.0,
+            "formula": {
+              "id": "",
+              "type": "identity",
+              "a": 1,
+              "b": 0,
+              "c": 0
+            }
+          },
+          "display": {
+            "multiplier": 1,
+            "precision": 2
+          }
+        }
+      },
+      "expected": [
+        1
+      ]
+    },
+    {
+      "componentId": "nico_sp1_info",
+      "raw": "The final hit deals a burst of [16982bff]{1}[-] Energy Damage, increased by {0}% for each Damaging effect on the Opponent, up to {3}. This can trigger through Block. As a Defender, the total potency is reduced by {2}%.",
+      "row": {
+        "ability_id": "nico_sp1_info",
+        "hud_id": "nico_sp1_2",
+        "buff_type": "dummy_info",
+        "raw_fields": {
+          "7": {
+            "strings": [
+              "mod_x_atk"
+            ]
+          },
+          "13": {
+            "floats": [
+              0.20000000298023224
+            ]
+          },
+          "14": {
+            "floats": [
+              1.5
+            ]
+          },
+          "15": {
+            "floats": [
+              50.0
+            ]
+          },
+          "18": {
+            "strings": [
+              ""
+            ]
+          },
+          "19": {
+            "strings": [
+              "none"
+            ]
+          },
+          "24": {
+            "ints": [
+              10
+            ]
+          }
+        }
+      },
+      "sources": {
+        "0": {
+          "kind": "abilityParam",
+          "componentId": "nico_sp1_info",
+          "buffType": "dummy_info",
+          "paramName": "chance",
+          "field": "base_val",
+          "rawValue": 0.20000000298023224,
+          "curveId": "none",
+          "baseVal": 0.20000000298023224,
+          "chance": 1.5,
+          "duration": 50.0,
+          "f24": 10,
+          "gameBinding": {
+            "version": 1,
+            "slot": 0,
+            "value": 0.20000000298023224
+          },
+          "display": {
+            "multiplier": 100,
+            "precision": 2
+          }
+        },
+        "1": {
+          "kind": "abilityParam",
+          "componentId": "nico_sp1_info",
+          "buffType": "dummy_info",
+          "paramName": "modifier",
+          "field": "chance",
+          "rawValue": 1.5,
+          "curveId": "none",
+          "baseVal": 0.20000000298023224,
+          "chance": 1.5,
+          "duration": 50.0,
+          "f24": 10,
+          "gameBinding": {
+            "version": 1,
+            "slot": 1,
+            "value": 1.5,
+            "formula": {
+              "id": "mod_x_atk",
+              "type": "mod_x_attk",
+              "a": 1.0,
+              "b": 1.0,
+              "c": 1.0
+            }
+          },
+          "display": {
+            "multiplier": 1,
+            "precision": 2
+          }
+        },
+        "2": {
+          "kind": "abilityParam",
+          "componentId": "nico_sp1_info",
+          "buffType": "dummy_info",
+          "paramName": "duration",
+          "field": "duration",
+          "rawValue": 50.0,
+          "curveId": "none",
+          "baseVal": 0.20000000298023224,
+          "chance": 1.5,
+          "duration": 50.0,
+          "f24": 10,
+          "gameBinding": {
+            "version": 1,
+            "slot": 2,
+            "value": 50.0
+          },
+          "display": {
+            "multiplier": 1,
+            "precision": 2
+          }
+        },
+        "3": {
+          "kind": "abilityParam",
+          "componentId": "nico_sp1_info",
+          "buffType": "dummy_info",
+          "paramName": "maxStacks",
+          "field": "f24",
+          "rawValue": 10,
+          "curveId": "none",
+          "baseVal": 0.20000000298023224,
+          "chance": 1.5,
+          "duration": 50.0,
+          "f24": 10,
+          "gameBinding": {
+            "version": 1,
+            "slot": 3,
+            "value": 10
+          },
+          "display": {
+            "multiplier": 1,
+            "precision": 0
+          }
+        }
+      },
+      "expected": [
+        15000,
+        20,
+        10,
+        50
+      ]
+    },
+    {
+      "componentId": "pvitr_alws_evd_chnc",
+      "raw": "For each Buff on the Opponent, Pavitr gains a {0}% chance to Evade incoming attacks. Pavitr will not Evade while Blocking a Basic Attack.",
+      "row": {
+        "ability_id": "pvitr_alws_evd_chnc",
+        "hud_id": "pvitr_titan_4",
+        "buff_type": "evade",
+        "raw_fields": {
+          "13": {
+            "floats": [
+              0.019999999552965164
+            ]
+          },
+          "14": {
+            "floats": [
+              1.0
+            ]
+          },
+          "15": {
+            "floats": [
+              0.0
+            ]
+          },
+          "18": {
+            "strings": [
+              ""
+            ]
+          },
+          "19": {
+            "strings": [
+              "none"
+            ]
+          },
+          "24": {
+            "ints": [
+              1
+            ]
+          }
+        }
+      },
+      "sources": {
+        "0": {
+          "kind": "abilityParam",
+          "componentId": "pvitr_alws_evd_chnc",
+          "buffType": "evade",
+          "paramName": "chance",
+          "field": "base_val",
+          "rawValue": 0.019999999552965164,
+          "curveId": "none",
+          "baseVal": 0.019999999552965164,
+          "chance": 1.0,
+          "duration": 0.0,
+          "f24": 1,
+          "gameBinding": {
+            "version": 1,
+            "slot": 0,
+            "value": 0.019999999552965164
+          },
+          "display": {
+            "multiplier": 100,
+            "precision": 2
+          }
+        }
+      },
+      "expected": [
+        2
+      ]
+    },
+    {
+      "componentId": "pvitr_seal_thrsh_info",
+      "raw": "{0}+ Seals: Activating a Special Attack grants a [16982bff]+{1}[-] [k=glossary/fury]Fury[/k] Passive for {2} seconds. Reaching {0} Seals for the first time during a Special Attack also grants this Fury. Max stacks: {3}.",
+      "row": {
+        "ability_id": "pvitr_seal_thrsh_info",
+        "hud_id": "pvitr_seal_4",
+        "buff_type": "dummy_info",
+        "raw_fields": {
+          "7": {
+            "strings": [
+              "mod_x_atk"
+            ]
+          },
+          "13": {
+            "floats": [
+              0.15000000596046448
+            ]
+          },
+          "14": {
+            "floats": [
+              0.17000000178813934
+            ]
+          },
+          "15": {
+            "floats": [
+              45.0
+            ]
+          },
+          "18": {
+            "strings": [
+              ""
+            ]
+          },
+          "19": {
+            "strings": [
+              "none"
+            ]
+          },
+          "24": {
+            "ints": [
+              3
+            ]
+          }
+        }
+      },
+      "sources": {
+        "0": {
+          "kind": "abilityParam",
+          "componentId": "pvitr_seal_thrsh_info",
+          "buffType": "dummy_info",
+          "paramName": "chance",
+          "field": "base_val",
+          "rawValue": 0.15000000596046448,
+          "curveId": "none",
+          "baseVal": 0.15000000596046448,
+          "chance": 0.17000000178813934,
+          "duration": 45.0,
+          "f24": 3,
+          "gameBinding": {
+            "version": 1,
+            "slot": 0,
+            "value": 0.15000000596046448
+          },
+          "display": {
+            "multiplier": 100,
+            "precision": 2
+          }
+        },
+        "1": {
+          "kind": "abilityParam",
+          "componentId": "pvitr_seal_thrsh_info",
+          "buffType": "dummy_info",
+          "paramName": "modifier",
+          "field": "chance",
+          "rawValue": 0.17000000178813934,
+          "curveId": "none",
+          "baseVal": 0.15000000596046448,
+          "chance": 0.17000000178813934,
+          "duration": 45.0,
+          "f24": 3,
+          "gameBinding": {
+            "version": 1,
+            "slot": 1,
+            "value": 0.17000000178813934,
+            "formula": {
+              "id": "mod_x_atk",
+              "type": "mod_x_attk",
+              "a": 1.0,
+              "b": 1.0,
+              "c": 1.0
+            }
+          },
+          "display": {
+            "multiplier": 1,
+            "precision": 2
+          }
+        },
+        "2": {
+          "kind": "abilityParam",
+          "componentId": "pvitr_seal_thrsh_info",
+          "buffType": "dummy_info",
+          "paramName": "duration",
+          "field": "duration",
+          "rawValue": 45.0,
+          "curveId": "none",
+          "baseVal": 0.15000000596046448,
+          "chance": 0.17000000178813934,
+          "duration": 45.0,
+          "f24": 3,
+          "gameBinding": {
+            "version": 1,
+            "slot": 2,
+            "value": 45.0
+          },
+          "display": {
+            "multiplier": 1,
+            "precision": 2
+          }
+        },
+        "3": {
+          "kind": "abilityParam",
+          "componentId": "pvitr_seal_thrsh_info",
+          "buffType": "dummy_info",
+          "paramName": "maxStacks",
+          "field": "f24",
+          "rawValue": 3,
+          "curveId": "none",
+          "baseVal": 0.15000000596046448,
+          "chance": 0.17000000178813934,
+          "duration": 45.0,
+          "f24": 3,
+          "gameBinding": {
+            "version": 1,
+            "slot": 3,
+            "value": 3
+          },
+          "display": {
+            "multiplier": 1,
+            "precision": 0
+          }
+        }
+      },
+      "expected": [
+        15,
+        1700,
+        45,
+        15,
+        3
+      ]
+    },
+    {
+      "componentId": "pvitr_hvy_steal",
+      "raw": "The final hit [k=glossary/nullify]Nullifies[/k] 1 Fury Buff and inflicts a Power Steal Passive, stealing {1}% of a Bar of Power over {2} seconds. Cooldown: {3} seconds.",
+      "row": {
+        "ability_id": "pvitr_hvy_steal",
+        "hud_id": "pvitr_hvy",
+        "buff_type": "mana_steal",
+        "raw_fields": {
+          "7": {
+            "strings": [
+              "var_x_a"
+            ]
+          },
+          "13": {
+            "floats": [
+              1.0
+            ]
+          },
+          "14": {
+            "floats": [
+              0.5
+            ]
+          },
+          "15": {
+            "floats": [
+              5.0
+            ]
+          },
+          "18": {
+            "strings": [
+              ""
+            ]
+          },
+          "19": {
+            "strings": [
+              "none"
+            ]
+          },
+          "24": {
+            "ints": [
+              25
+            ]
+          }
+        }
+      },
+      "sources": {
+        "1": {
+          "kind": "abilityParam",
+          "componentId": "pvitr_hvy_steal",
+          "buffType": "mana_steal",
+          "paramName": "modifier",
+          "field": "chance",
+          "rawValue": 0.5,
+          "curveId": "none",
+          "baseVal": 1.0,
+          "chance": 0.5,
+          "duration": 5.0,
+          "f24": 25,
+          "gameBinding": {
+            "version": 1,
+            "slot": 1,
+            "value": 0.5,
+            "formula": {
+              "id": "var_x_a",
+              "type": "mod_x_vara",
+              "a": 100.0,
+              "b": 0.0,
+              "c": 0.0
+            }
+          },
+          "display": {
+            "multiplier": 1,
+            "precision": 2
+          }
+        },
+        "2": {
+          "kind": "abilityParam",
+          "componentId": "pvitr_hvy_steal",
+          "buffType": "mana_steal",
+          "paramName": "duration",
+          "field": "duration",
+          "rawValue": 5.0,
+          "curveId": "none",
+          "baseVal": 1.0,
+          "chance": 0.5,
+          "duration": 5.0,
+          "f24": 25,
+          "gameBinding": {
+            "version": 1,
+            "slot": 2,
+            "value": 5.0
+          },
+          "display": {
+            "multiplier": 1,
+            "precision": 2
+          }
+        },
+        "3": {
+          "kind": "abilityParam",
+          "componentId": "pvitr_hvy_steal",
+          "buffType": "mana_steal",
+          "paramName": "maxStacks",
+          "field": "f24",
+          "rawValue": 25,
+          "curveId": "none",
+          "baseVal": 1.0,
+          "chance": 0.5,
+          "duration": 5.0,
+          "f24": 25,
+          "gameBinding": {
+            "version": 1,
+            "slot": 3,
+            "value": 25
+          },
+          "display": {
+            "multiplier": 1,
+            "precision": 0
+          }
+        }
+      },
+      "expected": [
+        50,
+        5,
+        25
+      ]
+    },
+    {
+      "componentId": "pvitr_sig_marked_bst",
+      "raw": "For every {3}% of the Opponent’s missing Health, Pavitr’s Marked Passive gains {1}% base potency, even if already active.",
+      "row": {
+        "ability_id": "pvitr_sig_marked_bst",
+        "hud_id": "pvitr_sig_3",
+        "buff_type": "set_var",
+        "raw_fields": {
+          "7": {
+            "strings": [
+              "var_x_a"
+            ]
+          },
+          "13": {
+            "floats": [
+              1.0
+            ]
+          },
+          "14": {
+            "floats": [
+              1.0
+            ]
+          },
+          "15": {
+            "floats": [
+              0.0
+            ]
+          },
+          "18": {
+            "strings": [
+              ""
+            ]
+          },
+          "19": {
+            "strings": [
+              "none"
+            ]
+          },
+          "24": {
+            "ints": [
+              25
+            ]
+          }
+        }
+      },
+      "sources": {
+        "1": {
+          "kind": "abilityParam",
+          "componentId": "pvitr_sig_marked_bst",
+          "buffType": "set_var",
+          "paramName": "modifier",
+          "field": "chance",
+          "rawValue": 1.0,
+          "curveId": "none",
+          "baseVal": 1.0,
+          "chance": 1.0,
+          "duration": 0.0,
+          "f24": 25,
+          "gameBinding": {
+            "version": 1,
+            "slot": 1,
+            "value": 1.0,
+            "formula": {
+              "id": "var_x_a",
+              "type": "mod_x_vara",
+              "a": 100.0,
+              "b": 0.0,
+              "c": 0.0
+            }
+          },
+          "display": {
+            "multiplier": 1,
+            "precision": 2
+          }
+        },
+        "3": {
+          "kind": "abilityParam",
+          "componentId": "pvitr_sig_marked_bst",
+          "buffType": "set_var",
+          "paramName": "maxStacks",
+          "field": "f24",
+          "rawValue": 25,
+          "curveId": "none",
+          "baseVal": 1.0,
+          "chance": 1.0,
+          "duration": 0.0,
+          "f24": 25,
+          "gameBinding": {
+            "version": 1,
+            "slot": 3,
+            "value": 25
+          },
+          "display": {
+            "multiplier": 1,
+            "precision": 0
+          }
+        }
+      },
+      "expected": [
+        25,
+        100
+      ]
+    }
+  ]
+}

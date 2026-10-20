@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildDescriptionTemplate } from "@cerebro/core/services/mcocGameDescriptionsImportService";
 import {
   buildMultiCurveData,
+  championAbilityPanelMatchesChapter,
   collectChampionAbilityTextGlossaryIds,
   normalizeChampionAbilityTextTemplate,
   prepareChampionAbilityCurveView,
@@ -234,6 +235,73 @@ describe("Champion Ability Text", () => {
       records: [{ id: 2 }],
     }]);
   });
+
+  it("groups real ability passages under the game's section heading without rendering HUD definitions", () => {
+    const section = { id: "ID_UI_STAT_ATTRIBUTE_TRIGGER_SUBTITLE_MGCLTHFT", title: "Magical Theft" };
+    const records = [
+      { id: 1, group: "base", title: null, template: { ...buildDescriptionTemplate("Basic Attacks steal Power."), display: { kind: "ability", section } } },
+      { id: 2, group: "base", title: "Fury", template: { ...buildDescriptionTemplate("Increases Attack Rating."), display: { kind: "glossary" } } },
+      { id: 3, group: "base", title: "Fury", template: { ...buildDescriptionTemplate("When an Atrophied Opponent gains a Buff, Agatha copies it."), display: { kind: "ability", section } } },
+      { id: 4, group: "base", title: "Power Gain", template: { ...buildDescriptionTemplate("Generates Power over time."), display: { kind: "glossary" } } },
+      { id: 5, group: "base", title: "Rubble", template: { ...buildDescriptionTemplate("Well-Timed Blocks replace an opponent's Buff with Rubble."), display: { kind: "ability", section } } },
+      { id: 6, group: "base", title: null, template: { ...buildDescriptionTemplate("Place a Rune Prison."), display: { kind: "ability", section: { id: "RNPRSN", title: "Rune Prison - Special Attack 1" } } } },
+    ];
+    const original = structuredClone(records);
+    const panel = prepareChampionAbilityTextView({ records }).descriptionPanels[0];
+    expect(panel.records.map(record => record.id)).toEqual([1, 3, 5, 6]);
+    expect(panel.recordGroups).toMatchObject([
+      { title: "Magical Theft", records: [{ id: 1 }, { id: 3 }, { id: 5 }] },
+      { title: "Rune Prison - Special Attack 1", records: [{ id: 6 }] },
+    ]);
+    expect(records).toEqual(original);
+  });
+
+  it("preserves validated display metadata separately from original template content", () => {
+    const template = { raw: "Combat text.", display: { kind: "ability", section: { id: "MAGIC", title: "Magical Theft" } } };
+    expect(validateChampionAbilityTextTemplate(template)).toEqual(template);
+    expect(() => validateChampionAbilityTextTemplate({ ...template, display: { kind: "unknown" } })).toThrow(/display/i);
+  });
+
+  it("presents explicitly shared special rules once with both attack introductions and chapter aliases", () => {
+    const section = { id: "ID_UI_STAT_ATTRIBUTE_TRIGGER_SUBTITLE_SPECIAL23", title: "Special Attacks 2 and 3" };
+    const records = [
+      ...["Rune Prison", "Dark Magic", "Soul Corruption"].map((title, index) => ({
+        id: index + 1, group: "special", title, template: buildDescriptionTemplate(`${title} flavor text.`),
+      })),
+      { id: 4, group: "special2", title: null, template: { ...buildDescriptionTemplate("These Special Attacks gain Empowered properties."), display: { kind: "ability", section } } },
+      { id: 5, group: "special2", title: "Energy Vulnerability", template: { ...buildDescriptionTemplate("Inflict Energy Vulnerability."), display: { kind: "ability", section } } },
+    ];
+    const original = structuredClone(records);
+    const panels = prepareChampionAbilityTextView({ records }).descriptionPanels;
+    expect(panels).toHaveLength(1);
+    expect(panels[0]).toMatchObject({
+      group: "special2", title: "Special Attacks 2 and 3", specialAttackNumbers: [2, 3],
+      specialAttackIntros: [{ number: 2, record: { id: 2, displayTitle: "Dark Magic" } }, { number: 3, record: { id: 3, displayTitle: "Soul Corruption" } }],
+      recordGroups: [{ title: "Special Attacks 2 and 3", records: [{ id: 4 }, { id: 5 }] }],
+    });
+    expect(panels[0].introRecord).toBeUndefined();
+    expect(championAbilityPanelMatchesChapter(panels[0], "special2")).toBe(true);
+    expect(championAbilityPanelMatchesChapter(panels[0], "special3")).toBe(true);
+    expect(championAbilityPanelMatchesChapter(panels[0], "special1")).toBe(false);
+    expect(championAbilityPanelMatchesChapter(panels[0], null)).toBe(false);
+    expect(records).toEqual(original);
+  });
+
+  it("does not infer shared attack scope from prose or merge mixed special sections", () => {
+    const panel = prepareChampionAbilityTextView({ records: [
+      { id: 1, group: "special2", title: "Special Attacks 2 and 3", template: buildDescriptionTemplate("These Special Attacks gain Empowered properties.") },
+    ] }).descriptionPanels[0];
+    expect(panel.title).toBe("Special Attack 2");
+    expect(panel).not.toHaveProperty("specialAttackNumbers");
+    const section = { id: "ID_UI_STAT_ATTRIBUTE_TRIGGER_SUBTITLE_SPECIAL23", title: "Special Attacks 2 and 3" };
+    const mixed = prepareChampionAbilityTextView({ records: [
+      { id: 1, group: "special2", title: null, template: { raw: "Shared rules.", display: { kind: "ability", section } } },
+      { id: 2, group: "special2", title: null, template: { raw: "Special 2 only.", display: { kind: "ability", section: { id: "SPECIAL2", title: "Special Attack 2" } } } },
+    ] }).descriptionPanels[0];
+    expect(mixed.title).toBe("Special Attack 2");
+    expect(mixed).not.toHaveProperty("specialAttackNumbers");
+  });
+
 
   it("collects glossary IDs from imported ability text templates", () => {
     expect(collectChampionAbilityTextGlossaryIds([
@@ -1065,82 +1133,6 @@ describe("Champion Ability Text", () => {
     ]);
   });
 
-  it("resolves Nico Minoru SP1 overloaded info placeholders by placeholder index", () => {
-    const template: TextTemplate = {
-      raw: "",
-      blocks: [{
-        type: "paragraph",
-        children: [
-          { type: "text", value: "increased by " },
-          {
-            type: "value",
-            key: "placeholder_0",
-            placeholderIndex: 0,
-            source: {
-              kind: "abilityParam",
-              componentId: "nico_sp1_info",
-              buffType: "dummy_info",
-              paramName: "modifier",
-              field: "chance",
-              rawValue: 1.5,
-              chance: 1.5,
-              baseVal: 0.2000000029802322,
-              duration: 50,
-              f24: 10,
-              display: { multiplier: 100, precision: 1 },
-            },
-          },
-          { type: "text", value: "% for each Damaging effect, up to " },
-          {
-            type: "value",
-            key: "placeholder_3",
-            placeholderIndex: 3,
-            source: {
-              kind: "abilityParam",
-              componentId: "nico_sp1_info",
-              buffType: "dummy_info",
-              paramName: "maxStacks",
-              field: "f24",
-              rawValue: 10,
-              chance: 1.5,
-              baseVal: 0.2000000029802322,
-              duration: 50,
-              f24: 10,
-            },
-          },
-          { type: "text", value: ". As a Defender, potency is reduced by " },
-          {
-            type: "value",
-            key: "placeholder_2",
-            placeholderIndex: 2,
-            source: {
-              kind: "abilityParam",
-              componentId: "nico_sp1_info",
-              buffType: "dummy_info",
-              paramName: "modifier",
-              field: "base_val",
-              rawValue: 0.2000000029802322,
-              chance: 1.5,
-              baseVal: 0.2000000029802322,
-              duration: 50,
-              f24: 10,
-              display: { multiplier: 100, precision: 1 },
-            },
-          },
-          { type: "text", value: "%." },
-        ],
-      }],
-    };
-    const [block] = normalizeChampionAbilityTextTemplate(template);
-    const values = block.children.filter((node): node is Extract<typeof node, { type: "value" }> => node.type === "value");
-    const resolved = values.map(node => resolveChampionAbilityTextValue({ node, curves: [], sigLevel: 1 }));
-
-    expect(resolved.map(result => result.status === "resolved" ? result.displayValue : "error")).toEqual([
-      "20",
-      "10",
-      "50",
-    ]);
-  });
 
   it("scales self.attack special attack damage even when display multiplier is 100", () => {
     const template: TextTemplate = {
@@ -1683,4 +1675,22 @@ describe("Champion Ability Text", () => {
       "3.65",
     ]);
   });
+
+
+
+
+
+
+  it("preserves intentional fractional count encodings on unrelated components", () => {
+    const template = buildDescriptionTemplate("Gain {0} charges.", { placeholder_sources: {
+      "0": { kind: "abilityParam", componentId: "other_charge_counter", paramName: "count", field: "base_val",
+        rawValue: 0.25, baseVal: 0.25, display: { multiplier: 100, precision: 0 } },
+    } });
+    const [block] = normalizeChampionAbilityTextTemplate(template);
+    const node = block.children.find(node => node.type === "value")!;
+    const result = resolveChampionAbilityTextValue({ node: node as Extract<typeof node, { type: "value" }>, curves: [], sigLevel: 200 });
+    expect(result.status === "resolved" && result.displayValue).toBe("25");
+  });
+
+
 });

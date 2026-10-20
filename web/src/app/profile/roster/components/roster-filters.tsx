@@ -12,6 +12,7 @@ import { ClassFilterToggle } from "./class-filter-toggle";
 import { cn } from "@/lib/utils";
 import { ChampionClass } from "@prisma/client";
 import type { RosterSortField, SortDirection } from "../types";
+import { EFFECT_FORMS, EFFECT_DIRECTIONS, EFFECT_FORM_LABELS, EFFECT_DIRECTION_LABELS, type EffectForm, type EffectDirection } from "@cerebro/core/domain/ability-source";
 
 interface RosterFiltersProps {
     search: string;
@@ -48,6 +49,10 @@ interface RosterFiltersProps {
     onAbilityFilterChange: (abs: string[]) => void;
     abilityLogic: 'AND' | 'OR';
     onAbilityLogicChange: (logic: 'AND' | 'OR') => void;
+    effectForms: EffectForm[];
+    onEffectFormsChange: (forms: EffectForm[]) => void;
+    effectDirections: EffectDirection[];
+    onEffectDirectionsChange: (directions: EffectDirection[]) => void;
     immunityFilter: string[];
     onImmunityFilterChange: (imms: string[]) => void;
     immunityLogic: 'AND' | 'OR';
@@ -75,6 +80,7 @@ export function RosterFilters({
     filterClasses, onFilterClassesChange, tagFilter, onTagFilterChange, tagLogic, onTagLogicChange,
     abilityCategoryFilter, onAbilityCategoryFilterChange, abilityCategoryLogic, onAbilityCategoryLogicChange,
     abilityFilter, onAbilityFilterChange, abilityLogic, onAbilityLogicChange,
+    effectForms, onEffectFormsChange, effectDirections, onEffectDirectionsChange,
     immunityFilter, onImmunityFilterChange, immunityLogic, onImmunityLogicChange,
     initialTags, initialAbilityCategories, initialAbilities, initialImmunities,
     canEdit = true,
@@ -128,13 +134,19 @@ export function RosterFilters({
         immunityFilter.forEach(imm => {
             filters.push({ label: imm, type: 'Immunity', onRemove: () => onImmunityFilterChange(immunityFilter.filter(i => i !== imm)) });
         });
+        effectForms.forEach(form => {
+            filters.push({ label: EFFECT_FORM_LABELS[form], type: 'Form', onRemove: () => onEffectFormsChange(effectForms.filter(value => value !== form)) });
+        });
+        effectDirections.forEach(direction => {
+            filters.push({ label: EFFECT_DIRECTION_LABELS[direction], type: 'Direction', onRemove: () => onEffectDirectionsChange(effectDirections.filter(value => value !== direction)) });
+        });
 
         if (showOwnershipFilter && !showUnowned) {
             filters.push({ label: 'Hidden', type: 'Unowned', onRemove: () => onShowUnownedChange(true) });
         }
 
         return filters;
-    }, [search, filterStars, filterRanks, filterAscensionLevels, filterClasses, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter, showUnowned, showOwnershipFilter, showRankFilter, showAscensionFilter, onSearchChange, onFilterStarsChange, onFilterRanksChange, onFilterAscensionLevelsChange, onFilterClassesChange, onTagFilterChange, onAbilityCategoryFilterChange, onAbilityFilterChange, onImmunityFilterChange, onShowUnownedChange]);
+    }, [search, filterStars, filterRanks, filterAscensionLevels, filterClasses, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter, effectForms, effectDirections, showUnowned, showOwnershipFilter, showRankFilter, showAscensionFilter, onSearchChange, onFilterStarsChange, onFilterRanksChange, onFilterAscensionLevelsChange, onFilterClassesChange, onTagFilterChange, onAbilityCategoryFilterChange, onAbilityFilterChange, onImmunityFilterChange, onEffectFormsChange, onEffectDirectionsChange, onShowUnownedChange]);
 
     return (
         <Card className="bg-slate-900/50 border-slate-800 p-2.5 z-40 backdrop-blur-md shadow-lg">
@@ -284,6 +296,23 @@ export function RosterFilters({
                     </div>
                 </div>
 
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-3 border-t border-slate-800/50 pt-2.5">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Ability sources</span>
+                    <div role="group" aria-label="Effect form" className="flex flex-wrap items-center gap-1">
+                        <span className="mr-1 text-[11px] text-slate-500">Form</span>
+                        {EFFECT_FORMS.map(form => <Button key={form} type="button" variant="ghost" size="sm" aria-pressed={effectForms.includes(form)} onClick={() => onEffectFormsChange(effectForms.includes(form) ? effectForms.filter(value => value !== form) : [...effectForms, form])} className={cn("h-7 rounded-md border px-2.5 text-[11px]", effectForms.includes(form) ? "border-sky-500/40 bg-sky-500/10 text-sky-200" : "border-transparent text-slate-400 hover:bg-slate-800")}>
+                            {EFFECT_FORM_LABELS[form]}
+                        </Button>)}
+                    </div>
+                    <div role="group" aria-label="Effect direction" className="flex flex-wrap items-center gap-1">
+                        <span className="mr-1 text-[11px] text-slate-500">Direction</span>
+                        {EFFECT_DIRECTIONS.map(direction => <Button key={direction} type="button" variant="ghost" size="sm" aria-pressed={effectDirections.includes(direction)} onClick={() => onEffectDirectionsChange(effectDirections.includes(direction) ? effectDirections.filter(value => value !== direction) : [...effectDirections, direction])} className={cn("h-7 rounded-md border px-2.5 text-[11px]", effectDirections.includes(direction) ? "border-sky-500/40 bg-sky-500/10 text-sky-200" : "border-transparent text-slate-400 hover:bg-slate-800")}>
+                            {EFFECT_DIRECTION_LABELS[direction]}
+                        </Button>)}
+                    </div>
+                    <span className="text-[10px] text-slate-500">Any selected form · any selected direction</span>
+                </div>
+
                 {/* Row 3: Active Filters Badges */}
                 {activeFilters.length > 0 && (
                     <div className="flex flex-wrap gap-2 border-t border-slate-800/50 pt-3 items-center">
@@ -321,6 +350,8 @@ export function RosterFilters({
                                 onAbilityCategoryFilterChange([]);
                                 onAbilityFilterChange([]);
                                 onImmunityFilterChange([]);
+                                onEffectFormsChange([]);
+                                onEffectDirectionsChange([]);
                             }}
                         >
                             <Trash2 className="w-3.5 h-3.5 mr-1" /> Clear All

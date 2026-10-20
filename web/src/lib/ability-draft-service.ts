@@ -1,6 +1,7 @@
 import { Prisma, PrismaClient } from '@prisma/client';
 import type { OpenRouterService } from '../../../src/services/openRouterService';
 import { abilityDraftPrompt } from '../../../src/prompts/abilityDraft';
+import { readAbilitySource } from '@cerebro/core/domain/ability-source';
 import {
   abilityDraftSource, buildAbilityDraftSynergies, buildAbilityDraftUserPrompt, parseAbilityDraft,
   type AbilityDraft,
@@ -67,11 +68,23 @@ export async function saveAbilityDraft(db: PrismaClient, championId: number, inp
       const ability = await tx.ability.upsert({
         where: { name: item.name }, update: {}, create: { name: item.name, description: '' },
       });
-      const data = { championId, abilityId: ability.id, type: item.type, source: abilityDraftSource(item) || null };
-      const existing = await tx.championAbilityLink.findFirst({ where: {
+      const metadata = readAbilitySource(item);
+      const data = { championId, abilityId: ability.id, type: item.type, source: abilityDraftSource(item) || null,
+        effectForm: metadata.effectForm, effectDirection: metadata.effectDirection };
+      let existing = await tx.championAbilityLink.findFirst({ where: {
         championId, abilityId: ability.id, type: item.type,
+        effectForm: data.effectForm, effectDirection: data.effectDirection,
         ...(data.source ? { source: data.source } : { OR: [{ source: null }, { source: '' }] }),
       } });
+      if (!existing) {
+        // Legacy rows retain their original wording until edited. Reuse the same
+        // application when only a leading metadata label has been cleaned up.
+        const candidates = await tx.championAbilityLink.findMany({ where: { championId, abilityId: ability.id, type: item.type } });
+        existing = candidates.find(candidate => {
+          const legacy = readAbilitySource(candidate);
+          return (legacy.condition || null) === data.source && legacy.effectForm === data.effectForm && legacy.effectDirection === data.effectDirection;
+        }) ?? null;
+      }
       const link = existing ?? await tx.championAbilityLink.create({ data });
       if (item.synergy) {
         await tx.championAbilitySynergy.createMany({

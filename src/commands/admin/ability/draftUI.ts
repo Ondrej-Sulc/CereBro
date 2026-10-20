@@ -8,6 +8,7 @@ import {
   ButtonBuilder,
   ButtonStyle,
 } from "discord.js";
+import { formatAbilitySource } from "../../../domain/ability-source";
 
 export function buildDraftLoadingContainerV2(championName: string): {
   components: ContainerBuilder[];
@@ -55,7 +56,7 @@ export function buildDraftContainerV2(
     const abilitiesTitle = new TextDisplayBuilder().setContent("### Abilities");
     const abilitiesBody = new TextDisplayBuilder().setContent(
       draft.abilities
-        .map((a: any) => `**${a.name}**: ${a.source || "-"}`)
+        .map((a: any) => `**${a.name}**: ${formatAbilitySource(a) || "-"}`)
         .join("\n")
     );
     container.addTextDisplayComponents(abilitiesTitle, abilitiesBody);
@@ -67,7 +68,7 @@ export function buildDraftContainerV2(
     );
     const immunitiesBody = new TextDisplayBuilder().setContent(
       draft.immunities
-        .map((i: any) => `**${i.name}**: ${i.source || "-"}`)
+        .map((i: any) => `**${i.name}**: ${formatAbilitySource(i) || "-"}`)
         .join("\n")
     );
     container.addTextDisplayComponents(immunitiesTitle, immunitiesBody);

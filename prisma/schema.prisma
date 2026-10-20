@@ -222,19 +222,45 @@ model Tag {
   @@unique([name, category])
 }
 
+enum AbilityEffectForm {
+  UNKNOWN
+  BUFF
+  DEBUFF
+  PASSIVE
+}
+
+enum AbilityEffectDirection {
+  UNKNOWN
+  GAIN
+  INFLICT
+}
+
 model ChampionAbilityLink {
   id               Int                      @id @default(autoincrement())
   type             AbilityLinkType
   source           String?
+  effectForm       AbilityEffectForm        @default(UNKNOWN)
+  effectDirection  AbilityEffectDirection   @default(UNKNOWN)
   championId       Int
   abilityId        Int
   ability          Ability                  @relation(fields: [abilityId], references: [id], onDelete: Cascade)
   champion         Champion                 @relation(fields: [championId], references: [id], onDelete: Cascade)
   synergyChampions ChampionAbilitySynergy[]
+  overviewSummary  ChampionAbilityOverview?
 
-  @@unique([championId, abilityId, type, source])
+  @@unique([championId, abilityId, type, source, effectForm, effectDirection], name: "sourceIdentity", map: "ChampionAbilityLink_source_identity_key")
   @@index([championId])
   @@index([abilityId])
+}
+
+// Reviewed display copy is separate from the original effect application and its receipts.
+model ChampionAbilityOverview {
+  championAbilityLinkId Int @id
+  text                 String
+  sourceHash           String
+  reviewHash           String
+  reviewedAt           DateTime @default(now())
+  championAbilityLink  ChampionAbilityLink @relation(fields: [championAbilityLinkId], references: [id], onDelete: Cascade)
 }
 
 model ChampionAbilitySynergy {

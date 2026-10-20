@@ -18,7 +18,7 @@ function database() {
     gameSynergy: { findMany: vi.fn().mockResolvedValue([row]) },
     ability: { upsert: vi.fn().mockResolvedValue({ id: 5 }) },
     championAbilityLink: {
-      findFirst: vi.fn().mockResolvedValue(null), create: vi.fn().mockResolvedValue({ id: 20 }),
+      findFirst: vi.fn().mockResolvedValue(null), findMany: vi.fn().mockResolvedValue([]), create: vi.fn().mockResolvedValue({ id: 20 }),
     },
     championAbilitySynergy: { createMany: vi.fn().mockResolvedValue({ count: 1 }) },
     $executeRaw: vi.fn().mockResolvedValue(0),
@@ -37,12 +37,34 @@ function router(draft: unknown, finishReason = 'stop') {
 }
 
 describe('ability draft generation and confirmation', () => {
+  it('reuses an older prefixed source when a new draft has clean text and tags', async () => {
+    const { db, boundary } = database();
+    boundary.championAbilityLink.findMany.mockResolvedValue([{ id: 99, source: 'Passive, SP1', effectForm: 'PASSIVE', effectDirection: 'UNKNOWN' }]);
+    await saveAbilityDraft(db, 2, { abilities: [{ name: 'Shock', source: 'SP1', effectForm: 'PASSIVE' }] });
+    expect(boundary.championAbilityLink.create).not.toHaveBeenCalled();
+  });
+  it('persists each application and includes both tags when checking source identity', async () => {
+    const { db, boundary } = database();
+    await saveAbilityDraft(db, 2, { abilities: [
+      { name: 'Shock', source: 'SP1', effectForm: 'PASSIVE', effectDirection: 'GAIN' },
+      { name: 'Shock', source: 'SP1', effectForm: 'DEBUFF', effectDirection: 'INFLICT' },
+    ] });
+    expect(boundary.championAbilityLink.findFirst.mock.calls.map(call => call[0].where)).toEqual([
+      { championId: 2, abilityId: 5, type: 'ABILITY', source: 'SP1', effectForm: 'PASSIVE', effectDirection: 'GAIN' },
+      { championId: 2, abilityId: 5, type: 'ABILITY', source: 'SP1', effectForm: 'DEBUFF', effectDirection: 'INFLICT' },
+    ]);
+    expect(boundary.championAbilityLink.create.mock.calls.map(call => call[0].data)).toMatchObject([
+      { source: 'SP1', effectForm: 'PASSIVE', effectDirection: 'GAIN' },
+      { source: 'SP1', effectForm: 'DEBUFF', effectDirection: 'INFLICT' },
+    ]);
+  });
+
   it('recognizes legacy blank sources when saving an unconditional effect', async () => {
     const { db, boundary } = database();
     boundary.championAbilityLink.findFirst.mockResolvedValue({ id: 99 });
     await saveAbilityDraft(db, 2, { immunities: [{ name: 'Bleed', source: '' }] });
     expect(boundary.championAbilityLink.findFirst).toHaveBeenCalledWith({ where: {
-      championId: 2, abilityId: 5, type: 'IMMUNITY', OR: [{ source: null }, { source: '' }],
+      championId: 2, abilityId: 5, type: 'IMMUNITY', effectForm: 'UNKNOWN', effectDirection: 'UNKNOWN', OR: [{ source: null }, { source: '' }],
     } });
     expect(boundary.championAbilityLink.create).not.toHaveBeenCalled();
   });
@@ -73,9 +95,9 @@ describe('ability draft generation and confirmation', () => {
     expect(transaction).toHaveBeenCalledOnce();
     const sources = boundary.championAbilityLink.create.mock.calls.map(call => call[0].data);
     expect(sources).toEqual([
-      { championId: 2, abilityId: 5, type: 'ABILITY', source: 'SP2' },
-      { championId: 2, abilityId: 5, type: 'ABILITY', source: 'Synergy: Stardust (6★) with Carina (7★); does not stack — SP1' },
-      { championId: 2, abilityId: 5, type: 'IMMUNITY', source: 'Synergy: Stardust (6★) with Carina (7★); does not stack — While above 50% Health' },
+      { championId: 2, abilityId: 5, type: 'ABILITY', effectForm: 'UNKNOWN', effectDirection: 'UNKNOWN', source: 'SP2' },
+      { championId: 2, abilityId: 5, type: 'ABILITY', effectForm: 'UNKNOWN', effectDirection: 'UNKNOWN', source: 'Synergy: Stardust (6★) with Carina (7★); does not stack — SP1' },
+      { championId: 2, abilityId: 5, type: 'IMMUNITY', effectForm: 'UNKNOWN', effectDirection: 'UNKNOWN', source: 'Synergy: Stardust (6★) with Carina (7★); does not stack — While above 50% Health' },
     ]);
     expect(boundary.championAbilitySynergy.createMany).toHaveBeenCalledTimes(2);
     expect(boundary.championAbilitySynergy.createMany).toHaveBeenCalledWith({

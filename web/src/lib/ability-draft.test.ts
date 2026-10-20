@@ -19,6 +19,22 @@ const row: DraftSynergyRow = {
 };
 
 describe('ability draft synergy context and validation', () => {
+  it('accepts independent form/direction tags and normalizes legacy prefixes', () => {
+    const draft = parseAbilityDraft({ abilities: [
+      { name: 'Spider-Seal', source: 'SP1', effectForm: 'BUFF', effectDirection: 'INFLICT' },
+      { name: 'Bleed', source: 'Start fight', effectForm: 'DEBUFF', effectDirection: 'GAIN' },
+      { name: 'Power Steal', source: 'Passive, When the Opponent gains Buffs' },
+    ] }, []);
+    expect(draft.abilities).toMatchObject([
+      { effectForm: 'BUFF', effectDirection: 'INFLICT' },
+      { effectForm: 'DEBUFF', effectDirection: 'GAIN' },
+      { source: 'When the Opponent gains Buffs', effectForm: 'PASSIVE' },
+    ]);
+    expect(() => parseAbilityDraft({ abilities: [{ name: 'Bleed', source: '', effectForm: 'BENEFICIAL' }] }, [])).toThrow();
+    expect(() => parseAbilityDraft({ abilities: [{ name: 'Bleed', source: '', effectDirection: 'OPPONENT' }] }, [])).toThrow();
+    expect(parseAbilityDraft({ immunities: [{ name: 'Bleed', source: '', effectDirection: 'GAIN' }] }, []).immunities[0].effectDirection).toBe('UNKNOWN');
+  });
+
   it('supplies owned and incoming descriptions, recipients, partners and obtainable rarities', () => {
     const owned = buildAbilityDraftSynergies([row], 1);
     const incoming = buildAbilityDraftSynergies([row], 2);

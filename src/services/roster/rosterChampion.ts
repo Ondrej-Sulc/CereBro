@@ -10,9 +10,15 @@ import { downloadImage } from '../../commands/roster/ocr/imageUtils.js';
 import { CONFIG } from './rosterConfig.js';
 import { GridCell } from './types.js';
 
+interface ChampionPortrait {
+  champion: Champion;
+  hash: string;
+  colors: Uint8Array;
+}
+
 export class RosterChampionService {
   private CACHE_DIR = path.join(os.tmpdir(), 'cerebro', 'champion-cache');
-  private championCache: Map<string, { champion: Champion; hash: string }> = new Map();
+  private championCache: Map<string, ChampionPortrait> = new Map();
   private classCache: Map<ChampionClass, Champion[]> = new Map();
 
   constructor() {
@@ -27,7 +33,7 @@ export class RosterChampionService {
     }
   }
 
-  public async identifyChampion(rawImage: Buffer, rawOpts: any, cell: GridCell): Promise<string | undefined> {
+  public async identifyChampion(rawImage: Buffer, rawOpts: { raw: { width: number; height: number } }, cell: GridCell): Promise<string | undefined> {
     if (!cell.class) return undefined;
 
     try {
@@ -50,23 +56,36 @@ export class RosterChampionService {
        
       const candidates = await this.getChampionsByClass(cell.class);
 
-      let bestMatch: string | undefined;
-      let minDistance = Infinity;
+      const ranked = candidates.map(candidate => ({
+        candidate, distance: this.compareHashes(portraitHash, candidate.hash),
+      })).sort((a, b) => a.distance - b.distance);
+      let best = ranked[0];
+      let colorDistance: number | undefined;
 
-      for (const candidate of candidates) {
-         const distance = this.compareHashes(portraitHash, candidate.hash);
-         if (distance < minDistance) {
-           minDistance = distance;
-           bestMatch = candidate.champion.name; 
-         }
+      // A near tie in the grayscale hash is ambiguous: differently colored faces can
+      // have the same light/dark pattern. Preserve distinct shape matches, but use
+      // spatial RGB samples when the runner-up is within 5% of the best distance.
+      if (best && best.distance <= CONFIG.CHAMPION_MATCH_THRESHOLD && ranked[1]
+        && best.distance >= ranked[1].distance * CONFIG.CHAMPION_SHAPE_AMBIGUITY_RATIO) {
+        const colors = this.samplePortraitColors(rawImage, imgW, imgH, left, top, w, h);
+        const colorRanked = ranked.map(match => ({
+          ...match, colorDistance: this.colorDistance(colors, match.candidate.colors),
+        })).sort((a, b) => a.colorDistance - b.colorDistance);
+        best = colorRanked[0];
+        colorDistance = colorRanked[0]?.colorDistance;
       }
+
+      const bestMatch = best?.candidate.champion.name;
+      const minDistance = best?.distance ?? Infinity;
 
       cell.debugInfo = {
          ...cell.debugInfo,
-         championMatch: { bestMatch, minDistance },
+         championMatch: { bestMatch, minDistance, colorDistance },
       };
 
-      if (minDistance <= CONFIG.CHAMPION_MATCH_THRESHOLD) {
+      if (colorDistance !== undefined
+        ? colorDistance <= CONFIG.CHAMPION_COLOR_RMSE_THRESHOLD
+        : minDistance <= CONFIG.CHAMPION_MATCH_THRESHOLD) {
          return bestMatch;
       }
 
@@ -78,7 +97,7 @@ export class RosterChampionService {
     }
   }
 
-  public async getChampionsByClass(championClass: ChampionClass): Promise<{ champion: Champion; hash: string }[]> {
+  public async getChampionsByClass(championClass: ChampionClass): Promise<ChampionPortrait[]> {
     let championsInDb = this.classCache.get(championClass);
     
     if (!championsInDb) {
@@ -89,7 +108,7 @@ export class RosterChampionService {
     }
 
     const toDownload: Champion[] = [];
-    const cachedResults: { champion: Champion; hash: string }[] = [];
+    const cachedResults: ChampionPortrait[] = [];
 
     for (const champion of championsInDb) {
         const cached = this.championCache.get(champion.name);
@@ -104,10 +123,11 @@ export class RosterChampionService {
 
     const downloadedResults = await Promise.all(toDownload.map(async (champion) => {
         try {
-            const images = champion.images as any;
-            const imageUrl = images?.p_128 || images?.full_primary;
+            const images = champion.images;
+            const imageUrl = images && typeof images === 'object' && !Array.isArray(images)
+              ? images.p_128 || images.full_primary : undefined;
             
-            if (!imageUrl) return null;
+            if (typeof imageUrl !== 'string') return null;
 
             const safeName = champion.name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
             const cacheFilePath = path.join(this.CACHE_DIR, `${safeName}_raw`);
@@ -137,7 +157,8 @@ export class RosterChampionService {
 
             const hash = this.computePortraitHashJS(rawData, w, h, cropLeft, cropTop, cropWidth, cropHeight);
             
-            const entry = { champion, hash };
+            const colors = this.samplePortraitColors(rawData, w, h, cropLeft, cropTop, cropWidth, cropHeight);
+            const entry = { champion, hash, colors };
             this.championCache.set(champion.name, entry);
             return entry;
         } catch (err) {
@@ -146,11 +167,34 @@ export class RosterChampionService {
         }
     }));
 
-    const validDownloads = downloadedResults.filter(r => r !== null) as { champion: Champion; hash: string }[];
+    const validDownloads = downloadedResults.filter((r): r is ChampionPortrait => r !== null);
     return [...cachedResults, ...validDownloads];
   }
 
-  // Optimized Point-Sampling Resize + Grayscale + pHash
+  private samplePortraitColors(source: Buffer, imgW: number, imgH: number,
+    cropX: number, cropY: number, cropW: number, cropH: number): Uint8Array {
+    const size = Math.min(cropW, cropH);
+    const left = cropX + Math.floor((cropW - size) / 2);
+    const top = cropY + Math.floor((cropH - size) / 2);
+    const colors = new Uint8Array(16 * 16 * 3);
+    for (let y = 0; y < 16; y++) {
+      for (let x = 0; x < 16; x++) {
+        const sx = Math.max(0, Math.min(imgW - 1, Math.floor(left + (x + 0.5) * size / 16)));
+        const sy = Math.max(0, Math.min(imgH - 1, Math.floor(top + (y + 0.5) * size / 16)));
+        const offset = (sy * imgW + sx) * 4;
+        colors.set(source.subarray(offset, offset + 3), (y * 16 + x) * 3);
+      }
+    }
+    return colors;
+  }
+
+  private colorDistance(left: Uint8Array, right: Uint8Array): number {
+    let sum = 0;
+    for (let i = 0; i < left.length; i++) sum += (left[i] - right[i]) ** 2;
+    return Math.sqrt(sum / left.length);
+  }
+
+  // Optimized Point-Sampling Resize + Grayscale + average hash
   // Replaces Sharp pipeline for extreme speed
   private computePortraitHashJS(
       source: Buffer, 

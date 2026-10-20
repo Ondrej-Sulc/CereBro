@@ -242,14 +242,18 @@
   overflow: hidden;
 }
 
-/* Hide spin buttons for number inputs */
+/* Hide native number steppers throughout the app. */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button,
 .no-spin-buttons::-webkit-outer-spin-button,
 .no-spin-buttons::-webkit-inner-spin-button {
   -webkit-appearance: none;
   margin: 0;
 }
+input[type="number"],
 .no-spin-buttons {
   -moz-appearance: textfield;
+  appearance: textfield;
 }
 
 /* Custom rule to hide footer on mobile for specific pages */

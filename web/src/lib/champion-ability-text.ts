@@ -3,6 +3,8 @@ import type {
   ChampionAbilityTextTemplateNode,
   ChampionAbilityTextTemplateValueSource,
 } from "@cerebro/core/domain/champion-ability-text/types";
+import { readAbilityTextDisplay } from "@cerebro/core/domain/champion-ability-text/display";
+import { readGameDisplayBinding, resolveGameDisplayBinding } from "@cerebro/core/domain/champion-ability-text/game-binding";
 
 export type TemplateNode = ChampionAbilityTextTemplateNode;
 export type TemplateValueSource = ChampionAbilityTextTemplateValueSource;
@@ -105,6 +107,8 @@ export type PreparedChampionAbilityTextPanel<
   records: Array<PreparedChampionAbilityTextRecord<TRecord>>;
   recordGroups: Array<PreparedChampionAbilityTextRecordGroup<TRecord>>;
   introRecord?: PreparedChampionAbilityTextRecord<TRecord>;
+  specialAttackNumbers?: number[];
+  specialAttackIntros?: Array<{ number: number; record: PreparedChampionAbilityTextRecord<TRecord> }>;
   emptyText: string;
 };
 
@@ -128,8 +132,11 @@ export function validateChampionAbilityTextTemplate(template: unknown): TextTemp
     throw new Error("Champion Ability Text template.raw must be a string.");
   }
 
+  const display = readAbilityTextDisplay(template.display);
+  const base = { raw: template.raw, ...(display ? { display } : {}) };
+
   if (template.blocks === undefined) {
-    return { raw: template.raw };
+    return base;
   }
 
   if (!Array.isArray(template.blocks)) {
@@ -137,7 +144,7 @@ export function validateChampionAbilityTextTemplate(template: unknown): TextTemp
   }
 
   return {
-    raw: template.raw,
+    ...base,
     blocks: template.blocks.map((block, blockIndex) => {
       if (!isRecord(block) || block.type !== "paragraph" || !Array.isArray(block.children)) {
         throw new Error(`Champion Ability Text block ${blockIndex} must be a paragraph with children.`);
@@ -188,7 +195,7 @@ export function prepareChampionAbilityTextView<
   sigLevel?: number;
   stat?: ChampionAbilityStat;
 }): PreparedChampionAbilityTextView<TRecord> {
-  const selectedCurves = curves.filter(curve => (curve.maxSig ?? 200) === maxSig);
+  const selectedCurves = bindGameDisplayCurves(curves.filter(curve => (curve.maxSig ?? 200) === maxSig), records);
   const preparedRecords = records.map(record => ({
     ...record,
     displayTitle: record.title ? formatGameText(record.title) : null,
@@ -218,12 +225,36 @@ export function prepareChampionAbilityTextView<
         ? `${abilityTextGroupTitle(group)} - ${introRecord.displayTitle}`
         : abilityTextGroupTitle(group);
 
-      return createAbilityTextPanel({
+      const panel = createAbilityTextPanel({
         group,
         title,
         records: groupRecords,
         introRecord,
       });
+      // The export files shared rules under one attack. Promote only explicit,
+      // uniform game trigger metadata; prose alone cannot establish the scope.
+      const sections = panel.records.map(record => {
+        try { return readAbilityTextDisplay(isRecord(record.template) ? record.template.display : undefined)?.section; }
+        catch { return undefined; }
+      });
+      const sharedSection = sections[0];
+      const scope = sharedSection?.id.match(/^ID_UI_STAT_ATTRIBUTE_TRIGGER_SUBTITLE_SPECIAL([123]{2,3})$/)?.[1];
+      const numbers = scope ? [...new Set([...scope].map(Number))].sort() : [];
+      if (sharedSection && specialMatch && numbers.length > 1 && numbers.includes(Number(specialMatch[1]))
+        && sections.every(section => section?.id === sharedSection?.id)
+        && numbers.every(number => `special${number}` === group || !textGroups[`special${number}`]?.length)) {
+        return {
+          ...panel,
+          title: formatGameText(sharedSection.title),
+          introRecord: undefined,
+          specialAttackNumbers: numbers,
+          specialAttackIntros: numbers.flatMap(number => {
+            const record = specialAttackTextByNumber.get(String(number));
+            return record ? [{ number, record }] : [];
+          }),
+        };
+      }
+      return panel;
     });
 
   return {
@@ -239,6 +270,12 @@ export function prepareChampionAbilityTextView<
     }),
     descriptionPanels,
   };
+}
+
+export function championAbilityPanelMatchesChapter(panel: PreparedChampionAbilityTextPanel, chapter: string | null) {
+  if (panel.group === chapter) return true;
+  const number = chapter?.match(/^special([123])$/)?.[1];
+  return Boolean(number && panel.specialAttackNumbers?.includes(Number(number)));
 }
 
 export function abilityTextGroupTitle(group: string) {
@@ -328,7 +365,7 @@ export function resolveChampionAbilityTextValue({
     };
   }
 
-  const explicitCurveId = node.source?.kind === "abilityParam" && node.source.curveId && node.source.curveId !== "none"
+  const explicitCurveId = node.source?.kind === "abilityParam" && !node.source.gameBinding && node.source.curveId && node.source.curveId !== "none"
     ? node.source.curveId
     : null;
 
@@ -450,16 +487,31 @@ function createAbilityTextPanel<
   const recordGroups: Array<PreparedChampionAbilityTextRecordGroup<TRecord>> = [];
   let currentGroup: PreparedChampionAbilityTextRecordGroup<TRecord> | null = null;
   let pendingTitle: { id: string; title: string } | null = null;
+  let currentSectionId: string | null = null;
   const visibleRecords: Array<PreparedChampionAbilityTextRecord<TRecord>> = [];
 
   for (const record of records) {
-    if (isGlossaryDefinitionRecord(record)) {
+    let display: TextTemplate["display"];
+    try { display = readAbilityTextDisplay(isRecord(record.template) ? record.template.display : undefined); } catch { /* Preparation already reports malformed metadata. */ }
+    if (display?.kind === "glossary") continue;
+    if (!display && isGlossaryDefinitionRecord(record)) {
       if (record.displayTitle) pendingTitle = { id: String(record.id), title: record.displayTitle };
       continue;
     }
 
     visibleRecords.push(record);
-    if (record.displayTitle) {
+    if (display?.section) {
+      if (currentGroup && currentSectionId === display.section.id) {
+        currentGroup.records.push(record);
+      } else {
+        currentGroup = { id: String(record.id), title: formatGameText(display.section.title), records: [record] };
+        recordGroups.push(currentGroup);
+      }
+      currentSectionId = display.section.id;
+      pendingTitle = null;
+    } else if (display?.kind === "ability" && currentSectionId && currentGroup) {
+      currentGroup.records.push(record);
+    } else if (record.displayTitle) {
       currentGroup = {
         id: String(record.id),
         title: record.displayTitle,
@@ -467,6 +519,7 @@ function createAbilityTextPanel<
       };
       recordGroups.push(currentGroup);
       pendingTitle = null;
+      currentSectionId = null;
     } else if (pendingTitle) {
       currentGroup = {
         id: pendingTitle.id,
@@ -712,6 +765,7 @@ function validateTemplateValueSource(source: unknown, path: string): TemplateVal
     f24: optionalNumber(source.f24, `${path}.f24`),
     f27: optionalNumber(source.f27, `${path}.f27`),
     display: source.display === undefined ? undefined : validateDisplay(source.display, `${path}.display`),
+    gameBinding: source.gameBinding === undefined ? undefined : readGameDisplayBinding(source.gameBinding),
   };
 }
 
@@ -735,6 +789,32 @@ function optionalNumber(value: unknown, path: string) {
   return value;
 }
 
+/** Derive chart output from the same exact binding as the text, keeping the
+ * existing curve records/IDs intact. No legacy scaling guess runs for it. */
+function bindGameDisplayCurves(curves: ChampionAbilityCurve[], records: Array<{ template: unknown }>) {
+  const sources: Array<Extract<TemplateValueSource, { kind: 'abilityParam' }>> = [];
+  function visit(nodes: TemplateNode[]) {
+    for (const node of nodes) {
+      if (node.type === 'color') visit(node.children);
+      if (node.type === 'value' && node.source?.kind === 'abilityParam' && node.source.gameBinding?.growth) sources.push(node.source);
+    }
+  }
+  for (const record of records) {
+    try { validateChampionAbilityTextTemplate(record.template).blocks?.forEach(block => visit(block.children)); }
+    catch { /* The normal preparation path reports malformed templates. */ }
+  }
+  return curves.map(curve => {
+    if (!isRecord(curve.params) || !isRecord(curve.params.source)) return curve;
+    const componentId = curve.params.source.componentId;
+    const sourceCurveId = curve.params.sourceCurveId;
+    const source = sources.find(s => s.componentId === componentId && (
+      s.gameBinding?.growth?.curve?.id === sourceCurveId ||
+      (!s.gameBinding?.growth?.curve && sourceCurveId === `legacy_log_${s.componentId}`)
+    ));
+    return source ? { ...curve, params: { ...curve.params, gameBinding: source.gameBinding } } : curve;
+  });
+}
+
 function findCurveForValueNode(
   node: Extract<TemplateNode, { type: "value" }>,
   curves: ChampionAbilityCurve[],
@@ -742,6 +822,10 @@ function findCurveForValueNode(
 ) {
   const source = node.source;
   if (!source || source.kind !== "abilityParam") return null;
+  // Explicit game bindings carry their own named growth target/coefficients.
+  // Legacy curves must not be matched by fuzzy effect or component names.
+  if (source.gameBinding) return curves.find(curve => isRecord(curve.params)
+    && JSON.stringify(curve.params.gameBinding) === JSON.stringify(source.gameBinding)) ?? null;
   const explicitCurveId = source.curveId && source.curveId !== "none" ? source.curveId : null;
   const selectedPanelIds = new Set(stat?.sigAbilityIds ?? []);
 
@@ -838,6 +922,11 @@ function resolveTemplateValue(
     return curve ? evaluateCurveDisplay(curve, sigLevel) : null;
   }
 
+  if (source.gameBinding) {
+    if (source.gameBinding.slot !== node.placeholderIndex) return null;
+    return resolveGameDisplayBinding(source.gameBinding, sigLevel, stat);
+  }
+
   const buffType = source.buffType ?? "";
   const timeValue = resolveTimeValue(node, source, curve, sigLevel);
   if (timeValue != null) return timeValue;
@@ -847,8 +936,6 @@ function resolveTemplateValue(
   }
 
   if (node.hint?.includes("%") && !isDamageAmountPlaceholder(node, source)) {
-    const indexedPercentValue = resolveIndexedPercentValue(node, source);
-    if (indexedPercentValue != null) return indexedPercentValue;
     if (curve && source.field !== "duration") {
       return normalizeCurveValueForSource(evaluateCurveDisplayForSource(curve, source, sigLevel), source, node);
     }
@@ -1007,10 +1094,6 @@ function resolveStaticRatingPercent(
     .find(value => value > 0 && value < 1) ?? null;
 }
 
-function isPotencyText(node: Extract<TemplateNode, { type: "value" }>) {
-  return /\bpotency\b/i.test(node.hint ?? "");
-}
-
 function isRatingText(node: Extract<TemplateNode, { type: "value" }>) {
   return /\b(critical damage rating|critical rating|resistance up|physical vulnerability|energy vulnerability|vulnerability|pierce)\b/i.test(node.hint ?? "");
 }
@@ -1024,8 +1107,6 @@ function resolveSourceValue(
 
   if (!isPercentContext) return fieldValue;
 
-  const indexedPercentValue = resolveIndexedPercentValue(node, source);
-  if (indexedPercentValue != null) return indexedPercentValue;
 
   if (source.field === "duration" && typeof source.baseVal === "number" && source.baseVal !== 1) {
     return normalizePercentValue(source.baseVal);
@@ -1053,39 +1134,6 @@ function resolveSourceValue(
   }
 
   if (fieldValue != null) return normalizePercentValue(fieldValue);
-  return null;
-}
-
-function resolveIndexedPercentValue(
-  node: Extract<TemplateNode, { type: "value" }>,
-  source: Extract<TemplateValueSource, { kind: "abilityParam" }>
-) {
-  const componentId = source.componentId ?? "";
-
-  if (componentId === "nico_hemo_info") {
-    if (node.placeholderIndex === 1) return normalizePercentValue(source.chance ?? 0);
-    if (node.placeholderIndex === 2) return normalizePercentValue(source.duration ?? 0);
-  }
-
-  if (componentId === "nico_hemo_pv_gain") {
-    if (node.placeholderIndex === 1) return normalizePercentValue(source.chance ?? 0);
-    if (node.placeholderIndex === 0) return normalizePercentFraction(source.baseVal ?? 0);
-  }
-
-  if (componentId === "nico_hex_pwr_gn_b" && node.placeholderIndex === 3) {
-    return source.f24 ?? null;
-  }
-
-  if (componentId === "nico_hex_imm_seq" && node.placeholderIndex === 3) {
-    return source.f24 ?? null;
-  }
-
-  if (componentId === "nico_sp1_info") {
-    if (node.placeholderIndex === 0) return normalizePercentValue(source.baseVal ?? 0);
-    if (node.placeholderIndex === 2) return normalizePercentValue(source.duration ?? 0);
-    if (node.placeholderIndex === 3) return source.f24 ?? null;
-  }
-
   return null;
 }
 
@@ -1240,6 +1288,7 @@ function evaluateCurveDelta(params: Record<string, unknown>, sig: number) {
 
 function evaluateCurveOutput(curve: ChampionAbilityCurve, sig: number, stat?: ChampionAbilityStat) {
   const params = curve.params as Record<string, unknown> | null;
+  if (params?.gameBinding) return resolveGameDisplayBinding(readGameDisplayBinding(params.gameBinding), sig, stat) ?? 0;
   const source = params && isRecord(params.source) ? params.source : null;
   const ability = source && isRecord(source.ability) ? source.ability : null;
   const buffType = typeof ability?.buffType === "string" ? ability.buffType : "";
@@ -1263,6 +1312,9 @@ function evaluateCurveOutput(curve: ChampionAbilityCurve, sig: number, stat?: Ch
 
 function formatAbilityTextValue(value: number, curve: ChampionAbilityCurve | null, node: Extract<TemplateNode, { type: "value" }>) {
   const source = node.source;
+  if (source?.kind === "abilityParam" && source.gameBinding) {
+    return value.toLocaleString("en-US", { maximumFractionDigits: source.gameBinding.slot === 3 ? 0 : 2 });
+  }
   const params = curve?.params as Record<string, unknown> | null | undefined;
   const display = params && isRecord(params.display) ? params.display : null;
   const outputPrecision = source?.kind === "abilityParam" && ["fury", "resist_physical", "resist_magic", "crit_resist", "armor_up"].includes(source.buffType ?? "")

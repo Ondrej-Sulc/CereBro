@@ -1,19 +1,16 @@
 "use client";
 
-import { memo, type ReactNode, useState } from "react";
+import { memo } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { ExternalLink, Trophy, Edit2, Shield, Zap, Tag as TagIcon, Hash, Swords } from "lucide-react";
+import { Trophy, Edit2, Swords } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getStarBorderClass, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { ChampionImages } from "@/types/champion";
-import { ProfileRosterEntry, FilterState } from "../types";
+import { ProfileRosterEntry } from "../types";
 import { CLASS_ICONS } from "../constants";
 
 interface ChampionCardProps {
@@ -21,14 +18,13 @@ interface ChampionCardProps {
     prestige?: number;
     onClick: (item: ProfileRosterEntry) => void;
     mode: 'view' | 'edit';
-    filters: FilterState;
+    onQuickView: (item: ProfileRosterEntry) => void;
     catalogMode?: boolean;
     canManageAttackReservations?: boolean;
     onToggleAttackReservation?: (item: ProfileRosterEntry) => void;
 }
 
-export const ChampionCard = memo(({ item, prestige, onClick, mode, filters, catalogMode = false, canManageAttackReservations = false, onToggleAttackReservation }: ChampionCardProps) => {
-    const [quickOpen, setQuickOpen] = useState(false);
+export const ChampionCard = memo(({ item, prestige, onClick, onQuickView, mode, catalogMode = false, canManageAttackReservations = false, onToggleAttackReservation }: ChampionCardProps) => {
     const classColors = getChampionClassColors(item.champion.class);
     const showUnownedState = !!item.isUnowned && !catalogMode;
 
@@ -37,19 +33,13 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters, cata
         : catalogMode && item.isUnowned
             ? 'border-slate-800 shadow-black/10'
             : getStarBorderClass(item.stars);
-    const abilityEntries = (item.champion.abilities || []).filter(a => a.type === 'ABILITY');
-    const immunityEntries = (item.champion.abilities || []).filter(a => a.type === 'IMMUNITY');
-    const displayAbilities = groupItems(abilityEntries, {
-        matchedNames: filters.abilities,
-        matchedCategories: filters.categories,
-    });
-    const displayImmunities = groupItems(immunityEntries, {
-        matchedNames: filters.immunities,
-        matchedCategories: [],
-    });
-    const highlightedTags = filters.tags.length > 0
-        ? (item.champion.tags || []).filter(t => filters.tags.includes(t.name))
-        : (item.champion.tags || []).slice(0, 12);
+    const activateCard = () => {
+        if (mode === 'edit') {
+            if (!item.isUnowned) onClick(item);
+        } else {
+            onQuickView(item);
+        }
+    };
 
     const cardContent = (
         <div
@@ -59,12 +49,17 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters, cata
                 borderClass,
                 showUnownedState && "grayscale-[0.45] saturate-[0.7] brightness-[0.9] opacity-75 hover:grayscale-[0.25] hover:saturate-[0.85] hover:brightness-[0.95] hover:opacity-90 transition-all duration-300"
             )}
-            onClick={() => {
-                if (mode === 'edit') {
-                    if (item.isUnowned) return;
-                    onClick(item);
-                } else {
-                    setQuickOpen(true);
+            role="button"
+            tabIndex={0}
+            data-roster-entry-id={item.id}
+            aria-label={`${mode === 'edit' ? 'Edit' : 'View'} ${item.champion.name}`}
+            aria-haspopup="dialog"
+            onClick={activateCard}
+            onKeyDown={event => {
+                if (event.target !== event.currentTarget) return;
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    activateCard();
                 }
             }}
         >
@@ -166,493 +161,6 @@ export const ChampionCard = memo(({ item, prestige, onClick, mode, filters, cata
         </div>
     );
 
-    if (mode === 'view') {
-        return (
-            <>
-                {cardContent}
-                <QuickChampionDialog
-                    item={item}
-                    prestige={prestige}
-                    open={quickOpen}
-                    onOpenChange={setQuickOpen}
-                    classColors={classColors}
-                    displayAbilities={displayAbilities}
-                    displayImmunities={displayImmunities}
-                    highlightedTags={highlightedTags}
-                    matchingTagsOnly={filters.tags.length > 0}
-                    showUnownedState={showUnownedState}
-                />
-            </>
-        );
-    }
-
     return cardContent;
 });
 ChampionCard.displayName = 'ChampionCard';
-
-type DetailItem = {
-    name: string;
-    iconUrl: string | null;
-    gameGlossaryTermId: string | null;
-    primaryColor?: string;
-    secondaryColor?: string;
-    description?: string | null;
-    matched: boolean;
-    instances: {
-        source: string | null;
-        synergyChampions: { name: string; images: ChampionImages }[];
-    }[];
-};
-
-function normalizeHexColor(color: string): string | undefined {
-    if (/^[0-9a-fA-F]{6}$/.test(color)) return `#${color}`;
-    if (/^[0-9a-fA-F]{8}$/.test(color)) return `#${color.slice(0, 6)}`;
-    return undefined;
-}
-
-function EffectIcon({ iconUrl, color, size = "sm" }: { iconUrl: string | null; color: string; size?: "sm" | "md" }) {
-    if (!iconUrl) return null;
-
-    const circleSize = size === "md" ? "h-8 w-8" : "h-7 w-7";
-    const glyphSize = size === "md" ? "h-6 w-6" : "h-5 w-5";
-
-    return (
-        <span
-            className={cn("relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/15 shadow-inner", circleSize)}
-            style={{
-                backgroundColor: color,
-                boxShadow: `inset 0 1px 0 rgba(255,255,255,0.34), inset 0 -8px 12px rgba(0,0,0,0.2), 0 0 20px ${color}24`,
-            }}
-        >
-            <span className="absolute left-1 top-1 h-3 w-3 rounded-full bg-white/35 blur-[2px]" />
-            <span className="absolute inset-x-1 bottom-0 h-3 rounded-full bg-black/15 blur-sm" />
-            <span
-                className={cn("relative", glyphSize)}
-                style={{
-                    backgroundColor: "#ffffff",
-                    maskImage: `url(${iconUrl})`,
-                    maskSize: "contain",
-                    maskRepeat: "no-repeat",
-                    maskPosition: "center",
-                    WebkitMaskImage: `url(${iconUrl})`,
-                    WebkitMaskSize: "contain",
-                    WebkitMaskRepeat: "no-repeat",
-                    WebkitMaskPosition: "center",
-                }}
-            />
-        </span>
-    );
-}
-
-function QuickChampionDialog({
-    item,
-    prestige,
-    open,
-    onOpenChange,
-    classColors,
-    displayAbilities,
-    displayImmunities,
-    highlightedTags,
-    matchingTagsOnly,
-    showUnownedState,
-}: {
-    item: ProfileRosterEntry;
-    prestige?: number;
-    open: boolean;
-    onOpenChange: (open: boolean) => void;
-    classColors: ReturnType<typeof getChampionClassColors>;
-    displayAbilities: DetailItem[];
-    displayImmunities: DetailItem[];
-    highlightedTags: { id: string | number; name: string }[];
-    matchingTagsOnly: boolean;
-    showUnownedState: boolean;
-}) {
-    const heroUrl = getChampionImageUrlOrPlaceholder(item.champion.images as unknown as ChampionImages, 'full', 'hero');
-    const portraitUrl = getChampionImageUrlOrPlaceholder(item.champion.images as unknown as ChampionImages, 'full');
-
-    return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent
-                className="bg-slate-950 border-slate-800 text-slate-200 p-0 overflow-hidden w-[calc(100vw-1rem)] h-[calc(100vh-1rem)] max-h-[calc(100vh-1rem)] sm:w-full sm:h-auto sm:max-h-[92vh] sm:max-w-[560px] lg:max-w-[900px] rounded-2xl gap-0 shadow-2xl"
-                onOpenAutoFocus={(event) => event.preventDefault()}
-            >
-                <DialogTitle className="sr-only">{item.champion.name}</DialogTitle>
-                <DialogDescription className="sr-only">Champion quick details</DialogDescription>
-
-                {/* Ambient background */}
-                <div className="absolute inset-0 z-0 pointer-events-none">
-                    {/* Blurred colour wash */}
-                    <div className="absolute inset-0 opacity-30">
-                        <Image src={heroUrl} alt="" fill className="object-cover blur-3xl scale-125 saturate-50" />
-                    </div>
-                    <div className="absolute inset-0 bg-slate-950/50" />
-
-                    {/* Hero art — visible on the right, fading left */}
-                    <div className="absolute inset-0 overflow-hidden">
-                        <Image
-                            src={heroUrl}
-                            alt=""
-                            fill
-                            sizes="900px"
-                            className="object-cover object-right-top opacity-55 mix-blend-lighten drop-shadow-2xl"
-                            priority={false}
-                        />
-                        {/* Fade left so it doesn't clash with the portrait panel */}
-                        <div className="absolute inset-0 bg-gradient-to-r from-slate-950/95 via-slate-950/60 to-slate-950/10" />
-                        {/* Fade bottom */}
-                        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/0 via-slate-950/50 to-slate-950/90" />
-                    </div>
-
-                    {/* Class glow */}
-                    <div
-                        className="absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full blur-[120px] opacity-25 mix-blend-screen"
-                        style={{ backgroundColor: classColors.color }}
-                    />
-                </div>
-
-
-                <TooltipProvider>
-                    {/* Content */}
-                    <div className="relative z-10 flex h-full min-h-0 flex-col w-full sm:max-h-[92vh]">
-                        {/* Top accent line */}
-                        <div className="absolute inset-x-0 top-0 h-px z-20 opacity-90" style={{ backgroundColor: classColors.color }} />
-
-                    {/* ── Header: portrait + name/stats ── */}
-                    <div className="flex min-h-[220px] flex-col gap-3 px-4 py-4 sm:min-h-[11rem] sm:flex-row sm:items-center sm:gap-0 sm:px-0 sm:py-0 lg:min-h-[13rem]">
-                        {/* Portrait */}
-                        <div className="relative hidden h-24 w-24 shrink-0 overflow-hidden rounded-2xl border border-white/10 bg-slate-950/40 shadow-xl shadow-black/30 ring-1 ring-white/5 sm:mx-4 sm:block sm:h-[11rem] sm:w-[11rem] lg:h-[13rem] lg:w-[13rem]">
-                            <div className="absolute inset-0" style={{ boxShadow: `inset 0 0 0 1px ${classColors.color}22` }} />
-                            <Image
-                                src={heroUrl}
-                                alt=""
-                                fill
-                                sizes="(max-width: 640px) 6rem, (max-width: 1024px) 11rem, 13rem"
-                                className="object-cover object-center opacity-25 blur-md scale-110"
-                                priority
-                            />
-                            <Image
-                                src={portraitUrl}
-                                alt={item.champion.name}
-                                fill
-                                sizes="(max-width: 640px) 6rem, (max-width: 1024px) 11rem, 13rem"
-                                className="object-cover object-center p-1"
-                                priority
-                            />
-                            {/* Edge fade */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-slate-950/65 via-transparent to-slate-950/10 sm:bg-gradient-to-r sm:from-transparent sm:via-transparent sm:to-slate-950/35" />
-                            <div className="absolute inset-0 bg-gradient-to-b from-slate-950/20 via-transparent to-slate-950/60" />
-                        </div>
-
-                        {/* Name / stats */}
-                        <div className="flex min-w-0 flex-1 flex-col justify-between gap-3 rounded-2xl border border-white/8 bg-black/15 px-4 py-3 backdrop-blur-[2px] sm:gap-4 sm:rounded-none sm:border-0 sm:bg-transparent sm:px-1 sm:py-5 sm:pr-5 sm:backdrop-blur-0">
-                            <div className="flex items-start gap-3 sm:block sm:space-y-2.5">
-                                <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-slate-950/40 shadow-lg shadow-black/25 ring-1 ring-white/5 sm:hidden">
-                                    <div className="absolute inset-0" style={{ boxShadow: `inset 0 0 0 1px ${classColors.color}22` }} />
-                                    <Image
-                                        src={heroUrl}
-                                        alt=""
-                                        fill
-                                        sizes="5rem"
-                                        className="object-cover object-center opacity-25 blur-md scale-110"
-                                        priority
-                                    />
-                                    <Image
-                                        src={portraitUrl}
-                                        alt={item.champion.name}
-                                        fill
-                                        sizes="5rem"
-                                        className="object-cover object-center p-1"
-                                        priority
-                                    />
-                                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-slate-950/30" />
-                                    <div className="absolute inset-0 bg-gradient-to-b from-slate-950/15 via-transparent to-slate-950/55" />
-                                </div>
-
-                                <div className="min-w-0 space-y-2.5">
-                                    <span
-                                        className="inline-block text-[10px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full border border-current/20 bg-black/30"
-                                        style={{ color: classColors.color }}
-                                    >
-                                        {item.champion.class}
-                                    </span>
-
-                                    <h2 className={cn("text-[1.7rem] sm:text-[2rem] lg:text-4xl font-black leading-[0.95] tracking-tight drop-shadow-lg", classColors.text)}>
-                                        {item.champion.name}
-                                    </h2>
-
-                                    {showUnownedState ? (
-                                        <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Unowned</span>
-                                    ) : !item.isUnowned ? (
-                                        <div className="mt-1 flex flex-wrap items-center gap-2">
-                                            <span className="inline-flex items-center gap-1 rounded-lg bg-black/40 border border-white/10 px-2.5 py-1 text-sm font-black text-white">
-                                                {item.stars}<span className="text-yellow-400">★</span> R{item.rank}
-                                            </span>
-                                            {item.isAwakened && (
-                                                <span className="inline-flex items-center rounded-lg bg-sky-950/60 border border-sky-500/30 px-2.5 py-1 text-sm font-black text-sky-300">
-                                                    S{item.sigLevel}
-                                                </span>
-                                            )}
-                                            {item.stars === 7 && (item.ascensionLevel || 0) > 0 && (
-                                                <span className="inline-flex items-center rounded-lg bg-amber-950/60 border border-amber-500/30 px-2.5 py-1 text-sm font-black text-amber-300">
-                                                    A{item.ascensionLevel}
-                                                </span>
-                                            )}
-                                        </div>
-                                    ) : null}
-                                </div>
-                            </div>
-
-                            {/* Prestige */}
-                            {prestige !== undefined && prestige > 0 && (
-                                <div className="flex items-end gap-2 pt-1">
-                                    <div>
-                                        <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-widest leading-none mb-1">Prestige</p>
-                                        <p className="text-[1.9rem] sm:text-[2.5rem] font-black text-white tabular-nums leading-none drop-shadow" style={{ color: classColors.color }}>
-                                            {prestige.toLocaleString()}
-                                        </p>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="h-px bg-slate-800/80" />
-
-                    {/* ── Body: abilities / tags ── */}
-                    <ScrollArea className="flex-1 min-h-0">
-                        <div className="space-y-5 px-4 py-4">
-                            <DetailGroup title="Immunities" icon={<Shield className="w-4 h-4" />} items={displayImmunities} tone="sky" emptyText="No immunities recorded." />
-                            <DetailGroup title="Abilities" icon={<Zap className="w-4 h-4" />} items={displayAbilities} tone="amber" emptyText="No abilities recorded." />
-
-                            {highlightedTags.length > 0 && (
-                                <div className="space-y-2">
-                                    <div className="flex items-center gap-2 text-sm font-bold text-slate-400">
-                                        <TagIcon className="w-4 h-4" />
-                                        {matchingTagsOnly ? "Matching Tags" : "Tags"}
-                                    </div>
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {highlightedTags.map((tag, i) => (
-                                            <Badge key={i} variant="outline" className="text-xs border-slate-700 bg-slate-900/70 text-slate-300 px-2.5 py-1">
-                                                <Hash className="mr-1 h-3 w-3 text-slate-500" />
-                                                {tag.name}
-                                            </Badge>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    </ScrollArea>
-
-                    {/* ── Footer ── */}
-                    <div className="flex items-center justify-end gap-3 px-4 py-3 bg-slate-950/70 border-t border-slate-800/80 backdrop-blur-sm shrink-0">
-                        <Button variant="ghost" className="text-slate-400 hover:text-slate-200 hover:bg-slate-800" onClick={() => onOpenChange(false)}>
-                            Close
-                        </Button>
-                        {item.champion.slug && (
-                            <Button asChild className="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white shadow-lg shadow-sky-900/30 border-t border-sky-400/30 font-bold">
-                                <Link href={`/champions/${item.champion.slug}`}>
-                                    <ExternalLink className="mr-2 h-4 w-4" />
-                                    Full Details
-                                </Link>
-                            </Button>
-                        )}
-                    </div>
-                </div>
-            </TooltipProvider>
-            </DialogContent>
-        </Dialog>
-    );
-}
-
-
-
-function groupItems(
-    items: ProfileRosterEntry['champion']['abilities'],
-    filters: { matchedNames: string[]; matchedCategories: string[] }
-): DetailItem[] {
-    const grouped = items.reduce((acc, curr) => {
-        const name = curr.ability.name;
-        if (!acc[name]) {
-            const raw = curr.ability.gameGlossaryTerm?.raw as Record<string, unknown> | null | undefined;
-            acc[name] = { 
-                name, 
-                iconUrl: curr.ability.iconUrl ?? null,
-                gameGlossaryTermId: curr.ability.gameGlossaryTermId ?? null,
-                primaryColor: typeof raw?.color_primary === "string" ? normalizeHexColor(raw.color_primary) : undefined,
-                secondaryColor: typeof raw?.color_secondary === "string" ? normalizeHexColor(raw.color_secondary) : undefined,
-                description: curr.ability.description,
-                matched: false, 
-                instances: [] 
-            };
-        }
-        const categoryNames = curr.ability.categories.map(category => category.name);
-        if (
-            filters.matchedNames.includes(name) ||
-            categoryNames.some(category => filters.matchedCategories.includes(category))
-        ) {
-            acc[name].matched = true;
-        }
-        acc[name].instances.push({
-            source: curr.source,
-            synergyChampions: (curr.synergyChampions || []).map(s => ({
-                name: s.champion.name,
-                images: s.champion.images as unknown as ChampionImages
-            }))
-        });
-        return acc;
-    }, {} as Record<string, DetailItem>);
-    return Object.values(grouped).sort((a, b) => {
-        if (a.matched !== b.matched) return a.matched ? -1 : 1;
-        return a.name.localeCompare(b.name);
-    });
-}
-
-function DetailGroup({
-    title,
-    icon,
-    items,
-    tone,
-    emptyText,
-}: {
-    title: string;
-    icon: ReactNode;
-    items: DetailItem[];
-    tone: "sky" | "amber";
-    emptyText?: string;
-}) {
-    const matchedCount = items.filter(item => item.matched).length;
-    const defaultColor = tone === "sky" ? "#38bdf8" : "#fbbf24";
-
-    return (
-        <div className="space-y-1.5">
-            <div className="flex items-center justify-between gap-2">
-                <div className={cn("flex items-center gap-1.5 text-xs font-bold", tone === "sky" ? "text-sky-400" : "text-amber-400")}>
-                    {icon}
-                    {title}
-                </div>
-                {matchedCount > 0 && (
-                    <span className={cn(
-                        "rounded-full border px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wide",
-                        tone === "sky"
-                            ? "border-sky-500/30 bg-sky-500/10 text-sky-300"
-                            : "border-amber-500/30 bg-amber-500/10 text-amber-300"
-                    )}>
-                        {matchedCount} matched
-                    </span>
-                )}
-            </div>
-            {items.length > 0 ? (
-                <div className="grid gap-1.5 lg:grid-cols-2">
-                    {items.map((item, i) => {
-                        const itemColor = item.primaryColor || defaultColor;
-                        const itemContent = (
-                            <div
-                                className={cn(
-                                    "rounded-lg border px-2.5 py-2 shadow-sm backdrop-blur-sm transition-colors w-full",
-                                    item.matched
-                                        ? tone === "sky"
-                                            ? "border-sky-400/50 bg-sky-950/45 ring-1 ring-sky-400/15"
-                                            : "border-amber-400/50 bg-amber-950/40 ring-1 ring-amber-400/15"
-                                        : tone === "sky"
-                                            ? "border-sky-900/45 bg-slate-950/45"
-                                            : "border-amber-900/45 bg-slate-950/45"
-                                )}
-                            >
-                                <div className="flex items-start justify-between gap-2">
-                                    <div className="min-w-0">
-                                        <div className="flex flex-wrap items-center gap-1.5">
-                                            <EffectIcon iconUrl={item.iconUrl} color={itemColor} />
-                                            <span 
-                                                className="text-sm font-bold leading-snug"
-                                                style={{ color: item.primaryColor ? itemColor : undefined }}
-                                            >
-                                                {item.name}
-                                            </span>
-                                            {item.matched && (
-                                                <span className={cn(
-                                                    "rounded px-1 py-0.5 text-[9px] font-black uppercase leading-none",
-                                                    tone === "sky" ? "bg-sky-400/15 text-sky-200" : "bg-amber-400/15 text-amber-200"
-                                                )}>
-                                                    Match
-                                                </span>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                </div>
-                                {item.instances.some(inst => inst.source || inst.synergyChampions.length > 0) && (
-                                    <div className="mt-1.5 space-y-1.5">
-                                        {item.instances
-                                            .filter(inst => inst.source || inst.synergyChampions.length > 0)
-                                            .map((inst, idx) => (
-                                                <div key={idx} className="rounded-md border border-white/[0.08] bg-black/15 px-2 py-1.5">
-                                                    <div className="flex flex-wrap items-center gap-2">
-                                                        {inst.source && (
-                                                            <span className="rounded bg-white/[0.06] px-1.5 py-0.5 text-xs leading-tight text-slate-300">
-                                                                {inst.source}
-                                                            </span>
-                                                        )}
-                                                        {inst.synergyChampions.length > 0 && (
-                                                            <>
-                                                                <span className="text-[9px] font-bold uppercase tracking-[0.14em] text-slate-500">
-                                                                    Synergy
-                                                                </span>
-                                                                <div className="flex shrink-0 -space-x-1.5">
-                                                                    {inst.synergyChampions.slice(0, 5).map((sc, scIdx) => (
-                                                                        <div key={`${idx}-${scIdx}-${sc.name}`} className="relative h-6 w-6 overflow-hidden rounded-full border border-slate-950 ring-1 ring-slate-700" title={sc.name}>
-                                                                            <Image src={getChampionImageUrlOrPlaceholder(sc.images, '64')} alt={sc.name} fill className="object-cover" />
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            ))}
-                                    </div>
-                                )}
-                            </div>
-                        );
-
-                        if (item.description) {
-                            return (
-                                <Tooltip key={i}>
-                                    <TooltipTrigger asChild>
-                                        <button 
-                                            className="text-left w-full focus:outline-none"
-                                            onClick={(e) => e.preventDefault()}
-                                        >
-                                            {itemContent}
-                                        </button>
-                                    </TooltipTrigger>
-                                    <TooltipContent 
-                                        side="top" 
-                                        className="max-w-[300px] bg-slate-900 border-slate-800 text-slate-200 p-3 shadow-2xl"
-                                    >
-                                        <div className="space-y-2">
-                                            <div className="flex items-center gap-2 border-b border-white/10 pb-2">
-                                                <EffectIcon iconUrl={item.iconUrl} color={itemColor} size="md" />
-                                                <span className="font-bold text-sm" style={{ color: itemColor }}>
-                                                    {item.name}
-                                                </span>
-                                            </div>
-                                            <p className="text-xs leading-relaxed text-slate-300">
-                                                {item.description}
-                                            </p>
-                                        </div>
-                                    </TooltipContent>
-                                </Tooltip>
-                            );
-                        }
-
-                        return <div key={i} className="w-full">{itemContent}</div>;
-                    })}
-                </div>
-            ) : (
-                <div className="rounded-lg border border-slate-800/70 bg-slate-900/50 px-3 py-2 text-xs text-slate-500">
-                    {emptyText ?? "None"}
-                </div>
-            )}
-        </div>
-    );
-}

@@ -1,4 +1,6 @@
-export type SynergyChampion = { id: number; name: string; slug: string | null; images: unknown };
+import type { ChampionClass } from '@prisma/client';
+
+export type SynergyChampion = { id: number; name: string; shortName?: string; class?: ChampionClass; slug: string | null; images: unknown };
 export type SynergyPartner = SynergyChampion & { rarities: number[] };
 export type ChampionSynergy = {
   id: string; name: string; description: string; enabled: boolean; unique: boolean;
@@ -7,6 +9,7 @@ export type ChampionSynergy = {
 };
 export type ChampionSynergyCard = Pick<ChampionSynergy, 'id' | 'name' | 'description' | 'unique'> & {
   partners: SynergyPartner[];
+  champions?: SynergyChampion[];
 };
 
 export function buildChampionSynergyView(rows: ChampionSynergy[], championId: number, rarity: number | null) {
@@ -29,6 +32,7 @@ export function buildChampionSynergyView(rows: ChampionSynergy[], championId: nu
     if (!partners.size) continue;
     (isOwner ? owned : incoming).push({
       id: row.id, name: parseSynergyDescription(row.name).map(s => s.text).join(''), description: row.description, unique: row.unique,
+      champions: [...new Map(row.members.map(member => [member.champion.id, member.champion])).values()],
       partners: [...partners.values()].map(p => ({ ...p, rarities: p.rarities.sort((a, b) => a - b) }))
         .sort((a, b) => a.name.localeCompare(b.name)),
     });
@@ -38,6 +42,40 @@ export function buildChampionSynergyView(rows: ChampionSynergy[], championId: nu
 }
 
 export type SynergyTextSegment = { text: string; color?: string; bold: boolean; italic: boolean; glossaryId?: string };
+
+type SynergyChampionTextSegment = SynergyTextSegment & { championClass?: ChampionClass };
+
+/** Highlight exact member names/short names only; conflicting aliases stay unclassified. */
+export function highlightSynergyChampionNames(segments: SynergyTextSegment[], champions: SynergyChampion[]): SynergyChampionTextSegment[] {
+  const normalize = (text: string) => text.trim().toLowerCase().replace(/[\u2018\u2019]/g, "'").replace(/\s+/g, ' ');
+  const aliases = new Map<string, ChampionClass | null>();
+  for (const champion of champions) {
+    for (const name of [champion.name, champion.shortName]) {
+      if (!name?.trim()) continue;
+      const alias = normalize(name);
+      const championClass = champion.class ?? null;
+      aliases.set(alias, aliases.has(alias) && aliases.get(alias) !== championClass ? null : championClass);
+    }
+  }
+  const names = [...aliases].filter(([, championClass]) => championClass).map(([name]) => name).sort((a, b) => b.length - a.length);
+  if (!names.length) return segments;
+  const pattern = new RegExp(names.map(name => name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&').replace(/'/g, "['\u2018\u2019]").replace(/ /g, '\\s+')).join('|'), 'giu');
+  return segments.flatMap(segment => {
+    if (segment.glossaryId) return [segment];
+    const result: SynergyChampionTextSegment[] = [];
+    let cursor = 0;
+    for (const match of segment.text.matchAll(pattern)) {
+      const start = match.index!;
+      const end = start + match[0].length;
+      if (!/(?:^|,|\band|&)\s*$/i.test(segment.text.slice(0, start)) || !/^\s*(?:,|\band\b|&|:|$)/i.test(segment.text.slice(end))) continue;
+      if (start > cursor) result.push({ ...segment, text: segment.text.slice(cursor, start) });
+      result.push({ ...segment, text: match[0], championClass: aliases.get(normalize(match[0]))! });
+      cursor = end;
+    }
+    if (cursor < segment.text.length) result.push({ ...segment, text: segment.text.slice(cursor) });
+    return result;
+  });
+}
 
 /** Only known game markup is interpreted; HTML remains escaped React text. */
 export function parseSynergyDescription(text: string): SynergyTextSegment[] {
@@ -62,6 +100,34 @@ export function parseSynergyDescription(text: string): SynergyTextSegment[] {
   }
   append(text.slice(cursor));
   return segments;
+}
+
+/** Arrange existing source text for display without inferring recipients or rewriting effects. */
+export function buildSynergyCardContent(description: string, unique: boolean) {
+  const lines: SynergyTextSegment[][] = [[]];
+  for (const segment of parseSynergyDescription(description)) {
+    segment.text.split(/\r?\n/).forEach((text, index) => {
+      if (index > 0) lines.push([]);
+      if (text) lines.at(-1)!.push({ ...segment, text });
+    });
+  }
+  const rows = lines.filter(line => line.some(segment => segment.text.trim()));
+  const lastRow = rows.at(-1);
+  const hasStandardUniqueNote = unique && lastRow && /^\s*(?:Unique(?: Synergy)?|Solo(?: Synergy)?):\s*(?:Does not stack with duplicate synergies|Only affects this champion and does not stack|Affects only this champion,? and does not stack)\.\s*$/i.test(lastRow.map(s => s.text).join(''));
+  const uniqueNote = hasStandardUniqueNote ? rows.pop()! : null;
+  return {
+    bonuses: rows.map(segments => {
+      const first = segments.findIndex(segment => segment.text.trim());
+      const label = segments[first];
+      // Only an explicitly formatted source label becomes a heading. Colons in
+      // ordinary sentences or unfamiliar markup retain their original context.
+      const hasLabel = label && (label.color || label.bold) && /^[^:]+:\s*$/.test(label.text);
+      return hasLabel
+        ? { label: segments.slice(0, first + 1), body: segments.slice(first + 1) }
+        : { label: [], body: segments };
+    }),
+    uniqueNote,
+  };
 }
 
 export function collectSynergyGlossaryIds(rows: Pick<ChampionSynergy, 'description'>[]) {

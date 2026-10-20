@@ -15,7 +15,7 @@ export interface GridCell {
   debugInfo?: {
     classMatch?: { bestMatch?: string; minRMSE?: number; minHueDiff?: string };
     classHue?: string;
-    championMatch?: { bestMatch?: string; minDistance?: number };
+    championMatch?: { bestMatch?: string; minDistance?: number; colorDistance?: number };
     starColor?: { r: number; g: number; b: number };
     hsl?: { h: number; s: number; l: number };
     starWidthRatio?: string;

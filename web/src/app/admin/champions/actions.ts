@@ -11,6 +11,7 @@ import { withActionContext } from "@/lib/with-request-context"
 import { OpenRouterService } from "@cerebro/core/services/openRouterService"
 import { generateAbilityDraft, saveAbilityDraft } from "@/lib/ability-draft-service"
 import type { AbilityDraft } from "@/lib/ability-draft"
+import { EFFECT_FORMS, EFFECT_DIRECTIONS, readAbilitySource, type EffectSourceMetadata } from "@cerebro/core/domain/ability-source"
 export type { AbilityDraft } from "@/lib/ability-draft"
 import {
   importMcocGameTags,
@@ -186,15 +187,22 @@ export const updateChampionAbility = withActionContext('updateChampionAbility', 
     championId: number,
     abilityId: number,
     type: AbilityLinkType,
-    source?: string
+    source?: string,
+    metadata?: EffectSourceMetadata
 ) => {
     await ensureAdmin("MANAGE_CHAMPIONS")
+    if (metadata && (!EFFECT_FORMS.includes(metadata.effectForm) || !EFFECT_DIRECTIONS.includes(metadata.effectDirection))) {
+        throw new Error("Invalid effect source tags.")
+    }
+    const normalized = readAbilitySource({ source, ...metadata })
+    const sourceData = { source: normalized.condition || null, effectForm: normalized.effectForm,
+        effectDirection: type === 'IMMUNITY' ? 'UNKNOWN' as const : normalized.effectDirection }
     if (linkId !== undefined) {
         await prisma.championAbilityLink.update({
             where: { id: linkId },
             data: {
                 type,
-                source
+                ...sourceData
             }
         })
     } else {
@@ -204,7 +212,7 @@ export const updateChampionAbility = withActionContext('updateChampionAbility', 
                 championId,
                 abilityId,
                 type,
-                source: source || null
+                ...sourceData
             }
         })
 
@@ -214,7 +222,7 @@ export const updateChampionAbility = withActionContext('updateChampionAbility', 
                     championId,
                     abilityId,
                     type,
-                    source
+                    ...sourceData
                 }
             })
         }

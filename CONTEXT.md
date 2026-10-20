@@ -18,6 +18,18 @@ Champion Ability Text is the domain rule set for validating imported game abilit
 
 It owns template shape, curve matching, static value resolution, game-stat value conversion, unresolved placeholder reporting, and chart-ready ability curve points used by Champion Details.
 
+Numeric ability text follows the game's positional formatter contract: slot 0 is Chance ×100, slot 1 is the component's DisplayFormula applied to Modifier, slot 2 is Duration, and slot 3 is Stackable. Named protobuf fields and explicit formula/growth coefficients establish these bindings; English text, effect names and champion IDs do not. The legacy export aliases `baseVal` and `chance` refer to protobuf Chance and Modifier respectively. New `gameBinding` metadata bypasses legacy heuristics for both text and signature chart output. Missing source identity, formula or growth data is reported rather than guessed; complete description imports must include verified numeric bindings.
+
+Ability text display metadata distinguishes combat paragraphs from HUD/glossary definitions and preserves localized trigger section headings. A Buff name is not a section heading. Full abilities groups combat paragraphs by their explicit game section and keeps glossary definitions in effect popovers. Display-only repairs bind the existing game/source identity and exact raw paragraph, retaining record IDs and value bindings.
+
+## Champion Effect Sources
+
+Each Champion Ability Link is a distinct application of an effect. Its form (Buff, Debuff, Passive, or Unknown) and direction (Gains on self, Inflicts on the opponent, or Unknown) are independent, source-level metadata. A champion can gain a Debuff or inflict a Buff; neither field is inferred from the effect name or beneficial/harmful polarity. Conditions keep their gameplay references to other effects. Immunities have no gain/inflict direction. Kit overview filters must match both fields on the same source, and different applications must remain separate when saving drafts or grouping effects.
+
+Roster ability filters also qualify the same application by effect, form and direction. Multiple forms or directions use OR within that field, combined with AND between fields. Immunity selection stays independent. Matching sources expand in the roster quick overview; other effects remain compact and can be opened manually. Source details are loaded only for the selected champion and reuse current hash-bound overview summaries and full-ability links.
+
+Champion Ability Overview is independently reviewed display copy for one existing effect source. Its separate record preserves the detailed source and prior enrichment receipts. Summaries describe activation and material restrictions without build-dependent amounts; retained constants require evidence of build independence. The source hash binds the effect, form, direction and required partners. A changed source invalidates its summary. Detailed text and ability navigation remain available independently of overview copy.
+
 ## Game Synergies
 
 Game Synergies are the game's imported team bonus definitions. A complete snapshot preserves the source synergy ID, localized description and numeric values, stacking flag, targeting tags, effect IDs, and original rules.
@@ -25,6 +37,8 @@ Game Synergies are the game's imported team bonus definitions. A complete snapsh
 An Owner is a champion at a specific obtainable star level that brings a synergy. A Required Partner is a champion at a specific obtainable star level that can activate it. For the supported ungrouped rules, any one listed required partner is sufficient. Targeting tags describe who receives effects and are distinct from activation partners.
 
 Game Synergy Members link these roles to collectible champions for navigation and rarity filtering. NPC definitions and unavailable template rarities remain in the raw snapshot without player-facing links. Champion Details shows outgoing synergies and incoming synergies from teammates for the selected rarity; this is a catalog, not a team activation simulator.
+
+Champion Details offers only obtainable star levels with imported stats and defaults to the highest of those levels. Imported stat templates alone do not establish that a champion is obtainable at that rarity.
 
 Game Synergies are independent of manually curated Champion Ability Synergy links. Importing a validated full snapshot atomically replaces only the game synergy tables. Grouped activation rules are preserved in the source format but blocked from import until their semantics are supported.
 

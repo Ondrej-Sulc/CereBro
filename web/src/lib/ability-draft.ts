@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { parseSynergyDescription } from './champion-synergies';
+import { EFFECT_FORMS, EFFECT_DIRECTIONS, readAbilitySource } from '@cerebro/core/domain/ability-source';
 
 type DraftChampion = { id: number; name: string; gameId: string | null };
 type Partner = DraftChampion & { rarities: number[] };
@@ -52,6 +53,8 @@ const synergySchema = z.object({
 }).strict();
 const itemSchema = z.object({
   name: z.string().trim().min(1).max(120), source: z.string().trim().max(2000),
+  effectForm: z.enum(EFFECT_FORMS).optional(),
+  effectDirection: z.enum(EFFECT_DIRECTIONS).optional(),
   synergy: synergySchema.optional(),
 }).strict();
 const draftSchema = z.object({
@@ -66,6 +69,11 @@ const stars = (rarities: number[]) => rarities.map(r => `${r}★`).join('/');
 export function parseAbilityDraft(input: unknown, contexts: AbilityDraftSynergy[]): AbilityDraft {
   const draft = draftSchema.parse(input);
   const normalize = (item: AbilityDraftItem): AbilityDraftItem => {
+    const metadata = readAbilitySource(item);
+    item = { ...item, source: metadata.condition,
+      ...(metadata.effectForm !== 'UNKNOWN' || item.effectForm ? { effectForm: metadata.effectForm } : {}),
+      ...(metadata.effectDirection !== 'UNKNOWN' || item.effectDirection ? { effectDirection: metadata.effectDirection } : {}),
+    };
     if (!item.synergy) {
       if (/\bsynerg(?:y|ies)\b/i.test(item.source)) throw new Error(`Missing synergy reference for ${item.name}.`);
       return item;
@@ -84,7 +92,10 @@ export function parseAbilityDraft(input: unknown, contexts: AbilityDraftSynergy[
     const requirement = `Synergy: ${context.name} (${stars(context.championRarities)}) with ${partners.join(' OR ')}${context.unique ? '; does not stack' : ''}`;
     return { ...item, synergy: { key: context.key, championIds, sourceHash: context.sourceHash, requirement } };
   };
-  return { abilities: (draft.abilities ?? []).map(normalize), immunities: (draft.immunities ?? []).map(normalize) };
+  return { abilities: (draft.abilities ?? []).map(normalize), immunities: (draft.immunities ?? []).map(item => {
+    const normalized = normalize(item);
+    return normalized.effectDirection ? { ...normalized, effectDirection: 'UNKNOWN' as const } : normalized;
+  }) };
 }
 
 export function abilityDraftSource(item: AbilityDraftItem): string {
