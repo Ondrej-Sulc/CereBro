@@ -11,12 +11,13 @@ import { CircleOff, Trophy, X, SlidersHorizontal, Shield, Zap, BookOpen, Tag as 
 import Link from "next/link";
 import Image from "next/image";
 import { getChampionClassColors } from "@/lib/championClassHelper";
-import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
+import { getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { ChampionImages } from "@/types/champion";
 import { cn } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { FilterGroup, MultiSelectFilter, MultiFilterGroup } from "@/components/ui/filters";
+import { matchesAllianceRosterFilters } from "@/lib/alliance-roster-filter";
 
 const CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"];
 
@@ -42,6 +43,7 @@ export function AllianceRosterMatrix({
     const [classFilter, setClassFilter] = useState<ChampionClass[]>([]);
     const [starFilter, setStarFilter] = useState<string>("ALL");
     const [rankFilter, setRankFilter] = useState<string[]>([]);
+    const [ascensionFilter, setAscensionFilter] = useState<number[]>([]);
     const [limitFilter, setLimitFilter] = useState<string>("10");
     const [showFilters, setShowFilters] = useState(false);
 
@@ -61,7 +63,7 @@ export function AllianceRosterMatrix({
 
     // Derived Data
     const players = useMemo(() => {
-        const uniquePlayers = new Map();
+        const uniquePlayers = new Map<string, { id: string; name: string; bg: number | null; avatar: string | null }>();
         data.forEach(d => {
             if (!uniquePlayers.has(d.playerId)) {
                 uniquePlayers.set(d.playerId, {
@@ -88,14 +90,12 @@ export function AllianceRosterMatrix({
         const filtered = data.filter(entry => {
             if (entry.playerId !== playerId) return false;
 
-            // Class
-            if (classFilter.length > 0 && !classFilter.includes(entry.championClass)) return false;
-
-            // Stars
-            if (starFilter !== "ALL" && entry.stars !== parseInt(starFilter)) return false;
-
-            // Rank
-            if (rankFilter.length > 0 && !rankFilter.includes(entry.rank.toString())) return false;
+            if (!matchesAllianceRosterFilters(entry, {
+                classes: classFilter,
+                stars: starFilter,
+                ranks: rankFilter,
+                ascensionLevels: ascensionFilter,
+            })) return false;
 
             // Tag Logic
             if (tagFilter.length > 0) {
@@ -152,7 +152,9 @@ export function AllianceRosterMatrix({
         return filtered.slice(0, parseInt(limitFilter));
     };
 
-    const groupedByBg = useMemo(() => {
+    const championsByPlayer = new Map(filteredPlayers.map(player => [player.id, getFilteredChampionsForPlayer(player.id)]));
+
+    const groupedByBg = (() => {
         const groups: Record<string, typeof filteredPlayers> = {
             "1": [],
             "2": [],
@@ -161,12 +163,13 @@ export function AllianceRosterMatrix({
         };
 
         filteredPlayers.forEach(p => {
+            if (!championsByPlayer.get(p.id)?.length) return;
             const key = p.bg?.toString() || "unassigned";
             if (groups[key]) groups[key].push(p);
         });
 
         return groups;
-    }, [filteredPlayers]);
+    })();
 
     const activeFilters = useMemo(() => {
         const filters: { label: string, type: string, onRemove: () => void }[] = [];
@@ -177,6 +180,10 @@ export function AllianceRosterMatrix({
 
         rankFilter.forEach(r => {
             filters.push({ label: `R${r}`, type: 'Rank', onRemove: () => setRankFilter(rankFilter.filter(x => x !== r)) });
+        });
+
+        ascensionFilter.forEach(level => {
+            filters.push({ label: `A${level}`, type: 'Ascension', onRemove: () => setAscensionFilter(ascensionFilter.filter(a => a !== level)) });
         });
 
         classFilter.forEach(cls => {
@@ -200,10 +207,10 @@ export function AllianceRosterMatrix({
         });
 
         return filters;
-    }, [starFilter, rankFilter, classFilter, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter]);
+    }, [starFilter, rankFilter, ascensionFilter, classFilter, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter]);
 
     const renderPlayerRow = (player: typeof players[0]) => {
-        const champions = getFilteredChampionsForPlayer(player.id);
+        const champions = championsByPlayer.get(player.id) ?? [];
         if (champions.length === 0) return null;
 
         return (
@@ -527,6 +534,13 @@ export function AllianceRosterMatrix({
                                         onChange={setRankFilter}
                                     />
 
+                                    {/* Ascension */}
+                                    <MultiFilterGroup
+                                        options={[0, 1, 2, 3, 4, 5].map(level => ({ value: String(level), label: `A${level}` }))}
+                                        values={ascensionFilter.map(String)}
+                                        onChange={values => setAscensionFilter(values.map(Number))}
+                                    />
+
                                     {/* Limit */}
                                     <FilterGroup
                                         options={[
@@ -663,6 +677,7 @@ export function AllianceRosterMatrix({
                                                 setBgFilter("ALL");
                                                 setStarFilter("ALL");
                                                 setRankFilter([]);
+                                                setAscensionFilter([]);
                                                 setClassFilter([]);
                                                 setTagFilter([]);
                                                 setAbilityCategoryFilter([]);
@@ -682,6 +697,11 @@ export function AllianceRosterMatrix({
 
             {/* Matrix View */}
             <div className="border border-slate-800 rounded-lg overflow-hidden bg-slate-950/20">
+                {Object.values(groupedByBg).every(players => players.length === 0) && (
+                    <p className="p-8 text-center text-sm text-slate-400" role="status">
+                        No champions match the current filters.
+                    </p>
+                )}
                 {Object.entries(groupedByBg).map(([bg, players]) => {
                     if (players.length === 0) return null;
                     const bgId = bg === "unassigned" ? null : parseInt(bg);

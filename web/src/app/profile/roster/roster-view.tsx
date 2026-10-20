@@ -33,7 +33,8 @@ import { PrestigeChartModal } from "./components/modals/prestige-chart-modal";
 import { useDeepMemo } from "@/hooks/use-deep-memo";
 import { switchProfile } from "../actions";
 import { reportClientError } from "@/lib/observability/client";
-import { matchesRosterAscensionFilter } from "./roster-ascension-filter";
+import { matchesRosterAscensionFilter } from "@/lib/roster-ascension-filter";
+import { loadRosterAddDefaults, normalizeRosterAddDefaults, saveRosterAddDefaults } from "@/lib/roster-add-defaults";
 import { matchesRosterKitFilters } from "@/lib/roster-kit";
 import type { EffectForm, EffectDirection } from "@cerebro/core/domain/ability-source";
 
@@ -393,7 +394,7 @@ export function RosterView({
       });
       toast({ title: "Success", description: "Champion added to roster" });
       setIsAddingChampion(false);
-      setNewChampion({ championId: null, stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false, ascensionLevel: 0 });
+      setNewChampion(current => ({ ...normalizeRosterAddDefaults(current), championId: null, sigLevel: 0, isAwakened: false, isAscended: false, ascensionLevel: 0 }));
       setPendingSection('all');
       startTransition(() => { router.refresh(); });
     } catch {
@@ -454,7 +455,19 @@ export function RosterView({
     championId: null, stars: 6, rank: 1, sigLevel: 0, isAwakened: false, isAscended: false, ascensionLevel: 0,
   });
 
+  const handleOpenAddChampion = () => {
+    const defaults = loadRosterAddDefaults(newChampion);
+    setNewChampion(current => ({ ...current, ...defaults }));
+    setIsAddingChampion(true);
+  };
 
+  const handleNewChampionChange = (next: typeof newChampion) => {
+    const defaults = normalizeRosterAddDefaults(next);
+    setNewChampion({ ...next, ...defaults });
+    if (defaults.stars !== newChampion.stars || defaults.rank !== newChampion.rank) {
+      saveRosterAddDefaults(defaults);
+    }
+  };
 
   useEffect(() => {
     if (!enablePrestigeInsights) return;
@@ -759,7 +772,7 @@ export function RosterView({
           <RosterFilters
             search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode}
             showUnowned={showUnowned} onShowUnownedChange={setShowUnowned}
-            onAddClick={() => setIsAddingChampion(true)}
+            onAddClick={handleOpenAddChampion}
             sortBy={sortBy} onSortByChange={setSortBy} sortDirection={sortDirection} onSortDirectionChange={setSortDirection} filterStars={filterStars} onFilterStarsChange={setFilterStars}
             visibleChampionCount={visibleChampionCount}
             totalChampionCount={totalChampionCount}
@@ -803,7 +816,7 @@ export function RosterView({
 
       {quickItem && <QuickChampionDialog key={quickItem.id} item={quickItem} prestige={isChampionsCatalog ? undefined : prestigeMap[quickItem.id]} open onOpenChange={open => { if (!open) setQuickItem(null); }} filters={{ tags: tagFilter, categories: abilityCategoryFilter, abilities: abilityFilter, immunities: immunityFilter, effectForms, effectDirections }} showUnownedState={!!quickItem.isUnowned && !isChampionsCatalog} />}
       {effectiveCanEdit && <EditChampionModal item={editingItem} prestige={editingItem ? prestigeMap[editingItem.id] : undefined} onClose={() => setEditingItem(null)} onUpdate={handleUpdate} onDelete={handleDelete} onItemChange={setEditingItem} />}
-      {effectiveCanEdit && <AddChampionModal open={isAddingChampion} onOpenChange={setIsAddingChampion} allChampions={allChampions} onAdd={handleAddChampion} newChampion={newChampion} onNewChampionChange={setNewChampion} />}
+      {effectiveCanEdit && <AddChampionModal open={isAddingChampion} onOpenChange={setIsAddingChampion} allChampions={allChampions} onAdd={handleAddChampion} newChampion={newChampion} onNewChampionChange={handleNewChampionChange} />}
       <PrestigeChartModal chartData={chartData} loading={loadingChart} onClose={() => setChartData(null)} />
     </div>
   );
