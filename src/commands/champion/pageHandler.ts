@@ -3,14 +3,14 @@ import {
   ContainerBuilder,
   MediaGalleryBuilder,
   MediaGalleryItemBuilder,
-  TextDisplayBuilder,
   MessageFlags,
   SeparatorBuilder,
   AttachmentBuilder,
 } from "discord.js";
 import { getChampionDataById } from "../../services/championService";
-import { createChampionActionRow, createPaginationActionRow } from "./actionRow";
-import { getInfoContent } from "./info";
+import { createChampionActionRow } from "./actionRow";
+import { addChampionViewContent } from "./content";
+import { createEmojiResolver } from "../../utils/emojiResolver";
 import { CLASS_COLOR } from "./view";
 import { generateChampionThumbnail } from "./thumbnail";
 import { getChampionImageUrl } from "../../utils/championHelper";
@@ -26,8 +26,6 @@ export async function handleChampionPageSwitch(interaction: ButtonInteraction) {
   if (!champion) {
     return;
   }
-
-  if (view !== "info") return;
 
   // Regenerate thumbnail for the new page
   const newThumbnail = await generateChampionThumbnail({
@@ -47,12 +45,6 @@ export async function handleChampionPageSwitch(interaction: ButtonInteraction) {
     name: newThumbnailFileName,
   });
 
-  const {
-    content,
-    currentPage,
-    totalPages,
-  } = getInfoContent(champion, page);
-
   const container = new ContainerBuilder();
   container.setAccentColor(CLASS_COLOR[champion.class]);
 
@@ -63,16 +55,7 @@ export async function handleChampionPageSwitch(interaction: ButtonInteraction) {
   );
   container.addMediaGalleryComponents(thumbnailGallery);
 
-  container.addTextDisplayComponents(new TextDisplayBuilder().setContent(content));
-
-  const paginationRow = createPaginationActionRow(
-    champion.id.toString(),
-    view,
-    currentPage,
-    totalPages
-  );
-  container.addSeparatorComponents(new SeparatorBuilder());
-  container.addActionRowComponents(paginationRow);
+  addChampionViewContent(container, champion, view, createEmojiResolver(interaction.client), page);
 
   container.addSeparatorComponents(new SeparatorBuilder());
   const viewActionRows = createChampionActionRow(

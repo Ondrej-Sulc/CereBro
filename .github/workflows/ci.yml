@@ -43,8 +43,8 @@ jobs:
       - name: Generate Prisma client
         run: pnpm run prisma:generate
 
-      - name: Verify reviewed summary hashes and display
-        run: pnpm exec vitest run src/domain/champion-overview-summary.test.ts web/src/lib/champion-kit.test.ts --maxWorkers=1
+      - name: Verify champion data and Discord rendering
+        run: pnpm exec vitest run src/domain/champion-overview-summary.test.ts web/src/lib/champion-kit.test.ts src/commands/champion/champion.test.ts src/commands/champion/pagination.test.ts src/utils/errorHandler.test.ts --maxWorkers=1
 
       - name: Build Bot (src)
         run: pnpm run build-only

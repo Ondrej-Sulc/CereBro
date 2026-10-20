@@ -136,7 +136,18 @@ export async function safeReply(
   try {
     if (interaction.isRepliable()) {
       if (interaction.deferred || interaction.replied) {
-        await interaction.editReply({ content });
+        // deferUpdate/update target the source message; deferReply/reply create
+        // a separate response, whose component format may be different.
+        const message = interaction.isMessageComponent() && interaction.ephemeral === null
+          ? interaction.message
+          : interaction.replied ? await interaction.fetchReply() : null;
+        if (message?.flags.has(MessageFlags.IsComponentsV2)) {
+          // V2 responses cannot be edited with legacy content. Keep the existing
+          // card intact and report the failure only to the user who triggered it.
+          await interaction.followUp({ content, flags: [MessageFlags.Ephemeral] });
+        } else {
+          await interaction.editReply({ content });
+        }
       } else {
         await interaction.reply({ content, flags: [MessageFlags.Ephemeral] });
       }

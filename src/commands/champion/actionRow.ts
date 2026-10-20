@@ -72,6 +72,12 @@ export function createPaginationActionRow(
     .setStyle(ButtonStyle.Primary)
     .setDisabled(currentPage === totalPages);
 
-  row.addComponents(prevButton, nextButton);
+  const pageIndicator = new ButtonBuilder()
+    .setCustomId(`champion_page:${championId}:${view}:${currentPage}`)
+    .setLabel(`Page ${currentPage} / ${totalPages}`)
+    .setStyle(ButtonStyle.Secondary)
+    .setDisabled(true);
+
+  row.addComponents(prevButton, pageIndicator, nextButton);
   return row;
 }

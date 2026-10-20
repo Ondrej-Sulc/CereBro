@@ -6,10 +6,6 @@ import {
   MediaGalleryBuilder,
   MediaGalleryItemBuilder,
   ContainerBuilder,
-  TextDisplayBuilder,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
   SeparatorBuilder,
 } from "discord.js";
 import { getChampionData, championList } from "../../services/championService";
@@ -17,16 +13,9 @@ import { Command, CommandAccess } from "../../types/command";
 import { createEmojiResolver } from "../../utils/emojiResolver";
 import { generateChampionThumbnail } from "./thumbnail";
 import { getChampionImageUrl } from "../../utils/championHelper";
-import { getInfoContent } from "./info";
-import { getAttacksContent } from "./attacks";
-import { getAbilitiesContent } from "./abilities";
-import { getImmunitiesContent } from "./immunities";
-import { getTagsContent } from "./tags";
-import { getOverviewContent, OverviewSection } from "./overview";
-import { getDuelContent, addDuelComponents } from "./duel";
-import { createChampionActionRow, createPaginationActionRow } from "./actionRow";
+import { createChampionActionRow } from "./actionRow";
+import { addChampionViewContent } from "./content";
 import { CLASS_COLOR } from "./view";
-import { DuelStatus } from "@prisma/client";
 import { registerButtonHandler } from "../../utils/buttonHandlerRegistry";
 import { registerModalHandler } from "../../utils/modalHandlerRegistry";
 import { registerSelectMenuHandler } from "../../utils/selectMenuHandlerRegistry";
@@ -236,82 +225,7 @@ export const command: Command = {
     container.addMediaGalleryComponents(thumbnailGallery);
 
     const resolveEmoji = createEmojiResolver(interaction.client);
-    let content: string | null = null;
-    let overviewSections: OverviewSection[] | null = null;
-    let paginationRow: ActionRowBuilder<ButtonBuilder> | null = null;
-
-    switch (subcommand) {
-      case "overview":
-        const result = getOverviewContent(champion, resolveEmoji);
-        if (typeof result === "string") {
-          content = result;
-        } else {
-          overviewSections = result;
-        }
-        break;
-      case "abilities":
-        content = getAbilitiesContent(champion, resolveEmoji);
-        break;
-      case "immunities":
-        content = getImmunitiesContent(champion, resolveEmoji);
-        break;
-      case "attacks":
-        content = getAttacksContent(champion);
-        break;
-      case "tags":
-        content = getTagsContent(champion);
-        break;
-      case "info":
-        const info = getInfoContent(champion, 1);
-        content = info.content;
-        if (info.totalPages > 1) {
-          paginationRow = createPaginationActionRow(
-            champion.id.toString(),
-            subcommand,
-            info.currentPage,
-            info.totalPages
-          );
-        }
-        break;
-      case "duel":
-        const duelsToShow = champion.duels.filter(
-          (d) => d.status === DuelStatus.ACTIVE || d.status === DuelStatus.OUTDATED
-        );
-        content = getDuelContent(duelsToShow, resolveEmoji);
-        break;
-      default:
-        // Default to overview logic
-        const defaultResult = getOverviewContent(champion, resolveEmoji);
-        if (typeof defaultResult === "string") {
-          content = defaultResult;
-        } else {
-          overviewSections = defaultResult;
-        }
-        break;
-    }
-
-    if (overviewSections) {
-      overviewSections.forEach((section, index) => {
-        container.addTextDisplayComponents(
-          new TextDisplayBuilder().setContent(`## ${section.title}\n${section.content}`)
-        );
-        if (index < overviewSections!.length - 1) {
-          container.addSeparatorComponents(new SeparatorBuilder());
-        }
-      });
-    } else if (content) {
-      container.addTextDisplayComponents(new TextDisplayBuilder().setContent(content));
-    }
-
-    if (paginationRow) {
-      container.addSeparatorComponents(new SeparatorBuilder());
-      container.addActionRowComponents(paginationRow);
-    }
-
-    // Add duel button here if applicable
-    if (subcommand === "duel") {
-      addDuelComponents(container, champion, resolveEmoji);
-    }
+    addChampionViewContent(container, champion, subcommand, resolveEmoji);
 
     container.addSeparatorComponents(new SeparatorBuilder());
     const viewActionRows = createChampionActionRow(
