@@ -198,6 +198,25 @@ describe("grouped overview sources", () => {
     ])
   })
 
+  it.each([500, 1000])("preserves a complete reviewed condition of %i characters in native and synergy cards", length => {
+    const summary = "While Amplify is active, ".padEnd(length - 1, "a") + "."
+    const [effect] = buildChampionKitOverviewEffects([
+      { ...source(1, "While Agatha is inside Rune Prison, gain Amplify."), overviewSummary: summary },
+      { ...source(2, "Synergy: MENTOR (7★) with Havok (7★); does not stack: Gain Amplify."), overviewSummary: summary, synergyChampions: [{ champion: partner }] },
+    ], new Map(), 7)
+    const [group] = groupChampionKitSources(effect, view)
+    expect(group.nativeSources[0].condition).toBe(summary)
+    expect(group.synergies[0].links[0].conditions).toEqual([summary])
+  })
+
+  it("rejects reviewed conditions beyond the maximum without exposing oversized raw fallback text", () => {
+    const [effect] = buildChampionKitOverviewEffects([
+      { ...source(1, "While Agatha is inside Rune Prison, gain Amplify."), overviewSummary: "a".repeat(1001) },
+      source(2, "a".repeat(361)),
+    ], new Map())
+    expect(groupChampionKitSources(effect, view)).toEqual([])
+  })
+
   it("shares metadata across distinct named links and a separate synergy partner row", () => {
     const [effect] = buildChampionKitOverviewEffects([
       source(1, "When either champion Intercepts or Punishes a Special, gain Amplify."),

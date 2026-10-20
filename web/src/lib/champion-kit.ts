@@ -121,10 +121,14 @@ function overviewCondition(recordedCondition: string, summary?: string | null): 
   const recorded = recordedCondition.trim()
   // Neither an effect name nor a saved summary establishes a missing source condition.
   if (!recorded || /^synergy\s*$/i.test(recorded)) return ""
-  const condition = summary?.trim() || recorded
+  const reviewed = summary?.trim()
+  const condition = reviewed || recorded
+  // Current reviewed summaries may use the approved extended length. Raw fallbacks
+  // retain the shorter limit so unreviewed source prose does not overwhelm cards.
+  const maxLength = reviewed ? 1000 : 360
   // Unavailable summaries must not expose the internal evidence/audit prose instead.
   // Leave the condition blank rather than stripping qualifiers or guessing missing values.
-  return condition.length <= 360 && !/[{}]|\b(?:unresolved|legacy|audit)\b|\b(?:text|link|addition):\s*\d+|\bvalue\s+(?:missing|not recorded)/i.test(condition)
+  return condition.length <= maxLength && !/[{}]|\b(?:unresolved|legacy|audit)\b|\b(?:text|link|addition):\s*\d+|\bvalue\s+(?:missing|not recorded)/i.test(condition)
     ? condition : ""
 }
 
