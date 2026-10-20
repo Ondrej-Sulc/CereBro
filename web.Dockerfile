@@ -44,18 +44,16 @@ USER root
 # Install any runtime OS packages here if needed (e.g., openssl for Prisma)
 RUN apt-get update && apt-get install -y --no-install-recommends openssl && \
     rm -rf /var/lib/apt/lists/*
-# The 'dependencies' stage ran as root, so node_modules is root-owned.
-# We need to change ownership to the node user so it can be modified.
-RUN chown -R node:node /usr/src/app
+# Generate into the root-owned dependency tree before dropping privileges.
+# COPY above already gives node ownership of the application/build directories.
+# Avoid recursively chowning node_modules: overlay filesystem copy-up makes it slow.
+RUN pnpm exec prisma generate
 
 # Switch to the non-root user
 USER node
 
 # The node_modules are already here from the 'dependencies' stage.
 # Now, we can build and generate code.
-
-# 1. Generate Prisma Client
-RUN pnpm exec prisma generate
 
 # Accept build arguments for client-side environment variables
 ARG APP_VERSION
