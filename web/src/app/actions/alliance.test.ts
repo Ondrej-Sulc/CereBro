@@ -46,6 +46,7 @@ vi.mock("@/lib/with-request-context", () => ({
 vi.mock("@cerebro/core/config", () => ({
   config: { BOT_TOKEN: "test-token" },
 }));
+vi.mock("@cerebro/core/services/allianceMembershipService", () => import("../../../../src/services/allianceMembershipService"));
 vi.mock("next/cache", () => cacheFake);
 
 import {

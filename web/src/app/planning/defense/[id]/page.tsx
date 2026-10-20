@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
-import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import DefenseDetailsClient from "@/components/war-planning/defense-details-client";
 import { updateDefensePlacement } from "../../defense-actions";
-import { getFromCache } from "@/lib/cache";
 import { getCachedChampions } from "@/lib/data/champions";
 import FormPageBackground from "@/components/FormPageBackground";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
@@ -91,25 +89,25 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
   const champions = await getCachedChampions();
 
   // Fetch members of the PLAN's alliance, not necessarily the viewer's alliance
-  const allianceMembers = await getFromCache(`alliance-members-${plan.allianceId}`, 3600, async () => {
-    return await prisma.player.findMany({
-      where: { allianceId: plan.allianceId },
-      orderBy: { ingameName: 'asc' },
-      include: {
-        roster: {
-          select: {
-            id: true,
-            championId: true,
-            stars: true,
-            rank: true,
-            isAscended: true,
-            ascensionLevel: true,
-            isAwakened: true,
-            sigLevel: true,
-            reservedForAttack: true,
-          }
-        }      }
-    });
+  // The bot also changes memberships; its process cannot invalidate a web memory cache.
+  const allianceMembers = await prisma.player.findMany({
+    where: { allianceId: plan.allianceId },
+    orderBy: { ingameName: 'asc' },
+    include: {
+      roster: {
+        select: {
+          id: true,
+          championId: true,
+          stars: true,
+          rank: true,
+          isAscended: true,
+          ascensionLevel: true,
+          isAwakened: true,
+          sigLevel: true,
+          reservedForAttack: true,
+        }
+      }
+    }
   });
 
   const tags = await prisma.tag.findMany({

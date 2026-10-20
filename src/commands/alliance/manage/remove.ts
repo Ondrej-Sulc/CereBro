@@ -1,6 +1,7 @@
 import { ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
 import loggerService from '../../../services/loggerService';
 import { checkAndCleanupAlliance } from '../../../services/allianceService.js';
+import { changePlayerAlliance } from '../../../services/allianceMembershipService.js';
 
 export async function handleAllianceManageRemove(interaction: ChatInputCommandInteraction) {
   const { prisma } = await import('../../../services/prismaService.js');
@@ -28,14 +29,8 @@ export async function handleAllianceManageRemove(interaction: ChatInputCommandIn
 
     const allianceId = player.allianceId;
 
-    await prisma.player.update({
-      where: { id: player.id },
-      data: {
-        allianceId: null,
-        isOfficer: false,
-        isPlanner: false,
-        battlegroup: null,
-      },
+    await prisma.$transaction(async (tx) => {
+      await changePlayerAlliance(tx, player.id, allianceId, null);
     });
 
     // Cleanup empty alliance
