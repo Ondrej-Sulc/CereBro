@@ -22,9 +22,12 @@ export async function handleExport(
     return;
   }
 
-  let csv = "Champion,Stars,Rank,IsAwakened,IsAscended\n";
+  let csv = "Champion,Stars,Rank,IsAwakened,IsAscended,SigLevel,AscensionLevel\n";
   roster.forEach((entry) => {
-    csv += `"${entry.champion.name}",${entry.stars},${entry.rank},${entry.isAwakened},${entry.isAscended}\n`;
+    const sigLevel = entry.isAwakened ? entry.sigLevel ?? 0 : 0;
+    const ascensionLevel = entry.ascensionLevel > 0 ? entry.ascensionLevel : entry.isAscended ? 1 : 0;
+    const name = entry.champion.name.replace(/"/g, '""');
+    csv += `"${name}",${entry.stars},${entry.rank},${entry.isAwakened},${entry.isAscended},${sigLevel},${ascensionLevel}\n`;
   });
 
   const attachment = new AttachmentBuilder(Buffer.from(csv), {

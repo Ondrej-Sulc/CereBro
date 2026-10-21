@@ -122,6 +122,8 @@ A dedicated system for planning fights across complex quests (e.g., Story conten
 ### Profile & Roster Manager
 *   **Profile:** Switch/create/delete multiple MCOC accounts per user.
 *   **Roster Grid:** High-performance virtualized list of champions.
+*   **Manual Add Defaults:** Remembers the last selected stars and rank on this browser, including across visits. Rank is clamped to the selected rarity's supported limit; champion, signature, and ascension are cleared after each add.
+*   **CSV Export:** `/roster export` retains `Champion`, `Stars`, `Rank`, `IsAwakened`, and `IsAscended` and appends numeric `SigLevel` and `AscensionLevel`. Unawakened signatures export as 0; legacy ascended entries without a level export as 1.
 *   **Advanced Filters:**
     *   Filter by Ability, Immunity, Tag, Category.
     *   **Logic:** Toggle between **AND** (match all) and **OR** (match any).
@@ -137,6 +139,7 @@ A dedicated system for planning fights across complex quests (e.g., Story conten
 
 ### Alliance Management (Web)
 *   **Roster Overview:** Spreadsheet-like view of the entire alliance's champions (`/alliance/roster`).
+*   **Roster Ascension Filter:** Multi-select A0–A5 alongside battlegroup, class, stars, rank, and ability filters. No selected ascension levels matches all; legacy ascended entries without a level match A1.
 *   **Conflict Visuals:** Player lists show warning icons for champions that are currently placed on defense.
 *   **Battlegroup Colors:** Customize BG identity colors (used in Discord maps and Web headers).
 *   **Discord Linking:**

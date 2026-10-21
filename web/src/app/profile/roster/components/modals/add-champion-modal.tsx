@@ -9,6 +9,7 @@ import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { maxSigForRarity } from "@/lib/mcoc-prestige";
+import { normalizeRosterAddDefaults, ROSTER_ADD_STARS } from "@/lib/roster-add-defaults";
 
 interface NewChampionFormData {
     championId: number | null;
@@ -44,11 +45,10 @@ export function AddChampionModal({ open, onOpenChange, allChampions, onAdd, newC
     };
 
     const handleStarChange = (newStars: number) => {
-        const newMaxRank = getMaxRank(newStars);
-        const clampedRank = Math.min(newChampion.rank, newMaxRank);
+        const defaults = normalizeRosterAddDefaults({ stars: newStars, rank: newChampion.rank });
         const newMaxSig = maxSigForRarity(newStars);
         const clampedSig = Math.min(newChampion.sigLevel, newMaxSig);
-        onNewChampionChange({...newChampion, stars: newStars, rank: clampedRank, sigLevel: clampedSig});
+        onNewChampionChange({...newChampion, ...defaults, sigLevel: clampedSig});
     };
 
     return (
@@ -132,7 +132,7 @@ export function AddChampionModal({ open, onOpenChange, allChampions, onAdd, newC
                             <div className="space-y-1.5">
                                 <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Stars</p>
                                 <div className="flex gap-1">
-                                    {[4, 5, 6, 7].map(s => (
+                                    {ROSTER_ADD_STARS.map(s => (
                                         <button
                                             key={s}
                                             onClick={() => handleStarChange(s)}
