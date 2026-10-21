@@ -91,11 +91,11 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
     handleAddWarBan,
     handleRemoveWarBan,
     fightsError,
-    loadedFightsContext,
+    deathSummaryLoading,
+    deathSummaryError,
   } = useWarPlanning(props);
 
   const deathSummaries = useMemo(() => summarizeWarDeaths([{ ...props.war, fights: currentFights }]), [props.war, currentFights]);
-  const deathSummaryLoading = loadingFights || loadedFightsContext?.warId !== props.warId || loadedFightsContext?.battlegroup !== currentBattlegroup;
 
   const [isDesktop, setIsDesktop] = useState(true);
   const [isPlayerPanelOpen, setIsPlayerPanelOpen] = useState(true); // Default open
@@ -412,7 +412,7 @@ export default function WarDetailsClient(props: WarDetailsClientProps) {
               warProgress={warProgress}
               onCopyBgText={handleCopyBgText}
               onCopyBgMarkdown={handleCopyBgMarkdown}
-              deathSummaryTrigger={<WarDeathSummaryDialog summary={deathSummaries[0]} battlegroup={currentBattlegroup} loading={deathSummaryLoading && !fightsError} error={fightsError} onSelectNode={handleNodeClick} />}
+              deathSummaryTrigger={<WarDeathSummaryDialog summary={deathSummaries[0]} battlegroup={currentBattlegroup} loading={deathSummaryLoading} error={deathSummaryError} onSelectNode={handleNodeClick} />}
             />
             
             <WarTabs 
