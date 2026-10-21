@@ -98,71 +98,69 @@ export const updateDefensePlacement = withActionContext('updateDefensePlacement'
 
   const { id, planId, nodeId, battlegroup, ...rest } = updatedPlacement;
 
-  // Strict Alliance Ownership Validation
-  if (id) {
-      const existingPlacement = await prisma.warDefensePlacement.findUnique({
-          where: { id },
-          include: { plan: { include: { alliance: true } } }
-      });
-
-      if (!existingPlacement) {
-          throw new Error("Placement not found.");
-      }
-
-      if (!isBotAdmin && existingPlacement.plan.alliance.id !== player.allianceId) {
-          throw new Error("Unauthorized: Cannot edit placements from another alliance.");
-      }
-  } else {
-      if (!planId) {
-          throw new Error("Plan ID is required.");
-      }
-
-      const targetPlan = await prisma.warDefensePlan.findUnique({
-          where: { id: planId },
-          include: { alliance: true }
-      });
-
-      if (!targetPlan) {
-          throw new Error("Plan not found.");
-      }
-
-      if (!isBotAdmin && targetPlan.alliance.id !== player.allianceId) {
-          throw new Error("Unauthorized: Cannot edit placements from another alliance.");
-      }
+  if (!id && !planId) throw new Error("Plan ID is required.");
+  if (!id && (!nodeId || !battlegroup)) {
+    throw new Error("PlanID, NodeID and Battlegroup required.");
   }
 
-  const updateData = {
+  await prisma.$transaction(async (tx) => {
+    const existingPlacement = await tx.warDefensePlacement.findUnique({
+      where: id ? { id } : {
+        planId_battlegroup_nodeId: { planId: planId!, battlegroup: battlegroup!, nodeId: nodeId! }
+      },
+      include: { plan: true }
+    });
+    if (id && !existingPlacement) throw new Error("Placement not found.");
+
+    // An existing placement's plan is authoritative, even if the client sends a different planId.
+    const plan = existingPlacement?.plan ?? await tx.warDefensePlan.findUnique({ where: { id: planId! } });
+    if (!plan) throw new Error("Plan not found.");
+    if (!isBotAdmin && plan.allianceId !== player.allianceId) {
+      throw new Error("Unauthorized: Cannot edit placements from another alliance.");
+    }
+
+    const assignedPlayerId = rest.playerId === undefined ? existingPlacement?.playerId ?? null : rest.playerId;
+    if (assignedPlayerId !== null) {
+      // Membership changes update Player before clearing placements. Hold the same
+      // row lock until this write commits so departure cannot race assignment.
+      const members = await tx.$queryRaw<{ id: string; allianceId: string | null }[]>`
+        SELECT "id", "allianceId" FROM "Player" WHERE "id" = ${assignedPlayerId} FOR UPDATE
+      `;
+      if (members[0]?.allianceId !== plan.allianceId) {
+        throw new Error("Player is not a member of this plan's alliance.");
+      }
+    }
+
+    // A partial edit may retain only the player we validated. A concurrent reassignment
+    // must fail rather than apply defender changes to a different, unlocked player.
+    const expectedPlayer = rest.playerId === undefined ? { playerId: assignedPlayerId } : {};
+    const updateData = {
       defenderId: rest.defenderId,
       playerId: rest.playerId,
       starLevel: rest.starLevel,
-  };
+    };
 
     if (id) {
-        await prisma.warDefensePlacement.update({
-            where: { id },
-            data: updateData,
-        });
+      await tx.warDefensePlacement.update({
+        where: { id, ...expectedPlayer },
+        data: updateData,
+      });
     } else {
-        // Upsert logic with new constraint
-        if (!planId || !nodeId || !battlegroup) {
-            throw new Error("PlanID, NodeID and Battlegroup required.");
+      await tx.warDefensePlacement.upsert({
+        where: {
+          planId_battlegroup_nodeId: { planId: planId!, battlegroup: battlegroup!, nodeId: nodeId! },
+          ...expectedPlayer,
+        },
+        update: updateData,
+        create: {
+          planId: planId!,
+          battlegroup: battlegroup!,
+          nodeId: nodeId!,
+          ...updateData,
         }
-        
-        await prisma.warDefensePlacement.upsert({
-            where: {
-                planId_battlegroup_nodeId: { planId, battlegroup, nodeId }
-            },
-            update: updateData,
-            create: {
-                planId,
-                battlegroup,
-                nodeId,
-                defenderId: rest.defenderId,
-                playerId: rest.playerId,
-                starLevel: rest.starLevel
-            }
-        });
+      });
     }
+  });
 });
 
 export const deleteDefensePlan = withActionContext('deleteDefensePlan', async (planId: string) => {

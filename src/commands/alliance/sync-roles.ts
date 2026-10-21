@@ -2,6 +2,8 @@ import { ChatInputCommandInteraction, Guild, MessageFlags } from 'discord.js';
 import { prisma } from '../../services/prismaService';
 import loggerService from '../../services/loggerService';
 import { checkAndCleanupAlliance } from '../../services/allianceService.js';
+import { changePlayerAlliance } from '../../services/allianceMembershipService.js';
+import type { Prisma } from '@prisma/client';
 
 /**
  * Synchronizes Discord roles for officers and battlegroups with the database for a specific guild.
@@ -95,7 +97,7 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string, isMan
           const shouldClearPlanner = !isPlannerRoleConfigured && existingAllianceMember.isPlanner;
 
           if (shouldUpdateBg || shouldUpdateOfficer || shouldUpdatePlanner || shouldClearPlanner) {
-            const updateData: any = {};
+            const updateData: Prisma.PlayerUncheckedUpdateInput = {};
             if (shouldUpdateBg) updateData.battlegroup = battlegroup;
             if (shouldUpdateOfficer) updateData.isOfficer = isOfficer;
             if (shouldUpdatePlanner) updateData.isPlanner = isPlanner;
@@ -148,8 +150,7 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string, isMan
             }
 
             // Player exists, link them to this alliance and ensure botUserId
-            const updateData: any = {
-              allianceId: alliance.id,
+            const updateData: Omit<Prisma.PlayerUncheckedUpdateInput, 'allianceId'> = {
               botUserId: botUser.id,
               isActive: true // Ensure they are active if they are the primary player
             };
@@ -158,9 +159,8 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string, isMan
             if (isPlannerRoleConfigured) updateData.isPlanner = isPlanner;
             if (!isPlannerRoleConfigured && globalPlayer.isPlanner) updateData.isPlanner = false;
 
-            await prisma.player.update({
-              where: { id: globalPlayer.id },
-              data: updateData,
+            await prisma.$transaction(async (tx) => {
+              await changePlayerAlliance(tx, globalPlayer.id, globalPlayer.allianceId, alliance.id, updateData);
             });
             
             // Ensure activeProfileId is set if not already
@@ -175,7 +175,7 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string, isMan
           } else {
             // New player entirely
             const avatar = member.user.displayAvatarURL({ extension: 'png', size: 256 });
-            const data: any = {
+            const data: Prisma.PlayerUncheckedCreateInput = {
               ingameName: member.displayName,
               discordId: member.id,
               avatar,
@@ -225,14 +225,8 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string, isMan
           if (alliance.id === 'GLOBAL') {
             continue;
           }
-          await prisma.player.update({
-            where: { id: existingAllianceMember.id },
-            data: {
-              allianceId: null,
-              battlegroup: null,
-              isOfficer: false,
-              isPlanner: false,
-            },
+          await prisma.$transaction(async (tx) => {
+            await changePlayerAlliance(tx, existingAllianceMember.id, alliance.id, null);
           });
           removedCount++;
         }
@@ -264,14 +258,8 @@ export async function syncRolesForGuild(guild: Guild, allianceId?: string, isMan
           continue;
         }
 
-        await prisma.player.update({
-          where: { id: player.id },
-          data: {
-            allianceId: null,
-            battlegroup: null,
-            isOfficer: false,
-            isPlanner: false,
-          },
+        await prisma.$transaction(async (tx) => {
+          await changePlayerAlliance(tx, player.id, alliance.id, null);
         });
         removedCount++;
       } catch (error) {

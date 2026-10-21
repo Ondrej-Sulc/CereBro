@@ -9,6 +9,7 @@ import logger from "@/lib/logger";
 import { withActionContext } from "@/lib/with-request-context";
 import { canManageAllianceMembers } from "@/lib/alliance-permissions";
 import { config } from "@cerebro/core/config";
+import { changePlayerAlliance } from "@cerebro/core/services/allianceMembershipService";
 
 export type DiscordRoleOption = {
     id: string;
@@ -615,14 +616,8 @@ export const leaveAlliance = withActionContext('leaveAlliance', async () => {
     const actingUser = await getUserPlayerWithAlliance();
     if (!actingUser || !actingUser.allianceId) throw new Error("Not in an alliance");
 
-    await prisma.player.update({
-        where: { id: actingUser.id },
-        data: {
-            allianceId: null,
-            battlegroup: null,
-            isOfficer: false,
-            isPlanner: false
-        }
+    await prisma.$transaction(async (tx) => {
+        await changePlayerAlliance(tx, actingUser.id, actingUser.allianceId, null);
     });
 
     clearCache(`alliance-members-${actingUser.allianceId}`);
@@ -637,30 +632,24 @@ export const removeMember = withActionContext('removeMember', async (playerId: s
     if (!actingUser || !actingUser.allianceId) throw new Error("Unauthorized");
     if (!canManageAllianceMembers(actingUser, actingUser.isBotAdmin)) throw new Error("Insufficient permissions");
 
-    const targetPlayer = await prisma.player.findUnique({ where: { id: playerId } });
-    if (!targetPlayer || targetPlayer.allianceId !== actingUser.allianceId) throw new Error("Player not in alliance");
+    await prisma.$transaction(async (tx) => {
+        const targetPlayer = await tx.player.findUnique({ where: { id: playerId } });
+        if (!targetPlayer || targetPlayer.allianceId !== actingUser.allianceId) throw new Error("Player not in alliance");
 
-    if (targetPlayer.id === actingUser.id && !actingUser.isBotAdmin) {
-        throw new Error("Cannot remove yourself");
-    }
-
-    if (targetPlayer.isOfficer) {
-        const officerCount = await prisma.player.count({
-            where: { allianceId: actingUser.allianceId, isOfficer: true }
-        });
-        if (officerCount <= 1) {
-            throw new Error("Cannot remove the last officer");
+        if (targetPlayer.id === actingUser.id && !actingUser.isBotAdmin) {
+            throw new Error("Cannot remove yourself");
         }
-    }
 
-    await prisma.player.update({
-        where: { id: playerId },
-        data: {
-            allianceId: null,
-            battlegroup: null,
-            isOfficer: false,
-            isPlanner: false
+        if (targetPlayer.isOfficer) {
+            const officerCount = await tx.player.count({
+                where: { allianceId: actingUser.allianceId, isOfficer: true }
+            });
+            if (officerCount <= 1) {
+                throw new Error("Cannot remove the last officer");
+            }
         }
+
+        await changePlayerAlliance(tx, playerId, targetPlayer.allianceId, null);
     });
 
     clearCache(`alliance-members-${actingUser.allianceId}`);
