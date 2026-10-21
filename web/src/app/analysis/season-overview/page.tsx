@@ -249,8 +249,9 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
         </div>
   
         <WarDeathSummaryPanel
-            key={selectedSeason}
+            key={`${selectedSeason}-${awaitedSearchParams.war}-${awaitedSearchParams.bg}`}
             summaries={warDeathSummaries}
+            bgColors={bgColors}
             initialWarId={typeof awaitedSearchParams.war === "string" ? awaitedSearchParams.war : undefined}
             initialBattlegroup={typeof awaitedSearchParams.bg === "string" ? Number(awaitedSearchParams.bg) : undefined}
         />

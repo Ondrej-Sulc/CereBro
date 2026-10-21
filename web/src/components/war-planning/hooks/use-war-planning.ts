@@ -81,6 +81,8 @@ export function useWarPlanning({
 
   // Data State
   const [currentFights, setCurrentFights] = useState<FightWithNode[]>([]);
+  // Bind death-summary availability to the response, including a successfully loaded empty BG.
+  const [loadedFightsContext, setLoadedFightsContext] = useState<{ warId: string; battlegroup: number } | null>(null);
   const [nodesMap, setNodesMap] = useState<Map<number, WarNodeWithAllocations>>(new Map());
   const currentFightsRef = useRef(currentFights);
   const pendingSaveNodeIds = useRef<Set<number>>(new Set());
@@ -171,6 +173,7 @@ export function useWarPlanning({
         }).filter((f): f is FightWithNode => f !== null);
 
         setCurrentFights(hydratedFights);
+        setLoadedFightsContext(previous => previous?.warId === warId && previous.battlegroup === currentBattlegroup ? previous : { warId, battlegroup: currentBattlegroup });
         setExtraChampions(extrasData);
         if (progressData) setWarProgress(progressData);
       } catch (err: unknown) {
@@ -231,6 +234,7 @@ export function useWarPlanning({
                     }
                     return prev;
                 });
+                setLoadedFightsContext(previous => previous?.warId === warId && previous.battlegroup === currentBattlegroup ? previous : { warId, battlegroup: currentBattlegroup });
             }
             
             // Sync extras (less critical race condition here usually)
@@ -677,6 +681,7 @@ export function useWarPlanning({
     setIsCloseDialogOpen,
     loadingFights,
     fightsError,
+    loadedFightsContext,
     activeTactic,
     historyFilters,
     setHistoryFilters,
