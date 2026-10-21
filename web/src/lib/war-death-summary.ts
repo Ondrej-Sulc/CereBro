@@ -1,3 +1,31 @@
+import { ChampionClass, type Prisma } from "@prisma/client";
+import type { ChampionImages } from "../types/champion";
+import { getChampionImageUrl, isChampionImages } from "./championHelper";
+
+interface DeathSummaryChampion {
+  name: string;
+  images?: ChampionImages | Prisma.JsonValue;
+  class?: ChampionClass | null;
+}
+
+export interface RecordedDeathChampion {
+  class: ChampionClass | null;
+  imageUrl: string | null;
+}
+
+/** Only the presentation metadata crosses the season/planner summary boundary. */
+function projectChampion(champion?: DeathSummaryChampion | null): RecordedDeathChampion {
+  // The general helper returns a transparent GIF for missing URLs. An absent
+  // source here must instead let the portrait's visible fallback render.
+  const images = champion?.images;
+  const imageUrl = isChampionImages(images) && typeof images.p_64 === "string" && images.p_64.trim()
+    ? getChampionImageUrl(images, "64") : null;
+  return {
+    class: champion?.class && Object.values(ChampionClass).includes(champion.class) ? champion.class : null,
+    imageUrl,
+  };
+}
+
 /** Minimal shared input for season statistics and the live attack planner. */
 export interface DeathSummaryFight {
   id: string;
@@ -5,8 +33,8 @@ export interface DeathSummaryFight {
   death: number;
   node: { nodeNumber: number };
   player: { id: string; ingameName: string } | null;
-  attacker?: { name: string } | null;
-  defender?: { name: string } | null;
+  attacker?: DeathSummaryChampion | null;
+  defender?: DeathSummaryChampion | null;
   videoId?: string | null;
   notes?: string | null;
 }
@@ -24,6 +52,8 @@ export interface RecordedDeathFight {
   deaths: number;
   attackerName: string;
   defenderName: string;
+  attacker: RecordedDeathChampion;
+  defender: RecordedDeathChampion;
   videoId: string | null;
   notes: string | null;
 }
@@ -77,6 +107,8 @@ export function summarizeWarDeaths(wars: readonly DeathSummaryWar[]): WarDeathSu
           id: fight.id, deaths: fight.death,
           attackerName: fight.attacker?.name ?? "Unknown attacker",
           defenderName: fight.defender?.name ?? "Unknown defender",
+          attacker: projectChampion(fight.attacker),
+          defender: projectChampion(fight.defender),
           videoId: fight.videoId ?? null, notes: fight.notes ?? null,
         });
       }

@@ -81,6 +81,8 @@ export function useWarPlanning({
 
   // Data State
   const [currentFights, setCurrentFights] = useState<FightWithNode[]>([]);
+  // Bind death-summary availability to the response, including a successfully loaded empty BG.
+  const [loadedFightsContext, setLoadedFightsContext] = useState<{ warId: string; battlegroup: number } | null>(null);
   const [nodesMap, setNodesMap] = useState<Map<number, WarNodeWithAllocations>>(new Map());
   const currentFightsRef = useRef(currentFights);
   const pendingSaveNodeIds = useRef<Set<number>>(new Set());
@@ -103,6 +105,7 @@ export function useWarPlanning({
   const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false);
   const [loadingFights, setLoadingFights] = useState(true);
   const [fightsError, setFightsError] = useState<string | null>(null);
+  const [fightsLoadError, setFightsLoadError] = useState<{ warId: string; battlegroup: number; message: string } | null>(null);
   const [activeTactic, setActiveTactic] = useState<WarTacticWithTags | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [warProgress, setWarProgress] = useState<WarProgress | null>(null);
@@ -112,6 +115,8 @@ export function useWarPlanning({
   const historyCache = useRef(new Map<string, HistoricalFightStat[]>());
 
   const currentBattlegroup = parseInt(activeTab.replace("bg", ""));
+  const deathSummaryError = fightsLoadError?.warId === warId && fightsLoadError.battlegroup === currentBattlegroup ? fightsLoadError.message : null;
+  const deathSummaryLoading = !deathSummaryError && (loadingFights || loadedFightsContext?.warId !== warId || loadedFightsContext?.battlegroup !== currentBattlegroup);
 
   // Fetch Active Tactic
   useEffect(() => {
@@ -140,14 +145,22 @@ export function useWarPlanning({
     fetchNodes();
   }, [warId]);
 
-  // Fetch Fights & Extras
+  // Fetch and poll within one effect lifetime: a BG can be revisited while an
+  // older request for that same BG is still in flight.
   useEffect(() => {
-    async function fetchData() {
-      // Don't fetch fights until we have the nodes map to hydrate them
-      if (nodesMap.size === 0) return;
+    if (nodesMap.size === 0) return;
 
-      setLoadingFights(true);
-      setFightsError(null);
+    let active = true;
+    let requestSequence = 0;
+    let latestSuccessfulRequest = 0;
+    setLoadingFights(true);
+    setLoadedFightsContext(null);
+    setFightsLoadError(null);
+    setFightsError(null);
+
+    async function fetchData(initial: boolean) {
+      const request = ++requestSequence;
+      const canApply = () => active && request >= latestSuccessfulRequest;
       try {
         const [fightsRes, extrasData, progressData] = await Promise.all([
             fetch(`/api/war-planning/fights?warId=${warId}&battlegroup=${currentBattlegroup}`),
@@ -155,112 +168,67 @@ export function useWarPlanning({
             getWarProgress(warId)
         ]);
 
+        if (!canApply()) return;
         if (!fightsRes.ok) {
-          throw new Error(`HTTP error! status: ${fightsRes.status}`);
-        }
-        const rawFights: FightWithNode[] = await fightsRes.json();
-        
-        // Merge static node data into fights
-        const hydratedFights: FightWithNode[] = rawFights.map(f => {
-            if (!f.node) return null;
-            const nodeData = nodesMap.get(f.node.nodeNumber);
-            return {
-                ...f,
-                node: nodeData || { ...f.node, allocations: [] }
-            };
-        }).filter((f): f is FightWithNode => f !== null);
+          if (initial) throw new Error(`HTTP error! status: ${fightsRes.status}`);
+        } else {
+          const rawFights: FightWithNode[] = await fightsRes.json();
+          if (!canApply()) return;
 
-        setCurrentFights(hydratedFights);
-        setExtraChampions(extrasData);
-        if (progressData) setWarProgress(progressData);
-      } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : String(err);
-        reportClientError("war_planning_fetch_data", err, {
+          const newFights = rawFights.filter(f => f.node).map(f => ({
+            ...f,
+            node: nodesMap.get(f.node.nodeNumber) || { ...f.node, allocations: [] },
+          }));
+          latestSuccessfulRequest = request;
+
+          if (initial) {
+            setCurrentFights(newFights);
+          } else {
+            setCurrentFights(prev => {
+              // Preserve optimistic updates while a node is being saved.
+              const mergedFights = newFights.map(newFight => {
+                if (pendingSaveNodeIds.current.has(newFight.node.nodeNumber)) {
+                  return prev.find(f => f.id === newFight.id) || newFight;
+                }
+                return newFight;
+              });
+              return JSON.stringify(prev) !== JSON.stringify(mergedFights) ? mergedFights : prev;
+            });
+          }
+          setLoadedFightsContext(previous => previous?.warId === warId && previous.battlegroup === currentBattlegroup ? previous : { warId, battlegroup: currentBattlegroup });
+          // Poll recovery only clears load failures; save/status errors remain.
+          setFightsLoadError(null);
+          setLoadingFights(false);
+        }
+
+        // Extras and progress belong to the same accepted request context.
+        setExtraChampions(prev => JSON.stringify(prev) !== JSON.stringify(extrasData) ? extrasData : prev);
+        if (progressData) {
+          setWarProgress(prev => JSON.stringify(prev) !== JSON.stringify(progressData) ? progressData : prev);
+        }
+      } catch (error) {
+        if (!canApply()) return;
+        if (!initial && isTransientPollingError(error)) return;
+        reportClientError(initial ? "war_planning_fetch_data" : "war_planning_poll", error, {
           war_id: warId,
           battlegroup: currentBattlegroup,
         });
-        setFightsError(message || "Failed to load war data.");
+        if (initial) {
+          const message = error instanceof Error ? error.message : String(error);
+          setFightsLoadError({ warId, battlegroup: currentBattlegroup, message: message || "Failed to load war data." });
+        }
       } finally {
-        setLoadingFights(false);
+        if (initial && canApply()) setLoadingFights(false);
       }
     }
-    fetchData();
-  }, [warId, currentBattlegroup, nodesMap]); // Added nodesMap dependency
 
-  // Polling Logic
-  useEffect(() => {
-    if (nodesMap.size === 0) return;
-
-    const pollInterval = setInterval(async () => {
-        try {
-            const [fightsRes, extrasData, progressData] = await Promise.all([
-                fetch(`/api/war-planning/fights?warId=${warId}&battlegroup=${currentBattlegroup}`),
-                getExtraChampions(warId, currentBattlegroup),
-                getWarProgress(warId)
-            ]);
-
-            if (fightsRes.ok) {
-                const rawFights: FightWithNode[] = await fightsRes.json();
-                
-                 // Merge static node data into fights
-                const newFights: FightWithNode[] = rawFights.map(f => {
-                    const nodeData = nodesMap.get(f.node.nodeNumber);
-                    return {
-                        ...f,
-                        node: nodeData || { ...f.node, allocations: [] }
-                    };
-                });
-                
-                // Merge Logic: Use currentFightsRef to check for changes and respect pending saves
-                setCurrentFights(prev => {
-                    const current = prev;
-                    
-                    // Map new fights, preserving optimistic updates for pending nodes
-                    const mergedFights = newFights.map(newFight => {
-                        const pending = pendingSaveNodeIds.current.has(newFight.node.nodeNumber);
-                        if (pending) {
-                            // Keep our local optimistic version if we are currently saving this node
-                            return current.find(f => f.id === newFight.id) || newFight; 
-                        }
-                        return newFight;
-                    });
-
-                    // Check if anything actually changed vs current state
-                    if (JSON.stringify(current) !== JSON.stringify(mergedFights)) {
-                        return mergedFights;
-                    }
-                    return prev;
-                });
-            }
-            
-            // Sync extras (less critical race condition here usually)
-            setExtraChampions(prev => {
-                 if (JSON.stringify(prev) !== JSON.stringify(extrasData)) {
-                     return extrasData;
-                 }
-                 return prev;
-            });
-
-            if (progressData) {
-              setWarProgress(prev => {
-                 if (JSON.stringify(prev) !== JSON.stringify(progressData)) {
-                     return progressData;
-                 }
-                 return prev;
-              });
-            }
-
-        } catch (error) {
-            if (isTransientPollingError(error)) return;
-            reportClientError("war_planning_poll", error, {
-              war_id: warId,
-              battlegroup: currentBattlegroup,
-            });
-        }
-    }, 5000);
-
-    return () => clearInterval(pollInterval);
-  }, [warId, currentBattlegroup, nodesMap]); // Added nodesMap dependency
+    void fetchData(true);
+    const pollInterval = setInterval(() => { void fetchData(false); }, 5000);
+    return () => {
+      active = false;
+      clearInterval(pollInterval);
+    };
+  }, [warId, currentBattlegroup, nodesMap]);
 
   const validatePlayerAssignment = useCallback((playerId: string, newChampionId: number, nodeId: number) => {
     // 1. Check Bans
@@ -676,7 +644,10 @@ export function useWarPlanning({
     isCloseDialogOpen,
     setIsCloseDialogOpen,
     loadingFights,
-    fightsError,
+    fightsError: fightsError || deathSummaryError,
+    loadedFightsContext,
+    deathSummaryLoading,
+    deathSummaryError,
     activeTactic,
     historyFilters,
     setHistoryFilters,
