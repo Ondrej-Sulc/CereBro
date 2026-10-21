@@ -12,6 +12,7 @@ import { warNodesData, warNodesDataBig } from "@cerebro/core/data/war-planning/n
 import { validateNodeAssignment } from "@cerebro/core/data/war-planning/path-logic";
 import { reportClientError } from "@/lib/observability/client";
 import { isTransientPollingError } from "@/lib/transient-client-errors";
+import { useHistoryFilters } from "./use-history-filters";
 
 export type RightPanelState = 'closed' | 'tools' | 'editor' | 'roster' | 'stats';
 
@@ -47,6 +48,9 @@ interface UseWarPlanningProps {
   seasonBans: SeasonBanWithChampion[];
   warBans: WarBanWithChampion[];
   userBattlegroup?: number | null;
+  initialBattlegroup?: number;
+  initialNodeNumber?: number;
+  latestHistorySeason: number | null;
 }
 
 export function useWarPlanning({
@@ -59,16 +63,20 @@ export function useWarPlanning({
   seasonBans,
   warBans: initialWarBans,
   userBattlegroup,
+  initialBattlegroup,
+  initialNodeNumber,
+  latestHistorySeason,
 }: UseWarPlanningProps) {
   const router = useRouter();
 
   // UI State
-  const [rightPanelState, setRightPanelState] = useState<RightPanelState>('closed');
-  const [activeTab, setActiveTab] = useState(userBattlegroup != null ? `bg${userBattlegroup}` : "bg1");
+  const initialNode = (war.mapType === WarMapType.BIG_THING ? warNodesDataBig : warNodesData).some(node => node.id === initialNodeNumber) ? initialNodeNumber! : null;
+  const [rightPanelState, setRightPanelState] = useState<RightPanelState>(initialNode ? 'editor' : 'closed');
+  const [activeTab, setActiveTab] = useState(initialBattlegroup && [1, 2, 3].includes(initialBattlegroup) ? `bg${initialBattlegroup}` : userBattlegroup != null ? `bg${userBattlegroup}` : "bg1");
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   // Selection State
-  const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
+  const [selectedNodeId, setSelectedNodeId] = useState<number | null>(initialNode);
   const [selectedPlayerId, setSelectedPlayerId] = useState<string | null>(null);
 
   // Data State
@@ -93,18 +101,14 @@ export function useWarPlanning({
   const [status, setStatus] = useState<WarStatus>(war.status);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [isCloseDialogOpen, setIsCloseDialogOpen] = useState(false);
-  const [loadingFights, setLoadingFights] = useState(false);
+  const [loadingFights, setLoadingFights] = useState(true);
   const [fightsError, setFightsError] = useState<string | null>(null);
   const [activeTactic, setActiveTactic] = useState<WarTacticWithTags | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
   const [warProgress, setWarProgress] = useState<WarProgress | null>(null);
 
   // History State
-  const [historyFilters, setHistoryFilters] = useState({
-    onlyCurrentTier: true,
-    onlyAlliance: true,
-    minSeason: undefined as number | undefined,
-  });
+  const [historyFilters, setHistoryFilters] = useHistoryFilters("attack", latestHistorySeason);
   const historyCache = useRef(new Map<string, HistoricalFightStat[]>());
 
   const currentBattlegroup = parseInt(activeTab.replace("bg", ""));

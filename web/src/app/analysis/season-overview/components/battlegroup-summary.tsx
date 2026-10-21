@@ -3,15 +3,18 @@ import { cn } from "@/lib/utils";
 import { Users } from "lucide-react";
 import { useMemo } from "react";
 import { PlayerStats } from "../types";
+import type { WarDeathSummary } from "@/lib/war-death-summary";
+import { getNodeCategory } from "@cerebro/core/data/war-planning/path-logic";
 
 interface BattlegroupSummaryProps {
   allPlayers: PlayerStats[];
+  warDeathSummaries: WarDeathSummary[];
   bgColors: { 1: string; 2: string; 3: string };
   selectedBg: 1 | 2 | 3 | null;
   onSelectBg: (bg: 1 | 2 | 3 | null) => void;
 }
 
-export function BattlegroupSummary({ allPlayers, bgColors, selectedBg, onSelectBg }: BattlegroupSummaryProps) {
+export function BattlegroupSummary({ allPlayers, warDeathSummaries, bgColors, selectedBg, onSelectBg }: BattlegroupSummaryProps) {
   const bgStats = useMemo(() => {
     const stats = {
       1: { fights: 0, deaths: 0, players: 0, pathDeaths: 0, miniBossDeaths: 0, bossDeaths: 0 },
@@ -29,8 +32,23 @@ export function BattlegroupSummary({ allPlayers, bgColors, selectedBg, onSelectB
         stats[bg].bossDeaths += p.bossDeaths;
       }
     });
+    // Unassigned/deleted-player deaths appear in the shared recorded-death summary.
+    for (const war of warDeathSummaries) {
+      for (const bg of war.battlegroups) {
+        const stat = stats[bg.battlegroup as 1 | 2 | 3];
+        for (const player of bg.players.filter(player => player.playerId === null)) {
+          stat.deaths += player.deaths;
+          for (const node of player.nodes) {
+            const category = getNodeCategory(node.nodeNumber);
+            if (category === 'boss') stat.bossDeaths += node.deaths;
+            else if (category === 'mini-boss') stat.miniBossDeaths += node.deaths;
+            else stat.pathDeaths += node.deaths;
+          }
+        }
+      }
+    }
     return stats;
-  }, [allPlayers]);
+  }, [allPlayers, warDeathSummaries]);
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-800/60 border-b border-slate-800/60 bg-slate-900/20">
@@ -38,7 +56,8 @@ export function BattlegroupSummary({ allPlayers, bgColors, selectedBg, onSelectB
           const bg = bgNum as 1|2|3;
           const stat = bgStats[bg];
           const accent = bgColors[bg];
-          const soloRate = stat.fights > 0 ? ((stat.fights - stat.deaths) / stat.fights) * 100 : 0;
+          const attributedDeaths = allPlayers.filter(player => player.battlegroup === bg).reduce((sum, player) => sum + player.deaths, 0);
+          const soloRate = stat.fights > 0 ? ((stat.fights - attributedDeaths) / stat.fights) * 100 : 0;
           const isSelected = selectedBg === bg;
           const isDimmed = selectedBg !== null && !isSelected;
           

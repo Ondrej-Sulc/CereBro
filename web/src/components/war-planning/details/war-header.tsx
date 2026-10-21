@@ -54,6 +54,7 @@ interface WarHeaderProps {
   warProgress?: WarProgress | null;
   onCopyBgText?: () => void;
   onCopyBgMarkdown?: () => void;
+  deathSummaryTrigger?: React.ReactNode;
 }
 
 export function WarHeader({
@@ -81,7 +82,8 @@ export function WarHeader({
   bgColors,
   warProgress,
   onCopyBgText,
-  onCopyBgMarkdown
+  onCopyBgMarkdown,
+  deathSummaryTrigger,
 }: WarHeaderProps) {
   const { toast } = useToast();
   const [isBanPopoverOpen, setIsBanPopoverOpen] = useState(false);
@@ -297,7 +299,8 @@ export function WarHeader({
           )}
         </div>
 
-        <div className="flex items-center gap-2 shrink-0 self-end lg:self-auto">
+        <div className="flex max-w-full flex-wrap items-center justify-end gap-2 shrink-0 self-end lg:self-auto">
+          {deathSummaryTrigger}
           {!isReadOnly && (
             <>
               <DropdownMenu>

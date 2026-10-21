@@ -8,7 +8,9 @@ import { redirect } from "next/navigation";
 import logger from "@/lib/logger";
 import { SeasonOverviewView } from "./season-overview-view";
 import { SeasonAnalysisContainer } from "./season-analysis-container";
-import { getAvailableSeasons, getSeasonData } from "./season-data";
+import { getSeasonData } from "./season-data";
+import { getAvailableSeasons } from "@/lib/war-seasons";
+import { WarDeathSummaryPanel } from "@/components/war-planning/war-death-summary";
 
 export const metadata: Metadata = {
   title: "Season Overview - CereBro",
@@ -122,6 +124,7 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
 
   // 2. Fetch and Process Data
   const {
+      warDeathSummaries,
       deathDistribution,
       topDefenders,
       topAttackers,
@@ -245,10 +248,18 @@ export default async function SeasonOverviewPage({ searchParams }: PageProps) {
             </Card>
         </div>
   
+        <WarDeathSummaryPanel
+            key={selectedSeason}
+            summaries={warDeathSummaries}
+            initialWarId={typeof awaitedSearchParams.war === "string" ? awaitedSearchParams.war : undefined}
+            initialBattlegroup={typeof awaitedSearchParams.bg === "string" ? Number(awaitedSearchParams.bg) : undefined}
+        />
+
         {/* Interactive Unified Roster Grid */}
         <SeasonOverviewView 
             allPlayers={allPlayers} 
             bgColors={bgColors} 
+            warDeathSummaries={warDeathSummaries}
         />
 
         {/* Combined Insights & Deep Dive */}

@@ -9,17 +9,20 @@ import { BattlegroupSummary } from "./components/battlegroup-summary";
 import { PlayerPerformanceList } from "./components/player-performance-list";
 import { CombatHistoryDialog } from "./components/combat-history-dialog";
 import { DEFAULT_PLAYER_SORT, sortPlayers, PlayerSortState } from "./player-sort";
+import type { WarDeathSummary } from "@/lib/war-death-summary";
 
 export type { PlayerStats } from "./types";
 
 interface SeasonOverviewViewProps {
   allPlayers: PlayerStats[];
   bgColors: { 1: string; 2: string; 3: string };
+  warDeathSummaries: WarDeathSummary[];
 }
 
 export function SeasonOverviewView({
   allPlayers,
   bgColors,
+  warDeathSummaries,
 }: SeasonOverviewViewProps) {
   const [selectedPlayer, setSelectedPlayer] = useState<PlayerStats | null>(null);
   const [selectedBg, setSelectedBg] = useState<1 | 2 | 3 | null>(null);
@@ -39,6 +42,7 @@ export function SeasonOverviewView({
       <Card className="bg-slate-950/40 border-slate-800/60 flex flex-col shadow-2xl backdrop-blur-md overflow-hidden">
           <BattlegroupSummary 
             allPlayers={allPlayers} 
+            warDeathSummaries={warDeathSummaries}
             bgColors={bgColors} 
             selectedBg={selectedBg} 
             onSelectBg={setSelectedBg} 

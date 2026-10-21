@@ -11,9 +11,11 @@ import { SeasonBanWithChampion, WarBanWithChampion } from "@cerebro/core/data/wa
 import { DEFAULT_PALETTE_STYLE, PlayerPaletteStyle } from "@/lib/player-colors";
 import logger from "@/lib/logger";
 import { cache } from "react";
+import { getAvailableSeasons } from "@/lib/war-seasons";
 
 interface WarDetailsPageProps {
   params: Promise<{ warId: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
 }
 
 const getWar = cache(async (warId: string) => {
@@ -54,8 +56,9 @@ export async function generateMetadata({ params }: WarDetailsPageProps): Promise
   };
 }
 
-export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
+export default async function WarDetailsPage({ params, searchParams }: WarDetailsPageProps) {
   const { warId } = await params;
+  const query = await searchParams;
   const player = await getUserPlayerWithAlliance();
   
   if (!player) {
@@ -82,6 +85,7 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
   const canPlan = canPlanAllianceWar(player, player.isBotAdmin);
 
   const champions = await getCachedChampions();
+  const historySeasons = await getAvailableSeasons(war.allianceId);
 
   // Fetch Season Bans
   const seasonBans = await getFromCache(`season-bans-${war.season}-${war.warTier}`, 300, async () => {
@@ -174,6 +178,9 @@ export default async function WarDetailsPage({ params }: WarDetailsPageProps) {
       bgColors={bgColors}
       activeDefensePlan={activeDefensePlan?.activeDefensePlan}
       userBattlegroup={player.battlegroup}
+      initialBattlegroup={typeof query?.bg === 'string' ? Number(query.bg) : undefined}
+      initialNodeNumber={typeof query?.node === 'string' ? Number(query.node) : undefined}
+      latestHistorySeason={Math.max(historySeasons[0] ?? 0, war.season) || null}
       paletteStyle={(war.alliance.playerColorPalette as PlayerPaletteStyle) ?? DEFAULT_PALETTE_STYLE}
     />
   );

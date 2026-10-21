@@ -6,20 +6,11 @@ import { ChampionImages } from "@/types/champion";
 import { PlayerStats, ChampionStat, NodeStat } from "./types";
 import { DetailedPlacementStat } from "./deep-dive-types";
 import { getGlobalDifficulties, calculateFightScore, calculateSoloBonus, normalizeRatings, DifficultyRatings } from "@/lib/war-rating";
-
-export async function getAvailableSeasons(allianceId: string) {
-  return await getFromCache(`distinct-seasons-${allianceId}`, 3600, async () => {
-    const distinctSeasons = await prisma.war.findMany({
-        where: { allianceId },
-        distinct: ['season'],
-        select: { season: true },
-        orderBy: { season: 'desc' }
-    });
-    return distinctSeasons.map(s => s.season).filter(s => s !== 0);
-  });
-}
+import { summarizeWarDeaths, type WarDeathSummary } from "@/lib/war-death-summary";
+import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 
 export interface SeasonData {
+    warDeathSummaries: WarDeathSummary[];
     bgStats: Record<number, Record<string, PlayerStats>>;
     bgTotals: Record<number, { fights: number; deaths: number }>;
     deathDistribution: { path: number; miniBoss: number; boss: number };
@@ -37,6 +28,9 @@ export interface SeasonData {
 }
 
 export async function getSeasonData(allianceId: string, selectedSeason: number): Promise<SeasonData> {
+    const viewer = await getUserPlayerWithAlliance();
+    if (!viewer?.allianceId || viewer.allianceId !== allianceId) throw new Error("Alliance membership required");
+
     // Fetch War Data (Cached for 5 minutes per alliance/season)
     const [wars, allTactics] = await Promise.all([
         getFromCache(`season-wars-${selectedSeason}-${allianceId}`, 300, () => 
@@ -49,9 +43,6 @@ export async function getSeasonData(allianceId: string, selectedSeason: number):
                 },
                 include: {
                     fights: {
-                        where: {
-                            player: { isNot: null }
-                        },
                         include: {
                             player: true,
                             attacker: { include: { tags: true } },
@@ -70,6 +61,8 @@ export async function getSeasonData(allianceId: string, selectedSeason: number):
             })
         )
     ]);
+
+    const warDeathSummaries = summarizeWarDeaths(wars);
   
     // Fetch difficulty ratings for all war tiers in this season
     const warTiers = [...new Set(wars.map(w => w.warTier))];
@@ -91,6 +84,9 @@ export async function getSeasonData(allianceId: string, selectedSeason: number):
       2: { fights: 0, deaths: 0 },
       3: { fights: 0, deaths: 0 }
     };
+    for (const war of warDeathSummaries) {
+        for (const bg of war.battlegroups) bgTotals[bg.battlegroup].deaths += bg.deaths;
+    }
 
     const deathDistribution = {
         path: 0,
@@ -116,10 +112,17 @@ export async function getSeasonData(allianceId: string, selectedSeason: number):
       );
 
       for (const fight of war.fights) {
-        if (!fight.player) continue;
-        
         const bg = fight.battlegroup;
         if (!bg || bg < 1 || bg > 3) continue;
+
+        // Keep positive recorded deaths even after a player has been unassigned/deleted.
+        if (!fight.player && fight.death <= 0) continue;
+        if (fight.node) {
+            const category = getNodeCategory(fight.node.nodeNumber);
+            if (category === 'boss') deathDistribution.boss += fight.death;
+            else if (category === 'mini-boss') deathDistribution.miniBoss += fight.death;
+            else deathDistribution.path += fight.death;
+        }
 
         // Collect Deep Dive Stats
         if (fight.defender && fight.node && fight.attacker) {
@@ -139,102 +142,100 @@ export async function getSeasonData(allianceId: string, selectedSeason: number):
         }
   
         // Player Stats
-        const pid = fight.player.id;
-        if (!bgStats[bg][pid]) {
-          bgStats[bg][pid] = {
-            playerId: pid,
-            playerName: fight.player.ingameName,
-            avatar: fight.player.avatar,
-            fights: 0,
-            deaths: 0,
-            pathFights: 0,
-            pathDeaths: 0,
-            miniBossFights: 0,
-            miniBossDeaths: 0,
-            bossFights: 0,
-            bossDeaths: 0,
-            battlegroup: bg,
-            warStats: [],
-            rating: 0,
-            ratingPerFight: 0,
-            normalizedRating: 0,
-            grade: 'C',
-            ratingBreakdown: { baseFightScore: 0, soloBonus: 0, totalRating: 0, ratingPerFight: 0 },
-          };
-        }
-        bgStats[bg][pid].fights += 1;
-        bgStats[bg][pid].deaths += fight.death;
-        
-        // Node Category Stats
-        if (fight.node) {
-            const category = getNodeCategory(fight.node.nodeNumber);
-            
-            // Player Counts & Deaths
-            if (category === 'boss') {
-                bgStats[bg][pid].bossFights++;
-                bgStats[bg][pid].bossDeaths += fight.death;
-                deathDistribution.boss += fight.death;
-            } else if (category === 'mini-boss') {
-                bgStats[bg][pid].miniBossFights++;
-                bgStats[bg][pid].miniBossDeaths += fight.death;
-                deathDistribution.miniBoss += fight.death;
-            } else {
-                bgStats[bg][pid].pathFights++;
-                bgStats[bg][pid].pathDeaths += fight.death;
-                deathDistribution.path += fight.death;
-            }
-        }
-
-        // War Stats Aggregation
-        let playerWarStat = bgStats[bg][pid].warStats.find(w => w.warId === war.id);
-        if (!playerWarStat) {
-            playerWarStat = {
-                warId: war.id,
-                warNumber: war.warNumber || 0,
-                opponent: war.enemyAlliance || 'Unknown',
-                fights: 0,
-                deaths: 0,
-                fightDetails: []
+        if (fight.player) {
+          const pid = fight.player.id;
+          if (!bgStats[bg][pid]) {
+            bgStats[bg][pid] = {
+              playerId: pid,
+              playerName: fight.player.ingameName,
+              avatar: fight.player.avatar,
+              fights: 0,
+              deaths: 0,
+              pathFights: 0,
+              pathDeaths: 0,
+              miniBossFights: 0,
+              miniBossDeaths: 0,
+              bossFights: 0,
+              bossDeaths: 0,
+              battlegroup: bg,
+              warStats: [],
+              rating: 0,
+              ratingPerFight: 0,
+              normalizedRating: 0,
+              grade: 'C',
+              ratingBreakdown: { baseFightScore: 0, soloBonus: 0, totalRating: 0, ratingPerFight: 0 },
             };
-            bgStats[bg][pid].warStats.push(playerWarStat);
+          }
+          bgStats[bg][pid].fights += 1;
+          bgStats[bg][pid].deaths += fight.death;
+        
+          // Node Category Stats
+          if (fight.node) {
+              const category = getNodeCategory(fight.node.nodeNumber);
+            
+              // Player Counts & Deaths
+              if (category === 'boss') {
+                  bgStats[bg][pid].bossFights++;
+                  bgStats[bg][pid].bossDeaths += fight.death;
+              } else if (category === 'mini-boss') {
+                  bgStats[bg][pid].miniBossFights++;
+                  bgStats[bg][pid].miniBossDeaths += fight.death;
+              } else {
+                  bgStats[bg][pid].pathFights++;
+                  bgStats[bg][pid].pathDeaths += fight.death;
+              }
+          }
+
+          // War Stats Aggregation
+          let playerWarStat = bgStats[bg][pid].warStats.find(w => w.warId === war.id);
+          if (!playerWarStat) {
+              playerWarStat = {
+                  warId: war.id,
+                  warNumber: war.warNumber || 0,
+                  opponent: war.enemyAlliance || 'Unknown',
+                  fights: 0,
+                  deaths: 0,
+                  fightDetails: []
+              };
+              bgStats[bg][pid].warStats.push(playerWarStat);
+          }
+
+          const isAttackerTactic = !!(activeTactic?.attackTag && fight.attacker?.tags?.some(t => t.name === activeTactic.attackTag!.name));
+          const isDefenderTactic = !!(activeTactic?.defenseTag && fight.defender?.tags?.some(t => t.name === activeTactic.defenseTag!.name));
+
+          // Rating calculations for this fight
+          const difficulties = difficultyByTier.get(war.warTier);
+          const nodeNum = fight.node?.nodeNumber ?? 0;
+          const nodeDifficulty = difficulties?.nodes.get(nodeNum) ?? 1.0;
+          const defenderDifficulty = fight.defenderId ? (difficulties?.defenders.get(fight.defenderId) ?? 1.0) : 1.0;
+          const nodeTypeMultiplier = nodeNum > 0 ? getNodeTypeMultiplier(nodeNum) : 1.0;
+          const fightScore = calculateFightScore(fight.death, nodeDifficulty, defenderDifficulty, nodeTypeMultiplier);
+
+          bgStats[bg][pid].ratingBreakdown.baseFightScore += fightScore;
+
+          playerWarStat.fights += 1;
+          playerWarStat.deaths += fight.death;
+          playerWarStat.fightDetails.push({
+              defenderName: fight.defender?.name || 'Unknown',
+              defenderClass: fight.defender?.class || 'COSMIC',
+              defenderImageUrl: getChampionImageUrl(fight.defender?.images as unknown as ChampionImages, '64'),
+              attackerName: fight.attacker?.name || 'Unknown',
+              attackerClass: fight.attacker?.class || 'COSMIC',
+              attackerImageUrl: getChampionImageUrl(fight.attacker?.images as unknown as ChampionImages, '64'),
+              nodeNumber: fight.node?.nodeNumber || 0,
+              isSolo: fight.death === 0,
+              deaths: fight.death,
+              videoId: fight.video?.id || null,
+              isAttackerTactic,
+              isDefenderTactic,
+              fightScore,
+              nodeDifficulty,
+              defenderDifficulty,
+              nodeTypeMultiplier,
+          });
+
+          bgTotals[bg].fights += 1;
         }
-
-        const isAttackerTactic = !!(activeTactic?.attackTag && fight.attacker?.tags?.some(t => t.name === activeTactic.attackTag!.name));
-        const isDefenderTactic = !!(activeTactic?.defenseTag && fight.defender?.tags?.some(t => t.name === activeTactic.defenseTag!.name));
-
-        // Rating calculations for this fight
-        const difficulties = difficultyByTier.get(war.warTier);
-        const nodeNum = fight.node?.nodeNumber ?? 0;
-        const nodeDifficulty = difficulties?.nodes.get(nodeNum) ?? 1.0;
-        const defenderDifficulty = fight.defenderId ? (difficulties?.defenders.get(fight.defenderId) ?? 1.0) : 1.0;
-        const nodeTypeMultiplier = nodeNum > 0 ? getNodeTypeMultiplier(nodeNum) : 1.0;
-        const fightScore = calculateFightScore(fight.death, nodeDifficulty, defenderDifficulty, nodeTypeMultiplier);
-
-        bgStats[bg][pid].ratingBreakdown.baseFightScore += fightScore;
-
-        playerWarStat.fights += 1;
-        playerWarStat.deaths += fight.death;
-        playerWarStat.fightDetails.push({
-            defenderName: fight.defender?.name || 'Unknown',
-            defenderClass: fight.defender?.class || 'COSMIC',
-            defenderImageUrl: getChampionImageUrl(fight.defender?.images as unknown as ChampionImages, '64'),
-            attackerName: fight.attacker?.name || 'Unknown',
-            attackerClass: fight.attacker?.class || 'COSMIC',
-            attackerImageUrl: getChampionImageUrl(fight.attacker?.images as unknown as ChampionImages, '64'),
-            nodeNumber: fight.node?.nodeNumber || 0,
-            isSolo: fight.death === 0,
-            deaths: fight.death,
-            videoId: fight.video?.id || null,
-            isAttackerTactic,
-            isDefenderTactic,
-            fightScore,
-            nodeDifficulty,
-            defenderDifficulty,
-            nodeTypeMultiplier,
-        });
-
-        bgTotals[bg].fights += 1;
-        bgTotals[bg].deaths += fight.death;
 
         // Defender Stats
         if (fight.defender) {
@@ -306,10 +307,12 @@ export async function getSeasonData(allianceId: string, selectedSeason: number):
     // Global Stats Calculation
     const globalFights = bgTotals[1].fights + bgTotals[2].fights + bgTotals[3].fights;
     const globalDeaths = bgTotals[1].deaths + bgTotals[2].deaths + bgTotals[3].deaths;
-    const globalSoloRate = globalFights > 0 ? ((globalFights - globalDeaths) / globalFights) * 100 : 0;
+    // Existing player performance metrics apply to attributed fights only.
+    const attributedDeaths = allPlayers.reduce((sum, player) => sum + player.deaths, 0);
+    const globalSoloRate = globalFights > 0 ? ((globalFights - attributedDeaths) / globalFights) * 100 : 0;
 
     // Calculate solo bonus and total ratings
-    const avgSoloRate = globalFights > 0 ? (globalFights - globalDeaths) / globalFights : 0;
+    const avgSoloRate = globalFights > 0 ? (globalFights - attributedDeaths) / globalFights : 0;
     const perFightMap = new Map<string, number>();
     const totalMap = new Map<string, number>();
 
@@ -347,6 +350,7 @@ export async function getSeasonData(allianceId: string, selectedSeason: number):
         : 0;
 
     return {
+        warDeathSummaries,
         bgStats,
         bgTotals,
         deathDistribution,

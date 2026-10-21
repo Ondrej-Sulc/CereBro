@@ -9,6 +9,7 @@ import FormPageBackground from "@/components/FormPageBackground";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { canPlanAllianceWar } from "@/lib/alliance-permissions";
 import { cache } from "react";
+import { getAvailableSeasons } from "@/lib/war-seasons";
 
 interface DefenseDetailsPageProps {
   params: Promise<{ id: string }>;
@@ -87,6 +88,7 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
   const canPlan = canPlanAllianceWar(player, player.isBotAdmin);
 
   const champions = await getCachedChampions();
+  const historySeasons = await getAvailableSeasons(plan.allianceId);
 
   // Fetch members of the PLAN's alliance, not necessarily the viewer's alliance
   // The bot also changes memberships; its process cannot invalidate a web memory cache.
@@ -136,6 +138,7 @@ export default async function DefenseDetailsPage({ params }: DefenseDetailsPageP
         champions={champions}
         players={allianceMembers}
         availableTags={tags}
+        latestHistorySeason={historySeasons[0] ?? null}
         isOfficer={canPlan}
         canConfigureDiscord={player.isOfficer || isBotAdmin}
         bgColors={bgColors}

@@ -45,6 +45,7 @@ import DefenseStatsPanel from "./defense-stats-panel";
 import { parseMissingDiscordChannelMessage } from "@/lib/discord-config-validation";
 import { MissingDiscordConfigDialog } from "@/components/alliance/missing-discord-config-dialog";
 import type { HistoricalNodeDefenseStat } from "@/app/planning/history-actions";
+import { useHistoryFilters } from "./hooks/use-history-filters";
 
 interface DefenseDetailsClientProps {
   plan: WarDefensePlan;
@@ -58,6 +59,7 @@ interface DefenseDetailsClientProps {
   bgColors?: Record<number, string>;
   userBattlegroup?: number | null;
   paletteStyle?: PlayerPaletteStyle;
+  latestHistorySeason: number | null;
 }
 
 interface WarNodeWithAllocations {
@@ -161,11 +163,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
   const [viewMode, setViewMode] = useState<'roster' | 'map'>('roster');
   const [activeTagId, setActiveTagId] = useState<number | null>(props.plan.highlightTagId);
   const [activeTier, setActiveTier] = useState<number | null>(props.plan.tier ?? null);
-  const [historyFilters, setHistoryFilters] = useState({
-    onlyCurrentTier: true,
-    onlyAlliance: true,
-    minSeason: undefined as number | undefined,
-  });
+  const [historyFilters, setHistoryFilters] = useHistoryFilters("defense", props.latestHistorySeason);
   const historyCache = useRef(new Map<string, HistoricalNodeDefenseStat[]>());
 
   const [isRenaming, setIsRenaming] = useState(false);
