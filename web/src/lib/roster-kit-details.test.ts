@@ -59,7 +59,36 @@ describe("roster effect details", () => {
     const links = buildRosterKitDetails(entries, [], undefined, cards).groups["GAIN:Amplify"][0].synergies[0].links
     expect(links).toHaveLength(1)
     expect(links[0].conditions).toEqual(["Gain Amplify.", "While Blocking, gain Amplify."])
-    expect(buildRosterKitDetails(entries, []).groups["GAIN:Amplify"][0].synergies[0].links).toHaveLength(3)
+    const unlinked = buildRosterKitDetails(entries, []).groups["GAIN:Amplify"][0].synergies[0].links
+    expect(unlinked).toHaveLength(2)
+    expect(unlinked.map(link => link.rarities)).toEqual([[6, 7], [7]])
     expect(buildRosterKitDetails(entries, [], 5).groups).toEqual({})
+  })
+
+  it("combines identical owner-rarity variants when the catalog contains multiple matching synergy cards", () => {
+    const partners = [{ champion: { name: "Ally", slug: "ally", images: null } }]
+    const entries = ["2★", "3★", "4★", "5★", "6★/7★"].map((stars, index) => link(index + 1,
+      `Synergy: Team (${stars}) with Ally (7★): Gain Amplify.`, {
+        synergyChampions: partners, overviewSummary: "Gain Amplify.",
+      }))
+    const before = structuredClone(entries)
+    const cards = ["low", "high"].map(id => ({ id, name: "Team", unique: false, description: "Team effects.", partners: [{ ...partners[0].champion, id: 2, rarities: [7] }] }))
+    const links = buildRosterKitDetails(entries, [], undefined, cards).groups["GAIN:Amplify"][0].synergies[0].links
+    expect(links).toHaveLength(1)
+    expect(links[0]).toMatchObject({ conditions: ["Gain Amplify."], rarities: [2, 3, 4, 5, 6, 7] })
+    expect(links[0].synergyId).toBeUndefined()
+    expect(entries).toEqual(before)
+  })
+
+  it("retains differing source mechanics even when their value-free reviewed summaries are identical", () => {
+    const partners = [{ champion: { name: "Ally", slug: "ally", images: null } }]
+    const entries = [
+      link(1, "Synergy: Team (6★) with Ally (7★): Gain 10% Amplify.", { synergyChampions: partners, overviewSummary: "Gain Amplify." }),
+      link(2, "Synergy: Team (7★) with Ally (7★): Gain 20% Amplify.", { synergyChampions: partners, overviewSummary: "Gain Amplify." }),
+    ]
+    const links = buildRosterKitDetails(entries, []).groups["GAIN:Amplify"][0].synergies[0].links
+    expect(links).toHaveLength(2)
+    expect(links.map(link => link.rarities)).toEqual([[6], [7]])
+    expect(buildRosterKitDetails(entries, [], 6).groups["GAIN:Amplify"][0].synergies[0].links).toHaveLength(1)
   })
 })

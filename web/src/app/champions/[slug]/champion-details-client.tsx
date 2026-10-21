@@ -186,7 +186,7 @@ function ChampionDossier({ view, pageState, updatePageState }: {
               <div className="mt-7 h-1 w-24" style={{ background: view.accent }} />
             </div>
 
-            <div className="flex max-w-5xl flex-col gap-4 border-y border-white/15 bg-black/20 py-5 backdrop-blur-sm sm:py-6 lg:flex-row lg:items-center lg:gap-6">
+            <div className="flex max-w-5xl flex-col gap-4 border-y border-white/15 bg-black/20 px-4 py-5 backdrop-blur-sm sm:px-6 sm:py-6 lg:flex-row lg:items-center lg:gap-6">
               <div className="grid min-w-0 flex-1 grid-cols-3">
                 <DossierPrestigeMetric view={view} />
                 <DossierMetric label="Health" value={format(view.health)} />
