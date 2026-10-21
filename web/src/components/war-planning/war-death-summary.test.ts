@@ -5,6 +5,21 @@ import { summarizeWarDeaths } from "../../lib/war-death-summary";
 import { BattlegroupDeathBreakdown, WarDeathSummaryPanel } from "./war-death-summary";
 
 describe("war death drilldown", () => {
+  it("renders readable attacker/defender roles and visible portrait fallbacks when metadata is absent", () => {
+    const [war] = summarizeWarDeaths([{ id: "war", season: 60, warNumber: 1, enemyAlliance: null, fights: [
+      { id: "fight", death: 2, battlegroup: 1, player: null, node: { nodeNumber: 4 }, attacker: { name: "Hulk" }, defender: { name: "Thing", images: { broken: true } } },
+    ] }]);
+    const html = renderToStaticMarkup(createElement(BattlegroupDeathBreakdown, { warId: war.warId, summary: war.battlegroups[0] }));
+    expect(html).toContain("Attacker");
+    expect(html).toContain("Defender");
+    expect(html).toContain("Hulk");
+    expect(html).toContain("Thing");
+    expect(html).toContain(">HU</span>");
+    expect(html).toContain(">TH</span>");
+    expect(html).not.toContain("data:image/gif");
+    expect(html).not.toContain("[object Object]");
+  });
+
   it("compares every war and all three BGs without opening a breakdown by default", () => {
     const summaries = summarizeWarDeaths([1, 2].map(warNumber => ({
       id: `war-${warNumber}`, season: 60, warNumber, enemyAlliance: `Opponent ${warNumber}`,

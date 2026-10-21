@@ -1,7 +1,50 @@
 import { describe, expect, it } from "vitest";
+import type { ChampionClass } from "@prisma/client";
 import { summarizeWarDeaths, type DeathSummaryWar } from "./war-death-summary";
 
 describe("war battlegroup recorded deaths", () => {
+  it("keeps champion names and neutral fallbacks for null, missing and malformed metadata", () => {
+    const blankImages = { hero: "", full_primary: "", full_secondary: "", p_32: "", s_32: "", p_64: "", s_64: "", p_128: "", s_128: "" };
+    const [summary] = summarizeWarDeaths([{
+      id: "war", season: 60, warNumber: 1, enemyAlliance: null,
+      fights: [
+        null, { name: "Named without metadata" },
+        { name: "Null metadata", images: null, class: null },
+        { name: "Malformed", images: { p_64: "/not-a-complete-image-record.png" } },
+        { name: "Empty URL", images: blankImages },
+        { name: "Non-string URL", images: { ...blankImages, p_64: 123 } },
+        { name: "Unknown class", class: "UNRECOGNIZED" as ChampionClass },
+      ].map((attacker, index) => ({ id: `fight-${index}`, attacker, death: 1, battlegroup: 1, node: { nodeNumber: 4 }, player: null })),
+    }]);
+    const fights = summary.battlegroups[0].players[0].nodes[0].fights;
+    expect(fights.map(fight => fight.attackerName)).toEqual(["Unknown attacker", "Named without metadata", "Null metadata", "Malformed", "Empty URL", "Non-string URL", "Unknown class"]);
+    for (const fight of fights) {
+      expect(fight.attacker).toEqual({ class: null, imageUrl: null });
+      expect(fight.defender).toEqual({ class: null, imageUrl: null });
+    }
+    expect(summary.deaths).toBe(7);
+  });
+
+  it("projects champion portraits and classes from season and planner fight shapes without leaking full records", () => {
+    const images = { hero: "/hulk.png", full_primary: "/hulk.png", full_secondary: "", p_32: "/hulk-32.png", s_32: "", p_64: "/hulk-64.png", s_64: "", p_128: "", s_128: "" };
+    const champion = { id: 1, name: "Hulk", class: "SCIENCE" as const, images, tags: [{ name: "Hero" }] };
+    const seasonChampion = { ...champion, shortName: "hulk", abilities: [], releaseDate: null };
+    const [summary] = summarizeWarDeaths([{
+      id: "war", season: 60, warNumber: 1, enemyAlliance: "Opponent",
+      fights: [seasonChampion, champion].map((attacker, index) => ({
+        id: `fight-${index}`, battlegroup: 2, death: 3, node: { nodeNumber: 4 }, player: null,
+        attacker, defender: { ...attacker, name: "Thing" },
+      })),
+    }]);
+    const fights = summary.battlegroups[1].players[0].nodes[0].fights;
+    for (const fight of fights) {
+      expect(fight).toMatchObject({ attackerName: "Hulk", defenderName: "Thing", attacker: { class: "SCIENCE", imageUrl: "/hulk-64.png" }, defender: { class: "SCIENCE", imageUrl: "/hulk-64.png" } });
+      expect(fight.attacker).toEqual({ class: "SCIENCE", imageUrl: "/hulk-64.png" });
+    }
+    expect(summary.deaths).toBe(6);
+    expect(summary.battlegroups.map(bg => bg.deaths)).toEqual([0, 6, 0]);
+  });
+
   it("sums deaths per war and BG and preserves player, node and fight drilldown", () => {
     const wars: DeathSummaryWar[] = [
       {

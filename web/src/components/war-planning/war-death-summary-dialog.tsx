@@ -30,14 +30,14 @@ export function WarDeathSummaryDialog({ summary, battlegroup, loading, error, on
         </Button>
       </DialogTrigger>
       <DialogContent className="flex max-h-[85dvh] max-w-[calc(100vw-1.5rem)] flex-col gap-0 overflow-hidden rounded-xl border-slate-800 bg-slate-950 p-0 text-slate-200 sm:max-w-2xl">
-        <DialogHeader className="shrink-0 border-b border-slate-800 p-4 text-left sm:p-5">
+        <DialogHeader className="shrink-0 border-b border-slate-800/60 bg-slate-900/40 p-4 text-left sm:p-5">
           <div className="flex items-start justify-between gap-3">
             <div className="min-w-0 space-y-2">
-              <DialogTitle className="leading-snug">BG{battlegroup} recorded deaths</DialogTitle>
+              <DialogTitle className="flex items-center gap-2 text-lg font-black uppercase italic tracking-tight leading-snug"><Skull aria-hidden="true" className="h-4 w-4 shrink-0 text-red-400" /> BG{battlegroup} recorded deaths</DialogTitle>
               <DialogDescription className="text-xs text-slate-400 [overflow-wrap:anywhere]">{warLabel(summary)} vs {summary.opponent} · Season {summary.season}</DialogDescription>
               {!loading && !unavailable && <p className={cn("text-sm", bg.deaths ? "text-red-300" : "text-slate-400")}>{recordedDeathsLabel(bg.deaths)} <span className="text-slate-400">· {bg.players.length} {bg.players.length === 1 ? "player" : "players"}</span></p>}
             </div>
-            <DialogClose asChild><button type="button" aria-label="Close death summary" className="flex h-9 w-9 shrink-0 items-center justify-center rounded text-slate-400 hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400"><X aria-hidden="true" className="h-4 w-4" /></button></DialogClose>
+            <DialogClose asChild><button type="button" aria-label="Close death summary" className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400 sm:h-9 sm:w-9"><X aria-hidden="true" className="h-4 w-4" /></button></DialogClose>
           </div>
         </DialogHeader>
         <div className="min-h-0 overflow-y-auto overscroll-contain px-4 sm:px-5">
