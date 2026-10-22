@@ -33,6 +33,19 @@ export class MapImageService {
     private static readonly NODE_COLOR = '#1e293b'; // slate-800
     private static readonly TEXT_COLOR = '#94a3b8'; // slate-400
 
+    private static readonly LEGEND_LAYOUT = {
+        titleY: 60,
+        titleSpacing: 60,
+        headerSpacing: 40,
+        rowHeight: 84,
+        bottomPadding: 40,
+        bannedTitleSpacing: 40,
+        bannedContentSpacing: 40,
+        bannedChampionSize: 56,
+        bannedChampionGap: 16,
+        bannedMaxPerRow: 10,
+    };
+
     private static readonly HIGHLIGHT_GLOW = '#0ea5e9'; // sky-500
     private static readonly HIGHLIGHT_BORDER = '#ffffff'; // sky-400
     private static readonly HIGHLIGHT_PREFIGHT = '#ffffff'; // purple-400
@@ -111,12 +124,22 @@ export class MapImageService {
         maxY += padding;
 
         let width = Math.ceil(maxX - minX);
-        const height = Math.ceil(maxY - minY);
+        let height = Math.ceil(maxY - minY);
 
         // Adjust for Legend
         const legendWidth = 750;
         if (legend && legend.length > 0) {
             width += legendWidth;
+            const layout = this.LEGEND_LAYOUT;
+            let legendHeight = layout.titleY + layout.titleSpacing + layout.headerSpacing
+                + legend.length * layout.rowHeight;
+            const bannedRows = Math.ceil((bannedChampions?.length ?? 0) / layout.bannedMaxPerRow);
+            if (bannedRows > 0) {
+                legendHeight += layout.bannedTitleSpacing + layout.bannedContentSpacing
+                    + bannedRows * layout.bannedChampionSize + (bannedRows - 1) * layout.bannedChampionGap;
+            }
+            // Compact maps can be shorter than their legend; retain the map's scale and origin.
+            height = Math.max(height, legendHeight + layout.bottomPadding);
         }
 
         // 2. Fetch Images (in parallel) and convert to Base64
@@ -541,7 +564,8 @@ export class MapImageService {
         if (legend && legend.length > 0) {
             const legendX = width - legendWidth;
             const contentX = legendX + 40;
-            let currentY = 60;
+            const layout = this.LEGEND_LAYOUT;
+            let currentY = layout.titleY;
 
             const legendVariant = legend.some(item => item.variant === 'defense') ? 'defense' : 'attack';
 
@@ -551,7 +575,7 @@ export class MapImageService {
                     ${legendVariant === 'defense' ? 'Defense Assignments' : 'Battlegroup Assignments'}
                 </text>
             `;
-            currentY += 60;
+            currentY += layout.titleSpacing;
 
             // Headers
             const colPlayer = 0;
@@ -577,11 +601,11 @@ export class MapImageService {
                     <line x1="${contentX}" y1="${currentY + 15}" x2="${width - 40}" y2="${currentY + 15}" stroke="${this.LINE_COLOR}" stroke-width="1" opacity="0.5" />
                 `;
             }
-            currentY += 40;
+            currentY += layout.headerSpacing;
 
             // 4c. Rows
             legend.forEach((item, index) => {
-                const rowHeight = 84;
+                const rowHeight = layout.rowHeight;
                 const rowY = currentY;
                 const centerY = rowY + (rowHeight / 2);
 
@@ -696,7 +720,7 @@ export class MapImageService {
 
             // 4d. Banned Champions (Below the last row of players)
             if (bannedChampions && bannedChampions.length > 0) {
-                const bannedY = currentY + 40;
+                const bannedY = currentY + layout.bannedTitleSpacing;
 
                 // Title
                 legendSvg += `
@@ -705,10 +729,10 @@ export class MapImageService {
                     </text>
                  `;
 
-                const bannedContentY = bannedY + 40;
-                const champSize = 56;
-                const champGap = 16;
-                const maxPerRow = 10;
+                const bannedContentY = bannedY + layout.bannedContentSpacing;
+                const champSize = layout.bannedChampionSize;
+                const champGap = layout.bannedChampionGap;
+                const maxPerRow = layout.bannedMaxPerRow;
 
                 bannedChampions.forEach((champ, index) => {
                     const row = Math.floor(index / maxPerRow);
@@ -737,8 +761,6 @@ export class MapImageService {
                     }
                 });
 
-                // Update currentY if we were to continue (but we aren't)
-                // currentY = ...
             }
         }
 

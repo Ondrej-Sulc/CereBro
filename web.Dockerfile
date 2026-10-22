@@ -84,7 +84,7 @@ ENV SOURCE_VERSION=$SOURCE_VERSION
 ENV NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=$NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
 
 # 2. Build the Next.js application
-RUN pnpm --filter web run build
+RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm --filter web run build
 
 # 3. Prune dev dependencies to create a lean, production-only node_modules
 # RUN CI=true pnpm prune --prod # This command is broken and removes 'next'
