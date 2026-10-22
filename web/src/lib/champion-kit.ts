@@ -109,7 +109,7 @@ function readKitSynergyHeader(source: string): KitSynergyHeader | null {
 }
 
 export type ChampionKitNativeSource = { key: string; label: string; condition: string; target: ChampionKitAbilityTarget | null }
-export type ChampionKitSynergyLink = { key: string; label: string; conditions: string[]; synergyId?: string }
+export type ChampionKitSynergyLink = { key: string; label: string; conditions: string[]; synergyId?: string; rarities?: number[] }
 export type ChampionKitPartnerSources = { key: string; champions: KitChampion[]; links: ChampionKitSynergyLink[] }
 export type ChampionKitSourceGroup = EffectSourceMetadata & {
   key: string
@@ -163,12 +163,16 @@ export function groupChampionKitSources(effect: ChampionKitEffect, view: Prepare
     const matchingCards = header ? synergyCards.filter(card => normalizedWords(card.name) === normalizedWords(header.name)
       && card.unique === header.unique && sameSynergyPartners(card, source.champions, header.partners)) : []
     const synergyId = matchingCards.length === 1 ? matchingCards[0].id : undefined
-    const linkKey = synergyId ?? source.rawLabel
+    // All-rarity previews may match several catalog cards. Combine only owner-star
+    // variants with identical source mechanics and displayed copy; keep their
+    // availability explicitly rather than treating each raw header as a new link.
+    const linkKey = synergyId ?? (header ? JSON.stringify([normalizedWords(header.name), header.condition, condition]) : source.rawLabel)
     let link = row.links.find(link => link.key === linkKey)
     if (!link) {
       link = { key: linkKey, label: header ? sourceLabel(header.name)! : "Team bonus", conditions: [], synergyId }
       row.links.push(link)
     }
+    if (header) link.rarities = [...new Set([...(link.rarities ?? []), ...header.rarities])].sort((a, b) => a - b)
     if (condition && !link.conditions.includes(condition)) link.conditions.push(condition)
   }
   return [...groups.values()].filter(group => group.nativeSources.length || group.synergies.length)

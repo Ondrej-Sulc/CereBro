@@ -7,7 +7,7 @@ import { ArrowUpRight, Hash, Shield, Sparkles, Swords, Tag, UsersRound, X } from
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { CompactEffectGrid, CompactEffectTile } from "@/components/champions/compact-effect-grid"
-import { EffectSources, EffectFormBadge } from "@/components/champions/effect-sources"
+import { EffectSources } from "@/components/champions/effect-sources"
 import { getChampionClassColors } from "@/lib/championClassHelper"
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
 import { buildRosterKitSections, type RosterKitEffect } from "@/lib/roster-kit"
@@ -66,11 +66,12 @@ export function QuickChampionDialog({ item, prestige, open, onOpenChange, filter
   }
   const synergyParams = new URLSearchParams(detailsParams)
   synergyParams.set("tab", "synergies")
-  const abilitiesParams = new URLSearchParams(detailsParams)
-  abilitiesParams.set("tab", "abilities")
-  const fullAbilitiesHref = `/champions/${item.champion.slug}?${abilitiesParams}`
   return <Dialog open={open} onOpenChange={onOpenChange}>
-    <DialogContent onCloseAutoFocus={event => {
+    <DialogContent onEscapeKeyDown={event => {
+      // The detail panel handles Escape and returns focus to its tile. Radix's
+      // document-level listener runs first, so prevent it from closing the dialog.
+      if (document.activeElement?.closest("[data-effect-panel]")) event.preventDefault()
+    }} onCloseAutoFocus={event => {
       event.preventDefault()
       // The virtualized grid can replace the original trigger while the dialog is open.
       window.requestAnimationFrame(() => {
@@ -113,7 +114,7 @@ export function QuickChampionDialog({ item, prestige, open, onOpenChange, filter
           const matchedCount = section.effects.filter(effect => effect.matched).length
           return <section key={section.key} aria-label={section.title}>
             <div className="mb-3 flex items-center gap-2.5 border-b border-white/[.06] pb-3"><Icon aria-hidden="true" className="h-4 w-4 text-slate-500" /><h4 className="flex-1 text-sm font-semibold text-slate-200">{section.title}</h4>{matchedCount > 0 && <span className="text-[10px] text-sky-300">{matchedCount} matched</span>}<span className="min-w-6 rounded-md border border-white/[.06] bg-white/[.025] px-1.5 py-0.5 text-center text-[11px] tabular-nums text-slate-500">{section.effects.length}</span></div>
-            {section.effects.length ? <CompactEffectGrid dense>{section.effects.map(effect => <QuickEffect key={`${effect.name}:${filterKey}`} effect={effect} groups={details?.groups[`${section.key}:${effect.name}`]} loading={!details && !detailsError} error={detailsError} onRetry={() => setRetry(value => value + 1)} abilityHref={abilityHref} synergiesHref={`/champions/${item.champion.slug}?${synergyParams}`} fullAbilitiesHref={fullAbilitiesHref} />)}</CompactEffectGrid> : <p className="text-xs text-slate-500">No immunities recorded.</p>}
+            {section.effects.length ? <CompactEffectGrid dense>{section.effects.map(effect => <QuickEffect key={`${effect.name}:${filterKey}`} effect={effect} groups={details?.groups[`${section.key}:${effect.name}`]} loading={!details && !detailsError} error={detailsError} onRetry={() => setRetry(value => value + 1)} abilityHref={abilityHref} synergiesHref={`/champions/${item.champion.slug}?${synergyParams}`} />)}</CompactEffectGrid> : <p className="text-xs text-slate-500">No immunities recorded.</p>}
           </section>
         })}
         {highlightedTags.length > 0 && <section aria-label={matchingTagsOnly ? "Matching tags" : "Tags"} className="border-t border-white/[.06] pt-5"><h4 className="mb-3 flex items-center gap-2 text-xs font-medium text-slate-500"><Tag aria-hidden="true" className="h-3.5 w-3.5" />{matchingTagsOnly ? "Matching tags" : "Tags"}</h4><div className="flex flex-wrap gap-1.5">{highlightedTags.map(tag => <span key={tag.id} className="inline-flex items-center gap-1 rounded-md border border-white/[.07] bg-white/[.025] px-2 py-1 text-[11px] text-slate-400"><Hash aria-hidden="true" className="h-3 w-3 text-slate-600" />{tag.name}</span>)}</div></section>}
@@ -126,20 +127,18 @@ export function QuickChampionDialog({ item, prestige, open, onOpenChange, filter
   </Dialog>
 }
 
-function QuickEffect({ effect, groups, loading, error, onRetry, abilityHref, synergiesHref, fullAbilitiesHref }: {
+export function QuickEffect({ effect, groups, loading, error, onRetry, abilityHref, synergiesHref }: {
   effect: RosterKitEffect
   groups?: ChampionKitSourceGroup[]
   loading: boolean; error: boolean; onRetry: () => void
   abilityHref: (target: ChampionKitAbilityTarget) => string
-  synergiesHref: string; fullAbilitiesHref: string
+  synergiesHref: string
 }) {
-  const [expanded, setExpanded] = useState(effect.matched)
   const visibleGroups = groups?.filter(group => !effect.matched || effect.matchedSources.some(source => source.effectForm === group.effectForm && source.effectDirection === group.effectDirection)) ?? []
-  const forms = [...new Set((effect.matched ? effect.matchedSources : effect.sources).map(source => source.effectForm))]
-  return <CompactEffectTile effect={effect} matched={effect.matched} expanded={expanded} onExpandedChange={setExpanded}>
+  return <CompactEffectTile effect={effect} matched={effect.matched}>
     {loading ? <p role="status" className="border-t border-white/[.06] px-4 py-4 text-xs text-slate-500">Loading conditions…</p>
       : error ? <div className="space-y-2 border-t border-white/[.06] px-4 py-4 text-xs text-slate-400"><p>Conditions couldn&apos;t be loaded.</p><button type="button" onClick={onRetry} className="text-sky-300 hover:text-sky-100">Try again</button></div>
         : visibleGroups.length ? <EffectSources effect={effect} groups={visibleGroups} showForms abilityHref={abilityHref} synergiesHref={synergiesHref} />
-          : <div className="space-y-3 border-t border-white/[.06] px-4 py-4"><div className="flex flex-wrap gap-1.5">{forms.map(form => form !== "UNKNOWN" && <EffectFormBadge key={form} form={form} />)}</div>{effect.type === "ABILITY" && effect.description && <p className="text-sm leading-6 text-slate-400">{effect.description}</p>}<Link href={fullAbilitiesHref} className="inline-flex items-center gap-1 text-xs text-sky-300 hover:text-sky-100">Full abilities<ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" /></Link></div>}
+          : undefined}
   </CompactEffectTile>
 }

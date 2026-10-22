@@ -47,9 +47,10 @@ export function EffectSources({ effect, groups, showForms = false, onViewAbility
               </div>
               <div className="space-y-3">{row.links.map(link => <div key={link.key} className="space-y-1.5">
                 {link.conditions.map(condition => <p key={condition} className="break-words text-sm leading-6 text-slate-300">{condition}</p>)}
-                {onViewSynergies
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">{onViewSynergies
                   ? <button type="button" aria-label={`View ${effect.name} synergy: ${link.label}`} onClick={() => onViewSynergies(link.synergyId)} className="inline-flex min-h-8 max-w-full items-center gap-1 rounded px-1 text-left text-xs font-medium text-indigo-300/80 hover:text-indigo-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300"><span className="min-w-0 break-words">{link.label}</span><ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0" /></button>
                   : synergiesHref ? <Link href={synergiesHref} className="inline-flex min-h-8 items-center gap-1 text-xs text-indigo-300/80 hover:text-indigo-100">{link.label}<ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5" /></Link> : <span className="text-xs text-indigo-300/80">{link.label}</span>}
+                {!link.synergyId && !!link.rarities?.length && <span aria-label={`Champion rarity: ${link.rarities.join(", ")} stars`} className="text-[10px] tabular-nums text-slate-500">{link.rarities.map(rarity => `${rarity}★`).join(" / ")}</span>}</div>
               </div>)}</div>
             </div>)}
           </div>}
