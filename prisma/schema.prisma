@@ -26,6 +26,7 @@ model Ability {
   gameGlossaryTerm   GameGlossaryTerm?     @relation(fields: [gameGlossaryTermId], references: [id])
   champions          ChampionAbilityLink[]
   categories         AbilityCategory[]     @relation("AbilityToAbilityCategory")
+  resistanceApplications ChampionAbilityResistance[]
 }
 
 model Champion {
@@ -247,10 +248,34 @@ model ChampionAbilityLink {
   champion         Champion                 @relation(fields: [championId], references: [id], onDelete: Cascade)
   synergyChampions ChampionAbilitySynergy[]
   overviewSummary  ChampionAbilityOverview?
+  resistances      ChampionAbilityResistance[]
 
   @@unique([championId, abilityId, type, source, effectForm, effectDirection], name: "sourceIdentity", map: "ChampionAbilityLink_source_identity_key")
   @@index([championId])
   @@index([abilityId])
+}
+
+// Source-bound classification; the original application and reviewed overview stay immutable.
+model ChampionAbilityResistance {
+  championAbilityLinkId Int
+  effectId             Int
+  mechanism            ResistanceMechanism
+  percent              Float?
+  sourceHash           String
+  evidence             Json
+  championAbilityLink  ChampionAbilityLink @relation(fields: [championAbilityLinkId], references: [id], onDelete: Cascade)
+  effect               Ability @relation(fields: [effectId], references: [id], onDelete: Restrict)
+
+  @@id([championAbilityLinkId, effectId])
+  @@index([effectId])
+}
+
+enum ResistanceMechanism {
+  RESISTANCE
+  POTENCY
+  DAMAGE
+  DURATION
+  POTENCY_AND_DURATION
 }
 
 // Reviewed display copy is separate from the original effect application and its receipts.

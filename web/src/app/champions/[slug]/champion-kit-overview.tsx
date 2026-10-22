@@ -36,7 +36,8 @@ export function ChampionKitOverview({ view, sideContent, ...navigation }: {
   }
   const rarity = Number(view.selectedRarity) || undefined
   const abilities = buildChampionKitOverviewEffects(view.abilities, view.glossaryById, rarity)
-  const immunities = buildChampionKitOverviewEffects(view.immunities, view.glossaryById, rarity)
+  const immunities = [...abilities.filter(effect => effect.type === "RESISTANCE"), ...buildChampionKitOverviewEffects(view.immunities, view.glossaryById, rarity)]
+    .sort((a, b) => a.name.localeCompare(b.name) || a.type.localeCompare(b.type))
   const synergyView = buildChampionSynergyView(view.champion.gameSynergies, view.champion.id, rarity ?? null)
   const synergyCards = [...synergyView.owned, ...synergyView.incoming]
   const sections = groupChampionKitAbilitiesByDirection(abilities)
@@ -57,7 +58,7 @@ export function ChampionKitOverview({ view, sideContent, ...navigation }: {
       {!sections.length && <ChampionEffectList title="Abilities" effects={[]} {...shared} />}
     </div>
     <aside className={styles.kitSidebar}>
-      <div className={styles.kitImmunities}><ChampionEffectList title="Immunities" effects={immunities} {...shared} /></div>
+      <div className={styles.kitImmunities}><ChampionEffectList title="Immunities & resistances" description={immunities.some(effect => effect.type === "RESISTANCE") ? "Resistance reduces an effect; it can still apply." : undefined} effects={immunities} {...shared} /></div>
       {otherEffects && <div className={styles.kitOtherEffects}><ChampionEffectList {...DIRECTION_SECTIONS.UNKNOWN} effects={otherEffects.effects} {...shared} /></div>}
       {sideContent && <div className={styles.kitSideContent}>{sideContent}</div>}
     </aside>
@@ -74,7 +75,7 @@ function ChampionEffectList({ title, description, icon, effects, view, synergyCa
   synergyCards: ChampionSynergyCard[]
   display: KitDisplay
 } & EffectNavigation) {
-  const immunity = title === "Immunities"
+  const immunity = title === "Immunities & resistances"
   const Icon = icon ?? (immunity ? Shield : Sparkles)
   return (
     <section aria-label={title} className={styles.kitEffectList} data-display={display}>
@@ -83,8 +84,8 @@ function ChampionEffectList({ title, description, icon, effects, view, synergyCa
         <div className="min-w-0 flex-1"><h3 className="text-lg font-semibold tracking-tight text-slate-100">{title}</h3>{description && <p className="mt-0.5 text-xs leading-5 text-slate-500">{description}</p>}</div>
         <span className={styles.kitSectionCount}>{effects.length}</span>
       </div>
-      {display === "compact" ? <CompactEffectGrid>{effects.map(effect => <CompactEffectCard key={effect.name} effect={effect} view={view} synergyCards={synergyCards} {...navigation} />)}</CompactEffectGrid>
-        : <div className="space-y-3">{effects.map(effect => <EffectCard key={effect.name} effect={effect} view={view} synergyCards={synergyCards} wide={!immunity} {...navigation} />)}</div>}
+      {display === "compact" ? <CompactEffectGrid>{effects.map(effect => <CompactEffectCard key={`${effect.type}:${effect.name}`} effect={effect} view={view} synergyCards={synergyCards} {...navigation} />)}</CompactEffectGrid>
+        : <div className="space-y-3">{effects.map(effect => <EffectCard key={`${effect.type}:${effect.name}`} effect={effect} view={view} synergyCards={synergyCards} wide={!immunity} {...navigation} />)}</div>}
       {!effects.length && <p className="rounded-xl border border-dashed border-white/10 px-5 py-6 text-sm leading-6 text-slate-400">No {title.toLowerCase()} recorded for this champion.</p>}
     </section>
   )
@@ -119,11 +120,11 @@ function EffectDefinition({ effect, showAllForms }: { effect: ChampionKitEffect;
   const forms = [...new Set(effect.sources.map(source => source.effectForm))]
   const label = <>
     <EffectIcon effect={effect} />
-    <span className="min-w-0 space-y-1.5 text-left"><span className="block text-base font-semibold leading-6" style={{ color: `color-mix(in srgb, ${effect.color} 82%, white)` }}>{effect.name}</span>{(forms.length === 1 || showAllForms) && <span className="flex flex-wrap gap-1.5">{forms.map(form => form !== "UNKNOWN" && <EffectFormBadge key={form} form={form} />)}</span>}</span>
+    <span className="min-w-0 space-y-1.5 text-left"><span className="block text-base font-semibold leading-6" style={{ color: `color-mix(in srgb, ${effect.color} 82%, white)` }}>{effect.name}</span>{(effect.type !== "ABILITY" || forms.length === 1 || showAllForms) && <span className="flex flex-wrap gap-1.5">{effect.type !== "ABILITY" && <span className="text-[11px] font-medium text-cyan-200">{effect.type === "IMMUNITY" ? "Immunity" : "Resistance"}</span>}{forms.map(form => form !== "UNKNOWN" && <EffectFormBadge key={form} form={form} />)}</span>}</span>
   </>
   if (!effect.description) return <div className="flex items-center gap-3.5 px-5 py-4">{label}</div>
   return <Tooltip open={open} onOpenChange={setOpen} delayDuration={180}>
-    <TooltipTrigger asChild><button type="button" aria-label={`About ${effect.name}`} onClick={event => { event.preventDefault(); setOpen(value => !value) }} className="flex w-full items-center gap-3.5 px-5 py-4 transition-colors hover:bg-white/[.025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400">{label}</button></TooltipTrigger>
+    <TooltipTrigger asChild><button type="button" aria-label={`About ${effect.name}${effect.type === "RESISTANCE" ? " resistance" : ""}`} onClick={event => { event.preventDefault(); setOpen(value => !value) }} className="flex w-full items-center gap-3.5 px-5 py-4 transition-colors hover:bg-white/[.025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400">{label}</button></TooltipTrigger>
     <TooltipContent side="top" align="start" sideOffset={8} className="max-w-[min(360px,calc(100vw-2rem))] rounded-xl border-white/15 bg-[#151b26] p-4 text-slate-300 shadow-2xl"><p className="mb-2 text-base font-semibold" style={{ color: effect.color }}>{effect.name}</p><p className="text-sm leading-6">{effect.description}</p></TooltipContent>
   </Tooltip>
 }

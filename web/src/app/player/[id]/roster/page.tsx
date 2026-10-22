@@ -5,6 +5,8 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getCachedChampions } from "@/lib/data/champions";
+import { attachResistances, getResistanceIndex } from "@/lib/data/champion-resistances";
+import { rosterKitOptions } from "@/lib/roster-kit-options";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { RosterView } from "@/app/profile/roster/roster-view";
 import { Button } from "@/components/ui/button";
@@ -84,7 +86,7 @@ export default async function PlayerRosterPage({ params, searchParams }: PlayerR
     // targetPlayerId is only set when viewing someone else's roster (for edit API calls)
     const targetPlayerId = currentUser?.id !== targetPlayer.id ? targetPlayer.id : undefined;
 
-    const [rosterEntries, allChampions, tags, abilityCategories, abilityLinks, immunityLinks] = await Promise.all([
+    const [rosterEntries, allChampions, tags, abilityCategories] = await Promise.all([
         prisma.roster.findMany({
             where: { playerId: targetPlayer.id },
             include: {
@@ -116,12 +118,10 @@ export default async function PlayerRosterPage({ params, searchParams }: PlayerR
         getCachedChampions(),
         prisma.tag.findMany({ orderBy: { name: "asc" } }),
         prisma.abilityCategory.findMany({ orderBy: { name: "asc" } }),
-        prisma.championAbilityLink.findMany({ where: { type: "ABILITY" }, select: { abilityId: true }, distinct: ["abilityId"] }),
-        prisma.championAbilityLink.findMany({ where: { type: "IMMUNITY" }, select: { abilityId: true }, distinct: ["abilityId"] }),
     ]);
 
-    const abilities = await prisma.ability.findMany({ where: { id: { in: abilityLinks.map(l => l.abilityId) } }, select: { id: true, name: true }, orderBy: { name: "asc" } });
-    const immunities = await prisma.ability.findMany({ where: { id: { in: immunityLinks.map(l => l.abilityId) } }, select: { id: true, name: true }, orderBy: { name: "asc" } });
+    const { abilities, immunities } = rosterKitOptions(allChampions.flatMap(champion => champion.abilities ?? []));
+    const resistanceIndex = await getResistanceIndex();
 
     const typedRosterEntries: ProfileRosterEntry[] = rosterEntries.map(entry => ({
         ...entry,
@@ -129,7 +129,7 @@ export default async function PlayerRosterPage({ params, searchParams }: PlayerR
         champion: {
             ...entry.champion,
             images: entry.champion.images as unknown as ChampionImages,
-            abilities: entry.champion.abilities.map(link => ({
+            abilities: attachResistances(entry.champion.abilities, resistanceIndex).map(link => ({
                 ...link,
                 synergyChampions: link.synergyChampions.map(synergy => ({
                     ...synergy,

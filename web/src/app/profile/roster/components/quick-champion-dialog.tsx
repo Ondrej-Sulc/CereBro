@@ -46,7 +46,7 @@ export function QuickChampionDialog({ item, prestige, open, onOpenChange, filter
     return () => controller.abort()
   }, [open, item.champion.slug, item.stars, retry])
   const sections = buildRosterKitSections(details?.entries ?? item.champion.abilities, filters, item.stars || undefined)
-  const filterKey = JSON.stringify([filters.abilities, filters.categories, filters.immunities, filters.effectForms, filters.effectDirections])
+  const filterKey = JSON.stringify([filters.abilities, filters.categories, filters.immunities, filters.includeResistances, filters.effectForms, filters.effectDirections])
   const matchingTagsOnly = filters.tags.length > 0
   const highlightedTags = matchingTagsOnly ? item.champion.tags.filter(tag => filters.tags.includes(tag.name)) : item.champion.tags.slice(0, 12)
   const owned = !item.isUnowned
@@ -114,7 +114,7 @@ export function QuickChampionDialog({ item, prestige, open, onOpenChange, filter
           const matchedCount = section.effects.filter(effect => effect.matched).length
           return <section key={section.key} aria-label={section.title}>
             <div className="mb-3 flex items-center gap-2.5 border-b border-white/[.06] pb-3"><Icon aria-hidden="true" className="h-4 w-4 text-slate-500" /><h4 className="flex-1 text-sm font-semibold text-slate-200">{section.title}</h4>{matchedCount > 0 && <span className="text-[10px] text-sky-300">{matchedCount} matched</span>}<span className="min-w-6 rounded-md border border-white/[.06] bg-white/[.025] px-1.5 py-0.5 text-center text-[11px] tabular-nums text-slate-500">{section.effects.length}</span></div>
-            {section.effects.length ? <CompactEffectGrid dense>{section.effects.map(effect => <QuickEffect key={`${effect.name}:${filterKey}`} effect={effect} groups={details?.groups[`${section.key}:${effect.name}`]} loading={!details && !detailsError} error={detailsError} onRetry={() => setRetry(value => value + 1)} abilityHref={abilityHref} synergiesHref={`/champions/${item.champion.slug}?${synergyParams}`} />)}</CompactEffectGrid> : <p className="text-xs text-slate-500">No immunities recorded.</p>}
+            {section.effects.length ? <CompactEffectGrid dense>{section.effects.map(effect => <QuickEffect key={`${effect.type}:${effect.name}:${filterKey}`} effect={effect} groups={details?.groups[`${section.key}:${effect.type}:${effect.name}`] ?? details?.groups[`${section.key}:${effect.name}`]} loading={!details && !detailsError} error={detailsError} onRetry={() => setRetry(value => value + 1)} abilityHref={abilityHref} synergiesHref={`/champions/${item.champion.slug}?${synergyParams}`} />)}</CompactEffectGrid> : <p className="text-xs text-slate-500">No immunities or resistances recorded.</p>}
           </section>
         })}
         {highlightedTags.length > 0 && <section aria-label={matchingTagsOnly ? "Matching tags" : "Tags"} className="border-t border-white/[.06] pt-5"><h4 className="mb-3 flex items-center gap-2 text-xs font-medium text-slate-500"><Tag aria-hidden="true" className="h-3.5 w-3.5" />{matchingTagsOnly ? "Matching tags" : "Tags"}</h4><div className="flex flex-wrap gap-1.5">{highlightedTags.map(tag => <span key={tag.id} className="inline-flex items-center gap-1 rounded-md border border-white/[.07] bg-white/[.025] px-2 py-1 text-[11px] text-slate-400"><Hash aria-hidden="true" className="h-3 w-3 text-slate-600" />{tag.name}</span>)}</div></section>}

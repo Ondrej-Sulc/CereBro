@@ -1,4 +1,5 @@
 import { AbilityLinkType, DuelStatus } from "@prisma/client"
+import { attachResistances, getResistanceIndex } from "@/lib/data/champion-resistances"
 import { unstable_cache } from "next/cache"
 import { prisma } from "@/lib/prisma"
 import { collectChampionAbilityTextGlossaryIds } from "@/lib/champion-ability-text"
@@ -226,12 +227,13 @@ export async function loadChampionDetails(slug: string) {
   const glossaryIds = [...new Set([...collectChampionGlossaryIds(champion), ...collectSynergyGlossaryIds(gameSynergies)])].sort()
   const glossaryTerms = glossaryIds.length ? await getGlossaryTerms(glossaryIds) : []
 
+  const resistanceIndex = await getResistanceIndex(champion.id)
   return {
     champion: {
       ...champion,
       stats: getObtainableChampionStats(champion),
       gameSynergies,
-      abilities: champion.abilities.map(link => ({
+      abilities: attachResistances(champion.abilities, resistanceIndex).map(link => ({
         ...link,
         overviewSummary: (() => {
           const saved = summaryByLink.get(link.id)

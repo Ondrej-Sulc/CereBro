@@ -1,5 +1,7 @@
 import { headers } from "next/headers";
 import { getCachedChampions } from "@/lib/data/champions";
+import { attachResistances, getResistanceIndex } from "@/lib/data/champion-resistances";
+import { rosterKitOptions } from "@/lib/roster-kit-options";
 import { getUserPlayerWithAlliance, getUserProfiles } from "@/lib/auth-helpers";
 import { RosterView } from "./roster-view";
 import { Metadata } from "next";
@@ -120,12 +122,13 @@ export default async function RosterPage(props: {
   const { allChampions, tags, abilityCategories, abilities, immunities } = catalogData;
 
   // Safely map and type-cast the roster entries to ensure JsonValue fields match our local interfaces
+  const resistanceIndex = await getResistanceIndex();
   const typedRosterEntries: ProfileRosterEntry[] = rosterEntries.map(entry => ({
     ...entry,
     champion: {
       ...entry.champion,
       images: entry.champion.images as unknown as ChampionImages,
-      abilities: entry.champion.abilities.map(link => ({
+      abilities: attachResistances(entry.champion.abilities, resistanceIndex).map(link => ({
         ...link,
         synergyChampions: link.synergyChampions.map(synergy => ({
           ...synergy,
@@ -195,18 +198,12 @@ function normalizePrestigeInsightTab(value: string | undefined): PrestigeInsight
 }
 
 async function loadChampionCatalogData() {
-  const [allChampions, tags, abilityCategories, abilityLinks, immunityLinks] = await Promise.all([
+  const [allChampions, tags, abilityCategories] = await Promise.all([
     getCachedChampions(),
     prisma.tag.findMany({ orderBy: { name: "asc" } }),
     prisma.abilityCategory.findMany({ orderBy: { name: "asc" } }),
-    prisma.championAbilityLink.findMany({ where: { type: "ABILITY" }, select: { abilityId: true }, distinct: ["abilityId"] }),
-    prisma.championAbilityLink.findMany({ where: { type: "IMMUNITY" }, select: { abilityId: true }, distinct: ["abilityId"] }),
   ]);
-
-  const [abilities, immunities] = await Promise.all([
-    prisma.ability.findMany({ where: { id: { in: abilityLinks.map(link => link.abilityId) } }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
-    prisma.ability.findMany({ where: { id: { in: immunityLinks.map(link => link.abilityId) } }, select: { id: true, name: true }, orderBy: { name: "asc" } }),
-  ]);
+  const { abilities, immunities } = rosterKitOptions(allChampions.flatMap(champion => champion.abilities ?? []));
 
   return { allChampions, tags, abilityCategories, abilities, immunities };
 }

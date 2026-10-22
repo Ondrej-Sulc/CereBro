@@ -1,14 +1,19 @@
 import { formatGameText, type PreparedChampionAbilityTextNode, type PreparedChampionAbilityTextView } from "./champion-ability-text"
 import { readAbilitySource, type EffectSourceMetadata, type EffectForm, type EffectDirection } from "@cerebro/core/domain/ability-source"
 import type { ChampionSynergyCard } from "./champion-synergies"
+import type { ResistanceDetail } from "@cerebro/core/domain/champion-resistance"
 
 type KitChampion = { name: string; slug: string | null; images: unknown }
+type KitAbility = { name: string; description?: string | null; iconUrl?: string | null; gameGlossaryTermId?: string | null; gameGlossaryTerm?: { raw: unknown } | null }
+export type KitResistance = ResistanceDetail & { effect: KitAbility }
 type KitLink = Partial<EffectSourceMetadata> & {
   id: number
-  type: "ABILITY" | "IMMUNITY"
+  type: "ABILITY" | "IMMUNITY" | "RESISTANCE"
   source: string | null
   overviewSummary?: string | null
-  ability: { name: string; description?: string | null; iconUrl?: string | null; gameGlossaryTermId?: string | null }
+  ability: KitAbility
+  resistances?: KitResistance[]
+  resistance?: ResistanceDetail
   synergyChampions: Array<{ champion: KitChampion }>
 }
 type KitGlossary = { description: string | null; raw: unknown; iconUrl?: string | null }
@@ -20,7 +25,7 @@ export type ChampionKitEffect = {
   color: string
   secondaryColor: string
   description: string | null
-  sources: Array<EffectSourceMetadata & { label: string; rawLabel: string; overviewSummary?: string | null; champions: KitChampion[] }>
+  sources: Array<EffectSourceMetadata & { label: string; rawLabel: string; overviewSummary?: string | null; resistance?: ResistanceDetail; champions: KitChampion[] }>
 }
 
 export type ChampionKitFilters = { effectForm: EffectForm | "ALL"; effectDirection: EffectDirection | "ALL" }
@@ -108,8 +113,8 @@ function readKitSynergyHeader(source: string): KitSynergyHeader | null {
   return match ? { name: match[1], rarities: [...match[2].matchAll(/[1-7]/g)].map(item => Number(item[0])), partners: match[3], unique: !!match[4], condition: source.slice(match[0].length).trim() } : null
 }
 
-export type ChampionKitNativeSource = { key: string; label: string; condition: string; target: ChampionKitAbilityTarget | null }
-export type ChampionKitSynergyLink = { key: string; label: string; conditions: string[]; synergyId?: string; rarities?: number[] }
+export type ChampionKitNativeSource = { key: string; label: string; condition: string; target: ChampionKitAbilityTarget | null; resistance?: ResistanceDetail }
+export type ChampionKitSynergyLink = { key: string; label: string; conditions: string[]; synergyId?: string; rarities?: number[]; resistance?: ResistanceDetail }
 export type ChampionKitPartnerSources = { key: string; champions: KitChampion[]; links: ChampionKitSynergyLink[] }
 export type ChampionKitSourceGroup = EffectSourceMetadata & {
   key: string
@@ -149,7 +154,7 @@ export function groupChampionKitSources(effect: ChampionKitEffect, view: Prepare
       const sourceKey = `${target?.recordId ?? ""}:${source.rawLabel.trim().replace(/\s+/g, " ").toLowerCase()}:${source.overviewSummary ?? ""}`
       let label = source.label
       if (["Conditional", "Base kit"].includes(label) && target && ![normalizedWords(effect.name), "always active", "attack details"].includes(normalizedWords(target.title)) && target.title.length <= 48 && !/[{}]|text:\d+|unresolved|legacy/i.test(target.title)) label = target.title
-      if (!group.nativeSources.some(item => item.key === sourceKey)) group.nativeSources.push({ key: sourceKey, label, condition, target })
+      if (!group.nativeSources.some(item => item.key === sourceKey)) group.nativeSources.push({ key: sourceKey, label, condition, target, resistance: source.resistance })
       continue
     }
     const partnersKey = source.champions.map(champion => champion.slug ?? champion.name).sort().join("|")
@@ -169,7 +174,7 @@ export function groupChampionKitSources(effect: ChampionKitEffect, view: Prepare
     const linkKey = synergyId ?? (header ? JSON.stringify([normalizedWords(header.name), header.condition, condition]) : source.rawLabel)
     let link = row.links.find(link => link.key === linkKey)
     if (!link) {
-      link = { key: linkKey, label: header ? sourceLabel(header.name)! : "Team bonus", conditions: [], synergyId }
+      link = { key: linkKey, label: header ? sourceLabel(header.name)! : "Team bonus", conditions: [], synergyId, resistance: source.resistance }
       row.links.push(link)
     }
     if (header) link.rarities = [...new Set([...(link.rarities ?? []), ...header.rarities])].sort((a, b) => a - b)
@@ -257,7 +262,7 @@ function abilityNodeText(nodes: PreparedChampionAbilityTextNode[]): string {
 
 export function buildChampionKitEffects(items: KitLink[], glossary: Map<string, KitGlossary>): ChampionKitEffect[] {
   const groups = new Map<string, ChampionKitEffect>()
-  for (const item of items) {
+  for (const item of projectResistanceLinks(items)) {
     const key = `${item.type}:${item.ability.name}`
     const term = glossary.get(item.ability.gameGlossaryTermId ?? item.ability.name.toLowerCase().replace(/[^a-z0-9]+/g, "_"))
     const raw = term?.raw && typeof term.raw === "object" ? term.raw as Record<string, unknown> : undefined
@@ -266,7 +271,7 @@ export function buildChampionKitEffects(items: KitLink[], glossary: Map<string, 
       name: item.ability.name,
       type: item.type,
       iconUrl: item.ability.iconUrl ?? term?.iconUrl ?? null,
-      ...getGameEffectColors(term?.raw),
+      ...getGameEffectColors(term?.raw ?? item.ability.gameGlossaryTerm?.raw),
       description: description ? formatGameText(description) : null,
       sources: [],
     }
@@ -279,10 +284,17 @@ export function buildChampionKitEffects(items: KitLink[], glossary: Map<string, 
       && source.overviewSummary === item.overviewSummary
       && source.effectForm === effectForm && source.effectDirection === effectDirection
       && source.champions.map(champion => champion.slug ?? champion.name).join("|") === champions.map(champion => champion.slug ?? champion.name).join("|"))
-    if (!sameSource) group.sources.push({ label, rawLabel, overviewSummary: item.overviewSummary, champions, effectForm, effectDirection })
+    if (!sameSource) group.sources.push({ label, rawLabel, overviewSummary: item.overviewSummary, resistance: item.resistance, champions, effectForm, effectDirection })
     groups.set(key, group)
   }
   return [...groups.values()]
+}
+
+/** A verified protection is indexed by its target effect; source conditions and partners are retained. */
+export function projectResistanceLinks<T extends { type: string; ability: KitAbility; resistances?: KitResistance[] }>(items: T[]): Array<T & { resistance?: ResistanceDetail }> {
+  return items.flatMap(item => item.type === "ABILITY" && item.resistances?.length
+    ? item.resistances.map(({ effect, ...resistance }) => ({ ...item, type: "RESISTANCE", ability: { ...item.ability, ...effect }, resistance }))
+    : [item])
 }
 
 export function getGameEffectColors(raw: unknown) {

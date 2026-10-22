@@ -30,6 +30,10 @@ Roster ability filters also qualify the same application by effect, form and dir
 
 Champion Ability Overview is independently reviewed display copy for one existing effect source. Its separate record preserves the detailed source and prior enrichment receipts. Summaries describe activation and material restrictions without build-dependent amounts; retained constants require evidence of build independence. The source hash binds the effect, form, direction and required partners. A changed source invalidates its summary. Detailed text and ability navigation remain available independently of overview copy.
 
+Champion Ability Resistance is separate metadata classifying an existing incoming protection by its target effect and recorded mechanism (potency, damage, duration or unspecified resistance). It does not change the original Ability Link or its reviewed Overview. A reduction, including one at or above 100%, does not establish immunity: the effect can still apply. Kit Overview and roster popups show both under Immunities & resistances with distinct labels. Roster immunity filters remain strict unless Include resistances is selected. General hit mitigation and Physical/Energy/Critical resistance ratings remain ordinary abilities.
+
+Resistance metadata binds the current source and required partners. Fixed numeric badges additionally require an imported stat-independent game display binding; native combat bindings cannot prove a separate synergy value. Build-, signature- or stack-dependent amounts are not flattened into fixed percentages. Source or imported evidence drift invalidates the classification at read time. See `docs/champion-resistances.md` for the local snapshot/plan/apply/verify workflow.
+
 ## Game Synergies
 
 Game Synergies are the game's imported team bonus definitions. A complete snapshot preserves the source synergy ID, localized description and numeric values, stacking flag, targeting tags, effect IDs, and original rules.

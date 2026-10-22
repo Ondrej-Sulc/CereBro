@@ -3,6 +3,7 @@ import { RosterWithChampion } from "@cerebro/core/services/rosterService";
 import { ChampionImages } from "@/types/champion";
 import type { EffectSourceMetadata } from "@cerebro/core/domain/ability-source";
 import type { RosterKitFilters } from "@/lib/roster-kit";
+import type { KitResistance } from "@/lib/champion-kit";
 
 export type ProfileRosterEntry = Omit<RosterWithChampion, 'champion'> & {
     isUnowned?: boolean;
@@ -13,6 +14,7 @@ export type ProfileRosterEntry = Omit<RosterWithChampion, 'champion'> & {
             id: number;
             type: string;
             source: string | null;
+            resistances?: KitResistance[];
             ability: {
                 name: string;
                 iconUrl: string | null;

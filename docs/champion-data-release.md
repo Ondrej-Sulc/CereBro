@@ -25,6 +25,8 @@ The datasets include champion metadata and tags, ability definitions and categor
 relations, prestige, stats, full ability templates and display/binding metadata,
 signature curves, glossary terms/icons, game synergies and their members, curated
 effect applications and partners, reviewed overviews, attacks and ordered hits.
+Source-bound resistance classifications and their imported-evidence references
+are included as a separate `resistances` dataset.
 This includes NPC catalog rows already present locally; it does not claim that
 unsupported NPC ability parameters have been repaired. A missing overview row
 means no stored copy. It must remain absent, not become an invented summary or a
@@ -90,6 +92,7 @@ null review; historical review records remain the source of that distinction.
 | Curated effect | Mapped champion + canonical ability + type + exact nullable source + form + direction + exact mapped partner set. |
 | Attack / hit | Mapped champion + attack type; hits in original numeric-ID order, with exact ordered properties. |
 | Overview | Mapped effect application, with the rebinding proof below. |
+| Resistance | Mapped effect application + canonical target ability. Preserve mechanism/percentage; rebind source hash and imported evidence record IDs only after exact semantic source, review and template equality. |
 
 `overviewSourceHash` in `src/domain/champion-overview-summary.ts` deliberately
 includes numeric link/champion/ability/partner IDs. If those IDs differ on the
@@ -101,6 +104,13 @@ source/hash, identity map, target source/hash and original review. This is a
 mechanical identity rebind, not permission to edit wording or generate a review.
 If source text, classification, ability or partner requirements differ, do not
 publish that overview without a separate approved correction.
+
+For resistance-only releases, promote only the new table and reviewed resistance
+rows. Map each referenced text by mapped champion plus `sourceId`; require exact
+template hashes before rebinding its numeric record ID. Never copy local source
+or text IDs onto a different target identity. A native combat binding cannot
+prove an unrelated synergy amount. Leave every pre-existing catalog and
+overview row untouched, and verify their before/after hashes.
 
 ## Scoped length migration
 
@@ -134,7 +144,7 @@ only the application code.
 > Follow `docs/champion-data-release.md`. First verify the bundle and inspect the
 > target read-only, then produce/rehearse the exact identity mapping and write
 > plan with a target backup and rollback. Preserve player/roster/alliance/war data
-> and target IDs. Import all 16 catalog datasets and both join relations, rebind
+> and target IDs. Import all catalog datasets and both join relations, rebind
 > overview source hashes only after semantic equality proof, preserve review
 > provenance and exact scoped length allowances, verify the result and refresh
 > caches. Do not use the old partial sync script, regenerate summaries, or copy

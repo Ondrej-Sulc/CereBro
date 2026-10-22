@@ -1,4 +1,5 @@
 import type { Champion as PrismaChampion, Tag } from '@prisma/client';
+import type { KitResistance } from '@/lib/champion-kit';
 
 export interface ChampionImages {
   hero: string;
@@ -16,6 +17,7 @@ export interface Champion extends Omit<PrismaChampion, 'images'> {
   images: ChampionImages;
   abilities?: { 
     type: 'ABILITY' | 'IMMUNITY';
+    resistances?: KitResistance[];
     ability: { 
       id: number;
       name: string;

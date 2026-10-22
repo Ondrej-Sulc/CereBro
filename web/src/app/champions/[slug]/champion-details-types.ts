@@ -2,6 +2,7 @@ import type { ChampionClass } from "@prisma/client"
 import type { ChampionSynergy } from "@/lib/champion-synergies"
 import type { prepareChampionAbilityTextView } from "@/lib/champion-ability-text"
 import type { EffectSourceMetadata } from "@cerebro/core/domain/ability-source"
+import type { KitResistance } from "@/lib/champion-kit"
 
 export type ChampionDetailsPayload = {
   id: number
@@ -18,6 +19,7 @@ export type ChampionDetailsPayload = {
     type: "ABILITY" | "IMMUNITY"
     source: string | null
     overviewSummary?: string | null
+    resistances?: KitResistance[]
     ability: { name: string; description?: string | null; categories: Array<{ name: string }>; iconUrl?: string | null; gameGlossaryTermId?: string | null }
     synergyChampions: Array<{ champion: { name: string; slug: string | null; images: unknown } }>
   }>

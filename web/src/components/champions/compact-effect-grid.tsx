@@ -66,12 +66,12 @@ export function CompactEffectTile({ effect, children, matched = false }: {
   const label = <>
     {matched && <span role="img" aria-label="Matches current filters" className={styles.kitCompactMatch}><Check aria-hidden="true" /></span>}
     <ChampionEffectIcon effect={effect} compact />
-    <span className={styles.kitCompactLabel}><span className={styles.kitCompactName}>{effect.name}</span>{synergyOnly && <span aria-label="Synergy only" className={styles.kitCompactSynergy}><UsersRound aria-hidden="true" />Synergy</span>}</span>
+    <span className={styles.kitCompactLabel}><span className={styles.kitCompactName}>{effect.name}</span>{effect.type !== "ABILITY" && <span className="text-[10px] font-medium text-cyan-200/80">{effect.type === "IMMUNITY" ? "Immunity" : "Resistance"}</span>}{synergyOnly && <span aria-label="Synergy only" className={styles.kitCompactSynergy}><UsersRound aria-hidden="true" />Synergy</span>}</span>
     {children && <ChevronDown aria-hidden="true" className={styles.kitCompactChevron} />}
   </>
   const trigger = children
-    ? <button ref={triggerRef} id={triggerId} type="button" data-effect-tile={id} className={styles.kitCompactTile} style={tileStyle} data-matched={matched || undefined} aria-label={`${effect.name} details`} aria-expanded={open} aria-controls={panelId} onClick={() => changeExpanded(!open)}>{label}</button>
-    : <div data-effect-tile={id} className={styles.kitCompactStatic} style={tileStyle} data-matched={matched || undefined} tabIndex={effect.description ? 0 : undefined} aria-label={effect.description ? `About ${effect.name}` : undefined}>{label}</div>
+    ? <button ref={triggerRef} id={triggerId} type="button" data-effect-tile={id} className={styles.kitCompactTile} style={tileStyle} data-matched={matched || undefined} aria-label={`${effect.name}${effect.type === "RESISTANCE" ? " resistance" : ""} details`} aria-expanded={open} aria-controls={panelId} onClick={() => changeExpanded(!open)}>{label}</button>
+    : <div data-effect-tile={id} className={styles.kitCompactStatic} style={tileStyle} data-matched={matched || undefined} tabIndex={effect.description ? 0 : undefined} aria-label={effect.description ? `About ${effect.name}${effect.type === "RESISTANCE" ? " resistance" : ""}` : undefined}>{label}</div>
   const header = effect.description ? <Tooltip delayDuration={250}><TooltipTrigger asChild>{trigger}</TooltipTrigger><TooltipContent side="top" className="max-w-[min(340px,calc(100vw-2rem))] border-white/15 bg-[#151b26] p-3 text-sm leading-6 text-slate-300"><p className="mb-1 font-semibold text-slate-100">{effect.name}</p><p>{effect.description}</p></TooltipContent></Tooltip> : trigger
   return <>
     {header}
@@ -110,8 +110,8 @@ function EffectDetailsPanel({ id, triggerId, effect, position, onClose, children
     <div ref={bodyRef} className={styles.kitCompactPanelBody}>
       <div className={styles.kitCompactPanelHeader}>
         <ChampionEffectIcon effect={effect} compact />
-        <div className="min-w-0 flex-1"><p className={styles.kitCompactPanelTitle}>{effect.name}</p><p className="mt-0.5 text-[11px] text-slate-500">Conditions &amp; sources</p></div>
-        <button type="button" aria-label={`Close ${effect.name} details`} onClick={onClose} className={styles.kitCompactPanelClose}><X aria-hidden="true" /></button>
+        <div className="min-w-0 flex-1"><p className={styles.kitCompactPanelTitle}>{effect.name}{effect.type === "RESISTANCE" ? " resistance" : ""}</p><p className="mt-0.5 text-[11px] text-slate-500">Conditions &amp; sources</p></div>
+        <button type="button" aria-label={`Close ${effect.name}${effect.type === "RESISTANCE" ? " resistance" : ""} details`} onClick={onClose} className={styles.kitCompactPanelClose}><X aria-hidden="true" /></button>
       </div>
       {children}
     </div>
@@ -119,7 +119,7 @@ function EffectDetailsPanel({ id, triggerId, effect, position, onClose, children
 }
 
 export function ChampionEffectIcon({ effect, compact = false }: { effect: ChampionKitEffect; compact?: boolean }) {
-  const Icon = effect.type === "IMMUNITY" ? Shield : Sparkles
+  const Icon = effect.type !== "ABILITY" ? Shield : Sparkles
   return <span aria-hidden="true" className={`grid h-11 w-11 shrink-0 place-items-center rounded-full border ${compact ? styles.kitCompactIcon : ""}`} style={{ backgroundColor: `${effect.color}16`, borderColor: `${effect.color}40` }}>
     {effect.iconUrl ? <span className={compact ? "h-6 w-6" : "h-7 w-7"} style={{ backgroundColor: effect.color, mask: `url(${effect.iconUrl}) center / contain no-repeat`, WebkitMask: `url(${effect.iconUrl}) center / contain no-repeat` }} /> : <Icon className="h-5 w-5" style={{ color: effect.color }} />}
   </span>

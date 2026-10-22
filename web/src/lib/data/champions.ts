@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { getFromCache } from "@/lib/cache";
 import { Champion } from "@/types/champion";
+import { attachResistances, getResistanceIndex } from "./champion-resistances";
 
 // Cache for 1 hour
 const CACHE_TTL = 3600;
@@ -13,6 +14,7 @@ const ABILITY_SELECT = {
   effectDirection: true,
   ability: {
     select: {
+      id: true,
       name: true,
       iconUrl: true,
       gameGlossaryTermId: true,
@@ -29,7 +31,7 @@ const ABILITY_SELECT = {
 } as const;
 
 export async function getCachedChampions(): Promise<Champion[]> {
-  return await getFromCache("all-champions-full-v4", CACHE_TTL, async () => {
+  const champions = await getFromCache("all-champions-full-v6", CACHE_TTL, async () => {
     const champions = await prisma.champion.findMany({
       where: { isPlayable: true },
       orderBy: { name: "asc" },
@@ -51,12 +53,14 @@ export async function getCachedChampions(): Promise<Champion[]> {
         tags: { select: { id: true, name: true } },
       },
     });
-    return champions as unknown as Champion[];
+    return champions;
   });
+  const resistanceIndex = await getResistanceIndex();
+  return champions.map(champion => ({ ...champion, abilities: attachResistances(champion.abilities, resistanceIndex) })) as unknown as Champion[];
 }
 
 export async function getCachedAllChampions(): Promise<Champion[]> {
-  return await getFromCache("all-champions-full-total-v3", CACHE_TTL, async () => {
+  const champions = await getFromCache("all-champions-full-total-v5", CACHE_TTL, async () => {
     const champions = await prisma.champion.findMany({
       orderBy: { name: "asc" },
       select: {
@@ -77,6 +81,8 @@ export async function getCachedAllChampions(): Promise<Champion[]> {
         tags: { select: { id: true, name: true } },
       },
     });
-    return champions as unknown as Champion[];
+    return champions;
   });
+  const resistanceIndex = await getResistanceIndex();
+  return champions.map(champion => ({ ...champion, abilities: attachResistances(champion.abilities, resistanceIndex) })) as unknown as Champion[];
 }
