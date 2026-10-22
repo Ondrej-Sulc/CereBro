@@ -7,6 +7,7 @@ import { EFFECT_FORM_LABELS, EFFECT_DIRECTION_LABELS } from "@cerebro/core/domai
 import type { ChampionKitEffect, ChampionKitAbilityTarget, groupChampionKitSources } from "@/lib/champion-kit"
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
 import type { ChampionImages } from "@/types/champion"
+import { resistanceLabel, type ResistanceDetail } from "@cerebro/core/domain/champion-resistance"
 
 const FORM_STYLES = {
   BUFF: "border-emerald-300/20 bg-emerald-300/[.06] text-emerald-200",
@@ -30,6 +31,7 @@ export function EffectSources({ effect, groups, showForms = false, onViewAbility
           {(showForms || groups.length > 1) && group.effectForm !== "UNKNOWN" && <div className="mb-2"><EffectFormBadge form={group.effectForm} /></div>}
           <div className="space-y-4">
             {group.nativeSources.map(source => <div key={source.key} className="min-w-0 space-y-1.5">
+              {source.resistance && <ResistanceBadge detail={source.resistance} />}
               {source.condition && (!source.target || (!onViewAbility && !abilityHref) || source.condition !== source.label) && <p className="break-words text-sm leading-6 text-slate-300">{source.condition}</p>}
               {source.target && onViewAbility && <button type="button" aria-label={`Read ${effect.name}: ${source.label}`} onClick={() => onViewAbility(source.target!.recordId)} className={sourceClass}><span className="min-w-0 break-words">{source.label}</span><ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-slate-500" /></button>}
               {source.target && abilityHref && !onViewAbility && <Link href={abilityHref(source.target)} aria-label={`Read ${effect.name}: ${source.label}`} className={sourceClass}><span className="min-w-0 break-words">{source.label}</span><ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0 text-slate-500" /></Link>}
@@ -46,6 +48,7 @@ export function EffectSources({ effect, groups, showForms = false, onViewAbility
               })}
               </div>
               <div className="space-y-3">{row.links.map(link => <div key={link.key} className="space-y-1.5">
+                {link.resistance && <ResistanceBadge detail={link.resistance} />}
                 {link.conditions.map(condition => <p key={condition} className="break-words text-sm leading-6 text-slate-300">{condition}</p>)}
                 <div className="flex flex-wrap items-center gap-x-2 gap-y-1">{onViewSynergies
                   ? <button type="button" aria-label={`View ${effect.name} synergy: ${link.label}`} onClick={() => onViewSynergies(link.synergyId)} className="inline-flex min-h-8 max-w-full items-center gap-1 rounded px-1 text-left text-xs font-medium text-indigo-300/80 hover:text-indigo-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300"><span className="min-w-0 break-words">{link.label}</span><ArrowUpRight aria-hidden="true" className="h-3.5 w-3.5 shrink-0" /></button>
@@ -56,6 +59,10 @@ export function EffectSources({ effect, groups, showForms = false, onViewAbility
           </div>}
         </section>)}
       </div>
+}
+
+function ResistanceBadge({ detail }: { detail: ResistanceDetail }) {
+  return <p className="text-xs font-semibold text-cyan-200">{resistanceLabel(detail)}<span className="ml-1.5 font-normal text-slate-500">· See source conditions</span></p>
 }
 
 export function EffectFormBadge({ form }: { form: Exclude<ChampionKitEffect["sources"][number]["effectForm"], "UNKNOWN"> }) {

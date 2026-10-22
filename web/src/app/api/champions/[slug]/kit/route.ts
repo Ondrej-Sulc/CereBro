@@ -5,6 +5,7 @@ import { getCurrentOverviewSummary } from "@cerebro/core/domain/champion-overvie
 import { buildRosterKitDetails } from "@/lib/roster-kit-details"
 import { getChampionSynergies } from "@/lib/data/champion-synergies"
 import { buildChampionSynergyView } from "@/lib/champion-synergies"
+import { attachResistances, getResistanceIndex } from "@/lib/data/champion-resistances"
 
 export const GET = withRouteContext(async (request: NextRequest, context: { params: Promise<{ slug: string }> }) => {
   const { slug } = await context.params
@@ -27,7 +28,7 @@ export const GET = withRouteContext(async (request: NextRequest, context: { para
   } })
   if (!champion) return NextResponse.json({ error: "Champion not found" }, { status: 404 })
   const synergies = buildChampionSynergyView(await getChampionSynergies(champion.id), champion.id, rarity ?? null)
-  const entries = champion.abilities.map(link => ({ ...link, overviewSummary: getCurrentOverviewSummary({
+  const entries = attachResistances(champion.abilities, await getResistanceIndex(champion.id)).map(link => ({ ...link, overviewSummary: getCurrentOverviewSummary({
     id: link.id, championId: link.championId, abilityId: link.abilityId, name: link.ability.name,
     type: link.type, source: link.source, effectForm: link.effectForm, effectDirection: link.effectDirection,
     synergyChampionIds: link.synergyChampions.map(partner => partner.championId),

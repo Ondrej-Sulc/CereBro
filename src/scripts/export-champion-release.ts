@@ -5,6 +5,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { artifactHash } from '../domain/champion-effect-enrichment';
 import { overviewSourceHash } from '../domain/champion-overview-summary';
+import { resistanceEvidenceHash, resistanceEvidenceRecords } from '../domain/champion-resistance-classification';
 
 // A local, read-only handoff for an agent-led data promotion. This is not an
 // importer and cannot change either database. Keep user/alliance tables out.
@@ -40,6 +41,7 @@ async function main() {
         gameSynergyMembers: await tx.gameSynergyMember.findMany({ orderBy: [{ synergyId: 'asc' }, { role: 'asc' }, { tierId: 'asc' }] }),
         effectApplications: await tx.championAbilityLink.findMany({ orderBy: { id: 'asc' } }),
         effectPartners: await tx.championAbilitySynergy.findMany({ orderBy: { id: 'asc' } }),
+        resistances: await tx.championAbilityResistance.findMany({ orderBy: [{ championAbilityLinkId: 'asc' }, { effectId: 'asc' }] }),
         overviews: await tx.championAbilityOverview.findMany({ orderBy: { championAbilityLinkId: 'asc' } }),
         attacks: await tx.attack.findMany({ orderBy: { id: 'asc' } }),
         hits: await tx.hit.findMany({ orderBy: { id: 'asc' } }),
@@ -54,6 +56,16 @@ async function main() {
         return !source || overviewSourceHash(source) !== row.sourceHash;
       });
       if (stale.length) throw new Error(`${stale.length} stale overview source bindings; release refused.`);
+      const textById = new Map(data.abilityTexts.map(record => [record.id, record]));
+      for (const resistance of data.resistances) {
+        const source = sources.get(resistance.championAbilityLinkId);
+        const records = resistanceEvidenceRecords(resistance.evidence);
+        if (!source || source.type !== 'ABILITY' || overviewSourceHash(source) !== resistance.sourceHash || !records
+          || (resistance.percent !== null && !records.length) || records.some(ref => {
+            const record = textById.get(ref.recordId);
+            return !record || record.championId !== source.championId || resistanceEvidenceHash(record.template) !== ref.templateHash;
+          })) throw new Error('Stale resistance source or imported evidence; release refused.');
+      }
       const limits = await tx.$queryRaw<Array<{ id: number; maximum: number }>>`
         SELECT id, champion_overview_text_limit(id, 'public') AS maximum FROM "ChampionAbilityLink" ORDER BY id`;
       const maxima = new Map(limits.map(row => [row.id, row.maximum]));

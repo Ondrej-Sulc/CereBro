@@ -57,10 +57,12 @@ interface RosterFiltersProps {
     onImmunityFilterChange: (imms: string[]) => void;
     immunityLogic: 'AND' | 'OR';
     onImmunityLogicChange: (logic: 'AND' | 'OR') => void;
+    includeResistances: boolean;
+    onIncludeResistancesChange: (value: boolean) => void;
     initialTags: { id: string | number, name: string }[];
     initialAbilityCategories: { id: string | number, name: string }[];
     initialAbilities: { id: string | number, name: string }[];
-    initialImmunities: { id: string | number, name: string }[];
+    initialImmunities: { id: string | number, name: string, resistanceOnly?: boolean }[];
     canEdit?: boolean;
     canManageAttackReservations?: boolean;
     showAttackReservationControls?: boolean;
@@ -82,6 +84,7 @@ export function RosterFilters({
     abilityFilter, onAbilityFilterChange, abilityLogic, onAbilityLogicChange,
     effectForms, onEffectFormsChange, effectDirections, onEffectDirectionsChange,
     immunityFilter, onImmunityFilterChange, immunityLogic, onImmunityLogicChange,
+    includeResistances, onIncludeResistancesChange,
     initialTags, initialAbilityCategories, initialAbilities, initialImmunities,
     canEdit = true,
     canManageAttackReservations = false,
@@ -132,7 +135,7 @@ export function RosterFilters({
         });
 
         immunityFilter.forEach(imm => {
-            filters.push({ label: imm, type: 'Immunity', onRemove: () => onImmunityFilterChange(immunityFilter.filter(i => i !== imm)) });
+            filters.push({ label: imm, type: includeResistances ? 'Protection' : 'Immunity', onRemove: () => onImmunityFilterChange(immunityFilter.filter(i => i !== imm)) });
         });
         effectForms.forEach(form => {
             filters.push({ label: EFFECT_FORM_LABELS[form], type: 'Form', onRemove: () => onEffectFormsChange(effectForms.filter(value => value !== form)) });
@@ -146,7 +149,7 @@ export function RosterFilters({
         }
 
         return filters;
-    }, [search, filterStars, filterRanks, filterAscensionLevels, filterClasses, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter, effectForms, effectDirections, showUnowned, showOwnershipFilter, showRankFilter, showAscensionFilter, onSearchChange, onFilterStarsChange, onFilterRanksChange, onFilterAscensionLevelsChange, onFilterClassesChange, onTagFilterChange, onAbilityCategoryFilterChange, onAbilityFilterChange, onImmunityFilterChange, onEffectFormsChange, onEffectDirectionsChange, onShowUnownedChange]);
+    }, [search, filterStars, filterRanks, filterAscensionLevels, filterClasses, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter, includeResistances, effectForms, effectDirections, showUnowned, showOwnershipFilter, showRankFilter, showAscensionFilter, onSearchChange, onFilterStarsChange, onFilterRanksChange, onFilterAscensionLevelsChange, onFilterClassesChange, onTagFilterChange, onAbilityCategoryFilterChange, onAbilityFilterChange, onImmunityFilterChange, onEffectFormsChange, onEffectDirectionsChange, onShowUnownedChange]);
 
     return (
         <Card className="bg-slate-900/50 border-slate-800 p-2.5 z-40 backdrop-blur-md shadow-lg">
@@ -292,7 +295,10 @@ export function RosterFilters({
                         <MultiSelectFilter title="Tags" icon={TagIcon} options={initialTags} selectedValues={tagFilter} onSelect={onTagFilterChange} logic={tagLogic} onLogicChange={onTagLogicChange} />
                         <MultiSelectFilter title="Categories" icon={BookOpen} options={initialAbilityCategories} selectedValues={abilityCategoryFilter} onSelect={onAbilityCategoryFilterChange} logic={abilityCategoryLogic} onLogicChange={onAbilityCategoryLogicChange} />
                         <MultiSelectFilter title="Abilities" icon={Zap} options={initialAbilities} selectedValues={abilityFilter} onSelect={onAbilityFilterChange} logic={abilityLogic} onLogicChange={onAbilityLogicChange} />
-                        <MultiSelectFilter title="Immunities" icon={Shield} options={initialImmunities} selectedValues={immunityFilter} onSelect={onImmunityFilterChange} logic={immunityLogic} onLogicChange={onImmunityLogicChange} />
+                        <div className="flex flex-wrap items-center gap-2">
+                            <MultiSelectFilter title={includeResistances ? "Immunities & resistances" : "Immunities"} icon={Shield} options={initialImmunities.filter(option => includeResistances || !option.resistanceOnly)} selectedValues={immunityFilter} onSelect={onImmunityFilterChange} logic={immunityLogic} onLogicChange={onImmunityLogicChange} />
+                            <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-slate-400"><input type="checkbox" checked={includeResistances} onChange={event => onIncludeResistancesChange(event.target.checked)} className="accent-sky-400" />Include resistances</label>
+                        </div>
                     </div>
                 </div>
 

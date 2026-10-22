@@ -49,5 +49,8 @@ jobs:
       - name: Build Bot (src)
         run: pnpm run build-only
 
+      - name: Verify source-bound resistance classifications and discovery
+        run: pnpm exec vitest run src/domain/champion-resistance.test.ts src/domain/champion-resistance-classification.test.ts src/domain/champion-resistance-plan.test.ts web/src/lib/champion-resistance.test.ts web/src/lib/roster-kit-options.test.ts web/src/lib/data/champion-resistances.test.ts --maxWorkers=1
+
       - name: Build Web (web)
         run: pnpm --filter ./web... run build
