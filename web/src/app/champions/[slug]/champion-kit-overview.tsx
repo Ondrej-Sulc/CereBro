@@ -96,7 +96,7 @@ function CompactEffectCard({ effect, view, synergyCards, ...navigation }: {
   view: ChampionDetailsView
   synergyCards: ChampionSynergyCard[]
 } & EffectNavigation) {
-  const groups = groupChampionKitSources(effect, view.descriptionView, synergyCards)
+  const groups = groupChampionKitSources(effect, view.descriptionView, synergyCards, sourceValueContext(view))
   return <CompactEffectTile effect={effect}>{groups.length > 0 ? <EffectSources effect={effect} groups={groups} showForms {...navigation} /> : undefined}</CompactEffectTile>
 }
 
@@ -106,13 +106,19 @@ function EffectCard({ effect, wide, view, synergyCards, onViewAbility, onViewSyn
   view: ChampionDetailsView
   synergyCards: ChampionSynergyCard[]
 } & EffectNavigation) {
-  const groups = groupChampionKitSources(effect, view.descriptionView, synergyCards)
+  const groups = groupChampionKitSources(effect, view.descriptionView, synergyCards, sourceValueContext(view))
   return (
     <article className={`overflow-hidden rounded-xl border border-white/[.08] bg-[#0e131c] ${wide && groups.length ? styles.kitEffectCardWithSources : ""}`}>
       <EffectDefinition effect={effect} showAllForms={!groups.length} />
       <EffectSources effect={effect} groups={groups} onViewAbility={onViewAbility} onViewSynergies={onViewSynergies} />
     </article>
   )
+}
+
+function sourceValueContext(view: ChampionDetailsView) {
+  return { sigLevel: view.sigLevel, maxSig: view.maxSig, championName: view.champion.name,
+    championAliases: [view.champion.shortName, view.champion.gameId?.replaceAll('_', ' ')].filter((name): name is string => !!name),
+    stat: view.selectedStat ? { ...view.selectedStat, health: view.health, attack: view.attack } : undefined }
 }
 
 function EffectDefinition({ effect, showAllForms }: { effect: ChampionKitEffect; showAllForms: boolean }) {

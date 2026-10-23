@@ -28,6 +28,14 @@ describe('current resistance bindings', () => {
     vi.mocked(prisma.championAbilityText.findMany).mockResolvedValue([{ ...textRecord, template: { raw: 'Changed' } }]);
     expect(await getResistanceIndex()).toEqual([]);
   });
+  it('attaches fresh numeric templates only for champion-specific contextual reads', async () => {
+    vi.mocked(prisma.championAbilityResistance.findMany).mockResolvedValue([{ ...row, percent: null }]);
+    const native = await getResistanceIndex(2);
+    expect(native[0].valueRecords).toEqual([{ id: 5, group: 'base', title: null, sortOrder: 1, template }]);
+    expect((await getResistanceIndex())[0].valueRecords).toBeUndefined();
+    vi.mocked(prisma.championAbilityText.findMany).mockResolvedValue([{ ...textRecord, template: { raw: 'Changed' } }]);
+    expect(await getResistanceIndex(2)).toEqual([]);
+  });
   it('rejects a changed source or an unbound fixed percentage', async () => {
     const changed = [{ ...row, championAbilityLink: { ...link, effectDirection: 'INFLICT' } }];
     vi.mocked(prisma.championAbilityResistance.findMany).mockResolvedValue(changed);

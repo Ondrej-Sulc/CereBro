@@ -36,15 +36,20 @@ export function QuickChampionDialog({ item, prestige, open, onOpenChange, filter
     const controller = new AbortController()
     setDetails(null)
     setDetailsError(false)
-    const params = item.stars ? `?rarity=${item.stars}` : ""
-    fetch(`/api/champions/${encodeURIComponent(item.champion.slug)}/kit${params}`, { signal: controller.signal, cache: "no-store" })
+    const params = new URLSearchParams()
+    if (item.stars) params.set("rarity", String(item.stars))
+    if (!item.isUnowned) {
+      params.set("sig", String(item.isAwakened ? item.sigLevel : 0))
+      if (item.rank) params.set("rank", String(item.rank))
+    }
+    fetch(`/api/champions/${encodeURIComponent(item.champion.slug)}/kit?${params}`, { signal: controller.signal, cache: "no-store" })
       .then(async response => {
         if (!response.ok) throw new Error("Unable to load kit details")
         const result: RosterKitDetails = await response.json()
         if (!controller.signal.aborted) setDetails(result)
       }).catch(() => { if (!controller.signal.aborted) setDetailsError(true) })
     return () => controller.abort()
-  }, [open, item.champion.slug, item.stars, retry])
+  }, [open, item.champion.slug, item.stars, item.rank, item.sigLevel, item.isAwakened, item.isUnowned, retry])
   const sections = buildRosterKitSections(details?.entries ?? item.champion.abilities, filters, item.stars || undefined)
   const filterKey = JSON.stringify([filters.abilities, filters.categories, filters.immunities, filters.includeResistances, filters.effectForms, filters.effectDirections])
   const matchingTagsOnly = filters.tags.length > 0

@@ -2,6 +2,7 @@ import { formatGameText, type PreparedChampionAbilityTextNode, type PreparedCham
 import { readAbilitySource, type EffectSourceMetadata, type EffectForm, type EffectDirection } from "@cerebro/core/domain/ability-source"
 import type { ChampionSynergyCard } from "./champion-synergies"
 import type { ResistanceDetail } from "@cerebro/core/domain/champion-resistance"
+import { nativeResistanceValues, synergyResistanceValues, type RecordedResistanceValue, type ResistanceValueContext } from "./champion-resistance-values"
 
 type KitChampion = { name: string; slug: string | null; images: unknown }
 type KitAbility = { name: string; description?: string | null; iconUrl?: string | null; gameGlossaryTermId?: string | null; gameGlossaryTerm?: { raw: unknown } | null }
@@ -113,8 +114,8 @@ function readKitSynergyHeader(source: string): KitSynergyHeader | null {
   return match ? { name: match[1], rarities: [...match[2].matchAll(/[1-7]/g)].map(item => Number(item[0])), partners: match[3], unique: !!match[4], condition: source.slice(match[0].length).trim() } : null
 }
 
-export type ChampionKitNativeSource = { key: string; label: string; condition: string; target: ChampionKitAbilityTarget | null; resistance?: ResistanceDetail }
-export type ChampionKitSynergyLink = { key: string; label: string; conditions: string[]; synergyId?: string; rarities?: number[]; resistance?: ResistanceDetail }
+export type ChampionKitNativeSource = { key: string; label: string; condition: string; target: ChampionKitAbilityTarget | null; resistance?: ResistanceDetail; values?: RecordedResistanceValue[] }
+export type ChampionKitSynergyLink = { key: string; label: string; conditions: string[]; synergyId?: string; rarities?: number[]; resistance?: ResistanceDetail; values?: RecordedResistanceValue[] }
 export type ChampionKitPartnerSources = { key: string; champions: KitChampion[]; links: ChampionKitSynergyLink[] }
 export type ChampionKitSourceGroup = EffectSourceMetadata & {
   key: string
@@ -137,7 +138,7 @@ function overviewCondition(recordedCondition: string, summary?: string | null): 
     ? condition : ""
 }
 
-export function groupChampionKitSources(effect: ChampionKitEffect, view: PreparedChampionAbilityTextView, synergyCards: ChampionSynergyCard[] = []): ChampionKitSourceGroup[] {
+export function groupChampionKitSources(effect: ChampionKitEffect, view: PreparedChampionAbilityTextView, synergyCards: ChampionSynergyCard[] = [], context: ResistanceValueContext = {}): ChampionKitSourceGroup[] {
   const groups = new Map<string, ChampionKitSourceGroup>()
   for (const source of effect.sources) {
     const key = `${source.effectForm}:${source.effectDirection}`
@@ -154,7 +155,8 @@ export function groupChampionKitSources(effect: ChampionKitEffect, view: Prepare
       const sourceKey = `${target?.recordId ?? ""}:${source.rawLabel.trim().replace(/\s+/g, " ").toLowerCase()}:${source.overviewSummary ?? ""}`
       let label = source.label
       if (["Conditional", "Base kit"].includes(label) && target && ![normalizedWords(effect.name), "always active", "attack details"].includes(normalizedWords(target.title)) && target.title.length <= 48 && !/[{}]|text:\d+|unresolved|legacy/i.test(target.title)) label = target.title
-      if (!group.nativeSources.some(item => item.key === sourceKey)) group.nativeSources.push({ key: sourceKey, label, condition, target, resistance: source.resistance })
+      if (!group.nativeSources.some(item => item.key === sourceKey)) group.nativeSources.push({ key: sourceKey, label, condition, target, resistance: source.resistance ? { mechanism: source.resistance.mechanism, percent: source.resistance.percent } : undefined,
+        values: nativeResistanceValues(effect.name, source.resistance, source.rawLabel, view, context) })
       continue
     }
     const partnersKey = source.champions.map(champion => champion.slug ?? champion.name).sort().join("|")
@@ -166,7 +168,8 @@ export function groupChampionKitSources(effect: ChampionKitEffect, view: Prepare
       group.synergies.push(row)
     }
     const matchingCards = header ? synergyCards.filter(card => normalizedWords(card.name) === normalizedWords(header.name)
-      && card.unique === header.unique && sameSynergyPartners(card, source.champions, header.partners)) : []
+      && card.unique === header.unique && (!card.rarities || card.rarities.some(rarity => header.rarities.includes(rarity)))
+      && sameSynergyPartners(card, source.champions, header.partners)) : []
     const synergyId = matchingCards.length === 1 ? matchingCards[0].id : undefined
     // All-rarity previews may match several catalog cards. Combine only owner-star
     // variants with identical source mechanics and displayed copy; keep their
@@ -174,7 +177,8 @@ export function groupChampionKitSources(effect: ChampionKitEffect, view: Prepare
     const linkKey = synergyId ?? (header ? JSON.stringify([normalizedWords(header.name), header.condition, condition]) : source.rawLabel)
     let link = row.links.find(link => link.key === linkKey)
     if (!link) {
-      link = { key: linkKey, label: header ? sourceLabel(header.name)! : "Team bonus", conditions: [], synergyId, resistance: source.resistance }
+      link = { key: linkKey, label: header ? sourceLabel(header.name)! : "Team bonus", conditions: [], synergyId, resistance: source.resistance ? { mechanism: source.resistance.mechanism, percent: source.resistance.percent } : undefined,
+        values: synergyResistanceValues(effect.name, source.resistance, matchingCards, context, source.rawLabel) }
       row.links.push(link)
     }
     if (header) link.rarities = [...new Set([...(link.rarities ?? []), ...header.rarities])].sort((a, b) => a - b)
