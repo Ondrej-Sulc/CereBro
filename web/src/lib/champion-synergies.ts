@@ -10,6 +10,7 @@ export type ChampionSynergy = {
 export type ChampionSynergyCard = Pick<ChampionSynergy, 'id' | 'name' | 'description' | 'unique'> & {
   partners: SynergyPartner[];
   champions?: SynergyChampion[];
+  rarities?: number[];
 };
 
 export function buildChampionSynergyView(rows: ChampionSynergy[], championId: number, rarity: number | null) {
@@ -32,6 +33,7 @@ export function buildChampionSynergyView(rows: ChampionSynergy[], championId: nu
     if (!partners.size) continue;
     (isOwner ? owned : incoming).push({
       id: row.id, name: parseSynergyDescription(row.name).map(s => s.text).join(''), description: row.description, unique: row.unique,
+      rarities: [...new Set(matches.map(member => member.rarity))].sort((a, b) => a - b),
       champions: [...new Map(row.members.map(member => [member.champion.id, member.champion])).values()],
       partners: [...partners.values()].map(p => ({ ...p, rarities: p.rarities.sort((a, b) => a - b) }))
         .sort((a, b) => a.name.localeCompare(b.name)),

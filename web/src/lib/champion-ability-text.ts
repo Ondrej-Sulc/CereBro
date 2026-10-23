@@ -4,7 +4,7 @@ import type {
   ChampionAbilityTextTemplateValueSource,
 } from "@cerebro/core/domain/champion-ability-text/types";
 import { readAbilityTextDisplay } from "@cerebro/core/domain/champion-ability-text/display";
-import { readGameDisplayBinding, resolveGameDisplayBinding } from "@cerebro/core/domain/champion-ability-text/game-binding";
+import { readGameDisplayBinding, resolveGameDisplayBinding, type GameDisplayBinding } from "@cerebro/core/domain/champion-ability-text/game-binding";
 
 export type TemplateNode = ChampionAbilityTextTemplateNode;
 export type TemplateValueSource = ChampionAbilityTextTemplateValueSource;
@@ -204,6 +204,7 @@ export function prepareChampionAbilityTextView<
       curves: selectedCurves,
       sigLevel,
       stat,
+      maxSig,
     }),
   }));
 
@@ -312,11 +313,13 @@ export function prepareChampionAbilityText({
   curves = [],
   sigLevel = 200,
   stat,
+  maxSig,
 }: {
   template: unknown;
   curves?: ChampionAbilityCurve[];
   sigLevel?: number;
   stat?: ChampionAbilityStat;
+  maxSig?: number;
 }): PreparedChampionAbilityText {
   let blocks: ReturnType<typeof normalizeChampionAbilityTextTemplate>;
 
@@ -336,7 +339,7 @@ export function prepareChampionAbilityText({
     status: "ready",
     blocks: blocks.map(block => ({
       type: block.type,
-      children: block.children.map(node => prepareChampionAbilityTextNode(node, curves, sigLevel, stat)),
+      children: block.children.map(node => prepareChampionAbilityTextNode(node, curves, sigLevel, stat, maxSig)),
     })),
   };
 }
@@ -346,12 +349,20 @@ export function resolveChampionAbilityTextValue({
   curves,
   sigLevel,
   stat,
+  maxSig,
 }: {
   node: Extract<TemplateNode, { type: "value" }>;
   curves: ChampionAbilityCurve[];
   sigLevel: number;
   stat?: ChampionAbilityStat;
+  maxSig?: number;
 }): ResolvedAbilityTextValue {
+  if (node.source?.kind === 'abilityParam' && node.source.gameBinding) {
+    const binding = gameBindingForSelectedCurves(node.source, curves, maxSig);
+    if (binding) node = { ...node, source: { ...node.source, gameBinding: binding } };
+    else return { status: 'error', curve: null, detail: 'No exact signature variant for this build.',
+      error: { code: 'EXPLICIT_CURVE_NOT_FOUND', message: 'No exact signature variant for this build.', placeholderIndex: node.placeholderIndex } };
+  }
   const curve = findCurveForValueNode(node, curves, stat);
   const value = resolveTemplateValue(node, curve, sigLevel, stat);
 
@@ -383,6 +394,31 @@ export function resolveChampionAbilityTextValue({
       placeholderIndex: node.placeholderIndex,
     },
   };
+}
+
+/** A named 200-Sig binding cannot be evaluated as a 99-Sig build. Use only an
+ * exact imported sibling with the same component family, slot, type and base.
+ * Never substitute a nearby effect or a curve that merely has similar prose. */
+function gameBindingForSelectedCurves(source: Extract<TemplateValueSource, { kind: 'abilityParam' }>, curves: ChampionAbilityCurve[], maxSig?: number): GameDisplayBinding | null {
+  const binding = source.gameBinding!;
+  const caps = maxSig === undefined ? [...new Set(curves.map(curve => curve.maxSig).filter(cap => cap != null))] : [maxSig];
+  const currentCurve = binding.growth?.curve;
+  if (caps.length !== 1 || !currentCurve || !/_(?:99|200)$/.test(currentCurve.id) || currentCurve.id.endsWith(`_${caps[0]}`)) return binding;
+  const replaceCap = (id: string) => id.replace(/_(?:99|200)$/, `_${caps[0]}`);
+  const candidates = curves.flatMap(curve => {
+    const params = isRecord(curve.params) ? curve.params : null;
+    const origin = params && isRecord(params.source) ? params.source : null;
+    const ability = origin && isRecord(origin.ability) ? origin.ability : null;
+    const field = binding.slot === 0 ? 'baseVal' : binding.slot === 1 ? 'chance' : 'duration';
+    if (!params || !origin || !ability || !source.componentId || !source.buffType || !source.paramName
+      || origin.componentId !== replaceCap(source.componentId) || params.sourceCurveId !== replaceCap(currentCurve.id)
+      || ability.buffType !== source.buffType || ability.paramName !== source.paramName
+      || typeof ability[field] !== 'number' || Math.abs(ability[field] - binding.value) > 1e-8
+      || ![params.f2, params.f3, params.f4, params.f5].every(value => typeof value === 'number' && Number.isFinite(value))) return [];
+    return [{ ...binding, growth: { coefficient: 0, curve: { id: String(params.sourceCurveId),
+      a: Number(params.f2), b: Number(params.f3), c: Number(params.f4), exponent: Number(params.f5) } } }];
+  });
+  return candidates.length === 1 ? candidates[0] : null;
 }
 
 export function buildMultiCurveData(curves: ChampionAbilityCurve[], stat?: ChampionAbilityStat, sigLevel?: number) {
@@ -602,7 +638,8 @@ function prepareChampionAbilityTextNode(
   node: TemplateNode,
   curves: ChampionAbilityCurve[],
   sigLevel: number,
-  stat?: ChampionAbilityStat
+  stat?: ChampionAbilityStat,
+  maxSig?: number
 ): PreparedChampionAbilityTextNode {
   if (node.type === "text") return { type: "text", value: formatGameText(node.value) };
   if (node.type === "glossary") return { type: "glossary", id: node.id, label: formatGameText(node.label) };
@@ -610,7 +647,7 @@ function prepareChampionAbilityTextNode(
     return {
       type: "color",
       color: node.color,
-      children: node.children.map(child => prepareChampionAbilityTextNode(child, curves, sigLevel, stat)),
+      children: node.children.map(child => prepareChampionAbilityTextNode(child, curves, sigLevel, stat, maxSig)),
     };
   }
   return {
@@ -618,7 +655,7 @@ function prepareChampionAbilityTextNode(
     key: node.key,
     placeholderIndex: node.placeholderIndex,
     source: node.source,
-    resolution: resolveChampionAbilityTextValue({ node, curves, sigLevel, stat }),
+    resolution: resolveChampionAbilityTextValue({ node, curves, sigLevel, stat, maxSig }),
   };
 }
 
