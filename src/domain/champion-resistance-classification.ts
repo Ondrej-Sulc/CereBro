@@ -60,32 +60,52 @@ export function classifyResistanceSource(link: ResistanceSource): ResistanceProp
   });
 }
 
-/** Numeric labels require a matching, stat-independent modifier from an imported combat record. */
-export function fixedResistancePercent(source: string, templates: unknown[]): number | null {
+/** Match inflected game labels (Bleeds, Stuns, Debuffs) without matching names such as Bleeding. */
+export function mentionsResistanceEffect(text: string, effect: string): boolean {
+  const word = effect === 'Debuffs' ? 'Debuff' : effect.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`\\b${word}s?\\b`, 'i').test(text);
+}
+
+const variableProtection = /signature|legacy|unresolved|up to|based on|scal|additional|increas|reduced to|\d\s*[-–]\s*\d/i;
+const percentages = (text: string) => [...text.matchAll(/(?:^|[^\d.])([+-]?\d+(?:\.\d+)?)\s*%/g)].map(match => Math.abs(Number(match[1])));
+const percentDisplay = new Intl.NumberFormat('en-US', { useGrouping: false, maximumFractionDigits: 2 });
+
+/** Plain imported text plus only build-independent game percentage arguments, at game display precision. */
+function fixedTemplateText(node: unknown): string {
+  if (!node || typeof node !== 'object') return '';
+  if (Array.isArray(node)) return node.map(fixedTemplateText).join('');
+  const value = node as Record<string, unknown>;
+  if (value.type === 'text') return typeof value.value === 'string' ? value.value : '';
+  if (value.type === 'glossary') return typeof value.label === 'string' ? value.label : '';
+  if (value.type === 'value') {
+    const source = value.source as Record<string, unknown> | undefined;
+    try {
+      const binding = readGameDisplayBinding(source?.gameBinding);
+      if (!binding.growth && (binding.slot === 0 || (binding.slot === 1 && ['identity', 'mod_x_vara'].includes(binding.formula!.type)))) {
+        const resolved = resolveGameDisplayBinding(binding, 0);
+        // The full-ability renderer displays these fields with at most two decimals.
+        if (resolved !== null) return percentDisplay.format(resolved);
+      }
+    } catch { /* Unverified, signature- or build-dependent values remain unresolved. */ }
+    return '{unresolved}';
+  }
+  if (Array.isArray(value.blocks)) return value.blocks.map(fixedTemplateText).join('\n');
+  return fixedTemplateText(value.children);
+}
+
+/** Numeric labels require the target's protection clause in an imported record, not a coincidental number. */
+export function fixedResistancePercent(source: string, templates: unknown[], effect: string): number | null {
   // Native combat bindings cannot prove a separate synergy modifier.
   if (/^Synergy:/i.test(source)) return null;
-  const body = source.replace(/^Synergy: .+?\([1-7]★(?:\/[1-7]★)*\) with .+?(?:; does not stack)?:\s*/i, '');
-  if (/signature|legacy|unresolved|\bper\b|\beach\b|up to|based on|scal|additional|increas|reduced to|\d\s*[-–]\s*\d/i.test(body)) return null;
-  const amounts = [...new Set([...body.matchAll(/(?:^|[^\d.-])(\d+(?:\.\d+)?)\s*%/g)].map(m => Number(m[1])))];
+  if (variableProtection.test(source)) return null;
+  const sourceClauses = source.split(/[.;](?:\s|$)/);
+  if (sourceClauses.some(clause => /\bper\b|\beach\b/i.test(clause) && /%/.test(clause))) return null;
+  const amounts = [...new Set(percentages(source))];
   if (amounts.length !== 1) return null;
-  let found = false;
-  const visit = (node: unknown) => {
-    if (!node || typeof node !== 'object') return;
-    if (Array.isArray(node)) { node.forEach(visit); return; }
-    const value = node as Record<string, unknown>;
-    if (value.type === 'value' && value.source && typeof value.source === 'object') {
-      const raw = value.source as Record<string, unknown>;
-      if (raw.gameBinding) {
-        try {
-          const binding = readGameDisplayBinding(raw.gameBinding);
-          if (binding.slot === 1 && !binding.growth && ['identity', 'mod_x_vara'].includes(binding.formula!.type)
-            && resolveGameDisplayBinding(binding, 0) === amounts[0]) found = true;
-        } catch { /* An unverified binding cannot establish a percentage. */ }
-      }
-    }
-    if (value.children) visit(value.children);
-    if (value.blocks) visit(value.blocks);
-  };
-  templates.forEach(visit);
-  return found ? amounts[0] : null;
+  return templates.some(template => fixedTemplateText(template)
+    .split(/[.;](?:\s|$)|\n|\band\s+(?=(?:the|he|she|his|her|their|makes)\b|[+-]?\d+(?:\.\d+)?\s*%)/i)
+    .some(clause => mentionsResistanceEffect(clause, effect) && !variableProtection.test(clause)
+      && !/\bper\b|\beach\b/i.test(clause)
+      && /resistan|reduc|decreas|less damage|(?:suffer|deal|takes?)\s*-\d/i.test(clause)
+      && percentages(clause).includes(amounts[0]))) ? amounts[0] : null;
 }
