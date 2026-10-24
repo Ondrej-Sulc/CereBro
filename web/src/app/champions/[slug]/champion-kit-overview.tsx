@@ -97,7 +97,7 @@ function CompactEffectCard({ effect, view, synergyCards, ...navigation }: {
   synergyCards: ChampionSynergyCard[]
 } & EffectNavigation) {
   const groups = groupChampionKitSources(effect, view.descriptionView, synergyCards, sourceValueContext(view))
-  return <CompactEffectTile effect={effect}>{groups.length > 0 ? <EffectSources effect={effect} groups={groups} showForms {...navigation} /> : undefined}</CompactEffectTile>
+  return <CompactEffectTile effect={effect}>{groups.length > 0 ? <EffectSources effect={effect} groups={groups} {...navigation} /> : undefined}</CompactEffectTile>
 }
 
 function EffectCard({ effect, wide, view, synergyCards, onViewAbility, onViewSynergies }: {
@@ -126,7 +126,7 @@ function EffectDefinition({ effect, showAllForms }: { effect: ChampionKitEffect;
   const forms = [...new Set(effect.sources.map(source => source.effectForm))]
   const label = <>
     <EffectIcon effect={effect} />
-    <span className="min-w-0 space-y-1.5 text-left"><span className="block text-base font-semibold leading-6" style={{ color: `color-mix(in srgb, ${effect.color} 82%, white)` }}>{effect.name}</span>{(effect.type !== "ABILITY" || forms.length === 1 || showAllForms) && <span className="flex flex-wrap gap-1.5">{effect.type !== "ABILITY" && <span className="text-[11px] font-medium text-cyan-200">{effect.type === "IMMUNITY" ? "Immunity" : "Resistance"}</span>}{forms.map(form => form !== "UNKNOWN" && <EffectFormBadge key={form} form={form} />)}</span>}</span>
+    <span className="min-w-0 space-y-1.5 text-left"><span className="block text-base font-semibold leading-6" style={{ color: `color-mix(in srgb, ${effect.color} 82%, white)` }}>{effect.name}</span>{(effect.type !== "ABILITY" || showAllForms) && <span className="flex flex-wrap gap-1.5">{effect.type !== "ABILITY" && <span className="text-[11px] font-medium text-cyan-200">{effect.type === "IMMUNITY" ? "Immunity" : "Resistance"}</span>}{showAllForms && forms.map(form => form !== "UNKNOWN" && <EffectFormBadge key={form} form={form} />)}</span>}</span>
   </>
   if (!effect.description) return <div className="flex items-center gap-3.5 px-5 py-4">{label}</div>
   return <Tooltip open={open} onOpenChange={setOpen} delayDuration={180}>

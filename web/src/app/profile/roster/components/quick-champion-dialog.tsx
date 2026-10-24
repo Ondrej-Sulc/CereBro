@@ -150,7 +150,7 @@ export function QuickEffect({ effect, groups, minResistancePotency, loading, err
   return <CompactEffectTile effect={effect} matched={effect.matched}>
     {loading ? undefined
       : error ? <div className="space-y-2 border-t border-white/[.06] px-4 py-4 text-xs text-slate-400"><p>Conditions couldn&apos;t be loaded.</p><button type="button" onClick={onRetry} className="text-sky-300 hover:text-sky-100">Try again</button></div>
-        : visibleGroups.length ? <EffectSources effect={effect} groups={visibleGroups} showForms abilityHref={abilityHref} synergiesHref={synergiesHref} />
+        : visibleGroups.length ? <EffectSources effect={effect} groups={visibleGroups} abilityHref={abilityHref} synergiesHref={synergiesHref} />
           : undefined}
   </CompactEffectTile>
 }

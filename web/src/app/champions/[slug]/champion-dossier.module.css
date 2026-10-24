@@ -294,6 +294,17 @@
   background: linear-gradient(120deg, rgb(255 255 255 / .018), transparent 65%), #0c141d;
 }
 .synergyCard:last-child { margin-bottom: 0; }
+.synergyAlias { display: block; height: 0; outline: none; scroll-margin-top: calc(var(--champion-header-height, 4rem) + var(--champion-tabs-height, 0rem) + 1.5rem); }
+.synergyCard:has(.synergyAlias:target), .synergyCard:has(.synergyLevel:target) { border-color: rgb(165 180 252 / .4); box-shadow: 0 0 0 1px rgb(165 180 252 / .2); }
+.synergyLevel { padding: 15px 20px 17px; outline: none; scroll-margin-top: calc(var(--champion-header-height, 4rem) + var(--champion-tabs-height, 0rem) + 1.5rem); }
+.synergyLevel + .synergyLevel { border-top: 1px solid rgb(255 255 255 / .065); }
+.synergyLevel:target, .synergyLevel:has(.synergyAlias:target), .synergyLevel[data-targeted="true"] { background: rgb(165 180 252 / .055); }
+.synergyLevelHeader { display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px 12px; margin-bottom: 7px; }
+.synergyLevelHeader h5 { flex-shrink: 0; color: #c8d2e0; font-size: 12px; font-weight: 600; line-height: 20px; }
+.synergyLevelAvailability { min-width: 0; color: #8e9db2; font-size: 12px; font-variant-numeric: tabular-nums; line-height: 20px; overflow-wrap: anywhere; }
+.synergyLevelAvailability > div + div { margin-top: 5px; }
+.synergyLevel .synergyBenefits { padding: 0; }
+.synergyLevel .synergyUniqueNote { margin: 13px -20px -17px; }
 .synergyCardHeader {
   padding: 13px 20px;
   border-bottom: 1px solid rgb(255 255 255 / .055);
@@ -334,6 +345,8 @@
   .synergyCardHeader { padding: 12px 16px; }
   .synergyPartners { padding: 14px 16px; }
   .synergyBenefits { padding: 16px; }
+  .synergyLevel { padding: 14px 16px 16px; }
+  .synergyLevel .synergyUniqueNote { margin: 13px -16px -16px; }
   .synergyUniqueNote { padding-inline: 16px; }
   .abilityGroups { gap: 12px; }
   .abilityGroupHeader { padding: 11px 12px; }

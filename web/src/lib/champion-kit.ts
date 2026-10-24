@@ -3,6 +3,7 @@ import { readAbilitySource, type EffectSourceMetadata, type EffectForm, type Eff
 import type { ChampionSynergyCard } from "./champion-synergies"
 import type { ResistanceDetail } from "@cerebro/core/domain/champion-resistance"
 import { nativeResistanceValues, synergyResistanceValues, type RecordedResistanceValue, type ResistanceValueContext } from "./champion-resistance-values"
+import { recordedSynergyBonus, type SynergyBonusSource } from "./champion-kit-synergy-bonus"
 
 type KitChampion = { name: string; slug: string | null; images: unknown }
 type KitAbility = { name: string; description?: string | null; iconUrl?: string | null; gameGlossaryTermId?: string | null; gameGlossaryTerm?: { raw: unknown } | null }
@@ -55,6 +56,7 @@ export type ChampionKitAbilityTarget = { recordId: string; chapter: string; titl
 export function summarizeChampionKitSource(value: string): string {
   const source = formatGameText(readAbilitySource({ source: value }).condition).replaceAll("_", " ").trim()
   if (/^(?:signature(?: ability)?|dupe|awakened)\b/i.test(source)) return "Signature ability"
+  if (/^Critical Hits?\b/i.test(source)) return "Critical Hits"
   const specials = source.match(/^(?:(?:on|during|after|activating)\s+)?(?:sp|special(?: attack)?)[\s-]*[123](?:\s*(?:[,/&]|and|or)\s*(?:sp|special(?: attack)?)[\s-]*[123])*/i)
   if (specials) {
     const numbers = [...specials[0].matchAll(/[123]/g)].map(match => match[0])
@@ -111,12 +113,17 @@ type KitSynergyHeader = { name: string; rarities: number[]; partners: string; un
 /** Only the canonical imported header establishes star requirements; legacy prose stays visible. */
 function readKitSynergyHeader(source: string): KitSynergyHeader | null {
   const match = source.match(/^\s*Synergy:\s*(.+?)\s+\(([1-7]★(?:\/[1-7]★)*)\)\s+with\s+(.+?)(; does not stack)?:\s*/i)
-  return match ? { name: match[1], rarities: [...match[2].matchAll(/[1-7]/g)].map(item => Number(item[0])), partners: match[3], unique: !!match[4], condition: source.slice(match[0].length).trim() } : null
+  if (!match) return null
+  // This known enrichment annotation describes a catalog flag discrepancy,
+  // not an activation requirement. Preserve the raw source and original flag.
+  const partners = match[3].replace(/; text prohibits duplicate stacking despite non-unique metadata$/i, "")
+  return { name: match[1], rarities: [...match[2].matchAll(/[1-7]/g)].map(item => Number(item[0])), partners, unique: !!match[4], condition: source.slice(match[0].length).trim() }
 }
 
 export type ChampionKitNativeSource = { key: string; label: string; condition: string; target: ChampionKitAbilityTarget | null; resistance?: ResistanceDetail; values?: RecordedResistanceValue[] }
-export type ChampionKitSynergyLink = { key: string; label: string; conditions: string[]; synergyId?: string; rarities?: number[]; resistance?: ResistanceDetail; values?: RecordedResistanceValue[] }
-export type ChampionKitPartnerSources = { key: string; champions: KitChampion[]; links: ChampionKitSynergyLink[]; partnerRarities?: number[] }
+export type ChampionKitSynergyLink = { key: string; label: string; conditions: string[]; synergyId?: string; rarities?: number[]; resistance?: ResistanceDetail; values?: RecordedResistanceValue[]
+  bonus?: { text: string; nonStacking: boolean; sources: Array<{ label: string; target: ChampionKitAbilityTarget }> } }
+export type ChampionKitPartnerSources = { key: string; champions: KitChampion[]; links: ChampionKitSynergyLink[]; partnerRarities?: number[]; partnerRequirement?: string; unique?: boolean }
 export type ChampionKitSourceGroup = EffectSourceMetadata & {
   key: string
   nativeSources: ChampionKitNativeSource[]
@@ -141,6 +148,7 @@ function overviewCondition(recordedCondition: string, summary?: string | null): 
 export function groupChampionKitSources(effect: ChampionKitEffect, view: PreparedChampionAbilityTextView, synergyCards: ChampionSynergyCard[] = [], context: ResistanceValueContext = {}): ChampionKitSourceGroup[] {
   const groups = new Map<string, ChampionKitSourceGroup>()
   const partnerVariants = new Map<ChampionKitPartnerSources, PartnerRarityVariant | null>()
+  const bonusSources = new Map<ChampionKitSynergyLink, Array<SynergyBonusSource | null>>()
   for (const source of effect.sources) {
     const key = `${source.effectForm}:${source.effectDirection}`
     const group: ChampionKitSourceGroup = groups.get(key) ?? { key, effectForm: source.effectForm, effectDirection: source.effectDirection, nativeSources: [], synergies: [] }
@@ -165,7 +173,7 @@ export function groupChampionKitSources(effect: ChampionKitEffect, view: Prepare
     const rowKey = `${partnersKey}:${requirementKey}`
     let row = group.synergies.find(item => item.key === rowKey)
     if (!row) {
-      row = { key: rowKey, champions: source.champions, links: [] }
+      row = { key: rowKey, champions: source.champions, links: [], unique: header?.unique, partnerRequirement: header?.partners }
       group.synergies.push(row)
     }
     const matchingCards = header ? synergyCards.filter(card => normalizedWords(card.name) === normalizedWords(header.name)
@@ -184,6 +192,11 @@ export function groupChampionKitSources(effect: ChampionKitEffect, view: Prepare
     }
     if (header) link.rarities = [...new Set([...(link.rarities ?? []), ...header.rarities])].sort((a, b) => a - b)
     if (condition && !link.conditions.includes(condition)) link.conditions.push(condition)
+    const bonusInputs = bonusSources.get(link) ?? []
+    bonusInputs.push(matchingCards.length === 1 && effect.type === "ABILITY" && source.effectForm === "DEBUFF" && source.effectDirection === "INFLICT"
+      && context.championName && /\b\d+(?:\.\d+)?%\s+increased\s+Debuff\s+duration\b/i.test(recordedCondition) ? { card: matchingCards[0], rawCondition: recordedCondition,
+      target: findChampionKitAbilityTarget(effect.name, recordedCondition, view, recordedCondition) } : null)
+    bonusSources.set(link, bonusInputs)
     const partner = header?.partners.match(/^(.+?) \(([1-7]★(?:\/[1-7]★)*)\)$/)
     if (source.champions.length !== 1 || !header || !partner || normalizedWords(partner[1]) !== normalizedWords(source.champions[0].name)) {
       partnerVariants.set(row, null)
@@ -194,7 +207,17 @@ export function groupChampionKitSources(effect: ChampionKitEffect, view: Prepare
       partnerVariants.set(row, variant)
     }
   }
-  for (const group of groups.values()) group.synergies = combinePartnerRarityVariants(group.synergies, partnerVariants)
+  for (const group of groups.values()) {
+    for (const row of group.synergies) {
+      const variant = partnerVariants.get(row)
+      if (variant) row.partnerRarities = [...variant.rarities].sort((a, b) => a - b)
+      for (const link of row.links) {
+        const bonus = recordedSynergyBonus(effect, group, link, bonusSources.get(link) ?? [], context)
+        if (bonus) link.bonus = bonus
+      }
+    }
+    group.synergies = combinePartnerRarityVariants(group.synergies, partnerVariants)
+  }
   return [...groups.values()].filter(group => group.nativeSources.length || group.synergies.length)
 }
 
@@ -203,7 +226,7 @@ type PartnerRarityVariant = { rarities: number[]; mechanics: Set<string> }
 /** Merge complete equivalent rows, rather than inferring one application's availability from another. */
 function combinePartnerRarityVariants(rows: ChampionKitPartnerSources[], variants: Map<ChampionKitPartnerSources, PartnerRarityVariant | null>) {
   const equivalent = new Map<string, ChampionKitPartnerSources>()
-  const linkContents = (link: ChampionKitSynergyLink) => JSON.stringify([link.label, [...link.conditions].sort(), link.rarities, link.resistance, link.values])
+  const linkContents = (link: ChampionKitSynergyLink) => JSON.stringify([link.label, [...link.conditions].sort(), link.rarities, link.resistance, link.values, link.bonus])
   return rows.filter(row => {
     const variant = variants.get(row)
     // Several required partners can have correlated rarity rules; unioning their

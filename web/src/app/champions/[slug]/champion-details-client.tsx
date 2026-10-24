@@ -131,7 +131,7 @@ function ChampionDossier({ view, pageState, updatePageState }: {
   }, [])
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    if (params.has("tab") && !params.has("ability")) {
+    if (params.has("tab") && !params.has("ability") && !window.location.hash) {
       sectionsRef.current?.scrollIntoView({ block: "start" })
     }
     // Restore a shared section on entry; later tab changes scroll in selectSection.
