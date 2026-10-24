@@ -1,735 +1,136 @@
-'use client';
+"use client";
 
-import { useState, useMemo } from 'react';
-import { AllianceRosterEntry } from '@/app/actions/alliance-roster';
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ChampionClass, Tag, AbilityCategory, Ability } from "@prisma/client";
-import { CircleOff, Trophy, X, SlidersHorizontal, Shield, Zap, BookOpen, Tag as TagIcon } from "lucide-react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { getChampionClassColors } from "@/lib/championClassHelper";
-import { getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
-import { ChampionImages } from "@/types/champion";
-import { cn } from "@/lib/utils";
+import { Trophy } from "lucide-react";
+import type { AllianceRosterEntry } from "@/app/actions/alliance-roster";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { FilterGroup, MultiSelectFilter, MultiFilterGroup } from "@/components/ui/filters";
-import { matchesAllianceRosterFilters } from "@/lib/alliance-roster-filter";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { RosterFilters } from "@/app/profile/roster/components/roster-filters";
+import { QuickChampionDialog } from "@/app/profile/roster/components/quick-champion-dialog";
+import { allianceRosterOptions, createAllianceRosterFilterIndex, createAllianceRosterFilters, filterAllianceRosterWithFacets, type AllianceBattlegroupFilter } from "@/lib/alliance-roster-filter";
+import type { RosterFiltersState } from "@/lib/roster-filtering";
+import { getRosterAscensionLevel } from "@/lib/roster-ascension-filter";
+import { getChampionClassColors } from "@/lib/championClassHelper";
+import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper";
+import { cn } from "@/lib/utils";
 
-const CLASSES: ChampionClass[] = ["SCIENCE", "SKILL", "MYSTIC", "COSMIC", "TECH", "MUTANT"];
+type ClientPageProps = { data: AllianceRosterEntry[]; bgColors: Record<number, string> };
 
-interface ClientPageProps {
-    data: AllianceRosterEntry[];
-    initialTags: Tag[];
-    initialAbilityCategories: AbilityCategory[];
-    initialAbilities: Ability[];
-    initialImmunities: Ability[];
-    bgColors: Record<number, string>;
+export function AllianceRosterMatrix({ data, bgColors }: ClientPageProps) {
+  const [filters, setFilters] = useState(createAllianceRosterFilters);
+  const [battlegroup, setBattlegroup] = useState<AllianceBattlegroupFilter>("ALL");
+  const [limit, setLimit] = useState<number | null>(10);
+  const [preview, setPreview] = useState<AllianceRosterEntry | null>(null);
+  const index = useMemo(() => createAllianceRosterFilterIndex(data), [data]);
+  const options = useMemo(() => allianceRosterOptions(data), [data]);
+  const result = useMemo(() => filterAllianceRosterWithFacets(index, filters, battlegroup, limit), [index, filters, battlegroup, limit]);
+  const updateFilter = <K extends keyof RosterFiltersState>(key: K, value: RosterFiltersState[K]) => setFilters(current => ({ ...current, [key]: value }));
+  const players = useMemo(() => [...new Map(data.map(entry => [entry.playerId, {
+    id: entry.playerId, name: entry.ingameName, bg: entry.battlegroup, avatar: entry.avatar,
+  }])).values()].sort((a, b) => (a.bg ?? 9) - (b.bg ?? 9) || a.name.localeCompare(b.name)), [data]);
+  const groupedByBg = new Map<string, typeof players>([["1", []], ["2", []], ["3", []], ["unassigned", []]]);
+  for (const player of players) {
+    if (result.championsByPlayer.get(player.id)?.length) groupedByBg.get(player.bg?.toString() ?? "unassigned")?.push(player);
+  }
+  const visibleCount = [...result.championsByPlayer.values()].reduce((total, champions) => total + champions.length, 0);
+  const playerCount = result.championsByPlayer.size;
+  const countLabel = `${visibleCount < result.entries.length ? `Showing ${visibleCount} of ${result.entries.length} matching` : visibleCount} champions across ${playerCount} ${playerCount === 1 ? "player" : "players"}`;
+
+  return <div className="container mx-auto space-y-6 px-4 py-6">
+    <div className="space-y-2">
+      <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Alliance Roster Overview</h1>
+      <p className="text-sm text-slate-400">Browse and filter rosters across the alliance.</p>
+    </div>
+
+    <RosterFilters
+      search={filters.search} onSearchChange={value => updateFilter("search", value)}
+      canEdit={false} showOwnershipFilter={false} showSort={false}
+      visibleChampionCount={visibleCount} countLabel={countLabel} facetCounts={result.counts}
+      contextControls={<AllianceScopeControls battlegroup={battlegroup} onBattlegroupChange={setBattlegroup} limit={limit} onLimitChange={setLimit} />}
+      additionalRules={battlegroup === "ALL" ? [] : [{ id: "battlegroup", label: battlegroup === "UNASSIGNED" ? "Unassigned players" : `Battlegroup ${battlegroup}`, remove: () => setBattlegroup("ALL") }]}
+      onClearAdditionalFilters={() => setBattlegroup("ALL")}
+      filterStars={filters.stars} onFilterStarsChange={value => updateFilter("stars", value)}
+      filterRanks={filters.ranks} onFilterRanksChange={value => updateFilter("ranks", value)}
+      filterAscensionLevels={filters.ascension} onFilterAscensionLevelsChange={value => updateFilter("ascension", value)}
+      filterClasses={filters.classes} onFilterClassesChange={value => updateFilter("classes", value)}
+      tagFilter={filters.tags} onTagFilterChange={value => updateFilter("tags", value)}
+      tagLogic={filters.tagLogic} onTagLogicChange={value => updateFilter("tagLogic", value)}
+      abilityCategoryFilter={filters.categories} onAbilityCategoryFilterChange={value => updateFilter("categories", value)}
+      abilityCategoryLogic={filters.categoryLogic ?? "OR"} onAbilityCategoryLogicChange={value => updateFilter("categoryLogic", value)}
+      abilityFilter={filters.abilities} onAbilityFilterChange={value => updateFilter("abilities", value)}
+      abilityLogic={filters.abilityLogic ?? "AND"} onAbilityLogicChange={value => updateFilter("abilityLogic", value)}
+      effectForms={[...(filters.effectForms ?? [])]} onEffectFormsChange={value => updateFilter("effectForms", value)}
+      effectDirections={[...(filters.effectDirections ?? [])]} onEffectDirectionsChange={value => updateFilter("effectDirections", value)}
+      immunityFilter={filters.immunities} onImmunityFilterChange={value => updateFilter("immunities", value)}
+      immunityLogic={filters.immunityLogic ?? "AND"} onImmunityLogicChange={value => updateFilter("immunityLogic", value)}
+      includeResistances={filters.includeResistances !== false} onIncludeResistancesChange={value => updateFilter("includeResistances", value)}
+      minResistancePotency={filters.minResistancePotency ?? null} onMinResistancePotencyChange={value => updateFilter("minResistancePotency", value)}
+      initialTags={options.tags} initialAbilityCategories={options.categories} initialAbilities={options.abilities} initialImmunities={options.immunities}
+    />
+
+    <div aria-label="Alliance roster results" className="overflow-hidden rounded-xl border border-slate-800 bg-slate-950/20">
+      {playerCount === 0 && <p className="p-8 text-center text-sm text-slate-400" role="status">No champions match the current filters.</p>}
+      {[...groupedByBg].map(([bg, members]) => {
+        if (!members.length) return null;
+        const accent = bg === "unassigned" ? undefined : bgColors[Number(bg)];
+        return <section key={bg} aria-label={bg === "unassigned" ? "Unassigned players" : `Battlegroup ${bg}`}>
+          <div className="flex items-center justify-between border-y border-slate-800 bg-slate-900/80 px-4 py-2" style={accent ? { borderLeft: `3px solid ${accent}` } : undefined}>
+            <h2 className="text-[11px] font-bold uppercase tracking-widest text-slate-400" style={{ color: accent }}>{bg === "unassigned" ? "Unassigned" : `Battlegroup ${bg}`}</h2>
+            <span className="text-[10px] text-slate-500">{members.length} {members.length === 1 ? "player" : "players"}</span>
+          </div>
+          {members.map(player => <div key={player.id} className="flex flex-col border-b border-slate-800/50 transition-colors hover:bg-slate-900/40 sm:flex-row">
+            <div className="flex shrink-0 items-center gap-2 border-b border-slate-800/50 bg-slate-900/30 p-2 sm:w-[140px] sm:border-b-0 sm:border-r">
+              <Avatar className="h-7 w-7 shrink-0 border border-slate-700"><AvatarImage src={player.avatar ?? undefined} /><AvatarFallback className="text-[10px]">{player.name.substring(0, 2).toUpperCase()}</AvatarFallback></Avatar>
+              <div className="min-w-0">
+                <Link href={`/player/${player.id}`} className="block truncate text-[11px] font-bold text-slate-200 transition-colors hover:text-sky-400">{player.name}</Link>
+                <p className="text-[10px] text-slate-500">{result.championsByPlayer.get(player.id)!.length < result.matchingByPlayer.get(player.id)! ? `${result.championsByPlayer.get(player.id)!.length} of ` : ""}{result.matchingByPlayer.get(player.id)} matches</p>
+              </div>
+            </div>
+            <div className="flex min-w-0 flex-1 flex-wrap content-start items-start gap-2 p-2">
+              {result.championsByPlayer.get(player.id)!.map(champion => <AllianceChampion key={champion.id} entry={champion} playerName={player.name} onOpen={() => setPreview(champion)} />)}
+            </div>
+          </div>)}
+        </section>;
+      })}
+    </div>
+    {preview && <QuickChampionDialog key={preview.id} item={preview} open onOpenChange={open => { if (!open) setPreview(null); }} filters={filters} showUnownedState={false} />}
+  </div>;
 }
 
-export function AllianceRosterMatrix({
-    data,
-    initialTags,
-    initialAbilityCategories,
-    initialAbilities,
-    initialImmunities,
-    bgColors
-}: ClientPageProps) {
-    // Filters
-    const [bgFilter, setBgFilter] = useState<string>("ALL");
-    const [classFilter, setClassFilter] = useState<ChampionClass[]>([]);
-    const [starFilter, setStarFilter] = useState<string>("ALL");
-    const [rankFilter, setRankFilter] = useState<string[]>([]);
-    const [ascensionFilter, setAscensionFilter] = useState<number[]>([]);
-    const [limitFilter, setLimitFilter] = useState<string>("10");
-    const [showFilters, setShowFilters] = useState(false);
+function AllianceScopeControls({ battlegroup, onBattlegroupChange, limit, onLimitChange }: {
+  battlegroup: AllianceBattlegroupFilter; onBattlegroupChange: (value: AllianceBattlegroupFilter) => void;
+  limit: number | null; onLimitChange: (value: number | null) => void;
+}) {
+  return <>
+    <div className="min-w-0 space-y-1 sm:w-40">
+      <p className="text-[11px] text-slate-500">Battlegroup</p>
+      <Select value={battlegroup} onValueChange={value => onBattlegroupChange(value as AllianceBattlegroupFilter)}>
+        <SelectTrigger aria-label="Battlegroup" className="h-11 w-full border-slate-800 bg-slate-950/40 text-xs text-slate-300"><SelectValue /></SelectTrigger>
+        <SelectContent><SelectItem value="ALL">All battlegroups</SelectItem>{[1, 2, 3].map(bg => <SelectItem key={bg} value={String(bg)}>Battlegroup {bg}</SelectItem>)}<SelectItem value="UNASSIGNED">Unassigned</SelectItem></SelectContent>
+      </Select>
+    </div>
+    <div className="min-w-0 space-y-1 sm:w-40">
+      <p className="text-[11px] text-slate-500">Champions per player</p>
+      <Select value={limit === null ? "ALL" : String(limit)} onValueChange={value => onLimitChange(value === "ALL" ? null : Number(value))}>
+        <SelectTrigger aria-label="Champions per player" className="h-11 w-full border-slate-800 bg-slate-950/40 text-xs text-slate-300"><SelectValue /></SelectTrigger>
+        <SelectContent>{[5, 10, 20].map(count => <SelectItem key={count} value={String(count)}>Top {count}</SelectItem>)}<SelectItem value="ALL">All matches</SelectItem></SelectContent>
+      </Select>
+    </div>
+  </>;
+}
 
-    // Multi-Select Filters
-    const [tagFilter, setTagFilter] = useState<string[]>([]);
-    const [tagLogic, setTagLogic] = useState<'AND' | 'OR'>('AND');
-
-    const [abilityCategoryFilter, setAbilityCategoryFilter] = useState<string[]>([]);
-    const [abilityCategoryLogic, setAbilityCategoryLogic] = useState<'AND' | 'OR'>('OR'); // Default to OR for categories usually
-
-    const [abilityFilter, setAbilityFilter] = useState<string[]>([]);
-    const [abilityLogic, setAbilityLogic] = useState<'AND' | 'OR'>('AND');
-
-    const [immunityFilter, setImmunityFilter] = useState<string[]>([]);
-    const [immunityLogic, setImmunityLogic] = useState<'AND' | 'OR'>('AND');
-
-
-    // Derived Data
-    const players = useMemo(() => {
-        const uniquePlayers = new Map<string, { id: string; name: string; bg: number | null; avatar: string | null }>();
-        data.forEach(d => {
-            if (!uniquePlayers.has(d.playerId)) {
-                uniquePlayers.set(d.playerId, {
-                    id: d.playerId,
-                    name: d.ingameName,
-                    bg: d.battlegroup,
-                    avatar: d.avatar
-                });
-            }
-        });
-        return Array.from(uniquePlayers.values()).sort((a, b) => {
-            // Sort by BG then Name
-            if (a.bg !== b.bg) return (a.bg || 9) - (b.bg || 9);
-            return a.name.localeCompare(b.name);
-        });
-    }, [data]);
-
-    const filteredPlayers = useMemo(() => {
-        if (bgFilter === "ALL") return players;
-        return players.filter(p => p.bg === parseInt(bgFilter));
-    }, [players, bgFilter]);
-
-    const getFilteredChampionsForPlayer = (playerId: string) => {
-        const filtered = data.filter(entry => {
-            if (entry.playerId !== playerId) return false;
-
-            if (!matchesAllianceRosterFilters(entry, {
-                classes: classFilter,
-                stars: starFilter,
-                ranks: rankFilter,
-                ascensionLevels: ascensionFilter,
-            })) return false;
-
-            // Tag Logic
-            if (tagFilter.length > 0) {
-                if (tagLogic === 'AND') {
-                    if (!tagFilter.every(t => entry.tags.includes(t))) return false;
-                } else {
-                    if (!tagFilter.some(t => entry.tags.includes(t))) return false;
-                }
-            }
-
-            // Ability Category Logic
-            if (abilityCategoryFilter.length > 0) {
-                // Get all category names present on this champion
-                const championCategories = new Set(entry.abilities.filter(a => a.type === 'ABILITY').flatMap(a => a.categories));
-
-                if (abilityCategoryLogic === 'AND') {
-                    // Must have ALL selected categories (across its abilities)
-                    if (!abilityCategoryFilter.every(c => championCategories.has(c))) return false;
-                } else {
-                    // Must have AT LEAST ONE of the selected categories
-                    if (!abilityCategoryFilter.some(c => championCategories.has(c))) return false;
-                }
-            }
-
-            // Ability Logic
-            if (abilityFilter.length > 0) {
-                const champAbilities = new Set(entry.abilities.filter(a => a.type === 'ABILITY').map(a => a.name));
-                if (abilityLogic === 'AND') {
-                    if (!abilityFilter.every(req => champAbilities.has(req))) return false;
-                } else {
-                    if (!abilityFilter.some(req => champAbilities.has(req))) return false;
-                }
-            }
-
-            // Immunity Logic
-            if (immunityFilter.length > 0) {
-                const champImmunities = new Set(entry.abilities.filter(a => a.type === 'IMMUNITY').map(a => a.name));
-                if (immunityLogic === 'AND') {
-                    if (!immunityFilter.every(req => champImmunities.has(req))) return false;
-                } else {
-                    if (!immunityFilter.some(req => champImmunities.has(req))) return false;
-                }
-            }
-
-            return true;
-        }).sort((a, b) => {
-            // Sort by Stars DESC, Rank DESC, Name ASC
-            if (a.stars !== b.stars) return b.stars - a.stars;
-            if (a.rank !== b.rank) return b.rank - a.rank;
-            return a.championName.localeCompare(b.championName);
-        });
-
-        if (limitFilter === "ALL") return filtered;
-        return filtered.slice(0, parseInt(limitFilter));
-    };
-
-    const championsByPlayer = new Map(filteredPlayers.map(player => [player.id, getFilteredChampionsForPlayer(player.id)]));
-
-    const groupedByBg = (() => {
-        const groups: Record<string, typeof filteredPlayers> = {
-            "1": [],
-            "2": [],
-            "3": [],
-            "unassigned": []
-        };
-
-        filteredPlayers.forEach(p => {
-            if (!championsByPlayer.get(p.id)?.length) return;
-            const key = p.bg?.toString() || "unassigned";
-            if (groups[key]) groups[key].push(p);
-        });
-
-        return groups;
-    })();
-
-    const activeFilters = useMemo(() => {
-        const filters: { label: string, type: string, onRemove: () => void }[] = [];
-
-        if (starFilter !== "ALL") {
-            filters.push({ label: `${starFilter} ★`, type: 'Stars', onRemove: () => setStarFilter("ALL") });
-        }
-
-        rankFilter.forEach(r => {
-            filters.push({ label: `R${r}`, type: 'Rank', onRemove: () => setRankFilter(rankFilter.filter(x => x !== r)) });
-        });
-
-        ascensionFilter.forEach(level => {
-            filters.push({ label: `A${level}`, type: 'Ascension', onRemove: () => setAscensionFilter(ascensionFilter.filter(a => a !== level)) });
-        });
-
-        classFilter.forEach(cls => {
-            filters.push({ label: cls.charAt(0) + cls.slice(1).toLowerCase(), type: 'Class', onRemove: () => setClassFilter(classFilter.filter(c => c !== cls)) });
-        });
-
-        tagFilter.forEach(t => {
-            filters.push({ label: t, type: 'Tag', onRemove: () => setTagFilter(tagFilter.filter(x => x !== t)) });
-        });
-
-        abilityCategoryFilter.forEach(c => {
-            filters.push({ label: c, type: 'Category', onRemove: () => setAbilityCategoryFilter(abilityCategoryFilter.filter(x => x !== c)) });
-        });
-
-        abilityFilter.forEach(a => {
-            filters.push({ label: a, type: 'Ability', onRemove: () => setAbilityFilter(abilityFilter.filter(x => x !== a)) });
-        });
-
-        immunityFilter.forEach(i => {
-            filters.push({ label: i, type: 'Immunity', onRemove: () => setImmunityFilter(immunityFilter.filter(x => x !== i)) });
-        });
-
-        return filters;
-    }, [starFilter, rankFilter, ascensionFilter, classFilter, tagFilter, abilityCategoryFilter, abilityFilter, immunityFilter]);
-
-    const renderPlayerRow = (player: typeof players[0]) => {
-        const champions = championsByPlayer.get(player.id) ?? [];
-        if (champions.length === 0) return null;
-
-        return (
-            <div key={player.id} className="flex border-b border-slate-800/50 bg-slate-950/20 hover:bg-slate-900/40 transition-colors">
-                {/* Player Sidebar */}
-                <div className="w-[140px] p-2 flex items-center gap-2 border-r border-slate-800/50 bg-slate-900/30 shrink-0">
-                    <Avatar className="h-7 w-7 border border-slate-700 shrink-0">
-                        <AvatarImage src={player.avatar || undefined} />
-                        <AvatarFallback className="text-[10px]">{player.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex flex-col min-w-0">
-                        <Link href={`/player/${player.id}`} className="font-bold truncate text-[11px] leading-tight text-slate-200 hover:text-sky-400 transition-colors">{player.name}</Link>
-                        <span className="text-[9px] text-slate-500 font-medium">Matches: {champions.length}</span>
-                    </div>
-                </div>
-
-                {/* Champions List */}
-                <div className="flex-1 p-1.5 flex flex-wrap gap-1 items-start content-start">
-                    {champions.map((champ, idx) => {
-                        const classColors = getChampionClassColors(champ.championClass);
-
-                        return (
-                            <Popover key={`${champ.championId}-${idx}`}>
-                                <PopoverTrigger asChild>
-                                    <div
-                                        className="flex flex-col items-center gap-0.5 shrink-0 group transition-transform hover:scale-110 hover:z-10 cursor-pointer"
-                                    >
-                                        <div className={cn(
-                                            "relative w-12 h-12 rounded overflow-hidden border bg-slate-900",
-                                            classColors.border
-                                        )}>
-                                            {/* Portrait */}
-                                            {champ.championImages && (
-                                                <Image
-                                                    src={getChampionImageUrlOrPlaceholder(champ.championImages, '64')}
-                                                    alt={champ.championName}
-                                                    fill
-                                                    sizes="48px"
-                                                    className="object-cover"
-                                                />
-                                            )}
-
-                                            {/* Tactic Indicators */}
-                                            <div className="absolute top-0 left-0 p-0.5 flex flex-col gap-0.5">
-                                                {champ.tactics.attack && <div className="w-1.5 h-1.5 rounded-full bg-red-500 shadow-sm ring-1 ring-black/50" title="Attack Tactic" />}
-                                                {champ.tactics.defense && <div className="w-1.5 h-1.5 rounded-full bg-sky-500 shadow-sm ring-1 ring-black/50" title="Defense Tactic" />}
-                                            </div>
-
-                                            {champ.isAscended && (
-                                                <div className="absolute bottom-0 right-0 p-0.5">
-                                                    <Trophy className="w-2 h-2 text-yellow-400 drop-shadow-md" />
-                                                </div>
-                                            )}
-                                        </div>
-                                        <span className="text-[8px] font-bold text-slate-300 leading-none whitespace-nowrap">
-                                            <span className="text-yellow-500">{champ.stars}★</span> R{champ.rank}{champ.stars === 7 && champ.ascensionLevel > 0 && <span className="text-amber-400"> A{champ.ascensionLevel}</span>} {champ.isAwakened && champ.sigLevel > 0 ? `S${champ.sigLevel}` : ''}
-                                        </span>
-                                    </div>
-                                </PopoverTrigger>
-                                <PopoverContent className="w-[280px] p-0 bg-slate-950 border-slate-800 shadow-xl z-50">
-                                    <div className="p-3 border-b border-slate-800 bg-slate-900/50 flex items-center gap-3">
-                                        <div className={cn("relative w-10 h-10 rounded border", classColors.border)}>
-                                            {champ.championImages && (
-                                                <Image
-                                                    src={getChampionImageUrlOrPlaceholder(champ.championImages, '64')}
-                                                    alt={champ.championName}
-                                                    fill
-                                                    className="object-cover"
-                                                />
-                                            )}
-                                        </div>
-                                        <div>
-                                            <div className="font-bold text-sm text-slate-100">{champ.championName}</div>
-                                            <div className={cn("text-[10px] font-bold uppercase", classColors.text)}>{champ.championClass}</div>
-                                        </div>
-                                    </div>
-                                    <ScrollArea className="max-h-[300px]">
-                                        <div className="p-3 space-y-4">
-                                            {(() => {
-                                                const isFilteringAbilities = abilityFilter.length > 0 || immunityFilter.length > 0 || abilityCategoryFilter.length > 0;
-                                                const isFilteringTags = tagFilter.length > 0;
-                                                const isFiltering = isFilteringAbilities || isFilteringTags;
-
-                                                if (!isFiltering) {
-                                                    return <div className="text-xs text-slate-500 text-center italic py-4">Select filters to view specific champion details.</div>;
-                                                }
-
-                                                const relevantItems = isFilteringAbilities ? champ.abilities.filter(a => {
-                                                    // Strict Type Checking for Filters
-                                                    if (abilityFilter.length > 0 && a.type === 'ABILITY' && abilityFilter.includes(a.name)) return true;
-                                                    if (immunityFilter.length > 0 && a.type === 'IMMUNITY' && immunityFilter.includes(a.name)) return true;
-
-                                                    if (abilityCategoryFilter.length > 0 && a.type === 'ABILITY' && a.categories.some(c => abilityCategoryFilter.includes(c))) return true;
-
-                                                    return false;
-                                                }) : [];
-
-                                                // Group by Name + Type to combine source instances
-                                                const groupedItems = relevantItems.reduce((acc, curr) => {
-                                                    const key = `${curr.type}-${curr.name}`;
-                                                    if (!acc[key]) {
-                                                        acc[key] = {
-                                                            name: curr.name,
-                                                            type: curr.type,
-                                                            instances: [] as {
-                                                                source: string | null,
-                                                                synergyChampions: { name: string; images: ChampionImages }[]
-                                                            }[]
-                                                        };
-                                                    }
-                                                    acc[key].instances.push({
-                                                        source: curr.source,
-                                                        synergyChampions: curr.synergyChampions.map(sc => ({
-                                                            name: sc.name,
-                                                            images: sc.images
-                                                        }))
-                                                    });
-                                                    return acc;
-                                                }, {} as Record<string, {
-                                                    name: string,
-                                                    type: string,
-                                                    instances: {
-                                                        source: string | null,
-                                                        synergyChampions: { name: string; images: ChampionImages }[]
-                                                    }[]
-                                                }>);
-
-                                                const displayAbilities = Object.values(groupedItems).filter(a => a.type === 'ABILITY');
-                                                const displayImmunities = Object.values(groupedItems).filter(a => a.type === 'IMMUNITY');
-                                                const displayTags = isFilteringTags ? champ.tags.filter(t => tagFilter.includes(t)) : [];
-
-                                                if (displayAbilities.length === 0 && displayImmunities.length === 0 && displayTags.length === 0) {
-                                                    return <div className="text-xs text-slate-500 text-center italic">No matching details found.</div>;
-                                                }
-
-                                                const renderBadgeContent = (item: {
-                                                    name: string,
-                                                    type: string,
-                                                    instances: {
-                                                        source: string | null,
-                                                        synergyChampions: { name: string; images: ChampionImages }[]
-                                                    }[]
-                                                }) => {
-                                                    const validInstances = item.instances.filter(inst => inst.source || inst.synergyChampions.length > 0);
-
-                                                    return (
-                                                        <div className="flex items-start gap-1.5">
-                                                            <span className="font-semibold whitespace-nowrap mt-1">{item.name}</span>
-                                                            {validInstances.length > 0 && (
-                                                                <div className="flex flex-col pl-1.5 border-l border-white/10">
-                                                                    {validInstances.map((instance, vIdx) => (
-                                                                        <div key={vIdx} className={cn(
-                                                                            "flex items-center gap-1.5 py-1",
-                                                                            vIdx > 0 && "border-t border-white/5"
-                                                                        )}>
-                                                                            {instance.synergyChampions.length > 0 && (
-                                                                                <div className="flex -space-x-1.5">
-                                                                                    {instance.synergyChampions.map((sc, scIdx) => (
-                                                                                        <div key={scIdx} className="relative w-4 h-4 rounded-full border border-slate-900 overflow-hidden ring-1 ring-slate-700 shrink-0" title={sc.name}>
-                                                                                            <Image
-                                                                                                src={getChampionImageUrlOrPlaceholder(sc.images as unknown as ChampionImages, '64') || '/assets/icons/glossary.svg'}
-                                                                                                alt={sc.name}
-                                                                                                fill
-                                                                                                className="object-cover"
-                                                                                            />
-                                                                                        </div>
-                                                                                    ))}
-                                                                                </div>
-                                                                            )}
-                                                                            {instance.source && (
-                                                                                <span className="font-normal opacity-70 text-[9px] leading-tight">
-                                                                                    {instance.source}
-                                                                                </span>
-                                                                            )}
-                                                                        </div>
-                                                                    ))}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    );
-                                                };
-
-                                                return (
-                                                    <>
-                                                        {displayImmunities.length > 0 && (
-                                                            <div className="space-y-1.5">
-                                                                <div className="flex items-center gap-1.5 text-xs font-bold text-sky-400">
-                                                                    <Shield className="w-3.5 h-3.5" />
-                                                                    Immunities
-                                                                </div>
-                                                                <div className="flex flex-wrap gap-1.5">
-                                                                    {displayImmunities.map((imm, i) => (
-                                                                        <Badge
-                                                                            key={i}
-                                                                            variant="secondary"
-                                                                            className="bg-sky-950/50 border-sky-800 text-sky-300 hover:bg-sky-900 text-[10px] px-2 py-1 h-auto whitespace-normal text-left items-start"
-                                                                        >
-                                                                            {renderBadgeContent(imm)}
-                                                                        </Badge>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        )}
-
-                                                        {displayAbilities.length > 0 && (
-                                                            <div className="space-y-1.5">
-                                                                <div className="flex items-center gap-1.5 text-xs font-bold text-amber-400">
-                                                                    <Zap className="w-3.5 h-3.5" />
-                                                                    Abilities
-                                                                </div>
-                                                                <div className="flex flex-wrap gap-1.5">
-                                                                    {displayAbilities.map((ab, i) => (
-                                                                        <Badge
-                                                                            key={i}
-                                                                            variant="secondary"
-                                                                            className="bg-amber-950/30 border-amber-800/60 text-amber-300 hover:bg-amber-900/60 text-[10px] px-2 py-1 h-auto whitespace-normal text-left items-start"
-                                                                        >
-                                                                            {renderBadgeContent(ab)}
-                                                                        </Badge>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        )}
-
-                                                        {displayTags.length > 0 && (
-                                                            <div className="space-y-1.5">
-                                                                <div className="flex items-center gap-1.5 text-xs font-bold text-slate-400">
-                                                                    <TagIcon className="w-3.5 h-3.5" />
-                                                                    Matching Tags
-                                                                </div>
-                                                                <div className="flex flex-wrap gap-1.5">
-                                                                    {displayTags.map((tag, i) => (
-                                                                        <Badge key={i} variant="outline" className="text-[10px] border-slate-700 text-slate-400">
-                                                                            {tag}
-                                                                        </Badge>
-                                                                    ))}
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </>
-                                                );
-                                            })()}
-                                        </div>
-                                    </ScrollArea>
-                                </PopoverContent>
-                            </Popover>
-                        );
-                    })}
-                </div>
-            </div>
-        );
-    };
-
-    return (
-        <div className="container mx-auto py-6 px-4 space-y-6">
-            <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold tracking-tight">Alliance Roster Overview</h1>
-                <p className="text-slate-400 text-sm">Efficiently browse and filter rosters across the entire alliance.</p>
-            </div>
-
-            {/* Filter Bar */}
-            <Card className="p-4 bg-slate-900/50 border-slate-800 backdrop-blur-md shadow-xl">
-                <div className="flex flex-col gap-4">
-                    {/* Top Row: Primary Filters */}
-                    <div className="flex flex-col xl:flex-row gap-4 items-start xl:items-center justify-between">
-                        <div className="flex flex-col w-full gap-4">
-                            <div className="flex items-center justify-between w-full">
-                                {/* Battlegroup - Always Visible */}
-                                <FilterGroup
-                                    options={[
-                                        { value: "ALL", label: "All BGs" },
-                                        { value: "1", label: "BG 1" },
-                                        { value: "2", label: "BG 2" },
-                                        { value: "3", label: "BG 3" },
-                                    ]}
-                                    value={bgFilter}
-                                    onChange={setBgFilter}
-                                    className="flex-1 max-w-[300px]"
-                                />
-
-                                {/* Mobile Toggle */}
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="xl:hidden ml-2"
-                                    onClick={() => setShowFilters(!showFilters)}
-                                >
-                                    <SlidersHorizontal className="w-4 h-4" />
-                                </Button>
-                            </div>
-
-                            {/* Secondary Filters - Hidden on Mobile unless toggled */}
-                            <div className={cn(
-                                "flex flex-col gap-4 w-full transition-all duration-300 ease-in-out",
-                                !showFilters && "hidden xl:flex",
-                                showFilters && "flex"
-                            )}>
-                                <div className="flex flex-wrap gap-2 items-center">
-                                    {/* Stars */}
-                                    <FilterGroup
-                                        options={[
-                                            { value: "ALL", label: "All Stars" },
-                                            { value: "7", label: "7 ★" },
-                                            { value: "6", label: "6 ★" },
-                                        ]}
-                                        value={starFilter}
-                                        onChange={setStarFilter}
-                                    />
-
-                                    {/* Rank */}
-                                    <MultiFilterGroup
-                                        options={[
-                                            { value: "1", label: "R1" },
-                                            { value: "2", label: "R2" },
-                                            { value: "3", label: "R3" },
-                                            { value: "4", label: "R4" },
-                                            { value: "5", label: "R5" },
-                                            { value: "6", label: "R6" },
-                                        ]}
-                                        values={rankFilter}
-                                        onChange={setRankFilter}
-                                    />
-
-                                    {/* Ascension */}
-                                    <MultiFilterGroup
-                                        options={[0, 1, 2, 3, 4, 5].map(level => ({ value: String(level), label: `A${level}` }))}
-                                        values={ascensionFilter.map(String)}
-                                        onChange={values => setAscensionFilter(values.map(Number))}
-                                    />
-
-                                    {/* Limit */}
-                                    <FilterGroup
-                                        options={[
-                                            { value: "5", label: "Top 5" },
-                                            { value: "10", label: "Top 10" },
-                                            { value: "20", label: "Top 20" },
-                                            { value: "ALL", label: "All" },
-                                        ]}
-                                        value={limitFilter}
-                                        onChange={setLimitFilter}
-                                    />
-                                </div>
-
-                                {/* Bottom Row: Tag, Abilities, Categories */}
-                                <div className="flex flex-col lg:flex-row gap-4 items-center justify-between border-t border-slate-800 pt-4">
-                                    <div className="flex flex-wrap gap-2 items-center w-full lg:w-auto">
-                                        {/* Tags */}
-                                        <MultiSelectFilter
-                                            title="Tags"
-                                            icon={TagIcon}
-                                            options={initialTags}
-                                            selectedValues={tagFilter}
-                                            onSelect={setTagFilter}
-                                            placeholder="Search tags..."
-                                            logic={tagLogic}
-                                            onLogicChange={setTagLogic}
-                                        />
-
-                                        {/* Ability Categories */}
-                                        <MultiSelectFilter
-                                            title="Categories"
-                                            icon={BookOpen}
-                                            options={initialAbilityCategories}
-                                            selectedValues={abilityCategoryFilter}
-                                            onSelect={setAbilityCategoryFilter}
-                                            placeholder="Search categories..."
-                                            logic={abilityCategoryLogic}
-                                            onLogicChange={setAbilityCategoryLogic}
-                                        />
-
-                                        {/* Abilities */}
-                                        <MultiSelectFilter
-                                            title="Abilities"
-                                            icon={Zap}
-                                            options={initialAbilities}
-                                            selectedValues={abilityFilter}
-                                            onSelect={setAbilityFilter}
-                                            placeholder="Search abilities..."
-                                            logic={abilityLogic}
-                                            onLogicChange={setAbilityLogic}
-                                        />
-
-                                        {/* Immunities */}
-                                        <MultiSelectFilter
-                                            title="Immunities"
-                                            icon={Shield}
-                                            options={initialImmunities}
-                                            selectedValues={immunityFilter}
-                                            onSelect={setImmunityFilter}
-                                            placeholder="Search immunities..."
-                                            logic={immunityLogic}
-                                            onLogicChange={setImmunityLogic}
-                                        />
-                                    </div>
-
-                                    {/* Class Filter */}
-                                    <div className="flex gap-1 overflow-x-auto pb-1 lg:pb-0 w-full sm:w-auto">
-                                        <Button
-                                            variant="ghost" size="icon"
-                                            className={cn(
-                                                "h-8 w-8 rounded-full shrink-0",
-                                                classFilter.length === 0 ? "bg-slate-700 text-white" : "text-slate-500 hover:text-slate-300"
-                                            )}
-                                            onClick={() => setClassFilter([])}
-                                            title="Clear Classes"
-                                        >
-                                            <CircleOff className="w-4 h-4" />
-                                        </Button>
-                                        {CLASSES.map(c => {
-                                            const colors = getChampionClassColors(c);
-                                            const isSelected = classFilter.includes(c);
-                                            return (
-                                                <Button
-                                                    key={c}
-                                                    variant="ghost" size="icon"
-                                                    className={cn(
-                                                        "h-8 w-8 rounded-full shrink-0 border border-transparent",
-                                                        isSelected && cn(colors.bg, colors.border)
-                                                    )}
-                                                    onClick={() => {
-                                                        if (isSelected) {
-                                                            setClassFilter(classFilter.filter(item => item !== c));
-                                                        } else {
-                                                            setClassFilter([...classFilter, c]);
-                                                        }
-                                                    }}
-                                                >
-                                                    <div className="relative w-5 h-5">
-                                                        <Image src={`/assets/icons/${c.charAt(0) + c.slice(1).toLowerCase()}.png`} alt={c} fill className="object-contain" />
-                                                    </div>
-                                                </Button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-
-                                {/* Active Filter Badges */}
-                                {activeFilters.length > 0 && (
-                                    <div className="flex flex-wrap gap-2 border-t border-slate-800 pt-3">
-                                        <span className="text-xs text-slate-500 py-0.5">Active Filters:</span>
-                                        {activeFilters.map((f, idx) => (
-                                            <Badge
-                                                key={`${f.type}-${f.label}-${idx}`}
-                                                variant="outline"
-                                                className="bg-slate-900 border-slate-700 text-slate-300 gap-1 pl-2 pr-1 h-6"
-                                            >
-                                                <span className="text-slate-500 font-normal mr-1">{f.type}:</span>
-                                                {f.label}
-                                                <Button
-                                                    variant="ghost"
-                                                    size="icon"
-                                                    className="h-4 w-4 ml-1 hover:bg-slate-800 hover:text-red-400 rounded-full"
-                                                    onClick={f.onRemove}
-                                                >
-                                                    <X className="h-3 w-3" />
-                                                </Button>
-                                            </Badge>
-                                        ))}
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="h-6 text-xs text-red-400 hover:text-red-300 hover:bg-red-950/30"
-                                            onClick={() => {
-                                                setBgFilter("ALL");
-                                                setStarFilter("ALL");
-                                                setRankFilter([]);
-                                                setAscensionFilter([]);
-                                                setClassFilter([]);
-                                                setTagFilter([]);
-                                                setAbilityCategoryFilter([]);
-                                                setAbilityFilter([]);
-                                                setImmunityFilter([]);
-                                            }}
-                                        >
-                                            Clear All
-                                        </Button>
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </Card>
-
-            {/* Matrix View */}
-            <div className="border border-slate-800 rounded-lg overflow-hidden bg-slate-950/20">
-                {Object.values(groupedByBg).every(players => players.length === 0) && (
-                    <p className="p-8 text-center text-sm text-slate-400" role="status">
-                        No champions match the current filters.
-                    </p>
-                )}
-                {Object.entries(groupedByBg).map(([bg, players]) => {
-                    if (players.length === 0) return null;
-                    const bgId = bg === "unassigned" ? null : parseInt(bg);
-                    const accentColor = bgId ? bgColors[bgId] : null;
-
-                    return (
-                        <div key={bg} className="flex flex-col">
-                            <div
-                                className="bg-slate-900/80 px-4 py-1.5 border-y border-slate-800 flex items-center justify-between"
-                                style={accentColor ? { borderLeft: `3px solid ${accentColor}` } : {}}
-                            >
-                                <span
-                                    className="text-[11px] font-black uppercase tracking-widest text-slate-400"
-                                    style={accentColor ? { color: accentColor } : {}}
-                                >
-                                    {bg === "unassigned" ? "Unassigned" : `Battlegroup ${bg}`}
-                                </span>
-                                <Badge variant="outline" className="h-4 text-[9px] bg-slate-950 border-slate-800 text-slate-400">
-                                    {players.length} Players
-                                </Badge>
-                            </div>
-                            <div className="flex flex-col">
-                                {players.map(player => renderPlayerRow(player))}
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
+function AllianceChampion({ entry, playerName, onOpen }: { entry: AllianceRosterEntry; playerName: string; onOpen: () => void }) {
+  const colors = getChampionClassColors(entry.champion.class);
+  const ascension = getRosterAscensionLevel(entry);
+  return <button type="button" data-roster-entry-id={entry.id} aria-label={`View ${entry.champion.name} for ${playerName}`} title={entry.champion.name} onClick={onOpen}
+    className="group flex shrink-0 flex-col items-center gap-1 rounded transition-transform hover:z-10 hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-400">
+    <span className={cn("relative block h-12 w-12 overflow-hidden rounded border bg-slate-900", colors.border)}>
+      <Image src={getChampionImageUrlOrPlaceholder(entry.champion.images, "64")} alt="" fill sizes="48px" className="object-cover" />
+      <span className="absolute left-0 top-0 flex flex-col gap-0.5 p-0.5">{entry.tactics.attack && <span className="h-1.5 w-1.5 rounded-full bg-red-500 ring-1 ring-black/50" title="Attack Tactic" />}{entry.tactics.defense && <span className="h-1.5 w-1.5 rounded-full bg-sky-500 ring-1 ring-black/50" title="Defense Tactic" />}</span>
+      {ascension > 0 && <Trophy aria-label="Ascended" className="absolute bottom-0.5 right-0.5 h-2.5 w-2.5 text-yellow-400" />}
+    </span>
+    <span className="whitespace-nowrap text-[9px] font-bold leading-none text-slate-300"><span className="text-yellow-500">{entry.stars}★</span> R{entry.rank}{entry.stars === 7 && ascension > 0 && <span className="text-amber-400"> A{ascension}</span>}{entry.isAwakened && entry.sigLevel > 0 ? ` S${entry.sigLevel}` : ""}</span>
+  </button>;
 }

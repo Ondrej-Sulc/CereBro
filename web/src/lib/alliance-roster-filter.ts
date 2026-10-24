@@ -1,22 +1,44 @@
-import type { ChampionClass } from "@prisma/client";
-import { matchesRosterAscensionFilter, type RosterAscensionState } from "./roster-ascension-filter";
+import type { AllianceRosterEntry } from "@/app/actions/alliance-roster";
+import { createOwnedRosterFilterIndex, filterRosterWithFacets, type RosterFiltersState } from "./roster-filtering";
+import { prepareRosterKit } from "./roster-kit";
+import { rosterKitOptions } from "./roster-kit-options";
 
-interface AllianceRosterFilterEntry extends RosterAscensionState {
-  championClass: ChampionClass;
-  stars: number;
-  rank: number;
+export type AllianceBattlegroupFilter = "ALL" | "1" | "2" | "3" | "UNASSIGNED";
+
+export function createAllianceRosterFilters(): RosterFiltersState {
+  return { search: "", classes: [], stars: [], ranks: [], ascension: [], tags: [], tagLogic: "AND", showUnowned: false,
+    abilities: [], categories: [], immunities: [], abilityLogic: "AND", categoryLogic: "OR", immunityLogic: "AND",
+    effectForms: [], effectDirections: [], includeResistances: true, minResistancePotency: null };
 }
 
-interface AllianceRosterFilters {
-  classes: ChampionClass[];
-  stars: string;
-  ranks: string[];
-  ascensionLevels: number[];
+export function createAllianceRosterFilterIndex(entries: AllianceRosterEntry[]) {
+  return createOwnedRosterFilterIndex(entries);
 }
 
-export function matchesAllianceRosterFilters(entry: AllianceRosterFilterEntry, filters: AllianceRosterFilters): boolean {
-  if (filters.classes.length > 0 && !filters.classes.includes(entry.championClass)) return false;
-  if (filters.stars !== "ALL" && entry.stars !== Number(filters.stars)) return false;
-  if (filters.ranks.length > 0 && !filters.ranks.includes(String(entry.rank))) return false;
-  return matchesRosterAscensionFilter(entry, filters.ascensionLevels);
+export function allianceRosterOptions(entries: AllianceRosterEntry[]) {
+  const champions = [...new Map(entries.map(entry => [entry.championId, entry.champion])).values()];
+  const links = champions.flatMap(champion => champion.abilities);
+  const options = (names: string[]) => [...new Set(names)].sort((a, b) => a.localeCompare(b)).map(name => ({ id: name, name }));
+  return {
+    ...rosterKitOptions(links),
+    tags: options(champions.flatMap(champion => champion.tags.map(tag => tag.name))),
+    categories: options(prepareRosterKit(links).abilities.flatMap(ability => ability.categories)),
+  };
+}
+
+/** Scope the shared index before faceting; per-player caps affect display only. */
+export function filterAllianceRosterWithFacets(index: ReturnType<typeof createAllianceRosterFilterIndex>, filters: RosterFiltersState,
+  battlegroup: AllianceBattlegroupFilter, limit: number | null) {
+  const scoped = { base: (stars: number[], showUnowned: boolean) => index.base(stars, showUnowned).filter(({ entry }) =>
+    battlegroup === "ALL" || (battlegroup === "UNASSIGNED" ? entry.battlegroup === null : entry.battlegroup === Number(battlegroup))) };
+  const result = filterRosterWithFacets(scoped, { ...filters, showUnowned: false });
+  const championsByPlayer = new Map<string, AllianceRosterEntry[]>();
+  const matchingByPlayer = new Map<string, number>();
+  for (const entry of [...result.entries].sort((a, b) => b.stars - a.stars || b.rank - a.rank || a.champion.name.localeCompare(b.champion.name))) {
+    matchingByPlayer.set(entry.playerId, (matchingByPlayer.get(entry.playerId) ?? 0) + 1);
+    const champions = championsByPlayer.get(entry.playerId) ?? [];
+    if (limit === null || champions.length < limit) champions.push(entry);
+    championsByPlayer.set(entry.playerId, champions);
+  }
+  return { ...result, championsByPlayer, matchingByPlayer };
 }

@@ -17,8 +17,12 @@ import type { FilterState, ProfileRosterEntry } from "../types"
 
 const SECTION_ICONS = { IMMUNITY: Shield, GAIN: Sparkles, INFLICT: Swords, UNKNOWN: Sparkles }
 
+export type QuickChampionItem = Pick<ProfileRosterEntry, "id" | "stars" | "rank" | "sigLevel" | "isAwakened" | "ascensionLevel" | "isUnowned"> & {
+  champion: Pick<ProfileRosterEntry["champion"], "name" | "class" | "slug" | "images" | "tags" | "abilities">
+}
+
 export function QuickChampionDialog({ item, prestige, open, onOpenChange, filters, showUnownedState }: {
-  item: ProfileRosterEntry
+  item: QuickChampionItem
   prestige?: number
   open: boolean
   onOpenChange: (open: boolean) => void

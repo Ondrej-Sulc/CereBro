@@ -1,37 +1,17 @@
 'use server';
 
 import { prisma } from "@/lib/prisma";
-import { ChampionClass } from "@prisma/client";
 import { ChampionImages } from "@/types/champion";
 import { withActionContext } from "@/lib/with-request-context";
+import type { ProfileRosterEntry } from "@/app/profile/roster/types";
+import { attachResistances, getResistanceIndex } from "@/lib/data/champion-resistances";
 
-export type AllianceRosterEntry = {
-    playerId: string;
+export type AllianceRosterEntry = Pick<ProfileRosterEntry, "id" | "playerId" | "championId" | "stars" | "rank" | "sigLevel" | "isAwakened" | "isAscended" | "ascensionLevel"> & {
     ingameName: string;
     battlegroup: number | null;
     avatar: string | null;
-    championId: number;
-    championName: string;
-    championClass: ChampionClass;
-    championImages: ChampionImages;
-    stars: number;
-    rank: number;
-    sigLevel: number;
-    isAwakened: boolean;
-    isAscended: boolean;
-    ascensionLevel: number;
-    tags: string[];
+    champion: Pick<ProfileRosterEntry["champion"], "id" | "name" | "class" | "slug" | "images" | "tags" | "abilities">;
     tactics: { attack: boolean; defense: boolean };
-    abilities: {
-        name: string;
-        type: string; // AbilityLinkType
-        source: string | null;
-        categories: string[];
-        synergyChampions: {
-            name: string;
-            images: ChampionImages;
-        }[];
-    }[];
 };
 
 export const getAllianceRoster = withActionContext('getAllianceRoster', async (
@@ -83,17 +63,25 @@ export const getAllianceRoster = withActionContext('getAllianceRoster', async (
                     id: true,
                     name: true,
                     class: true,
+                    slug: true,
                     images: true,
                     tags: {
                         select: { id: true, name: true }
                     },
                     abilities: {
                         select: {
+                            id: true,
                             type: true,
                             source: true,
+                            effectForm: true,
+                            effectDirection: true,
                             ability: {
                                 select: {
                                     name: true,
+                                    iconUrl: true,
+                                    description: true,
+                                    gameGlossaryTermId: true,
+                                    gameGlossaryTerm: { select: { raw: true } },
                                     categories: {
                                         select: { name: true }
                                     }
@@ -104,6 +92,7 @@ export const getAllianceRoster = withActionContext('getAllianceRoster', async (
                                     champion: {
                                         select: {
                                             name: true,
+                                            slug: true,
                                             images: true
                                         }
                                     }
@@ -116,9 +105,26 @@ export const getAllianceRoster = withActionContext('getAllianceRoster', async (
         }
     });
 
-    // 5. Transform to flat structure for the matrix
+    const resistanceIndex = await getResistanceIndex();
+    const membersById = new Map(members.map(member => [member.id, member]));
+    const champions = new Map<number, AllianceRosterEntry["champion"]>();
+    for (const { champion } of rosterEntries) {
+        if (champions.has(champion.id)) continue;
+        champions.set(champion.id, {
+            ...champion,
+            images: champion.images as unknown as ChampionImages,
+            abilities: attachResistances(champion.abilities, resistanceIndex).map(link => ({
+                ...link,
+                synergyChampions: link.synergyChampions.map(({ champion: partner }) => ({
+                    champion: { ...partner, images: partner.images as unknown as ChampionImages },
+                })),
+            })),
+        });
+    }
+
+    // Preserve the shared kit shape, including source metadata and validated resistance targets.
     const result: AllianceRosterEntry[] = rosterEntries.map(entry => {
-        const player = members.find(m => m.id === entry.playerId)!;
+        const player = membersById.get(entry.playerId)!;
         
         // Determine Tactics
         const champTagIds = new Set(entry.champion.tags.map(t => t.id));
@@ -126,85 +132,25 @@ export const getAllianceRoster = withActionContext('getAllianceRoster', async (
         const hasDefenseTactic = [...defenseTagIds].some(id => champTagIds.has(id!));
 
         return {
+            id: entry.id,
             playerId: player.id,
             ingameName: player.ingameName,
             battlegroup: player.battlegroup,
             avatar: player.avatar,
             championId: entry.champion.id,
-            championName: entry.champion.name,
-            championClass: entry.champion.class,
-            championImages: entry.champion.images as unknown as ChampionImages,
+            champion: champions.get(entry.championId)!,
             stars: entry.stars,
             rank: entry.rank,
             sigLevel: entry.sigLevel,
             isAwakened: entry.isAwakened,
             isAscended: entry.isAscended,
             ascensionLevel: entry.ascensionLevel,
-            tags: entry.champion.tags.map(t => t.name),
             tactics: {
                 attack: hasAttackTactic,
                 defense: hasDefenseTactic
             },
-            abilities: entry.champion.abilities.map(a => ({
-                name: a.ability.name,
-                type: a.type,
-                source: a.source,
-                categories: a.ability.categories.map(c => c.name),
-                synergyChampions: a.synergyChampions.map(sc => ({
-                    name: sc.champion.name,
-                    images: sc.champion.images as unknown as ChampionImages
-                }))
-            }))
         };
     });
 
     return result;
-});
-
-export const getAllianceTagsAndTactics = withActionContext('getAllianceTagsAndTactics', async (allianceId: string) => {
-     const latestWar = await prisma.war.findFirst({
-        where: { allianceId },
-        orderBy: { createdAt: 'desc' }
-    });
-    const season = latestWar?.season || 0;
-
-    const tactics = await prisma.warTactic.findMany({
-        where: { season },
-        include: { attackTag: true, defenseTag: true }
-    });
-
-    const tags = await prisma.tag.findMany({
-        orderBy: { name: 'asc' }
-    });
-
-    const abilityCategories = await prisma.abilityCategory.findMany({
-        orderBy: { name: 'asc' }
-    });
-
-    // Fetch separate lists for Abilities and Immunities based on actual usage
-    const abilityLinks = await prisma.championAbilityLink.findMany({
-        where: { type: 'ABILITY' },
-        select: { abilityId: true },
-        distinct: ['abilityId']
-    });
-    
-    const immunityLinks = await prisma.championAbilityLink.findMany({
-        where: { type: 'IMMUNITY' },
-        select: { abilityId: true },
-        distinct: ['abilityId']
-    });
-
-    const abilities = await prisma.ability.findMany({
-        where: { id: { in: abilityLinks.map(l => l.abilityId) } },
-        select: { id: true, name: true, description: true, emoji: true, iconUrl: true, gameGlossaryTermId: true },
-        orderBy: { name: 'asc' }
-    });
-
-    const immunities = await prisma.ability.findMany({
-        where: { id: { in: immunityLinks.map(l => l.abilityId) } },
-        select: { id: true, name: true, description: true, emoji: true, iconUrl: true, gameGlossaryTermId: true },
-        orderBy: { name: 'asc' }
-    });
-
-    return { tactics, tags, abilityCategories, abilities, immunities, season };
 });

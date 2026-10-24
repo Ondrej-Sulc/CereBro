@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef, useState, type Ref } from "react";
+import { useId, useRef, useState, type Ref, type ReactNode } from "react";
 import { Search, PenLine, Plus, Zap, Shield, Tag, X, Swords, ArrowUp, ArrowDown, ChevronDown, SlidersHorizontal, Layers, EllipsisVertical } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import type { EffectForm, EffectDirection } from "@cerebro/core/domain/ability-s
 import { ChoiceGroup, ClassChoices, MobileClassFilter, OwnershipFilter, ProgressionFilter, SourceRefinement, ImmunityRefinement } from "./roster-filter-fields";
 import { RosterFilterPicker } from "./roster-filter-picker";
 import { RosterFilterSheet, useMobileRosterFilters } from "./roster-filter-sheet";
-import { buildActiveFilterRules } from "./roster-filter-rules";
+import { buildActiveFilterRules, type RosterFilterRule } from "./roster-filter-rules";
 import type { RosterEffectOption, ProtectionOption } from "@/lib/roster-kit-options";
 import type { RosterFacetCounts } from "@/lib/roster-filtering";
 
@@ -77,7 +77,19 @@ export interface RosterFiltersProps {
     showRankFilter?: boolean;
     showAscensionFilter?: boolean;
     showPrestigeSort?: boolean;
+    showSort?: boolean;
+    contextControls?: ReactNode;
+    additionalRules?: RosterFilterRule[];
+    onClearAdditionalFilters?: () => void;
 }
+
+type RosterManagementProps = Pick<RosterFiltersProps, "viewMode" | "onViewModeChange" | "showUnowned" | "onShowUnownedChange" | "onAddClick" | "sortBy" | "onSortByChange" | "sortDirection" | "onSortDirectionChange">;
+type SharedRosterFiltersProps = Omit<RosterFiltersProps, keyof RosterManagementProps> & Partial<RosterManagementProps>;
+const ignoreChange = () => {};
+const managementDefaults: RosterManagementProps = {
+  viewMode: "view", onViewModeChange: ignoreChange, showUnowned: true, onShowUnownedChange: ignoreChange,
+  onAddClick: ignoreChange, sortBy: "NAME", onSortByChange: ignoreChange, sortDirection: "ASC", onSortDirectionChange: ignoreChange,
+};
 
 function clearSelections(p: RosterFiltersProps) {
   p.onSearchChange("");
@@ -98,15 +110,17 @@ function clearSelections(p: RosterFiltersProps) {
   p.onAbilityLogicChange("AND");
   p.onImmunityLogicChange("AND");
   if (p.showOwnershipFilter !== false) p.onShowUnownedChange(true);
+  p.onClearAdditionalFilters?.();
 }
 
-export function RosterFilters(p: RosterFiltersProps) {
+export function RosterFilters(props: SharedRosterFiltersProps) {
+  const p: RosterFiltersProps = { ...managementDefaults, ...props, canEdit: props.canEdit ?? Boolean(props.onViewModeChange) };
   const [expanded, setExpanded] = useState(false);
   const panelId = useId();
   const mobileFilterButton = useRef<HTMLButtonElement>(null);
   const desktopFilterButton = useRef<HTMLButtonElement>(null);
   const isMobile = useMobileRosterFilters();
-  const rules = buildActiveFilterRules(p);
+  const rules = [...buildActiveFilterRules(p), ...(p.additionalRules ?? [])];
   const editing = p.canEdit !== false && p.viewMode === "edit";
   const reserving = p.canManageAttackReservations && p.onShowAttackReservationControlsChange && p.showAttackReservationControls;
   const hasRosterActions = p.canEdit !== false || Boolean(p.canManageAttackReservations && p.onShowAttackReservationControlsChange);
@@ -126,7 +140,8 @@ export function RosterFilters(p: RosterFiltersProps) {
         </div>
         {hasRosterActions && <div className="sm:hidden"><RosterActions p={p} compact /></div>}
         <div className="ml-auto hidden items-center gap-2 sm:flex">
-          <RosterSort p={p} />
+          {p.contextControls && <div className="flex items-center gap-2 [&>div>p]:sr-only">{p.contextControls}</div>}
+          {p.showSort !== false && <RosterSort p={p} />}
           <MoreFiltersButton expanded={expanded} panelId={panelId} count={advancedCount} onToggle={() => setExpanded(!expanded)} buttonRef={desktopFilterButton} />
           <RosterActions p={p} />
         </div>
@@ -137,10 +152,11 @@ export function RosterFilters(p: RosterFiltersProps) {
         <MobileClassFilter values={p.filterClasses} onChange={p.onFilterClassesChange} counts={p.facetCounts?.classes} />
         <MoreFiltersButton expanded={expanded} panelId={`${panelId}-mobile`} count={advancedCount} onToggle={() => setExpanded(!expanded)} compact buttonRef={mobileFilterButton} />
       </div>
-      <div className={cn("grid items-center gap-1 border-t border-slate-800/60 pt-1 sm:hidden", p.showOwnershipFilter !== false ? "grid-cols-2" : "grid-cols-[minmax(0,180px)] justify-end")}>
+      {(p.showOwnershipFilter !== false || p.showSort !== false) && <div className={cn("grid items-center gap-1 border-t border-slate-800/60 pt-1 sm:hidden", p.showOwnershipFilter !== false && p.showSort !== false ? "grid-cols-2" : "grid-cols-[minmax(0,180px)]", p.showOwnershipFilter === false && "justify-end")}>
         {p.showOwnershipFilter !== false && <OwnershipFilter showUnowned={p.showUnowned} onChange={p.onShowUnownedChange} compact />}
-        <RosterSort p={p} compact />
-      </div>
+        {p.showSort !== false && <RosterSort p={p} compact />}
+      </div>}
+      {p.contextControls && <div className="grid grid-cols-2 items-end gap-3 border-t border-slate-800/60 pt-3 sm:hidden">{p.contextControls}</div>}
       {(editing || reserving) && <div aria-label="Active roster modes" className="flex flex-wrap gap-1 border-t border-slate-800/60 pt-2">
         {editing && <Button type="button" variant="ghost" onClick={() => p.onViewModeChange("view")} className="h-10 gap-2 bg-amber-500/10 px-3 text-xs text-amber-200"><PenLine className="h-3.5 w-3.5" />Done editing<X className="h-3 w-3" /></Button>}
         {reserving && <Button type="button" variant="ghost" onClick={() => p.onShowAttackReservationControlsChange?.(false)} className="h-10 gap-2 bg-amber-500/10 px-3 text-xs text-amber-200"><Swords className="h-3.5 w-3.5" />Attack reservations on<X className="h-3 w-3" /></Button>}

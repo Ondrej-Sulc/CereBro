@@ -1,6 +1,6 @@
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { redirect } from "next/navigation";
-import { getAllianceRoster, getAllianceTagsAndTactics } from "@/app/actions/alliance-roster";
+import { getAllianceRoster } from "@/app/actions/alliance-roster";
 import { AllianceRosterMatrix } from "./client-page";
 import { Metadata } from "next";
 import logger from "@/lib/logger";
@@ -19,11 +19,7 @@ export default async function AllianceRosterPage() {
 
     logger.info({ userId: player.id, allianceId: player.allianceId }, "User accessing Alliance Roster Overview page");
 
-    // Parallel fetch for data
-    const [rosterData, metaData] = await Promise.all([
-        getAllianceRoster(player.allianceId),
-        getAllianceTagsAndTactics(player.allianceId)
-    ]);
+    const rosterData = await getAllianceRoster(player.allianceId);
 
     const bgColors = {
         1: player.alliance?.battlegroup1Color || "#ef4444",
@@ -34,10 +30,6 @@ export default async function AllianceRosterPage() {
     return (
         <AllianceRosterMatrix 
             data={rosterData}
-            initialTags={metaData.tags}
-            initialAbilityCategories={metaData.abilityCategories}
-            initialAbilities={metaData.abilities}
-            initialImmunities={metaData.immunities}
             bgColors={bgColors}
         />
     );

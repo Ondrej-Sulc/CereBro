@@ -4,7 +4,7 @@ import type { Champion } from "@/types/champion";
 import type { ProfileRosterEntry } from "@/app/profile/roster/types";
 import { isChampionObtainableAs } from "./champion-obtainable";
 import { getRosterAscensionLevel } from "./roster-ascension-filter";
-import { prepareRosterKit, matchesPreparedRosterKitFilters, type RosterKitFilters } from "./roster-kit";
+import { prepareRosterKit, matchesPreparedRosterKitFilters, type RosterKitFilters, type RosterKitLink } from "./roster-kit";
 
 export type FacetCounts = Readonly<Record<string, number>>;
 export type RosterFacetCounts = Record<"stars" | "ranks" | "ascension" | "classes" | "tags" | "abilities" | "categories" | "immunities" | "forms" | "directions", FacetCounts>;
@@ -20,7 +20,16 @@ export type RosterFiltersState = RosterKitFilters & {
   showUnowned: boolean;
 };
 
-function indexEntry(entry: ProfileRosterEntry) {
+export type FilterableRosterEntry = Pick<ProfileRosterEntry, "id" | "championId" | "stars" | "rank" | "isAscended" | "ascensionLevel" | "isUnowned"> & {
+  champion: {
+    name: string;
+    class: ChampionClass;
+    tags?: { name: string }[];
+    abilities?: RosterKitLink[];
+  };
+};
+
+function indexEntry<T extends FilterableRosterEntry>(entry: T) {
   const kit = prepareRosterKit(entry.champion.abilities ?? [], entry.stars || undefined);
   return {
     entry, kit,
@@ -33,7 +42,7 @@ function indexEntry(entry: ProfileRosterEntry) {
 }
 
 /** Stable data preparation stays independent of search, sort and selected filters. */
-export function createRosterFilterIndex(roster: ProfileRosterEntry[], champions: Champion[]) {
+export function createRosterFilterIndex(roster: ProfileRosterEntry[], champions: Champion[]): RosterFilterIndex<ProfileRosterEntry> {
   const owned = roster.map(indexEntry);
   const ownedIds = new Set(roster.map(entry => entry.championId));
   const ownedStars = new Set(roster.map(entry => `${entry.championId}:${entry.stars}`));
@@ -53,7 +62,21 @@ export function createRosterFilterIndex(roster: ProfileRosterEntry[], champions:
   };
 }
 
-type IndexedEntry = ReturnType<typeof indexEntry>;
+type IndexedEntry<T extends FilterableRosterEntry = FilterableRosterEntry> = ReturnType<typeof indexEntry<T>>;
+export type RosterFilterIndex<T extends FilterableRosterEntry> = { base: (stars: number[], showUnowned: boolean) => IndexedEntry<T>[] };
+
+/** Alliance and other owned-only views share the matcher without manufacturing catalog entries. */
+export function createOwnedRosterFilterIndex<T extends FilterableRosterEntry>(entries: T[]): RosterFilterIndex<T> {
+  const variants = new WeakMap<T["champion"], Map<number, IndexedEntry<T>>>();
+  const indexed = entries.map(entry => {
+    const rarities = variants.get(entry.champion) ?? new Map<number, IndexedEntry<T>>();
+    const item = rarities.get(entry.stars) ?? indexEntry(entry);
+    rarities.set(entry.stars, item);
+    variants.set(entry.champion, rarities);
+    return { ...item, entry };
+  });
+  return { base: () => indexed };
+}
 type BasicFacet = "classes" | "stars" | "ranks" | "ascension";
 
 function matchesBasic(item: IndexedEntry, filters: RosterFiltersState, search: string, omit?: BasicFacet) {
@@ -75,7 +98,7 @@ function matchesTags(item: IndexedEntry, filters: RosterFiltersState) {
  * OR facets ignore their own selections; AND facets retain them and test each extra choice.
  * Every other facet, search term and source qualifier remains active.
  */
-export function filterRosterWithFacets(index: ReturnType<typeof createRosterFilterIndex>, filters: RosterFiltersState) {
+export function filterRosterWithFacets<T extends FilterableRosterEntry>(index: RosterFilterIndex<T>, filters: RosterFiltersState) {
   const counts: RosterFacetCounts = {
     stars: Object.create(null), ranks: Object.create(null), ascension: Object.create(null), classes: Object.create(null),
     tags: Object.create(null), abilities: Object.create(null), categories: Object.create(null), immunities: Object.create(null),
@@ -86,7 +109,7 @@ export function filterRosterWithFacets(index: ReturnType<typeof createRosterFilt
     target[value] = (target[value] ?? 0) + 1;
   };
   const search = filters.search.toLowerCase();
-  const entries: ProfileRosterEntry[] = [];
+  const entries: T[] = [];
 
   for (const item of index.base(filters.stars, filters.showUnowned)) {
     const basic = matchesBasic(item, filters, search);

@@ -34,7 +34,11 @@ export function RosterFilterSheet({ id, p, open, onOpenChange, onReset, onCloseF
   const [tab, setTab] = useState(p.showRankFilter === false && p.showAscensionFilter === false ? "abilities" : "roster");
   const protectionLabel = p.includeResistances ? "Immunities & resistances" : "Immunities";
   return <Sheet open={open} onOpenChange={onOpenChange}>
-    <SheetContent id={id} side="bottom" onCloseAutoFocus={event => { event.preventDefault(); onCloseFocus(); }} className="flex h-[min(680px,90dvh)] flex-col gap-0 overflow-hidden rounded-t-2xl border-slate-800 bg-slate-950 p-0 text-slate-200 [&>button]:right-2 [&>button]:top-2 [&>button]:grid [&>button]:h-11 [&>button]:w-11 [&>button]:place-items-center">
+    <SheetContent id={id} side="bottom" onEscapeKeyDown={event => {
+      if (document.querySelector("[data-roster-filter-picker]")) event.preventDefault();
+    }} onInteractOutside={event => {
+      if (document.querySelector("[data-roster-filter-picker]")) event.preventDefault();
+    }} onCloseAutoFocus={event => { event.preventDefault(); onCloseFocus(); }} className="flex h-[min(680px,90dvh)] flex-col gap-0 overflow-hidden rounded-t-2xl border-slate-800 bg-slate-950 p-0 text-slate-200 [&>button]:right-2 [&>button]:top-2 [&>button]:grid [&>button]:h-11 [&>button]:w-11 [&>button]:place-items-center">
       <SheetHeader className="shrink-0 px-4 pb-3 pt-4 text-left">
         <SheetTitle className="pr-10 text-base text-slate-100">Filters</SheetTitle>
         <SheetDescription role="status" aria-live="polite" className="text-xs text-slate-400">{p.countLabel}</SheetDescription>
@@ -49,6 +53,7 @@ export function RosterFilterSheet({ id, p, open, onOpenChange, onReset, onCloseF
           ]).map(({ value, label, icon: Icon }) => <TabsTrigger key={value} value={value} className="h-11 min-w-0 gap-1 px-1 text-[11px] text-slate-400 data-[state=active]:bg-slate-800 data-[state=active]:text-sky-100"><Icon className="hidden h-3 w-3 shrink-0 min-[375px]:block" />{label}</TabsTrigger>)}
         </TabsList>
         <TabsContent value="roster" className="mt-0 min-h-0 flex-1 space-y-5 overflow-y-auto px-4 pb-5">
+          {p.contextControls && <div className="grid grid-cols-2 items-end gap-3">{p.contextControls}</div>}
           <FilterField label="Rarity"><ChoiceGroup label="Rarity" options={[7, 6, 5].map(value => ({ value, label: `${value}★` }))} values={p.filterStars} onChange={p.onFilterStarsChange} counts={p.facetCounts?.stars} showCounts compact /></FilterField>
           <ClassChoices values={p.filterClasses} onChange={p.onFilterClassesChange} counts={p.facetCounts?.classes} compact />
           {p.showOwnershipFilter !== false && <OwnershipFilter showUnowned={p.showUnowned} onChange={p.onShowUnownedChange} compact />}

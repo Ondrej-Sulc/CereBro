@@ -44,7 +44,7 @@ jobs:
         run: pnpm run prisma:generate
 
       - name: Verify champion data, UI and Discord rendering
-        run: pnpm exec vitest run src/domain/champion-overview-summary.test.ts web/src/lib/champion-kit.test.ts web/src/lib/roster-kit.test.ts web/src/lib/roster-kit-details.test.ts web/src/components/champions/compact-effect-grid.test.ts web/src/app/profile/roster/components/quick-champion-dialog.test.ts src/commands/champion/champion.test.ts src/commands/champion/pagination.test.ts src/utils/errorHandler.test.ts --maxWorkers=1
+        run: pnpm exec vitest run src/domain/champion-overview-summary.test.ts web/src/lib/champion-kit.test.ts web/src/lib/roster-kit.test.ts web/src/lib/roster-kit-details.test.ts web/src/lib/roster-filtering.test.ts web/src/lib/alliance-roster-filtering.test.ts web/src/app/actions/alliance-roster.test.ts web/src/app/profile/roster/components/roster-filter-rules.test.ts web/src/components/champions/compact-effect-grid.test.ts web/src/app/profile/roster/components/quick-champion-dialog.test.ts src/commands/champion/champion.test.ts src/commands/champion/pagination.test.ts src/utils/errorHandler.test.ts --maxWorkers=1
 
       - name: Build Bot (src)
         run: pnpm run build-only
