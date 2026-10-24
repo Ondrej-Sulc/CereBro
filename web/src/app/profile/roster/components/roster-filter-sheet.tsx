@@ -56,18 +56,18 @@ export function RosterFilterSheet({ id, p, open, onOpenChange, onReset, onCloseF
           {p.showAscensionFilter !== false && <FilterField label="Ascension"><ChoiceGroup label="Ascension" options={[0, 1, 2, 3, 4, 5].map(value => ({ value, label: `${value}` }))} values={p.filterAscensionLevels} onChange={p.onFilterAscensionLevelsChange} counts={p.facetCounts?.ascension} showCounts compact /></FilterField>}
         </TabsContent>
         <TabsContent value="tags" className="mt-0 min-h-0 flex-1 overflow-y-auto px-4 pb-5">
-          <RosterFilterPicker label="Tags" icon={Tag} options={p.initialTags} counts={p.facetCounts?.tags} values={p.tagFilter} onChange={p.onTagFilterChange} logic={p.tagLogic} onLogicChange={p.onTagLogicChange} />
+          <RosterFilterPicker modal label="Tags" icon={Tag} options={p.initialTags} counts={p.facetCounts?.tags} values={p.tagFilter} onChange={p.onTagFilterChange} logic={p.tagLogic} onLogicChange={p.onTagLogicChange} />
         </TabsContent>
         <TabsContent value="abilities" className="mt-0 min-h-0 flex-1 space-y-3 overflow-y-auto px-4 pb-5">
-          <RosterFilterPicker label="Ability categories" icon={Layers} options={p.initialAbilityCategories} counts={p.facetCounts?.categories} values={p.abilityCategoryFilter} onChange={p.onAbilityCategoryFilterChange} logic={p.abilityCategoryLogic} onLogicChange={p.onAbilityCategoryLogicChange} />
-          <RosterFilterPicker label="Abilities" icon={Zap} options={p.initialAbilities} counts={p.facetCounts?.abilities} values={p.abilityFilter} onChange={p.onAbilityFilterChange} logic={p.abilityLogic} onLogicChange={p.onAbilityLogicChange} />
+          <RosterFilterPicker modal label="Ability categories" icon={Layers} options={p.initialAbilityCategories} counts={p.facetCounts?.categories} values={p.abilityCategoryFilter} onChange={p.onAbilityCategoryFilterChange} logic={p.abilityCategoryLogic} onLogicChange={p.onAbilityCategoryLogicChange} />
+          <RosterFilterPicker modal label="Abilities" icon={Zap} options={p.initialAbilities} counts={p.facetCounts?.abilities} values={p.abilityFilter} onChange={p.onAbilityFilterChange} logic={p.abilityLogic} onLogicChange={p.onAbilityLogicChange} />
           <details className="group border-t border-slate-800">
             <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-xs text-slate-400">Refine ability sources<ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" /></summary>
             <div className="pt-2"><AbilitySourceFields forms={p.effectForms} onFormsChange={p.onEffectFormsChange} directions={p.effectDirections} onDirectionsChange={p.onEffectDirectionsChange} formCounts={p.facetCounts?.forms} directionCounts={p.facetCounts?.directions} /></div>
           </details>
         </TabsContent>
         <TabsContent value="protection" className="mt-0 min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-5">
-          <RosterFilterPicker label={protectionLabel} icon={Shield} options={p.initialImmunities} counts={p.facetCounts?.immunities} values={p.immunityFilter} onChange={p.onImmunityFilterChange} logic={p.immunityLogic} onLogicChange={p.onImmunityLogicChange} />
+          <RosterFilterPicker modal label={protectionLabel} icon={Shield} options={p.initialImmunities} counts={p.facetCounts?.immunities} values={p.immunityFilter} onChange={p.onImmunityFilterChange} logic={p.immunityLogic} onLogicChange={p.onImmunityLogicChange} />
           <details className="group border-t border-slate-800">
             <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-2 text-xs text-slate-400">Refine immunity sources<ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" /></summary>
             <div className="pt-2"><ImmunitySourceFields includeResistances={p.includeResistances} onIncludeResistancesChange={p.onIncludeResistancesChange} minimum={p.minResistancePotency} onMinimumChange={p.onMinResistancePotencyChange} /></div>

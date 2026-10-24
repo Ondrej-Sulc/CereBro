@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import type { RosterEffectOption } from "@/lib/roster-kit-options";
 import type { FacetCounts } from "@/lib/roster-filtering";
 
-export function RosterFilterPicker({ label, triggerLabel, icon: Icon, options, counts, values, onChange, logic, onLogicChange }: {
+export function RosterFilterPicker({ label, triggerLabel, icon: Icon, options, counts, values, onChange, logic, onLogicChange, modal = false }: {
   label: string;
   triggerLabel?: string;
   icon: LucideIcon;
@@ -19,6 +19,8 @@ export function RosterFilterPicker({ label, triggerLabel, icon: Icon, options, c
   onChange: (values: string[]) => void;
   logic: "AND" | "OR";
   onLogicChange: (logic: "AND" | "OR") => void;
+  // A sheet's portalled picker needs its own active scroll lock for touch gestures.
+  modal?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [showUnavailable, setShowUnavailable] = useState(false);
@@ -49,7 +51,7 @@ export function RosterFilterPicker({ label, triggerLabel, icon: Icon, options, c
       </span>
     </CommandItem>;
   };
-  return <Popover open={open} onOpenChange={setOpen}>
+  return <Popover open={open} onOpenChange={setOpen} modal={modal}>
     <PopoverTrigger asChild>
       <Button type="button" variant="outline" aria-label={label} aria-expanded={open} className={cn(
         "h-10 w-full justify-between gap-2 px-3 text-xs font-normal",
