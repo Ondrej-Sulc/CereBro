@@ -5,6 +5,20 @@ export type ChampionSynergyDisplayCard = ChampionSynergyCard & { ids: string[]; 
 export type ChampionSynergyFamily = { id: string; name: string; variants: Array<ChampionSynergyDisplayCard & { level: number | null }> }
 
 const sorted = (values: number[]) => [...new Set(values)].sort((a, b) => a - b)
+
+/** Shorten consecutive stars without implying availability in gaps. */
+export function formatSynergyRarities(rarities: number[]): string {
+  const values = sorted(rarities)
+  const ranges: string[] = []
+  for (let index = 0; index < values.length; index++) {
+    const start = values[index]
+    while (values[index + 1] === values[index] + 1) index++
+    const end = values[index]
+    ranges.push(start === end ? `${start}★` : `${start}–${end}★`)
+  }
+  return ranges.join(", ") || "Not recorded"
+}
+
 const partnerKey = (partners: SynergyPartner[]) => partners.map(partner => ({ id: partner.id, rarities: sorted(partner.rarities) })).sort((a, b) => a.id - b.id)
 const hasKnownAvailability = (card: ChampionSynergyCard) => !!card.rarities?.length && card.partners.length > 0 && card.partners.every(partner => partner.rarities.length > 0)
 const memberKey = (card: ChampionSynergyCard) => [card.partners.map(partner => partner.id).sort((a, b) => a - b), card.champions?.map(champion => champion.id).sort((a, b) => a - b)]

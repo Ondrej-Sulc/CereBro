@@ -3,12 +3,12 @@
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useMemo, useState, type CSSProperties } from "react"
-import { Layers2, Search, Users } from "lucide-react"
+import { ChevronDown, Layers2, Search, Users } from "lucide-react"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
 import { getChampionClassColors } from "@/lib/championClassHelper"
 import { buildSynergyCardContent, highlightSynergyChampionNames, parseSynergyDescription, type ChampionSynergyCard, type SynergyChampion, type SynergyPartner, type SynergyTextSegment } from "@/lib/champion-synergies"
-import { groupChampionSynergyFamilies, type ChampionSynergyDisplayCard, type ChampionSynergyFamily } from "@/lib/champion-synergy-display"
+import { formatSynergyRarities, groupChampionSynergyFamilies, type ChampionSynergyDisplayCard, type ChampionSynergyFamily } from "@/lib/champion-synergy-display"
 import { cn } from "@/lib/utils"
 import type { ChampionImages } from "@/types/champion"
 import styles from "./champion-dossier.module.css"
@@ -74,7 +74,7 @@ function SynergyFamilyCard({ family, incoming, rarity, glossaryById, targetSyner
     <header className={styles.synergyCardHeader}><h4 id={titleId}>{family.name}</h4></header>
     <div className={styles.synergyPartners}>
       <p className={styles.synergyPartnersLabel}>{incoming ? "Brought by" : first.partners.length > 1 ? "Requires one of" : "Requires"}</p>
-      <div className="flex flex-wrap gap-2">{first.partners.map(partner => <Partner key={partner.id} partner={partner} showRarities={false} />)}</div>
+      <div className="flex flex-wrap gap-2">{first.partners.map(partner => <Partner key={partner.id} partner={partner} showRequirements={false} />)}</div>
     </div>
     <div>{family.variants.map((card, index) => {
       const levelTitleId = `champion-synergy-${card.id}-title`
@@ -82,10 +82,7 @@ function SynergyFamilyCard({ family, incoming, rarity, glossaryById, targetSyner
         {card.ids.filter(id => id !== card.id).map(id => <span key={id} id={`champion-synergy-${id}`} role="group" aria-labelledby={levelTitleId} tabIndex={-1} className={styles.synergyAlias} />)}
         <div className={styles.synergyLevelHeader}>
           <h5 id={levelTitleId}><span className="sr-only">{family.name} </span>Lv. {card.level}</h5>
-          <div className={styles.synergyLevelAvailability}>{card.availability.map((rule, ruleIndex) => <div key={ruleIndex}>
-            {rarity === null && rule.championRarities.length > 0 && <p>This champion: {rule.championRarities.map(value => `${value}★`).join("/")}</p>}
-            <div className="flex flex-wrap gap-x-3 gap-y-1">{rule.partners.map(partner => <span key={partner.id} aria-label={`${partner.name} available at ${partner.rarities.join(", ")} stars`}>{rule.partners.length > 1 && <span>{partner.name}: </span>}{partner.rarities.map(value => `${value}★`).join("/")}</span>)}</div>
-          </div>)}</div>
+          <StarRequirements card={card} rarity={rarity} />
         </div>
         <SynergyBonuses content={contents[index]} champions={card.champions} glossaryById={glossaryById} />
         {card.unique && !sharedUniqueNote && <SynergyUniqueNote content={contents[index]} glossaryById={glossaryById} />}
@@ -98,6 +95,8 @@ function SynergyFamilyCard({ family, incoming, rarity, glossaryById, targetSyner
 function SynergyCard({ card, incoming, rarity, glossaryById, selected }: { card: ChampionSynergyDisplayCard; incoming: boolean; rarity: number | null; glossaryById: Map<string, GlossaryEntry>; selected: boolean }) {
   const content = buildSynergyCardContent(card.description, card.unique)
   const titleId = `champion-synergy-${card.id}-title`
+  const singleRule = card.availability.length === 1
+  const partners = singleRule ? card.availability[0].partners : card.partners
   return (
     <article id={`champion-synergy-${card.id}`} aria-labelledby={titleId} tabIndex={-1} data-selected={selected} className={cn(styles.synergyCard, "scroll-mt-[calc(var(--champion-header-height,4rem)+var(--champion-tabs-height)+1.5rem)] overflow-hidden rounded-xl border outline-none target:border-indigo-300/40 target:ring-1 target:ring-indigo-300/20", selected ? "border-indigo-300/40 ring-1 ring-indigo-300/20" : "border-white/[.09]")}>
       {card.ids.filter(id => id !== card.id).map(id => <span key={id} id={`champion-synergy-${id}`} role="group" aria-labelledby={titleId} tabIndex={-1} className={styles.synergyAlias} />)}
@@ -106,15 +105,23 @@ function SynergyCard({ card, incoming, rarity, glossaryById, selected }: { card:
       </header>
       <div className={styles.synergyPartners}>
         <p className={styles.synergyPartnersLabel}>{incoming ? "Brought by" : card.partners.length > 1 ? "Requires one of" : "Requires"}</p>
-        <div className="space-y-3">{card.availability.map((rule, index) => <div key={index}>
-          {rarity === null && rule.championRarities.length > 0 && <p className="mb-2 text-xs text-slate-400">This champion: {rule.championRarities.map(value => `${value}★`).join("/")}</p>}
-          <div className="flex flex-wrap gap-2">{rule.partners.map(partner => <Partner key={partner.id} partner={partner} />)}</div>
-        </div>)}</div>
+        <div className="flex flex-wrap gap-2">{partners.map(partner => <Partner key={partner.id} partner={partner} showRequirements={singleRule} />)}</div>
+        <details className="group/requirements mt-1.5">
+          <summary className="flex min-h-11 w-fit cursor-pointer list-none items-center gap-1.5 rounded text-xs text-slate-400 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 sm:min-h-8">Star requirements<ChevronDown aria-hidden="true" className="h-3 w-3 transition-transform group-open/requirements:rotate-180" /></summary>
+          <StarRequirements card={card} rarity={rarity} showNames />
+        </details>
       </div>
       <SynergyBonuses content={content} champions={card.champions} glossaryById={glossaryById} />
       {card.unique && <SynergyUniqueNote content={content} glossaryById={glossaryById} />}
     </article>
   )
+}
+
+function StarRequirements({ card, rarity, showNames = false }: { card: ChampionSynergyDisplayCard; rarity: number | null; showNames?: boolean }) {
+  return <div className={styles.synergyLevelAvailability}>{card.availability.map((rule, index) => <div key={index}>
+    {rarity === null && rule.championRarities.length > 0 && <p>This champion: {formatSynergyRarities(rule.championRarities)}</p>}
+    <div className="flex flex-wrap gap-x-3 gap-y-1">{rule.partners.map(partner => <span key={partner.id} aria-label={`${partner.name} available at ${partner.rarities.join(", ")} stars`}>{(showNames || rule.partners.length > 1) && <span>{partner.name}: </span>}{formatSynergyRarities(partner.rarities)}</span>)}</div>
+  </div>)}</div>
 }
 
 function SynergyBonuses({ content, champions, glossaryById }: { content: ReturnType<typeof buildSynergyCardContent>; champions?: SynergyChampion[]; glossaryById: Map<string, GlossaryEntry> }) {
@@ -158,23 +165,22 @@ function SynergyText({ segments, glossaryById, muted = false, champions = [] }: 
   )
 }
 
-function Partner({ partner, showRarities = true }: { partner: SynergyPartner; showRarities?: boolean }) {
+function Partner({ partner, showRequirements = true }: { partner: SynergyPartner; showRequirements?: boolean }) {
   const style = partner.class ? { "--synergy-class-color": getChampionClassColors(partner.class).color } as CSSProperties : undefined
   const content = <>
     <Image src={getChampionImageUrlOrPlaceholder(partner.images as ChampionImages, "64")} alt="" width={40} height={40} className={cn(styles.synergyPartnerPortrait, "h-10 w-10 shrink-0 rounded-md bg-black/15 object-contain")} />
     <span className={cn(styles.synergyChampionName, "min-w-0 text-[13px] font-medium leading-5 [overflow-wrap:anywhere]")}>{partner.name}</span>
-    {showRarities && <span aria-label={`${partner.name} available at ${partner.rarities.join(", ")} stars`} className="shrink-0 text-[11px] tabular-nums text-slate-400">{partner.rarities.map(rarity => `${rarity}★`).join("/")}</span>}
   </>
   const className = styles.synergyPartner
   const badge = partner.slug ? <Link className={className} style={style} href={`/champions/${partner.slug}`}>{content}</Link> : <span tabIndex={0} className={className} style={style}>{content}</span>
-  if (!showRarities) return badge
+  if (!showRequirements || !partner.rarities.length) return badge
   return (
     <Tooltip delayDuration={250}>
       <TooltipTrigger asChild>
         {badge}
       </TooltipTrigger>
       <TooltipContent className="max-w-xs border-white/15 bg-[#0b0f15] text-white/70">
-        Synergy available at {partner.rarities.join(", ")} ★
+        Synergy available at {formatSynergyRarities(partner.rarities)}
       </TooltipContent>
     </Tooltip>
   )

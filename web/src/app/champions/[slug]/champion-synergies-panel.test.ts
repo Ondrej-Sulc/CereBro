@@ -29,19 +29,26 @@ describe("full synergy card display", () => {
     expect(html).toMatch(/<h4[^>]*>IT&#x27;S COMPLICATED<\/h4>/)
     for (const level of [1, 2, 3]) expect(html).toMatch(new RegExp(`<h5[^>]*><span[^>]*>IT&#x27;S COMPLICATED </span>Lv\\. ${level}</h5>`))
     for (const amount of [15, 35, 60]) expect(html.match(new RegExp(`All Champions gain \\+${amount} Armor Rating`, "g"))).toHaveLength(1)
-    for (const stars of ["2★", "3★", "4★/5★/6★/7★"]) expect(html).toContain(stars)
+    for (const stars of ["2★", "3★", "4–7★"]) expect(html).toContain(stars)
     for (const id of ["comp_006", "comp_007", "comp_008", "comp_009", "comp_010"]) expect(html.match(new RegExp(`id="champion-synergy-${id}"`, "g"))).toHaveLength(1)
     expect(html.match(/data-selected="true"/g)).toHaveLength(1)
     expect(html).toMatch(/<section[^>]*id="champion-synergy-comp_008"[^>]*data-targeted="true"/)
   })
 
-  it("renders Hulk Ragnarok's repeated Lv. 3 bonus once with all Black Widow rarities", () => {
+  it("renders the repeated bonus once with a clean partner badge and exact requirements on demand", () => {
     const view = buildChampionSynergyView(rows, hulk.id, 6)
     expect(view.incoming).toHaveLength(3)
     const html = renderPanel({ ...view, rarity: 6, glossaryById: new Map() })
     expect(html.match(/<article\b/g)).toHaveLength(1)
     expect(html.match(/All Champions gain \+60 Armor Rating/g)).toHaveLength(1)
-    expect(html).toContain("4★/5★/6★/7★")
+    expect(html).toMatch(/<details\b/)
+    expect(html).not.toMatch(/<details[^>]*\bopen/)
+    expect(html).toContain("Star requirements")
+    expect(html).toContain("4–7★")
+    expect(html).not.toContain("4★/5★/6★/7★")
+    const partnerLink = html.match(/<a\b[^>]*href="\/champions\/black-widow-deadly-origin"[^>]*>(.*?)<\/a>/)?.[1]
+    expect(partnerLink).toBeDefined()
+    expect(partnerLink).not.toContain("★")
     for (const id of ["comp_008", "comp_009", "comp_010"]) expect(html).toContain(`id="champion-synergy-${id}"`)
   })
 
