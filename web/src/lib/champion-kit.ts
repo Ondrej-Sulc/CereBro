@@ -116,7 +116,7 @@ function readKitSynergyHeader(source: string): KitSynergyHeader | null {
 
 export type ChampionKitNativeSource = { key: string; label: string; condition: string; target: ChampionKitAbilityTarget | null; resistance?: ResistanceDetail; values?: RecordedResistanceValue[] }
 export type ChampionKitSynergyLink = { key: string; label: string; conditions: string[]; synergyId?: string; rarities?: number[]; resistance?: ResistanceDetail; values?: RecordedResistanceValue[] }
-export type ChampionKitPartnerSources = { key: string; champions: KitChampion[]; links: ChampionKitSynergyLink[] }
+export type ChampionKitPartnerSources = { key: string; champions: KitChampion[]; links: ChampionKitSynergyLink[]; partnerRarities?: number[] }
 export type ChampionKitSourceGroup = EffectSourceMetadata & {
   key: string
   nativeSources: ChampionKitNativeSource[]
@@ -140,6 +140,7 @@ function overviewCondition(recordedCondition: string, summary?: string | null): 
 
 export function groupChampionKitSources(effect: ChampionKitEffect, view: PreparedChampionAbilityTextView, synergyCards: ChampionSynergyCard[] = [], context: ResistanceValueContext = {}): ChampionKitSourceGroup[] {
   const groups = new Map<string, ChampionKitSourceGroup>()
+  const partnerVariants = new Map<ChampionKitPartnerSources, PartnerRarityVariant | null>()
   for (const source of effect.sources) {
     const key = `${source.effectForm}:${source.effectDirection}`
     const group: ChampionKitSourceGroup = groups.get(key) ?? { key, effectForm: source.effectForm, effectDirection: source.effectDirection, nativeSources: [], synergies: [] }
@@ -183,8 +184,47 @@ export function groupChampionKitSources(effect: ChampionKitEffect, view: Prepare
     }
     if (header) link.rarities = [...new Set([...(link.rarities ?? []), ...header.rarities])].sort((a, b) => a - b)
     if (condition && !link.conditions.includes(condition)) link.conditions.push(condition)
+    const partner = header?.partners.match(/^(.+?) \(([1-7]★(?:\/[1-7]★)*)\)$/)
+    if (source.champions.length !== 1 || !header || !partner || normalizedWords(partner[1]) !== normalizedWords(source.champions[0].name)) {
+      partnerVariants.set(row, null)
+    } else if (partnerVariants.get(row) !== null) {
+      const variant = partnerVariants.get(row) ?? { rarities: [...partner[2].matchAll(/[1-7]/g)].map(item => Number(item[0])), mechanics: new Set<string>() }
+      variant.mechanics.add(JSON.stringify([normalizedWords(header.name), header.unique, [...header.rarities].sort(), header.condition, condition,
+        source.resistance, [...new Set(matchingCards.map(card => card.description))].sort()]))
+      partnerVariants.set(row, variant)
+    }
   }
+  for (const group of groups.values()) group.synergies = combinePartnerRarityVariants(group.synergies, partnerVariants)
   return [...groups.values()].filter(group => group.nativeSources.length || group.synergies.length)
+}
+
+type PartnerRarityVariant = { rarities: number[]; mechanics: Set<string> }
+
+/** Merge complete equivalent rows, rather than inferring one application's availability from another. */
+function combinePartnerRarityVariants(rows: ChampionKitPartnerSources[], variants: Map<ChampionKitPartnerSources, PartnerRarityVariant | null>) {
+  const equivalent = new Map<string, ChampionKitPartnerSources>()
+  const linkContents = (link: ChampionKitSynergyLink) => JSON.stringify([link.label, [...link.conditions].sort(), link.rarities, link.resistance, link.values])
+  return rows.filter(row => {
+    const variant = variants.get(row)
+    // Several required partners can have correlated rarity rules; unioning their
+    // stars independently would advertise combinations that do not exist.
+    if (!variant) return true
+    const key = JSON.stringify([row.champions[0].slug ?? row.champions[0].name,
+      [...variant.mechanics].sort(), row.links.map(linkContents).sort()])
+    const previous = equivalent.get(key)
+    if (!previous) {
+      equivalent.set(key, row)
+      return true
+    }
+    previous.partnerRarities = [...new Set([...(previous.partnerRarities ?? variants.get(previous)!.rarities), ...variant.rarities])].sort((a, b) => a - b)
+    for (const link of row.links) {
+      const target = previous.links.find(item => linkContents(item) === linkContents(link))!
+      // Several catalog variants have no single correct card destination. The
+      // shared link opens the synergies tab, which retains every original card.
+      if (target.synergyId !== link.synergyId) target.synergyId = undefined
+    }
+    return false
+  })
 }
 
 function sameSynergyPartners(card: ChampionSynergyCard, champions: KitChampion[], requirements: string): boolean {

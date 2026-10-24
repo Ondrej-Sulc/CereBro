@@ -17,4 +17,16 @@ describe('recorded resistance values', () => {
     expect(html).toContain('with his signature');
     expect(html).not.toContain('Immunity');
   });
+
+  it('shows the combined partner rarities on one synergy source', () => {
+    const effect: ChampionKitEffect = { name: 'Bleed', type: 'ABILITY', iconUrl: null, color: '#fff', secondaryColor: '#000', description: null, sources: [] };
+    const groups: ChampionKitSourceGroup[] = [{ key: 'PASSIVE:INFLICT', effectForm: 'PASSIVE', effectDirection: 'INFLICT', nativeSources: [],
+      synergies: [{ key: 'cross-training', champions: [{ name: 'Punisher 2099', slug: 'punisher-2099', images: null }], partnerRarities: [2, 3, 4, 5, 6, 7],
+        links: [{ key: 'cross-training', label: 'Cross Training', conditions: ['His signature may inflict passive Bleed.'], rarities: [2, 3, 4, 5, 6, 7] }] }] }];
+    const html = renderToStaticMarkup(createElement(EffectSources, { effect, groups, synergiesHref: '/champions/punisher?tab=synergies' }));
+    expect(html.match(/His signature may inflict passive Bleed\./g)).toHaveLength(1);
+    expect(html).toContain('Punisher 2099 rarity: 2, 3, 4, 5, 6, 7 stars');
+    expect(html).toContain('Champion rarity: 2, 3, 4, 5, 6, 7 stars');
+    expect(html).toContain('/champions/punisher?tab=synergies');
+  });
 });

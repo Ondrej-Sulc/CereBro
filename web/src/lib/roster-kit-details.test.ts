@@ -91,4 +91,78 @@ describe("roster effect details", () => {
     expect(links.map(link => link.rarities)).toEqual([[6], [7]])
     expect(buildRosterKitDetails(entries, [], 6).groups["GAIN:Amplify"][0].synergies[0].links).toHaveLength(1)
   })
+
+  it("shows identical Punisher Bleed synergy variants once per application, retaining partner rarities", () => {
+    const partner = { id: 2, name: "Punisher 2099", slug: "punisher-2099", images: null }
+    const variants = [[2], [3], [4], [5], [6, 7]]
+    const applications = [
+      { form: "DEBUFF" as const, raw: "+25% Fury and Bleed Ability Accuracy. Critical Hits: inflict {1} Bleed for {2} seconds.", summary: "Cross Training increases Critical Hit Bleed Ability Accuracy." },
+      { form: "PASSIVE" as const, raw: "+25% Fury and Bleed Ability Accuracy. Signature: inflict {1} Bleed when an enemy Bleed Debuff expires.", summary: "Cross Training increases signature Bleed Ability Accuracy." },
+    ]
+    const entries = variants.flatMap((rarities, index) => applications.map((application, offset) => link(index * 2 + offset,
+      `Synergy: CROSS TRAINING (2★/3★/4★/5★/6★/7★) with Punisher 2099 (${rarities.map(r => `${r}★`).join("/")}); does not stack: ${application.raw}`, {
+        ability: { ...link(0, null).ability, name: "Bleed" }, effectForm: application.form, effectDirection: "INFLICT",
+        synergyChampions: [{ champion: partner }], overviewSummary: application.summary,
+      })))
+    const cards = variants.map((rarities, index) => ({ id: `pn2099_${index}`, name: "Cross Training", unique: true,
+      description: "+25% Fury and Bleed Ability Accuracy.", rarities: [2, 3, 4, 5, 6, 7], partners: [{ ...partner, rarities }] }))
+    const original = structuredClone(entries)
+
+    for (const rarity of [undefined, 6]) {
+      const groups = buildRosterKitDetails(entries, [], rarity, cards).groups["INFLICT:Bleed"]
+      expect(groups).toHaveLength(2)
+      groups.forEach((group, index) => {
+        expect(group.synergies).toHaveLength(1)
+        expect(group.synergies[0]).toMatchObject({ champions: [partner], partnerRarities: [2, 3, 4, 5, 6, 7],
+          links: [{ conditions: [applications[index].summary], rarities: [2, 3, 4, 5, 6, 7] }] })
+        expect(group.synergies[0].links[0].synergyId).toBeUndefined()
+      })
+    }
+    expect(entries).toEqual(original)
+  })
+
+  it("keeps partner rarity variants separate when mechanics or owner availability differ", () => {
+    const partner = { name: "Ally", slug: "ally", images: null }
+    const entries = [
+      link(1, "Synergy: Team (6★) with Ally (6★): Gain 10% Amplify.", { synergyChampions: [{ champion: partner }], overviewSummary: "Gain Amplify." }),
+      link(2, "Synergy: Team (6★) with Ally (7★): Gain 20% Amplify.", { synergyChampions: [{ champion: partner }], overviewSummary: "Gain Amplify." }),
+      link(3, "Synergy: Team (7★) with Ally (5★): Gain 10% Amplify.", { synergyChampions: [{ champion: partner }], overviewSummary: "Gain Amplify." }),
+    ]
+    expect(buildRosterKitDetails(entries, []).groups["GAIN:Amplify"][0].synergies).toHaveLength(3)
+  })
+
+  it("does not broaden correlated requirements for multiple partners", () => {
+    const partners = ["Ally", "Other"].map(name => ({ champion: { name, slug: name.toLowerCase(), images: null } }))
+    const entries = [
+      link(1, "Synergy: Team (7★) with Ally (6★), Other (7★): Gain Amplify.", { synergyChampions: partners }),
+      link(2, "Synergy: Team (7★) with Ally (7★), Other (6★): Gain Amplify.", { synergyChampions: partners }),
+    ]
+    expect(buildRosterKitDetails(entries, []).groups["GAIN:Amplify"][0].synergies).toHaveLength(2)
+  })
+
+  it("keeps differing catalog bonuses separate behind identical recorded templates and summaries", () => {
+    const partner = { id: 2, name: "Ally", slug: "ally", images: null }
+    const entries = [6, 7].map(rarity => link(rarity, `Synergy: Team (7★) with Ally (${rarity}★): Gain {1}% Amplify.`, {
+      synergyChampions: [{ champion: partner }], overviewSummary: "Gain Amplify.",
+    }))
+    const cards = [6, 7].map((rarity, index) => ({ id: `team_${rarity}`, name: "Team", unique: false,
+      description: `Gain ${10 + index * 10}% Amplify.`, partners: [{ ...partner, rarities: [rarity] }] }))
+    const rows = buildRosterKitDetails(entries, [], 7, cards).groups["GAIN:Amplify"][0].synergies
+    expect(rows).toHaveLength(2)
+    expect(rows.map(row => row.links[0].synergyId)).toEqual(["team_6", "team_7"])
+  })
+
+  it("only merges complete equivalent source rows, preserving application-specific availability", () => {
+    const partner = { id: 2, name: "Ally", slug: "ally", images: null }
+    const entries = [
+      link(1, "Synergy: Team (7★) with Ally (6★): Gain Amplify when attacking.", { synergyChampions: [{ champion: partner }] }),
+      link(2, "Synergy: Team (7★) with Ally (6★): Gain Amplify when blocking.", { synergyChampions: [{ champion: partner }] }),
+      link(3, "Synergy: Team (7★) with Ally (7★): Gain Amplify when attacking.", { synergyChampions: [{ champion: partner }] }),
+    ]
+    const cards = [6, 7].map(rarity => ({ id: `team_${rarity}`, name: "Team", unique: false,
+      description: "Team effects.", partners: [{ ...partner, rarities: [rarity] }] }))
+    const rows = buildRosterKitDetails(entries, [], 7, cards).groups["GAIN:Amplify"][0].synergies
+    expect(rows).toHaveLength(2)
+    expect(rows.map(row => row.links[0].conditions.length)).toEqual([2, 1])
+  })
 })

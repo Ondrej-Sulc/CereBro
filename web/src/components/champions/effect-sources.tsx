@@ -44,7 +44,7 @@ export function EffectSources({ effect, groups, showForms = false, onViewAbility
               <div className="flex flex-wrap items-center gap-2">
               <span className="rounded border border-indigo-300/20 bg-indigo-300/[.07] px-2 py-0.5 text-[11px] font-semibold leading-4 text-indigo-200">Synergy</span>
               {row.champions.map(champion => {
-                const content = <><Image src={getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "64")} alt="" width={20} height={20} className="h-5 w-5 shrink-0 rounded object-contain" /><span>{champion.name}</span></>
+                const content = <><Image src={getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "64")} alt="" width={20} height={20} className="h-5 w-5 shrink-0 rounded object-contain" /><span>{champion.name}</span>{!!row.partnerRarities?.length && <span aria-label={`${champion.name} rarity: ${row.partnerRarities.join(", ")} stars`} className="text-[10px] tabular-nums text-slate-500">{row.partnerRarities.map(rarity => `${rarity}★`).join("/")}</span>}</>
                 const className = "inline-flex items-center gap-1.5 rounded-md border border-white/[.08] bg-white/[.03] py-0.5 pl-0.5 pr-2 text-xs text-slate-300 hover:border-white/25 hover:text-white"
                 return champion.slug ? <Link key={champion.slug} href={`/champions/${champion.slug}`} className={className}>{content}</Link> : <span key={champion.name} className={className}>{content}</span>
               })}
