@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { Player, Alliance } from "@prisma/client";
-import { isChampionObtainableAs } from "@/lib/champion-obtainable";
 import { signInAction } from "@/app/actions/auth";
 
 // Local imports
@@ -33,9 +32,9 @@ import { PrestigeChartModal } from "./components/modals/prestige-chart-modal";
 import { useDeepMemo } from "@/hooks/use-deep-memo";
 import { switchProfile } from "../actions";
 import { reportClientError } from "@/lib/observability/client";
-import { matchesRosterAscensionFilter } from "@/lib/roster-ascension-filter";
 import { loadRosterAddDefaults, normalizeRosterAddDefaults, saveRosterAddDefaults } from "@/lib/roster-add-defaults";
-import { matchesRosterKitFilters } from "@/lib/roster-kit";
+import { createRosterFilterIndex, filterRosterWithFacets } from "@/lib/roster-filtering";
+import type { RosterEffectOption, ProtectionOption } from "@/lib/roster-kit-options";
 import type { EffectForm, EffectDirection } from "@cerebro/core/domain/ability-source";
 
 function buildRosterQueryParams(params: {
@@ -142,8 +141,8 @@ interface RosterViewProps {
   initialSigAwakenedOnly: boolean;
   initialTags: { id: string | number, name: string }[];
   initialAbilityCategories: { id: string | number, name: string }[];
-  initialAbilities: { id: string | number, name: string }[];
-  initialImmunities: { id: string | number, name: string, resistanceOnly?: boolean }[];
+  initialAbilities: RosterEffectOption[];
+  initialImmunities: ProtectionOption[];
   initialLimit: number;
   initialShowInsights?: boolean;
   initialInsightTab: PrestigeInsightTab;
@@ -232,8 +231,9 @@ export function RosterView({
   const [effectForms, setEffectForms] = useState<EffectForm[]>([]);
   const [effectDirections, setEffectDirections] = useState<EffectDirection[]>([]);
   const [immunityFilter, setImmunityFilter] = useState<string[]>([]);
-  const [includeResistances, setIncludeResistances] = useState(false);
+  const [includeResistances, setIncludeResistances] = useState(true);
   const [immunityLogic, setImmunityLogic] = useState<'AND' | 'OR'>('AND');
+  const [minResistancePotency, setMinResistancePotency] = useState<number | null>(null);
 
   // Stabilize initial values to avoid unnecessary re-renders/effects
   const memoizedPrestigeMap = useDeepMemo(initialPrestigeMap);
@@ -481,70 +481,20 @@ export function RosterView({
     return () => clearTimeout(timer);
   }, [enablePrestigeInsights, sigBudget, updateUrlParams, initialSigBudget]);
 
-  const filteredRoster = useMemo(() => {
-    let baseRoster = [...roster];
+  const filterIndex = useMemo(() => createRosterFilterIndex(roster, allChampions), [roster, allChampions]);
+  const { entries: matchingRoster, counts: facetCounts } = useMemo(() => filterRosterWithFacets(filterIndex, {
+    search, classes: filterClasses, stars: filterStars, ranks: filterRanks, ascension: filterAscensionLevels,
+    tags: tagFilter, tagLogic, abilities: abilityFilter, categories: abilityCategoryFilter,
+    immunities: immunityFilter, includeResistances, abilityLogic, categoryLogic: abilityCategoryLogic,
+    immunityLogic, effectForms, effectDirections, minResistancePotency, showUnowned,
+  }), [filterIndex, search, filterClasses, filterStars, filterRanks, filterAscensionLevels, tagFilter, tagLogic,
+    abilityFilter, abilityCategoryFilter, immunityFilter, includeResistances, abilityLogic, abilityCategoryLogic,
+    immunityLogic, effectForms, effectDirections, minResistancePotency, showUnowned]);
 
-    if (showUnowned) {
-      const ownedChampionIds = new Set(roster.map(r => r.championId));
-      const ownedChampionStars = new Set(roster.map(r => `${r.championId}:${r.stars}`));
-      const hasStarFilter = filterStars.length > 0;
-      const unownedChampions = allChampions.filter(c => {
-        if (!hasStarFilter) return !ownedChampionIds.has(c.id);
-
-        return filterStars.some(stars =>
-          isChampionObtainableAs(c, stars) && !ownedChampionStars.has(`${c.id}:${stars}`)
-        );
-      });
-
-      const unownedEntries: ProfileRosterEntry[] = unownedChampions.map(c => ({
-        id: hasStarFilter ? `unowned-${c.id}-${filterStars.join("-")}` : `unowned-${c.id}`,
-        playerId: roster[0]?.playerId || '',
-        championId: c.id,
-        stars: 0,
-        rank: 0,
-        sigLevel: 0,
-        isAwakened: false,
-        isAscended: false,
-        ascensionLevel: 0,
-        reservedForAttack: false,
-        powerRating: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        champion: c as unknown as ProfileRosterEntry['champion'],
-        isUnowned: true
-      }));
-
-      baseRoster = [...baseRoster, ...unownedEntries];
-    }
-
-    const filtered = baseRoster.filter((item) => {
-      const matchesSearch = item.champion.name.toLowerCase().includes(search.toLowerCase());
-      const matchesClass = filterClasses.length === 0 || filterClasses.includes(item.champion.class);
-      const matchesStars = filterStars.length === 0 || item.isUnowned || filterStars.includes(item.stars);
-      const matchesRank = filterRanks.length === 0 || item.isUnowned || filterRanks.includes(item.rank);
-      const matchesAscension = matchesRosterAscensionFilter(item, filterAscensionLevels);
-
-      if (!matchesSearch || !matchesClass || !matchesStars || !matchesRank || !matchesAscension) return false;
-
-      // Pre-compute sets once per item for performance
-      const champTags = (item.champion.tags || []).map(t => t.name);
-
-      if (tagFilter.length > 0) {
-        if (tagLogic === 'AND') { if (!tagFilter.every(t => champTags.includes(t))) return false; }
-        else { if (!tagFilter.some(t => champTags.includes(t))) return false; }
-      }
-
-      return matchesRosterKitFilters(item.champion.abilities || [], {
-        abilities: abilityFilter, categories: abilityCategoryFilter, immunities: immunityFilter, includeResistances,
-        abilityLogic, categoryLogic: abilityCategoryLogic, immunityLogic, effectForms, effectDirections,
-      }, item.stars || undefined);
-    });
-
-    return filtered.sort((a, b) => compareRosterEntries(a, b, sortBy, sortDirection, {
+  const filteredRoster = useMemo(() => [...matchingRoster].sort((a, b) => compareRosterEntries(a, b, sortBy, sortDirection, {
       prestigeMap,
       catalogPrestigeByChampionId,
-    }));
-  }, [roster, search, filterClasses, filterStars, filterRanks, filterAscensionLevels, sortBy, sortDirection, prestigeMap, catalogPrestigeByChampionId, tagFilter, tagLogic, abilityCategoryFilter, abilityCategoryLogic, abilityFilter, abilityLogic, immunityFilter, immunityLogic, includeResistances, effectForms, effectDirections, showUnowned, allChampions]);
+    })), [matchingRoster, sortBy, sortDirection, prestigeMap, catalogPrestigeByChampionId]);
 
   const visibleChampionCount = filteredRoster.length;
   const totalChampionCount = isChampionsCatalog
@@ -771,6 +721,7 @@ export function RosterView({
       {!showInsights && (
         <>
           <RosterFilters
+            facetCounts={facetCounts}
             search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode}
             showUnowned={showUnowned} onShowUnownedChange={setShowUnowned}
             onAddClick={handleOpenAddChampion}
@@ -786,6 +737,7 @@ export function RosterView({
             effectForms={effectForms} onEffectFormsChange={setEffectForms} effectDirections={effectDirections} onEffectDirectionsChange={setEffectDirections}
             immunityFilter={immunityFilter} onImmunityFilterChange={setImmunityFilter} immunityLogic={immunityLogic} onImmunityLogicChange={setImmunityLogic}
             includeResistances={includeResistances} onIncludeResistancesChange={setIncludeResistances}
+            minResistancePotency={minResistancePotency} onMinResistancePotencyChange={setMinResistancePotency}
             initialTags={initialTags} initialAbilityCategories={initialAbilityCategories} initialAbilities={initialAbilities} initialImmunities={initialImmunities}
             canEdit={effectiveCanEdit}
             canManageAttackReservations={effectiveCanManageAttackReservations}
@@ -816,7 +768,7 @@ export function RosterView({
         </>
       )}
 
-      {quickItem && <QuickChampionDialog key={quickItem.id} item={quickItem} prestige={isChampionsCatalog ? undefined : prestigeMap[quickItem.id]} open onOpenChange={open => { if (!open) setQuickItem(null); }} filters={{ tags: tagFilter, categories: abilityCategoryFilter, abilities: abilityFilter, immunities: immunityFilter, includeResistances, effectForms, effectDirections }} showUnownedState={!!quickItem.isUnowned && !isChampionsCatalog} />}
+      {quickItem && <QuickChampionDialog key={quickItem.id} item={quickItem} prestige={isChampionsCatalog ? undefined : prestigeMap[quickItem.id]} open onOpenChange={open => { if (!open) setQuickItem(null); }} filters={{ tags: tagFilter, categories: abilityCategoryFilter, abilities: abilityFilter, immunities: immunityFilter, includeResistances, effectForms, effectDirections, minResistancePotency }} showUnownedState={!!quickItem.isUnowned && !isChampionsCatalog} />}
       {effectiveCanEdit && <EditChampionModal item={editingItem} prestige={editingItem ? prestigeMap[editingItem.id] : undefined} onClose={() => setEditingItem(null)} onUpdate={handleUpdate} onDelete={handleDelete} onItemChange={setEditingItem} />}
       {effectiveCanEdit && <AddChampionModal open={isAddingChampion} onOpenChange={setIsAddingChampion} allChampions={allChampions} onAdd={handleAddChampion} newChampion={newChampion} onNewChampionChange={handleNewChampionChange} />}
       <PrestigeChartModal chartData={chartData} loading={loadingChart} onClose={() => setChartData(null)} />

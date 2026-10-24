@@ -21,6 +21,8 @@ export interface Champion extends Omit<PrismaChampion, 'images'> {
     ability: { 
       id: number;
       name: string;
+      iconUrl?: string | null;
+      gameGlossaryTerm?: { raw: unknown } | null;
       categories: { name: string }[];
     } 
   }[];

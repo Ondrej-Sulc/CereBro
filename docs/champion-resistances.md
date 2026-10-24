@@ -2,7 +2,7 @@
 
 Kit Overview and roster quick views distinguish **Immunity** from **Resistance** under one protection section. Resistance keeps the effect-specific activation, synergy, recipient and lifetime conditions in the existing reviewed source copy. It never implies that an effect cannot apply, even when the recorded reduction is 100% or greater.
 
-Roster filtering defaults to actual immunities. **Include resistances** explicitly broadens protection matches, including conditional sources; check the expanded source before choosing a counter. General damage mitigation and Physical/Energy/Critical resistance ratings stay in ordinary abilities.
+Roster filtering includes immunities and resistances by default, including conditional sources. **Refine immunity sources** contains **Include resistances** and an optional **Minimum potency reduction**. A minimum includes full immunities and known potency or combined potency/duration reductions meeting that percentage; unknown and differently measured values are excluded. Turn resistances off for immunity-only matches; clearing filters restores the inclusive default with no minimum. Check the expanded source before choosing a counter. General damage mitigation and Physical/Energy/Critical resistance ratings stay in ordinary abilities.
 
 ## Storage and projection
 

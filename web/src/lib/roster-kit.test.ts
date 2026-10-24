@@ -1,11 +1,87 @@
 import { describe, expect, it } from "vitest"
-import { buildRosterKitSections, matchesRosterKitFilters, type RosterKitLink } from "./roster-kit"
+import { buildRosterKitSections, matchesRosterKitFilters, matchingRosterKitSourceGroups, type RosterKitLink } from "./roster-kit"
 
 const filters = { abilities: [], immunities: [], categories: [] }
 const link = (id: number, name: string, values: Partial<RosterKitLink> = {}): RosterKitLink => ({
   id, type: "ABILITY", source: null, synergyChampions: [],
   ability: { name, iconUrl: null, gameGlossaryTermId: null, description: null, gameGlossaryTerm: { raw: { color_primary: "ff0000" } }, categories: [] },
   ...values,
+})
+
+describe("roster protection potency", () => {
+  const resistance = (id: number, name: string, percent: number | null, mechanism: "POTENCY" | "POTENCY_AND_DURATION" | "DAMAGE" | "DURATION" | "RESISTANCE" = "POTENCY", source: string | null = null) => link(id, "Damage Reduction", {
+    effectForm: "PASSIVE", effectDirection: "GAIN", source,
+    resistances: [{ effect: { name }, mechanism, percent }],
+  })
+
+  it("includes all resistances by default, with an immunity-only opt-out", () => {
+    const entries = [resistance(1, "Bleed", null)]
+    const selected = { ...filters, immunities: ["Bleed"] }
+    expect(matchesRosterKitFilters(entries, selected)).toBe(true)
+    expect(matchesRosterKitFilters(entries, { ...selected, includeResistances: false })).toBe(false)
+    expect(buildRosterKitSections(entries, selected)[0].effects[0]).toMatchObject({ type: "RESISTANCE", matched: true })
+    expect(buildRosterKitSections(entries, { ...selected, includeResistances: false })[0].effects[0].matched).toBe(false)
+  })
+
+  it.each([[79.99, false], [80, true], [100, true], [150, true], [null, false]] as const)("checks an inclusive 80 percent minimum against %s", (percent, expected) => {
+    const entries = [resistance(1, "Bleed", percent)]
+    const selected = { ...filters, immunities: ["Bleed"], minResistancePotency: 80 }
+    expect(matchesRosterKitFilters(entries, selected)).toBe(expected)
+    expect(buildRosterKitSections(entries, selected)[0].effects[0].matched).toBe(expected)
+  })
+
+  it.each(["DURATION", "DAMAGE", "RESISTANCE"] as const)("does not treat %s as potency", mechanism => {
+    expect(matchesRosterKitFilters([resistance(1, "Bleed", 100, mechanism)], { ...filters, immunities: ["Bleed"], minResistancePotency: 80 })).toBe(false)
+  })
+
+  it("accepts combined potency/duration reduction and full immunity", () => {
+    const selected = { ...filters, immunities: ["Bleed"], minResistancePotency: 80 }
+    expect(matchesRosterKitFilters([resistance(1, "Bleed", 80, "POTENCY_AND_DURATION")], selected)).toBe(true)
+    const immunity = link(2, "Bleed", { type: "IMMUNITY" })
+    expect(matchesRosterKitFilters([immunity], { ...selected, minResistancePotency: 150 })).toBe(true)
+    expect(buildRosterKitSections([immunity], selected)[0].effects[0].matched).toBe(true)
+  })
+
+  it("does not add separate sources or borrow percentages from another effect", () => {
+    const entries = [resistance(1, "Bleed", 40), resistance(2, "Bleed", 40), resistance(3, "Poison", 90)]
+    expect(matchesRosterKitFilters(entries, { ...filters, immunities: ["Bleed"], minResistancePotency: 80 })).toBe(false)
+  })
+
+  it("qualifies each effect before all/any matching and keeps ability qualifiers independent", () => {
+    const entries = [resistance(1, "Bleed", 80), resistance(2, "Poison", 60), link(3, "Fury", { effectForm: "BUFF", effectDirection: "GAIN" })]
+    const selected = { ...filters, abilities: ["Fury"], effectForms: ["BUFF"] as const, immunities: ["Bleed", "Poison"], minResistancePotency: 80 }
+    expect(matchesRosterKitFilters(entries, selected)).toBe(false)
+    expect(matchesRosterKitFilters(entries, { ...selected, immunityLogic: "OR" })).toBe(true)
+    expect(matchesRosterKitFilters(entries, { ...selected, minResistancePotency: 60 })).toBe(true)
+  })
+
+  it("supports threshold-only searches, rarity restrictions, and temporarily disabling resistances", () => {
+    const entries = [resistance(1, "Bleed", 90, "POTENCY", "Synergy: Team (7\u2605) with Ally (7\u2605): Resist Bleed.")]
+    const selected = { ...filters, minResistancePotency: 80 }
+    expect(matchesRosterKitFilters(entries, selected, 6)).toBe(false)
+    expect(matchesRosterKitFilters(entries, selected, 7)).toBe(true)
+    expect(matchesRosterKitFilters([link(2, "Fury")], selected)).toBe(false)
+    expect(matchesRosterKitFilters([link(2, "Fury")], { ...selected, includeResistances: false })).toBe(true)
+    expect(matchesRosterKitFilters(entries, { ...selected, immunities: ["Bleed"], includeResistances: false })).toBe(false)
+    expect(buildRosterKitSections(entries, selected, 6)[0].effects).toEqual([])
+  })
+
+  it("highlights only qualifying sources and filters their grouped conditions without mutating data", () => {
+    const entries = [resistance(1, "Bleed", 60, "POTENCY", "While armor is active."), resistance(2, "Bleed", 90, "POTENCY", "During a Special Attack.")]
+    const effect = buildRosterKitSections(entries, { ...filters, immunities: ["Bleed"], minResistancePotency: 80 })[0].effects[0]
+    expect(effect.matchedSources.map(source => source.resistance?.percent)).toEqual([90])
+    const detail = (percent: number) => ({ mechanism: "POTENCY" as const, percent })
+    const groups = [{ key: "PASSIVE:GAIN", effectForm: "PASSIVE" as const, effectDirection: "GAIN" as const,
+      nativeSources: [60, 90].map(percent => ({ key: String(percent), label: "Native", condition: `${percent}% reduction`, target: null, resistance: detail(percent) })),
+      synergies: [{ key: "team", champions: [], links: [40, 80].map(percent => ({ key: String(percent), label: "Team", conditions: [`${percent}% reduction`], resistance: detail(percent) })) }],
+    }]
+    const before = structuredClone(groups)
+    const filtered = matchingRosterKitSourceGroups(effect, groups, 80)
+    expect(filtered[0].nativeSources.map(source => source.resistance?.percent)).toEqual([90])
+    expect(filtered[0].synergies[0].links.map(source => source.resistance?.percent)).toEqual([80])
+    expect(groups).toEqual(before)
+    expect(matchingRosterKitSourceGroups(effect, groups, 100)).toEqual([])
+  })
 })
 
 describe("roster quick kit", () => {

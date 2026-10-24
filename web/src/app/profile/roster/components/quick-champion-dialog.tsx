@@ -10,7 +10,7 @@ import { CompactEffectGrid, CompactEffectTile } from "@/components/champions/com
 import { EffectSources } from "@/components/champions/effect-sources"
 import { getChampionClassColors } from "@/lib/championClassHelper"
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
-import { buildRosterKitSections, type RosterKitEffect } from "@/lib/roster-kit"
+import { buildRosterKitSections, matchingRosterKitSourceGroups, type RosterKitEffect } from "@/lib/roster-kit"
 import type { RosterKitDetails } from "@/lib/roster-kit-details"
 import type { ChampionKitSourceGroup, ChampionKitAbilityTarget } from "@/lib/champion-kit"
 import type { FilterState, ProfileRosterEntry } from "../types"
@@ -51,7 +51,8 @@ export function QuickChampionDialog({ item, prestige, open, onOpenChange, filter
     return () => controller.abort()
   }, [open, item.champion.slug, item.stars, item.rank, item.sigLevel, item.isAwakened, item.isUnowned, retry])
   const sections = buildRosterKitSections(details?.entries ?? item.champion.abilities, filters, item.stars || undefined)
-  const filterKey = JSON.stringify([filters.abilities, filters.categories, filters.immunities, filters.includeResistances, filters.effectForms, filters.effectDirections])
+  const loading = !details && !detailsError
+  const filterKey = JSON.stringify([filters.abilities, filters.categories, filters.immunities, filters.includeResistances, filters.effectForms, filters.effectDirections, filters.minResistancePotency])
   const matchingTagsOnly = filters.tags.length > 0
   const highlightedTags = matchingTagsOnly ? item.champion.tags.filter(tag => filters.tags.includes(tag.name)) : item.champion.tags.slice(0, 12)
   const owned = !item.isUnowned
@@ -113,13 +114,13 @@ export function QuickChampionDialog({ item, prestige, open, onOpenChange, filter
         <DialogClose asChild><button type="button" aria-label="Close champion preview" className="absolute right-3 top-3 grid h-8 w-8 place-items-center rounded-lg border border-white/10 bg-black/20 text-slate-400 transition-colors hover:bg-white/10 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"><X aria-hidden="true" className="h-4 w-4" /></button></DialogClose>
       </header>
       <div tabIndex={0} aria-label="Champion kit overview" className="min-h-0 flex-1 space-y-7 overflow-y-auto overscroll-contain px-4 py-5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-slate-500 sm:px-6 sm:py-6">
-        <div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-base font-semibold text-slate-100">Kit overview</h3><p className="mt-1 text-xs text-slate-500">Select an effect for its conditions and sources.</p></div><span className="inline-flex items-center gap-1.5 text-[10px] text-slate-500"><UsersRound aria-hidden="true" className="h-3 w-3" />Synergy-only effects are marked</span></div>
+        <div className="flex flex-wrap items-center justify-between gap-3"><div><h3 className="text-base font-semibold text-slate-100">Kit overview</h3><p role="status" className="mt-1 text-xs text-slate-500">{loading ? "Loading effect sources…" : "Select an effect for its conditions and sources."}</p></div><span className="inline-flex items-center gap-1.5 text-[10px] text-slate-500"><UsersRound aria-hidden="true" className="h-3 w-3" />Synergy-only effects are marked</span></div>
         {sections.map(section => {
           const Icon = SECTION_ICONS[section.key]
           const matchedCount = section.effects.filter(effect => effect.matched).length
           return <section key={section.key} aria-label={section.title}>
             <div className="mb-3 flex items-center gap-2.5 border-b border-white/[.06] pb-3"><Icon aria-hidden="true" className="h-4 w-4 text-slate-500" /><h4 className="flex-1 text-sm font-semibold text-slate-200">{section.title}</h4>{matchedCount > 0 && <span className="text-[10px] text-sky-300">{matchedCount} matched</span>}<span className="min-w-6 rounded-md border border-white/[.06] bg-white/[.025] px-1.5 py-0.5 text-center text-[11px] tabular-nums text-slate-500">{section.effects.length}</span></div>
-            {section.effects.length ? <CompactEffectGrid dense>{section.effects.map(effect => <QuickEffect key={`${effect.type}:${effect.name}:${filterKey}`} effect={effect} groups={details?.groups[`${section.key}:${effect.type}:${effect.name}`] ?? details?.groups[`${section.key}:${effect.name}`]} loading={!details && !detailsError} error={detailsError} onRetry={() => setRetry(value => value + 1)} abilityHref={abilityHref} synergiesHref={`/champions/${item.champion.slug}?${synergyParams}`} />)}</CompactEffectGrid> : <p className="text-xs text-slate-500">No immunities or resistances recorded.</p>}
+            {section.effects.length ? <CompactEffectGrid dense>{section.effects.map(effect => <QuickEffect key={`${effect.type}:${effect.name}:${filterKey}`} effect={effect} groups={details?.groups[`${section.key}:${effect.type}:${effect.name}`] ?? details?.groups[`${section.key}:${effect.name}`]} minResistancePotency={filters.includeResistances !== false ? filters.minResistancePotency : null} loading={loading} error={detailsError} onRetry={() => setRetry(value => value + 1)} abilityHref={abilityHref} synergiesHref={`/champions/${item.champion.slug}?${synergyParams}`} />)}</CompactEffectGrid> : <p className="text-xs text-slate-500">No immunities or resistances recorded.</p>}
           </section>
         })}
         {highlightedTags.length > 0 && <section aria-label={matchingTagsOnly ? "Matching tags" : "Tags"} className="border-t border-white/[.06] pt-5"><h4 className="mb-3 flex items-center gap-2 text-xs font-medium text-slate-500"><Tag aria-hidden="true" className="h-3.5 w-3.5" />{matchingTagsOnly ? "Matching tags" : "Tags"}</h4><div className="flex flex-wrap gap-1.5">{highlightedTags.map(tag => <span key={tag.id} className="inline-flex items-center gap-1 rounded-md border border-white/[.07] bg-white/[.025] px-2 py-1 text-[11px] text-slate-400"><Hash aria-hidden="true" className="h-3 w-3 text-slate-600" />{tag.name}</span>)}</div></section>}
@@ -132,16 +133,18 @@ export function QuickChampionDialog({ item, prestige, open, onOpenChange, filter
   </Dialog>
 }
 
-export function QuickEffect({ effect, groups, loading, error, onRetry, abilityHref, synergiesHref }: {
+export function QuickEffect({ effect, groups, minResistancePotency, loading, error, onRetry, abilityHref, synergiesHref }: {
   effect: RosterKitEffect
   groups?: ChampionKitSourceGroup[]
+  minResistancePotency?: number | null
   loading: boolean; error: boolean; onRetry: () => void
   abilityHref: (target: ChampionKitAbilityTarget) => string
   synergiesHref: string
 }) {
-  const visibleGroups = groups?.filter(group => !effect.matched || effect.matchedSources.some(source => source.effectForm === group.effectForm && source.effectDirection === group.effectDirection)) ?? []
+  const visibleGroups = matchingRosterKitSourceGroups(effect, groups, minResistancePotency)
+  // Loading content would auto-open matched tiles before source availability is known.
   return <CompactEffectTile effect={effect} matched={effect.matched}>
-    {loading ? <p role="status" className="border-t border-white/[.06] px-4 py-4 text-xs text-slate-500">Loading conditions…</p>
+    {loading ? undefined
       : error ? <div className="space-y-2 border-t border-white/[.06] px-4 py-4 text-xs text-slate-400"><p>Conditions couldn&apos;t be loaded.</p><button type="button" onClick={onRetry} className="text-sky-300 hover:text-sky-100">Try again</button></div>
         : visibleGroups.length ? <EffectSources effect={effect} groups={visibleGroups} showForms abilityHref={abilityHref} synergiesHref={synergiesHref} />
           : undefined}

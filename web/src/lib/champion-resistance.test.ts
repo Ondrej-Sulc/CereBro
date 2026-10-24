@@ -40,12 +40,12 @@ describe('resistance discovery', () => {
     expect(groups[0].nativeSources[0].condition).toContain('without preventing Bleed application');
     expect(resistance).toEqual(before);
   });
-  it('requires explicit opt-in for resistance matches and highlights only matching protection', () => {
+  it('includes resistance matches by default and supports an explicit immunity-only search', () => {
     const selected = { ...filters, immunities: ['Bleed'] };
-    expect(matchesRosterKitFilters([resistance], selected)).toBe(false);
-    expect(matchesRosterKitFilters([resistance], { ...selected, includeResistances: true })).toBe(true);
-    expect(buildRosterKitSections([resistance], selected)[0].effects[0].matched).toBe(false);
-    expect(buildRosterKitSections([resistance], { ...selected, includeResistances: true })[0].effects[0].matched).toBe(true);
+    expect(matchesRosterKitFilters([resistance], selected)).toBe(true);
+    expect(matchesRosterKitFilters([resistance], { ...selected, includeResistances: false })).toBe(false);
+    expect(buildRosterKitSections([resistance], selected)[0].effects[0].matched).toBe(true);
+    expect(buildRosterKitSections([resistance], { ...selected, includeResistances: false })[0].effects[0].matched).toBe(false);
   });
   it('keeps actual immunity and resistance applications distinct for the same effect', () => {
     const entries = [resistance, { ...resistance, id: 2, type: 'IMMUNITY', resistances: [], ability: ability('Bleed') }];
