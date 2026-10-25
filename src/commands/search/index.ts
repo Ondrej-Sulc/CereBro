@@ -2,6 +2,7 @@ import {
   SlashCommandBuilder,
   ChatInputCommandInteraction,
   AutocompleteInteraction,
+  SlashCommandSubcommandBuilder,
 } from "discord.js";
 import { Command, CommandAccess } from "../../types/command";
 import { registerButtonHandler } from "../../utils/buttonHandlerRegistry";
@@ -9,12 +10,26 @@ import { handleGlobalSearch, handleSearchPagination } from "./all";
 import { handleRosterSearch, handleRosterSearchPagination } from "./roster";
 import { handleAutocomplete } from "./autocomplete";
 
+function addEffectOptions(subcommand: SlashCommandSubcommandBuilder) {
+  return subcommand
+    .addStringOption(option => option.setName("effect-form").setDescription("Match ability sources with this form")
+      .addChoices({ name: "Buff", value: "BUFF" }, { name: "Debuff", value: "DEBUFF" },
+        { name: "Passive", value: "PASSIVE" }, { name: "Not recorded", value: "UNKNOWN" }))
+    .addStringOption(option => option.setName("effect-direction").setDescription("Match ability sources with this direction")
+      .addChoices({ name: "Gains on self", value: "GAIN" }, { name: "Inflicts on opponent", value: "INFLICT" },
+        { name: "Not recorded", value: "UNKNOWN" }))
+    .addBooleanOption(option => option.setName("include-resistances")
+      .setDescription("Include resistances in immunity searches (default: true; false for full immunity only)"))
+    .addNumberOption(option => option.setName("min-resistance").setMinValue(0)
+      .setDescription("Minimum potency reduction %, including full immunities; excludes unknown or other reductions"));
+}
+
 export const command: Command = {
   data: new SlashCommandBuilder()
     .setName("search")
     .setDescription("Powerful search for champions based on various criteria.")
     .addSubcommand((subcommand) =>
-      subcommand
+      addEffectOptions(subcommand)
         .setName("all")
         .setDescription("Search from all champions in the game")
         .addStringOption((option) =>
@@ -26,7 +41,7 @@ export const command: Command = {
         .addStringOption((option) =>
           option
             .setName("immunities")
-            .setDescription("Search by immunities (use 'and'/'or')")
+            .setDescription("Search by immunities and resistances (use 'and'/'or')")
             .setAutocomplete(true)
         )
         .addStringOption((option) =>
@@ -57,7 +72,7 @@ export const command: Command = {
         )
     )
     .addSubcommand((subcommand) =>
-      subcommand
+      addEffectOptions(subcommand)
         .setName("roster")
         .setDescription("Search from a player roster")
         .addStringOption((option) =>
@@ -69,7 +84,7 @@ export const command: Command = {
         .addStringOption((option) =>
           option
             .setName("immunities")
-            .setDescription("Search by immunities (use 'and'/'or')")
+            .setDescription("Search by immunities and resistances (use 'and'/'or')")
             .setAutocomplete(true)
         )
         .addStringOption((option) =>

@@ -3,18 +3,15 @@ import {
   RosterEntryWithChampionRelations,
   SearchCoreParams,
 } from "../../../types/search";
+import { AttackType as AttackTypeEnum } from "@prisma/client";
 import {
-  ChampionClass,
-  AbilityCategory,
-  Hit,
-  AttackType as AttackTypeEnum,
-} from "@prisma/client";
-import {
-  parseAndOrConditions,
   isAttackType,
-  ATTACK_TYPE_KEYWORDS,
   MODIFIER_KEYWORDS,
 } from "../queryBuilder";
+import { projectChampionEffects, type ChampionEffect } from "../../../domain/champion-effects";
+import { formatChampionEffectSources } from "../../champion/view";
+import { prepareChampionEffectDisplay } from "../../champion/effect-display";
+import { matchesAbilitySource, matchesProtection, type ParsedSearchCriteria } from "../utils";
 import { getApplicationEmojiMarkupByName } from "../../../services/applicationEmojiService";
 
 
@@ -24,77 +21,63 @@ export function getCriteriaString(
 ) {
   const criteriaParts: string[] = [];
   for (const [key, value] of Object.entries(searchCriteria)) {
-    if (value) {
+    if (value != null && value !== "") {
       const formattedKey = key
         .replace(/([A-Z])/g, " $1")
         .replace(/^./, (str) => str.toUpperCase());
-      criteriaParts.push(`**${formattedKey}:** 
-${value}
-`);
+      const display = key === "includeResistances" ? (value ? "Included" : "Full immunities only") : value;
+      criteriaParts.push(`**${formattedKey}:** ${display}`);
     }
   }
+  if (searchCriteria.immunities && searchCriteria.includeResistances == null) criteriaParts.push("**Include resistances:** Yes");
   return criteriaParts.join("\n");
+}
+
+export function getSearchHeader(criteria: Omit<SearchCoreParams, "userId" | "page" | "searchId">, total: number, roster = false): string {
+  const text = getCriteriaString(criteria);
+  // Keep room for results even for unusually long user-entered AND/OR expressions.
+  const preview = text.length > 1000 ? `${text.slice(0, 999)}…` : text;
+  return `Found **${total}** champion(s)${roster ? " in your roster" : ""} matching your criteria.\n${preview ? `\n${preview}` : ""}`;
+}
+
+export function getSearchPageLimit(criteria: Omit<SearchCoreParams, "userId" | "page" | "searchId">, total: number, roster = false): number {
+  return 3900 - getSearchHeader(criteria, total, roster).length;
 }
 
 export function getChampionDetailsString(
   champion: ChampionWithRelations,
-  parsedSearchCriteria: any
+  parsedSearchCriteria: ParsedSearchCriteria
 ) {
   const details: string[] = [];
 
-  const processLinks = (
-    links: ChampionWithRelations["abilities"],
-    type: "ABILITY" | "IMMUNITY",
-    criteria: string[]
-  ) => {
-    const matchedLinks = links.filter(
-      (link) =>
-        link.type === type && criteria.includes(link.ability.name.toLowerCase())
-    );
-
-    if (matchedLinks.length === 0) return null;
-
-    const grouped = new Map<string, string[]>();
-    matchedLinks.forEach((link) => {
-      if (!grouped.has(link.ability.name)) {
-        grouped.set(link.ability.name, []);
-      }
-      if (link.source) {
-        const sources = grouped.get(link.ability.name)!;
-        if (!sources.includes(link.source)) {
-          sources.push(link.source);
-        }
-      }
-    });
-
-    const strings = Array.from(grouped.entries()).map(([name, sources]) => {
-      if (sources.length > 0) {
-        return `**${name}** (${sources.join(" | ")})`;
-      }
-      return `**${name}**`;
-    });
-    return strings.join(", ");
-  };
-
-  if (parsedSearchCriteria.abilities.length > 0) {
-    const abilitiesString = processLinks(
-      champion.abilities,
-      "ABILITY",
-      parsedSearchCriteria.abilities
-    );
-    if (abilitiesString) {
-      details.push(`> *Abilities:* ${abilitiesString}`);
+  const effects = champion.effects ?? projectChampionEffects(champion.abilities);
+  const display = prepareChampionEffectDisplay(champion);
+  const abilities = effects.filter(effect => matchesAbilitySource(effect, parsedSearchCriteria));
+  const categoryMatches = (effect: ChampionEffect) => !parsedSearchCriteria.abilityCategory.length
+    || effect.ability.categories?.some(category => parsedSearchCriteria.abilityCategory.includes(category.name.toLowerCase()));
+  const formatEffects = (items: ChampionEffect[]) => {
+    const groups = new Map<string, ChampionEffect[]>();
+    for (const effect of items) {
+      const sources = groups.get(effect.ability.name) ?? [];
+      sources.push(effect);
+      groups.set(effect.ability.name, sources);
     }
+    return [...groups].map(([name, links]) => {
+      const sources = formatChampionEffectSources(links, text => text, display);
+      return `**${name}**${sources.length ? ` (${sources.join(" | ")})` : ""}`;
+    }).join(", ");
+  };
+  if (parsedSearchCriteria.abilities.length || parsedSearchCriteria.effectForm || parsedSearchCriteria.effectDirection) {
+    const matching = abilities.filter(effect => (!parsedSearchCriteria.abilities.length
+      || parsedSearchCriteria.abilities.includes(effect.ability.name.toLowerCase())));
+    if (matching.length) details.push(`> *Abilities:* ${formatEffects(matching)}`);
   }
-
-  if (parsedSearchCriteria.immunities.length > 0) {
-    const immunitiesString = processLinks(
-      champion.abilities,
-      "IMMUNITY",
-      parsedSearchCriteria.immunities
-    );
-    if (immunitiesString) {
-      details.push(`> *Immunities:* ${immunitiesString}`);
+  const protections = effects.filter(effect => matchesProtection(effect, parsedSearchCriteria)
+    && (!parsedSearchCriteria.immunities.length || parsedSearchCriteria.immunities.includes(effect.ability.name.toLowerCase())));
+  if (parsedSearchCriteria.immunities.length || parsedSearchCriteria.minResistance != null) {
+    for (const [type, label] of [["IMMUNITY", "Immunities"], ["RESISTANCE", "Resistances"]] as const) {
+      const matching = protections.filter(effect => effect.type === type);
+      if (matching.length) details.push(`> *${label}:* ${formatEffects(matching)}`);
     }
   }
 
@@ -109,66 +92,9 @@ export function getChampionDetailsString(
     }
   }
 
-  if (parsedSearchCriteria.abilityCategory.length > 0) {
-    const matchedAbilitiesForCategory = champion.abilities.filter(
-      (link) =>
-        link.type === "ABILITY" &&
-        link.ability.categories.some((cat) =>
-          parsedSearchCriteria.abilityCategory.includes(cat.name.toLowerCase())
-        )
-    );
-
-    if (matchedAbilitiesForCategory.length > 0) {
-      const displayCategories = [
-        ...new Set(
-          matchedAbilitiesForCategory.flatMap((link) =>
-            link.ability.categories
-
-              .filter((cat) =>
-                parsedSearchCriteria.abilityCategory.includes(
-                  cat.name.toLowerCase()
-                )
-              )
-
-              .map((cat) => cat.name)
-          )
-        ),
-      ];
-
-      const groupedAbilities = new Map<string, string[]>();
-
-      matchedAbilitiesForCategory.forEach((link) => {
-        if (!groupedAbilities.has(link.ability.name)) {
-          groupedAbilities.set(link.ability.name, []);
-        }
-
-        if (link.source) {
-          const sources = groupedAbilities.get(link.ability.name)!;
-
-          if (!sources.includes(link.source)) {
-            sources.push(link.source);
-          }
-        }
-      });
-
-      const displayAbilities = Array.from(groupedAbilities.entries()).map(
-        ([name, sources]) => {
-          if (sources.length > 0) {
-            return `**${name}** (${sources.join(" | ")})`;
-          }
-
-          return `**${name}**`;
-        }
-      );
-
-      if (displayCategories.length > 0) {
-        if (parsedSearchCriteria.abilityCategory.length > 1) {
-          details.push(`> *Categories:* ${displayCategories.join(", ")}`);
-        }
-
-        details.push(`> *Matching Abilities:* ${displayAbilities.join(", ")}`);
-      }
-    }
+  if (parsedSearchCriteria.abilityCategory.length) {
+    const matching = abilities.filter(effect => categoryMatches(effect));
+    if (matching.length) details.push(`> *Matching Abilities:* ${formatEffects(matching)}`);
   }
 
   if (parsedSearchCriteria.attackType.length > 0) {
@@ -230,12 +156,15 @@ export function getChampionDetailsString(
     }
   }
 
-  return details.join("\n");
+  const text = details.join("\n");
+  if (text.length <= 1800) return text;
+  // Search is a preview. Champion commands retain every source through pagination.
+  return `${text.slice(0, 1600).replace(/\s+\S*$/, "")}…\n> Full sources: \`/champion overview champion:${champion.name}\``;
 }
 
 export function getChampionDisplayLength(
   champion: ChampionWithRelations,
-  parsedSearchCriteria: any
+  parsedSearchCriteria: ParsedSearchCriteria
 ): number {
   const details = getChampionDetailsString(champion, parsedSearchCriteria);
   const capitalizedClassName =
@@ -255,7 +184,7 @@ export function getChampionDisplayLength(
 
 export function getRosterEntryDisplayLength(
   entry: RosterEntryWithChampionRelations,
-  parsedSearchCriteria: any
+  parsedSearchCriteria: ParsedSearchCriteria
 ): number {
   const championLength = getChampionDisplayLength(
     entry.champion,

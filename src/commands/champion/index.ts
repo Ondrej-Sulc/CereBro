@@ -80,7 +80,7 @@ export const command: Command = {
     .addSubcommand((subcommand) =>
       subcommand
         .setName("immunities")
-        .setDescription("List all of a champion's immunities.")
+        .setDescription("List a champion's immunities and resistances with their conditions.")
         .addStringOption((option) =>
           option
             .setName("champion")
@@ -104,7 +104,7 @@ export const command: Command = {
     .addSubcommand((subcommand) =>
       subcommand
         .setName("overview")
-        .setDescription("Display a champion's abilities, immunities, and tags.")
+        .setDescription("Display a champion's abilities, immunities, resistances, and tags.")
         .addStringOption((option) =>
           option
             .setName("champion")

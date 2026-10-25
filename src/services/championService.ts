@@ -8,7 +8,12 @@ import {
   Tag,
   ChampionAbilitySynergy,
   Duel,
+  ChampionAbilityCurve,
+  ChampionStats,
 } from "@prisma/client";
+import { CHAMPION_EFFECT_INCLUDE, attachChampionSynergies } from "./championEffectService";
+import type { ChampionEffectSource } from "../domain/champion-effects";
+import type { ChampionSynergy } from "../domain/champion-synergies";
 import { normalizeChampionName } from "../utils/championHelper";
 import logger from "./loggerService";
 
@@ -51,7 +56,7 @@ export type ChampionAbilitySynergyWithChampion = ChampionAbilitySynergy & {
   champion: Champion;
 };
 
-export type ChampionAbilityLinkWithRelations = ChampionAbilityLink & {
+export type ChampionAbilityLinkWithRelations = ChampionAbilityLink & Pick<ChampionEffectSource, "overviewSummary" | "resistances"> & {
   ability: Ability;
   synergyChampions: ChampionAbilitySynergyWithChampion[];
 };
@@ -61,53 +66,47 @@ export type ChampionWithAllRelations = Champion & {
   abilities: ChampionAbilityLinkWithRelations[];
   tags: Tag[];
   duels: Duel[];
+  abilityTexts?: Array<{ id: number; championId: number; group: string; title: string | null; sortOrder: number; template: unknown }>;
+  abilityCurves?: ChampionAbilityCurve[];
+  stats?: Array<Pick<ChampionStats, "rarity" | "rank" | "challengeRating" | "attack" | "health" | "sigAbilityIds">>;
+  gameSynergies?: ChampionSynergy[];
 };
 
 export async function getChampionDataById(
   id: number
 ): Promise<ChampionWithAllRelations | null> {
-  return prisma.champion.findUnique({
+  const champion = await prisma.champion.findUnique({
     where: { id },
     include: {
       attacks: { include: { hits: true } },
-      abilities: {
-        include: {
-          ability: true,
-          synergyChampions: {
-            include: {
-              champion: true,
-            },
-          },
-        },
-      },
+      abilities: { include: CHAMPION_EFFECT_INCLUDE },
+      abilityTexts: { orderBy: [{ group: "asc" }, { sortOrder: "asc" }] },
+      abilityCurves: true,
+      stats: { orderBy: [{ rarity: "desc" }, { rank: "desc" }] },
       tags: true,
       duels: true,
     },
-  }) as Promise<ChampionWithAllRelations | null>;
+  });
+  return champion ? (await attachChampionSynergies([champion]))[0] : null;
 }
 
 export async function getChampionData(
   championName: string
 ): Promise<ChampionWithAllRelations | null> {
-  return prisma.champion.findFirst({
+  const champion = await prisma.champion.findFirst({
     where: { name: { equals: championName, mode: "insensitive" } },
 
     include: {
       attacks: { include: { hits: true } },
-      abilities: {
-        include: {
-          ability: true,
-          synergyChampions: {
-            include: {
-              champion: true,
-            },
-          },
-        },
-      },
+      abilities: { include: CHAMPION_EFFECT_INCLUDE },
+      abilityTexts: { orderBy: [{ group: "asc" }, { sortOrder: "asc" }] },
+      abilityCurves: true,
+      stats: { orderBy: [{ rarity: "desc" }, { rank: "desc" }] },
       tags: true,
       duels: true,
     },
-  }) as Promise<ChampionWithAllRelations | null>;
+  });
+  return champion ? (await attachChampionSynergies([champion]))[0] : null;
 }
 
 let _prestigeThresholdsCache: Map<string, number> | null = null;

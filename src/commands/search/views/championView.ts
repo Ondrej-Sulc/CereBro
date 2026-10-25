@@ -15,8 +15,8 @@ import {
   ChampionWithRelations,
   SearchCoreParams,
 } from "../../../types/search";
-import { parseAndOrConditions } from "../queryBuilder";
-import { getChampionDetailsString, getCriteriaString } from "./common";
+import { parseSearchCriteria } from "../utils";
+import { getChampionDetailsString, getSearchHeader } from "./common";
 import { CommandResult } from "../../../types/command";
 import { getApplicationEmojiMarkupByName } from "../../../services/applicationEmojiService";
 
@@ -34,28 +34,9 @@ export async function generateChampionResponse(
   const container = new ContainerBuilder();
   container.setAccentColor(0x323232);
 
-  const parsedSearchCriteria = {
-    abilities: parseAndOrConditions(searchCriteria.abilities).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-    immunities: parseAndOrConditions(searchCriteria.immunities).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-    tags: parseAndOrConditions(searchCriteria.tags).conditions.map((c) =>
-      c.toLowerCase()
-    ),
-    abilityCategory: parseAndOrConditions(
-      searchCriteria.abilityCategory
-    ).conditions.map((c) => c.toLowerCase()),
-    attackType: parseAndOrConditions(searchCriteria.attackType).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-  };
+  const parsedSearchCriteria = parseSearchCriteria(searchCriteria);
 
-  const criteriaString = getCriteriaString(searchCriteria);
-  const header = `Found **${totalChampions}** champion(s) matching your criteria.\n${ 
-    criteriaString ? `\n${criteriaString}` : ""
-  }`;
+  const header = getSearchHeader(searchCriteria, totalChampions, false);
 
   container.addTextDisplayComponents(new TextDisplayBuilder().setContent(header));
   container.addSeparatorComponents(new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small));

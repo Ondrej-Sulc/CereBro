@@ -8,9 +8,10 @@ import {
   ButtonBuilder,
   ButtonStyle,
 } from "discord.js";
-import { AbilityCategory, Champion, ChampionAbilityLink } from "@prisma/client";
+import { AbilityCategory, Champion } from "@prisma/client";
 import { prisma } from "../../services/prismaService";
 import { CommandResult } from "../../types/command";
+import { findSearchChampions } from "../search/data";
 import { glossaryColors } from "./index";
 
 export async function handleEffect(
@@ -28,11 +29,6 @@ export async function handleEffect(
     },
     include: {
       categories: true,
-      champions: {
-        include: {
-          champion: true,
-        },
-      },
     },
   });
 
@@ -55,25 +51,13 @@ export async function handleEffect(
     };
   }
 
-  const typedChampions = effect.champions as (ChampionAbilityLink & {
-    champion: Champion;
-  })[];
-
-  const abilityChamps = [
-    ...new Map(
-      typedChampions
-        .filter((c) => c.type === "ABILITY")
-        .map((item) => [item.championId, item])
-    ).values(),
-  ].sort((a, b) => a.champion.name.localeCompare(b.champion.name));
-
-  const immunityChamps = [
-    ...new Map(
-      typedChampions
-        .filter((c) => c.type === "IMMUNITY")
-        .map((item) => [item.championId, item])
-    ).values(),
-  ].sort((a, b) => a.champion.name.localeCompare(b.champion.name));
+  const [abilityChamps, protectionChamps] = await Promise.all([
+    findSearchChampions({ abilities: effect.name }), findSearchChampions({ immunities: effect.name }),
+  ]);
+  const immunityChamps = protectionChamps.filter(champion => champion.effects.some(source =>
+    source.type === "IMMUNITY" && source.ability.name === effect.name));
+  const resistanceChamps = protectionChamps.filter(champion => champion.effects.some(source =>
+    source.type === "RESISTANCE" && source.ability.name === effect.name));
 
   const title = new TextDisplayBuilder().setContent(
     `# ${effect.emoji ? `${resolveEmoji(effect.emoji)} ` : ""}${effect.name}`
@@ -92,22 +76,22 @@ export async function handleEffect(
     container.addTextDisplayComponents(noDescription);
   }
 
-  if (effect.champions.length > 0) {
+  if (abilityChamps.length + protectionChamps.length > 0) {
     container.addSeparatorComponents(
       new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small)
     );
 
     const displayChampionEmojis = (
-      champions: (ChampionAbilityLink & { champion: Champion })[],
+      champions: Champion[],
       container: ContainerBuilder,
       resolveEmoji: (text: string) => string
     ) => {
       const championEmojis = champions
-        .map((link) => resolveEmoji(link.champion.discordEmoji || ""))
+        .map(champion => champion.discordEmoji ? resolveEmoji(champion.discordEmoji) : champion.name)
         .filter(Boolean);
 
       if (championEmojis.length > 0) {
-        const limit = 50;
+        const limit = 12;
         let emojiContent = "## " + championEmojis.slice(0, limit).join(" ");
 
         if (championEmojis.length > limit) {
@@ -145,23 +129,26 @@ export async function handleEffect(
       container.addActionRowComponents(searchButtons);
     }
 
-    if (immunityChamps.length > 0) {
+    if (protectionChamps.length > 0) {
       if (abilityChamps.length > 0) {
         container.addSeparatorComponents(
           new SeparatorBuilder().setSpacing(SeparatorSpacingSize.Small)
         );
       }
-      const immunitiesTitle = new TextDisplayBuilder().setContent(
-        "## Champions immune to this effect"
-      );
-      container.addTextDisplayComponents(immunitiesTitle);
-      displayChampionEmojis(immunityChamps, container, resolveEmoji);
+      if (immunityChamps.length) {
+        container.addTextDisplayComponents(new TextDisplayBuilder().setContent("## Champions immune to this effect"));
+        displayChampionEmojis(immunityChamps, container, resolveEmoji);
+      }
+      if (resistanceChamps.length) {
+        container.addTextDisplayComponents(new TextDisplayBuilder().setContent("## Champions resistant to this effect"));
+        displayChampionEmojis(resistanceChamps, container, resolveEmoji);
+      }
 
       const searchImmunitiesButtons = new ActionRowBuilder<ButtonBuilder>();
       searchImmunitiesButtons.addComponents(
         new ButtonBuilder()
           .setCustomId(`glossary_search_immunity_${effect.name}`)
-          .setLabel("🔍 Search for this immunity")
+          .setLabel("🔍 Search immunities & resistances")
           .setStyle(glossaryColors.buttons.search)
       );
       if (player && player.roster.length > 0) {

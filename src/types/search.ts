@@ -8,6 +8,9 @@ import {
   Hit,
   Roster,
 } from "@prisma/client";
+import type { EffectForm, EffectDirection } from "../domain/ability-source";
+import type { ChampionEffect, ChampionEffectSource } from "../domain/champion-effects";
+import type { ChampionSynergy } from "../domain/champion-synergies";
 
 export interface SearchCoreParams {
   abilities?: string | null;
@@ -16,6 +19,10 @@ export interface SearchCoreParams {
   championClass?: string | null;
   abilityCategory?: string | null;
   attackType?: string | null;
+  effectForm?: EffectForm | null;
+  effectDirection?: EffectDirection | null;
+  includeResistances?: boolean | null;
+  minResistance?: number | null;
   userId: string;
   page?: number;
   searchId?: string;
@@ -23,7 +30,9 @@ export interface SearchCoreParams {
 
 export type ChampionWithRelations = Champion & {
   tags: Tag[];
-  abilities: (ChampionAbilityLink & {
+  effects?: ChampionEffect[];
+  gameSynergies?: ChampionSynergy[];
+  abilities: (ChampionAbilityLink & Pick<ChampionEffectSource, "synergyChampions" | "overviewSummary" | "resistances"> & {
     ability: Ability & {
       categories: AbilityCategory[];
     };

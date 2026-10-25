@@ -1,7 +1,8 @@
 import {
   ChampionWithAllRelations,
-  ChampionAbilityLinkWithRelations,
 } from "../../services/championService";
+import { projectChampionEffects } from "../../domain/champion-effects";
+import { prepareChampionEffectDisplay } from "./effect-display";
 import {
   formatLinkedAbilitySection,
   formatAttacks,
@@ -17,26 +18,24 @@ export function getOverviewContent(
   champion: ChampionWithAllRelations,
   resolveEmoji: (text: string) => string
 ): OverviewSection[] | string {
-  const abilities = champion.abilities.filter(
-    (a: ChampionAbilityLinkWithRelations) => a.type === "ABILITY"
-  );
-  const immunities = champion.abilities.filter(
-    (a: ChampionAbilityLinkWithRelations) => a.type === "IMMUNITY"
-  );
+  const effects = projectChampionEffects(champion.abilities, champion.abilityTexts);
+  const display = prepareChampionEffectDisplay(champion);
+  const abilities = effects.filter(a => a.type === "ABILITY");
+  const immunities = effects.filter(a => a.type === "IMMUNITY" || a.type === "RESISTANCE");
 
   const sections: OverviewSection[] = [];
 
   if (abilities.length > 0) {
     sections.push({
       title: "Abilities",
-      content: formatLinkedAbilitySection(abilities, resolveEmoji, "Abilities", 'compact'),
+      content: formatLinkedAbilitySection(abilities, resolveEmoji, "Abilities", 'compact', display),
     });
   }
 
   if (immunities.length > 0) {
     sections.push({
-      title: "Immunities",
-      content: formatLinkedAbilitySection(immunities, resolveEmoji, "Immunities", 'compact'),
+      title: "Immunities & resistances",
+      content: formatLinkedAbilitySection(immunities, resolveEmoji, "Immunities", 'compact', display),
     });
   }
 

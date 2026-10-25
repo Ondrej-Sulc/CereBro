@@ -6,32 +6,24 @@ import {
   MessageFlags,
 } from "discord.js";
 import crypto from "crypto";
+import { readSearchCriteria, parseSearchCriteria } from "./utils";
 import {
   RosterEntryWithChampionRelations,
-  SearchCoreParams,
 } from "../../types/search";
-import { buildSearchWhereClause, parseAndOrConditions } from "./queryBuilder";
+import { findSearchRoster } from "./data";
 import { rosterSearchCache } from "./cache";
 import { paginate } from "./pagination";
 import { rosterCore } from "./searchService";
-import { getRosterEntryDisplayLength } from "./views/common";
+import { getRosterEntryDisplayLength, getSearchPageLimit } from "./views/common";
 import { getPlayer } from "../../utils/playerHelper";
 
 
 
 async function handleRosterSearch(interaction: ChatInputCommandInteraction) {
-  const { prisma } = await import("../../services/prismaService.js");
   const searchId = crypto.randomUUID();
-  const searchCriteria = {
-    abilities: interaction.options.getString("abilities"),
-    immunities: interaction.options.getString("immunities"),
-    tags: interaction.options.getString("tags"),
-    championClass: interaction.options.getString("class"),
-    abilityCategory: interaction.options.getString("ability-category"),
-    attackType: interaction.options.getString("attack-type"),
-  };
+  const searchCriteria = readSearchCriteria(interaction);
 
-  if (Object.values(searchCriteria).every((v) => !v)) {
+  if (Object.values(searchCriteria).every(value => value == null || value === "" || value === false)) {
     await interaction.editReply({
       content: "You must provide at least one search criteria.",
     });
@@ -44,29 +36,7 @@ async function handleRosterSearch(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  const where = await buildSearchWhereClause(searchCriteria);
-  const rosterEntries = await prisma.roster.findMany({
-    where: {
-      playerId: player.id,
-      champion: where,
-    },
-    include: {
-      champion: {
-        include: {
-          tags: true,
-          abilities: {
-            include: { ability: { include: { categories: true } } },
-          },
-          attacks: { include: { hits: true } },
-        },
-      },
-    },
-    orderBy: [
-      { stars: "desc" },
-      { rank: "desc" },
-      { champion: { name: "asc" } },
-    ],
-  });
+  const rosterEntries = await findSearchRoster(player.id, searchCriteria);
 
   if (rosterEntries.length === 0) {
     await interaction.editReply({
@@ -75,25 +45,9 @@ async function handleRosterSearch(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  const parsedSearchCriteria = {
-    abilities: parseAndOrConditions(searchCriteria.abilities).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-    immunities: parseAndOrConditions(searchCriteria.immunities).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-    tags: parseAndOrConditions(searchCriteria.tags).conditions.map((c) =>
-      c.toLowerCase()
-    ),
-    abilityCategory: parseAndOrConditions(
-      searchCriteria.abilityCategory
-    ).conditions.map((c) => c.toLowerCase()),
-    attackType: parseAndOrConditions(searchCriteria.attackType).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-  };
+  const parsedSearchCriteria = parseSearchCriteria(searchCriteria);
 
-  const pages = paginate<RosterEntryWithChampionRelations>(rosterEntries, (entry) => getRosterEntryDisplayLength(entry, parsedSearchCriteria));
+  const pages = paginate<RosterEntryWithChampionRelations>(rosterEntries, (entry) => getRosterEntryDisplayLength(entry, parsedSearchCriteria), getSearchPageLimit(searchCriteria, rosterEntries.length, true));
   rosterSearchCache.set(searchId, { criteria: searchCriteria, pages });
   setTimeout(() => rosterSearchCache.delete(searchId), 15 * 60 * 1000); // 15 min expiry
 

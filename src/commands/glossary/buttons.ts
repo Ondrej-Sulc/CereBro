@@ -10,16 +10,14 @@ import { createEmojiResolver } from "../../utils/emojiResolver";
 import { handleList } from "./list";
 import { handleEffect } from "./effect";
 import crypto from "crypto";
-import {
-  buildSearchWhereClause,
-  parseAndOrConditions,
-} from "../search/queryBuilder";
+import { findSearchChampions, findSearchRoster } from "../search/data";
+import { parseSearchCriteria } from "../search/utils";
 import { rosterSearchCache, searchCache } from "../search/cache";
 import { paginate } from "../search/pagination";
 import { core, rosterCore } from "../search/searchService";
-import { prisma } from "../../services/prismaService";
 import {
   getChampionDisplayLength,
+  getSearchPageLimit,
   getRosterEntryDisplayLength,
 } from "../search/views/common";
 import { getPlayer } from "../../utils/playerHelper";
@@ -95,20 +93,7 @@ async function handleSearchButton(interaction: ButtonInteraction) {
     attackType: null,
   };
 
-  const where = await buildSearchWhereClause(searchCriteria);
-  const allChampions = await prisma.champion.findMany({
-    where,
-    include: {
-      tags: true,
-      abilities: {
-        include: {
-          ability: { include: { categories: true } },
-        },
-      },
-      attacks: { include: { hits: true } },
-    },
-    orderBy: { name: "asc" },
-  });
+  const allChampions = await findSearchChampions(searchCriteria);
 
   if (allChampions.length === 0) {
     await interaction.editReply(
@@ -117,26 +102,10 @@ async function handleSearchButton(interaction: ButtonInteraction) {
     return;
   }
 
-  const parsedSearchCriteria = {
-    abilities: parseAndOrConditions(searchCriteria.abilities).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-    immunities: parseAndOrConditions(searchCriteria.immunities).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-    tags: parseAndOrConditions(searchCriteria.tags).conditions.map((c) =>
-      c.toLowerCase()
-    ),
-    abilityCategory: parseAndOrConditions(
-      searchCriteria.abilityCategory
-    ).conditions.map((c) => c.toLowerCase()),
-    attackType: parseAndOrConditions(searchCriteria.attackType).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-  };
+  const parsedSearchCriteria = parseSearchCriteria(searchCriteria);
 
   const pages = paginate(allChampions, (champion) =>
-    getChampionDisplayLength(champion, parsedSearchCriteria)
+    getChampionDisplayLength(champion, parsedSearchCriteria), getSearchPageLimit(searchCriteria, allChampions.length)
   );
   searchCache.set(searchId, { criteria: searchCriteria, pages });
   setTimeout(() => searchCache.delete(searchId), 15 * 60 * 1000); // 15 min expiry
@@ -173,20 +142,7 @@ async function handleCategorySearchButton(interaction: ButtonInteraction) {
     attackType: null,
   };
 
-  const where = await buildSearchWhereClause(searchCriteria);
-  const allChampions = await prisma.champion.findMany({
-    where,
-    include: {
-      tags: true,
-      abilities: {
-        include: {
-          ability: { include: { categories: true } },
-        },
-      },
-      attacks: { include: { hits: true } },
-    },
-    orderBy: { name: "asc" },
-  });
+  const allChampions = await findSearchChampions(searchCriteria);
 
   if (allChampions.length === 0) {
     await interaction.editReply(
@@ -195,26 +151,10 @@ async function handleCategorySearchButton(interaction: ButtonInteraction) {
     return;
   }
 
-  const parsedSearchCriteria = {
-    abilities: parseAndOrConditions(searchCriteria.abilities).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-    immunities: parseAndOrConditions(searchCriteria.immunities).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-    tags: parseAndOrConditions(searchCriteria.tags).conditions.map((c) =>
-      c.toLowerCase()
-    ),
-    abilityCategory: parseAndOrConditions(
-      searchCriteria.abilityCategory
-    ).conditions.map((c) => c.toLowerCase()),
-    attackType: parseAndOrConditions(searchCriteria.attackType).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-  };
+  const parsedSearchCriteria = parseSearchCriteria(searchCriteria);
 
   const pages = paginate(allChampions, (champion) =>
-    getChampionDisplayLength(champion, parsedSearchCriteria)
+    getChampionDisplayLength(champion, parsedSearchCriteria), getSearchPageLimit(searchCriteria, allChampions.length)
   );
   searchCache.set(searchId, { criteria: searchCriteria, pages });
   setTimeout(() => searchCache.delete(searchId), 15 * 60 * 1000); // 15 min expiry
@@ -259,29 +199,7 @@ async function handleRosterSearchEffectButton(interaction: ButtonInteraction) {
     return;
   }
 
-  const where = await buildSearchWhereClause(searchCriteria);
-  const rosterEntries = await prisma.roster.findMany({
-    where: {
-      playerId: player.id,
-      champion: where,
-    },
-    include: {
-      champion: {
-        include: {
-          tags: true,
-          abilities: {
-            include: { ability: { include: { categories: true } } },
-          },
-          attacks: { include: { hits: true } },
-        },
-      },
-    },
-    orderBy: [
-      { stars: "desc" },
-      { rank: "desc" },
-      { champion: { name: "asc" } },
-    ],
-  });
+  const rosterEntries = await findSearchRoster(player.id, searchCriteria);
 
   if (rosterEntries.length === 0) {
     const container = new ContainerBuilder();
@@ -297,26 +215,10 @@ async function handleRosterSearchEffectButton(interaction: ButtonInteraction) {
     return;
   }
 
-  const parsedSearchCriteria = {
-    abilities: parseAndOrConditions(searchCriteria.abilities).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-    immunities: parseAndOrConditions(searchCriteria.immunities).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-    tags: parseAndOrConditions(searchCriteria.tags).conditions.map((c) =>
-      c.toLowerCase()
-    ),
-    abilityCategory: parseAndOrConditions(
-      searchCriteria.abilityCategory
-    ).conditions.map((c) => c.toLowerCase()),
-    attackType: parseAndOrConditions(searchCriteria.attackType).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-  };
+  const parsedSearchCriteria = parseSearchCriteria(searchCriteria);
 
   const pages = paginate(rosterEntries, (entry) =>
-    getRosterEntryDisplayLength(entry, parsedSearchCriteria)
+    getRosterEntryDisplayLength(entry, parsedSearchCriteria), getSearchPageLimit(searchCriteria, rosterEntries.length, true)
   );
   rosterSearchCache.set(searchId, { criteria: searchCriteria, pages });
   setTimeout(() => rosterSearchCache.delete(searchId), 15 * 60 * 1000); // 15 min expiry
@@ -359,29 +261,7 @@ async function handleRosterSearchCategoryButton(interaction: ButtonInteraction) 
     return;
   }
 
-  const where = await buildSearchWhereClause(searchCriteria);
-  const rosterEntries = await prisma.roster.findMany({
-    where: {
-      playerId: player.id,
-      champion: where,
-    },
-    include: {
-      champion: {
-        include: {
-          tags: true,
-          abilities: {
-            include: { ability: { include: { categories: true } } },
-          },
-          attacks: { include: { hits: true } },
-        },
-      },
-    },
-    orderBy: [
-      { stars: "desc" },
-      { rank: "desc" },
-      { champion: { name: "asc" } },
-    ],
-  });
+  const rosterEntries = await findSearchRoster(player.id, searchCriteria);
 
   if (rosterEntries.length === 0) {
     const container = new ContainerBuilder();
@@ -397,26 +277,10 @@ async function handleRosterSearchCategoryButton(interaction: ButtonInteraction) 
     return;
   }
 
-  const parsedSearchCriteria = {
-    abilities: parseAndOrConditions(searchCriteria.abilities).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-    immunities: parseAndOrConditions(searchCriteria.immunities).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-    tags: parseAndOrConditions(searchCriteria.tags).conditions.map((c) =>
-      c.toLowerCase()
-    ),
-    abilityCategory: parseAndOrConditions(
-      searchCriteria.abilityCategory
-    ).conditions.map((c) => c.toLowerCase()),
-    attackType: parseAndOrConditions(searchCriteria.attackType).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-  };
+  const parsedSearchCriteria = parseSearchCriteria(searchCriteria);
 
   const pages = paginate(rosterEntries, (entry) =>
-    getRosterEntryDisplayLength(entry, parsedSearchCriteria)
+    getRosterEntryDisplayLength(entry, parsedSearchCriteria), getSearchPageLimit(searchCriteria, rosterEntries.length, true)
   );
   rosterSearchCache.set(searchId, { criteria: searchCriteria, pages });
   setTimeout(() => rosterSearchCache.delete(searchId), 15 * 60 * 1000); // 15 min expiry

@@ -1048,7 +1048,7 @@
       {
         "type": 1,
         "name": "immunities",
-        "description": "List all of a champion's immunities.",
+        "description": "List a champion's immunities and resistances with their conditions.",
         "options": [
           {
             "autocomplete": true,
@@ -1076,7 +1076,7 @@
       {
         "type": 1,
         "name": "overview",
-        "description": "Display a champion's abilities, immunities, and tags.",
+        "description": "Display a champion's abilities, immunities, resistances, and tags.",
         "options": [
           {
             "autocomplete": true,
@@ -1490,6 +1490,63 @@
         "description": "Search from all champions in the game",
         "options": [
           {
+            "type": 3,
+            "choices": [
+              {
+                "name": "Buff",
+                "value": "BUFF"
+              },
+              {
+                "name": "Debuff",
+                "value": "DEBUFF"
+              },
+              {
+                "name": "Passive",
+                "value": "PASSIVE"
+              },
+              {
+                "name": "Not recorded",
+                "value": "UNKNOWN"
+              }
+            ],
+            "name": "effect-form",
+            "description": "Match ability sources with this form",
+            "required": false
+          },
+          {
+            "type": 3,
+            "choices": [
+              {
+                "name": "Gains on self",
+                "value": "GAIN"
+              },
+              {
+                "name": "Inflicts on opponent",
+                "value": "INFLICT"
+              },
+              {
+                "name": "Not recorded",
+                "value": "UNKNOWN"
+              }
+            ],
+            "name": "effect-direction",
+            "description": "Match ability sources with this direction",
+            "required": false
+          },
+          {
+            "name": "include-resistances",
+            "description": "Include resistances in immunity searches (default: true; false for full immunity only)",
+            "required": false,
+            "type": 5
+          },
+          {
+            "min_value": 0,
+            "type": 10,
+            "name": "min-resistance",
+            "description": "Minimum potency reduction %, including full immunities; excludes unknown or other reductions",
+            "required": false
+          },
+          {
             "autocomplete": true,
             "type": 3,
             "name": "abilities",
@@ -1500,7 +1557,7 @@
             "autocomplete": true,
             "type": 3,
             "name": "immunities",
-            "description": "Search by immunities (use 'and'/'or')",
+            "description": "Search by immunities and resistances (use 'and'/'or')",
             "required": false
           },
           {
@@ -1539,6 +1596,63 @@
         "description": "Search from a player roster",
         "options": [
           {
+            "type": 3,
+            "choices": [
+              {
+                "name": "Buff",
+                "value": "BUFF"
+              },
+              {
+                "name": "Debuff",
+                "value": "DEBUFF"
+              },
+              {
+                "name": "Passive",
+                "value": "PASSIVE"
+              },
+              {
+                "name": "Not recorded",
+                "value": "UNKNOWN"
+              }
+            ],
+            "name": "effect-form",
+            "description": "Match ability sources with this form",
+            "required": false
+          },
+          {
+            "type": 3,
+            "choices": [
+              {
+                "name": "Gains on self",
+                "value": "GAIN"
+              },
+              {
+                "name": "Inflicts on opponent",
+                "value": "INFLICT"
+              },
+              {
+                "name": "Not recorded",
+                "value": "UNKNOWN"
+              }
+            ],
+            "name": "effect-direction",
+            "description": "Match ability sources with this direction",
+            "required": false
+          },
+          {
+            "name": "include-resistances",
+            "description": "Include resistances in immunity searches (default: true; false for full immunity only)",
+            "required": false,
+            "type": 5
+          },
+          {
+            "min_value": 0,
+            "type": 10,
+            "name": "min-resistance",
+            "description": "Minimum potency reduction %, including full immunities; excludes unknown or other reductions",
+            "required": false
+          },
+          {
             "autocomplete": true,
             "type": 3,
             "name": "abilities",
@@ -1549,7 +1663,7 @@
             "autocomplete": true,
             "type": 3,
             "name": "immunities",
-            "description": "Search by immunities (use 'and'/'or')",
+            "description": "Search by immunities and resistances (use 'and'/'or')",
             "required": false
           },
           {

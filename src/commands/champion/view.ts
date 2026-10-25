@@ -1,8 +1,10 @@
 import { ChampionClass, Hit, Tag } from "@prisma/client";
-import { formatAbilitySource } from "../../domain/ability-source";
+import { formatAbilitySource, readAbilitySource } from "../../domain/ability-source";
+import type { ChampionEffect } from "../../domain/champion-effects";
+import { resistanceLabel } from "../../domain/champion-resistance";
+import { formatChampionSynergySources, isSynergyEffect, type ChampionEffectDisplay } from "./effect-display";
 import {
   AttackWithHits,
-  ChampionAbilityLinkWithRelations,
 } from "../../services/championService";
 
 export const CLASS_COLOR: Record<ChampionClass, number> = {
@@ -163,10 +165,11 @@ export function formatAttacks(
 }
 
 export function formatLinkedAbilitySection(
-  links: ChampionAbilityLinkWithRelations[],
+  links: ChampionEffect[],
   resolveEmoji: (text: string) => string,
   sectionTitle: string,
-  formattingStyle: "detailed" | "compact"
+  formattingStyle: "detailed" | "compact",
+  display?: ChampionEffectDisplay
 ): string {
   if (!links || links.length === 0) {
     return formattingStyle === "compact"
@@ -174,51 +177,33 @@ export function formatLinkedAbilitySection(
       : `No ${sectionTitle.toLowerCase()} found.`;
   }
 
-  // Group by ability name; collect distinct sources per ability
+  // Keep each source application, even when independently reviewed copy is identical.
   const byName = new Map<
     string,
     {
       name: string;
       emoji?: string | null;
       sources: string[];
+      links: ChampionEffect[];
     }
   >();
 
   for (const link of links) {
     const name = link.ability.name;
-    const key = name.toLowerCase();
-    let source = formatAbilitySource(link);
-
-    if (link.synergyChampions && link.synergyChampions.length > 0) {
-      const synergyPart = link.synergyChampions
-        .map((synergy) => {
-          const emoji = synergy.champion.discordEmoji
-            ? resolveEmoji(synergy.champion.discordEmoji)
-            : "";
-          return `${emoji}`.trim();
-        })
-        .join(" ");
-
-      source = `Synergy ${synergyPart}${source && source !== 'Synergy' ? ` & ${source}` : ''}`;
-    }
+    const key = `${link.type}:${name.toLowerCase()}`;
 
     if (!byName.has(key)) {
       byName.set(key, {
         name,
         emoji: link.ability.emoji || undefined,
         sources: [],
+        links: [],
       });
     }
-    if (source) {
-      const entry = byName.get(key)!;
-      if (
-        !entry.sources.some(
-          (s: string) => s.toLowerCase() === source.toLowerCase()
-        )
-      ) {
-        entry.sources.push(source);
-      }
-    }
+    byName.get(key)!.links.push(link);
+  }
+  for (const entry of byName.values()) {
+    entry.sources = formatChampionEffectSources(entry.links, resolveEmoji, display, formattingStyle);
   }
 
   const items = Array.from(byName.values()).sort((a, b) =>
@@ -250,13 +235,13 @@ export function formatLinkedAbilitySection(
       if (item.sources.length === 0) {
         lines.push(base);
       } else if (item.sources.length === 1) {
-        lines.push(`${base}\n> ${item.sources[0]}`);
+        lines.push(`${base}\n> ${item.sources[0].replaceAll("\n", "\n> ")}`);
       } else {
         lines.push(base);
         // Sort sources for consistent ordering
         item.sources.sort((a: string, b: string) => a.localeCompare(b));
         for (const source of item.sources) {
-          lines.push(`> ${source}`);
+          lines.push(`> ${source.replaceAll("\n", "\n> ")}`);
         }
       }
     }
@@ -265,27 +250,28 @@ export function formatLinkedAbilitySection(
 }
 
 export function formatAbilities(
-  abilities: ChampionAbilityLinkWithRelations[],
-  resolveEmoji: (text: string) => string
+  abilities: ChampionEffect[],
+  resolveEmoji: (text: string) => string,
+  display?: ChampionEffectDisplay
 ): string {
-  return formatLinkedAbilitySection(
-    abilities,
-    resolveEmoji,
-    "Abilities",
-    "detailed"
-  );
+  if (!abilities.length) return "No abilities found.";
+  return ([["GAIN", "Gains on self"], ["INFLICT", "Inflicts on opponent"], ["UNKNOWN", "Direction not recorded"]] as const)
+    .flatMap(([direction, title]) => {
+      const sources = abilities.filter(ability => ability.effectDirection === direction);
+      return sources.length ? [`## ${title}\n${formatLinkedAbilitySection(sources, resolveEmoji, "Abilities", "detailed", display)}`] : [];
+    }).join("\n\n");
 }
 
 export function formatImmunities(
-  immunities: ChampionAbilityLinkWithRelations[],
-  resolveEmoji: (text: string) => string
+  immunities: ChampionEffect[],
+  resolveEmoji: (text: string) => string,
+  display?: ChampionEffectDisplay
 ): string {
-  return formatLinkedAbilitySection(
-    immunities,
-    resolveEmoji,
-    "Immunities",
-    "detailed"
-  );
+  if (!immunities.length) return "No immunities or resistances found.";
+  return ([["IMMUNITY", "Immunities"], ["RESISTANCE", "Resistances"]] as const).flatMap(([type, title]) => {
+    const sources = immunities.filter(effect => effect.type === type);
+    return sources.length ? [`## ${title}\n${formatLinkedAbilitySection(sources, resolveEmoji, title, "detailed", display)}`] : [];
+  }).join("\n\n");
 }
 
 export function formatTags(tags: Tag[]): string {
@@ -296,4 +282,20 @@ export function formatTags(tags: Tag[]): string {
     .map((t) => `\`${t.name}\``)
     .sort()
     .join(" ");
+}
+
+/** Keep source metadata and teammate names even when reviewed copy replaces the prose. */
+export function formatChampionEffectSource(link: ChampionEffect, resolveEmoji: (text: string) => string = text => text): string {
+  if (isSynergyEffect(link)) return formatChampionSynergySources([link], resolveEmoji).join(" | ");
+  const metadata = readAbilitySource({ ...link, source: link.overviewSummary ?? link.source });
+  const source = formatAbilitySource({ ...metadata, source: metadata.condition,
+    effectDirection: link.type === "ABILITY" ? metadata.effectDirection : "UNKNOWN" });
+  const protection = link.type === "IMMUNITY" ? "Immunity" : link.resistance ? resistanceLabel(link.resistance) : "";
+  return [protection, source].filter(Boolean).join(" — ");
+}
+
+export function formatChampionEffectSources(links: ChampionEffect[], resolveEmoji: (text: string) => string = text => text,
+  display?: ChampionEffectDisplay, style: "compact" | "detailed" = "compact"): string[] {
+  return [...links.filter(link => !isSynergyEffect(link)).map(link => formatChampionEffectSource(link, resolveEmoji)),
+    ...formatChampionSynergySources(links, resolveEmoji, display, style)].filter(Boolean);
 }

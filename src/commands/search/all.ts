@@ -6,51 +6,30 @@ import {
   MessageFlags,
 } from "discord.js";
 import crypto from "crypto";
+import { readSearchCriteria, parseSearchCriteria } from "./utils";
 import {
-  SearchCoreParams,
   ChampionWithRelations,
 } from "../../types/search";
-import { buildSearchWhereClause, parseAndOrConditions } from "./queryBuilder";
+import { findSearchChampions } from "./data";
 import { searchCache } from "./cache";
 import { paginate } from "./pagination";
 import { core } from "./searchService";
-import { getChampionDisplayLength } from "./views/common";
+import { getChampionDisplayLength, getSearchPageLimit } from "./views/common";
 
 
 
 async function handleGlobalSearch(interaction: ChatInputCommandInteraction) {
-  const { prisma } = await import("../../services/prismaService.js");
   const searchId = crypto.randomUUID();
-  const searchCriteria = {
-    abilities: interaction.options.getString("abilities"),
-    immunities: interaction.options.getString("immunities"),
-    tags: interaction.options.getString("tags"),
-    championClass: interaction.options.getString("class"),
-    abilityCategory: interaction.options.getString("ability-category"),
-    attackType: interaction.options.getString("attack-type"),
-  };
+  const searchCriteria = readSearchCriteria(interaction);
 
-  if (Object.values(searchCriteria).every((v) => !v)) {
+  if (Object.values(searchCriteria).every(value => value == null || value === "" || value === false)) {
     await interaction.editReply({
       content: "You must provide at least one search criteria.",
     });
     return;
   }
 
-  const where = await buildSearchWhereClause(searchCriteria);
-  const allChampions = await prisma.champion.findMany({
-    where,
-    include: {
-      tags: true,
-      abilities: {
-        include: {
-          ability: { include: { categories: true } },
-        },
-      },
-      attacks: { include: { hits: true } },
-    },
-    orderBy: { name: "asc" },
-  });
+  const allChampions = await findSearchChampions(searchCriteria);
 
   if (allChampions.length === 0) {
     await interaction.editReply({
@@ -59,25 +38,9 @@ async function handleGlobalSearch(interaction: ChatInputCommandInteraction) {
     return;
   }
 
-  const parsedSearchCriteria = {
-    abilities: parseAndOrConditions(searchCriteria.abilities).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-    immunities: parseAndOrConditions(searchCriteria.immunities).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-    tags: parseAndOrConditions(searchCriteria.tags).conditions.map((c) =>
-      c.toLowerCase()
-    ),
-    abilityCategory: parseAndOrConditions(
-      searchCriteria.abilityCategory
-    ).conditions.map((c) => c.toLowerCase()),
-    attackType: parseAndOrConditions(searchCriteria.attackType).conditions.map(
-      (c) => c.toLowerCase()
-    ),
-  };
+  const parsedSearchCriteria = parseSearchCriteria(searchCriteria);
 
-  const pages = paginate<ChampionWithRelations>(allChampions, (champion) => getChampionDisplayLength(champion, parsedSearchCriteria));
+  const pages = paginate<ChampionWithRelations>(allChampions, (champion) => getChampionDisplayLength(champion, parsedSearchCriteria), getSearchPageLimit(searchCriteria, allChampions.length));
   searchCache.set(searchId, { criteria: searchCriteria, pages });
   setTimeout(() => searchCache.delete(searchId), 15 * 60 * 1000); // 15 min expiry
 

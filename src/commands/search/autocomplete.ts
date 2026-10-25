@@ -7,6 +7,8 @@ import {
   MODIFIER_KEYWORDS,
 } from "./queryBuilder";
 import { ChampionClass } from "@prisma/client";
+import { getSearchEffectNames } from "./data";
+import type { EffectForm, EffectDirection } from "../../domain/ability-source";
 
 export async function handleAutocomplete(interaction: AutocompleteInteraction) {
     const { prisma } = await import("../../services/prismaService.js");
@@ -15,50 +17,15 @@ export async function handleAutocomplete(interaction: AutocompleteInteraction) {
 
     const { prefix, search } = getAutocompletePrefixAndCurrent(focusedValue);
 
-    if (focusedOption.name === "abilities") {
-      const abilities = await prisma.ability.findMany({
-        where: {
-          name: {
-            contains: search,
-            mode: "insensitive",
-          },
-          champions: {
-            some: {
-              type: "ABILITY",
-            },
-          },
-        },
-        take: 25,
-        orderBy: { name: "asc" },
+    if (focusedOption.name === "abilities" || focusedOption.name === "immunities") {
+      const names = await getSearchEffectNames(focusedOption.name, search, {
+        effectForm: interaction.options.getString("effect-form") as EffectForm | null,
+        effectDirection: interaction.options.getString("effect-direction") as EffectDirection | null,
+        includeResistances: interaction.options.getBoolean("include-resistances"),
+        minResistance: interaction.options.getNumber("min-resistance"),
       });
-      await interaction.respond(
-        abilities.map((ability: { name: string }) => ({
-          name: `${prefix}${ability.name}`,
-          value: `${prefix}${ability.name}`,
-        }))
-      );
-    } else if (focusedOption.name === "immunities") {
-      const immunities = await prisma.ability.findMany({
-        where: {
-          name: {
-            contains: search,
-            mode: "insensitive",
-          },
-          champions: {
-            some: {
-              type: "IMMUNITY",
-            },
-          },
-        },
-        take: 25,
-        orderBy: { name: "asc" },
-      });
-      await interaction.respond(
-        immunities.map((immunity: { name: string }) => ({
-          name: `${prefix}${immunity.name}`,
-          value: `${prefix}${immunity.name}`,
-        }))
-      );
+      await interaction.respond(names.map(name => ({ name: `${prefix}${name}`, value: `${prefix}${name}` }))
+        .filter(choice => choice.value.length <= 100));
     } else if (focusedOption.name === "tags") {
       let tags;
       if (search) {

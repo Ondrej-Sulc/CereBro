@@ -3,7 +3,7 @@ import { ActionRowBuilder, ButtonBuilder, ButtonStyle } from "discord.js";
 const detailViews = [
   { label: "Info", value: "info" },
   { label: "Abilities", value: "abilities" },
-  { label: "Immunities", value: "immunities" },
+  { label: "Immunities & resistances", value: "immunities" },
   { label: "Attacks", value: "attacks" },
   { label: "Tags", value: "tags" },
   { label: "Duels", value: "duel" },

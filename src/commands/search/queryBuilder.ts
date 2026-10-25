@@ -145,31 +145,25 @@ export async function buildSearchWhereClause(
 
   if (immunities) {
     const { conditions, useAnd } = parseAndOrConditions(immunities);
-    if (conditions.length > 0) {
-      if (useAnd) {
-        conditions.forEach((immunityName) => {
-          (where.AND as Prisma.ChampionWhereInput[]).push({
-            abilities: {
-              some: {
-                type: "IMMUNITY",
-                ability: {
-                  name: { equals: immunityName, mode: "insensitive" },
-                },
-              },
-            },
-          });
-        });
-      } else {
-        (where.AND as Prisma.ChampionWhereInput[]).push({
-          abilities: {
-            some: {
-              type: "IMMUNITY",
-              ability: { name: { in: conditions, mode: "insensitive" } },
-            },
-          },
-        });
-      }
+    const protectionCondition = (name: string): Prisma.ChampionWhereInput => {
+      const nameFilter: Prisma.StringFilter = { equals: name, mode: "insensitive" };
+      const alternatives: Prisma.ChampionAbilityLinkWhereInput[] = [
+        { type: "IMMUNITY", ability: { name: nameFilter } },
+      ];
+      if (params.includeResistances !== false) alternatives.push({ type: "ABILITY",
+        resistances: { some: { effect: { name: nameFilter } } },
+      });
+      return { abilities: { some: { OR: alternatives } } };
+    };
+    if (conditions.length) {
+      (where.AND as Prisma.ChampionWhereInput[]).push(useAnd
+        ? { AND: conditions.map(protectionCondition) } : { OR: conditions.map(protectionCondition) });
     }
+  }
+
+  // Form/direction are checked on projected applications, including legacy source annotations.
+  if (params.effectForm || params.effectDirection) {
+    (where.AND as Prisma.ChampionWhereInput[]).push({ abilities: { some: { type: "ABILITY" } } });
   }
 
   if (abilityCategory) {
