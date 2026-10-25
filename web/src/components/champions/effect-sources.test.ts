@@ -104,8 +104,9 @@ describe('leveled synergy source display', () => {
     const html = renderToStaticMarkup(createElement(EffectSources, { effect, groups, synergiesHref: '/champions/galan?tab=synergies' }));
     expect(html.match(/This non-stacking synergy grants/g)).toHaveLength(1);
     expect(html.match(/>Synergy<\/span>/g)).toHaveLength(1);
-    for (const id of ['gentle_02a', 'gentle_02b', 'gentle_02c']) expect(html).toContain(`#champion-synergy-${id}`);
-    for (const stars of [5, 6, 7]) expect(html).toContain(`>${stars}★</span>`);
+    expect(html.match(/href="\/champions\/galan\?tab=synergies"/g)).toHaveLength(1);
+    expect(html).not.toContain('#champion-synergy-');
+    expect(html).not.toContain('★');
     expect(html).not.toContain('Lv. undefined');
   });
 
@@ -122,8 +123,8 @@ describe('leveled synergy source display', () => {
     expect(groups[0].synergies.every(row => row.unique === false)).toBe(true);
     const html = renderToStaticMarkup(createElement(EffectSources, { effect: { ...bleed, name: 'Fury' }, groups, synergiesHref: '/champions/moon-knight?tab=synergies' }));
     expect(html.match(/During Waning Moon/g)).toHaveLength(1);
-    expect(html).toContain('#champion-synergy-termcontract_3');
-    expect(html).toContain('#champion-synergy-termcontract_4');
+    expect(html.match(/href="\/champions\/moon-knight\?tab=synergies"/g)).toHaveLength(1);
+    expect(html).not.toContain('★');
     expect(entries[0].source).toContain('text prohibits duplicate stacking despite non-unique metadata');
   });
   it('retains the actual three White Tiger levels and exposes their separate partner requirements', () => {
@@ -133,19 +134,40 @@ describe('leveled synergy source display', () => {
     expect(rows.map(row => row.links[0].synergyId)).toEqual(['scream_04', 'scream_05', 'scream_06']);
   });
 
-  it('shows the shared White Tiger summary once, with all three level references and star requirements', () => {
+  it('shows the shared White Tiger summary once, with short level references and no inline star requirements', () => {
     const html = renderToStaticMarkup(createElement(EffectSources, { effect: bleed, groups: whiteTigerSources(), onViewSynergies: () => {} }));
     expect(html.match(/This synergy boosts Bleed potency/g)).toHaveLength(1);
     for (const level of [1, 2, 3]) expect(html).toContain(`View Bleed synergy: Bloody Marys - Lv. ${level}`);
-    expect(html).toContain('Scream rarity: 3 stars');
-    expect(html).toContain('Scream rarity: 4 stars');
-    expect(html).toContain('Scream rarity: 5, 6, 7 stars');
+    expect(html).not.toContain('★');
+    expect(html).not.toContain('rarity:');
     expect(html.match(/>Synergy<\/span>/g)).toHaveLength(1);
   });
 
   it('keeps each synergy level link directed at its original card from roster popups', () => {
     const html = renderToStaticMarkup(createElement(EffectSources, { effect: bleed, groups: whiteTigerSources(), synergiesHref: '/champions/white-tiger?tab=synergies' }));
     for (const id of ['scream_04', 'scream_05', 'scream_06']) expect(html).toContain(`href="/champions/white-tiger?tab=synergies#champion-synergy-${id}"`);
+  });
+
+  it('keeps Robbie Reyes\' partner badges and level links without repeating activation metadata', () => {
+    const champions = ['Dracula', 'Knull', 'Mephisto'].map(name => ({ name, slug: name.toLowerCase(), images: null }));
+    const condition = 'All Champions gain Critical Damage Rating from this synergy.';
+    const groups: ChampionKitSourceGroup[] = [{ key: 'UNKNOWN:GAIN', effectForm: 'UNKNOWN', effectDirection: 'GAIN', nativeSources: [],
+      synergies: [1, 2, 3].map(level => ({ key: `rivals-${level}`, champions, unique: false,
+        partnerRequirement: 'Knull (2★/3★/4★/5★/6★/7★) OR Mephisto (2★/3★/4★/5★/6★) OR Dracula (2★/3★/4★/5★/6★/7★)',
+        links: [{ key: `rivals-${level}`, label: `RIVALS Lv. ${level}`, synergyId: `rivals_${level}`, rarities: level === 3 ? [5, 6, 7] : [level + 2], conditions: [condition] }],
+      })) }];
+    const original = structuredClone(groups);
+    const html = renderToStaticMarkup(createElement(EffectSources, { effect: { ...bleed, name: 'Critical Damage Rating' }, groups, synergiesHref: '/champions/ghost-rider-robbie-reyes?tab=synergies' }));
+    expect(html.match(/All Champions gain Critical Damage Rating/g)).toHaveLength(1);
+    for (const champion of champions) expect(html.match(new RegExp(`href="/champions/${champion.slug}"`, 'g'))).toHaveLength(1);
+    for (const level of [1, 2, 3]) {
+      expect(html).toContain(`>Lv. ${level}</span>`);
+      expect(html).toContain(`#champion-synergy-rivals_${level}`);
+    }
+    expect(html).not.toContain('★');
+    expect(html).not.toContain(' OR ');
+    expect(html).not.toContain('Champion 3');
+    expect(groups).toEqual(original);
   });
 
   it('keeps different conditions, forms, directions, and numeric resistance contexts separate', () => {
@@ -219,15 +241,16 @@ describe('recorded resistance values', () => {
     expect(html).not.toContain('Immunity');
   });
 
-  it('shows the combined partner rarities on one synergy source', () => {
+  it('keeps a single synergy source compact, with rarity requirements available through its link', () => {
     const effect: ChampionKitEffect = { name: 'Bleed', type: 'ABILITY', iconUrl: null, color: '#fff', secondaryColor: '#000', description: null, sources: [] };
     const groups: ChampionKitSourceGroup[] = [{ key: 'PASSIVE:INFLICT', effectForm: 'PASSIVE', effectDirection: 'INFLICT', nativeSources: [],
       synergies: [{ key: 'cross-training', champions: [{ name: 'Punisher 2099', slug: 'punisher-2099', images: null }], partnerRarities: [2, 3, 4, 5, 6, 7],
         links: [{ key: 'cross-training', label: 'Cross Training', conditions: ['His signature may inflict passive Bleed.'], rarities: [2, 3, 4, 5, 6, 7] }] }] }];
     const html = renderToStaticMarkup(createElement(EffectSources, { effect, groups, synergiesHref: '/champions/punisher?tab=synergies' }));
     expect(html.match(/His signature may inflict passive Bleed\./g)).toHaveLength(1);
-    expect(html).toContain('Punisher 2099 rarity: 2, 3, 4, 5, 6, 7 stars');
-    expect(html).toContain('Champion rarity: 2, 3, 4, 5, 6, 7 stars');
+    expect(html).toContain('Punisher 2099');
+    expect(html).not.toContain('★');
+    expect(html).not.toContain('rarity:');
     expect(html).toContain('/champions/punisher?tab=synergies');
   });
 });

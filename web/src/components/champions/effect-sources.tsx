@@ -41,22 +41,30 @@ export function EffectSources({ effect, groups, onViewAbility, onViewSynergies, 
       </div>
       {group.synergies.length > 0 && <div className={`space-y-4 ${group.nativeSources.length ? "mt-3 border-t border-white/[.05] pt-3" : ""}`}>
         {groupSynergySourceDisplay(group.synergies).map(source => {
-          const variants = source.references.length > 1
+          const compactReferences = new Map<string, (typeof source.references)[number]>()
+          for (const reference of source.references) {
+            const key = reference.level ?? reference.label
+            const existing = compactReferences.get(key)
+            if (!existing) compactReferences.set(key, { ...reference })
+            // Star-only alternatives share one link to the full synergy view.
+            else if (existing.synergyId !== reference.synergyId) existing.synergyId = undefined
+          }
+          const visibleReferences = [...compactReferences.values()]
+          const variants = visibleReferences.length > 1
           const bonus = source.bonus
-          const references = source.references.map(reference => ({
-            label: variants ? reference.variantLabel ?? reference.label : reference.label,
-            ariaLabel: `View ${effect.name} synergy: ${reference.label}${variants && reference.variantLabel !== `Lv. ${reference.level}` ? ` — ${reference.variantLabel}` : ""}`,
+          const references = visibleReferences.map(reference => ({
+            label: variants && reference.level ? `Lv. ${reference.level}` : reference.label,
+            ariaLabel: `View ${effect.name} synergy: ${reference.label}`,
             onSelect: onViewSynergies ? () => onViewSynergies(reference.synergyId) : undefined,
             href: !onViewSynergies && synergiesHref ? reference.synergyId ? `${synergiesHref.split("#")[0]}#champion-synergy-${encodeURIComponent(reference.synergyId)}` : synergiesHref : undefined,
-            suffix: <>{variants && reference.details?.map(detail => <span key={detail.ariaLabel} aria-label={detail.ariaLabel} className="ml-1 text-[11px] tabular-nums text-slate-500">({detail.text})</span>)}{!reference.synergyId && !!reference.rarities?.length && <span aria-label={`Champion rarity: ${reference.rarities.join(", ")} stars`} className="ml-1 text-[11px] tabular-nums text-slate-500">{reference.rarities.map(rarity => `${rarity}★`).join("/")}</span>}</>,
           }))
-          const prefix = variants ? <><span className="font-medium text-indigo-200">{source.family}</span>{": "}{references.map((reference, index) => <Fragment key={source.references[index].key}>{index > 0 && " · "}<SourceReference {...reference} /></Fragment>)}</> : undefined
+          const prefix = variants ? <><span className="font-medium text-indigo-200">{source.family}</span>{": "}{references.map((reference, index) => <Fragment key={visibleReferences[index].key}>{index > 0 && " · "}<SourceReference {...reference} /></Fragment>)}</> : undefined
           return <div key={source.key} className="space-y-1.5">
             <div className="flex flex-wrap items-center gap-2">
               <span className="rounded border border-indigo-300/20 bg-indigo-300/[.07] px-2 py-0.5 text-[11px] font-semibold leading-4 text-indigo-200">Synergy</span>
               {bonus && source.champions.length > 1 && <span className="text-xs text-slate-400">Any one of</span>}
               {source.champions.map(champion => {
-                const content = <><Image src={getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "64")} alt="" width={20} height={20} className="h-5 w-5 shrink-0 rounded object-contain" /><span>{champion.name}</span>{!!source.partnerRarities?.length && <span aria-label={`${champion.name} rarity: ${source.partnerRarities.join(", ")} stars`} className="text-[11px] tabular-nums text-slate-500">{source.partnerRarities.map(rarity => `${rarity}★`).join("/")}</span>}</>
+                const content = <><Image src={getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "64")} alt="" width={20} height={20} className="h-5 w-5 shrink-0 rounded object-contain" /><span>{champion.name}</span></>
                 const className = "inline-flex items-center gap-1.5 rounded-md border border-white/[.08] bg-white/[.03] py-0.5 pl-0.5 pr-2 text-xs text-slate-300 hover:border-white/25 hover:text-white"
                 return champion.slug ? <Link key={champion.slug} href={`/champions/${champion.slug}`} className={className}>{content}</Link> : <span key={champion.name} className={className}>{content}</span>
               })}
@@ -81,7 +89,7 @@ export function EffectSources({ effect, groups, onViewAbility, onViewSynergies, 
   </div>
 }
 
-type SourceReferenceProps = { label: string; ariaLabel: string; onSelect?: () => void; href?: string; suffix?: ReactNode }
+type SourceReferenceProps = { label: string; ariaLabel: string; onSelect?: () => void; href?: string }
 
 function abilityReference(effect: string, label: string, target: ChampionKitAbilityTarget | null, onViewAbility?: (recordId: string) => void,
   abilityHref?: (target: ChampionKitAbilityTarget) => string): SourceReferenceProps | undefined {
@@ -90,12 +98,12 @@ function abilityReference(effect: string, label: string, target: ChampionKitAbil
     onSelect: onViewAbility ? () => onViewAbility(target.recordId) : undefined, href: !onViewAbility ? abilityHref?.(target) : undefined }
 }
 
-function SourceReference({ label, ariaLabel, onSelect, href, suffix }: SourceReferenceProps) {
+function SourceReference({ label, ariaLabel, onSelect, href }: SourceReferenceProps) {
   const className = "inline rounded-sm text-left font-medium text-sky-200 underline decoration-sky-300/35 underline-offset-[3px] transition-colors hover:text-white hover:decoration-sky-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
   const content = <><span>{label}</span><ArrowUpRight aria-hidden="true" className="ml-0.5 inline h-3 w-3 align-baseline text-sky-300/70" /></>
   return <>{onSelect ? <button type="button" aria-label={ariaLabel} onClick={onSelect} className={className}>{content}</button>
     : href ? <Link href={href} aria-label={ariaLabel} className={className}>{content}</Link>
-      : <span className="font-medium text-slate-300">{label}</span>}{suffix}</>
+      : <span className="font-medium text-slate-300">{label}</span>}</>
 }
 
 function SourceCondition({ condition, form, reference, prefix }: { condition: string; form: ChampionKitSourceGroup["effectForm"]; reference?: SourceReferenceProps; prefix?: ReactNode }) {
