@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useRef, useState, type Ref, type ReactNode } from "react";
-import { Search, PenLine, Plus, Zap, Shield, Tag, X, Swords, ArrowUp, ArrowDown, ChevronDown, SlidersHorizontal, Layers, EllipsisVertical } from "lucide-react";
+import { Search, PenLine, Plus, Zap, Shield, Tag, X, Swords, ArrowUp, ArrowDown, ChevronDown, SlidersHorizontal, Layers } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -236,14 +236,14 @@ function RosterSort({ p, compact = false }: { p: RosterFiltersProps; compact?: b
 function RosterActions({ p, compact = false }: { p: RosterFiltersProps; compact?: boolean }) {
   const showAttackToggle = p.canManageAttackReservations && p.onShowAttackReservationControlsChange;
   if (p.canEdit === false && !showAttackToggle) return null;
-  return <div className="flex shrink-0 items-center gap-2"><DropdownMenu>
+  return <DropdownMenu>
     <DropdownMenuTrigger asChild>
-      <Button type="button" variant="ghost" size="icon" aria-label="Roster actions" className={cn("h-10 w-10 shrink-0 text-slate-400", compact && "h-11 w-11", (p.viewMode === "edit" && p.canEdit !== false || showAttackToggle && p.showAttackReservationControls) && "bg-amber-500/10 text-amber-200")}><EllipsisVertical className="h-5 w-5" /></Button>
+      <Button type="button" size="sm" aria-label="Edit roster" className={cn("h-10 shrink-0 gap-1.5 bg-sky-600 px-3 text-xs text-white hover:bg-sky-500", compact && "h-11", (p.viewMode === "edit" && p.canEdit !== false || showAttackToggle && p.showAttackReservationControls) && "bg-amber-500/10 text-amber-200 hover:bg-amber-500/20")}><PenLine aria-hidden="true" className="h-3.5 w-3.5" />Edit<ChevronDown aria-hidden="true" className="h-3.5 w-3.5" /></Button>
     </DropdownMenuTrigger>
     <DropdownMenuContent align="end" collisionPadding={16} className="w-60 border-slate-800 bg-slate-950 text-slate-200">
       <DropdownMenuLabel className="text-[11px] font-medium text-slate-500">Roster actions</DropdownMenuLabel>
       {p.canEdit !== false && <>
-        {compact && <DropdownMenuItem onSelect={p.onAddClick} className="min-h-11 gap-3 text-sky-300"><Plus className="h-4 w-4" />Add champion</DropdownMenuItem>}
+        <DropdownMenuItem inset onSelect={p.onAddClick} className="min-h-11 gap-3"><Plus className="h-4 w-4" />Add champion</DropdownMenuItem>
         <DropdownMenuCheckboxItem checked={p.viewMode === "edit"} onCheckedChange={checked => p.onViewModeChange(checked ? "edit" : "view")} className="min-h-11 gap-3 pl-8"><PenLine className="h-4 w-4" />Edit roster</DropdownMenuCheckboxItem>
       </>}
       {showAttackToggle && <>
@@ -251,7 +251,5 @@ function RosterActions({ p, compact = false }: { p: RosterFiltersProps; compact?
         <DropdownMenuCheckboxItem checked={p.showAttackReservationControls ?? false} onCheckedChange={checked => p.onShowAttackReservationControlsChange?.(checked)} className="min-h-11 gap-3 pl-8"><Swords className="h-4 w-4" />Attack reservations</DropdownMenuCheckboxItem>
       </>}
     </DropdownMenuContent>
-  </DropdownMenu>
-    {!compact && p.canEdit !== false && <Button type="button" size="sm" aria-label="Add champion" onClick={p.onAddClick} className="h-10 gap-1.5 bg-sky-600 px-3 text-xs text-white hover:bg-sky-500"><Plus className="h-3.5 w-3.5" />Add</Button>}
-  </div>;
+  </DropdownMenu>;
 }
