@@ -1,6 +1,6 @@
 # Relic catalog
 
-The public catalog at `/relics` browses game relic definitions independently of player ownership, champion bindings and prestige. Each source relic ID has its own `/relics/[slug]` page. Rarity selections are reflected in the URL.
+The public catalog at `/relics` browses game relic definitions independently of player ownership and champion bindings. Each source relic ID has its own `/relics/[slug]` page. Rarity selections are reflected in the URL. The detail pages also show [captured relic prestige](relic-prestige.md) for the selected rank and signature level.
 
 The initial 18 October 2026 snapshot contains 145 definitions (25 Battlecasts and 120 Statcast variants), 224 socket items, 698 rarity records and 3,090 scaling contexts. The browser groups the 120 Statcasts into 24 visual families while preserving all individual variants. Together with the Battlecasts, this makes 49 browsing cards. The 98 delivered portrait PNGs are published to the same Google Cloud Storage bucket as champion images; they are not bundled under `web/public`.
 
@@ -80,7 +80,7 @@ Evidence: the immutable source package's `scaling-method-evidence.txt`, particul
 
 Rune panels list available options rather than an equipped loadout. Original slot positions and ordered option IDs stay unchanged in the data; the page does not claim all options are simultaneously equipped or unlocked at the selected rarity.
 
-Game-recommended champions are presented as source suggestions, not best-pairing rankings. Links require exact game IDs. Class and extra restriction selectors are reference data only: selector inclusion/exclusion semantics have not been established, so the catalog does not assert eligibility. Owned relics, binding validation, loadouts and relic prestige are later features.
+Game-recommended champions are presented as source suggestions, not best-pairing rankings. Links require exact game IDs. Class and extra restriction selectors are reference data only: selector inclusion/exclusion semantics have not been established, so the catalog does not assert eligibility. Owned relics, binding validation and loadouts are later features.
 
 ## Verification
 

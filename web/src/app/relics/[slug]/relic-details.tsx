@@ -29,6 +29,7 @@ import type { RelicAttributeIcon } from "@/lib/relic-attribute-icons";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import type { ChampionClass } from "@prisma/client";
 import styles from "./relic-details.module.css";
+import { RelicPrestige } from "./relic-prestige";
 
 function AttributeGlyph({ icon }: { icon?: RelicAttributeIcon }) {
   if (!icon) return null;
@@ -264,6 +265,10 @@ export function RelicDetails({ family }: { family: RelicFamilyDetails }) {
           )}
         </div>
       </header>
+
+      {rarity && data.prestige[rarity.id] && (
+        <RelicPrestige ranks={data.prestige[rarity.id]} maxRank={rarity.maxRank} maxSignature={rarity.maxSignature} />
+      )}
 
       {data.variants.length > 1 && (
         <section

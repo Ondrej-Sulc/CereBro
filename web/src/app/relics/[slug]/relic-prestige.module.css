@@ -1,0 +1,35 @@
+.panel {
+  display: flex;
+  align-items: center;
+  gap: clamp(24px, 4vw, 64px);
+  margin: 0 0 28px;
+  padding: 24px 28px;
+  border: 1px solid var(--border, #24303e);
+  border-radius: 16px;
+  background: linear-gradient(110deg, color-mix(in srgb, var(--relic-color) 8%, #0b131e), #0b131e 60%);
+}
+.result { display: flex; flex-direction: column; gap: 6px; min-width: 190px; }
+.label { display: flex; align-items: center; gap: 8px; color: #a9bdd2; font-size: 12px; font-weight: 600; }
+.result output { color: #f1f5f9; font-size: 34px; font-weight: 700; line-height: 1.2; font-variant-numeric: tabular-nums; }
+.note { color: #8196ac; font-size: 11px; }
+.controls { flex: 1; display: flex; align-items: center; gap: 36px; }
+.ranks { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+.ranks button { width: 38px; height: 38px; border: 1px solid #2b3b4f; border-radius: 8px; color: #c7d7e7; background: #101a27; transition: background 150ms, border-color 150ms; }
+.ranks button:hover { background: #1b2a3d; }
+.ranks button[aria-pressed="true"] { border-color: var(--relic-color); background: color-mix(in srgb, var(--relic-color) 17%, #101a27); color: #fff; }
+.ranks button:focus-visible, .signature input:focus-visible { outline: 2px solid #a2c5ff; outline-offset: 3px; }
+.signature { flex: 1; min-width: 160px; }
+.signatureHeading { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 8px; }
+.signature input[type="number"] { width: 68px; border: 1px solid #2b3b4f; border-radius: 7px; padding: 5px 8px; color: #e5edf6; background: #0a111b; font-variant-numeric: tabular-nums; }
+.signature input[type="range"] { width: 100%; accent-color: var(--relic-color); cursor: pointer; }
+.rangeLabels { display: flex; justify-content: space-between; margin-top: 3px; color: #8196ac; font-size: 10px; }
+@media (max-width: 800px) {
+  .panel { align-items: stretch; gap: 24px; padding: 20px; }
+  .result { min-width: 150px; justify-content: center; }
+  .controls { flex-direction: column; align-items: stretch; gap: 18px; }
+}
+@media (max-width: 480px) {
+  .panel { flex-direction: column; gap: 20px; }
+  .result output { font-size: 30px; }
+}
+@media (prefers-reduced-motion: reduce) { .ranks button { transition: none; } }

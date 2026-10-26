@@ -5,6 +5,7 @@ import { getRelicDetails, getRelicFamilyDetails } from "./relics";
 const db = vi.hoisted(() => ({
   gameRelic: { findUnique: vi.fn(), findMany: vi.fn() },
   gameRelicSocketItem: { findMany: vi.fn() },
+  gameRelicPrestige: { findMany: vi.fn() },
   champion: { findMany: vi.fn() },
   gameGlossaryTerm: { findMany: vi.fn() },
   $queryRaw: vi.fn(),
@@ -14,6 +15,7 @@ vi.mock("@/lib/prisma", () => ({ prisma: db }));
 const makeRow = (suffix: string, amount: string) => ({
   id: `relic_${suffix}`, slug: `statcast-example-${suffix}`, isCurrent: true,
   familyKey: "example-family", importId: "source-one",
+  sourceHash: `hash_${suffix}`,
   name: `Example ${suffix}`, secondaryAttribute: suffix,
   portraitPath: "/example.png", importedFrom: { generatedAt: new Date("2026-10-18") },
   definition: {
@@ -41,12 +43,40 @@ beforeEach(() => {
   db.gameRelic.findUnique.mockResolvedValue(rows[1]);
   db.gameRelic.findMany.mockResolvedValue(rows);
   db.gameRelicSocketItem.findMany.mockResolvedValue([socket("armor"), socket("critical")]);
+  db.gameRelicPrestige.findMany.mockResolvedValue([]);
   db.champion.findMany.mockResolvedValue([]);
   db.gameGlossaryTerm.findMany.mockResolvedValue([]);
   db.$queryRaw.mockResolvedValue([]);
 });
 
 describe("relic variant family loading", () => {
+  it("loads exact prestige per variant and refuses data from a superseded definition", async () => {
+    db.gameRelic.findUnique.mockResolvedValue(rows[0]);
+    const ranks = Array.from({ length: 5 }, (_, index) => ({
+      rank: index + 1, socketRanks: { "0": (index + 1) * 10 },
+      prestigeBySignature: Array.from({ length: 201 }, (_, sig) => 1000 + index * 100 + sig),
+    }));
+    db.gameRelicPrestige.findMany.mockResolvedValue([
+      { relicId: rows[0].id, sourceRarityId: "t7", sourceDefinitionHash: rows[0].sourceHash, sourcePackageHash: rows[0].importId, ranks },
+      { relicId: rows[1].id, sourceRarityId: "t7", sourceDefinitionHash: "old-definition", sourcePackageHash: rows[1].importId, ranks },
+    ]);
+    const family = await getRelicFamilyDetails(rows[0].slug);
+    expect(family?.members[0].prestige.t7).toEqual(ranks);
+    expect(family?.members[1].prestige).toEqual({});
+    expect(db.gameRelicPrestige.findMany).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([null, "old-package"])("hides prestige from an unbound or superseded package (%s)", async sourcePackageHash => {
+    db.gameRelic.findUnique.mockResolvedValue(rows[0]);
+    const ranks = Array.from({ length: 5 }, (_, index) => ({ rank: index + 1,
+      socketRanks: { "0": 10 }, prestigeBySignature: Array.from({ length: 201 }, () => 1000) }));
+    db.gameRelicPrestige.findMany.mockResolvedValue([
+      { relicId: rows[0].id, sourceRarityId: "t7", sourceDefinitionHash: rows[0].sourceHash, sourcePackageHash, ranks },
+    ]);
+    const family = await getRelicFamilyDetails(rows[0].slug);
+    expect(family?.members[0].prestige).toEqual({});
+  });
+
   it("loads the current family together while keeping each variant's identity and values", async () => {
     const family = await getRelicFamilyDetails(rows[1].slug);
     expect(family?.initialId).toBe(rows[1].id);
