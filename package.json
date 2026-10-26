@@ -31,7 +31,7 @@
   },
   "scripts": {
     "test": "vitest --run",
-    "test:relics": "vitest run src/domain/relic-catalog.test.ts src/domain/relic-values.test.ts src/services/relicCatalogImportService.test.ts src/services/relicPortraitService.test.ts src/services/gcpStorageService.test.ts web/src/lib/relic-attribute-icons.test.ts web/src/lib/relic-rune-icons.test.ts web/src/lib/relic-rune-sections.test.ts --maxWorkers=1",
+    "test:relics": "vitest run src/domain/relic-catalog.test.ts src/domain/relic-values.test.ts src/services/relicCatalogImportService.test.ts src/services/relicPortraitService.test.ts src/services/gcpStorageService.test.ts web/src/lib/relic-attribute-icons.test.ts web/src/lib/relic-rune-icons.test.ts web/src/lib/relic-rune-sections.test.ts web/src/lib/data/relics.test.ts --maxWorkers=1",
     "build-only": "tsc",
     "build": "tsc && node scripts/generate-docs.js",
     "start": "node dist/index.js",

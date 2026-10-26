@@ -56,6 +56,8 @@ If validation or import fails, stop before merging; the upload-before-transactio
 
 ## Rarity and identity
 
+Detail pages load only the selected relic's variant family together, sharing socket and icon data. Secondary-variant links switch locally using the browser history API; rarity changes replace the current history entry. Both preserve the selected rarity, other query parameters and hash without another page request. Direct URLs, new-tab links and browser Back/Forward still select the exact source variant. Family details use a five-minute cache keyed by family and selected import; a newly imported version cannot reuse the previous import's family payload.
+
 - Statcast controls expose only the user-confirmed 5★–7★ range. All 240 lower-rarity Statcast template records remain stored. Filtering does not reindex the source arrays: a 5★ Statcast still uses original source index 2.
 - Battlecasts retain their recorded rarity choices. Do not apply a blanket 6★ cap: The Cosmic Egg has source-backed 6★ and 7★ records.
 - A cached rarity template or definition does not establish current crystal availability. The catalog states its snapshot date.

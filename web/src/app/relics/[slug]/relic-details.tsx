@@ -1,7 +1,7 @@
 "use client";
 
-import { useTransition, type CSSProperties } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, type CSSProperties, type MouseEvent } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -24,7 +24,7 @@ import {
 } from "@cerebro/core/domain/relic-catalog";
 import { parseSynergyDescription } from "@cerebro/core/domain/champion-synergies";
 import { relicRuneSections } from "@/lib/relic-rune-sections";
-import type { RelicDetailData } from "@/lib/data/relics";
+import type { RelicFamilyDetails } from "@/lib/data/relics";
 import type { RelicAttributeIcon } from "@/lib/relic-attribute-icons";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import type { ChampionClass } from "@prisma/client";
@@ -48,13 +48,16 @@ function AttributeGlyph({ icon }: { icon?: RelicAttributeIcon }) {
   );
 }
 
-export function RelicDetails({ data }: { data: RelicDetailData }) {
+export function RelicDetails({ family }: { family: RelicFamilyDetails }) {
+  const pathname = usePathname();
+  const data = family.members.find(
+    (member) => pathname === `/relics/${member.slug}`,
+  )
+    ?? family.members.find((member) => member.relic.id === family.initialId)!;
   const { relic, items, attributeIcons, runeIcons } = data;
   const isStatcast = relic.type === "statcast";
   const TypeIcon = isStatcast ? SlidersHorizontal : Swords;
-  const router = useRouter();
   const query = useSearchParams();
-  const [isPending, startTransition] = useTransition();
   const rarities = selectableRelicRarities(relic);
   const requested = Number(query.get("rarity"));
   const rarity = rarities.find((r) => r.stars === requested) ?? rarities.at(-1);
@@ -63,10 +66,40 @@ export function RelicDetails({ data }: { data: RelicDetailData }) {
     relic.className.toUpperCase() as ChampionClass,
   ).color;
   const changeRarity = (stars: number) => {
-    const params = new URLSearchParams(query.toString());
-    params.set("rarity", String(stars));
-    startTransition(() => router.replace(`?${params}`, { scroll: false }));
+    const url = new URL(window.location.href);
+    url.searchParams.set("rarity", String(stars));
+    window.history.replaceState(
+      null, "", `${url.pathname}${url.search}${url.hash}`,
+    );
   };
+  const variantHref = (slug: string) => {
+    const params = new URLSearchParams(query.toString());
+    if (rarity) params.set("rarity", String(rarity.stars));
+    return `/relics/${slug}${params.size ? `?${params}` : ""}`;
+  };
+  const changeVariant = (event: MouseEvent<HTMLAnchorElement>) => {
+    // Keep native links for new tabs, modified clicks and pre-hydration use.
+    if (
+      event.defaultPrevented || event.button !== 0 || event.metaKey ||
+      event.ctrlKey || event.shiftKey || event.altKey
+    ) return;
+    event.preventDefault();
+    // Read the latest URL so a rapid rarity → variant click cannot restore
+    // the previous render's query parameters.
+    const url = new URL(window.location.href);
+    url.pathname = new URL(event.currentTarget.href).pathname;
+    const currentRarity = rarities.find(
+      (entry) => entry.stars === Number(url.searchParams.get("rarity")),
+    ) ?? rarity;
+    if (currentRarity)
+      url.searchParams.set("rarity", String(currentRarity.stars));
+    if (url.href !== window.location.href) {
+      window.history.pushState(null, "", `${url.pathname}${url.search}${url.hash}`);
+    }
+  };
+  useEffect(() => {
+    document.title = `${relic.name} | CereBro`;
+  }, [relic.name]);
   const describe = (item: RelicSocketItem) => {
     const context = rarity ? data.contexts[rarity.id]?.[item.id] : undefined;
     // Resolve the complete template so reduction wording and existing units
@@ -193,7 +226,7 @@ export function RelicDetails({ data }: { data: RelicDetailData }) {
           </div>
         </div>
 
-        <div className={styles.rarityBar} aria-busy={isPending}>
+        <div className={styles.rarityBar}>
           <div className={styles.rarityControl}>
             <span className={styles.eyebrow} id="rarity-label">
               Relic rarity
@@ -246,11 +279,11 @@ export function RelicDetails({ data }: { data: RelicDetailData }) {
           </div>
           <div className={styles.variantChoices}>
             {data.variants.map((variant) => (
-              <Link
+              <a
                 aria-current={variant.id === relic.id ? "page" : undefined}
                 key={variant.id}
-                scroll={false}
-                href={`/relics/${variant.slug}${rarity ? `?rarity=${rarity.stars}` : ""}`}
+                href={variantHref(variant.slug)}
+                onClick={changeVariant}
               >
                 <AttributeGlyph
                   icon={attributeIcons[variant.secondaryAttribute ?? ""]}
@@ -259,7 +292,7 @@ export function RelicDetails({ data }: { data: RelicDetailData }) {
                 {variant.id === relic.id && (
                   <Check size={14} aria-hidden="true" />
                 )}
-              </Link>
+              </a>
             ))}
           </div>
         </section>
