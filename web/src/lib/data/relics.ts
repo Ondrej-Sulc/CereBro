@@ -130,43 +130,52 @@ export function getRelicCatalog(): Promise<RelicCatalogData> {
   });
 }
 
-export const getRelicDetails = cache(async (slug: string) => {
-  const row = await prisma.gameRelic.findUnique({
-    where: { slug },
+async function loadRelicFamily(familyKey: string) {
+  const rows = await prisma.gameRelic.findMany({
+    where: { familyKey, isCurrent: true },
     select: {
       id: true,
-      isCurrent: true,
+      slug: true,
+      name: true,
+      secondaryAttribute: true,
       definition: true,
       portraitPath: true,
       scalingContexts: true,
-      familyKey: true,
       importId: true,
       importedFrom: { select: { generatedAt: true } },
     },
+    orderBy: { secondaryAttribute: "asc" },
   });
-  if (!row?.isCurrent) return null;
-  const relic = relicDefinitionSchema.parse(row.definition);
-  if (relic.id !== row.id)
-    throw new Error("Relic definition identity mismatch");
+  const relics = rows.map((row) => {
+    const relic = relicDefinitionSchema.parse(row.definition);
+    if (relic.id !== row.id)
+      throw new Error("Relic definition identity mismatch");
+    return relic;
+  });
+  const variants = rows.map(({ id, slug, name, secondaryAttribute }) => ({
+    id,
+    slug,
+    name,
+    secondaryAttribute,
+  }));
   const ids = [
-    ...new Set([
-      ...relic.innateSocketItemIds,
-      ...relic.slots.flatMap((s) => s.socketItemIds),
-    ]),
+    ...new Set(
+      relics.flatMap((relic) => [
+        ...relic.innateSocketItemIds,
+        ...relic.slots.flatMap((s) => s.socketItemIds),
+      ]),
+    ),
   ];
-  const [sockets, variants, champions, attributeIcons] = await Promise.all([
+  const [sockets, champions, attributeIcons] = await Promise.all([
     prisma.gameRelicSocketItem.findMany({
       where: { id: { in: ids }, isCurrent: true },
       select: { definition: true },
     }),
-    prisma.gameRelic.findMany({
-      where: { familyKey: row.familyKey, isCurrent: true },
-      select: { id: true, slug: true, name: true, secondaryAttribute: true },
-      orderBy: { secondaryAttribute: "asc" },
-    }),
     prisma.champion.findMany({
       where: {
-        gameId: { in: relic.recommendedChampions.map((c) => c.gameId) },
+        gameId: {
+          in: [...new Set(relics.flatMap((relic) => relic.recommendedChampions.map((c) => c.gameId)))],
+        },
         isPlayable: true,
       },
       select: {
@@ -186,14 +195,16 @@ export const getRelicDetails = cache(async (slug: string) => {
   }
   for (const id of ids)
     if (!items[id]) throw new Error(`Missing current relic socket ${id}`);
-  // Read only this relic's formatter dependencies from its immutable import.
+  // Read the family's formatter dependencies once per immutable import.
   // Do not load the multi-megabyte source snapshot into the page payload.
   const tieredIds = [
     ...new Set(Object.values(items).flatMap((item) => item.tieredStatModIds)),
   ].sort();
-  const displayRows = tieredIds.length
+  const importIds = [...new Set(rows.map((row) => row.importId))];
+  const displayEntries = await Promise.all(importIds.map(async (importId) => {
+    const displayRows = tieredIds.length
     ? await getFromCache(
-        `relic-value-formats-v1:${row.importId}:${tieredIds.join(",")}`,
+        `relic-value-formats-v1:${importId}:${tieredIds.join(",")}`,
         300,
         () =>
           prisma.$queryRaw<Array<{ id: string; display: unknown }>>(Prisma.sql`
@@ -208,80 +219,108 @@ export const getRelicDetails = cache(async (slug: string) => {
       FROM "GameRelicImport" source
       CROSS JOIN LATERAL jsonb_each(source.snapshot->'raw'->'SocketItemsTiereds') tiered
       CROSS JOIN LATERAL (SELECT source.snapshot->'dependencies'->'stat_modifiers'->(tiered.value->>'StatModId') AS value) modifier
-      WHERE source.id = ${row.importId} AND tiered.key IN (${Prisma.join(tieredIds)})
+      WHERE source.id = ${importId} AND tiered.key IN (${Prisma.join(tieredIds)})
     `),
       )
     : [];
-  const displays = new Map(
-    displayRows.map((entry) => [entry.id, entry.display]),
+    return [importId, new Map(displayRows.map((entry) => [entry.id, entry.display]))] as const;
+  }));
+  const displaysByImport = new Map(displayEntries);
+  const runeIcons = await getRelicRuneIcons(
+    [...new Set(relics.flatMap((relic) => relic.slots.flatMap((slot) => slot.socketItemIds)))].map((id) => items[id]),
   );
-  const contexts: Record<string, Record<string, RelicScalingContext>> = {};
-  if (Array.isArray(row.scalingContexts))
-    for (const entry of row.scalingContexts) {
-      if (
-        !entry ||
-        typeof entry !== "object" ||
-        Array.isArray(entry) ||
-        typeof entry.rarityId !== "string" ||
-        typeof entry.socketItemId !== "string" ||
-        !entry.parameters ||
-        typeof entry.parameters !== "object" ||
-        Array.isArray(entry.parameters)
-      )
-        continue;
-      const parameters: RelicScalingContext["parameters"] = {};
-      for (const [id, raw] of Object.entries(entry.parameters)) {
-        if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
-        parameters[id] = {};
-        for (const [key, value] of Object.entries(raw)) {
-          if (!value || typeof value !== "object" || Array.isArray(value))
-            continue;
-          parameters[id][key] = {
-            display: relicParameterDisplay(key, displays.get(id)) ?? null,
-            constantRaw:
-              typeof value.constantRaw === "string" ? value.constantRaw : null,
-            minAtRarity:
-              typeof value.minAtRarity === "string" ? value.minAtRarity : null,
-            maxAtRarity:
-              typeof value.maxAtRarity === "string" ? value.maxAtRarity : null,
-            usesChallengeRating:
-              typeof value.usesChallengeRating === "boolean"
-                ? value.usesChallengeRating
-                : undefined,
-            exponent:
-              typeof value.exponent === "number" ? value.exponent : undefined,
-          };
+  return rows.map((row, index) => {
+    const relic = relics[index];
+    const displays = displaysByImport.get(row.importId)!;
+    const contexts: Record<string, Record<string, RelicScalingContext>> = {};
+    if (Array.isArray(row.scalingContexts))
+      for (const entry of row.scalingContexts) {
+        if (
+          !entry ||
+          typeof entry !== "object" ||
+          Array.isArray(entry) ||
+          typeof entry.rarityId !== "string" ||
+          typeof entry.socketItemId !== "string" ||
+          !entry.parameters ||
+          typeof entry.parameters !== "object" ||
+          Array.isArray(entry.parameters)
+        )
+          continue;
+        const parameters: RelicScalingContext["parameters"] = {};
+        for (const [id, raw] of Object.entries(entry.parameters)) {
+          if (!raw || typeof raw !== "object" || Array.isArray(raw)) continue;
+          parameters[id] = {};
+          for (const [key, value] of Object.entries(raw)) {
+            if (!value || typeof value !== "object" || Array.isArray(value))
+              continue;
+            parameters[id][key] = {
+              display: relicParameterDisplay(key, displays.get(id)) ?? null,
+              constantRaw:
+                typeof value.constantRaw === "string" ? value.constantRaw : null,
+              minAtRarity:
+                typeof value.minAtRarity === "string" ? value.minAtRarity : null,
+              maxAtRarity:
+                typeof value.maxAtRarity === "string" ? value.maxAtRarity : null,
+              usesChallengeRating:
+                typeof value.usesChallengeRating === "boolean"
+                  ? value.usesChallengeRating
+                  : undefined,
+              exponent:
+                typeof value.exponent === "number" ? value.exponent : undefined,
+            };
+          }
         }
+        (contexts[entry.rarityId] ??= {})[entry.socketItemId] = { parameters };
       }
-      (contexts[entry.rarityId] ??= {})[entry.socketItemId] = { parameters };
-    }
-  return {
-    relic,
-    items,
-    runeIcons: await getRelicRuneIcons(
-      [...new Set(relic.slots.flatMap((slot) => slot.socketItemIds))].map(
-        (id) => items[id],
-      ),
-    ),
-    variants,
-    contexts,
-    attributeIcons,
-    portraitPath: row.portraitPath,
-    generatedAt: row.importedFrom.generatedAt.toISOString(),
-    recommendations: relic.recommendedChampions.map((r) => {
-      const champion = champions.find((c) => c.gameId === r.gameId);
-      return {
-        gameId: r.gameId,
-        name: champion?.name ?? r.name,
-        slug: champion?.slug ?? null,
-        className: champion?.class ?? null,
-        portraitUrl: champion
-          ? getChampionImageUrlOrPlaceholder(champion.images, "64")
-          : null,
-      };
-    }),
-  };
+    return {
+      slug: row.slug,
+      relic,
+      items,
+      runeIcons,
+      variants,
+      contexts,
+      attributeIcons,
+      portraitPath: row.portraitPath,
+      generatedAt: row.importedFrom.generatedAt.toISOString(),
+      recommendations: relic.recommendedChampions.map((r) => {
+        const champion = champions.find((c) => c.gameId === r.gameId);
+        return {
+          gameId: r.gameId,
+          name: champion?.name ?? r.name,
+          slug: champion?.slug ?? null,
+          className: champion?.class ?? null,
+          portraitUrl: champion
+            ? getChampionImageUrlOrPlaceholder(champion.images, "64")
+            : null,
+        };
+      }),
+    };
+  });
+}
+
+// A family is the small set of secondary variants, never the entire catalog.
+// Shared sockets/icons are fetched once and shared in the client payload.
+export const getRelicFamilyDetails = cache(async (slug: string) => {
+  const row = await prisma.gameRelic.findUnique({
+    where: { slug },
+    select: { id: true, isCurrent: true, familyKey: true, importId: true },
+  });
+  if (!row?.isCurrent) return null;
+  const members = await getFromCache(
+    `relic-family-details-v1:${row.familyKey}:${row.importId}`,
+    300,
+    () => loadRelicFamily(row.familyKey),
+  );
+  if (!members.some((member) => member.relic.id === row.id && member.slug === slug))
+    return null;
+  return { initialId: row.id, members };
 });
-export type RelicDetailData = NonNullable<
-  Awaited<ReturnType<typeof getRelicDetails>>
+
+export const getRelicDetails = cache(async (slug: string) => {
+  const family = await getRelicFamilyDetails(slug);
+  return family?.members.find((member) => member.slug === slug) ?? null;
+});
+export type RelicFamilyDetails = NonNullable<
+  Awaited<ReturnType<typeof getRelicFamilyDetails>>
 >;
+export type RelicDetailData = RelicFamilyDetails["members"][number];
