@@ -207,6 +207,7 @@ describe("verified relic package import", () => {
     );
     const tx = {
       $executeRaw: vi.fn(),
+      $queryRaw: vi.fn().mockResolvedValue([{ matches: true }]),
       gameRelic: {
         findMany: vi.fn().mockResolvedValue([]),
         updateMany: vi.fn(),
@@ -214,7 +215,6 @@ describe("verified relic package import", () => {
       },
       gameRelicRarity: { updateMany: vi.fn(), upsert: vi.fn() },
       gameRelicSocketItem: { updateMany: vi.fn(), upsert: vi.fn() },
-      gameRelicImport: { createMany: vi.fn() },
     };
     const db = {
       gameRelic: tx.gameRelic,

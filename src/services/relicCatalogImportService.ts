@@ -240,17 +240,24 @@ export async function importRelicCatalog(
         )
       )
         throw new Error("Catalog changed after preview");
-      await tx.gameRelicImport.createMany({
-        data: [
-          {
-            id: bundle.sourceHash,
-            generatedAt: new Date(bundle.catalog.metadata.generatedAt),
-            manifest: bundle.manifest,
-            snapshot: bundle.snapshot,
-          },
-        ],
-        skipDuplicates: true,
-      });
+      // Prisma's JSON write protocol rounds some high-precision source doubles.
+      // Bind JSON text and let PostgreSQL parse it without a second numeric codec.
+      const manifestText = JSON.stringify(bundle.manifest);
+      const snapshotText = JSON.stringify(bundle.snapshot);
+      const generatedAt = new Date(bundle.catalog.metadata.generatedAt);
+      await tx.$executeRaw`
+        INSERT INTO "GameRelicImport" (id, "generatedAt", manifest, snapshot)
+        VALUES (${bundle.sourceHash}, ${generatedAt}, ${manifestText}::jsonb, ${snapshotText}::jsonb)
+        ON CONFLICT (id) DO NOTHING
+      `;
+      const [stored] = await tx.$queryRaw<Array<{ matches: boolean }>>`
+        SELECT manifest = ${manifestText}::jsonb
+          AND snapshot = ${snapshotText}::jsonb
+          AND "generatedAt" = ${generatedAt} AS matches
+        FROM "GameRelicImport" WHERE id = ${bundle.sourceHash}
+      `;
+      if (!stored?.matches)
+        throw new Error("Immutable relic snapshot differs from the verified source package");
       await tx.gameRelic.updateMany({ data: { isCurrent: false } });
       await tx.gameRelicRarity.updateMany({
         data: { isCurrent: false, selectable: false },
