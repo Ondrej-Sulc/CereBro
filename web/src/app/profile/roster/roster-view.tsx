@@ -157,7 +157,7 @@ interface RosterViewProps {
 }
 
 const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ style, children, ...props }, ref) => (
-  <div ref={ref} {...props} style={style} className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 gap-2">
+  <div ref={ref} {...props} style={style} className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 lg:grid-cols-10 xl:grid-cols-12 2xl:grid-cols-[repeat(auto-fill,minmax(104px,1fr))] gap-2">
     {children}
   </div>
 ));

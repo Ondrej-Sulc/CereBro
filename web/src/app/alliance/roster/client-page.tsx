@@ -38,7 +38,7 @@ export function AllianceRosterMatrix({ data, bgColors }: ClientPageProps) {
   const playerCount = result.championsByPlayer.size;
   const countLabel = `${visibleCount < result.entries.length ? `Showing ${visibleCount} of ${result.entries.length} matching` : visibleCount} champions across ${playerCount} ${playerCount === 1 ? "player" : "players"}`;
 
-  return <div className="container mx-auto space-y-6 px-4 py-6">
+  return <div className="w-full space-y-6 px-4 py-6">
     <div className="space-y-2">
       <h1 className="text-2xl font-bold tracking-tight sm:text-3xl">Alliance Roster Overview</h1>
       <p className="text-sm text-slate-400">Browse and filter rosters across the alliance.</p>

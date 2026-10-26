@@ -16,6 +16,67 @@ model AbilityCategory {
   abilities   Ability[] @relation("AbilityToAbilityCategory")
 }
 
+// Versioned game relic definitions, independent of player ownership and champion facts.
+model GameRelicImport {
+  id          String   @id
+  generatedAt DateTime
+  manifest    Json
+  snapshot    Json
+  importedAt  DateTime @default(now())
+  relics      GameRelic[]
+  socketItems GameRelicSocketItem[]
+}
+
+model GameRelic {
+  id                 String        @id
+  slug               String        @unique
+  name               String
+  shortName          String
+  type               String
+  class              ChampionClass
+  familyKey          String
+  primaryAttribute   String?
+  secondaryAttribute String?
+  portraitPath       String
+  definition         Json
+  scalingContexts    Json          @default("[]")
+  sourceHash         String
+  isCurrent          Boolean       @default(true)
+  importId           String
+  importedFrom       GameRelicImport @relation(fields: [importId], references: [id], onDelete: Restrict)
+  rarities           GameRelicRarity[]
+
+  @@index([isCurrent, type, class])
+  @@index([familyKey])
+}
+
+model GameRelicRarity {
+  relicId         String
+  sourceRarityId  String
+  stars           Int
+  sourceOrderIndex Int
+  maxRank         Int
+  maxSignature    Int
+  selectable      Boolean
+  isCurrent       Boolean @default(true)
+  raw             Json
+  relic           GameRelic @relation(fields: [relicId], references: [id], onDelete: Cascade)
+
+  @@id([relicId, sourceRarityId])
+  @@unique([relicId, stars])
+}
+
+model GameRelicSocketItem {
+  id           String @id
+  name         String
+  type         String
+  definition   Json
+  sourceHash   String
+  isCurrent    Boolean @default(true)
+  importId     String
+  importedFrom GameRelicImport @relation(fields: [importId], references: [id], onDelete: Restrict)
+}
+
 model Ability {
   id                 Int                   @id @default(autoincrement())
   name               String                @unique

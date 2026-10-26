@@ -52,6 +52,12 @@ The full Synergies tab groups catalog entries independently of effect-source pop
 
 Game Synergies are independent of manually curated Champion Ability Synergy links. Importing a validated full snapshot atomically replaces only the game synergy tables. Grouped activation rules are preserved in the source format but blocked from import until their semantics are supported.
 
+## Game Relics
+
+Game Relics are imported Battlecast and Statcast catalog definitions, separate from player-owned items and champion bindings. Each source ID and original rarity index remains distinct. Statcast visual families group secondary variants for browsing; they do not merge those definitions. Public controls expose Statcasts at 5★–7★ while lower-rarity templates remain in the source snapshot. Battlecast rarities follow their individual records.
+
+The catalog retains the complete verified source bundle and projects current definitions, socket items and rarities into dedicated tables. Portraits use the champion-image GCS bucket with a separate content-addressed `relics/` prefix, public URLs in the database and Next Image delivery. Numeric descriptions show fixed values and metadata-supported, rarity-wide progression ranges. Rating effects use explicit unbound percentage previews; supported Attack/Health coefficients show percentages of the bound champion's respective stat rather than flat amounts. Unsupported conversions remain marked Build-dependent. These are not selected-build combat calculations. Rune options are inspectable reference data, game recommendations are hints, and raw restriction selectors do not imply supported eligibility checks. See `docs/relic-catalog.md`.
+
 ## Quest Planning
 
 Quest Planning is the domain rule set for turning quest plans, route choices, fight restrictions, player rosters, selected counters, prefight champions, synergy champions, and revive counts into a player's saved quest plan.

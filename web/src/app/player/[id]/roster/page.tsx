@@ -172,7 +172,7 @@ export default async function PlayerRosterPage({ params, searchParams }: PlayerR
         : null;
 
     return (
-        <div className="container mx-auto p-4 sm:p-8 space-y-6">
+        <div className="w-full p-4 sm:p-8 space-y-6">
             {/* Back navigation */}
             <div className="flex items-center gap-3">
                 <Button asChild variant="ghost" size="sm" className="h-8 gap-1.5 text-slate-400 hover:text-slate-200 -ml-2">

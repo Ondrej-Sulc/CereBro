@@ -50,7 +50,7 @@ export default async function RosterPage(props: {
     const initialGlobalPrestigeOptions = normalizeGlobalPrestigeListOptions({}, { targetRank: 3 });
 
     return (
-      <div className="container mx-auto p-4 sm:p-8">
+      <div className="w-full p-4 sm:p-8">
         <RosterView
           key="public-champions"
           variant="champions"
@@ -157,7 +157,7 @@ export default async function RosterPage(props: {
   const shareUrl = `${protocol}://${host}/player/${player.id}/roster`;
 
   return (
-    <div className="container mx-auto p-4 sm:p-8">
+    <div className="w-full p-4 sm:p-8">
       <RosterView
         key={player.id}
         initialRoster={typedRosterEntries}
