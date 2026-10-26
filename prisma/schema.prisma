@@ -61,9 +61,26 @@ model GameRelicRarity {
   isCurrent       Boolean @default(true)
   raw             Json
   relic           GameRelic @relation(fields: [relicId], references: [id], onDelete: Cascade)
+  prestige        GameRelicPrestige?
 
   @@id([relicId, sourceRarityId])
   @@unique([relicId, stars])
+}
+
+// Exact game-returned ratings. Separate from catalog definitions and player prestige.
+model GameRelicPrestige {
+  relicId              String
+  sourceRarityId       String
+  sourceDefinitionHash String
+  // Unbound legacy captures stay hidden until verified import supplies this hash.
+  sourcePackageHash    String?
+  gameAssemblyHash     String
+  captureHash          String
+  capturedAt           DateTime
+  ranks                Json
+  rarity               GameRelicRarity @relation(fields: [relicId, sourceRarityId], references: [relicId, sourceRarityId], onDelete: Cascade, map: "GameRelicPrestige_rarity_fkey")
+
+  @@id([relicId, sourceRarityId])
 }
 
 model GameRelicSocketItem {

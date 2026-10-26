@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { relicParameterDisplay } from "@cerebro/core/domain/relic-values";
+import { parseRelicPrestigeRanks, type RelicPrestigeRank } from "@cerebro/core/domain/relic-prestige";
 import {
   buildRelicRuneIcons,
   relicRuneGlossaryId,
@@ -141,6 +142,7 @@ async function loadRelicFamily(familyKey: string) {
       definition: true,
       portraitPath: true,
       scalingContexts: true,
+      sourceHash: true,
       importId: true,
       importedFrom: { select: { generatedAt: true } },
     },
@@ -166,7 +168,7 @@ async function loadRelicFamily(familyKey: string) {
       ]),
     ),
   ];
-  const [sockets, champions, attributeIcons] = await Promise.all([
+  const [sockets, champions, attributeIcons, prestigeRows] = await Promise.all([
     prisma.gameRelicSocketItem.findMany({
       where: { id: { in: ids }, isCurrent: true },
       select: { definition: true },
@@ -187,6 +189,10 @@ async function loadRelicFamily(familyKey: string) {
       },
     }),
     getRelicAttributeIcons(),
+    prisma.gameRelicPrestige.findMany({
+      where: { relicId: { in: rows.map(row => row.id) } },
+      select: { relicId: true, sourceRarityId: true, sourceDefinitionHash: true, sourcePackageHash: true, ranks: true },
+    }),
   ]);
   const items: Record<string, RelicSocketItem> = {};
   for (const socket of sockets) {
@@ -272,6 +278,13 @@ async function loadRelicFamily(familyKey: string) {
         }
         (contexts[entry.rarityId] ??= {})[entry.socketItemId] = { parameters };
       }
+    const prestige: Record<string, RelicPrestigeRank[]> = {};
+    for (const captured of prestigeRows) {
+      if (captured.relicId !== relic.id || captured.sourceDefinitionHash !== row.sourceHash ||
+        captured.sourcePackageHash !== row.importId) continue;
+      const rarity = selectableRelicRarities(relic).find(r => r.id === captured.sourceRarityId);
+      if (rarity) prestige[rarity.id] = parseRelicPrestigeRanks(captured.ranks, rarity);
+    }
     return {
       slug: row.slug,
       relic,
@@ -279,6 +292,7 @@ async function loadRelicFamily(familyKey: string) {
       runeIcons,
       variants,
       contexts,
+      prestige,
       attributeIcons,
       portraitPath: row.portraitPath,
       generatedAt: row.importedFrom.generatedAt.toISOString(),
@@ -307,7 +321,7 @@ export const getRelicFamilyDetails = cache(async (slug: string) => {
   });
   if (!row?.isCurrent) return null;
   const members = await getFromCache(
-    `relic-family-details-v1:${row.familyKey}:${row.importId}`,
+    `relic-family-details-v2:${row.familyKey}:${row.importId}`,
     300,
     () => loadRelicFamily(row.familyKey),
   );
