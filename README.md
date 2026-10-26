@@ -101,6 +101,7 @@ The flagship feature of the platform.
 ### 🧠 Knowledge Base
 
 - **Champion Search:** Powerful filtering by immunities, tags, and ability mechanics. Supported by a comprehensive glossary for deep effect lookups.
+- **Relic Catalog:** `/relics` browses Battlecasts and Statcast variants by class and attribute, with rarity-aware descriptions, rune options and game-supplied pairing hints. See [the import and data contract](docs/relic-catalog.md). Player ownership and relic bindings are separate future features.
 - **Champion Prestige Data:** Maintains a normalized, high-performance database of prestige values across all rarities, ranks, and signature levels.
 - **Community Data:** Crowdsourced Duel Targets with an admin review queue system.
 

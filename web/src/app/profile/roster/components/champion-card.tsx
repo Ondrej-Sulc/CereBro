@@ -67,7 +67,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, onQuickView, mode, 
                 src={getChampionImageUrlOrPlaceholder(item.champion.images as unknown as ChampionImages, 'full')}
                 alt={item.champion.name}
                 fill
-                sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 16vw, 10vw"
+                sizes="(min-width: 1536px) 120px, (min-width: 1280px) 8.34vw, (min-width: 1024px) 10vw, (min-width: 768px) 12.5vw, (min-width: 640px) 16.67vw, 20vw"
                 className="object-cover p-1 transition-transform duration-300 group-hover:scale-[1.07]"
             />
 

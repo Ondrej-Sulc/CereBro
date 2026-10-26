@@ -1,0 +1,159 @@
+.page {
+  --relic-color: #a78bfa;
+  --relic-muted: #96a7bc;
+  width: 100%;
+  padding: 42px 32px 72px;
+  color: #dbe4ef;
+}
+.catalogHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 28px;
+  margin-bottom: 30px;
+}
+.eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  line-height: 1.5;
+  letter-spacing: 1.3px;
+  font-weight: 650;
+  color: #9eacc0;
+}
+.catalogHeader .eyebrow {
+  color: #bda5ef;
+}
+.page h1 {
+  font-size: clamp(34px, 4vw, 44px);
+  letter-spacing: -1.5px;
+  font-weight: 650;
+  line-height: 1.15;
+  margin: 9px 0 12px;
+  color: #f5f8fc;
+}
+.catalogHeader p {
+  font-size: 15px;
+  color: #9baac0;
+  line-height: 1.7;
+  margin: 0;
+}
+.catalogNumbers {
+  display: flex;
+  gap: 30px;
+  flex-shrink: 0;
+  margin: 0;
+}
+.catalogNumbers > div {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 4px;
+}
+.catalogNumbers > div + div {
+  padding-left: 30px;
+  border-left: 1px solid #283343;
+}
+.catalogNumbers dt {
+  color: #99a8bd;
+  font-size: 12px;
+}
+.catalogNumbers dd {
+  color: #e7edf7;
+  font-size: 30px;
+  letter-spacing: -1px;
+  font-weight: 600;
+  line-height: 1.15;
+  margin: 0;
+}
+.page :where(a, button):focus-visible {
+  outline: 2px solid #b69aee;
+  outline-offset: 4px;
+}
+.sourceNote {
+  font-size: 12px;
+  color: #91a1b8;
+  line-height: 1.8;
+  border-top: 1px solid #263344;
+  margin-top: 34px;
+  padding-top: 20px;
+}
+.empty {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  text-align: center;
+  padding: 72px 24px;
+  color: #9caec7;
+  border: 1px dashed #344154;
+  border-radius: 14px;
+  background: #0c142080;
+}
+.empty > svg {
+  color: #b79bdd;
+}
+.empty h2 {
+  font-size: 21px;
+  font-weight: 600;
+  color: #e1e8f5;
+  margin: 18px 0 8px;
+}
+.empty p {
+  font-size: 14px;
+  line-height: 1.7;
+}
+.empty button {
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid #6c5888;
+  border-radius: 7px;
+  font-size: 13px;
+  color: #d6bdfb;
+  margin-top: 20px;
+  background: #a78bfa0b;
+}
+@media (max-width: 1100px) {
+  .catalogNumbers {
+    gap: 20px;
+  }
+  .catalogNumbers > div + div {
+    padding-left: 20px;
+  }
+}
+@media (max-width: 800px) {
+  .page {
+    padding: 30px 22px 56px;
+  }
+  .catalogNumbers {
+    display: none;
+  }
+}
+@media (max-width: 480px) {
+  .page {
+    padding: 26px 16px 44px;
+  }
+  .catalogHeader {
+    margin-bottom: 24px;
+  }
+  .catalogHeader .eyebrow {
+    font-size: 10px;
+  }
+  .catalogHeader p {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .page h1 {
+    font-size: 36px;
+  }
+  .sourceNote {
+    font-size: 11px;
+  }
+  .empty {
+    padding: 48px 20px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page :where(a, button, img) {
+    transition: none;
+  }
+}

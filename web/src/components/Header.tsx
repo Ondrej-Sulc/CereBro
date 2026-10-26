@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Swords, Menu, Book, Shield, Trophy, ChevronDown, LayoutGrid, Users, Heart, Map as MapIcon, Info, Search } from "lucide-react";
+import { Swords, Menu, Book, Shield, Trophy, ChevronDown, LayoutGrid, Users, Heart, Map as MapIcon, Info, Search, Gem } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -142,6 +142,12 @@ export default function Header({ userButton, isInAlliance, hasPlayerProfile }: {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 bg-slate-950 border-slate-800 text-slate-300">
                 <DropdownMenuItem asChild>
+                  <Link href="/relics" className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
+                    <Gem className="w-4 h-4 text-slate-300" />
+                    <span>Relics</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link href="/search" className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
                     <Search className="w-4 h-4 text-slate-300" />
                     <span>Search</span>
@@ -205,6 +211,10 @@ export default function Header({ userButton, isInAlliance, hasPlayerProfile }: {
                                       >
                                         <MapIcon className="w-5 h-5" />
                                         Quest Planner
+                                      </Link>
+                                      <Link href="/relics" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors">
+                                        <Gem className="w-5 h-5" />
+                                        Relics
                                       </Link>
                                       <Link
                                           href="/war-videos"

@@ -133,7 +133,7 @@ export function RosterFilters(props: SharedRosterFiltersProps) {
   return <div className="space-y-3">
     <section aria-label="Champion filters" className="space-y-2 rounded-xl bg-slate-900/40 p-3 sm:space-y-4 sm:p-4">
       <div className="flex items-center gap-2 sm:flex-wrap sm:gap-3">
-        <div className="relative min-w-0 flex-1 sm:min-w-[220px] lg:max-w-xl">
+        <div className="relative min-w-0 flex-1 sm:min-w-[220px]">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
           <Input aria-label="Search champions" placeholder="Search champions…" value={p.search} onChange={event => p.onSearchChange(event.target.value)} className="h-11 border-slate-800/80 bg-slate-950/40 pl-10 pr-9 text-base shadow-none placeholder:text-slate-500 focus-visible:ring-sky-500 sm:text-sm" />
           {p.search && <Button type="button" variant="ghost" size="icon" onClick={() => p.onSearchChange("")} aria-label="Clear champion search" className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 text-slate-400 hover:text-white"><X className="h-3.5 w-3.5" /></Button>}

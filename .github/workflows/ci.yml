@@ -49,6 +49,9 @@ jobs:
       - name: Build Bot (src)
         run: pnpm run build-only
 
+      - name: Verify relic data, formatting and cloud image publication
+        run: pnpm run test:relics
+
       - name: Verify source-bound resistance classifications and discovery
         run: pnpm exec vitest run src/domain/champion-resistance.test.ts src/domain/champion-resistance-classification.test.ts src/domain/champion-resistance-plan.test.ts web/src/lib/champion-resistance.test.ts web/src/lib/roster-kit-options.test.ts web/src/lib/data/champion-resistances.test.ts web/src/lib/champion-ability-text.test.ts web/src/components/champions/effect-sources.test.ts 'web/src/app/api/champions/[slug]/kit/route.test.ts' --maxWorkers=1
 
