@@ -1,3 +1,4 @@
+import { getFightRecordings, canViewFightRecording } from '@cerebro/core/domain/war-recordings';
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import logger from "@/lib/logger";
@@ -34,6 +35,8 @@ export const GET = withRouteContext(async (
       where: { id: { in: session.fightIds } },
       include: {
         war: true,
+        video: true,
+        recordings: { include: { video: true } },
         player: {
           include: { alliance: true }
         },
@@ -51,10 +54,16 @@ export const GET = withRouteContext(async (
     }
 
     // Transform to match frontend expectation (prefightChampions as Champion[])
-    const formattedFights = warFights.map(fight => ({
-        ...fight,
-        prefightChampions: fight.prefightChampions.map(pf => pf.champion)
-    }));
+    const formattedFights = warFights.map(fight => {
+      const { video, recordings, ...details } = fight;
+      const visible = getFightRecordings(fight).filter(video => canViewFightRecording(video, fight.war.allianceId, fight.player));
+      return {
+        ...details,
+        videoId: visible[0]?.id || null,
+        existingRecordings: visible.map(video => ({ id: video.id, description: video.description })),
+        prefightChampions: fight.prefightChampions.map(pf => pf.champion),
+      };
+    });
 
     // 3. All fights belong to the same player; get the user from the first one.
     const user = warFights[0].player;

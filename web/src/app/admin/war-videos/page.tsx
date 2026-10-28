@@ -1,3 +1,4 @@
+import { getVideoFights } from '@cerebro/core/domain/war-recordings';
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -74,6 +75,13 @@ function buildWarVideoWhere(status: string, query: string): Prisma.WarVideoWhere
       { fights: { some: { war: { enemyAlliance: { contains: trimmedQuery, mode: "insensitive" } } } } },
       { fights: { some: { attacker: { name: { contains: trimmedQuery, mode: "insensitive" } } } } },
       { fights: { some: { defender: { name: { contains: trimmedQuery, mode: "insensitive" } } } } },
+      { fightLinks: { some: { fight: { OR: [
+        { player: { ingameName: { contains: trimmedQuery, mode: 'insensitive' } } },
+        { attacker: { name: { contains: trimmedQuery, mode: 'insensitive' } } },
+        { defender: { name: { contains: trimmedQuery, mode: 'insensitive' } } },
+        { war: { alliance: { name: { contains: trimmedQuery, mode: 'insensitive' } } } },
+        { war: { enemyAlliance: { contains: trimmedQuery, mode: 'insensitive' } } },
+      ] } } } },
     ];
   }
 
@@ -176,11 +184,14 @@ export default async function AdminWarVideosPage({ searchParams }: AdminWarVideo
   const page = Number.isFinite(requestedPage) && requestedPage > 0 ? requestedPage : 1;
   const where = buildWarVideoWhere(status, query);
 
-  const [videos, total] = await Promise.all([
+  const [rawVideos, total] = await Promise.all([
     prisma.warVideo.findMany({
       where,
       include: {
         submittedBy: true,
+        fightLinks: { include: { fight: { include: {
+          player: true, attacker: true, defender: true, node: true, war: { include: { alliance: true } },
+        } } } },
         fights: {
           include: {
             player: true,
@@ -198,6 +209,8 @@ export default async function AdminWarVideosPage({ searchParams }: AdminWarVideo
     }),
     prisma.warVideo.count({ where }),
   ]);
+
+  const videos = rawVideos.map(video => ({ ...video, fights: getVideoFights(video) }));
 
   const pageCount = Math.max(1, Math.ceil(total / PAGE_SIZE));
   const activeStatusLabel = statusOptions.find((option) => option.value === status)?.label ?? "Pending";

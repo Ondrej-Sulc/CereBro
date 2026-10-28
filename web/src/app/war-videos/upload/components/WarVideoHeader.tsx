@@ -77,7 +77,7 @@ export function WarVideoHeader({
               uploadMode === "single" ? "bg-slate-700 text-white shadow-sm" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
             )}
           >
-            Single Video (all fights)
+            Shared Videos (all fights)
           </Button>
           <Button
             type="button"
@@ -88,7 +88,7 @@ export function WarVideoHeader({
               uploadMode === "multiple" ? "bg-slate-700 text-white shadow-sm" : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/50"
             )}
           >
-            Separate Videos (per fight)
+            Videos Per Fight
           </Button>
         </div>
       </div>}

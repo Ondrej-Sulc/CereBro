@@ -1,5 +1,7 @@
 'use server';
 
+import { getFightRecordings, fightHasVisibleRecording, canViewFightRecording } from '@cerebro/core/domain/war-recordings';
+
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { WarStatus } from "@/lib/prisma";
@@ -913,18 +915,21 @@ export const getFightVideos = withActionContext('getFightVideos', async (nodeId:
     const session = await auth();
     if (!session?.user?.id) return [];
 
+    const viewer = await getUserPlayerWithAlliance();
     const historicalFights = await prisma.warFight.findMany({
         where: {
             nodeId,
             defenderId,
             attackerId,
-            videoId: { not: null },
-            war: { status: WarStatus.FINISHED, warTier }
+            ...fightHasVisibleRecording(viewer),
+            war: { status: WarStatus.FINISHED, warTier },
         },
         select: {
             id: true,
             death: true,
-            video: { select: { id: true, url: true } },
+            video: true,
+            recordings: { include: { video: true } },
+            war: { select: { allianceId: true } },
             player: { select: { id: true, ingameName: true } }
         },
         orderBy: [
@@ -934,12 +939,9 @@ export const getFightVideos = withActionContext('getFightVideos', async (nodeId:
         take: 3
     });
 
-    return historicalFights.map(hf => ({
-        url: hf.video?.url,
-        videoId: hf.video?.id,
-        death: hf.death,
-        playerName: hf.player?.ingameName
-    }));
+    return historicalFights.flatMap(fight => getFightRecordings(fight)
+      .filter(video => canViewFightRecording(video, fight.war.allianceId, viewer))
+      .map(video => ({ url: video.url, videoId: video.id, death: fight.death, playerName: fight.player?.ingameName })));
 });
 
 export const getWarMapPng = withActionContext('getWarMapPng', async (warId: string, battlegroup: number, playerId?: string): Promise<string> => {

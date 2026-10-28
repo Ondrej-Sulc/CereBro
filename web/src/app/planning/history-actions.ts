@@ -1,5 +1,8 @@
 'use server';
 
+import { getFightRecordings, canViewFightRecording } from '@cerebro/core/domain/war-recordings';
+import { getUserPlayerWithAlliance } from '@/lib/auth-helpers';
+
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { ChampionImages } from "@/types/champion";
@@ -23,6 +26,7 @@ export type HistoricalFightStat = {
     battlegroup: number | null;
     death: number;
     videoId?: string;
+    videoIds?: string[];
     prefightChampions: { name: string; images: ChampionImages }[];
   }[];
 };
@@ -64,6 +68,7 @@ export const getBatchHistoricalCounters = withActionContext('getBatchHistoricalC
   if (!session?.user?.id || requests.length === 0) return {};
 
   const { minSeason, maxTier, minTier, seasons, allianceId, mapType } = options;
+  const viewer = await getUserPlayerWithAlliance();
 
   // Create tuple list for the IN clause: ((1, 101), (2, 202), ...)
   const valueTuples = Prisma.join(
@@ -78,34 +83,23 @@ export const getBatchHistoricalCounters = withActionContext('getBatchHistoricalC
       COUNT(*) as "totalFights",
       SUM("wf"."death") as "totalDeaths",
       COUNT(CASE WHEN "wf"."death" = 0 THEN 1 END) as "solos",
-      COUNT("wf"."videoId") as "videoCount",
-      (SELECT "v"."url" FROM "WarVideo" "v" 
-       JOIN "WarFight" "wf2" ON "wf2"."videoId" = "v"."id"
-       WHERE "wf2"."attackerId" = "wf"."attackerId" 
-       AND "wf2"."defenderId" = "wf"."defenderId"
-       AND "wf2"."nodeId" = "wf"."nodeId"
-       AND "v"."url" IS NOT NULL
-       LIMIT 1
-      ) as "sampleVideoUrl",
-      (SELECT "v"."id" FROM "WarVideo" "v" 
-       JOIN "WarFight" "wf2" ON "wf2"."videoId" = "v"."id"
-       WHERE "wf2"."attackerId" = "wf"."attackerId" 
-       AND "wf2"."defenderId" = "wf"."defenderId"
-       AND "wf2"."nodeId" = "wf"."nodeId"
-       AND "v"."id" IS NOT NULL
-       LIMIT 1
-      ) as "sampleVideoInternalId",
-      (SELECT "wf2"."id" FROM "WarFight" "wf2"
-       JOIN "WarVideo" "v" ON "wf2"."videoId" = "v"."id"
-       WHERE "wf2"."attackerId" = "wf"."attackerId" 
-       AND "wf2"."defenderId" = "wf"."defenderId"
-       AND "wf2"."nodeId" = "wf"."nodeId"
-       AND "v"."id" IS NOT NULL
-       LIMIT 1
-      ) as "sampleFightId"
+      SUM("recorded"."videoCount")::bigint as "videoCount",
+      (array_agg("recorded"."sampleVideoUrl" ORDER BY "wf"."createdAt", "wf"."id") FILTER (WHERE "recorded"."sampleVideoInternalId" IS NOT NULL))[1] as "sampleVideoUrl",
+      (array_agg("recorded"."sampleVideoInternalId" ORDER BY "wf"."createdAt", "wf"."id") FILTER (WHERE "recorded"."sampleVideoInternalId" IS NOT NULL))[1] as "sampleVideoInternalId",
+      (array_agg("wf"."id" ORDER BY "wf"."createdAt", "wf"."id") FILTER (WHERE "recorded"."sampleVideoInternalId" IS NOT NULL))[1] as "sampleFightId"
     FROM "WarFight" "wf"
     JOIN "War" "w" ON "wf"."warId" = "w"."id"
     JOIN "WarNode" "wn" ON "wf"."nodeId" = "wn"."id"
+    LEFT JOIN LATERAL (
+      SELECT COUNT(*) as "videoCount",
+        (array_agg("v"."url" ORDER BY "r"."position", "v"."id"))[1] as "sampleVideoUrl",
+        (array_agg("v"."id" ORDER BY "r"."position", "v"."id"))[1] as "sampleVideoInternalId"
+      FROM "WarFightVideo" "r" JOIN "WarVideo" "v" ON "v"."id" = "r"."videoId"
+      WHERE "r"."fightId" = "wf"."id"
+        AND "v"."status" = 'PUBLISHED'
+        AND ("v"."visibility" = 'public' OR ("v"."visibility" = 'alliance' AND "w"."allianceId" = ${viewer?.allianceId || ''}))
+    ) "recorded" ON TRUE
+
     WHERE 
       ("wn"."nodeNumber", "wf"."defenderId") IN (${valueTuples})
       AND "wf"."attackerId" IS NOT NULL
@@ -200,6 +194,7 @@ export const getHistoricalNodeDefenseStats = withActionContext('getHistoricalNod
   if (!session?.user?.id) return [];
 
   const { minSeason, maxTier, minTier, seasons, allianceId, mapType } = options;
+  const viewer = await getUserPlayerWithAlliance();
 
   const fights = await prisma.warFight.findMany({
     where: {
@@ -262,6 +257,7 @@ export const getHistoricalCounters = withActionContext('getHistoricalCounters', 
   if (!session?.user?.id) return [];
 
   const { minSeason, maxTier, minTier, seasons, allianceId, mapType } = options;
+  const viewer = await getUserPlayerWithAlliance();
 
   // 1. Fetch detailed fight records
   const fights = await prisma.warFight.findMany({
@@ -284,7 +280,9 @@ export const getHistoricalCounters = withActionContext('getHistoricalCounters', 
     include: {
       attacker: { select: { id: true, name: true, images: true } },
       player: { select: { ingameName: true, avatar: true } },
-      video: { select: { id: true, url: true } },
+      video: true,
+      recordings: { include: { video: true } },
+      war: { select: { allianceId: true } },
       prefightChampions: { 
           select: { 
               champion: { select: { name: true, images: true } } 
@@ -323,12 +321,13 @@ export const getHistoricalCounters = withActionContext('getHistoricalCounters', 
     stat.totalFights++;
     stat.deaths += fight.death;
     if (fight.death === 0) stat.solos++;
-    if (fight.video) {
-        stat.videoCount++;
+    const videos = getFightRecordings(fight).filter(video => canViewFightRecording(video, fight.war.allianceId, viewer));
+    if (videos.length) {
+        stat.videoCount += videos.length;
         // Keep the first video found as sample
         if (!stat.sampleVideoUrl && !stat.sampleVideoInternalId) {
-            stat.sampleVideoUrl = fight.video.url || undefined;
-            stat.sampleVideoInternalId = fight.video.id;
+            stat.sampleVideoUrl = videos[0].url || undefined;
+            stat.sampleVideoInternalId = videos[0].id;
             stat.prefightChampions = prefights.map(p => ({ name: p.name, images: p.images as unknown as ChampionImages }));
         }
     } else if (stat.prefightChampions!.length === 0 && prefights.length > 0) {
@@ -343,7 +342,8 @@ export const getHistoricalCounters = withActionContext('getHistoricalCounters', 
         avatar: fight.player.avatar,
         battlegroup: fight.battlegroup,
         death: fight.death,
-        videoId: fight.video?.id,
+        videoId: videos[0]?.id,
+        videoIds: videos.map(video => video.id),
         prefightChampions: prefights.map(p => ({ name: p.name, images: p.images as unknown as ChampionImages }))
       });
     }

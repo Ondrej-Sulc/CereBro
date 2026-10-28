@@ -1,3 +1,4 @@
+import { getFightRecordings, fightHasVisibleRecording, canViewFightRecording } from '@cerebro/core/domain/war-recordings';
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
@@ -33,6 +34,7 @@ interface WarFightWithRelations extends WarFight {
   player: Player | null;
   prefightChampions: Pick<Champion, 'id' | 'name' | 'images' | 'class'>[];
   video: (WarVideo & { submittedBy: Player }) | null;
+  videos: (WarVideo & { submittedBy: Player })[];
 }
 
 interface WarVideosPageProps {
@@ -111,10 +113,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
         {
             OR: [
                 {
-                    video: {
-                        status: "PUBLISHED",
-                        visibility: "public"
-                    }
+                    ...fightHasVisibleRecording(currentUser)
                 },
                 ...(currentUser?.allianceId ? [{
                     war: { allianceId: currentUser.allianceId }
@@ -123,7 +122,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
         },
         query ? {
           OR: [
-            { video: { description: { contains: query, mode: "insensitive" } } },
+            fightHasVisibleRecording(currentUser, { description: { contains: query, mode: 'insensitive' } }),
             { player: { ingameName: { contains: query, mode: "insensitive" } } },
             { attacker: { name: { contains: query, mode: "insensitive" } } },
             { defender: { name: { contains: query, mode: "insensitive" } } },
@@ -139,7 +138,7 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
         player ? { player: { ingameName: { contains: player, mode: "insensitive" } } } : {},
         alliance ? { war: { alliance: { name: { contains: alliance, mode: "insensitive" } } } } : {},
         battlegroup !== undefined ? { battlegroup: battlegroup } : {},
-        hasVideo ? { videoId: { not: null } } : {},
+        hasVideo ? fightHasVisibleRecording(currentUser) : {},
         outcome === "solo" ? { death: 0 } : {},
         outcome === "deaths" ? { death: { gt: 0 } } : {},
       ]
@@ -157,7 +156,8 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
       },
       video: {
         include: { submittedBy: true }
-      }
+      },
+      recordings: { include: { video: { include: { submittedBy: true } } } }
     },
     orderBy: { createdAt: 'desc' },
     take: 50,
@@ -166,6 +166,8 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
   // Map fights to flatten prefightChampions
   const fights: WarFightWithRelations[] = rawFights.map(f => ({
       ...f,
+      videos: getFightRecordings(f).filter(video => canViewFightRecording(video, f.war.allianceId, currentUser)),
+      video: getFightRecordings(f).find(video => canViewFightRecording(video, f.war.allianceId, currentUser)) || null,
       prefightChampions: f.prefightChampions.map(p => p.champion)
   }));
 
@@ -337,10 +339,11 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                             <span className="text-[11px] font-medium truncate">Unknown</span>
                         )}
                     </div>
-                    <div className="shrink-0 ml-2">
+                    <div className="shrink-0 ml-2 flex items-center gap-2">
+                        {fight.video && currentUser && (fight.playerId === currentUser.id || currentUser.isBotAdmin || (currentUser.isOfficer && currentUser.allianceId === fight.war.allianceId)) && <UploadFightButton fightId={fight.id} />}
                         {fight.video ? (
                             <div className="inline-flex items-center justify-center rounded-md h-6 px-2.5 text-[10px] bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white border border-sky-600 transition-all duration-200">
-                                <Play className="h-2.5 w-2.5 mr-1" /> Video
+                                <Play className="h-2.5 w-2.5 mr-1" /> {fight.videos.length} video{fight.videos.length === 1 ? "" : "s"}
                             </div>
                         ) : (
                             (currentUser && (
@@ -526,11 +529,14 @@ export default async function WarVideosPage({ searchParams }: WarVideosPageProps
                             </td>
                             <td className="px-4 py-3 align-middle text-right">
                                 {fight.video ? (
+                                    <div className="flex items-center justify-end gap-2">
+                                    {currentUser && (fight.playerId === currentUser.id || currentUser.isBotAdmin || (currentUser.isOfficer && currentUser.allianceId === fight.war.allianceId)) && <UploadFightButton fightId={fight.id} />}
                                     <Link href={`/war-videos/${fight.video.id}`}>
                                         <Button variant="ghost" size="sm" className="h-8 px-3 text-xs bg-sky-600/20 hover:bg-sky-600 text-sky-300 hover:text-white border border-sky-600 transition-all duration-200 shadow-md shadow-sky-500/10 hover:shadow-sky-500/30">
-                                            <Play className="h-3 w-3 mr-1.5" /> Watch Video
+                                            <Play className="h-3 w-3 mr-1.5" /> {fight.videos.length > 1 ? `Watch ${fight.videos.length} videos` : "Watch Video"}
                                         </Button>
                                     </Link>
+                                    </div>
                                 ) : (
                                     (currentUser && (
                                         fight.playerId === currentUser.id ||

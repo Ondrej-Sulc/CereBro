@@ -4,6 +4,7 @@ import logger from "@/lib/logger";
 import { getCachedChampions } from '@/lib/data/champions';
 import { getUserPlayerWithAlliance } from '@/lib/auth-helpers';
 import { withRouteContext } from "@/lib/with-request-context";
+import { getFightRecordings, canViewFightRecording } from '@cerebro/core/domain/war-recordings';
 
 export const GET = withRouteContext(async (request) => {
   const player = await getUserPlayerWithAlliance();
@@ -46,6 +47,8 @@ export const GET = withRouteContext(async (request) => {
         battlegroup: bgNum,
       },
       include: {
+        video: true,
+        recordings: { include: { video: true } },
         node: {
             select: {
                 nodeNumber: true
@@ -67,11 +70,15 @@ export const GET = withRouteContext(async (request) => {
 
     // Map the result to match the interface
     const mappedFights = fights.map(f => {
+        const videos = getFightRecordings(f).filter(video => canViewFightRecording(video, war.allianceId, player));
+        const { video, recordings, ...fight } = f;
         const attacker = f.attackerId ? championMap.get(f.attackerId) : null;
         const defender = f.defenderId ? championMap.get(f.defenderId) : null;
 
         return {
-            ...f,
+            ...fight,
+            videoId: videos[0]?.id || null,
+            videoIds: videos.map(video => video.id),
             type: "attack",
             attacker: attacker ? {
                 id: attacker.id,

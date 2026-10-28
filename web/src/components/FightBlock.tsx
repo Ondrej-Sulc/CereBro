@@ -8,8 +8,6 @@ import {
   Shield,
   Skull,
   X,
-  UploadCloud,
-  Video,
   Trophy,
 } from "lucide-react";
 import { Button } from "./ui/button";
@@ -17,8 +15,9 @@ import { cn } from "@/lib/utils";
 import { WarNode } from "@prisma/client";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { Champion } from "@/types/champion";
-import { Input } from "./ui/input";
-import { Textarea } from "@/components/ui/textarea";
+
+import { RecordingInputs } from './RecordingInputs';
+import type { RecordingDraft } from '@/lib/war-recording-upload';
 
 export interface FightData {
   id: string;
@@ -27,6 +26,8 @@ export interface FightData {
   defenderId: string;
   prefightChampionIds: string[];
   death: number;
+  recordings?: RecordingDraft[];
+  existingRecordings?: { id: string; description: string | null }[];
   videoFile?: File | null;
   videoUrl?: string;
   battlegroup?: number;
@@ -43,6 +44,7 @@ interface FightBlockProps {
   prefightChampions: Champion[];
   uploadMode: "single" | "multiple";
   sourceMode: "upload" | "link";
+  savedRecordingIds?: string[];
   errors?: Record<string, string>;
 }
 
@@ -57,6 +59,7 @@ export function FightBlock({
   uploadMode,
   sourceMode,
   errors,
+  savedRecordingIds,
 }: FightBlockProps) {
   const selectedAttacker = useMemo(
     () => initialChampions.find((c) => String(c.id) === fight.attackerId),
@@ -81,6 +84,7 @@ export function FightBlock({
           : "border-white/5 hover:border-white/10 hover:shadow-lg hover:shadow-black/20"
       )}
     >
+      <fieldset disabled={!!savedRecordingIds?.length} className="min-w-0">
       {/* Header Row: Node & Actions */}
       <div className={cn(
         "flex items-center justify-between px-3 py-2 border-b bg-slate-950/30",
@@ -243,60 +247,19 @@ export function FightBlock({
           </div>
         </div>
 
+      </div>
+      </fieldset>
+      <div className="px-3 pb-3 sm:px-4 sm:pb-4 space-y-3">
+        {!!fight.existingRecordings?.length && <div className="flex flex-wrap gap-2 text-xs text-slate-400">
+          <span>Already attached:</span>
+          {fight.existingRecordings.map((video, index) => <a key={video.id} href={`/war-videos/${video.id}`} target="_blank" rel="noopener noreferrer" className="text-sky-400 hover:underline">Video {index + 1}</a>)}
+        </div>}
         {/* Individual Video Input (Multiple Mode Only) */}
         {uploadMode === "multiple" && (
           <div className="pt-1 space-y-2">
-            {sourceMode === "upload" ? (
-              <div className="relative group/upload shadow-lg shadow-sky-950/20">
-                <Label
-                  htmlFor={`videoFile-${fight.id}`}
-                  className={cn(
-                    "flex items-center justify-center gap-2 h-9 w-full rounded-md bg-slate-800/30 hover:bg-slate-800/50 border border-dashed border-slate-700 hover:border-sky-500 transition-all cursor-pointer",
-                    errors?.[`videoFile-${fight.id}`] && "border-red-500 bg-red-500/5"
-                  )}
-                >
-                  <UploadCloud className="h-3.5 w-3.5 text-slate-400 group-hover/upload:text-sky-400 transition-colors" />
-                  <span className={cn("text-xs font-medium text-slate-400 group-hover/upload:text-sky-400 transition-colors truncate max-w-[200px]", fight.videoFile && "text-sky-400")}>
-                    {fight.videoFile ? fight.videoFile.name : "Upload Fight Video"}
-                  </span>
-                </Label>
-                <Input
-                  id={`videoFile-${fight.id}`}
-                  type="file"
-                  accept="video/*"
-                  onChange={(e) =>
-                    updateFight({
-                      videoFile: e.target.files ? e.target.files[0] : null,
-                    })
-                  }
-                  className="hidden"
-                />
-              </div>
-            ) : (
-              <div className="relative">
-                <div className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">
-                  <Video className="h-3.5 w-3.5 text-sky-500" />
-                </div>
-                <Input
-                  id={`videoUrl-${fight.id}`}
-                  type="url"
-                  value={fight.videoUrl || ""}
-                  onChange={(e) => updateFight({ videoUrl: e.target.value })}
-                  placeholder="Paste YouTube URL..."
-                  className={cn(
-                    "h-9 pl-9 bg-slate-950/30 border-white/5 text-xs focus:border-sky-500/50 placeholder:text-slate-600 rounded-md shadow-lg shadow-sky-950/20",
-                    errors?.[`videoUrl-${fight.id}`] && "border-red-500"
-                  )}
-                />
-              </div>
-            )}
-            
-            <Textarea
-              placeholder="Fight description (optional)..."
-              value={fight.description || ""}
-              onChange={(e) => updateFight({ description: e.target.value })}
-              className="bg-slate-950/30 border-white/5 min-h-[60px] text-xs resize-none"
-            />
+            <RecordingInputs recordings={fight.recordings || [{ id: fight.id, file: fight.videoFile || null, url: fight.videoUrl || '' }]}
+              onChange={recordings => updateFight({ recordings })} sourceMode={sourceMode} savedIds={savedRecordingIds} />
+            {errors?.[`recordings-${fight.id}`] && <p role="alert" className="text-sm text-red-400">{errors[`recordings-${fight.id}`]}</p>}
           </div>
         )}
 

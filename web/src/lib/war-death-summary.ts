@@ -36,6 +36,7 @@ export interface DeathSummaryFight {
   attacker?: DeathSummaryChampion | null;
   defender?: DeathSummaryChampion | null;
   videoId?: string | null;
+  videoIds?: string[];
   notes?: string | null;
 }
 
@@ -55,6 +56,7 @@ export interface RecordedDeathFight {
   attacker: RecordedDeathChampion;
   defender: RecordedDeathChampion;
   videoId: string | null;
+  videoIds?: string[];
   notes: string | null;
 }
 
@@ -109,7 +111,7 @@ export function summarizeWarDeaths(wars: readonly DeathSummaryWar[]): WarDeathSu
           defenderName: fight.defender?.name ?? "Unknown defender",
           attacker: projectChampion(fight.attacker),
           defender: projectChampion(fight.defender),
-          videoId: fight.videoId ?? null, notes: fight.notes ?? null,
+          videoId: fight.videoIds?.[0] ?? fight.videoId ?? null, videoIds: fight.videoIds, notes: fight.notes ?? null,
         });
       }
       const sortedPlayers = [...players.values()].sort((a, b) => b.deaths - a.deaths || a.playerName.localeCompare(b.playerName));

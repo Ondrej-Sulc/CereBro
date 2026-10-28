@@ -33,7 +33,7 @@ export async function handleGenerateUploadLink(interaction: ButtonInteraction) {
     where: {
       warId: warId,
       playerId: playerId,
-      videoId: null, // Only include fights that don't have a video yet
+      // Include recorded fights so another attempt can be uploaded later.
     },
     select: {
       id: true,
@@ -44,7 +44,7 @@ export async function handleGenerateUploadLink(interaction: ButtonInteraction) {
     const infoContainer = new ContainerBuilder()
       .setAccentColor(0x87CEEB) // Using 'sky' to match the /aw command color
       .addTextDisplayComponents(
-        new TextDisplayBuilder().setContent('There are no fights in this plan that still need a video uploaded.')
+        new TextDisplayBuilder().setContent('There are no fights assigned to this player in this plan.')
       );
     await interaction.editReply({
       components: [infoContainer],

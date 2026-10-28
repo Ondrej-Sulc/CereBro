@@ -30,7 +30,7 @@ export async function handleDeathVideoNotification(client: Client, payload: any)
 
         const embed = new EmbedBuilder()
             .setColor(0xef4444) // Red 500
-            .setTitle(`💀 Death Reported: ${title || 'Untitled Video'}`)
+            .setTitle(`💀 Fight Recording: ${title || 'Untitled Video'}`)
             .setURL(mediaUrl || videoPageUrl);
 
         if (description) {
@@ -48,7 +48,7 @@ export async function handleDeathVideoNotification(client: Client, payload: any)
                     try {
                         const attackerEmoji = await getEmoji(f.attackerName, client);
                         const defenderEmoji = await getEmoji(f.defenderName, client);
-                        const deathCount = f.death > 1 ? ` (${f.death} deaths)` : '';
+                        const deathCount = ` (${f.death} total fight deaths)`;
                         
                         return `- ${attackerEmoji} **${f.attackerName}** vs ${defenderEmoji} **${f.defenderName}** (Node ${f.nodeNumber})${deathCount}` +
                         (f.playerInVideo !== uploaderName ? ` by *${f.playerInVideo}*` : '');
@@ -67,7 +67,7 @@ export async function handleDeathVideoNotification(client: Client, payload: any)
         embed.addFields(
             { name: '👤 Submitted by', value: uploaderName, inline: true },
             { name: '📅 War', value: warDisplay, inline: true },
-            { name: '💀 Total Deaths', value: String(totalDeaths), inline: true }
+            { name: '💀 Total Fight Deaths', value: String(totalDeaths), inline: true }
         );
 
         const actionRow = new ActionRowBuilder<ButtonBuilder>().addComponents(

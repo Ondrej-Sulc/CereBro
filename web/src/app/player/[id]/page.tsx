@@ -1,3 +1,4 @@
+import { getFightRecordings, getVideoFights, fightHasVisibleRecording, canViewFightRecording } from '@cerebro/core/domain/war-recordings';
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
@@ -111,7 +112,7 @@ export default async function PlayerProfilePage({ params, searchParams }: Player
         },
     } satisfies Prisma.WarFightWhereInput;
 
-    const [questPlans, roster, recentVideos, recentFights, rosterTotal, rosterByStars, rosterAscendedCount, videoTotal, fightAggregate, uniqueWarIds, supporter, pendingInvite, warInsights] = await Promise.all([
+    const [questPlans, roster, rawRecentVideos, rawRecentFights, rosterTotal, rosterByStars, rosterAscendedCount, videoTotal, fightAggregate, uniqueWarIds, supporter, pendingInvite, warInsights] = await Promise.all([
         getPlayerQuestPlansForProfile(id),
         prisma.roster.findMany({
             where: { playerId: id },
@@ -131,18 +132,16 @@ export default async function PlayerProfilePage({ params, searchParams }: Player
                 OR: [
                     { visibility: "public" },
                     ...(currentUser?.allianceId ? [{
-                        fights: { some: { war: { allianceId: currentUser.allianceId } } }
+                        OR: [
+                          { fights: { some: { war: { allianceId: currentUser.allianceId } } } },
+                          { fightLinks: { some: { fight: { war: { allianceId: currentUser.allianceId } } } } },
+                        ]
                     }] : [])
                 ]
             },
             include: {
-                fights: {
-                    include: {
-                        war: { include: { alliance: true } },
-                        attacker: true,
-                        defender: true,
-                    }
-                }
+                fights: { include: { war: { include: { alliance: true } }, attacker: true, defender: true } },
+                fightLinks: { include: { fight: { include: { war: { include: { alliance: true } }, attacker: true, defender: true } } } },
             },
             orderBy: { createdAt: 'desc' },
             take: 4
@@ -151,7 +150,7 @@ export default async function PlayerProfilePage({ params, searchParams }: Player
             where: {
                 playerId: id,
                 OR: [
-                    { video: { status: "PUBLISHED", visibility: "public" } },
+                    fightHasVisibleRecording(currentUser),
                     ...(currentUser?.allianceId ? [{
                         war: { allianceId: currentUser.allianceId }
                     }] : [])
@@ -162,7 +161,8 @@ export default async function PlayerProfilePage({ params, searchParams }: Player
                 defender: true,
                 war: { include: { alliance: true } },
                 node: true,
-                video: true
+                video: true,
+                recordings: { include: { video: true } }
             },
             orderBy: { createdAt: 'desc' },
             take: 15
@@ -194,6 +194,12 @@ export default async function PlayerProfilePage({ params, searchParams }: Player
         }) : Promise.resolve(null),
         warInsightsPromise,
     ]);
+
+    const recentVideos = rawRecentVideos.map(video => ({ ...video, fights: getVideoFights(video) }));
+    const recentFights = rawRecentFights.map(fight => ({ ...fight,
+      videos: getFightRecordings(fight).filter(video => canViewFightRecording(video, fight.war.allianceId, currentUser)),
+      video: getFightRecordings(fight).find(video => canViewFightRecording(video, fight.war.allianceId, currentUser)) || null,
+    }));
 
     const totalFights = fightAggregate._count.id;
     const totalDeaths = fightAggregate._sum.death ?? 0;

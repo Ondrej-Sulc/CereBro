@@ -1,3 +1,5 @@
+import { fightHasRecording, getFightRecordings, canViewFightRecording } from '@cerebro/core/domain/war-recordings';
+import { getUserPlayerWithAlliance } from '@/lib/auth-helpers';
 import type { Metadata } from "next";
 import { prisma } from '@cerebro/core/services/prismaService';
 import { notFound } from 'next/navigation';
@@ -13,34 +15,10 @@ interface PageProps {
 }
 
 const getWarVideoForMetadata = cache(async (videoId: string) => {
-  return prisma.warVideo.findUnique({
-    where: { id: videoId },
-    select: {
-      status: true,
-      visibility: true,
-      submittedBy: {
-        select: {
-          ingameName: true,
-        },
-      },
-      fights: {
-        take: 1,
-        orderBy: {
-          createdAt: "asc",
-        },
-        select: {
-          war: {
-            select: {
-              season: true,
-              warNumber: true,
-              warTier: true,
-              enemyAlliance: true,
-            },
-          },
-        },
-      },
-    },
-  });
+  const video = await prisma.warVideo.findUnique({ where: { id: videoId }, include: { submittedBy: true } });
+  if (!video) return null;
+  const fights = await prisma.warFight.findMany({ where: fightHasRecording({ id: videoId }), take: 1, orderBy: { createdAt: 'asc' }, select: { war: true } });
+  return { ...video, fights };
 });
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -92,58 +70,36 @@ export default async function WarVideoPage(props: PageProps) {
     notFound();
   }
 
-  const warVideo = await prisma.warVideo.findUnique({
-    where: { id: videoId },
-    include: {
-      submittedBy: true,
-      fights: {
-        include: {
-          war: true,
-          attacker: {
-            include: {
-              tags: true,
-              abilities: {
-                include: {
-                  ability: true,
-                },
-              },
-            },
-          },
-          defender: {
-            include: {
-              tags: true,
-              abilities: {
-                include: {
-                  ability: true,
-                },
-              },
-            },
-          },
-          node: true,
-          player: true,
-          prefightChampions: {
-            include: {
-              champion: {
-                include: {
-                  abilities: {
-                    include: {
-                      ability: true,
-                    },
-                  },
-                },
-              }
-            },
-          },
-        },
+  const videoRecord = await prisma.warVideo.findUnique({ where: { id: videoId }, include: { submittedBy: true } });
+  if (!videoRecord) notFound();
+  const [linkedFights, viewer] = await Promise.all([
+    prisma.warFight.findMany({
+      where: fightHasRecording({ id: videoId }),
+      orderBy: { createdAt: 'asc' },
+      include: {
+        war: true, node: true, player: true, video: true,
+        recordings: { include: { video: true }, orderBy: [{ position: 'asc' }, { videoId: 'asc' }] },
+        attacker: { include: { tags: true, abilities: { include: { ability: true } } } },
+        defender: { include: { tags: true, abilities: { include: { ability: true } } } },
+        prefightChampions: { include: { champion: { include: { abilities: { include: { ability: true } } } } } },
       },
-    },
-  });
-
-  if (!warVideo) {
-    notFound();
-  }
+    }),
+    getUserPlayerWithAlliance(),
+  ]);
+  const warVideo = { ...videoRecord, fights: linkedFights.map(fight => {
+    const { video, recordings, ...details } = fight;
+    const visible = getFightRecordings(fight).filter(video => isAdmin || canViewFightRecording(video, fight.war.allianceId, viewer));
+    return {
+      ...details,
+      videoId: visible[0]?.id || null,
+      videos: visible.map(video => ({ id: video.id, description: video.description })),
+      canAddRecording: !!viewer && (viewer.id === fight.playerId || viewer.isBotAdmin || (viewer.isOfficer && viewer.allianceId === fight.war.allianceId)),
+    };
+  }) };
 
   const editAccess = await getWarVideoEditAccess(warVideo.submittedById);
+  if (!isAdmin && !editAccess.canEdit && (warVideo.status !== 'PUBLISHED' ||
+    (warVideo.visibility !== 'public' && !linkedFights.some(fight => viewer?.allianceId === fight.war.allianceId)))) notFound();
 
   let activeTactic = null;
   const war = warVideo.fights[0]?.war;

@@ -1,3 +1,4 @@
+import { fightHasRecording } from '@cerebro/core/domain/war-recordings';
 import { notFound, redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getCachedChampions } from "@/lib/data/champions";
@@ -14,12 +15,19 @@ interface PageProps {
 export default async function EditWarVideoPage({ params }: PageProps) {
   const { videoId } = await params;
 
-  const video = await prisma.warVideo.findUnique({
+  const videoRecord = await prisma.warVideo.findUnique({
     where: { id: videoId },
     include: {
       submittedBy: { include: { alliance: true } },
-      fights: {
-        include: {
+
+    },
+  });
+
+  if (!videoRecord) notFound();
+
+  const linkedFights = await prisma.warFight.findMany({
+    where: fightHasRecording({ id: videoId }),
+    include: {
           war: true,
           player: true,
           attacker: {
@@ -44,11 +52,8 @@ export default async function EditWarVideoPage({ params }: PageProps) {
           },
         },
         orderBy: { createdAt: "asc" },
-      },
-    },
   });
-
-  if (!video) notFound();
+  const video = { ...videoRecord, fights: linkedFights };
 
   const access = await getWarVideoEditAccess(video.submittedById);
   if (!access.canEdit) redirect(`/war-videos/${videoId}`);

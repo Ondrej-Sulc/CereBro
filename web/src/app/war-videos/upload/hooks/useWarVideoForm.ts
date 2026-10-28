@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import { Champion } from "@/types/champion";
 import { War, WarFight, Player as PrismaPlayer, WarNode as PrismaWarNode } from '@prisma/client';
 import { FightData } from "@/components/FightBlock";
+import { createRecordingUploadState, submitRecordingGroups, RecordingDraft, RecordingUploadResult } from '@/lib/war-recording-upload';
 import { reportClientError } from "@/lib/observability/client";
 
 interface PlayerWithAlliance extends PrismaPlayer {
@@ -14,6 +15,7 @@ interface PlayerWithAlliance extends PrismaPlayer {
 }
 
 export interface PreFilledFight extends WarFight {
+  existingRecordings?: { id: string; description: string | null }[];
   war: War;
   player: PrismaPlayer | null;
   attacker: Champion | null;
@@ -57,8 +59,11 @@ export function useWarVideoForm({
   // Form state
   const [uploadMode, setUploadMode] = useState<"single" | "multiple">("single");
   const [sourceMode, setSourceMode] = useState<"upload" | "link">("link");
-  const [videoFile, setVideoFile] = useState<File | null>(null);
-  const [videoUrl, setVideoUrl] = useState<string>(() => initialVideo?.url || "");
+  const [recordings, setRecordings] = useState<RecordingDraft[]>(() => [{ id: uuidv4(), file: null, url: initialVideo?.url || "" }]);
+  const videoFile = recordings[0]?.file || null;
+  const videoUrl = recordings[0]?.url || "";
+  const uploadState = useRef(createRecordingUploadState());
+  const [savedRecordingIds, setSavedRecordingIds] = useState<string[]>([]);
   const [fights, setFights] = useState<FightData[]>(() => {
     if (preFilledFights && preFilledFights.length > 0) {
       return preFilledFights.map(pf => ({
@@ -68,7 +73,8 @@ export function useWarVideoForm({
         defenderId: pf.defenderId ? String(pf.defenderId) : "",
         prefightChampionIds: pf.prefightChampions.map(c => String(c.id)),
         death: pf.death,
-        videoFile: null, // No video file initially
+        existingRecordings: pf.existingRecordings,
+        recordings: [{ id: uuidv4(), file: null, url: "" }],
         battlegroup: pf.battlegroup ?? undefined,
       }));
     }
@@ -80,7 +86,7 @@ export function useWarVideoForm({
         defenderId: "",
         prefightChampionIds: [],
         death: 0,
-        videoFile: null,
+        recordings: [{ id: uuidv4(), file: null, url: "" }],
       },
     ];
   });
@@ -290,7 +296,7 @@ export function useWarVideoForm({
         defenderId: "",
         prefightChampionIds: [],
         death: 0,
-        videoFile: null,
+        recordings: [{ id: uuidv4(), file: null, url: "" }],
       },
     ]);
   }, []);
@@ -303,13 +309,12 @@ export function useWarVideoForm({
 
   const validateForm = useCallback(() => {
     const newErrors: Record<string, string> = {};
-    if (uploadMode === "single") {
-      if (sourceMode === 'upload' && !videoFile) {
-        newErrors.videoFile = "Video file is required.";
-      } else if (sourceMode === 'link' && !videoUrl) {
-        newErrors.videoUrl = "Video URL is required.";
+    const recordingGroups = uploadMode === 'single' ? [recordings] : fights.map(fight => fight.recordings || []);
+    recordingGroups.forEach((items, groupIndex) => {
+      if (!items.length || items.some(item => !savedRecordingIds.includes(item.id) && (sourceMode === 'upload' ? !item.file : !item.url.trim()))) {
+        newErrors[uploadMode === 'single' ? 'recordings' : `recordings-${fights[groupIndex].id}`] = 'Choose a file or enter a URL for every video.';
       }
-    }
+    });
     if (!season) newErrors.season = "Season is required.";
     if (!isOffseason && !warNumber)
       newErrors.warNumber = "War number is required.";
@@ -318,13 +323,6 @@ export function useWarVideoForm({
     if (!battlegroup && contextMode === 'alliance') newErrors.battlegroup = "Battlegroup is required.";
 
     fights.forEach((fight) => {
-      if (uploadMode === "multiple") {
-        if (sourceMode === 'upload' && !fight.videoFile) {
-          newErrors[`videoFile-${fight.id}`] = "Video file is required for each fight.";
-        } else if (sourceMode === 'link' && !fight.videoUrl) {
-          newErrors[`videoUrl-${fight.id}`] = "Video URL is required for each fight.";
-        }
-      }
       if (!fight.attackerId)
         newErrors[`attackerId-${fight.id}`] = "Attacker is required.";
       if (!fight.defenderId)
@@ -335,12 +333,12 @@ export function useWarVideoForm({
 
     setErrors(newErrors);
     return newErrors;
-  }, [uploadMode, sourceMode, videoFile, videoUrl, season, isOffseason, warNumber, warTier, battlegroup, contextMode, fights]);
+  }, [uploadMode, sourceMode, videoFile, videoUrl, season, isOffseason, warNumber, warTier, battlegroup, contextMode, fights, recordings, savedRecordingIds]);
 
   const uploadVideo = useCallback(
     async (formData: FormData, fightIds: string[]) => {
       // Use XMLHttpRequest for consistent progress tracking across all browsers
-      return new Promise<{ videoIds: string[] }>((resolve, reject) => {
+      return new Promise<RecordingUploadResult>((resolve, reject) => {
         const xhr = new XMLHttpRequest();
 
         xhr.upload.onprogress = (event) => {
@@ -476,10 +474,10 @@ export function useWarVideoForm({
         // Scroll to first errored fight block, or fall back to first error element on the page
         setTimeout(() => {
           const fightErrorKey = Object.keys(formErrors).find((k) =>
-            /^(nodeId|attackerId|defenderId|videoFile|videoUrl)-/.test(k)
+            /^(nodeId|attackerId|defenderId|recordings)-/.test(k)
           );
           if (fightErrorKey) {
-            const fightId = fightErrorKey.replace(/^(nodeId|attackerId|defenderId|videoFile|videoUrl)-/, "");
+            const fightId = fightErrorKey.replace(/^(nodeId|attackerId|defenderId|recordings)-/, "");
             document.getElementById(`fight-block-${fightId}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
           }
         }, 50);
@@ -503,7 +501,7 @@ export function useWarVideoForm({
             playerId: playerInVideoId,
             customPlayerName: customPlayerName || undefined,
             isGlobal,
-            fights,
+            fights: fights.map(fight => ({ ...fight, id: preFilledFights?.some(saved => saved.id === fight.id) ? fight.id : undefined })),
             season,
             warNumber: isOffseason ? null : warNumber,
             warTier,
@@ -521,192 +519,42 @@ export function useWarVideoForm({
           return;
         }
 
-        if (sourceMode === 'link') {
-          // --- Handle URL Submission ---
-          setCurrentUpload("Linking video...");
-          const commonPayload = {
-            token,
-            visibility,
-            description,
-            playerId: playerInVideoId,
-            customPlayerName: customPlayerName || undefined, // Send custom name if exists
-            isGlobal, // Send flag
+        const groups = uploadMode === 'single'
+          ? [{ id: 'shared', fights, recordings }]
+          : fights.map(fight => ({ id: fight.id, fights: [fight], recordings: fight.recordings || [] }));
+        const videoIds = await submitRecordingGroups(groups, uploadState.current, async (recording, group, resolvedFightIds, index, total) => {
+          setCurrentUpload(`${sourceMode === 'upload' ? 'Uploading' : 'Linking'} video ${index} of ${total}...`);
+          setUploadProgress(0);
+          const firstFight = group.fights[0];
+          const attacker = initialChampions.find(champ => String(champ.id) === firstFight.attackerId)?.name || 'Unknown';
+          const defender = initialChampions.find(champ => String(champ.id) === firstFight.defenderId)?.name || 'Unknown';
+          const node = initialNodes.find(item => String(item.id) === firstFight.nodeId)?.nodeNumber || '??';
+          const playerName = initialPlayers.find(player => player.id === playerInVideoId)?.ingameName || customPlayerName || 'Unknown';
+          const title = `MCOC AW: S${season} ${isOffseason ? 'Offseason' : 'W' + warNumber} T${warTier} - ${attacker} vs ${defender} on Node ${node} by ${playerName}`;
+          const payload = {
+            token, visibility, description: recording.description || firstFight.description || description,
+            playerId: playerInVideoId, customPlayerName: customPlayerName || undefined, isGlobal,
+            ...(resolvedFightIds ? { fightIds: resolvedFightIds } : preFilledFights ? { fightUpdates: group.fights } : {
+              fights: group.fights, season, warNumber: isOffseason ? null : warNumber, warTier, battlegroup, mapType,
+            }),
           };
-
-          if (uploadMode === 'single') {
-            if (preFilledFights) {
-              const result = await linkVideo({
-                ...commonPayload,
-                videoUrl,
-                fightUpdates: fights,
-              });
-              toast({ title: "Success!", description: "Video has been linked to all fights." });
-              if (result.videoIds && result.videoIds.length > 0) {
-                router.push(`/war-videos/${result.videoIds[0]}`);
-              } else {
-                router.push("/war-videos");
-              }
-            } else { // New: send full fight data for creation
-              const result = await linkVideo({
-                ...commonPayload,
-                videoUrl,
-                fights: fights, // send full objects
-                season: season,
-                warNumber: isOffseason ? null : warNumber,
-                warTier: warTier,
-                battlegroup: battlegroup,
-                mapType: mapType,
-              });
-              toast({ title: "Success!", description: "Video has been linked to all fights." });
-              if (result.videoIds && result.videoIds.length > 0) {
-                router.push(`/war-videos/${result.videoIds[0]}`);
-              } else {
-                router.push("/war-videos");
-              }
-            }
-          } else { // 'multiple' mode
-            const allLinkedVideoIds = [];
-            const commonPayloadLoop = { // Moved commonPayload outside the loop, renamed to avoid shadow
-              token,
-              visibility,
-              description,
-              playerId: playerInVideoId,
-              customPlayerName: customPlayerName || undefined,
-              isGlobal,
-            };
-
-            for (let i = 0; i < fights.length; i++) {
-              const fight = fights[i];
-              setCurrentUpload(`Linking fight ${i + 1} of ${fights.length}...`);
-
-              const fightDescription = fight.description || description;
-
-              if (preFilledFights) {
-                const result = await linkVideo({
-                  ...commonPayloadLoop,
-                  description: fightDescription,
-                  videoUrl: fight.videoUrl,
-                  fightUpdates: [fight],
-                });
-                if (result.videoIds && result.videoIds.length > 0) {
-                  allLinkedVideoIds.push(result.videoIds[0]);
-                }
-              } else {
-                // New: send full fight data for creation
-                const result = await linkVideo({
-                  ...commonPayloadLoop,
-                  description: fightDescription,
-                  videoUrl: fight.videoUrl,
-                  fights: [fight], // send single fight
-                  season: season,
-                  warNumber: isOffseason ? null : warNumber,
-                  warTier: warTier,
-                  battlegroup: battlegroup,
-                  mapType: mapType,
-                });
-                if (result.videoIds && result.videoIds.length > 0) {
-                  allLinkedVideoIds.push(result.videoIds[0]);
-                }
-              }
-            }
-            toast({ title: "Success!", description: "All videos have been linked." });
-            if (allLinkedVideoIds.length > 0) {
-              router.push(`/war-videos/${allLinkedVideoIds[0]}`);
-            } else {
-              router.push("/war-videos");
-            }
-          }
-        } else {
-          // --- Handle File Upload ---
-          const getTitle = (fight: FightData) => {
-            const selectedAttacker = initialChampions.find((c) => String(c.id) === fight.attackerId);
-            const selectedDefender = initialChampions.find((c) => String(c.id) === fight.defenderId);
-            const selectedNode = initialNodes.find((n) => String(n.id) === fight.nodeId);
-            const selectedPlayer = initialPlayers.find((p) => p.id === playerInVideoId);
-            const attackerName = selectedAttacker?.name || "Unknown";
-            const defenderName = selectedDefender?.name || "Unknown";
-            const nodeNumber = selectedNode?.nodeNumber || "??";
-            const playerName = selectedPlayer?.ingameName || customPlayerName || "Unknown"; // Use custom name
-            return `MCOC AW: S${season} ${isOffseason ? "Offseason" : "W" + warNumber} T${warTier} - ${attackerName} vs ${defenderName} on Node ${nodeNumber} by ${playerName}`;
-          };
-
-          if (uploadMode === "single") {
-            setCurrentUpload("Uploading video...");
+          let result: RecordingUploadResult;
+          if (sourceMode === 'link') {
+            result = await linkVideo({ ...payload, videoUrl: recording.url });
+          } else {
             const formData = new FormData();
-            formData.append("token", token);
-            formData.append("videoFile", videoFile!);
-            formData.append("visibility", visibility);
-            formData.append("description", description);
-            if (playerInVideoId) formData.append("playerId", playerInVideoId);
-            if (customPlayerName) formData.append("customPlayerName", customPlayerName); // Append custom name
-            if (isGlobal) formData.append("isGlobal", "true");
-            formData.append("title", getTitle(fights[0]));
-            formData.append("mode", "single");
-
-            if (preFilledFights) {
-              formData.append("fightUpdates", JSON.stringify(fights));
-            } else {
-              formData.append("fights", JSON.stringify(fights));
-              formData.append("season", season);
-              if (!isOffseason) formData.append("warNumber", warNumber);
-              formData.append("warTier", warTier);
-              formData.append("battlegroup", battlegroup);
-              formData.append("mapType", mapType);
+            formData.append('videoFile', recording.file!);
+            formData.append('title', title);
+            for (const [key, value] of Object.entries(payload)) {
+              if (value !== undefined && value !== null) formData.append(key, typeof value === 'object' ? JSON.stringify(value) : String(value));
             }
-
-            const result = await uploadVideo(formData, fights.map(f => f.id));
-            
-            // Handle Direct Upload Result
-            toast({ title: "Success!", description: "All fights have been submitted." });
-            if (result.videoIds && result.videoIds.length > 0) {
-              router.push(`/war-videos/${result.videoIds[0]}`);
-            } else {
-              router.push("/war-videos");
-            }
-          } else { // 'multiple' mode
-            const allUploadedVideoIds: string[] = [];
-            
-            for (let i = 0; i < fights.length; i++) {
-              const fight = fights[i];
-              setCurrentUpload(`Uploading fight ${i + 1} of ${fights.length}...`);
-              setUploadProgress(0);
-              const formData = new FormData();
-              formData.append("token", token);
-              formData.append("videoFile", fight.videoFile!);
-              formData.append("visibility", visibility);
-              formData.append("description", fight.description || description);
-              if (playerInVideoId) formData.append("playerId", playerInVideoId);
-              if (customPlayerName) formData.append("customPlayerName", customPlayerName);
-              if (isGlobal) formData.append("isGlobal", "true");
-              formData.append("title", getTitle(fight));
-              formData.append("mode", "multiple");
-
-              if (preFilledFights) {
-                formData.append("fightUpdates", JSON.stringify([fight]));
-              } else {
-                formData.append("fights", JSON.stringify([fight])); // send single fight
-                formData.append("season", season);
-                if (!isOffseason) formData.append("warNumber", warNumber);
-                formData.append("warTier", warTier);
-                formData.append("battlegroup", battlegroup);
-                formData.append("mapType", mapType);
-              }
-
-              const result = await uploadVideo(formData, [fight.id]);
-              
-              if (result.videoIds && result.videoIds.length > 0) {
-                allUploadedVideoIds.push(result.videoIds[0]);
-              }
-            }
-            
-            toast({ title: "Success!", description: "All videos have been uploaded." });
-            if (allUploadedVideoIds.length > 0) {
-              router.push(`/war-videos/${allUploadedVideoIds[0]}`);
-            } else {
-              router.push("/war-videos");
-            }
+            result = await uploadVideo(formData, group.fights.map(fight => fight.id));
           }
-        }
+          setSavedRecordingIds(previous => [...new Set([...previous, recording.id])]);
+          return result;
+        });
+        toast({ title: 'Success!', description: 'All videos have been added to your fights.' });
+        router.push(`/war-videos/${videoIds[0]}`);
       } catch (error: unknown) {
         const err = error as Error;
         reportClientError("war_video_upload_submit", err, {
@@ -717,7 +565,9 @@ export function useWarVideoForm({
         });
         toast({
           title: "Upload Failed",
-          description: err.message || "An unknown error occurred.",
+          description: uploadState.current.recordings.size > 0
+            ? `${err.message}. ${uploadState.current.recordings.size} video(s) are saved. Retry to submit the remaining videos.`
+            : err.message || "An unknown error occurred.",
           variant: "destructive",
         });
       } finally {
@@ -758,6 +608,7 @@ export function useWarVideoForm({
       contextMode, // Dependency
       isEditMode,
       editVideoId,
+      recordings,
     ]
   );
 
@@ -767,15 +618,8 @@ export function useWarVideoForm({
       if (sourceMode === 'upload') return !videoFile;
       return !videoUrl;
     }
-    if (uploadMode === "single") {
-      if (sourceMode === 'upload') return !videoFile;
-      if (sourceMode === 'link') return !videoUrl;
-    }
-    if (uploadMode === "multiple") {
-      if (sourceMode === 'upload') return fights.some((f) => !f.videoFile);
-      if (sourceMode === 'link') return fights.some((f) => !f.videoUrl);
-    }
-    return false;
+    const items = uploadMode === 'single' ? recordings : fights.flatMap(fight => fight.recordings || []);
+    return items.length === 0 || items.some(recording => !savedRecordingIds.includes(recording.id) && (sourceMode === 'upload' ? !recording.file : !recording.url.trim()));
   };
 
   return {
@@ -785,9 +629,10 @@ export function useWarVideoForm({
     sourceMode,
     setSourceMode,
     videoFile,
-    setVideoFile,
     videoUrl,
-    setVideoUrl,
+    recordings,
+    setRecordings,
+    savedRecordingIds,
     fights,
     setFights,
     season,
@@ -844,7 +689,7 @@ function buildEditFormData(payload: {
   playerId: string;
   customPlayerName?: string;
   isGlobal: boolean;
-  fights: FightData[];
+  fights: (Omit<FightData, 'id'> & { id?: string })[];
   season: string;
   warNumber: string | null;
   warTier: string;

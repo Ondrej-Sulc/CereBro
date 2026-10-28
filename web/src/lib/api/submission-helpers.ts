@@ -1,6 +1,8 @@
 import { Prisma, PrismaClient, WarMapType, Player, UploadToken, Alliance } from '@prisma/client';
 import logger from "@/lib/logger";
 import crypto from 'crypto';
+import { appendFightRecording, detachFightRecording } from '@cerebro/core/services/warRecordingService';
+import { fightHasRecording, getVideoFights } from '@cerebro/core/domain/war-recordings';
 
 export class FightMismatchError extends Error {
     constructor(
@@ -22,7 +24,7 @@ export type ValidationResult =
 
 const GLOBAL_ALLIANCE_ID = "GLOBAL";
 
-interface FightInput {
+export interface FightInput {
     nodeId: string;
     attackerId: string;
     defenderId: string;
@@ -30,7 +32,7 @@ interface FightInput {
     prefightChampionIds?: string[];
 }
 
-interface FightUpdate extends FightInput {
+export interface FightUpdate extends FightInput {
     id: string;
     battlegroup?: string;
 }
@@ -51,6 +53,8 @@ export type SyncWarVideoEditParams = {
     playerId: string;
     customPlayerName?: string;
     isGlobal?: boolean;
+    videoUpdates?: { url: string | null; description: string; visibility: string };
+    notifySourceChange?: boolean;
 };
 
 type PrismaLike = PrismaClient | Prisma.TransactionClient;
@@ -380,87 +384,51 @@ export async function processFightUpdates(prisma: PrismaLike, updates: FightUpda
 }
 
 export async function syncWarVideoEditedFights(
-    prisma: PrismaClient,
+    database: PrismaClient,
     params: SyncWarVideoEditParams
 ): Promise<{ fightIds: string[]; fightListChanged: boolean }> {
-    if (!Array.isArray(params.fights) || params.fights.length === 0) {
-        throw new Error("At least one fight is required");
-    }
-
-    const currentFightIds = await prisma.warFight.findMany({
-        where: { videoId: params.videoId },
-        select: { id: true },
-    });
-    const currentIdSet = new Set(currentFightIds.map(fight => fight.id));
-    const submittedExistingIds = params.fights
-        .map(fight => fight.id)
-        .filter((id): id is string => !!id);
-
-    const invalidIds = submittedExistingIds.filter(id => !currentIdSet.has(id));
-    if (invalidIds.length > 0) {
-        throw new Error("One or more fights do not belong to this video");
-    }
-
-    const existingSubmittedSet = new Set(submittedExistingIds);
-    const idsToDetach = [...currentIdSet].filter(id => !existingSubmittedSet.has(id));
-    const newFights = params.fights.filter(fight => !fight.id);
-    const existingUpdates = params.fights.filter((fight): fight is EditableFightInput & { id: string } => !!fight.id);
-
-    const resolved = await resolveWarAndPlayer(prisma, params);
-
-    if (params.warNumber !== null) {
-        await assertRegularWarFightMatches(prisma, {
-            warId: resolved.warId,
-            season: params.season,
-            warNumber: params.warNumber,
-            battlegroup: resolved.battlegroup,
-            fights: params.fights,
-            allowedExistingIds: currentIdSet,
-        });
-    }
-
-    const fightIds = await prisma.$transaction(async (tx) => {
-        if (idsToDetach.length > 0) {
-            await tx.warFight.updateMany({
-                where: { id: { in: idsToDetach }, videoId: params.videoId },
-                data: { videoId: null },
+    if (!Array.isArray(params.fights) || params.fights.length === 0) throw new Error("At least one fight is required");
+    return database.$transaction(async tx => {
+        const currentFights = await tx.warFight.findMany({ where: fightHasRecording({ id: params.videoId }), select: { id: true } });
+        const currentIds = new Set(currentFights.map(fight => fight.id));
+        const existingUpdates = params.fights.filter((fight): fight is EditableFightInput & { id: string } => !!fight.id);
+        if (existingUpdates.some(fight => !currentIds.has(fight.id))) throw new Error("One or more fights do not belong to this video");
+        const submittedIds = new Set(existingUpdates.map(fight => fight.id));
+        const idsToDetach = [...currentIds].filter(id => !submittedIds.has(id));
+        const newFights = params.fights.filter(fight => !fight.id);
+        const resolved = await resolveWarAndPlayer(tx, params);
+        if (params.warNumber !== null) {
+            await assertRegularWarFightMatches(tx, {
+                warId: resolved.warId, season: params.season, warNumber: params.warNumber,
+                battlegroup: resolved.battlegroup, fights: params.fights, allowedExistingIds: currentIds,
             });
         }
-
+        await detachFightRecording(tx, idsToDetach, params.videoId);
         for (const fight of existingUpdates) {
-            await updateFightForVideoEdit(tx, {
-                fight,
-                warId: resolved.warId,
-                playerId: resolved.playerId,
-                battlegroup: resolved.battlegroup,
-            });
+            await updateFightForVideoEdit(tx, { fight, warId: resolved.warId, playerId: resolved.playerId, battlegroup: resolved.battlegroup });
         }
-
-        const createdIds: string[] = [];
+        const fightIds = existingUpdates.map(fight => fight.id);
         for (const fight of newFights) {
-            const created = await tx.warFight.create({
-                data: {
-                    warId: resolved.warId,
-                    playerId: resolved.playerId,
-                    nodeId: parseInt(fight.nodeId),
-                    attackerId: parseInt(fight.attackerId),
-                    defenderId: parseInt(fight.defenderId),
-                    death: fight.death,
-                    battlegroup: resolved.battlegroup,
-                    videoId: params.videoId,
-                    prefightChampions: buildPrefightCreate(fight.prefightChampionIds, resolved.playerId),
-                },
-            });
-            createdIds.push(created.id);
+            const existing = params.warNumber !== null ? await tx.warFight.findFirst({
+                where: { warId: resolved.warId, battlegroup: resolved.battlegroup, nodeId: parseInt(fight.nodeId) }, select: { id: true },
+            }) : null;
+            if (existing) {
+                fightIds.push(existing.id);
+            } else {
+                const created = await tx.warFight.create({ data: {
+                    warId: resolved.warId, playerId: resolved.playerId, nodeId: parseInt(fight.nodeId),
+                    attackerId: parseInt(fight.attackerId), defenderId: parseInt(fight.defenderId), death: fight.death,
+                    battlegroup: resolved.battlegroup, prefightChampions: buildPrefightCreate(fight.prefightChampionIds, resolved.playerId),
+                } });
+                fightIds.push(created.id);
+            }
         }
-
-        return [...existingUpdates.map(fight => fight.id), ...createdIds];
+        await appendFightRecording(tx, fightIds, params.videoId);
+        if (params.videoUpdates) await tx.warVideo.update({ where: { id: params.videoId }, data: params.videoUpdates });
+        const fightListChanged = idsToDetach.length > 0 || newFights.length > 0;
+        if (params.notifySourceChange || fightListChanged) await queueVideoNotification(tx, { videoId: params.videoId, title: 'War Video Updated' });
+        return { fightIds, fightListChanged };
     });
-
-    return {
-        fightIds,
-        fightListChanged: idsToDetach.length > 0 || newFights.length > 0,
-    };
 }
 
 async function resolveWarAndPlayer(
@@ -669,12 +637,12 @@ function parsePrefightIds(prefightChampionIds: string[] | undefined): number[] {
 }
 
 export async function queueVideoNotification(
-    prisma: PrismaClient, 
+    prisma: PrismaLike,
     params: { videoId: string; title: string; }
 ) {
     logger.info({ videoId: params.videoId }, "Starting notification queue process");
 
-    const video = await prisma.warVideo.findUnique({
+    const record = await prisma.warVideo.findUnique({
         where: { id: params.videoId },
         include: {
             submittedBy: { include: { alliance: true } },
@@ -686,14 +654,19 @@ export async function queueVideoNotification(
                     player: true,
                     war: true
                 }
+            },
+            fightLinks: {
+                include: { fight: { include: { attacker: true, defender: true, node: true, player: true, war: true } } }
             }
         }
     });
 
-    if (!video) {
+    if (!record) {
         logger.warn({ videoId: params.videoId }, "Skipping notification: Video not found");
         return;
     }
+
+    const video = { ...record, fights: getVideoFights(record) };
 
     if (!video.submittedBy.alliance) {
         logger.info({ videoId: params.videoId, uploader: video.submittedBy.ingameName }, "Skipping notification: Uploader has no alliance");
