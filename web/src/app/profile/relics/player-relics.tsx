@@ -105,7 +105,7 @@ export function PlayerRelics({
           </div>
         </div>
         <div className={styles.headerActions}>
-          <RelicScreenshotImport disabled={switching} />
+          <RelicScreenshotImport disabled={switching} attributeIcons={catalog.attributeIcons} />
           <button
             className={styles.primary}
             disabled={switching}
