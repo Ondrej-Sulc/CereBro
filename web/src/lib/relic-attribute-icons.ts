@@ -11,17 +11,22 @@ export const RELIC_ATTRIBUTE_GLOSSARY_IDS = {
   "Energy Resistance": "energy_res",
   "Energy Penetration": "energy_penetration",
   "Physical Resistance": "phys_res",
-  "Physical Penetration": "physical_pen",
   "Special Damage": "prowess",
 } as const;
 
 export type RelicAttributeIcon = { iconUrl: string; color: string };
 
+// The legacy physical_pen glossary artwork differs from the Statcast Treatment glyph.
+// See public/icons/relic-attributes/README.md for the game-source provenance.
+const RELIC_SOURCE_ICONS: Record<string, RelicAttributeIcon> = {
+  "Physical Penetration": { iconUrl: "/icons/relic-attributes/physical-penetration.svg", color: "#b8c5d6" },
+};
+
 export function buildRelicAttributeIcons(
   terms: readonly { id: string; iconUrl: string | null; raw: unknown }[],
 ): Record<string, RelicAttributeIcon> {
   const byId = new Map(terms.map((term) => [term.id, term]));
-  const icons: Record<string, RelicAttributeIcon> = {};
+  const icons: Record<string, RelicAttributeIcon> = { ...RELIC_SOURCE_ICONS };
   for (const [attribute, id] of Object.entries(RELIC_ATTRIBUTE_GLOSSARY_IDS)) {
     const term = byId.get(id);
     const iconUrl = term?.iconUrl?.trim();

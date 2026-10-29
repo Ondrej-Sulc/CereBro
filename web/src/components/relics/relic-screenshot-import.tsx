@@ -8,7 +8,7 @@ import { RelicScreenshotPreview } from './relic-screenshot-preview';
 import { RelicScreenshotChoices } from './relic-screenshot-choices';
 import { RelicAttributeGlyph } from './relic-picker';
 import type { RelicAttributeIcon } from '@/lib/relic-attribute-icons';
-import { summarizeRelicReview, type RelicReviewRow } from './relic-screenshot-review';
+import { selectRelicReviewBuild, summarizeRelicReview, type RelicReviewRow } from './relic-screenshot-review';
 import type { RelicScreenshotRow } from '@cerebro/core/domain/relic-screenshot';
 import type { OwnedRelic, RelicInventorySnapshot } from '@cerebro/core/domain/player-relics';
 import styles from './relic-screenshot-import.module.css';
@@ -25,6 +25,7 @@ export function RelicScreenshotImport({ disabled = false, attributeIcons }: { di
 function ScreenshotDialog({ onClose, attributeIcons }: { onClose: () => void; attributeIcons: Record<string, RelicAttributeIcon> }) {
   const { profile, entries, prestige, updateSnapshot } = useRelicInventory();
   const [rows, setRows] = useState<RelicReviewRow[]>([]);
+  const [reviewEntries, setReviewEntries] = useState(entries);
   const [revision, setRevision] = useState(prestige?.revision ?? '');
   const [busy, setBusy] = useState('');
   const [progress, setProgress] = useState<{ completed:number; total:number } | null>(null);
@@ -51,8 +52,8 @@ function ScreenshotDialog({ onClose, attributeIcons }: { onClose: () => void; at
     const next = [...review.decisions, ...review.unmatched].find(row => row.id !== id);
     requestAnimationFrame(() => document.getElementById(next ? `review-card-${next.id}` : 'relic-review-ready')?.focus({preventScroll:true}));
   }
-  function choose(row: RelicReviewRow, choice: number) {
-    patch(row.id, { choice, included:true, skipped:false, pendingVariantId:null });
+  function choose(row: RelicReviewRow, choice: number, selectionSource: RelicReviewRow['selectionSource'] = 'manual') {
+    patch(row.id, { choice, selectionSource, included:true, skipped:false, pendingVariantId:null });
     setEditingId(null);
     const match = row.matches[choice];
     setAnnouncement(`${row.name}${match.secondaryAttribute ? `, ${match.secondaryAttribute}` : ''}: rank ${match.rank}, signature ${match.sigLevel} selected.`);
@@ -84,11 +85,14 @@ function ScreenshotDialog({ onClose, attributeIcons }: { onClose: () => void; at
           const result = await response.json();
           if (!response.ok) throw new Error(result.error || 'Could not read this screenshot.');
           if (result.profileId !== profile.id || !alive.current) break;
+          const snapshot = result.inventory as RelicInventorySnapshot;
+          if (snapshot.profile?.id !== profile.id) throw new Error('Your active profile changed. Reopen the import and try again.');
+          setReviewEntries(snapshot.entries);
           const url = URL.createObjectURL(file); urls.current.push(url);
           const scanned = result.rows as RelicScreenshotRow[];
           setRows(old => [...old, ...scanned.map(row => {
-            const ready = row.matches.length === 1 && row.attributeStatus !== 'unclear' && row.attributeStatus !== 'conflict';
-            return { ...row, fileName:file.name, imageUrl:url, choice:ready ? 0 : null, included:ready, skipped:false };
+            const selection = selectRelicReviewBuild(row, snapshot.entries);
+            return { ...row, fileName:file.name, imageUrl:url, ...selection, included:selection.choice !== null, skipped:false };
           })]);
           setImageCount(count => count+1);
           setProgress({completed:index+1,total:files.length});
@@ -130,7 +134,7 @@ function ScreenshotDialog({ onClose, attributeIcons }: { onClose: () => void; at
           const fresh = await fetch('/api/profile/relics', {cache:'no-store'});
           if (fresh.ok) {
             const snapshot = await fresh.json() as RelicInventorySnapshot;
-            if (snapshot.profile?.id === profile.id) { updateSnapshot(snapshot); setRevision(snapshot.prestige!.revision); }
+            if (snapshot.profile?.id === profile.id) { updateSnapshot(snapshot); setReviewEntries(snapshot.entries); setRevision(snapshot.prestige!.revision); }
           }
         }
         throw new Error(result.error || 'Could not save the batch.');
@@ -141,10 +145,14 @@ function ScreenshotDialog({ onClose, attributeIcons }: { onClose: () => void; at
   }
   function card(row: RelicReviewRow, compact = false) {
     const match = row.choice === null ? null : row.matches[row.choice];
-    const existing = match ? entries.find(entry => entry.relicId === match.relicId && entry.stars === match.stars) : undefined;
+    const existing = match ? reviewEntries.find(entry => entry.relicId === match.relicId && entry.stars === match.stars) : undefined;
     return <ReviewCard key={row.id} attributeIcons={attributeIcons} row={row} compact={compact} expanded={editingId === row.id} disabled={!!busy}
       conflict={review.conflictIds.has(row.id)} existing={existing} onChoose={choice => choose(row,choice)} onLeaveOut={() => leaveOut(row)}
-      onVariantChange={relicId => { patch(row.id, {pendingVariantId:relicId, choice:null, included:false}); setEditingId(null); }}
+      onVariantChange={relicId => {
+        const selection = selectRelicReviewBuild(row, reviewEntries, relicId);
+        if (selection.choice !== null) choose(row, selection.choice, selection.selectionSource);
+        else { patch(row.id, {pendingVariantId:relicId, choice:null, selectionSource:null, included:false}); setEditingId(null); }
+      }}
       onEdit={() => setEditingId(editingId === row.id ? null : row.id)} />;
   }
   return <Dialog open onOpenChange={value => { if (!value && !operation.current) onClose(); }}>
@@ -180,7 +188,7 @@ function ScreenshotDialog({ onClose, attributeIcons }: { onClose: () => void; at
             {!!review.unmatched.length && <section id="relic-review-unmatched" className={styles.section} aria-labelledby="relic-unmatched-heading"><div className={styles.sectionHeading}><div><h2 id="relic-unmatched-heading">Needs manual entry <span>{review.unmatched.length}</span></h2><p>These cards will be left out of this import. Use Add relics to enter their in-game rank and signature.</p></div></div><div className={styles.cards}>{review.unmatched.map(row => card(row))}</div></section>}
             <section id="relic-review-ready" tabIndex={-1} className={styles.section} aria-labelledby="relic-ready-heading"><div className={styles.sectionHeading}><div><h2 id="relic-ready-heading"><Check size={17} />Ready to import <span>{review.ready.length}</span></h2><p>Review the matched builds. You can change or leave out any card.</p></div></div><div className={styles.readyCards}>{review.ready.map(row => card(row,true))}</div>{!review.ready.length && <p className={styles.empty}>Your selected builds will appear here.</p>}</section>
             {!!review.skipped.length && <details className={styles.skipped}><summary>Left out ({review.skipped.length})<ChevronDown size={15} /></summary>{review.skipped.map(row => <div key={row.id}><span>{row.name}<small>{row.rating.toLocaleString('en-US')} rating</small></span><button disabled={!!busy} onClick={() => patch(row.id,{skipped:false,included:row.choice !== null})}>Restore</button></div>)}</details>}
-            <details className={styles.help}><summary>How are builds matched?<ChevronDown size={14} /></summary><p>Rank and signature matching assumes all unlocked runes are fully leveled for the current rank. Partially leveled runes change prestige, so add those relics manually using their in-game rank and signature. Even with maxed runes, a rating can match more than one build. Statcast attribute icons identify the variant; unclear icons need your choice. Matching duplicates are saved once.</p></details>
+            <details className={styles.help}><summary>How are builds matched?<ChevronDown size={14} /></summary><p>Rank and signature matching assumes all unlocked runes are fully leveled for the current rank. Partially leveled runes change prestige, so add those relics manually using their in-game rank and signature. Even with maxed runes, a rating can match more than one build. If the identified relic exactly matches a build saved in your collection, we reuse its rank and signature. You can still change it. Statcast attribute icons identify the variant; unclear icons need your choice. Matching duplicates are saved once.</p></details>
           </>}
         </div>
         {!!rows.length && <footer className={styles.footer}>
@@ -222,6 +230,8 @@ function ReviewCard({row, compact, expanded, disabled, conflict, existing, attri
           : 'No matching build was found. Check the screenshot details. Matching assumes fully leveled runes; if any unlocked runes are not maxed, use Add relics to enter the in-game rank and signature manually.'}
       </p>}
     </div>}
-    {existing && <p className={styles.existing}>{match?.rank === existing.rank && match.sigLevel === existing.sigLevel ? 'Already in your collection.' : `Updates your rank ${existing.rank}, sig ${existing.sigLevel} relic.`}</p>}
+    {existing && <p className={styles.existing}>{match?.rank === existing.rank && match.sigLevel === existing.sigLevel
+      ? row.selectionSource === 'collection' ? 'Matched your saved rank and signature.' : 'Already in your collection.'
+      : `Updates your rank ${existing.rank}, sig ${existing.sigLevel} relic.`}</p>}
   </article>;
 }
