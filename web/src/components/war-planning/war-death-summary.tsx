@@ -84,9 +84,9 @@ export function BattlegroupDeathBreakdown({ warId, summary, onSelectNode }: {
                       <Swords aria-hidden="true" className="hidden h-4 w-4 text-slate-600 sm:block" />
                       <FightChampion name={fight.defenderName} champion={fight.defender} role="Defender" />
                     </div>
-                    {(fight.notes || fight.videoId) && <div className="min-w-0 space-y-1 border-t border-slate-800/60 pt-2">
+                    {(fight.notes || fight.videoId || fight.videoIds?.length) && <div className="min-w-0 space-y-1 border-t border-slate-800/60 pt-2">
                       {fight.notes && <p className="whitespace-pre-wrap text-xs leading-relaxed text-slate-400 [overflow-wrap:anywhere]">{fight.notes}</p>}
-                      {fight.videoId && <Link href={`/war-videos/${fight.videoId}`} className={linkStyle}><PlayCircle aria-hidden="true" className="h-3.5 w-3.5" /> Watch fight video</Link>}
+                      {(fight.videoIds || (fight.videoId ? [fight.videoId] : [])).map((id, index, videos) => <Link key={id} href={`/war-videos/${id}`} className={linkStyle}><PlayCircle aria-hidden="true" className="h-3.5 w-3.5" /> {videos.length > 1 ? `Watch video ${index + 1}` : 'Watch fight video'}</Link>)}
                     </div>}
                   </li>
                 )))}

@@ -5,6 +5,17 @@ import { summarizeWarDeaths } from "../../lib/war-death-summary";
 import { BattlegroupDeathBreakdown, WarDeathSummaryPanel } from "./war-death-summary";
 
 describe("war death drilldown", () => {
+  it('shows both recordings while counting the fight deaths once', () => {
+    const [war] = summarizeWarDeaths([{ id: 'war', season: 60, warNumber: 1, enemyAlliance: null, fights: [
+      { id: 'fight', death: 1, battlegroup: 1, player: null, node: { nodeNumber: 4 }, videoIds: ['failed-attempt', 'finish'] },
+    ] }]);
+    expect(war.deaths).toBe(1);
+    const html = renderToStaticMarkup(createElement(BattlegroupDeathBreakdown, { warId: war.warId, summary: war.battlegroups[0] }));
+    expect(html).toContain('/war-videos/failed-attempt');
+    expect(html).toContain('/war-videos/finish');
+    expect(html).toContain('Watch video 1');
+    expect(html).toContain('Watch video 2');
+  });
   it("renders readable attacker/defender roles and visible portrait fallbacks when metadata is absent", () => {
     const [war] = summarizeWarDeaths([{ id: "war", season: 60, warNumber: 1, enemyAlliance: null, fights: [
       { id: "fight", death: 2, battlegroup: 1, player: null, node: { nodeNumber: 4 }, attacker: { name: "Hulk" }, defender: { name: "Thing", images: { broken: true } } },

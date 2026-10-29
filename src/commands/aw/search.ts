@@ -1,3 +1,4 @@
+import { getFightRecordings, fightHasVisibleRecording, canViewFightRecording } from '../../domain/war-recordings';
 import {
     ChatInputCommandInteraction,
     ContainerBuilder,
@@ -84,7 +85,7 @@ export async function handleSearchSubcommand(interaction: ChatInputCommandIntera
     const discordId = interaction.user.id;
     const player = await prisma.player.findFirst({
         where: { discordId },
-        select: { allianceId: true }
+        select: { id: true, allianceId: true }
     });
 
     const attackerName = interaction.options.getString('attacker');
@@ -110,17 +111,14 @@ export async function handleSearchSubcommand(interaction: ChatInputCommandIntera
                     playerName ? { player: { ingameName: { contains: playerName, mode: 'insensitive' } } } : {},
                     attackerName ? { attacker: { name: { contains: attackerName, mode: 'insensitive' } } } : {},
                     defenderName ? { defender: { name: { contains: defenderName, mode: 'insensitive' } } } : {},
-                    hasVideo !== null ? (hasVideo ? { videoId: { not: null } } : { videoId: null }) : {},
+                    hasVideo !== null ? (hasVideo ? fightHasVisibleRecording(player) : { NOT: fightHasVisibleRecording(player) }) : {},
                     // Visibility check:
                     // 1. Video is PUBLIC and PUBLISHED
                     // 2. OR User is in the alliance that fought this war (covers Alliance-Private videos and Log-Only fights)
                     {
                         OR: [
                             {
-                                video: {
-                                    status: 'PUBLISHED',
-                                    visibility: 'public'
-                                }
+                                ...fightHasVisibleRecording(player)
                             },
                             ...(player?.allianceId ? [{
                                 war: { allianceId: player.allianceId }
@@ -135,9 +133,8 @@ export async function handleSearchSubcommand(interaction: ChatInputCommandIntera
                 node: true,
                 war: true,
                 player: true,
-                video: {
-                    include: { submittedBy: true }
-                }
+                video: { include: { submittedBy: true } },
+                recordings: { include: { video: { include: { submittedBy: true } } } }
             },
             orderBy: { createdAt: 'desc' },
             take: 10,
@@ -181,8 +178,11 @@ export async function handleSearchSubcommand(interaction: ChatInputCommandIntera
 
             const title = `**${attackerName}** vs **${defenderName}** (Node ${f.node.nodeNumber})`;
             const meta = `S${f.war.season} T${f.war.warTier} • ${playerName}`;
-            const videoIcon = f.video ? '🎥 ' : '';
-            const link = f.video ? `[Watch](${config.botBaseUrl}/war-videos/${f.video.id})` : '';
+            const recordings = getFightRecordings(f).filter(video => canViewFightRecording(video, f.war.allianceId, player));
+            const videoIcon = recordings.length ? '🎥 ' : '';
+            const link = recordings.length > 3
+              ? `[Watch all ${recordings.length} videos](${config.botBaseUrl}/war-videos/${recordings[0].id})`
+              : recordings.map((video, index) => `[${recordings.length > 1 ? `Video ${index + 1}` : 'Watch'}](${config.botBaseUrl}/war-videos/${video.id})`).join(' | ');
             return `${videoIcon} ${title} - ${meta} ${link}`;
         }).join('\n');
         

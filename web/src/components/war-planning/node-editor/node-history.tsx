@@ -472,16 +472,17 @@ const HistoricalRow = memo(function HistoricalRow({ stat }: { stat: HistoricalFi
                     {player.death === 0 ? "Solo" : `${player.death} Deaths`}
                   </span>
                 </div>
-                {player.videoId && (
+                {(player.videoIds || (player.videoId ? [player.videoId] : [])).map((id, index, videos) => (
                   <a
-                    href={`/war-videos/${player.videoId}`}
+                    key={id} href={`/war-videos/${id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-amber-500/70 hover:text-amber-400"
+                    className="inline-flex items-center gap-1 text-amber-500/70 hover:text-amber-400"
+                    aria-label={`Watch video ${index + 1}`}
                   >
-                    <PlayCircle className="h-3 w-3" />
+                    <PlayCircle className="h-3 w-3" />{videos.length > 1 && <span>{index + 1}</span>}
                   </a>
-                )}
+                ))}
               </div>
             </div>
           ))}

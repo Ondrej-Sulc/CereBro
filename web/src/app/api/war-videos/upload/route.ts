@@ -5,11 +5,14 @@ import { getYouTubeService } from '@cerebro/core/services/youtubeService';
 import { parseFormData } from '@/lib/parseFormData';
 import { existsSync } from 'fs';
 import fs from 'fs/promises';
-import { validateUploadToken, processNewFights, processFightUpdates, queueVideoNotification, FightMismatchError } from '@/lib/api/submission-helpers';
+import { validateUploadToken, FightMismatchError } from '@/lib/api/submission-helpers';
+import { submitWarRecording, WarRecordingAccessError } from '@/lib/api/war-recording-submission';
 import { withRouteContext } from '@/lib/with-request-context';
 
 export const POST = withRouteContext(async (req: NextRequest) => {
   let tempFilePath: string | null = null;
+  let uploadedYoutubeId: string | null = null;
+  let saved = false;
 
   try {
     const { fields, tempFilePath: path } = await parseFormData(req);
@@ -41,44 +44,10 @@ export const POST = withRouteContext(async (req: NextRequest) => {
        if (tempFilePath && existsSync(tempFilePath)) await fs.unlink(tempFilePath);
        return NextResponse.json({ error: auth.error }, { status: auth.status });
     }
-    const { player, uploadToken } = auth;
-    const isTrusted = player.isTrustedUploader;
+    const { player } = auth;
 
     if (!tempFilePath || !existsSync(tempFilePath)) {
       return NextResponse.json({ error: 'No video file found' }, { status: 400 });
-    }
-
-    // 2. Process Fights
-    let fightIdsToLink: string[] = [];
-
-    if (newFightsJson) {
-        const newFights = JSON.parse(newFightsJson);
-        if (!Array.isArray(newFights) || newFights.length === 0) throw new Error("Invalid new fights data");
-
-        fightIdsToLink = await processNewFights(prisma, {
-            allianceId: player.allianceId,
-            season: parsedSeason,
-            warNumber: parsedWarNumber,
-            warTier: parsedWarTier,
-            battlegroup: parsedBattlegroup,
-            mapType: mapType === 'BIG_THING' ? 'BIG_THING' : 'STANDARD',
-            fights: newFights,
-            playerId: customPlayerName ? (playerId || "") : (playerId || player.id),
-            customPlayerName,
-            isGlobal: isGlobal === "true"
-        });
-    } else if (fightUpdatesJson) {
-        const updates = JSON.parse(fightUpdatesJson);
-        if (!Array.isArray(updates) || updates.length === 0) throw new Error("Invalid fight updates data");
-        fightIdsToLink = await processFightUpdates(prisma, updates);
-    } else if (existingFightIdsJson) {
-        try {
-            fightIdsToLink = JSON.parse(existingFightIdsJson);
-        } catch { throw new Error("Invalid existing fight IDs"); }
-        if (!Array.isArray(fightIdsToLink) || fightIdsToLink.length === 0) throw new Error("Existing fight IDs must be an array");
-    } else {
-        if (tempFilePath && existsSync(tempFilePath)) await fs.unlink(tempFilePath);
-        return NextResponse.json({ error: "No fight data provided" }, { status: 400 });
     }
 
     // 3. Upload Video
@@ -88,33 +57,27 @@ export const POST = withRouteContext(async (req: NextRequest) => {
     const youtubeVideoId = await youTubeService.uploadVideo(tempFilePath, title, description, 'unlisted');
 
     if (!youtubeVideoId) throw new Error('YouTube upload failed');
+    uploadedYoutubeId = youtubeVideoId;
     logger.info({ youtubeVideoId }, "YouTube upload completed");
 
     const youtubeUrl = youTubeService.getVideoUrl(youtubeVideoId);
 
-    // 4. Create WarVideo & Link
-    const newWarVideo = await prisma.warVideo.create({
-      data: {
-        url: youtubeUrl,
-        description,
-        status: isTrusted ? 'PUBLISHED' : 'UPLOADED',
-        visibility: visibility || 'public',
-        submittedBy: { connect: { id: uploadToken.playerId } },
-      },
+    const result = await submitWarRecording(prisma, player, {
+      url: youtubeUrl, description, visibility, title,
+      fights: newFightsJson ? JSON.parse(newFightsJson) : undefined,
+      fightUpdates: fightUpdatesJson ? JSON.parse(fightUpdatesJson) : undefined,
+      fightIds: existingFightIdsJson ? JSON.parse(existingFightIdsJson) : undefined,
+      season: parsedSeason, warNumber: parsedWarNumber,
+      warTier: parsedWarTier, battlegroup: parsedBattlegroup,
+      mapType: mapType === 'BIG_THING' ? 'BIG_THING' : 'STANDARD',
+      playerId, customPlayerName, isGlobal: isGlobal === 'true',
     });
-
-    await prisma.warFight.updateMany({
-      where: { id: { in: fightIdsToLink } },
-      data: { videoId: newWarVideo.id },
-    });
-
-    // 5. Notification
-    await queueVideoNotification(prisma, { videoId: newWarVideo.id, title });
+    saved = true;
 
     // 6. Cleanup
-    await fs.unlink(tempFilePath);
+    await fs.unlink(tempFilePath).catch(error => logger.warn({ error }, 'Could not clean up uploaded video temporary file'));
 
-    return NextResponse.json({ message: 'Videos uploaded successfully', videoIds: [newWarVideo.id] }, { status: 200 });
+    return NextResponse.json(result, { status: 200 });
 
   } catch (error: unknown) {
     interface ApiError extends Error {
@@ -129,6 +92,9 @@ export const POST = withRouteContext(async (req: NextRequest) => {
         };
     }
     const err = error as ApiError;
+    if (uploadedYoutubeId && !saved) {
+      await getYouTubeService().deleteVideo(uploadedYoutubeId).catch(error => logger.error({ error }, 'Could not clean up unlinked YouTube upload'));
+    }
     logger.error({
       error: err,
       message: err.message,
@@ -144,6 +110,8 @@ export const POST = withRouteContext(async (req: NextRequest) => {
         details: error.message,
       }, { status: 409 });
     }
+
+    if (error instanceof WarRecordingAccessError) return NextResponse.json({ error: error.message }, { status: 403 });
 
     // Check for specific YouTube API quota error
     const errors = err.errors || err.response?.data?.error?.errors;

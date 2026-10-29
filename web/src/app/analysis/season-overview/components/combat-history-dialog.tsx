@@ -232,18 +232,18 @@ export function CombatHistoryDialog({ player, onClose }: CombatHistoryDialogProp
                                                     )}
                                                 </div>
                                                 
-                                                {fight.videoId && (
+                                                {(fight.videoIds || (fight.videoId ? [fight.videoId] : [])).map((id, index) => (
                                                     <Link 
-                                                        href={`/war-videos/${fight.videoId}`} 
+                                                        key={id} href={`/war-videos/${id}`}
                                                         target="_blank" 
                                                         rel="noopener noreferrer"
                                                         className="p-2 ml-2 bg-sky-600/20 border border-sky-600/50 rounded-full hover:bg-sky-600 text-sky-300 hover:text-white transition-all duration-300 group/video shadow-md shadow-sky-500/10 hover:shadow-sky-500/30"
-                                                        title="Watch Fight Video"
+                                                        title={`Watch fight video ${index + 1}`} aria-label={`Watch fight video ${index + 1}`}
                                                         onClick={(e) => e.stopPropagation()}
                                                     >
                                                         <Video className="w-4 h-4 group-hover/video:scale-110 transition-transform" />
                                                     </Link>
-                                                )}
+                                                ))}
                                             </div>
                                         </div>
                                         ))}

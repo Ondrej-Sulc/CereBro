@@ -7,7 +7,7 @@ import { useTransition } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
-export function UploadFightButton({ fightId }: { fightId: string }) {
+export function UploadFightButton({ fightId, label }: { fightId: string; label?: string }) {
     const [isPending, startTransition] = useTransition();
     const { toast } = useToast();
     const router = useRouter();
@@ -16,7 +16,8 @@ export function UploadFightButton({ fightId }: { fightId: string }) {
         <Button 
             variant="outline" 
             size="sm" 
-            className="h-8 w-8 p-0 rounded-full bg-slate-800/50 border-slate-700 hover:bg-sky-500/20 hover:text-sky-400 hover:border-sky-500/50 transition-all"
+            aria-label={label || "Add fight video"}
+            className={label ? "gap-1.5" : "h-8 w-8 p-0 rounded-full bg-slate-800/50 border-slate-700 hover:bg-sky-500/20 hover:text-sky-400 hover:border-sky-500/50 transition-all"}
             disabled={isPending}
             onClick={() => startTransition(async () => {
                 try {
@@ -27,7 +28,7 @@ export function UploadFightButton({ fightId }: { fightId: string }) {
                 }
             })}
         >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4" />{label}
         </Button>
     )
 }

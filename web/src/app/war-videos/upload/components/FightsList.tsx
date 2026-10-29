@@ -15,6 +15,7 @@ interface FightsListProps {
   prefightChampions: Champion[];
   uploadMode: "single" | "multiple";
   sourceMode: "upload" | "link";
+  savedRecordingIds: string[];
   errors: Record<string, string>;
 }
 
@@ -29,6 +30,7 @@ export function FightsList({
   uploadMode,
   sourceMode,
   errors,
+  savedRecordingIds,
 }: FightsListProps) {
   return (
     <div className="space-y-4">
@@ -42,16 +44,17 @@ export function FightsList({
           fight={fight}
           onFightChange={onFightChange}
           onRemove={onRemoveFight}
-          canRemove={fights.length > 1}
+          canRemove={fights.length > 1 && savedRecordingIds.length === 0}
           initialChampions={initialChampions}
           initialNodes={initialNodes}
           prefightChampions={prefightChampions}
           uploadMode={uploadMode}
           sourceMode={sourceMode}
           errors={errors}
+          savedRecordingIds={savedRecordingIds}
         />
       ))}
-      <Button type="button" variant="outline" onClick={onAddFight} className="w-full bg-slate-900/50 border-slate-700/50 hover:bg-slate-800/50 hover:border-sky-500/50 transition-colors">
+      <Button type="button" variant="outline" onClick={onAddFight} disabled={savedRecordingIds.length > 0} className="w-full bg-slate-900/50 border-slate-700/50 hover:bg-slate-800/50 hover:border-sky-500/50 transition-colors">
         <Plus className="mr-2 h-4 w-4" />
         Add Another Fight
       </Button>

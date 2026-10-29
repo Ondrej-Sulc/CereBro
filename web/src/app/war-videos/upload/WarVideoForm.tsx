@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useWarVideoForm, UseWarVideoFormProps } from "./hooks/useWarVideoForm";
 import { WarVideoHeader } from "./components/WarVideoHeader";
-import { VideoInputSection } from "./components/VideoInputSection";
+import { RecordingInputs } from "@/components/RecordingInputs";
 import { FightsList } from "./components/FightsList";
 import { WarContextSection } from "./components/WarContextSection";
 import { UploadOverlay } from "./components/UploadOverlay";
@@ -17,10 +17,9 @@ export function WarVideoForm(props: UseWarVideoFormProps) {
     setUploadMode,
     sourceMode,
     setSourceMode,
-    videoFile,
-    setVideoFile,
-    videoUrl,
-    setVideoUrl,
+    recordings,
+    setRecordings,
+    savedRecordingIds,
     fights,
     season,
     setSeason,
@@ -68,8 +67,10 @@ export function WarVideoForm(props: UseWarVideoFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 relative">
+      <fieldset disabled={isSubmitting} className="min-w-0 space-y-6">
       <div className={cn("space-y-6", isSubmitting && "max-h-[calc(100vh-10rem)] overflow-y-auto")}>
         
+        <fieldset disabled={savedRecordingIds.length > 0} className="min-w-0">
         <WarVideoHeader
           uploadMode={uploadMode}
           setUploadMode={setUploadMode}
@@ -78,16 +79,12 @@ export function WarVideoForm(props: UseWarVideoFormProps) {
           canUploadFiles={canUploadFiles}
           isEditMode={isEditMode}
         />
+        </fieldset>
 
-        <VideoInputSection
-          uploadMode={uploadMode}
-          sourceMode={sourceMode}
-          videoFile={videoFile}
-          setVideoFile={setVideoFile}
-          videoUrl={videoUrl}
-          setVideoUrl={setVideoUrl}
-          errors={errors}
-        />
+        {uploadMode === 'single' && <div className="glass rounded-xl border border-slate-800/60 p-4 sm:p-6 bg-slate-950/30">
+          <RecordingInputs recordings={recordings} onChange={setRecordings} sourceMode={sourceMode} allowMultiple={!isEditMode} savedIds={savedRecordingIds} />
+          {errors.recordings && <p role="alert" className="mt-2 text-sm text-red-400">{errors.recordings}</p>}
+        </div>}
 
         <FightsList
           fights={fights}
@@ -100,8 +97,10 @@ export function WarVideoForm(props: UseWarVideoFormProps) {
           uploadMode={uploadMode}
           sourceMode={sourceMode}
           errors={errors}
+          savedRecordingIds={savedRecordingIds}
         />
 
+        <fieldset disabled={savedRecordingIds.length > 0} className="min-w-0">
         <WarContextSection
           mapType={mapType}
           setMapType={setMapType}
@@ -134,7 +133,10 @@ export function WarVideoForm(props: UseWarVideoFormProps) {
           uploadMode={uploadMode}
           isEditing={isEditMode}
         />
+        </fieldset>
       </div>
+
+      </fieldset>
 
       <UploadOverlay
         isSubmitting={isSubmitting}

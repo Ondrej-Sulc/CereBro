@@ -9,7 +9,6 @@ import { getWarVideoEditAccess } from "@/lib/war-video-edit-auth";
 import {
   FightMismatchError,
   syncWarVideoEditedFights,
-  queueVideoNotification,
 } from "@/lib/api/submission-helpers";
 import type { EditableFightInput } from "@/lib/api/submission-helpers";
 import { getYouTubeService } from "@cerebro/core/services/youtubeService";
@@ -111,7 +110,7 @@ export const PATCH = withRouteContext(async (
       return NextResponse.json({ error: "Video URL is required" }, { status: 400 });
     }
 
-    const syncResult = await syncWarVideoEditedFights(prisma, {
+    await syncWarVideoEditedFights(prisma, {
       videoId,
       allianceId: video.submittedBy.allianceId,
       season: parsedSeason,
@@ -123,16 +122,8 @@ export const PATCH = withRouteContext(async (
       playerId: typeof payload.playerId === "string" ? payload.playerId : video.submittedById,
       customPlayerName: typeof payload.customPlayerName === "string" ? payload.customPlayerName : undefined,
       isGlobal,
-    });
-
-    const oldUrl = video.url;
-    await prisma.warVideo.update({
-      where: { id: videoId },
-      data: {
-        url: nextUrl,
-        description,
-        visibility,
-      },
+      videoUpdates: { url: nextUrl, description, visibility },
+      notifySourceChange: nextUrl !== video.url,
     });
 
     if (replacedVideoFile && oldYoutubeIdToDelete) {
@@ -141,11 +132,6 @@ export const PATCH = withRouteContext(async (
       } catch (error) {
         logger.error({ err: error, videoId, oldYoutubeIdToDelete }, "Failed to delete replaced YouTube video");
       }
-    }
-
-    const videoSourceChanged = nextUrl !== oldUrl;
-    if (videoSourceChanged || syncResult.fightListChanged) {
-      await queueVideoNotification(prisma, { videoId, title: "War Video Updated" });
     }
 
     await cleanupTempFile(tempFilePath);

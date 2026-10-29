@@ -796,6 +796,7 @@ model WarFight {
   playerId          String?
   warId             String
   videoId           String?
+  recordings        WarFightVideo[]
   battlegroup       Int
   death             Int             @default(0)
   notes             String?
@@ -858,9 +859,25 @@ model WarVideo {
   gcsUrl        String?        @unique
   url           String?        @unique
   fights        WarFight[]
+  fightLinks    WarFightVideo[]
   submittedBy   Player         @relation("SubmittedBy", fields: [submittedById], references: [id])
 
   @@index([submittedById])
+}
+
+// A recording can cover several fights; a fight can have several recordings.
+// WarFight.videoId remains the first recording for compatibility during rollout.
+model WarFightVideo {
+  fightId   String
+  videoId   String
+  position  Int
+  createdAt DateTime @default(now())
+  fight     WarFight @relation(fields: [fightId], references: [id], onDelete: Cascade)
+  video     WarVideo @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@id([fightId, videoId])
+  @@index([fightId, position])
+  @@index([videoId])
 }
 
 model WarNode {

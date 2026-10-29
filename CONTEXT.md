@@ -1,5 +1,15 @@
 # CereBro Context
 
+## War Fight Recordings
+
+A War Fight is one recorded matchup and retains one attacker, defender, player and total death count. Videos are recordings of that fight, not additional attempts or outcomes for statistics. One fight can have multiple ordered recordings, and one recording can cover several fights.
+
+WarFightVideo owns recording order and the distinct fight/video association. Adding a recording appends it without replacing earlier recordings or creating another fight. A repeated video link is idempotent. Removing an association preserves the fight, its other recordings and the video wherever else it is used. Each recording retains its own uploader, visibility and moderation state; public access to one recording does not expose private or pending recordings attached to the same fight.
+
+WarFight.videoId remains the first recording for compatibility during deployment. The additive migration backfills its associations and preserves additions made by old application instances. New readers use the recording collection and deduplicate the legacy link. Concurrent appends lock fight rows in stable ID order. Historical statistics aggregate fights separately from recordings, so video count never multiplies fight or death totals. Batch uploads resolve a new fight once and reuse its saved ID for further recordings and retries.
+
+Recording persistence and historical SQL integration tests use a disposable local database whose name contains recordings_test. Set WAR_RECORDINGS_TEST_DATABASE_URL, run node scripts/setup-war-recordings-test-db.cjs, then run the warRecordingService.integration and history-actions.recordings Vitest suites. The setup script decodes the historical UTF-16 baseline without changing its deployed checksum and applies all subsequent migrations normally.
+
 ## MCOC Prestige Projection
 
 MCOC Prestige Projection is the domain rule set for turning champion prestige endpoints, rarity, rank, signature level, and ascension into game-display prestige values and chart-ready prestige curves.

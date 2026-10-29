@@ -1,3 +1,4 @@
+import { getFightRecordings, fightHasRecording, canViewFightRecording } from '../../domain/war-recordings';
 import { Client, TextChannel, MessageFlags, ContainerBuilder, TextDisplayBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ThreadChannel, AttachmentBuilder, ChannelType, MediaGalleryBuilder, MediaGalleryItemBuilder, SeparatorBuilder } from 'discord.js';
 import { prisma } from '../prismaService';
 import { getEmoji, capitalize } from '../../commands/aw/utils';
@@ -241,7 +242,7 @@ export async function distributeWarPlan(
             prisma.warFight.findMany({
                 where: {
                     OR: batch,
-                    videoId: { not: null },
+                    AND: [fightHasRecording({ status: 'PUBLISHED' })],
                     war: { status: 'FINISHED' }
                 },
                 select: {
@@ -249,7 +250,9 @@ export async function distributeWarPlan(
                     defenderId: true,
                     attackerId: true,
                     death: true,
-                    video: { select: { id: true, url: true } },
+                    video: true,
+                    recordings: { include: { video: true } },
+                    war: { select: { allianceId: true } },
                     player: { select: { id: true, ingameName: true } }
                 },
                 orderBy: [
@@ -261,16 +264,13 @@ export async function distributeWarPlan(
         const historicalFights = chunkResults.flat();
 
         for (const hf of historicalFights) {
-            if (!hf.video?.url || !hf.defenderId || !hf.attackerId || !hf.player) continue;
+            if (!hf.defenderId || !hf.attackerId || !hf.player) continue;
             const key = `${hf.nodeId}-${hf.defenderId}-${hf.attackerId}`;
             if (!videoMap.has(key)) videoMap.set(key, []);
-            videoMap.get(key)!.push({
-                url: hf.video.url,
-                videoId: hf.video.id,
-                death: hf.death,
-                playerId: hf.player.id,
-                playerName: hf.player.ingameName
-            });
+            for (const video of getFightRecordings(hf).filter(video => canViewFightRecording(video, hf.war.allianceId, { id: '', allianceId: war.allianceId }))) {
+              if (!video.url) continue;
+              videoMap.get(key)!.push({ url: video.url, videoId: video.id, death: hf.death, playerId: hf.player.id, playerName: hf.player.ingameName });
+            }
         }
     }
 

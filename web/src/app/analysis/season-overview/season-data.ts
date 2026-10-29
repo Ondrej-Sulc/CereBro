@@ -1,3 +1,4 @@
+import { getFightRecordings, canViewFightRecording } from '@cerebro/core/domain/war-recordings';
 import { prisma } from "@/lib/prisma";
 import { getFromCache } from "@/lib/cache";
 import { getChampionImageUrl } from "@/lib/championHelper";
@@ -32,7 +33,7 @@ export async function getSeasonData(allianceId: string, selectedSeason: number):
     if (!viewer?.allianceId || viewer.allianceId !== allianceId) throw new Error("Alliance membership required");
 
     // Fetch War Data (Cached for 5 minutes per alliance/season)
-    const [wars, allTactics] = await Promise.all([
+    const [rawWars, allTactics] = await Promise.all([
         getFromCache(`season-wars-${selectedSeason}-${allianceId}`, 300, () => 
             prisma.war.findMany({
                 where: { 
@@ -48,7 +49,8 @@ export async function getSeasonData(allianceId: string, selectedSeason: number):
                             attacker: { include: { tags: true } },
                             defender: { include: { tags: true } },
                             node: true,
-                            video: true
+                            video: true,
+                            recordings: { include: { video: true } }
                         }
                     }
                 }
@@ -61,6 +63,11 @@ export async function getSeasonData(allianceId: string, selectedSeason: number):
             })
         )
     ]);
+
+    const wars = rawWars.map(war => ({ ...war, fights: war.fights.map(fight => {
+      const videos = getFightRecordings(fight).filter(video => canViewFightRecording(video, allianceId, viewer));
+      return { ...fight, video: videos[0] || null, videoId: videos[0]?.id || null, videoIds: videos.map(video => video.id) };
+    }) }));
 
     const warDeathSummaries = summarizeWarDeaths(wars);
   
@@ -226,6 +233,7 @@ export async function getSeasonData(allianceId: string, selectedSeason: number):
               isSolo: fight.death === 0,
               deaths: fight.death,
               videoId: fight.video?.id || null,
+              videoIds: fight.videoIds,
               isAttackerTactic,
               isDefenderTactic,
               fightScore,

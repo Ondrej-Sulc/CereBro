@@ -1,5 +1,6 @@
 'use client';
 
+import { UploadFightButton } from '@/components/UploadFightButton';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -19,6 +20,8 @@ import { getYoutubeEmbedUrl, getYoutubeVideoId } from '@/lib/youtube';
 export interface WarFight {
   id: string;
   death: number;
+  videos: { id: string; description: string | null }[];
+  canAddRecording?: boolean;
   battlegroup: number | null;
   attacker: (Champion & { tags: Tag[] }) | null; // Made nullable
   defender: (Champion & { tags: Tag[] }) | null; // Made nullable
@@ -186,6 +189,8 @@ export default function WarVideoDisplay({ warVideo, isAdmin, canEdit, activeTact
         </div>
       )}
 
+      {sortedFights.length === 1 && <RecordingLinks fight={sortedFights[0]} videoId={warVideo.id} />}
+
       {/* Video Player */}
       {videoId && (
         <div className="rounded-xl overflow-hidden border border-slate-800/50 shadow-2xl bg-black">
@@ -251,9 +256,11 @@ export default function WarVideoDisplay({ warVideo, isAdmin, canEdit, activeTact
                       : "bg-gradient-to-r from-green-600/80 to-green-700/80 text-green-100 hover:from-green-600 hover:to-green-700 border-green-500/50"
                   )}
                 >
-                  {fight.death ? '💀 Death' : '✓ Solo'}
+                  {fight.death ? `${fight.death} Death${fight.death > 1 ? 's' : ''}` : '✓ Solo'}
                 </Badge>
               </div>
+
+              {sortedFights.length > 1 && <RecordingLinks fight={fight} videoId={warVideo.id} />}
 
               <div className="p-5 grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
                 {/* Attacker */}
@@ -392,4 +399,15 @@ export default function WarVideoDisplay({ warVideo, isAdmin, canEdit, activeTact
       </div>
     </div>
   );
+}
+
+function RecordingLinks({ fight, videoId }: { fight: WarFight; videoId: string }) {
+  return <div className="flex flex-wrap items-center gap-2 rounded-xl border border-slate-800/50 bg-slate-950/30 p-4" aria-label={`Videos for node ${fight.node.nodeNumber}`}>
+    {(fight.videos || []).map((video, index) => <Button key={video.id} asChild size="sm" variant={video.id === videoId ? 'default' : 'outline'}>
+      <Link href={`/war-videos/${video.id}`} aria-current={video.id === videoId ? 'page' : undefined} title={video.description || undefined}>
+        <Play className="mr-1 h-3 w-3" /> Video {index + 1}
+      </Link>
+    </Button>)}
+    {fight.canAddRecording && <UploadFightButton fightId={fight.id} label="Add video" />}
+  </div>;
 }

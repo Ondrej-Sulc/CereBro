@@ -28,6 +28,7 @@ export interface WarFightDetail {
   isSolo: boolean;
   deaths: number;
   videoId: string | null;
+  videoIds?: string[];
   isAttackerTactic: boolean;
   isDefenderTactic: boolean;
   fightScore: number;
