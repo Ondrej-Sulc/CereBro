@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ClipboardEvent } from 'react';
 import { Camera, Check, ChevronDown, ImagePlus, Images, Loader2, ScanLine, ShieldCheck, TriangleAlert, X } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useRelicInventory } from './relic-inventory';
+import { RelicScreenshotPreview } from './relic-screenshot-preview';
 import { summarizeRelicReview, type RelicReviewRow } from './relic-screenshot-review';
 import type { RelicScreenshotRow } from '@cerebro/core/domain/relic-screenshot';
 import type { OwnedRelic, RelicInventorySnapshot } from '@cerebro/core/domain/player-relics';
@@ -200,10 +201,7 @@ function ReviewCard({row, compact, expanded, disabled, conflict, existing, onCho
   });
   return <article id={`review-card-${row.id}`} tabIndex={-1} aria-label={`${row.name} ${row.rating}`} className={`${styles.card} ${compact ? styles.compact : ''} ${conflict ? styles.conflict : ''} ${expanded ? styles.expanded : ''}`}>
     <div className={styles.cardOverview}>
-      <a href={row.imageUrl} target="_blank" rel="noreferrer" aria-label={`Open original ${row.name} screenshot`} className={styles.thumbnail} style={{
-        backgroundImage:`url("${row.imageUrl}")`, backgroundSize:`${100/row.bounds.width}% ${100/row.bounds.height}%`,
-        backgroundPosition:`${100*row.bounds.x/(1-row.bounds.width)}% ${100*row.bounds.y/(1-row.bounds.height)}%`,
-      }} />
+      <RelicScreenshotPreview row={row} />
       <div className={styles.detail}><h3>{row.name}</h3>
         <p>{compact && match ? `${match.stars}★` : row.stars ? `${row.stars}★` : 'Rarity unclear'} · {row.className?.toLowerCase() ?? 'Class unclear'} · <strong>{row.rating.toLocaleString('en-US')}</strong></p>
         {compact && match ? <p className={styles.matchedBuild}><Check size={13} />Rank {match.rank}<span>Sig {match.sigLevel}</span></p> : <span className={styles.cardBadge}>{row.matches.length ? conflict ? 'Build conflict' : 'Choose a build' : 'No exact match'}</span>}
