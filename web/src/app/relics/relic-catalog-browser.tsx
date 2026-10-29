@@ -1,6 +1,7 @@
 "use client";
-import { useMemo, useState } from "react";
-import { Gem, Sparkles } from "lucide-react";
+import { useMemo } from "react";
+import { Sparkles } from "lucide-react";
+import { CollectionHeading, useCollectionState } from "@/components/collections/collection-navigation";
 import { filterRelicFamilies } from "@cerebro/core/domain/relic-catalog";
 import type { RelicCatalogData } from "@/lib/data/relics";
 import styles from "./relics.module.css";
@@ -10,7 +11,11 @@ import {
   RelicCatalogFilters,
 } from "./relic-catalog-filters";
 export function RelicCatalogBrowser({ data }: { data: RelicCatalogData }) {
-  const [filters, setFilters] = useState(DEFAULT_RELIC_FILTERS);
+  const [specificFilters, setSpecificFilters] = useCollectionState("filters", DEFAULT_RELIC_FILTERS);
+  const [query, setQuery] = useCollectionState("search", "", true);
+  const [className, setClassName] = useCollectionState("classes", "all", true);
+  const filters = useMemo(() => ({ ...specificFilters, query, className }), [specificFilters, query, className]);
+  const setFilters = (next: typeof filters) => { setSpecificFilters(next); setQuery(next.query); setClassName(next.className); };
   const visible = useMemo(
     () => filterRelicFamilies(data.families, filters),
     [data.families, filters],
@@ -24,10 +29,7 @@ export function RelicCatalogBrowser({ data }: { data: RelicCatalogData }) {
     <div className={styles.page}>
       <header className={styles.catalogHeader}>
         <div>
-          <span className={styles.eyebrow}>
-            <Gem size={14} /> THE RELIC COLLECTION
-          </span>
-          <h1>Relics</h1>
+          <CollectionHeading />
           <p>
             Explore Battlecasts, Statcasts and the abilities behind every
             pairing.

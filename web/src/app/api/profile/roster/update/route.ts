@@ -221,6 +221,7 @@ export const POST = withRouteContext(async (req: NextRequest) => {
 
     // Invalidate caches
     revalidatePath("/profile/roster");
+    revalidatePath("/champions");
     if (effectivePlayerId !== player.id) {
         revalidatePath(`/player/${effectivePlayerId}/roster`);
     }

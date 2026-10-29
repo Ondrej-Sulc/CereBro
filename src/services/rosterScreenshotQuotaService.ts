@@ -1,4 +1,4 @@
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient, Prisma } from "@prisma/client";
 
 export const FREE_SCREENSHOT_MONTHLY_LIMIT = 5;
 export const ALLIANCE_UNLOCK_THRESHOLD_MINOR = 2500;
@@ -61,7 +61,7 @@ function supportActorWhere(actor: RosterScreenshotQuotaActor) {
 }
 
 export async function getAllianceSupportWindowMinor(
-  prisma: PrismaClient,
+  prisma: PrismaClient | Prisma.TransactionClient,
   allianceId: string,
   windowStart: Date,
   windowEnd: Date,
@@ -115,7 +115,7 @@ export async function getAllianceSupportWindowMinor(
 export async function getRosterScreenshotQuota(
   actor: RosterScreenshotQuotaActor,
   requested: number,
-  options: { now?: Date; prisma?: PrismaClient } = {}
+  options: { now?: Date; prisma?: PrismaClient | Prisma.TransactionClient } = {}
 ): Promise<RosterScreenshotQuotaResult> {
   const prisma = options.prisma ?? (await import("./prismaService.js")).prisma;
   const now = options.now ?? new Date();

@@ -1,6 +1,8 @@
+import 'dotenv/config';
 import { v1 } from "@google-cloud/vision";
 import { randomUUID } from "crypto";
 import logger from "./loggerService.js";
+import { googleVisionConfigFromEnv } from './googleVisionConfig';
 
 export interface VisionTextDetection {
   description?: string;
@@ -389,12 +391,11 @@ let googleVisionServiceInstance: GoogleVisionService | null = null;
 
 export async function getGoogleVisionService(): Promise<GoogleVisionService> {
   if (!googleVisionServiceInstance) {
-    const { config } = await import("../config.js");
-    const visionConfig = config.googleVision;
+    const visionConfig = googleVisionConfigFromEnv(process.env);
     googleVisionServiceInstance = new GoogleVisionService({
       clientFactory: () =>
         createGoogleVisionClient(
-          config.GOOGLE_CREDENTIALS,
+          visionConfig.credentials,
           visionConfig.transport
         ),
       timeoutMs: visionConfig.timeoutMs,

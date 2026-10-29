@@ -134,6 +134,7 @@ export const POST = withRouteContext(async (req: Request) => {
     }
 
     revalidatePath("/profile/roster");
+    revalidatePath("/champions");
     if (effectivePlayerId !== player.id) {
       revalidatePath(`/player/${effectivePlayerId}/roster`);
     }

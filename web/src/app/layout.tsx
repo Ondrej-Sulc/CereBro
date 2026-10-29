@@ -9,6 +9,7 @@ import { VersionChecker } from "@/components/version-checker";
 import { QueryErrorToast } from "@/components/QueryErrorToast";
 import { getAppVersion } from "@/lib/app-version";
 import { getMetadataIcons } from "@/lib/app-icons";
+import { CollectionMemoryProvider } from "@/components/collections/collection-navigation";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -100,9 +101,11 @@ export default function RootLayout({
           <Suspense>
             <PostHogPageview />
           </Suspense>
-          <MainLayout>
-            {children}
-          </MainLayout>
+          <CollectionMemoryProvider>
+            <MainLayout>
+              {children}
+            </MainLayout>
+          </CollectionMemoryProvider>
           <QueryErrorToast />
           <Toaster />
         </PHProvider>

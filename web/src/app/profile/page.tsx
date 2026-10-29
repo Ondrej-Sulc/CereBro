@@ -208,7 +208,7 @@ export default async function ProfilePage() {
                             <CardTitle className="text-sm font-medium text-slate-400">Summoner Prestige</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{player.summonerPrestige?.toLocaleString() || "N/A"}</div>
+                            <div className="text-2xl font-bold">{player.summonerPrestige?.toLocaleString("en-US") ?? "N/A"}</div>
                         </CardContent>
                     </Card>
                     <Card className="bg-slate-900/50 border-slate-800">
@@ -216,10 +216,10 @@ export default async function ProfilePage() {
                             <CardTitle className="text-sm font-medium text-slate-400">Champion Prestige</CardTitle>
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">{player.championPrestige?.toLocaleString() || "N/A"}</div>
+                            <div className="text-2xl font-bold">{player.championPrestige?.toLocaleString("en-US") ?? "N/A"}</div>
                         </CardContent>
                     </Card>
-                    <RelicPrestigeEditor profileId={player.id} initialValue={player.relicPrestige} />
+                    <RelicPrestigeEditor profileId={player.id} initialValue={player.relicPrestige} automatic={player.relicPrestigeFromInventory} />
                 </div>
 
                 {/* History Chart */}

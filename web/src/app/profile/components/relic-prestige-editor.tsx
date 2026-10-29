@@ -1,5 +1,6 @@
 'use client';
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,9 +13,10 @@ import { useRouter } from "next/navigation";
 interface RelicPrestigeEditorProps {
     profileId: string;
     initialValue: number | null;
+    automatic?: boolean;
 }
 
-export function RelicPrestigeEditor({ profileId, initialValue }: RelicPrestigeEditorProps) {
+export function RelicPrestigeEditor({ profileId, initialValue, automatic = false }: RelicPrestigeEditorProps) {
     const [isEditing, setIsEditing] = useState(false);
     const [value, setValue] = useState(initialValue?.toString() || "");
     const [isPending, startTransition] = useTransition();
@@ -22,8 +24,8 @@ export function RelicPrestigeEditor({ profileId, initialValue }: RelicPrestigeEd
     const router = useRouter();
 
     const handleSave = () => {
-        const numericValue = parseInt(value, 10);
-        if (isNaN(numericValue)) {
+        const numericValue = Number(value);
+        if (!value.trim() || !Number.isSafeInteger(numericValue)) {
             toast({
                 title: "Invalid value",
                 description: "Please enter a valid number for relic prestige.",
@@ -63,6 +65,7 @@ export function RelicPrestigeEditor({ profileId, initialValue }: RelicPrestigeEd
                     <CardTitle className="text-sm font-medium text-slate-400">Relic Prestige</CardTitle>
                 </CardHeader>
                 <CardContent>
+                    {automatic && <p className="text-xs text-amber-200 mb-3">Saving a manual value stops automatic updates from My Relics.</p>}
                     <div className="flex items-center gap-2">
                         <style>{`
                             .relic-prestige-input[type='number']::-webkit-inner-spin-button,
@@ -75,6 +78,7 @@ export function RelicPrestigeEditor({ profileId, initialValue }: RelicPrestigeEd
                             }
                         `}</style>
                         <Input
+                            aria-label="Relic prestige"
                             type="number"
                             value={value}
                             onChange={(e) => setValue(e.target.value)}
@@ -126,7 +130,10 @@ export function RelicPrestigeEditor({ profileId, initialValue }: RelicPrestigeEd
                 </Button>
             </CardHeader>
             <CardContent>
-                <div className="text-2xl font-bold group-hover:text-indigo-300 transition-colors">{initialValue?.toLocaleString() || "N/A"}</div>
+                <div className="text-2xl font-bold group-hover:text-indigo-300 transition-colors">{initialValue?.toLocaleString("en-US") ?? "N/A"}</div>
+                <Link href="/relics?view=personal" onClick={(event) => event.stopPropagation()} className="text-xs text-indigo-300 hover:text-indigo-200">
+                    {automatic ? "Automatic tracking · Manage in My Relics" : "Calculate from My Relics"}
+                </Link>
                 <p className="text-[10px] text-slate-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Click to edit manually</p>
             </CardContent>
         </Card>

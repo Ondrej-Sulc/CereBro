@@ -30,6 +30,8 @@ import { getChampionClassColors } from "@/lib/championClassHelper";
 import type { ChampionClass } from "@prisma/client";
 import styles from "./relic-details.module.css";
 import { RelicPrestige } from "./relic-prestige";
+import { RelicOwnershipButton } from "@/components/relics/relic-inventory";
+import { selectRelicPrestigeBuild } from "@cerebro/core/domain/relic-prestige";
 
 function AttributeGlyph({ icon }: { icon?: RelicAttributeIcon }) {
   if (!icon) return null;
@@ -51,10 +53,9 @@ function AttributeGlyph({ icon }: { icon?: RelicAttributeIcon }) {
 
 export function RelicDetails({ family }: { family: RelicFamilyDetails }) {
   const pathname = usePathname();
-  const data = family.members.find(
-    (member) => pathname === `/relics/${member.slug}`,
-  )
-    ?? family.members.find((member) => member.relic.id === family.initialId)!;
+  const data =
+    family.members.find((member) => pathname === `/relics/${member.slug}`) ??
+    family.members.find((member) => member.relic.id === family.initialId)!;
   const { relic, items, attributeIcons, runeIcons } = data;
   const isStatcast = relic.type === "statcast";
   const TypeIcon = isStatcast ? SlidersHorizontal : Swords;
@@ -70,7 +71,9 @@ export function RelicDetails({ family }: { family: RelicFamilyDetails }) {
     const url = new URL(window.location.href);
     url.searchParams.set("rarity", String(stars));
     window.history.replaceState(
-      null, "", `${url.pathname}${url.search}${url.hash}`,
+      null,
+      "",
+      `${url.pathname}${url.search}${url.hash}`,
     );
   };
   const variantHref = (slug: string) => {
@@ -81,21 +84,31 @@ export function RelicDetails({ family }: { family: RelicFamilyDetails }) {
   const changeVariant = (event: MouseEvent<HTMLAnchorElement>) => {
     // Keep native links for new tabs, modified clicks and pre-hydration use.
     if (
-      event.defaultPrevented || event.button !== 0 || event.metaKey ||
-      event.ctrlKey || event.shiftKey || event.altKey
-    ) return;
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    )
+      return;
     event.preventDefault();
     // Read the latest URL so a rapid rarity → variant click cannot restore
     // the previous render's query parameters.
     const url = new URL(window.location.href);
     url.pathname = new URL(event.currentTarget.href).pathname;
-    const currentRarity = rarities.find(
-      (entry) => entry.stars === Number(url.searchParams.get("rarity")),
-    ) ?? rarity;
+    const currentRarity =
+      rarities.find(
+        (entry) => entry.stars === Number(url.searchParams.get("rarity")),
+      ) ?? rarity;
     if (currentRarity)
       url.searchParams.set("rarity", String(currentRarity.stars));
     if (url.href !== window.location.href) {
-      window.history.pushState(null, "", `${url.pathname}${url.search}${url.hash}`);
+      window.history.pushState(
+        null,
+        "",
+        `${url.pathname}${url.search}${url.hash}`,
+      );
     }
   };
   useEffect(() => {
@@ -146,7 +159,7 @@ export function RelicDetails({ family }: { family: RelicFamilyDetails }) {
       className={styles.page}
       style={{ "--relic-color": color } as CSSProperties}
     >
-      <Link href="/relics" className={styles.back}>
+      <Link href="/relics?view=catalog" className={styles.back}>
         <ArrowLeft size={15} /> Relic catalog
       </Link>
 
@@ -182,6 +195,27 @@ export function RelicDetails({ family }: { family: RelicFamilyDetails }) {
               </span>
             </div>
             <h1>{relic.name}</h1>
+            {rarity && (
+              <div className="max-w-xs my-3">
+                <RelicOwnershipButton
+                  relicIds={[relic.id]}
+                  selection={{
+                    relicId: relic.id,
+                    stars: rarity.stars,
+                    rank: selectRelicPrestigeBuild(
+                      rarity,
+                      query.get("rank"),
+                      query.get("sig"),
+                    ).rank,
+                    sigLevel: selectRelicPrestigeBuild(
+                      rarity,
+                      query.get("rank"),
+                      query.get("sig"),
+                    ).signature,
+                  }}
+                />
+              </div>
+            )}
             <p className={styles.heroDescription}>
               {isStatcast
                 ? "Explore its attribute bonuses and find your secondary variant."
@@ -267,7 +301,11 @@ export function RelicDetails({ family }: { family: RelicFamilyDetails }) {
       </header>
 
       {rarity && data.prestige[rarity.id] && (
-        <RelicPrestige ranks={data.prestige[rarity.id]} maxRank={rarity.maxRank} maxSignature={rarity.maxSignature} />
+        <RelicPrestige
+          ranks={data.prestige[rarity.id]}
+          maxRank={rarity.maxRank}
+          maxSignature={rarity.maxSignature}
+        />
       )}
 
       {data.variants.length > 1 && (

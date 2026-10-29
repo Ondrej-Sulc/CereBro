@@ -113,6 +113,7 @@ export const PUT = withRouteContext(async (req: Request) => {
     });
 
     revalidatePath("/profile/roster");
+    revalidatePath("/champions");
     revalidatePath(`/player/${rosterEntry.playerId}/roster`);
     if (player.allianceId) clearCache(`alliance-members-${player.allianceId}`);
     if (rosterEntry.player.allianceId && rosterEntry.player.allianceId !== player.allianceId) {
@@ -178,6 +179,7 @@ export const DELETE = withRouteContext(async (req: Request) => {
     });
 
     revalidatePath("/profile/roster");
+    revalidatePath("/champions");
     revalidatePath(`/player/${targetPlayerId}/roster`);
     if (player.allianceId) clearCache(`alliance-members-${player.allianceId}`);
     if (targetAllianceId && targetAllianceId !== player.allianceId) {

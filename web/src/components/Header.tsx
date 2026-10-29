@@ -21,12 +21,13 @@ import {
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
+import { CollectionNavLink } from "@/components/collections/collection-navigation";
 
 export default function Header({ userButton, isInAlliance, hasPlayerProfile }: { userButton: React.ReactNode; isInAlliance: boolean; hasPlayerProfile: boolean }) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const pathname = usePathname();
-  const rosterLabel = hasPlayerProfile ? "My Roster" : "Champions";
+  const rosterLabel = "Champions";
 
   // Automatically close mobile menu on route change using the render-sync pattern
   const [prevPathname, setPrevPathname] = useState(pathname);
@@ -59,10 +60,10 @@ export default function Header({ userButton, isInAlliance, hasPlayerProfile }: {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-3 text-sm font-medium">
-            <Link href="/profile/roster" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors px-2 py-2">
+            <CollectionNavLink section="champions" canUsePersonal={hasPlayerProfile} className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors px-2 py-2">
               <LayoutGrid className="w-4 h-4" />
               {rosterLabel}
-            </Link>
+            </CollectionNavLink>
 
             <Link href="/planning/quests" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors px-2 py-2">
               <MapIcon className="w-4 h-4" />
@@ -142,10 +143,10 @@ export default function Header({ userButton, isInAlliance, hasPlayerProfile }: {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48 bg-slate-950 border-slate-800 text-slate-300">
                 <DropdownMenuItem asChild>
-                  <Link href="/relics" className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
+                  <CollectionNavLink section="relics" canUsePersonal={hasPlayerProfile} className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
                     <Gem className="w-4 h-4 text-slate-300" />
                     <span>Relics</span>
-                  </Link>
+                  </CollectionNavLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                   <Link href="/search" className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
@@ -198,13 +199,14 @@ export default function Header({ userButton, isInAlliance, hasPlayerProfile }: {
                                         <Search className="w-5 h-5" />
                                         Search
                                       </Link>
-                                      <Link
-                                          href="/profile/roster"
+                                      <CollectionNavLink
+                                          section="champions" canUsePersonal={hasPlayerProfile}
+                                          onClick={() => setIsMobileMenuOpen(false)}
                                           className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
                                       >
                                         <LayoutGrid className="w-5 h-5" />
                                         {rosterLabel}
-                                      </Link>
+                                      </CollectionNavLink>
                                       <Link
                                           href="/planning/quests"
                                           className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
@@ -212,10 +214,10 @@ export default function Header({ userButton, isInAlliance, hasPlayerProfile }: {
                                         <MapIcon className="w-5 h-5" />
                                         Quest Planner
                                       </Link>
-                                      <Link href="/relics" className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors">
+                                      <CollectionNavLink section="relics" canUsePersonal={hasPlayerProfile} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors">
                                         <Gem className="w-5 h-5" />
                                         Relics
-                                      </Link>
+                                      </CollectionNavLink>
                                       <Link
                                           href="/war-videos"
                                           className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"

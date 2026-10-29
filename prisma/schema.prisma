@@ -62,6 +62,7 @@ model GameRelicRarity {
   raw             Json
   relic           GameRelic @relation(fields: [relicId], references: [id], onDelete: Cascade)
   prestige        GameRelicPrestige?
+  ownedRelics     PlayerRelic[]
 
   @@id([relicId, sourceRarityId])
   @@unique([relicId, stars])
@@ -92,6 +93,22 @@ model GameRelicSocketItem {
   isCurrent    Boolean @default(true)
   importId     String
   importedFrom GameRelicImport @relation(fields: [importId], references: [id], onDelete: Restrict)
+}
+
+// Inventory belongs to one game profile, retaining the exact source variant/rarity.
+model PlayerRelic {
+  id             String   @id @default(cuid())
+  playerId       String
+  relicId        String
+  sourceRarityId String
+  rank           Int
+  sigLevel       Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  player         Player   @relation(fields: [playerId], references: [id], onDelete: Cascade)
+  rarity         GameRelicRarity @relation(fields: [relicId, sourceRarityId], references: [relicId, sourceRarityId], onDelete: Restrict)
+
+  @@unique([playerId, relicId, sourceRarityId])
 }
 
 model Ability {
@@ -445,6 +462,7 @@ model Player {
   updatedAt          DateTime                    @updatedAt
   championPrestige   Int?
   relicPrestige      Int?
+  relicPrestigeFromInventory Boolean             @default(false)
   summonerPrestige   Int?
   allianceId         String?
   isBotAdmin         Boolean                     @default(false)
@@ -466,6 +484,7 @@ model Player {
   prestigeHistory    PrestigeLog[]
   createdQuestPlans  QuestPlan[]                 @relation("QuestCreator")
   roster             Roster[]
+  relics             PlayerRelic[]
   uploadTokens       UploadToken[]
   encounterVideos    QuestEncounterVideo[]
   defensePlacements  WarDefensePlacement[]

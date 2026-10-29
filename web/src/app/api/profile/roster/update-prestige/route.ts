@@ -1,3 +1,5 @@
+import { recordChampionPrestige } from "@cerebro/core/services/playerPrestigeService";
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
@@ -19,37 +21,9 @@ export const POST = withRouteContext(async (req: Request) => {
     const body = await req.json();
     const { championPrestige } = updateSchema.parse(body);
 
-    // Only update if it changed significantly (more than 1 point)
-    if (Math.abs(championPrestige - (player.championPrestige || 0)) > 1) {
-      logger.info({ playerId: player.id, old: player.championPrestige, new: championPrestige }, "Updating player prestige via POST");
-      
-      const newSummonerPrestige = (player.summonerPrestige === player.championPrestige || !player.summonerPrestige) 
-        ? championPrestige + (player.relicPrestige || 0)
-        : player.summonerPrestige;
-
-      try {
-        await prisma.$transaction([
-          prisma.player.update({
-            where: { id: player.id },
-            data: { 
-              championPrestige: championPrestige,
-              summonerPrestige: newSummonerPrestige
-            }
-          }),
-          prisma.prestigeLog.create({
-            data: {
-              playerId: player.id,
-              championPrestige: championPrestige,
-              summonerPrestige: newSummonerPrestige,
-              relicPrestige: player.relicPrestige || 0
-            }
-          })
-        ]);
-      } catch (dbError) {
-        logger.error({ playerId: player.id, error: dbError }, "Error in prestige update transaction");
-        throw dbError; // Propagate to outer catch for 500 response
-      }
-    }
+    await recordChampionPrestige(prisma, player.id, championPrestige);
+    revalidatePath("/profile");
+    revalidatePath("/relics", "layout");
 
     return NextResponse.json({ success: true });
   } catch (error) {

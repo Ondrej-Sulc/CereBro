@@ -1,7 +1,13 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { getRelicDetails, getRelicFamilyDetails } from "@/lib/data/relics";
+import {
+  getRelicCatalog,
+  getRelicDetails,
+  getRelicFamilyDetails,
+} from "@/lib/data/relics";
 import { RelicDetails } from "./relic-details";
+import { getPlayerRelicInventory } from "@/lib/data/player-relics";
+import { RelicInventoryProvider } from "@/components/relics/relic-inventory";
 export const dynamic = "force-dynamic";
 export async function generateMetadata({
   params,
@@ -20,7 +26,24 @@ export default async function RelicPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const family = await getRelicFamilyDetails(slug);
+  const [family, inventory, catalog] = await Promise.all([
+    getRelicFamilyDetails(slug),
+    getPlayerRelicInventory(),
+    getRelicCatalog(),
+  ]);
   if (!family) notFound();
-  return <RelicDetails family={family} />;
+  const ids = new Set(family.members.map((member) => member.relic.id));
+  const choices = catalog.families
+    .flatMap((group) => group.variants)
+    .filter((relic) => ids.has(relic.id));
+  return (
+    <RelicInventoryProvider
+      key={inventory.profile?.id ?? "guest"}
+      initial={inventory}
+      choices={choices}
+      attributeIcons={catalog.attributeIcons}
+    >
+      <RelicDetails family={family} />
+    </RelicInventoryProvider>
+  );
 }
