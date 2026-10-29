@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupRelicReviewVariants, sharedRelicReviewBuild, summarizeRelicReview, type RelicReviewRow } from './relic-screenshot-review';
+import { groupRelicReviewVariants, selectRelicReviewBuild, sharedRelicReviewBuild, summarizeRelicReview, type RelicReviewRow } from './relic-screenshot-review';
 
 function row(id: string, change: Partial<RelicReviewRow> = {}): RelicReviewRow {
   return { id, name:'Ant-Man', rating:1962, stars:6, awakened:true, className:'SCIENCE',
@@ -9,6 +9,37 @@ function row(id: string, change: Partial<RelicReviewRow> = {}): RelicReviewRow {
     choice:null, included:false, skipped:false, ...change };
 }
 describe('screenshot review decisions', () => {
+  const owned = {relicId:'ant',stars:6,rank:4,sigLevel:87,current:true,prestige:1962};
+  it('reuses an exact owned build to resolve a rank/signature collision', () => {
+    expect(selectRelicReviewBuild(row('ant'), [owned])).toEqual({choice:1,selectionSource:'collection'});
+    expect(selectRelicReviewBuild(row('ant'), [])).toEqual({choice:null,selectionSource:null});
+  });
+  it.each([
+    {relicId:'other'}, {stars:5}, {rank:5}, {sigLevel:88}, {current:false}, {prestige:null}, {prestige:1963},
+  ])('does not reuse a different or stale saved build (%j)', change => {
+    expect(selectRelicReviewBuild(row('ant'), [{...owned,...change}]).choice).toBeNull();
+  });
+  it('does not infer an unclear variant from which relics the player owns', () => {
+    const base = row('unclear', {attributeStatus:'unclear'});
+    const other = base.matches.map(m => ({...m,relicId:'other',secondaryAttribute:'Armor'}));
+    const unclear = {...base,matches:[...base.matches,...other]};
+    expect(selectRelicReviewBuild(unclear,[owned]).choice).toBeNull();
+    expect(selectRelicReviewBuild(unclear,[owned],'ant')).toEqual({choice:1,selectionSource:'collection'});
+    expect(selectRelicReviewBuild(unclear,[owned],'other').choice).toBeNull();
+    expect(selectRelicReviewBuild({...unclear,attributeStatus:'conflict'},[owned],'ant').choice).toBeNull();
+  });
+  it('keeps rarity decisions open and does not assume a saved rank after progression changes', () => {
+    const base = row('ant');
+    expect(selectRelicReviewBuild({...base,stars:null,matches:[...base.matches,{...base.matches[1],stars:5}]},[owned]).choice).toBeNull();
+    expect(selectRelicReviewBuild({...base,rating:2000,matches:base.matches.map(m=>({...m,sigLevel:m.sigLevel+1}))},[owned]).choice).toBeNull();
+    expect(selectRelicReviewBuild({...base,matches:[]},[owned]).choice).toBeNull();
+  });
+  it('retains normal single-match selection and uses saved values only for one unambiguous owned build', () => {
+    const single=row('single',{matches:[row('ant').matches[1]]});
+    expect(selectRelicReviewBuild(single,[])).toEqual({choice:0,selectionSource:'screenshot'});
+    expect(selectRelicReviewBuild({...single,attributeStatus:'unclear'},[owned]).choice).toBeNull();
+    expect(selectRelicReviewBuild(row('ant'),[owned,{...owned,rank:3,sigLevel:187}]).choice).toBeNull();
+  });
   it('offers one variant choice across rarities while preserving exact match indices for saving', () => {
     const base = row('sample').matches[0];
     const matches = [
