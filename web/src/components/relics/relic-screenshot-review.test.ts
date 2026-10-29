@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { summarizeRelicReview, type RelicReviewRow } from './relic-screenshot-review';
+import { groupRelicReviewVariants, sharedRelicReviewBuild, summarizeRelicReview, type RelicReviewRow } from './relic-screenshot-review';
 
 function row(id: string, change: Partial<RelicReviewRow> = {}): RelicReviewRow {
   return { id, name:'Ant-Man', rating:1962, stars:6, awakened:true, className:'SCIENCE',
@@ -9,6 +9,25 @@ function row(id: string, change: Partial<RelicReviewRow> = {}): RelicReviewRow {
     choice:null, included:false, skipped:false, ...change };
 }
 describe('screenshot review decisions', () => {
+  it('offers one variant choice across rarities while preserving exact match indices for saving', () => {
+    const base = row('sample').matches[0];
+    const matches = [
+      {...base, relicId:'armor', stars:7, rank:1, sigLevel:0, secondaryAttribute:'Armor'},
+      {...base, relicId:'energy', stars:7, rank:1, sigLevel:0, secondaryAttribute:'Energy Resistance'},
+      {...base, relicId:'armor', stars:6, rank:4, sigLevel:100, secondaryAttribute:'Armor'},
+    ];
+    const variants = groupRelicReviewVariants(matches);
+    expect(variants.map(v => [v.relicId, v.choices.map(c => c.index)])).toEqual([['armor',[0,2]],['energy',[1]]]);
+    expect(variants[1].choices[0].match).toEqual(matches[1]);
+    expect(sharedRelicReviewBuild(matches)).toBeNull();
+  });
+  it('shows a shared build once when only the variant needs a decision', () => {
+    const base = {...row('sample').matches[0], stars:7, rank:1, sigLevel:0};
+    const matches = ['Armor','Physical Penetration','Energy Resistance'].map(attribute => ({...base, relicId:attribute, secondaryAttribute:attribute}));
+    expect(sharedRelicReviewBuild(matches)).toEqual({stars:7,rank:1,sigLevel:0});
+    expect(sharedRelicReviewBuild([])).toBeNull();
+    expect(sharedRelicReviewBuild([...matches,{...base, sigLevel:1}])).toBeNull();
+  });
   it('separates choices, unmatched, ready and explicitly skipped cards without losing their order', () => {
     const summary = summarizeRelicReview([row('ready',{choice:1,included:true}),row('pick'),row('missing',{matches:[]}),row('skip',{skipped:true})]);
     expect(summary.decisions.map(r=>r.id)).toEqual(['pick']);

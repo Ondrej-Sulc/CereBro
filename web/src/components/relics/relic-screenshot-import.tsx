@@ -5,21 +5,24 @@ import { Camera, Check, ChevronDown, ImagePlus, Images, Loader2, ScanLine, Shiel
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useRelicInventory } from './relic-inventory';
 import { RelicScreenshotPreview } from './relic-screenshot-preview';
+import { RelicScreenshotChoices } from './relic-screenshot-choices';
+import { RelicAttributeGlyph } from './relic-picker';
+import type { RelicAttributeIcon } from '@/lib/relic-attribute-icons';
 import { summarizeRelicReview, type RelicReviewRow } from './relic-screenshot-review';
 import type { RelicScreenshotRow } from '@cerebro/core/domain/relic-screenshot';
 import type { OwnedRelic, RelicInventorySnapshot } from '@cerebro/core/domain/player-relics';
 import styles from './relic-screenshot-import.module.css';
 
-export function RelicScreenshotImport({ disabled = false }: { disabled?: boolean }) {
+export function RelicScreenshotImport({ disabled = false, attributeIcons }: { disabled?: boolean; attributeIcons: Record<string, RelicAttributeIcon> }) {
   const inventory = useRelicInventory();
   const [open, setOpen] = useState(false);
   return <>
     <button className={styles.launch} disabled={disabled} onClick={() => setOpen(true)}><Camera size={17} /> Import screenshots</button>
-    {open && inventory.profile && <ScreenshotDialog key={inventory.profile.id} onClose={() => setOpen(false)} />}
+    {open && inventory.profile && <ScreenshotDialog key={inventory.profile.id} attributeIcons={attributeIcons} onClose={() => setOpen(false)} />}
   </>;
 }
 
-function ScreenshotDialog({ onClose }: { onClose: () => void }) {
+function ScreenshotDialog({ onClose, attributeIcons }: { onClose: () => void; attributeIcons: Record<string, RelicAttributeIcon> }) {
   const { profile, entries, prestige, updateSnapshot } = useRelicInventory();
   const [rows, setRows] = useState<RelicReviewRow[]>([]);
   const [revision, setRevision] = useState(prestige?.revision ?? '');
@@ -49,10 +52,10 @@ function ScreenshotDialog({ onClose }: { onClose: () => void }) {
     requestAnimationFrame(() => document.getElementById(next ? `review-card-${next.id}` : 'relic-review-ready')?.focus({preventScroll:true}));
   }
   function choose(row: RelicReviewRow, choice: number) {
-    patch(row.id, { choice, included:true, skipped:false });
+    patch(row.id, { choice, included:true, skipped:false, pendingVariantId:null });
     setEditingId(null);
     const match = row.matches[choice];
-    setAnnouncement(`${row.name}: rank ${match.rank}, signature ${match.sigLevel} selected.`);
+    setAnnouncement(`${row.name}${match.secondaryAttribute ? `, ${match.secondaryAttribute}` : ''}: rank ${match.rank}, signature ${match.sigLevel} selected.`);
     focusNext(row.id);
   }
   function leaveOut(row: RelicReviewRow) {
@@ -139,8 +142,9 @@ function ScreenshotDialog({ onClose }: { onClose: () => void }) {
   function card(row: RelicReviewRow, compact = false) {
     const match = row.choice === null ? null : row.matches[row.choice];
     const existing = match ? entries.find(entry => entry.relicId === match.relicId && entry.stars === match.stars) : undefined;
-    return <ReviewCard key={row.id} row={row} compact={compact} expanded={editingId === row.id} disabled={!!busy}
+    return <ReviewCard key={row.id} attributeIcons={attributeIcons} row={row} compact={compact} expanded={editingId === row.id} disabled={!!busy}
       conflict={review.conflictIds.has(row.id)} existing={existing} onChoose={choice => choose(row,choice)} onLeaveOut={() => leaveOut(row)}
+      onVariantChange={relicId => { patch(row.id, {pendingVariantId:relicId, choice:null, included:false}); setEditingId(null); }}
       onEdit={() => setEditingId(editingId === row.id ? null : row.id)} />;
   }
   return <Dialog open onOpenChange={value => { if (!value && !operation.current) onClose(); }}>
@@ -157,7 +161,7 @@ function ScreenshotDialog({ onClose }: { onClose: () => void }) {
             <div className={styles.metrics}>
               <a href="#relic-review-decisions" className={styles.decisionMetric}><TriangleAlert size={18} /><strong>{review.decisions.length}</strong><span>Need a choice</span></a>
               <a href="#relic-review-ready" className={styles.readyMetric}><Check size={18} /><strong>{review.ready.length}</strong><span>Ready cards</span></a>
-              <a href={review.unmatched.length ? '#relic-review-unmatched' : undefined}><ScanLine size={18} /><strong>{review.unmatched.length}</strong><span>Unmatched</span></a>
+              <a href={review.unmatched.length ? '#relic-review-unmatched' : undefined}><ScanLine size={18} /><strong>{review.unmatched.length}</strong><span>Manual entry</span></a>
             </div>
           </section>}
           <label className={`${styles.upload} ${rows.length ? styles.uploadCompact : ''} ${busy ? styles.uploadBusy : ''}`}>
@@ -170,13 +174,13 @@ function ScreenshotDialog({ onClose }: { onClose: () => void }) {
           {errors.map((error,index) => <p role="alert" key={index} className={styles.error}>{error}</p>)}
           {!!rows.length && <>
             <section id="relic-review-decisions" className={styles.section} aria-labelledby="relic-decision-heading">
-              <div className={styles.sectionHeading}><div><h2 id="relic-decision-heading">Needs a choice <span>{review.decisions.length}</span></h2><p>Tap the rank that matches your relic. Its signature is shown underneath.</p></div></div>
+              <div className={styles.sectionHeading}><div><h2 id="relic-decision-heading">Needs a choice <span>{review.decisions.length}</span></h2><p>Choose any unclear variant, then the matching rank and signature.</p></div></div>
               {review.decisions.length ? <div className={styles.cards}>{review.decisions.map(row => card(row))}</div> : <div className={styles.allDone}><Check size={18} />All build choices resolved.</div>}
             </section>
-            {!!review.unmatched.length && <section id="relic-review-unmatched" className={styles.section} aria-labelledby="relic-unmatched-heading"><div className={styles.sectionHeading}><div><h2 id="relic-unmatched-heading">Couldn’t match <span>{review.unmatched.length}</span></h2><p>Leave these out and add them manually, or try a clearer screenshot.</p></div></div><div className={styles.cards}>{review.unmatched.map(row => card(row))}</div></section>}
+            {!!review.unmatched.length && <section id="relic-review-unmatched" className={styles.section} aria-labelledby="relic-unmatched-heading"><div className={styles.sectionHeading}><div><h2 id="relic-unmatched-heading">Needs manual entry <span>{review.unmatched.length}</span></h2><p>These cards will be left out of this import. Use Add relics to enter their in-game rank and signature.</p></div></div><div className={styles.cards}>{review.unmatched.map(row => card(row))}</div></section>}
             <section id="relic-review-ready" tabIndex={-1} className={styles.section} aria-labelledby="relic-ready-heading"><div className={styles.sectionHeading}><div><h2 id="relic-ready-heading"><Check size={17} />Ready to import <span>{review.ready.length}</span></h2><p>Review the matched builds. You can change or leave out any card.</p></div></div><div className={styles.readyCards}>{review.ready.map(row => card(row,true))}</div>{!review.ready.length && <p className={styles.empty}>Your selected builds will appear here.</p>}</section>
             {!!review.skipped.length && <details className={styles.skipped}><summary>Left out ({review.skipped.length})<ChevronDown size={15} /></summary>{review.skipped.map(row => <div key={row.id}><span>{row.name}<small>{row.rating.toLocaleString('en-US')} rating</small></span><button disabled={!!busy} onClick={() => patch(row.id,{skipped:false,included:row.choice !== null})}>Restore</button></div>)}</details>}
-            <details className={styles.help}><summary>How are builds matched?<ChevronDown size={14} /></summary><p>Matches assume max-level unlocked runes. A rating can match more than one rank and signature. Statcast attribute icons identify the variant; unclear icons need your choice. Matching duplicates are saved once.</p></details>
+            <details className={styles.help}><summary>How are builds matched?<ChevronDown size={14} /></summary><p>Rank and signature matching assumes all unlocked runes are fully leveled for the current rank. Partially leveled runes change prestige, so add those relics manually using their in-game rank and signature. Even with maxed runes, a rating can match more than one build. Statcast attribute icons identify the variant; unclear icons need your choice. Matching duplicates are saved once.</p></details>
           </>}
         </div>
         {!!rows.length && <footer className={styles.footer}>
@@ -188,33 +192,35 @@ function ScreenshotDialog({ onClose }: { onClose: () => void }) {
   </Dialog>;
 }
 
-function ReviewCard({row, compact, expanded, disabled, conflict, existing, onChoose, onLeaveOut, onEdit}: {
+function ReviewCard({row, compact, expanded, disabled, conflict, existing, attributeIcons, onChoose, onVariantChange, onLeaveOut, onEdit}: {
+  attributeIcons: Record<string, RelicAttributeIcon>;
   row:RelicReviewRow; compact:boolean; expanded:boolean; disabled:boolean; conflict:boolean; existing?:OwnedRelic;
   onChoose:(choice:number) => void; onLeaveOut:() => void; onEdit:() => void;
+  onVariantChange:(relicId:string) => void;
 }) {
   const match = row.choice === null ? null : row.matches[row.choice];
-  const groups = new Map<string, { name:string; choices:{index:number; rank:number; sigLevel:number}[] }>();
-  row.matches.forEach((option,index) => {
-    const key = `${option.relicId}:${option.stars}`;
-    const group = groups.get(key) ?? {name:`${option.stars}★ · ${option.secondaryAttribute ?? option.name}${option.secondaryAttribute && !row.className ? ` · ${option.name}` : ''}`,choices:[]};
-    group.choices.push({index,rank:option.rank,sigLevel:option.sigLevel}); groups.set(key,group);
-  });
+  const hasVariantChoices = new Set(row.matches.map(option => option.relicId)).size > 1;
   return <article id={`review-card-${row.id}`} tabIndex={-1} aria-label={`${row.name} ${row.rating}`} className={`${styles.card} ${compact ? styles.compact : ''} ${conflict ? styles.conflict : ''} ${expanded ? styles.expanded : ''}`}>
     <div className={styles.cardOverview}>
       <RelicScreenshotPreview row={row} />
       <div className={styles.detail}><h3>{row.name}</h3>
         <p>{compact && match ? `${match.stars}★` : row.stars ? `${row.stars}★` : 'Rarity unclear'} · {row.className?.toLowerCase() ?? 'Class unclear'} · <strong>{row.rating.toLocaleString('en-US')}</strong></p>
-        {compact && match ? <p className={styles.matchedBuild}><Check size={13} />Rank {match.rank}<span>Sig {match.sigLevel}</span></p> : <span className={styles.cardBadge}>{row.matches.length ? conflict ? 'Build conflict' : 'Choose a build' : 'No exact match'}</span>}
-        {row.secondaryAttribute && <p className={styles.attribute}>{row.secondaryAttribute}</p>}
-        {compact && match?.secondaryAttribute && !row.secondaryAttribute && <p className={styles.attribute}>{match.secondaryAttribute}</p>}
+        {compact && match ? <p className={styles.matchedBuild}><Check size={13} />Rank {match.rank}<span>Sig {match.sigLevel}</span></p> : <span className={styles.cardBadge}>{row.matches.length ? conflict ? 'Build conflict' : hasVariantChoices && !row.pendingVariantId ? 'Choose a variant' : 'Choose a build' : 'Build not matched'}</span>}
+        {row.secondaryAttribute && <p className={styles.attribute}><RelicAttributeGlyph icon={attributeIcons[row.secondaryAttribute]} />{row.secondaryAttribute}</p>}
+        {compact && match?.secondaryAttribute && !row.secondaryAttribute && <p className={styles.attribute}><RelicAttributeGlyph icon={attributeIcons[match.secondaryAttribute]} />{match.secondaryAttribute}</p>}
       </div>
       <div className={styles.cardActions}>{compact && <button disabled={disabled} aria-expanded={expanded} onClick={onEdit}>{expanded ? 'Done' : 'Change'}</button>}<button disabled={disabled} onClick={onLeaveOut} aria-label={`Leave out ${row.name} ${row.rating}`} title="Leave out">{compact ? <X size={15} /> : 'Leave out'}</button></div>
     </div>
     {(!compact || expanded) && <div className={styles.cardBody}>
       {conflict && <p className={styles.warning}>These screenshots select different builds for the same relic. Match the choices or leave one out.</p>}
-      {row.attributeStatus === 'unclear' && <p className={styles.warning}>Check the secondary attribute against the original card’s icons.</p>}
+      {row.attributeStatus === 'unclear' && !hasVariantChoices && <p className={styles.warning}>Check the detected attribute against the original card’s icons.</p>}
       {row.attributeStatus === 'conflict' && <p className={styles.warning}>The icon and relic family disagree. Try a clearer screenshot or add this relic manually.</p>}
-      {row.matches.length ? <div className={`${styles.choiceGroups} ${groups.size > 1 && [...groups.values()].every(group => group.choices.length === 1) ? styles.variantGroups : ''}`}>{[...groups].map(([key,group]) => <fieldset key={key} className={styles.choiceGroup} disabled={disabled}><legend>{group.name}</legend><div className={styles.choices}>{group.choices.map(option => <button type="button" key={option.index} aria-label={`${group.name}, Rank ${option.rank}, Sig ${option.sigLevel}`} aria-pressed={row.choice === option.index} onClick={() => onChoose(option.index)}><strong>Rank {option.rank}</strong><span>Sig {option.sigLevel}</span>{row.choice === option.index && <Check size={14} />}</button>)}</div></fieldset>)}</div> : <p className={styles.warning}>No matching build was found. Check the screenshot and rune levels; this card won’t be imported.</p>}
+      {row.matches.length ? <RelicScreenshotChoices matches={row.matches} choice={row.choice} attributeIcons={attributeIcons}
+        disabled={disabled} showIdentity={!row.className} onChoose={onChoose} pendingVariantId={row.pendingVariantId ?? null} onVariantChange={onVariantChange} /> : <p className={styles.warning}>
+        {row.attributeStatus === 'recognized'
+          ? 'Relic and variant recognized, but rank and signature could not be matched. Matching assumes all unlocked runes are fully leveled for the current rank. If any runes are not maxed, use Add relics to enter the in-game rank and signature manually.'
+          : 'No matching build was found. Check the screenshot details. Matching assumes fully leveled runes; if any unlocked runes are not maxed, use Add relics to enter the in-game rank and signature manually.'}
+      </p>}
     </div>}
     {existing && <p className={styles.existing}>{match?.rank === existing.rank && match.sigLevel === existing.sigLevel ? 'Already in your collection.' : `Updates your rank ${existing.rank}, sig ${existing.sigLevel} relic.`}</p>}
   </article>;
