@@ -1,0 +1,192 @@
+{
+  "expected": [
+    "Special Damage",
+    "Special Damage",
+    "Critical Resistance",
+    "Critical Damage Rating",
+    "Physical Resistance",
+    "Armor",
+    "Critical Rating",
+    "Energy Penetration",
+    "Critical Rating",
+    "Critical Resistance",
+    "Energy Resistance",
+    "Physical Resistance",
+    "Critical Rating",
+    "Energy Penetration",
+    "Physical Resistance",
+    "Armor Penetration",
+    "Physical Penetration",
+    "Block Proficiency",
+    "Critical Damage Rating",
+    "Armor Penetration",
+    "Critical Damage Rating",
+    "Critical Resistance",
+    "Energy Penetration",
+    "Critical Rating",
+    "Energy Resistance",
+    "Armor",
+    "Energy Resistance",
+    "Critical Rating",
+    "Armor",
+    "Critical Resistance",
+    "Physical Resistance"
+  ],
+  "sources": [
+    {
+      "image": "15087-0",
+      "label": "CRUEL RELIC",
+      "rating": 2583
+    },
+    {
+      "image": "15087-1",
+      "label": "PRECISE RELIC",
+      "rating": 2129
+    },
+    {
+      "image": "15087-2",
+      "label": "TOUGH RELIC",
+      "rating": 1886
+    },
+    {
+      "image": "15087-3",
+      "label": "PRECISE RELIC",
+      "rating": 1867
+    },
+    {
+      "image": "15087-4",
+      "label": "STURDY RELIC",
+      "rating": 1856
+    },
+    {
+      "image": "15087-5",
+      "label": "STURDY RELIC",
+      "rating": 1856
+    },
+    {
+      "image": "15087-6",
+      "label": "STURDY RELIC",
+      "rating": 1856
+    },
+    {
+      "image": "15087-7",
+      "label": "STURDY RELIC",
+      "rating": 1856
+    },
+    {
+      "image": "15088-0",
+      "label": "SHIELDED RELIC",
+      "rating": 1856
+    },
+    {
+      "image": "15088-1",
+      "label": "SHIELDED RELIC",
+      "rating": 1856
+    },
+    {
+      "image": "15088-2",
+      "label": "PRECISE RELIC",
+      "rating": 1856
+    },
+    {
+      "image": "15088-3",
+      "label": "INSULATED RELIC",
+      "rating": 1856
+    },
+    {
+      "image": "15088-4",
+      "label": "INSULATED RELIC",
+      "rating": 1856
+    },
+    {
+      "image": "15088-5",
+      "label": "INSULATED RELIC",
+      "rating": 1856
+    },
+    {
+      "image": "15088-6",
+      "label": "INSULATED RELIC",
+      "rating": 1856
+    },
+    {
+      "image": "15088-7",
+      "label": "EXPERT RELIC",
+      "rating": 1856
+    },
+    {
+      "image": "15088-8",
+      "label": "CONDUCTIVE RELIC",
+      "rating": 1856
+    },
+    {
+      "image": "15088-9",
+      "label": "ARMOURED RELIC",
+      "rating": 1856
+    },
+    {
+      "image": "15090-0",
+      "label": "PIERCING RELIC",
+      "rating": 1284
+    },
+    {
+      "image": "15090-1",
+      "label": "EXPERT RELIC",
+      "rating": 1284
+    },
+    {
+      "image": "15090-2",
+      "label": "ARMOURED RELIC",
+      "rating": 1284
+    },
+    {
+      "image": "15091-0",
+      "label": "SHIELDED RELIC",
+      "rating": 1130
+    },
+    {
+      "image": "15091-1",
+      "label": "INSULATED RELIC",
+      "rating": 1122
+    },
+    {
+      "image": "15091-2",
+      "label": "CRUEL RELIC",
+      "rating": 1122
+    },
+    {
+      "image": "15092-0",
+      "label": "STURDY RELIC",
+      "rating": 1068
+    },
+    {
+      "image": "15092-1",
+      "label": "SHIELDED RELIC",
+      "rating": 1068
+    },
+    {
+      "image": "15092-2",
+      "label": "TOUGH RELIC",
+      "rating": 1014
+    },
+    {
+      "image": "15092-3",
+      "label": "SHIELDED RELIC",
+      "rating": 1014
+    },
+    {
+      "image": "15092-4",
+      "label": "PRECISE RELIC",
+      "rating": 1014
+    },
+    {
+      "image": "15092-5",
+      "label": "INSULATED RELIC",
+      "rating": 1014
+    },
+    {
+      "image": "15092-6",
+      "label": "ARMOURED RELIC",
+      "rating": 1014
+    }
+  ]
+}

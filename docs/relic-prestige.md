@@ -1,13 +1,13 @@
 # Relic prestige
 
-Status (26 October 2026): captured, imported locally and integrated into relic detail pages on `feat/relic-prestige`. No production import or deployment has been performed.
+Status: deployed with code and captured data on 26 October 2026 (PR #88). Per-profile relic tracking is being added separately; see `player-relics.md`.
 
 ## Coverage and meaning
 
 - 145 relic definitions, including individual Statcast secondary variants.
 - All 458 public relic/rarity combinations and 2,026 rank/rarity combinations.
 - 407,226 exact ratings: every supported rank and signature 0?200. Statcasts are limited to the catalog's public 5?7-star rarities.
-- Each rating uses **all unlocked runes at their maximum levels for that rank**. It is not a rating for arbitrary rune levels or a player's owned relic.
+- Each rating uses **all unlocked runes at their maximum levels for that rank**. Personal relic tracking uses the same assumption; arbitrary rune levels are not modeled.
 
 Rune levels affect prestige. For example, 6-star Ant-Man at rank 1/signature 0 returns 831 with maxed level-10 runes, versus 408 with level-1 runes. At maxed runes, signature 100 returns 1,202 and rank 5/signature 200 returns 2,527. These are direct game responses, not interpolations.
 
@@ -73,3 +73,7 @@ The first Statcast request also includes a fresh server process. Ant-Man is a ne
 Across 31 browser interactions, event-to-DOM updates took 3.6–7.4 ms: rank median 4.4 ms, signature median 4.9 ms, variant median 6.0 ms. There were no new relic-detail RSC requests and no observed long tasks during the measured repeated-interaction sequence. Exact displayed values and retained selections were checked.
 
 The embedded preview throttled animation-frame callbacks, so these measurements deliberately make no input-to-paint, INP or LCP claim. Real-device/network-throttled testing and deployed monitoring remain separate release follow-ups. Raw measurements are `performance-http.json` and `performance-browser.json` in the capture artifact directory. Cold loading is the main remaining performance opportunity; no code or database changes were made for this measurement pass.
+
+### Owned inventory aggregation (28 October 2026)
+
+My Relics now previews the highest 30 owned ratings across both relic types. After explicit top-30 confirmation, build mutations atomically update the profile relic/summoner totals and history. Incomplete/unknown-data inventories preserve recorded totals; manual edits or screenshot imports disable automation. See [personal relic inventory](player-relics.md#top-30-prestige) for activation, rounding, concurrency and source-drift behavior.

@@ -1,0 +1,35 @@
+.panel { margin-bottom: 24px; border: 1px solid #35415a; border-radius: 15px; background: linear-gradient(115deg, #1c233b, #101b29 75%); overflow: hidden; }
+.metrics { display: flex; flex-wrap: wrap; align-items: center; gap: 24px 36px; padding: 22px 24px; }
+.primaryMetric, .secondaryMetric { display: grid; gap: 5px; }
+.primaryMetric > span, .secondaryMetric > span { display: flex; align-items: center; gap: 8px; color: #b9c8dd; font-size: 12px; }
+.primaryMetric > span { color: #d4baff; }
+.primaryMetric strong { font-size: 32px; font-weight: 650; letter-spacing: -.7px; font-variant-numeric: tabular-nums; }
+.secondaryMetric strong { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.metrics small { color: #9bafca; font-size: 11px; }
+.action { margin-left: auto; display: grid; justify-items: end; gap: 10px; }
+.status, .active { display: flex; gap: 6px; align-items: center; color: #a9bbd2; font-size: 12px; }
+.active { color: #8edbb7; }
+.action button, .submit { border: 1px solid #7862a4; background: #3c2f5b; color: #efdeff; border-radius: 8px; padding: 10px 14px; font-size: 12px; font-weight: 600; }
+.action .quiet { background: transparent; border-color: #3b4960; color: #b8c7dc; }
+.action button:hover:not(:disabled), .submit:hover:not(:disabled) { background: #534071; }
+.action button:disabled, .submit:disabled { opacity: .5; cursor: not-allowed; }
+.footnote { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; border-top: 1px solid #29374d; padding: 12px 24px; font-size: 12px; line-height: 1.6; color: #a8bbd4; }
+.footnote small { font-size: 11px; color: #8fa4c0; }
+.dialog { color: #e0ebfa; background: #111c2c; border-color: #40506b; }
+.comparison { display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 13px; color: #b9c9df; }
+.comparison strong { display: flex; align-items: center; gap: 10px; color: #eadcff; font-size: 19px; font-variant-numeric: tabular-nums; }
+.confirm { display: flex; align-items: start; gap: 12px; padding: 14px; border: 1px solid #455477; background: #1b2940; border-radius: 10px; font-size: 13px; line-height: 1.6; cursor: pointer; }
+.confirm input { margin-top: 4px; accent-color: #c4a2fc; width: 17px; height: 17px; flex-shrink: 0; }
+.note { color: #9db0cc; font-size: 12px; line-height: 1.6; }
+.error { color: #f2baa2; padding: 10px 16px; font-size: 13px; }
+.submit { display: flex; justify-content: center; align-items: center; gap: 8px; }
+.panel button:focus-visible, .panel a:focus-visible, .dialog button:focus-visible, .confirm input:focus-visible { outline: 2px solid #c7a7ff; outline-offset: 3px; }
+@media (max-width: 700px) {
+  .metrics { gap: 20px; padding: 18px; }
+  .primaryMetric { flex: 1 0 100%; }
+  .secondaryMetric { flex: 1; }
+  .action { width: 100%; margin: 0; justify-items: start; }
+  .action button { width: 100%; }
+  .footnote { padding: 12px 18px; }
+  .comparison { flex-wrap: wrap; }
+}

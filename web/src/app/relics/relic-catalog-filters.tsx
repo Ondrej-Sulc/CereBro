@@ -1,6 +1,12 @@
 "use client";
 
-import { useId, useRef, useState, type CSSProperties } from "react";
+import {
+  useId,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import Image from "next/image";
 import {
   Check,
@@ -80,12 +86,16 @@ export function RelicCatalogFilters({
   onChange,
   visibleFamilies,
   visibleVariants,
+  resultSummary,
+  ownedTypeCounts,
 }: {
   data: RelicCatalogData;
   filters: RelicFilters;
   onChange: (filters: RelicFilters) => void;
   visibleFamilies: number;
   visibleVariants: number;
+  resultSummary?: ReactNode;
+  ownedTypeCounts?: Record<RelicFilters["type"], number>;
 }) {
   const id = useId();
   const searchRef = useRef<HTMLInputElement>(null);
@@ -102,7 +112,7 @@ export function RelicCatalogFilters({
       ),
     ),
   ].sort();
-  const typeCounts = {
+  const typeCounts = ownedTypeCounts ?? {
     all: data.families.length,
     battlecast: data.families.filter((family) => family.type === "battlecast")
       .length,
@@ -134,7 +144,7 @@ export function RelicCatalogFilters({
               <button
                 key={key}
                 type="button"
-                aria-label={`${label} (${typeCounts[key]} families)`}
+                aria-label={`${label} (${typeCounts[key]} ${ownedTypeCounts ? "owned" : "families"})`}
                 aria-pressed={filters.type === key}
                 onClick={() =>
                   onChange({
@@ -334,9 +344,14 @@ export function RelicCatalogFilters({
           aria-live="polite"
           aria-atomic="true"
         >
-          <strong>{visibleFamilies}</strong> of {data.families.length} families
-          <span aria-hidden="true">·</span>
-          {visibleVariants} {visibleVariants === 1 ? "variant" : "variants"}
+          {resultSummary ?? (
+            <>
+              <strong>{visibleFamilies}</strong> of {data.families.length}{" "}
+              families
+              <span aria-hidden="true">·</span>
+              {visibleVariants} {visibleVariants === 1 ? "variant" : "variants"}
+            </>
+          )}
         </p>
         {chips.length > 0 && (
           <div

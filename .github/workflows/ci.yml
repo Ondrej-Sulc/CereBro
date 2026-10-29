@@ -66,10 +66,13 @@ jobs:
       - name: Verify relic data, formatting and cloud image publication
         run: pnpm run test:relics
 
+      - name: Verify catalog and personal-view navigation
+        run: pnpm exec vitest run web/src/lib/collection-view.test.ts --maxWorkers=1
+
       - name: Verify exact relic source preservation in PostgreSQL
         env:
           RELIC_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/relic_tests
-        run: pnpm exec vitest run src/services/relicCatalogImportService.postgres.test.ts --maxWorkers=1
+        run: pnpm exec vitest run src/services/relicCatalogImportService.postgres.test.ts src/services/playerRelicService.postgres.test.ts --maxWorkers=1
 
       - name: Verify source-bound resistance classifications and discovery
         run: pnpm exec vitest run src/domain/champion-resistance.test.ts src/domain/champion-resistance-classification.test.ts src/domain/champion-resistance-plan.test.ts web/src/lib/champion-resistance.test.ts web/src/lib/roster-kit-options.test.ts web/src/lib/data/champion-resistances.test.ts web/src/lib/champion-ability-text.test.ts web/src/components/champions/effect-sources.test.ts 'web/src/app/api/champions/[slug]/kit/route.test.ts' --maxWorkers=1

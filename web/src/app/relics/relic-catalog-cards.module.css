@@ -20,6 +20,20 @@
   outline: 2px solid #d8c5ff;
   outline-offset: 4px;
 }
+.cardLink {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+.cardLink:focus-visible {
+  outline: 2px solid #d8c5ff;
+  outline-offset: -3px;
+  border-radius: 17px;
+}
+.cardAction {
+  padding: 0 14px 14px;
+}
 .stage {
   position: relative;
   display: flex;

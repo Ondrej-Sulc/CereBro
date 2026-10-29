@@ -1,5 +1,7 @@
 'use server';
 
+import { recordPlayerPrestige } from "@cerebro/core/services/playerPrestigeService";
+
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
@@ -183,6 +185,8 @@ export const switchProfile = withActionContext('switchProfile', async (profileId
   ]);
 
   revalidatePath("/profile", "layout");
+  revalidatePath("/champions");
+  revalidatePath("/relics", "layout");
   return { success: true };
 });
 
@@ -197,32 +201,16 @@ export const updateRelicPrestige = withActionContext('updateRelicPrestige', asyn
     return { error: "Profile not found" };
   }
 
-  if (value < 0 || value > 20000) {
+  if (!Number.isSafeInteger(value) || value < 0 || value > 20000) {
     return { error: "Invalid prestige value (must be between 0 and 20000)" };
   }
 
   logger.info({ userId: user.id, profileId, oldRelicPrestige: profile.relicPrestige, newRelicPrestige: value }, "Updating relic prestige");
   
-  const newSummonerPrestige = (profile.championPrestige || 0) + value;
+  await recordPlayerPrestige(prisma, profileId, { relicPrestige: value });
 
-  await prisma.$transaction([
-    prisma.player.update({
-      where: { id: profileId },
-      data: {
-        relicPrestige: value,
-        summonerPrestige: newSummonerPrestige
-      }
-    }),
-    prisma.prestigeLog.create({
-      data: {
-        playerId: profileId,
-        summonerPrestige: newSummonerPrestige,
-        championPrestige: profile.championPrestige || 0,
-        relicPrestige: value,
-      }
-    }),
-  ]);
-
+  revalidatePath("/relics", "layout");
+  revalidatePath(`/player/${profileId}`);
   revalidatePath("/profile");
   return { success: true };
 });

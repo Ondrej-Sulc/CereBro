@@ -1,3 +1,4 @@
+import { recordPlayerPrestige } from "../../services/playerPrestigeService";
 import {
   MessageFlags,
   ContainerBuilder,
@@ -126,24 +127,10 @@ export async function updatePrestige(params: {
   if (isValid) {
     const oldPrestige = player.summonerPrestige;
 
-    await prisma.$transaction([
-      prisma.player.update({
-        where: { id: player.id },
-        data: {
-          summonerPrestige: finalSummonerPrestige,
-          championPrestige: finalChampionPrestige,
-          relicPrestige: finalRelicPrestige,
-        },
-      }),
-      prisma.prestigeLog.create({
-        data: {
-          playerId: player.id,
-          summonerPrestige: finalSummonerPrestige,
-          championPrestige: finalChampionPrestige,
-          relicPrestige: finalRelicPrestige,
-        },
-      }),
-    ]);
+    await recordPlayerPrestige(prisma, player.id, {
+      relicPrestige: finalRelicPrestige,
+      championPrestige: finalChampionPrestige,
+    });
 
     const prestigeChange =
       oldPrestige && oldPrestige > 0 ? summonerPrestige! - oldPrestige : 0;
@@ -159,7 +146,7 @@ export async function updatePrestige(params: {
       `🏆 TOP 30 Prestige: **${summonerPrestige}** ${changeString}\n` +
       `⚔️ Champion Prestige: **${championPrestige}**\n` +
       `🔮 Relic Prestige: **${relicPrestige}**\n` +
-      `\n*Prestige has been updated for ${player.ingameName}.*`;
+      `\n*Prestige has been updated for ${player.ingameName}. Relic prestige now uses this imported value; automatic tracking can be enabled in My Relics.*`;
 
     const container = new ContainerBuilder();
     container.setAccentColor(0xffd700); // Gold color for prestige

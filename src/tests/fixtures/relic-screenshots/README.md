@@ -1,0 +1,11 @@
+# Relic screenshot fixture
+
+`cards.webp` is a cropped first row of the user-supplied 15087.png (28 October 2026). The account header and currency information are excluded. It contains six actual game relic cards, including Statcasts, two Cosmic Egg rarities, and Ant-Man. The small bound-champion portraits are intentionally retained to catch recognition of the wrong entity.
+
+`cards.ocr.json` contains the corresponding Google Vision word boxes, translated into crop coordinates. Tests inject these recorded OCR results and do not call Google. `catalog.json` contains the relevant current relic definitions and directly captured prestige curves from the local game catalog; there are no player records.
+
+The user independently confirmed the 6-star Ant-Man with rating 1,962 is rank 4, signature 87. The same captured curve also matches rank 3, signature 187. Both must remain available until the user chooses. The other cards are recognition samples, not independently confirmed rank/signature ground truth.
+
+`attribute-icons.png` contains 31 cropped secondary glyphs from the six supplied screenshots (15087–15092), at their original pixel scale with two pixels of padding per tile. `attribute-icons.json` records visually checked identities and source card/rating references. The tests compare shapes rather than tile colors; Physical Penetration in tile 16 and Block Proficiency in tile 17 deliberately remain unrecognized at the original scale. Resized fixtures must never produce a wrong accepted label. These images contain no account header, currency or player records.
+
+`tech-cards.webp` is the first row of the supplied 15133.png, cropped below the account header. Its cached OCR (`tech-cards.ocr.json`) and relevant source catalog (`tech-catalog.json`) cover Cruel, three Sturdy variants, Hulkbuster and Sentinel. Hulkbuster's six-star cyan frame is visible near the star row but obscured higher up by the relic artwork; this checks generic frame sampling. A derived test obscures the frame and requires rarity to remain unknown even though prestige matches exist. All three Sturdy secondary icons must stay distinct. These build candidates are not independently confirmed rank/signature ground truth.

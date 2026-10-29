@@ -7,12 +7,12 @@ import { useRouter } from "next/navigation";
 import { VirtuosoGrid } from "react-virtuoso";
 import { Champion } from "@/types/champion";
 import Link from "next/link";
-import { Upload, TrendingUp, ChevronDown, Share2, Grid3X3, Swords, LogIn } from "lucide-react";
+import { Upload, TrendingUp, ChevronDown, Share2, Grid3X3, Swords } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { Player, Alliance } from "@prisma/client";
-import { signInAction } from "@/app/actions/auth";
+import { CollectionHeading, useCollectionState, useIsCollectionScreen } from "@/components/collections/collection-navigation";
 
 // Local imports
 import { ProfileRosterEntry, Recommendation, SigRecommendation, PotentialRecommendation, PrestigePoint, PrestigeInsightTab, RosterSortField, SortDirection } from "./types";
@@ -189,19 +189,20 @@ export function RosterView({
   const router = useRouter();
   const { toast } = useToast();
   const isChampionsCatalog = variant === "champions";
+  const isCollectionScreen = useIsCollectionScreen();
   const enablePrestigeInsights = !isChampionsCatalog && !!player;
   const effectiveCanEdit = canEdit && !isChampionsCatalog && !!player;
   const effectiveCanManageAttackReservations = canManageAttackReservations && !isChampionsCatalog;
 
   const [roster, setRoster] = useState<ProfileRosterEntry[]>(initialRoster);
-  const [search, setSearch] = useState("");
-  const [filterClasses, setFilterClasses] = useState<ChampionClass[]>([]);
-  const [filterStars, setFilterStars] = useState<number[]>([]);
-  const [filterRanks, setFilterRanks] = useState<number[]>([]);
-  const [filterAscensionLevels, setFilterAscensionLevels] = useState<number[]>([]);
-  const [sortBy, setSortBy] = useState<RosterSortField>(enablePrestigeInsights ? "PRESTIGE" : "NAME");
-  const [sortDirection, setSortDirection] = useState<SortDirection>(enablePrestigeInsights ? "DESC" : "ASC");
-  const [showUnowned, setShowUnowned] = useState(true);
+  const [search, setSearch] = useCollectionState("search", "", true);
+  const [filterClasses, setFilterClasses] = useCollectionState<ChampionClass[]>("classes", [], true);
+  const [filterStars, setFilterStars] = useCollectionState<number[]>("stars", []);
+  const [filterRanks, setFilterRanks] = useCollectionState<number[]>("ranks", []);
+  const [filterAscensionLevels, setFilterAscensionLevels] = useCollectionState<number[]>("ascension", []);
+  const [sortBy, setSortBy] = useCollectionState<RosterSortField>("sort", enablePrestigeInsights ? "PRESTIGE" : "NAME");
+  const [sortDirection, setSortDirection] = useCollectionState<SortDirection>("direction", enablePrestigeInsights ? "DESC" : "ASC");
+  const [showUnowned, setShowUnowned] = useCollectionState("unowned", isChampionsCatalog || !isCollectionScreen);
   const [editingItem, setEditingItem] = useState<ProfileRosterEntry | null>(null);
   const [quickItem, setQuickItem] = useState<ProfileRosterEntry | null>(null);
   const [showInsights, setShowInsights] = useState(enablePrestigeInsights ? initialShowInsights : false);
@@ -221,19 +222,19 @@ export function RosterView({
   const lastFetchedParams = useRef<string | null>(null);
 
   // Filter States
-  const [viewMode, setViewMode] = useState<'view' | 'edit'>('view');
-  const [tagFilter, setTagFilter] = useState<string[]>([]);
-  const [tagLogic, setTagLogic] = useState<'AND' | 'OR'>('AND');
-  const [abilityCategoryFilter, setAbilityCategoryFilter] = useState<string[]>([]);
-  const [abilityCategoryLogic, setAbilityCategoryLogic] = useState<'AND' | 'OR'>('OR');
-  const [abilityFilter, setAbilityFilter] = useState<string[]>([]);
-  const [abilityLogic, setAbilityLogic] = useState<'AND' | 'OR'>('AND');
-  const [effectForms, setEffectForms] = useState<EffectForm[]>([]);
-  const [effectDirections, setEffectDirections] = useState<EffectDirection[]>([]);
-  const [immunityFilter, setImmunityFilter] = useState<string[]>([]);
-  const [includeResistances, setIncludeResistances] = useState(true);
-  const [immunityLogic, setImmunityLogic] = useState<'AND' | 'OR'>('AND');
-  const [minResistancePotency, setMinResistancePotency] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useCollectionState<'view' | 'edit'>('editMode', 'view');
+  const [tagFilter, setTagFilter] = useCollectionState<string[]>('tags', []);
+  const [tagLogic, setTagLogic] = useCollectionState<'AND' | 'OR'>('tagLogic', 'AND');
+  const [abilityCategoryFilter, setAbilityCategoryFilter] = useCollectionState<string[]>('categories', []);
+  const [abilityCategoryLogic, setAbilityCategoryLogic] = useCollectionState<'AND' | 'OR'>('categoryLogic', 'OR');
+  const [abilityFilter, setAbilityFilter] = useCollectionState<string[]>('abilities', []);
+  const [abilityLogic, setAbilityLogic] = useCollectionState<'AND' | 'OR'>('abilityLogic', 'AND');
+  const [effectForms, setEffectForms] = useCollectionState<EffectForm[]>('forms', []);
+  const [effectDirections, setEffectDirections] = useCollectionState<EffectDirection[]>('directions', []);
+  const [immunityFilter, setImmunityFilter] = useCollectionState<string[]>('immunities', []);
+  const [includeResistances, setIncludeResistances] = useCollectionState('resistances', true);
+  const [immunityLogic, setImmunityLogic] = useCollectionState<'AND' | 'OR'>('immunityLogic', 'AND');
+  const [minResistancePotency, setMinResistancePotency] = useCollectionState<number | null>('minPotency', null);
 
   // Stabilize initial values to avoid unnecessary re-renders/effects
   const memoizedPrestigeMap = useDeepMemo(initialPrestigeMap);
@@ -590,12 +591,14 @@ export function RosterView({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
+      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-3xl font-bold text-white tracking-tight">
-              {isChampionsCatalog ? "Champions" : `${player?.ingameName ?? "Player"}'s Champions`}
-            </h1>
+          <div className="flex flex-wrap items-center gap-3">
+            <CollectionHeading fallback={
+              <h1 className="text-[28px] sm:text-3xl font-bold text-white tracking-tight">
+                {!isCollectionScreen && !isChampionsCatalog ? `${player?.ingameName ?? "Player"}'s Champions` : "Champions"}
+              </h1>
+            } />
             {!isChampionsCatalog && !targetPlayerId && profiles.length > 1 && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -625,15 +628,15 @@ export function RosterView({
               </DropdownMenu>
             )}
           </div>
-          <p className="text-slate-400 mt-1">
+          <p className="text-slate-400 mt-3">
             {isChampionsCatalog
               ? "Browse all playable champions, filter by class, tags, abilities, and immunities."
               : targetPlayerId
                 ? "View and manage this player's champions."
-                : "Manage your champions, update stats, and track your progress."}
+                : `${player?.ingameName ?? "Your profile"}'s roster · Manage builds and track your progress.`}
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto">
+        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto empty:hidden">
           {enablePrestigeInsights && top30Average > 0 && (
             <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-950/20 border border-amber-900/40 rounded-lg shadow-inner h-10">
               <span className="text-amber-500/80 text-[10px] font-bold uppercase tracking-wider">Top 30 Prestige</span>
@@ -664,22 +667,7 @@ export function RosterView({
             </Button>
           )}
         </div>
-      </div>
-
-      {isChampionsCatalog && (
-        <div className="flex flex-col gap-3 rounded-lg border border-sky-500/20 bg-sky-950/20 px-4 py-3 text-sm text-slate-200 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="font-semibold text-sky-100">Track your own champions</p>
-            <p className="text-slate-400">Sign in to build your roster, manage ranks, and unlock prestige insights.</p>
-          </div>
-          <form action={signInAction}>
-            <Button size="sm" className="gap-2 bg-sky-600 text-white hover:bg-sky-500">
-              <LogIn className="h-4 w-4" />
-              Sign In
-            </Button>
-          </form>
-        </div>
-      )}
+      </header>
 
       {enablePrestigeInsights && (
         <>

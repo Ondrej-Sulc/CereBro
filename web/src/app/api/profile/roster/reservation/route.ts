@@ -72,6 +72,7 @@ export const PATCH = withRouteContext(async (req: Request) => {
     });
 
     revalidatePath("/profile/roster");
+    revalidatePath("/champions");
     revalidatePath(`/player/${rosterEntry.playerId}/roster`);
     if (rosterEntry.player.allianceId) {
       clearCache(`alliance-members-${rosterEntry.player.allianceId}`);
