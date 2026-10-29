@@ -17,17 +17,29 @@ export function normalizeRelicGlyph(source: Float32Array, width: number, height:
       }
     }
     const w = maxX - minX + 1, h = maxY - minY + 1;
-    if ((Math.max(w / h, h / w) > 4.5 && (fontRules || minY > height * .75)) || points.length < 2) for (const p of points) mask[p] = 0;
+    // A detached arrow tail through the middle is part of a penetration glyph.
+    // Only discard long, thin rules at the outer edge (tile borders/font underlines).
+    const boundaryRule = (w / h > 4.5 && w > width * .65 && (minY > height * .75 || maxY < height * .2)) ||
+      (h / w > 4.5 && h > height * .65 && (minX > width * .8 || maxX < width * .2));
+    if (boundaryRule || points.length < 2) for (const p of points) mask[p] = 0;
     else components.push({ points, minX, minY, maxX, maxY });
   }
   const main = components.sort((a, b) => b.points.length - a.points.length)[0];
   if (!main) return null;
   const pad = Math.max(2, Math.min(width, height) * .08);
-  for (const c of components.slice(1)) if (c.maxX < main.minX - pad || c.minX > main.maxX + pad || c.maxY < main.minY - pad || c.minY > main.maxY + pad)
+  // Font paths contain intentional detached strokes; only screenshot crops can contain nearby artwork.
+  for (const c of components.slice(1)) if (!fontRules && (c.maxX < main.minX - pad || c.minX > main.maxX + pad || c.maxY < main.minY - pad || c.minY > main.maxY + pad))
     for (const p of c.points) mask[p] = 0;
   let minX = width, minY = height, maxX = -1, maxY = -1, area = 0;
   for (let p = 0;p < mask.length;p++)if (mask[p] >= .2) { const x = p % width, y = Math.floor(p / width); minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y); area++; }
   if (area < 8 || area > width * height * .85 || maxX - minX < 3 || maxY - minY < 3) return null;
+  // Anchor scale to the body, not a one-pixel arrow tail which may touch the crop edge.
+  // Apply the same rule to font templates and photographed glyphs.
+  const minColumnInk = Math.max(2, (maxY - minY + 1) * .18);
+  const columns = new Uint16Array(width);
+  for (let y = minY;y <= maxY;y++)for (let x = minX;x <= maxX;x++)if (mask[y * width + x] >= .2) columns[x]++;
+  while (minX < maxX && columns[minX] < minColumnInk) minX++;
+  while (maxX > minX && columns[maxX] < minColumnInk) maxX--;
   const size = RELIC_GLYPH_SIZE, w = maxX - minX + 1, h = maxY - minY + 1, scale = (size - 4) / Math.max(w, h);
   const out = new Float32Array(size * size), left = (size - w * scale) / 2, top = (size - h * scale) / 2;
   for (let y = 0;y < size;y++)for (let x = 0;x < size;x++) {
