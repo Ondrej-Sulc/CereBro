@@ -1,5 +1,18 @@
 export const RELIC_GLYPH_SIZE = 32;
 
+/** Extract the same white foreground from screenshot crops and small rendered source glyphs. */
+export function extractRelicGlyph(rgb: Uint8Array, width: number, height: number, box: { x: number; y: number; width: number; height: number }): Float32Array | null {
+  const left = Math.round(box.x), top = Math.round(box.y), w = Math.round(box.width), h = Math.round(box.height);
+  if (left < 0 || top < 0 || left + w > width || top + h > height || w < 10 || h < 10 || rgb.length !== width * height * 3) return null;
+  const pixels = new Float32Array(w * h);
+  for (let y = 0;y < h;y++)for (let x = 0;x < w;x++) {
+    const p = ((top + y) * width + left + x) * 3, r = rgb[p], g = rgb[p + 1], b = rgb[p + 2];
+    const min = Math.min(r, g, b), max = Math.max(r, g, b);
+    if (max - min < 100 && min > 100) pixels[y * w + x] = Math.min(1, (min - 100) / 90);
+  }
+  return normalizeRelicGlyph(pixels, w, h);
+}
+
 /** Normalize glyph foreground only; remove detached tile/font boundary rules, not interior strokes. */
 export function normalizeRelicGlyph(source: Float32Array, width: number, height: number, fontRules = false): Float32Array | null {
   const mask = source.slice(), seen = new Uint8Array(mask.length);

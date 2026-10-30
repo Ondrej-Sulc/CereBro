@@ -1,0 +1,337 @@
+{
+  "fontSha256": "3fd45947178653508917b6abc88ed4506b0f711f37eaf8998bf8279c4fa118f6",
+  "relicSourceSha256": "b7c34489a35034dc58cc4eda26f0727e98ee3465d5596261b613d25b6133a47d",
+  "description": "Source glyphs rendered at 18/22/26 pixels on rust tiles; independent input image, not normalized recognition masks.",
+  "fixtures": [
+    {
+      "attribute": "Critical Rating",
+      "size": 18,
+      "box": {
+        "x": 0,
+        "y": 0,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Critical Rating",
+      "size": 22,
+      "box": {
+        "x": 0,
+        "y": 32,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Critical Rating",
+      "size": 26,
+      "box": {
+        "x": 0,
+        "y": 64,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Special Damage",
+      "size": 18,
+      "box": {
+        "x": 32,
+        "y": 0,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Special Damage",
+      "size": 22,
+      "box": {
+        "x": 32,
+        "y": 32,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Special Damage",
+      "size": 26,
+      "box": {
+        "x": 32,
+        "y": 64,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Energy Resistance",
+      "size": 18,
+      "box": {
+        "x": 64,
+        "y": 0,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Energy Resistance",
+      "size": 22,
+      "box": {
+        "x": 64,
+        "y": 32,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Energy Resistance",
+      "size": 26,
+      "box": {
+        "x": 64,
+        "y": 64,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Physical Resistance",
+      "size": 18,
+      "box": {
+        "x": 96,
+        "y": 0,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Physical Resistance",
+      "size": 22,
+      "box": {
+        "x": 96,
+        "y": 32,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Physical Resistance",
+      "size": 26,
+      "box": {
+        "x": 96,
+        "y": 64,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Armor",
+      "size": 18,
+      "box": {
+        "x": 128,
+        "y": 0,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Armor",
+      "size": 22,
+      "box": {
+        "x": 128,
+        "y": 32,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Armor",
+      "size": 26,
+      "box": {
+        "x": 128,
+        "y": 64,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Armor Penetration",
+      "size": 18,
+      "box": {
+        "x": 160,
+        "y": 0,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Armor Penetration",
+      "size": 22,
+      "box": {
+        "x": 160,
+        "y": 32,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Armor Penetration",
+      "size": 26,
+      "box": {
+        "x": 160,
+        "y": 64,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Critical Damage Rating",
+      "size": 18,
+      "box": {
+        "x": 192,
+        "y": 0,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Critical Damage Rating",
+      "size": 22,
+      "box": {
+        "x": 192,
+        "y": 32,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Critical Damage Rating",
+      "size": 26,
+      "box": {
+        "x": 192,
+        "y": 64,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Block Proficiency",
+      "size": 18,
+      "box": {
+        "x": 224,
+        "y": 0,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Block Proficiency",
+      "size": 22,
+      "box": {
+        "x": 224,
+        "y": 32,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Block Proficiency",
+      "size": 26,
+      "box": {
+        "x": 224,
+        "y": 64,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Critical Resistance",
+      "size": 18,
+      "box": {
+        "x": 256,
+        "y": 0,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Critical Resistance",
+      "size": 22,
+      "box": {
+        "x": 256,
+        "y": 32,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Critical Resistance",
+      "size": 26,
+      "box": {
+        "x": 256,
+        "y": 64,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Energy Penetration",
+      "size": 18,
+      "box": {
+        "x": 288,
+        "y": 0,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Energy Penetration",
+      "size": 22,
+      "box": {
+        "x": 288,
+        "y": 32,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Energy Penetration",
+      "size": 26,
+      "box": {
+        "x": 288,
+        "y": 64,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Physical Penetration",
+      "size": 18,
+      "box": {
+        "x": 320,
+        "y": 0,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Physical Penetration",
+      "size": 22,
+      "box": {
+        "x": 320,
+        "y": 32,
+        "width": 32,
+        "height": 32
+      }
+    },
+    {
+      "attribute": "Physical Penetration",
+      "size": 26,
+      "box": {
+        "x": 320,
+        "y": 64,
+        "width": 32,
+        "height": 32
+      }
+    }
+  ]
+}

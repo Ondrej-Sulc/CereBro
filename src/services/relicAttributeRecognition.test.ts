@@ -4,6 +4,20 @@ import { readFile } from 'node:fs/promises';
 import { rankRelicAttributes, recognizeRelicAttribute } from './relicAttributeRecognition';
 
 describe('Statcast attribute glyph recognition', () => {
+  it('recognizes small source glyphs, including the thin Energy Penetration outline', async () => {
+    const { fixtures } = JSON.parse(await readFile('src/tests/fixtures/relic-screenshots/small-source-glyphs.json', 'utf8')) as {
+      fixtures: { attribute: string; size: number; box: { x: number; y: number; width: number; height: number } }[];
+    };
+    const { data, info } = await sharp('src/tests/fixtures/relic-screenshots/small-source-glyphs.png').removeAlpha().raw().toBuffer({ resolveWithObject: true });
+    for (const fixture of fixtures) {
+      expect(recognizeRelicAttribute(data, info.width, info.height, fixture.box)?.attribute,
+        `${fixture.attribute} at ${fixture.size}px`).toBe(fixture.attribute);
+    }
+  });
+  it('keeps the compressed review thumbnail unresolved when its outline is no longer legible', async () => {
+    const { data, info } = await sharp('src/tests/fixtures/relic-screenshots/energy-review-thumbnail.png').removeAlpha().raw().toBuffer({ resolveWithObject: true });
+    expect(recognizeRelicAttribute(data, info.width, info.height, { x: 0, y: 0, width: info.width, height: info.height })).toBeNull();
+  });
   it('recognizes the primary/secondary glyphs across all 36 follow-up cards, including penetration arrows', async () => {
     const fixtures = JSON.parse(await readFile('src/tests/fixtures/relic-screenshots/variant-icons.json', 'utf8')) as {
       screenshot: string; card: number; slot: string; expected: string; box: {x:number;y:number;width:number;height:number};
@@ -20,9 +34,7 @@ describe('Statcast attribute glyph recognition', () => {
     for (const [index, expected] of fixture.expected.entries()) {
       const result = recognizeRelicAttribute(data, info.width, info.height, { x: index * 32 + 2, y: 2, width: 28, height: 28 });
       expect(rankRelicAttributes(data, info.width, info.height, { x: index * 32 + 2, y: 2, width: 28, height: 28 })[0]?.attribute).toBe(expected);
-      // This tiny Block Proficiency glyph still lacks a safe margin. Preserve manual review.
-      if (index === 17) expect(result, `uncertain glyph ${index}`).toBeNull();
-      else expect(result?.attribute, `screenshot glyph ${index}`).toBe(expected);
+      expect(result?.attribute, `screenshot glyph ${index}`).toBe(expected);
     }
   });
   it.each([.5, .75, 1.25, 1.5])('does not confuse follow-up variants at scale %s', async scale => {

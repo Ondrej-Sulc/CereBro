@@ -3,7 +3,7 @@ import { createHash } from 'node:crypto';
 import opentype from 'opentype.js';
 import sharp from 'sharp';
 import { z } from 'zod';
-import { normalizeRelicGlyph, RELIC_GLYPH_SIZE } from '../domain/relic-attribute-mask';
+import { extractRelicGlyph, normalizeRelicGlyph, RELIC_GLYPH_SIZE } from '../domain/relic-attribute-mask';
 
 // Offline generation only: bind game SocketItems.Treatment characters to the actual bundled font.
 async function main() {
@@ -24,10 +24,24 @@ async function main() {
     for (let i = 0;i < mask.length;i++)mask[i] = data[i * 4 + 3] / 255;
     const normalized = normalizeRelicGlyph(mask, info.width, info.height, true);
     if (!normalized) throw new Error(`Empty glyph for ${item.Id}`);
-    glyphs.push({ attribute: item.Name.en.replace(/ Secondary$/, ''), sourceId: item.Id, codePoint: item.Treatment.codePointAt(0)!, mask: Buffer.from(normalized.map(v => Math.round(v * 255))).toString('base64') });
+    const encode = (values: Float32Array) => Buffer.from(values.map(v => Math.round(v * 255))).toString('base64');
+    const rasterMasks = [];
+    // Render all attributes at the same sizes on a neutral dark tile, then use the
+    // screenshot foreground extraction. This preserves rasterization loss without
+    // relaxing confidence thresholds or learning champion/variant-specific cases.
+    const whiteSvg = svg.replace('<path ', '<path fill="white" ');
+    for (const size of [12, 16, 20, 24, 32]) {
+      const { data: rgb, info: raster } = await sharp(Buffer.from(whiteSvg))
+        .resize(size, size, { fit: 'contain', background: '#303030' })
+        .flatten({ background: '#303030' }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+      const small = extractRelicGlyph(rgb, raster.width, raster.height, { x: 0, y: 0, width: size, height: size });
+      if (!small) throw new Error(`Empty ${size}px glyph for ${item.Id}`);
+      rasterMasks.push({ size, mask: encode(small) });
+    }
+    glyphs.push({ attribute: item.Name.en.replace(/ Secondary$/, ''), sourceId: item.Id, codePoint: item.Treatment.codePointAt(0)!, mask: encode(normalized), rasterMasks });
   }
   const sha = (b: Buffer) => createHash('sha256').update(b).digest('hex');
-  await writeFile(output, JSON.stringify({ version: 1, size: RELIC_GLYPH_SIZE, font: 'Marvel-Icons-Font', fontSha256: sha(fontBytes), relicSourceSha256: sha(rawBytes), glyphs }, null, 2) + '\n');
+  await writeFile(output, JSON.stringify({ version: 2, size: RELIC_GLYPH_SIZE, font: 'Marvel-Icons-Font', fontSha256: sha(fontBytes), relicSourceSha256: sha(rawBytes), glyphs }, null, 2) + '\n');
 }
 main().catch(error => { console.error(error instanceof Error ? error.message : error); process.exitCode = 1; });
 

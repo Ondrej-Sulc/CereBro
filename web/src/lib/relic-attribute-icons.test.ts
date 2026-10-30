@@ -2,6 +2,10 @@ import { describe, expect, it } from "vitest";
 import { buildRelicAttributeIcons } from "./relic-attribute-icons";
 
 describe("relic attribute icon presentation", () => {
+  it.each([null, "/legacy/energy.svg"])("provides the source Energy Penetration glyph regardless of glossary availability (%s)", (iconUrl) => {
+    const icons = buildRelicAttributeIcons([{ id: "energy_penetration", iconUrl, raw: {} }]);
+    expect(icons["Energy Penetration"]).toEqual({ iconUrl: "/icons/relic-attributes/energy-penetration.svg", color: "#b8c5d6" });
+  });
   it("uses the Statcast game-font glyph instead of the incorrect legacy Physical Penetration artwork", () => {
     const icons = buildRelicAttributeIcons([{id:'physical_pen',iconUrl:'/legacy/wrong-burst.svg',raw:{}}]);
     expect(icons['Physical Penetration']).toEqual({iconUrl:'/icons/relic-attributes/physical-penetration.svg',color:'#b8c5d6'});
@@ -17,6 +21,7 @@ describe("relic attribute icon presentation", () => {
         { id: "energy_res", iconUrl: "/effects/energy.svg", raw: null },
       ]),
     ).toEqual({
+      "Energy Penetration": { iconUrl: "/icons/relic-attributes/energy-penetration.svg", color: "#b8c5d6" },
       "Physical Penetration": { iconUrl: "/icons/relic-attributes/physical-penetration.svg", color: "#b8c5d6" },
       "Critical Damage Rating": {
         iconUrl: "/effects/cruelty.svg",
@@ -34,6 +39,7 @@ describe("relic attribute icon presentation", () => {
         { id: "fury", iconUrl: "/effects/fury.svg", raw: null },
       ]),
     ).toEqual({
+      "Energy Penetration": { iconUrl: "/icons/relic-attributes/energy-penetration.svg", color: "#b8c5d6" },
       "Physical Penetration": { iconUrl: "/icons/relic-attributes/physical-penetration.svg", color: "#b8c5d6" },
     });
   });
