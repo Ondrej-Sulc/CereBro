@@ -15,7 +15,6 @@ vi.mock("@/lib/logger", () => ({ default: { warn: vi.fn(), error: vi.fn(), info:
 vi.mock("@cerebro/core/config", () => ({ config: { BOT_TOKEN: "test" } }));
 vi.mock("@cerebro/core/services/allianceMembershipService", () => import("../../../../src/services/allianceMembershipService"));
 vi.mock("@cerebro/core/services/mapImageService", () => ({ MapImageService: {} }));
-vi.mock("@cerebro/core/data/war-planning/nodes-data", () => ({ warNodesData: [], warNodesDataBig: [] }));
 vi.mock("@/lib/championHelper", () => ({ getChampionImageUrl: vi.fn() }));
 vi.mock("@/lib/discord-config-validation", () => ({}));
 

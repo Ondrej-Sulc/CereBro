@@ -16,7 +16,6 @@ vi.mock("@/lib/logger", () => ({ default: { warn: vi.fn(), error: vi.fn(), info:
 vi.mock("@cerebro/core/config", () => ({ config: { BOT_TOKEN: "test" } }));
 vi.mock("@cerebro/core/services/allianceMembershipService", () => import("../../../../src/services/allianceMembershipService"));
 vi.mock("@cerebro/core/services/mapImageService", () => ({ MapImageService: {} }));
-vi.mock("@cerebro/core/data/war-planning/nodes-data", () => ({ warNodesData: [], warNodesDataBig: [] }));
 vi.mock("@/lib/championHelper", () => ({ getChampionImageUrl: vi.fn() }));
 vi.mock("@/lib/discord-config-validation", () => ({}));
 
@@ -107,6 +106,30 @@ describe.skipIf(!url)("defense assignment and departure on PostgreSQL", () => {
   function target(mode: typeof targets[number]) {
     return mode === "id" ? { id: "slot" } : { planId: "plan", battlegroup: 1, nodeId: mode === "upsert-create" ? 2 : 1 };
   }
+
+  it.each(targets)("rejects an off-map Big Thing node for %s without changing placements", async (mode) => {
+    await client.warDefensePlan.update({ where: { id: 'plan' }, data: { mapType: 'BIG_THING' } });
+    await client.warNode.create({ data: { id: 1011, nodeNumber: 11 } });
+    if (mode !== 'upsert-create') {
+      await client.warDefensePlacement.update({ where: { id: 'slot' }, data: { nodeId: 1011 } });
+    }
+    const before = await client.warDefensePlacement.findMany();
+    const coordinates = mode === 'id' ? { id: 'slot' } : { planId: 'plan', battlegroup: 1, nodeId: 1011 };
+    await expect(updateDefensePlacement({ ...coordinates, defenderId: 101 }))
+      .rejects.toThrow("Node does not exist on this plan's map.");
+    expect(await client.warDefensePlacement.findMany()).toEqual(before);
+  });
+
+  it('accepts Big Thing node 10 with a database identity greater than ten', async () => {
+    await client.warDefensePlan.update({ where: { id: 'plan' }, data: { mapType: 'BIG_THING' } });
+    await client.warNode.create({ data: { id: 1010, nodeNumber: 10 } });
+    await updateDefensePlacement({ planId: 'plan', battlegroup: 1, nodeId: 1010, playerId: 'departing', defenderId: 101 });
+    const saved = await client.warDefensePlacement.findUniqueOrThrow({
+      where: { planId_battlegroup_nodeId: { planId: 'plan', battlegroup: 1, nodeId: 1010 } }, include: { node: true },
+    });
+    expect(saved.node.nodeNumber).toBe(10);
+    expect(saved.defenderId).toBe(101);
+  });
 
   it.each(targets)("cleans the %s assignment if assignment locks first", async (mode) => {
     const lock = gate();

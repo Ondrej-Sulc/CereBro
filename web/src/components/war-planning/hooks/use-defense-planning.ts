@@ -6,6 +6,7 @@ import { RightPanelState } from "./use-war-planning";
 import { warNodesData, warNodesDataBig } from "@cerebro/core/data/war-planning/nodes-data";
 import { reportClientError } from "@/lib/observability/client";
 import { isTransientPollingError } from "@/lib/transient-client-errors";
+import { getWarMapNodeNumbers, filterWarMapPlacements } from '@cerebro/core/domain/war-map';
 
 interface WarNodeWithAllocations extends WarNode {
     allocations: (WarNodeAllocation & { nodeModifier: NodeModifier })[];
@@ -41,6 +42,8 @@ export function useDefensePlanning({
   const [currentPlacements, setCurrentPlacements] = useState<PlacementWithNode[]>([]);
   const [nodesMap, setNodesMap] = useState<Map<number, WarNodeWithAllocations>>(new Map());
   const pendingSaveNodeIds = useRef<Set<number>>(new Set());
+  const mapNodeNumbers = useMemo(() => new Set(getWarMapNodeNumbers(mapType)), [mapType]);
+  const mapPlacements = useMemo(() => filterWarMapPlacements(currentPlacements, mapType), [currentPlacements, mapType]);
 
   const currentBattlegroup = useMemo(() => {
       const match = activeTab.match(/^bg(\d+)$/);
@@ -53,8 +56,8 @@ export function useDefensePlanning({
 
   // Derived: Filtered Placements for current BG
   const filteredPlacements = useMemo(() => {
-      return currentPlacements.filter(p => p.battlegroup === currentBattlegroup);
-  }, [currentPlacements, currentBattlegroup]);
+      return mapPlacements.filter(p => p.battlegroup === currentBattlegroup);
+  }, [mapPlacements, currentBattlegroup]);
 
   // Derived Selection
   const selectedPlacement = useMemo(() => {
@@ -95,7 +98,7 @@ export function useDefensePlanning({
             const data: WarNodeWithAllocations[] = await res.json();
             
             const map = new Map<number, WarNodeWithAllocations>();
-            data.forEach(n => map.set(n.nodeNumber, n));
+            data.forEach(n => { if (mapNodeNumbers.has(n.nodeNumber)) map.set(n.nodeNumber, n); });
             setNodesMap(map);
         } catch (err) {
             if (err instanceof Error && err.name === 'AbortError') return;
@@ -106,7 +109,7 @@ export function useDefensePlanning({
     fetchNodes();
     
     return () => controller.abort();
-  }, [planId]);
+  }, [planId, mapNodeNumbers]);
 
   // Initial Data Fetch
   useEffect(() => {
@@ -354,7 +357,7 @@ export function useDefensePlanning({
     selectedPlayerId,
     setSelectedPlayerId,
     currentPlacements: filteredPlacements, // Return filtered placements for Map
-    allPlacements: currentPlacements, // Expose all for roster stats
+    allPlacements: mapPlacements, // Expose this map's placements for roster stats and warnings
     currentBattlegroup,
     loadingPlacements,
     error,

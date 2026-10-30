@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import logger from "@/lib/logger";
 import { getUserPlayerWithAlliance } from '@/lib/auth-helpers';
 import { withRouteContext } from "@/lib/with-request-context";
+import { getWarMapNodeNumbers } from '@cerebro/core/domain/war-map';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +40,7 @@ export const GET = withRouteContext(async (request) => {
 
     const plan = await prisma.warDefensePlan.findUnique({
         where: { id: planId },
-        select: { allianceId: true },
+        select: { allianceId: true, mapType: true },
     });
 
     if (!plan) {
@@ -54,6 +55,7 @@ export const GET = withRouteContext(async (request) => {
     const placements = await prisma.warDefensePlacement.findMany({
         where: { 
             planId,
+            node: { nodeNumber: { in: getWarMapNodeNumbers(plan.mapType) } },
             ...(battlegroup && { battlegroup })
         },
         select: {

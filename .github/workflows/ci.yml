@@ -63,6 +63,9 @@ jobs:
       - name: Build Bot (src)
         run: pnpm run build-only
 
+      - name: Verify war map boundaries and defense planning
+        run: pnpm exec vitest run src/domain/war-map.test.ts web/src/app/api/war-planning/nodes/route.test.ts web/src/app/api/war-planning/placements/route.test.ts web/src/app/planning/defense-map-actions.test.ts web/src/app/planning/defense-actions.test.ts web/src/components/war-planning/hooks/use-defense-planning.test.ts web/src/components/war-planning/hooks/use-war-planning.test.ts --maxWorkers=1
+
       - name: Verify relic data, formatting and cloud image publication
         run: pnpm run test:relics
 

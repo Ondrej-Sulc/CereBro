@@ -1,5 +1,7 @@
 "use client";
 
+import { getMissingDefenseNodeNumbers } from '@cerebro/core/domain/war-map';
+
 import { useState, useEffect, useCallback, useRef } from "react";
 import { WarDefensePlan, WarDefensePlacement, WarMapType, Tag } from "@prisma/client";
 import { Champion } from "@/types/champion";
@@ -501,10 +503,7 @@ export default function DefenseDetailsClient(props: DefenseDetailsClientProps) {
       const incompleteBgs = battlegroups
           .map((targetBg) => {
               const bgPlacements = allPlacements.filter((placement) => placement.battlegroup === targetBg);
-              const missing = bgPlacements
-                  .filter((placement) => !placement.playerId || !placement.defenderId)
-                  .map((placement) => placement.node.nodeNumber)
-                  .sort((a, b) => a - b);
+              const missing = getMissingDefenseNodeNumbers(bgPlacements, props.plan.mapType);
 
               return { bg: targetBg, missing };
           })

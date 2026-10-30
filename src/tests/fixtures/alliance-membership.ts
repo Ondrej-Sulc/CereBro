@@ -121,6 +121,7 @@ export function createMembershipDatabase() {
         }))),
   };
   const tx = {
+    warNode: { findUnique: vi.fn(async ({ where }: { where: { id: number } }) => ({ id: where.id, nodeNumber: where.id })) },
     player, warDefensePlacement, warDefensePlan,
     $queryRaw: vi.fn(async (_query: TemplateStringsArray, playerId: string) =>
       state.members.filter((member) => member.id === playerId)

@@ -7,6 +7,7 @@ import logger from '../loggerService';
 import { getChampionImageUrl } from '../../utils/championHelper';
 import { config } from '../../config';
 import { capitalize, getEmoji } from '../../commands/aw/utils';
+import { filterWarMapPlacements } from '../../domain/war-map';
 
 export interface DistributeResult {
     sent: string[];
@@ -75,6 +76,8 @@ export async function distributeDefensePlan(
         result.errors.push("No defense plan found");
         return result;
     }
+
+    plan.placements = filterWarMapPlacements(plan.placements, plan.mapType);
 
     // --- Fetch Roster Data for Ranks ---
     const placementPlayerIds = Array.from(new Set(plan.placements.map(p => p.playerId).filter(Boolean))) as string[];

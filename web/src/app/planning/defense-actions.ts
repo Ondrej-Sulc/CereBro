@@ -12,6 +12,7 @@ import { createMissingDiscordChannelMessage, findMissingBattlegroupChannels } fr
 import { MapImageService, NodeAssignment, LegendItem } from "@cerebro/core/services/mapImageService";
 import { warNodesData, warNodesDataBig } from "@cerebro/core/data/war-planning/nodes-data";
 import { getChampionImageUrl } from "@/lib/championHelper";
+import { getWarMapNodeNumbers, filterWarMapPlacements } from '@cerebro/core/domain/war-map';
 
 export type DistributeDefensePlanResult =
   | { success: true }
@@ -117,6 +118,11 @@ export const updateDefensePlacement = withActionContext('updateDefensePlacement'
     if (!plan) throw new Error("Plan not found.");
     if (!isBotAdmin && plan.allianceId !== player.allianceId) {
       throw new Error("Unauthorized: Cannot edit placements from another alliance.");
+    }
+
+    const node = await tx.warNode.findUnique({ where: { id: existingPlacement?.nodeId ?? nodeId! } });
+    if (!node || !getWarMapNodeNumbers(plan.mapType).includes(node.nodeNumber)) {
+      throw new Error("Node does not exist on this plan's map.");
     }
 
     const assignedPlayerId = rest.playerId === undefined ? existingPlacement?.playerId ?? null : rest.playerId;
@@ -387,6 +393,8 @@ export const getDefensePlanMapPng = withActionContext('getDefensePlanMapPng', as
   if (!isBotAdmin && plan.allianceId !== player.allianceId) {
     throw new Error("Unauthorized");
   }
+
+  plan.placements = filterWarMapPlacements(plan.placements, plan.mapType);
 
   const allianceMembers = await prisma.player.findMany({
     where: { allianceId: plan.allianceId },

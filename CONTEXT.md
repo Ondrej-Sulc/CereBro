@@ -1,5 +1,9 @@
 # CereBro Context
 
+## War Map Nodes
+
+WarNode.id is a database identity, while WarNode.nodeNumber is the number shown on a map. The map layout defines which node numbers exist: Big Thing has 1–10 and Standard has 1–50. Portal layout IDs are not placement slots. Node configuration, defense assignment, completion checks and distribution must use the plan's map type. Historical off-map defense placements are excluded from planning and distribution without deleting their saved rows.
+
 ## War Fight Recordings
 
 A War Fight is one recorded matchup and retains one attacker, defender, player and total death count. Videos are recordings of that fight, not additional attempts or outcomes for statistics. One fight can have multiple ordered recordings, and one recording can cover several fights.

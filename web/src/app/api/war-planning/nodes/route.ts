@@ -4,6 +4,8 @@ import logger from "@/lib/logger";
 import { getFromCache } from '@/lib/cache';
 import { getUserPlayerWithAlliance } from '@/lib/auth-helpers';
 import { withRouteContext } from "@/lib/with-request-context";
+import { WarMapType } from '@prisma/client';
+import { getWarMapNodeNumbers } from '@cerebro/core/domain/war-map';
 
 // Cache node data for 1 hour as it's structurally static
 const NODES_CACHE_TTL = 3600;
@@ -31,7 +33,7 @@ export const GET = withRouteContext(async (request) => {
         return NextResponse.json({ message: 'You must be in an alliance.' }, { status: 403 });
     }
 
-    let mapType = 'STANDARD';
+    let mapType: WarMapType = WarMapType.STANDARD;
 
     if (warId) {
         const war = await prisma.war.findUnique({
@@ -62,6 +64,7 @@ export const GET = withRouteContext(async (request) => {
     // Fetch nodes with allocations, cached
     const nodes = await getFromCache(`war-nodes-${mapType}`, NODES_CACHE_TTL, async () => {
         return await prisma.warNode.findMany({
+            where: { nodeNumber: { in: getWarMapNodeNumbers(mapType) } },
             orderBy: { nodeNumber: 'asc' },
             include: {
                 allocations: {
