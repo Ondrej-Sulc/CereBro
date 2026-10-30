@@ -10,7 +10,6 @@ import {
   updatePlayerRelic,
   removePlayerRelic,
   getPlayerRelicState,
-  setPlayerRelicPrestigeSource,
   playerRelicBuildOptions,
   PlayerRelicError,
 } from "@cerebro/core/services/playerRelicService";
@@ -89,9 +88,9 @@ function mutate(method: "POST" | "PATCH" | "DELETE" | "PUT") {
           { error: "Your active profile changed. Refresh before saving." },
           409,
         );
-      const preference = method === "PUT"
-        ? await setPlayerRelicPrestigeSource(prisma, player.id, data) : null;
-      const entry = method === "PUT" ? null :
+      if (method === "PUT")
+        return json({ error: "Relic prestige is now calculated automatically once you have 30 relics with available ratings. Refresh this page." }, 410);
+      const entry =
         method === "POST"
           ? await addPlayerRelic(prisma, player.id, data)
           : method === "PATCH"
@@ -103,7 +102,7 @@ function mutate(method: "POST" | "PATCH" | "DELETE" | "PUT") {
       revalidatePath(`/player/${player.id}`);
       const inventory = {
         profile: { id: player.id, name: player.ingameName },
-        ...(preference ?? await getPlayerRelicState(prisma, player.id)),
+        ...await getPlayerRelicState(prisma, player.id),
       };
       return json({ entry: entry ?? null, inventory }, method === "POST" ? 201 : 200);
     } catch (error) {

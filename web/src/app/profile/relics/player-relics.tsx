@@ -207,7 +207,7 @@ export function PlayerRelics({
                     alt=""
                     width={160}
                     height={160}
-                    sizes="160px"
+                    sizes="(max-width: 700px) 105px, 150px"
                   />
                 </div>
                 <h2>{entry.shortName}</h2>
@@ -224,8 +224,8 @@ export function PlayerRelics({
                 <div className={styles.build}>
                   <span>{entry.stars}★</span>
                   <span>Rank {entry.rank}</span>
-                  <span>
-                    {entry.sigLevel ? `Sig ${entry.sigLevel}` : "Unawakened"}
+                  <span title={entry.sigLevel ? `Signature level ${entry.sigLevel}` : "Unawakened"}>
+                    {`Sig ${entry.sigLevel}`}
                   </span>
                 </div>
                 <div className={styles.rating}>

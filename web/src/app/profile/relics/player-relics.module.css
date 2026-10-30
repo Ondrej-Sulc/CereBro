@@ -261,8 +261,76 @@
     flex-wrap: wrap;
   }
   .grid {
-    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
-    gap: 15px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .card {
+    border-radius: 12px;
+  }
+  .cardLink {
+    padding: 12px 10px 0;
+  }
+  .cardTop {
+    gap: 4px;
+    font-size: 9px;
+    letter-spacing: 0;
+  }
+  .portrait,
+  .portrait img {
+    height: 105px;
+  }
+  .portrait img {
+    width: 105px;
+  }
+  .portrait {
+    margin: 3px 0;
+  }
+  .card h2 {
+    display: grid;
+    align-content: center;
+    min-height: 36px;
+    font-size: 15px;
+    line-height: 18px;
+    letter-spacing: -0.2px;
+    overflow-wrap: anywhere;
+  }
+  .attributes {
+    min-height: 48px;
+    margin: 5px 0 8px;
+    font-size: 11px;
+    line-height: 15px;
+    overflow-wrap: anywhere;
+  }
+  .attributes span {
+    font-size: 10px;
+  }
+  .build {
+    gap: 4px;
+    font-size: 10px;
+    margin-top: auto;
+  }
+  .build span {
+    padding: 3px 4px;
+    border-radius: 4px;
+  }
+  .rating {
+    flex-wrap: wrap;
+    gap: 3px 6px;
+    padding: 9px 0;
+    margin-top: 10px;
+  }
+  .rating span {
+    gap: 4px;
+    font-size: 10px;
+  }
+  .rating strong {
+    margin-left: auto;
+    font-size: 18px;
+  }
+  .edit {
+    min-height: 44px;
+    padding: 10px 6px;
+    font-size: 11px;
   }
 }
 @media (prefers-reduced-motion: reduce) {

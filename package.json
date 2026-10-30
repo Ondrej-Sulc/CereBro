@@ -47,6 +47,7 @@
     "import:mcoc-synergies": "tsx src/scripts/import-mcoc-synergies.ts",
     "import:mcoc-relics": "tsx src/scripts/import-mcoc-relics.ts",
     "import:relic-prestige": "tsx src/scripts/import-mcoc-relic-prestige.ts",
+    "reconcile:relic-prestige": "tsx src/scripts/reconcile-player-relic-prestige.ts",
     "audit:champion-ability-text": "tsx src/scripts/audit-champion-ability-text.ts",
     "db:dump": "tsx src/scripts/db-sync.ts export",
     "db:sync": "tsx src/scripts/db-sync.ts import",

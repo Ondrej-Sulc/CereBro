@@ -207,10 +207,12 @@ export const updateRelicPrestige = withActionContext('updateRelicPrestige', asyn
 
   logger.info({ userId: user.id, profileId, oldRelicPrestige: profile.relicPrestige, newRelicPrestige: value }, "Updating relic prestige");
   
-  await recordPlayerPrestige(prisma, profileId, { relicPrestige: value });
+  const saved = await recordPlayerPrestige(prisma, profileId, { relicPrestige: value });
 
   revalidatePath("/relics", "layout");
   revalidatePath(`/player/${profileId}`);
   revalidatePath("/profile");
+  if (saved.relicPrestigeFromInventory)
+    return { error: "Relic prestige is calculated automatically from your top 30 relics. Update their builds in My Relics instead." };
   return { success: true };
 });

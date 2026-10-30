@@ -6,6 +6,7 @@ import {
   removePlayerRelic,
   listPlayerRelics,
 } from "./playerRelicService";
+import { recordPlayerPrestige } from "./playerPrestigeService";
 
 const stamp = new Date("2026-10-27T08:00:00Z");
 const rarity = {
@@ -52,6 +53,8 @@ function fixture() {
     $executeRaw: vi.fn(),
     $queryRaw: vi.fn().mockResolvedValue([{ championPrestige: 10000, relicPrestige: 1000, summonerPrestige: 11000, relicPrestigeFromInventory: false }]),
     gameRelicRarity: { findFirst: vi.fn().mockResolvedValue(row.rarity) },
+    player: { update: vi.fn() },
+    prestigeLog: { create: vi.fn() },
     playerRelic: {
       create: vi.fn().mockResolvedValue(row),
       findFirst: vi.fn().mockResolvedValue(row),
@@ -67,6 +70,23 @@ function fixture() {
   return { db, tx, row };
 }
 describe("player relic inventory", () => {
+  it.each([29, 30, 31])("calculates prestige by default at 30 valid relics (%i owned)", async count => {
+    const { db, tx, row } = fixture();
+    row.rarity.maxRank = 1;
+    row.rarity.maxSignature = 1;
+    tx.playerRelic.findMany.mockResolvedValue(Array.from({length:count}, (_, i) => ({...row,id:`owned-${i}`})));
+    await addPlayerRelic(db, 'p', {relicId:'r',stars:6,rank:1,sigLevel:0});
+    if (count < 30) expect(tx.player.update).not.toHaveBeenCalled();
+    else expect(tx.player.update).toHaveBeenCalledWith(expect.objectContaining({data:{championPrestige:10000,relicPrestige:100,summonerPrestige:10100,relicPrestigeFromInventory:true}}));
+  });
+  it("keeps eligible collection prestige authoritative during a manual or profile screenshot update", async () => {
+    const { db, tx, row } = fixture();
+    row.rarity.maxRank = 1;
+    row.rarity.maxSignature = 1;
+    tx.playerRelic.findMany.mockResolvedValue(Array.from({length:30}, (_, i) => ({...row,id:`owned-${i}`})));
+    expect(await recordPlayerPrestige(db, 'p', {championPrestige:20000,relicPrestige:5000})).toEqual({championPrestige:20000,relicPrestige:100,summonerPrestige:20100,relicPrestigeFromInventory:true});
+    expect(tx.prestigeLog.create).toHaveBeenCalledOnce();
+  });
   it("adds an exact variant/rarity to the authenticated player without touching account prestige", async () => {
     const { db, tx } = fixture();
     const result = await addPlayerRelic(db, "p", {

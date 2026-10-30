@@ -1,6 +1,6 @@
 export const RELIC_PRESTIGE_COUNT = 30;
 
-/** Known-entry preview until all top-30 entries are recorded and confirmed. */
+/** Known-entry preview until at least 30 relics are recorded with complete ratings. */
 export function calculatePlayerRelicPrestige(entries: readonly { id: string; prestige: number | null }[]) {
   const known = entries.filter((entry): entry is { id: string; prestige: number } =>
     entry.prestige !== null && Number.isSafeInteger(entry.prestige) && entry.prestige >= 0,
