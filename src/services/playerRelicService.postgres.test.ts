@@ -9,10 +9,9 @@ import {
   updatePlayerRelic,
   removePlayerRelic,
   getPlayerRelicState,
-  setPlayerRelicPrestigeSource,
   importPlayerRelics,
 } from "./playerRelicService";
-import { recordChampionPrestige, recordPlayerPrestige } from "./playerPrestigeService";
+import { recordChampionPrestige, recordPlayerPrestige, reconcilePlayerRelicPrestige } from "./playerPrestigeService";
 
 const connection = process.env.RELIC_TEST_DATABASE_URL;
 describe.skipIf(!connection)("player relic inventory in PostgreSQL", () => {
@@ -218,7 +217,7 @@ describe.skipIf(!connection)("player relic inventory in PostgreSQL", () => {
 
       // Existing manual values survive an incomplete inventory and missing data.
       let state = await getPlayerRelicState(db, "b");
-      await expect(setPlayerRelicPrestigeSource(db, "b", { enabled: true, confirmedTop30: true, revision: state.prestige.revision })).rejects.toThrow(/at least 30/);
+      expect(state.prestige).toMatchObject({ready:false,automatic:false,recorded:5678});
       await removePlayerRelic(db, "b", { id: state.entries[0].id, updatedAt: state.entries[0].updatedAt });
       await recordPlayerPrestige(db, "b", { championPrestige: 30000, relicPrestige: 2000 });
       for (let i = 0; i < 32; i++) {
@@ -234,13 +233,20 @@ describe.skipIf(!connection)("player relic inventory in PostgreSQL", () => {
           ranks: [1, 2].map((rank) => ({ rank, socketRanks: {}, prestigeBySignature: [rank * 100, rank * 100 + 25] })),
         } });
         if (i < 30) await addPlayerRelic(db, "b", { relicId: id, stars: 6, rank: 1, sigLevel: 0 });
+        if (i === 28) expect((await getPlayerRelicState(db, "b")).prestige).toMatchObject({recorded:2000,automatic:false,ready:false});
       }
       state = await getPlayerRelicState(db, "b");
-      expect(state.prestige).toMatchObject({ average: 100, recorded: 2000, automatic: false, ready: true, summoner: 32000 });
-      await expect(setPlayerRelicPrestigeSource(db, "b", { enabled: true, revision: state.prestige.revision })).rejects.toThrow(/confirm/);
-      const active = await setPlayerRelicPrestigeSource(db, "b", { enabled: true, confirmedTop30: true, revision: state.prestige.revision });
-      expect(active.prestige).toMatchObject({ recorded: 100, summoner: 30100, automatic: true });
-      await expect(setPlayerRelicPrestigeSource(db, "b", { enabled: false, revision: state.prestige.revision })).rejects.toThrow(/changed/);
+      expect(state.prestige).toMatchObject({ average: 100, recorded: 100, automatic: true, ready: true, summoner: 30100 });
+      // Existing opted-out collections are reconciled through the same locked calculation.
+      await db.$executeRaw`UPDATE "Player" SET "relicPrestigeFromInventory" = false, "relicPrestige" = 2000, "summonerPrestige" = 32000 WHERE "id" = 'b'`;
+      const preview = await reconcilePlayerRelicPrestige(db, 'b');
+      expect(preview).toMatchObject({changed:true,applied:false,ready:true,ownedCount:30,next:{relicPrestige:100,summonerPrestige:30100,relicPrestigeFromInventory:true}});
+      expect((await getPlayerRelicState(db,'b')).prestige.recorded).toBe(2000);
+      await reconcilePlayerRelicPrestige(db, 'b', {apply:true});
+      const reconciledLogs = await db.prestigeLog.count({where:{playerId:'b'}});
+      expect(await reconcilePlayerRelicPrestige(db, 'b', {apply:true})).toMatchObject({changed:false});
+      expect(await db.prestigeLog.count({where:{playerId:'b'}})).toBe(reconciledLogs);
+      const active = await getPlayerRelicState(db, 'b');
       const row = active.entries[0];
       const upgraded = await updatePlayerRelic(db, "b", { id: row.id, updatedAt: row.updatedAt, rank: 2, sigLevel: 1 });
       expect((await getPlayerRelicState(db, "b")).prestige).toMatchObject({ recorded: 104, summoner: 30104 });
@@ -252,7 +258,7 @@ describe.skipIf(!connection)("player relic inventory in PostgreSQL", () => {
       const low = active.entries[1];
       await removePlayerRelic(db, "b", { id: low.id, updatedAt: low.updatedAt });
       state = await getPlayerRelicState(db, "b");
-      expect(state.prestige).toMatchObject({ ready: false, recorded: 104, automatic: true });
+      expect(state.prestige).toMatchObject({ ready: false, recorded: 104, automatic: false });
       const replacement = await addPlayerRelic(db, "b", { relicId: low.relicId, stars: 6, rank: 1, sigLevel: 0 });
       // Unknown data pauses updates even if the other 30 ratings are known.
       await db.gameRelicPrestige.update({ where: { relicId_sourceRarityId: { relicId: "prestige-31", sourceRarityId: "t6" } }, data: { sourcePackageHash: "drift" } });
@@ -278,17 +284,15 @@ describe.skipIf(!connection)("player relic inventory in PostgreSQL", () => {
       const logs = await db.prestigeLog.count({ where: { playerId: "b" } });
       await recordChampionPrestige(db, "b", 31000);
       expect(await db.prestigeLog.count({ where: { playerId: "b" } })).toBe(logs);
-      // Manual edit / OCR import opts out; later inventory edits leave that value intact.
+      // Manual edits and profile OCR cannot opt an eligible collection out.
       await recordPlayerPrestige(db, "b", { relicPrestige: 1800 });
       state = await getPlayerRelicState(db, "b");
-      expect(state.prestige).toMatchObject({ automatic: false, recorded: 1800, summoner: 32800 });
+      expect(state.prestige).toMatchObject({ automatic: true, recorded: 104, summoner: 31104 });
       await updatePlayerRelic(db, "b", { id: another.id, updatedAt: another.updatedAt, rank: 2, sigLevel: 1 });
-      expect((await getPlayerRelicState(db, "b")).prestige.recorded).toBe(1800);
+      expect((await getPlayerRelicState(db, "b")).prestige.recorded).toBe(108);
       await recordPlayerPrestige(db, "b", { relicPrestige: 1900, championPrestige: 32000 });
       state = await getPlayerRelicState(db, "b");
-      expect(state.prestige).toMatchObject({ automatic: false, recorded: 1900, summoner: 33900, champion: 32000 });
-      await setPlayerRelicPrestigeSource(db, "b", { enabled: true, confirmedTop30: true, revision: state.prestige.revision });
-      state = await getPlayerRelicState(db, "b");
+      expect(state.prestige).toMatchObject({ automatic: true, recorded: 108, summoner: 32108, champion: 32000 });
       const batch = state.entries.filter(entry => entry.rank === 1).slice(0, 2).map(entry => ({ relicId: entry.relicId, stars: entry.stars, rank: 2, sigLevel: 1, expectedPrestige: 225 }));
       const logsBeforeImport = await db.prestigeLog.count({ where: { playerId: 'b' } });
       const batchResult = await importPlayerRelics(db, 'b', { revision: state.prestige.revision, entries: batch });
@@ -296,9 +300,14 @@ describe.skipIf(!connection)("player relic inventory in PostgreSQL", () => {
       expect(batchResult.prestige.recorded).toBe(batchResult.prestige.average);
       expect(batchResult.prestige.summoner).toBe(32000 + batchResult.prestige.average!);
       expect(await db.prestigeLog.count({ where: { playerId: 'b' } })).toBe(logsBeforeImport+1);
-      state = batchResult;
-      const stopped = await setPlayerRelicPrestigeSource(db, "b", { enabled: false, revision: state.prestige.revision });
-      expect(stopped.prestige).toMatchObject({ automatic: false, recorded: state.prestige.recorded, summoner: state.prestige.summoner });
+      // Importing the 30th item activates calculation once for the whole batch.
+      await db.$executeRaw`INSERT INTO "Player" ("id", "championPrestige", "relicPrestige", "summonerPrestige") VALUES ('a', 20000, 500, 20500)`;
+      for (let i = 0; i < 29; i++) await addPlayerRelic(db,'a',{relicId:`prestige-${i}`,stars:6,rank:1,sigLevel:0});
+      const beforeThirty = await getPlayerRelicState(db,'a');
+      expect(beforeThirty.prestige).toMatchObject({recorded:500,automatic:false});
+      const thirty = await importPlayerRelics(db,'a',{revision:beforeThirty.prestige.revision,entries:[{relicId:'prestige-29',stars:6,rank:1,sigLevel:0,expectedPrestige:100}]});
+      expect(thirty.prestige).toMatchObject({recorded:100,summoner:20100,automatic:true,ready:true});
+      expect(await db.prestigeLog.count({where:{playerId:'a'}})).toBe(1);
     } finally {
       if (created) {
         expect(schema).toMatch(/^player_relic_test_[a-f0-9]{32}$/);

@@ -127,13 +127,13 @@ export async function updatePrestige(params: {
   if (isValid) {
     const oldPrestige = player.summonerPrestige;
 
-    await recordPlayerPrestige(prisma, player.id, {
+    const saved = await recordPlayerPrestige(prisma, player.id, {
       relicPrestige: finalRelicPrestige,
       championPrestige: finalChampionPrestige,
     });
 
     const prestigeChange =
-      oldPrestige && oldPrestige > 0 ? summonerPrestige! - oldPrestige : 0;
+      oldPrestige && oldPrestige > 0 ? (saved.summonerPrestige ?? 0) - oldPrestige : 0;
     const changeString =
       prestigeChange > 0
         ? `(+${prestigeChange})`
@@ -143,10 +143,12 @@ export async function updatePrestige(params: {
 
     const prestigeInfo =
       `**Prestige Values for ${player.ingameName}**:\n` +
-      `🏆 TOP 30 Prestige: **${summonerPrestige}** ${changeString}\n` +
-      `⚔️ Champion Prestige: **${championPrestige}**\n` +
-      `🔮 Relic Prestige: **${relicPrestige}**\n` +
-      `\n*Prestige has been updated for ${player.ingameName}. Relic prestige now uses this imported value; automatic tracking can be enabled in My Relics.*`;
+      `🏆 TOP 30 Prestige: **${saved.summonerPrestige}** ${changeString}\n` +
+      `⚔️ Champion Prestige: **${saved.championPrestige}**\n` +
+      `🔮 Relic Prestige: **${saved.relicPrestige}**\n` +
+      `\n*Prestige has been updated for ${player.ingameName}. ${saved.relicPrestigeFromInventory
+        ? "Relic prestige is calculated automatically from your top 30 saved relics."
+        : "Relic prestige uses the imported value until your collection has 30 relics with available ratings."}*`;
 
     const container = new ContainerBuilder();
     container.setAccentColor(0xffd700); // Gold color for prestige

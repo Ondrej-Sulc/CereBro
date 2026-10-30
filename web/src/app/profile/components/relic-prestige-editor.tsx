@@ -43,6 +43,7 @@ export function RelicPrestigeEditor({ profileId, initialValue, automatic = false
                         description: result.error,
                         variant: "destructive"
                     });
+                    router.refresh();
                     return;
                 }
                 toast({ title: "Relic prestige updated successfully" });
@@ -58,14 +59,13 @@ export function RelicPrestigeEditor({ profileId, initialValue, automatic = false
         });
     };
 
-    if (isEditing) {
+    if (isEditing && !automatic) {
         return (
             <Card className="bg-slate-900/50 border-indigo-500/50 ring-1 ring-indigo-500/20">
                 <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium text-slate-400">Relic Prestige</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    {automatic && <p className="text-xs text-amber-200 mb-3">Saving a manual value stops automatic updates from My Relics.</p>}
                     <div className="flex items-center gap-2">
                         <style>{`
                             .relic-prestige-input[type='number']::-webkit-inner-spin-button,
@@ -114,12 +114,13 @@ export function RelicPrestigeEditor({ profileId, initialValue, automatic = false
     }
 
     return (
-        <Card className="bg-slate-900/50 border-slate-800 group hover:border-indigo-500/30 transition-all cursor-pointer" onClick={() => setIsEditing(true)}>
+        <Card className={`bg-slate-900/50 border-slate-800 group transition-all ${automatic ? "" : "hover:border-indigo-500/30 cursor-pointer"}`} onClick={automatic ? undefined : () => setIsEditing(true)}>
             <CardHeader className="pb-2 flex flex-row items-center justify-between space-y-0">
                 <CardTitle className="text-sm font-medium text-slate-400">Relic Prestige</CardTitle>
-                <Button 
+                {!automatic && <Button
                     variant="ghost" 
                     size="icon" 
+                    aria-label="Edit relic prestige"
                     className="h-6 w-6 text-slate-500 group-hover:text-indigo-400 transition-colors"
                     onClick={(e) => {
                         e.stopPropagation();
@@ -127,14 +128,14 @@ export function RelicPrestigeEditor({ profileId, initialValue, automatic = false
                     }}
                 >
                     <Pencil className="w-3 h-3" />
-                </Button>
+                </Button>}
             </CardHeader>
             <CardContent>
                 <div className="text-2xl font-bold group-hover:text-indigo-300 transition-colors">{initialValue?.toLocaleString("en-US") ?? "N/A"}</div>
                 <Link href="/relics?view=personal" onClick={(event) => event.stopPropagation()} className="text-xs text-indigo-300 hover:text-indigo-200">
-                    {automatic ? "Automatic tracking · Manage in My Relics" : "Calculate from My Relics"}
+                    {automatic ? "Calculated from your top 30 · My Relics" : "Add 30 relics for automatic prestige"}
                 </Link>
-                <p className="text-[10px] text-slate-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Click to edit manually</p>
+                {!automatic && <p className="text-[10px] text-slate-600 mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Click to edit manually</p>}
             </CardContent>
         </Card>
     );

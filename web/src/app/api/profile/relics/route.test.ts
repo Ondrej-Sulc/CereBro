@@ -7,7 +7,6 @@ const mocks = vi.hoisted(() => ({
   update: vi.fn(),
   remove: vi.fn(),
   state: vi.fn(),
-  preference: vi.fn(),
   options: vi.fn(),
 }));
 vi.mock("@/lib/auth-helpers", () => ({
@@ -27,7 +26,6 @@ vi.mock(
     updatePlayerRelic: mocks.update,
     removePlayerRelic: mocks.remove,
     getPlayerRelicState: mocks.state,
-    setPlayerRelicPrestigeSource: mocks.preference,
     playerRelicBuildOptions: mocks.options,
   }),
 );
@@ -35,7 +33,6 @@ beforeEach(() => {
   vi.clearAllMocks();
   mocks.player.mockResolvedValue({ id: "profile-a", ingameName: "Alpha" });
   mocks.state.mockResolvedValue({ entries: [], prestige: null });
-  mocks.preference.mockResolvedValue({ entries: [], prestige: null });
   mocks.add.mockResolvedValue({ id: "new" });
 });
 const request = (method: string, body: unknown, origin = "http://localhost") =>
@@ -94,7 +91,6 @@ describe("private relic routes", () => {
       expect(mocks.add).not.toHaveBeenCalled();
       expect(mocks.update).not.toHaveBeenCalled();
       expect(mocks.remove).not.toHaveBeenCalled();
-      expect(mocks.preference).not.toHaveBeenCalled();
     },
   );
   it("passes only the authenticated owner into the service", async () => {
@@ -115,13 +111,14 @@ describe("private relic routes", () => {
       expect(mocks.add).not.toHaveBeenCalled();
     },
   );
-  it("changes prestige source only for the active owner and returns current totals", async () => {
-    const data = { enabled: true, confirmedTop30: true, revision: "a".repeat(64) };
+  it.each([true, false])("rejects obsolete prestige opt-in/out requests without writing (%s)", async (enabled) => {
+    const data = { enabled, confirmedTop30: true, revision: "a".repeat(64) };
     const response = await PUT(request("PUT", { profileId: "profile-a", ...data }));
-    expect(response.status).toBe(200);
-    expect(mocks.preference).toHaveBeenCalledWith({}, "profile-a", data);
-    expect((await response.json()).inventory.profile.id).toBe("profile-a");
+    expect(response.status).toBe(410);
+    expect((await response.json()).error).toMatch(/automatically/);
     expect(mocks.add).not.toHaveBeenCalled();
+    expect(mocks.update).not.toHaveBeenCalled();
+    expect(mocks.remove).not.toHaveBeenCalled();
   });
   it("does not cache private inventory", async () => {
     const response = await GET(
