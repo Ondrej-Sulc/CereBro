@@ -61,12 +61,16 @@ Configuration is applied only during the production build phase. Development and
 production startup do not require the upload credential even if the upload flag
 is present in the runtime environment.
 
-The Dockerfile accepts the credential as a BuildKit secret named
-`POSTHOG_SOURCEMAPS_API_KEY`, readable by uid 1000 during the build. It is not an
-`ARG` or image `ENV`. A Docker build that enables uploads must supply that secret
-and the non-secret build arguments. The deployment builder must be configured to
-provide the secret mount before enabling upload. Do not put the private key in
-`NEXT_PUBLIC_*` variables or pass it as a persistent image environment variable.
+Railway's current Dockerfile builder rejects secret mounts before executing the
+build, including when upload is disabled. The initial release attempt confirmed
+this parser restriction. The standard Dockerfile therefore explicitly disables
+upload and contains no private-key mount, `ARG` or persistent image `ENV`.
+
+To enable source maps later, run the Next.js integration in a separate CI build
+with the credential scoped to that build step, and arrange deployment of those
+same built artifacts. This build/promotion flow is not configured by this patch.
+Do not put the private key in `NEXT_PUBLIC_*` variables, Docker build arguments,
+or a persistent image environment variable.
 
 Actual authenticated upload requires that build credential and is a rollout
 check; it is not exercised by credential-free local builds or CI tests.
@@ -111,6 +115,7 @@ groups. Do not resolve issues solely because a local fix has been prepared.
 - Frozen-lockfile install passed. Unrelated Google API type and Prisma peer
   resolution changes introduced during dependency installation were reverted.
 
-The upload-enabled authenticated build and Docker secret delivery remain rollout
-checks. The local production build used the normal upload-disabled configuration.
-No deployment, PostHog status changes, or production data mutations were made.
+The upload-enabled authenticated build and its separate artifact promotion flow
+remain future setup. The local production build used the normal upload-disabled
+configuration. Preparation made no PostHog status changes or production data
+mutations. Deployment follows separately under the user's release instruction.
