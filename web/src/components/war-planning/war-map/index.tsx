@@ -14,6 +14,8 @@ import { CanvasNode } from './canvas-node';
 import Konva from 'konva';
 import { KonvaEventObject } from 'konva/lib/Node';
 import { PlayerColorContext } from '../player-color-context';
+import { useCanvasSize } from '../hooks/use-canvas-size';
+import { MapErrorBoundary } from './map-error-boundary';
 
 interface WarMapProps {
   warId?: string;
@@ -75,7 +77,7 @@ const WarMap = memo(function WarMap({
   const isFull = isFullscreen !== undefined ? isFullscreen : internalFullscreen;
   const stageRef = useRef<Konva.Stage>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [stageSize, setStageSize] = useState({ width: 1000, height: 800 });
+  const stageSize = useCanvasSize(containerRef, isFull);
 
   // Refs for touch events (pinch-to-zoom) - Absolute Start Approach
   const gestureStartScale = useRef<number | null>(null);
@@ -134,24 +136,6 @@ const WarMap = memo(function WarMap({
 
     return result;
   };
-  // Responsive Stage Size via ResizeObserver
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const resizeObserver = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        const { width, height } = entry.contentRect;
-        setStageSize({ width, height });
-      }
-    });
-
-    resizeObserver.observe(containerRef.current);
-
-    return () => {
-      resizeObserver.disconnect();
-    };
-  }, [isFull]); // Re-bind if fullscreen state changes container ref logic (though ref is stable)
-
   const handleToggleFullscreen = () => {
     if (onToggleFullscreen) {
       onToggleFullscreen();
@@ -511,5 +495,11 @@ const WarMap = memo(function WarMap({
   );
 });
 
-export default WarMap;
+export default function RecoverableWarMap(props: WarMapProps) {
+  return (
+    <MapErrorBoundary mapType={props.mapType} warId={props.warId} battlegroup={props.battlegroup}>
+      <WarMap {...props} />
+    </MapErrorBoundary>
+  );
+}
 

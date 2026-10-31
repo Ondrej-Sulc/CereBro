@@ -3,6 +3,8 @@ import path from 'path';
 import TsconfigPathsPlugin from 'tsconfig-paths-webpack-plugin';
 import { execSync } from 'child_process';
 import { createHash } from 'crypto';
+import { withPostHogConfig } from '@posthog/nextjs-config';
+import { getSourceMapConfig } from './src/lib/observability/source-map-config';
 
 function deriveServerActionsKey(secret: string): string {
   return createHash('sha256')
@@ -90,4 +92,15 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+type ConfigFactory = (phase: string, context: { defaultConfig: NextConfig }) => NextConfig | Promise<NextConfig>;
+
+const config: ConfigFactory = (phase, context) => {
+  const sourceMapConfig = getSourceMapConfig(process.env, buildId, phase);
+  if (!sourceMapConfig) return nextConfig;
+  // The official wrapper returns a phase-aware function (typed as NextConfig).
+  // Invoke it here so upload hooks run, while runtime needs no upload credential.
+  const configured = withPostHogConfig(nextConfig, sourceMapConfig) as NextConfig | ConfigFactory;
+  return typeof configured === 'function' ? configured(phase, context) : configured;
+};
+
+export default config;

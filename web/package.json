@@ -52,7 +52,7 @@
     "next-auth": "5.0.0-beta.30",
     "pino": "^10.1.0",
     "pino-pretty": "^13.1.2",
-    "posthog-js": "^1.290.0",
+    "posthog-js": "^1.438.5",
     "posthog-node": "^5.10.3",
     "react": "19.2.0",
     "react-day-picker": "^9.13.1",
@@ -73,7 +73,9 @@
     "vaul": "^1.1.2"
   },
   "devDependencies": {
+    "@posthog/nextjs-config": "^1.12.0",
     "@types/busboy": "^1.5.4",
+    "@types/jsdom": "^21.1.7",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
@@ -82,6 +84,7 @@
     "cross-env": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "16.0.10",
+    "jsdom": "26.1.0",
     "react-scan": "^0.4.3",
     "tailwindcss": "^3.4.18",
     "tailwindcss-animate": "^1.0.7"

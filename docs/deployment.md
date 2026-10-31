@@ -13,6 +13,7 @@ We use separate, optimized `Dockerfile`s for the Bot and Web services.
 *   **Production permissions:** Source/build directories are copied with `--chown=node:node`. Prisma generation runs as root in the root-owned dependency tree; Next build and runtime use `node`. Do not recursively chown all dependencies, which forces an expensive overlay filesystem copy-up.
 *   **Permissions:** `docker-entrypoint.sh` runs as root to `chown` `.next` and `node_modules` before switching to `node` user (fixes local dev permission issues).
 *   **Deployment Identity:** Next.js uses deployment metadata (`APP_VERSION`, `RAILWAY_GIT_COMMIT_SHA`, `RAILWAY_DEPLOYMENT_ID`, etc.) as the build id and response version so clients can detect stale deployments.
+*   **PostHog source maps:** Upload is optional and disabled by default. Enabling it requires a build-only write credential supplied as a BuildKit secret; see [error tracking setup](error-tracking-fixes.md#private-source-maps).
 *   **Server Actions:** Self-hosted deploys must provide a stable `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` at build time, or provide `AUTH_SECRET`/`NEXTAUTH_SECRET` at build time so the build can derive one. This prevents Server Action id mismatches across instances.
 
 ### Bot Service (`Dockerfile`)

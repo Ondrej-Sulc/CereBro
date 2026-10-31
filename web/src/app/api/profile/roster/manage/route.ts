@@ -7,6 +7,7 @@ import logger from "@/lib/logger";
 import { clearCache } from "@/lib/cache";
 import { withRouteContext } from "@/lib/with-request-context";
 import { clampAscensionLevelForRarity } from "@/lib/mcoc-prestige";
+import { captureServerException } from "@/lib/observability/server";
 
 const updateSchema = z.object({
   id: z.string(),
@@ -125,6 +126,7 @@ export const PUT = withRouteContext(async (req: Request) => {
     if (error instanceof z.ZodError) {
         return NextResponse.json({ error: "Invalid data", details: (error as z.ZodError).issues }, { status: 400 });
     }
+    captureServerException(error, { source: "profile_roster_manage", method: "PUT", status: 500 });
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 });
@@ -191,6 +193,7 @@ export const DELETE = withRouteContext(async (req: Request) => {
     if (error instanceof z.ZodError) {
         return NextResponse.json({ error: "Invalid data", details: (error as z.ZodError).issues }, { status: 400 });
     }
+    captureServerException(error, { source: "profile_roster_manage", method: "DELETE", status: 500 });
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 });

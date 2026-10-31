@@ -5,6 +5,7 @@ import { PostHogProvider } from 'posthog-js/react'
 import { usePathname, useSearchParams } from 'next/navigation'
 import { useEffect } from 'react'
 import { installIgnoredBrowserErrorFilter } from '@/lib/observability/ignored-browser-errors'
+import { beforeSendPostHog } from '@/lib/observability/posthog-before-send'
 
 const posthog_key = process.env.NEXT_PUBLIC_POSTHOG_KEY
 const posthog_host = process.env.NEXT_PUBLIC_POSTHOG_HOST
@@ -17,6 +18,7 @@ if (typeof window !== 'undefined') {
       api_host: posthog_host,
       capture_pageview: false, // we capture pageviews manually
       capture_exceptions: true,
+      before_send: beforeSendPostHog,
       defaults: '2025-05-24',
       mask_personal_data_properties: true,
     })

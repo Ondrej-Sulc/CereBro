@@ -29,6 +29,7 @@ import {
 import { Loader2, Plus, Pencil, Trash2, CheckCircle2, Info, MapPin, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { LocalDate } from "@/components/LocalDate";
 import Link from "next/link";
 import {
   Popover,
@@ -258,7 +259,7 @@ export function ProfileManager({ profiles, activeProfileId }: ProfileManagerProp
                     {profile.roster?.[0] && (
                       <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
                         <Clock className="w-3 h-3" />
-                        <span>Updated {new Date(profile.roster[0].updatedAt).toLocaleDateString()}</span>
+                        <span>Updated <LocalDate value={profile.roster[0].updatedAt} /></span>
                       </div>
                     )}
                   </div>

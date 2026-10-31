@@ -66,6 +66,9 @@ jobs:
       - name: Verify war map boundaries and defense planning
         run: pnpm exec vitest run src/domain/war-map.test.ts web/src/app/api/war-planning/nodes/route.test.ts web/src/app/api/war-planning/placements/route.test.ts web/src/app/planning/defense-map-actions.test.ts web/src/app/planning/defense-actions.test.ts web/src/components/war-planning/hooks/use-defense-planning.test.ts web/src/components/war-planning/hooks/use-war-planning.test.ts --maxWorkers=1
 
+      - name: Verify canvas recovery, hydration and error reporting
+        run: pnpm exec vitest run web/src/components/war-planning/hooks/use-canvas-size.test.ts web/src/components/war-planning/war-map/map-error-boundary.test.tsx web/src/app/profile/components/profile-manager.hydration.test.tsx web/src/components/PostHogProvider.test.ts web/src/lib/observability/source-map-config.test.ts web/next.config.test.ts web/src/app/api/profile/roster/manage/route.test.ts web/src/lib/observability/ignored-browser-errors.test.ts web/src/lib/observability/reportable-client-exceptions.test.ts --maxWorkers=1
+
       - name: Verify relic data, formatting and cloud image publication
         run: pnpm run test:relics
 

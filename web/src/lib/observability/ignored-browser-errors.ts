@@ -8,7 +8,7 @@ let browserErrorFilterInstalled = false;
 export function isIgnoredBrowserErrorMessage(message: unknown): boolean {
   return (
     typeof message === "string" &&
-    IGNORED_BROWSER_ERROR_MESSAGES.some((ignored) => message.includes(ignored))
+    IGNORED_BROWSER_ERROR_MESSAGES.some((ignored) => message.trim() === ignored)
   );
 }
 

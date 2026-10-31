@@ -70,6 +70,9 @@ ARG AUTH_SECRET
 ARG NEXTAUTH_SECRET
 ARG NEXT_PUBLIC_POSTHOG_KEY
 ARG NEXT_PUBLIC_POSTHOG_HOST
+ARG POSTHOG_UPLOAD_SOURCEMAPS=false
+ARG POSTHOG_PROJECT_ID
+ARG POSTHOG_SOURCEMAPS_HOST
 ENV NEXT_PUBLIC_POSTHOG_KEY=$NEXT_PUBLIC_POSTHOG_KEY
 ENV NEXT_PUBLIC_POSTHOG_HOST=$NEXT_PUBLIC_POSTHOG_HOST
 ENV APP_VERSION=$APP_VERSION
@@ -84,7 +87,11 @@ ENV SOURCE_VERSION=$SOURCE_VERSION
 ENV NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=$NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
 
 # 2. Build the Next.js application
-RUN NODE_OPTIONS="--max-old-space-size=4096" pnpm --filter web run build
+RUN --mount=type=secret,id=POSTHOG_SOURCEMAPS_API_KEY,uid=1000 \
+    if [ -r /run/secrets/POSTHOG_SOURCEMAPS_API_KEY ]; then \
+      export POSTHOG_SOURCEMAPS_API_KEY="$(cat /run/secrets/POSTHOG_SOURCEMAPS_API_KEY)"; \
+    fi; \
+    NODE_OPTIONS="--max-old-space-size=4096" pnpm --filter web run build
 
 # 3. Prune dev dependencies to create a lean, production-only node_modules
 # RUN CI=true pnpm prune --prod # This command is broken and removes 'next'
