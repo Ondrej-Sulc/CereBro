@@ -783,10 +783,8 @@ export async function distributeWarPlan(
                 const key = `${f.nodeId}-${f.defenderId}-${f.attackerId}`;
                 const videos = videoMap.get(key);
                 if (videos) {
-                    // Filter out this player's own videos, take top 3
-                    const validVideos = videos
-                        .filter(v => v.playerId !== playerObj.id)
-                        .slice(0, 3);
+                    // Include the player's own eligible recordings alongside teammates' videos.
+                    const validVideos = videos.slice(0, 3);
 
                     if (validVideos.length > 0) {
                         const videoLinks = validVideos.map(v => {

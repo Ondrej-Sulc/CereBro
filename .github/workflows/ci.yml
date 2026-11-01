@@ -81,7 +81,7 @@ jobs:
         run: pnpm exec vitest run src/services/relicCatalogImportService.postgres.test.ts src/services/playerRelicService.postgres.test.ts --maxWorkers=1
 
       - name: Verify multiple fight recordings
-        run: pnpm exec vitest run src/domain/war-recordings.test.ts web/src/lib/war-recording-upload.test.ts 'web/src/app/war-videos/[videoId]/page.recordings.test.ts' web/src/lib/war-death-summary.test.ts web/src/components/war-planning/war-death-summary.test.ts web/src/app/analysis/season-overview/season-data.test.ts --maxWorkers=1
+        run: pnpm exec vitest run src/domain/war-recordings.test.ts src/services/distribution/warPlanDistributor.test.ts web/src/lib/war-recording-upload.test.ts 'web/src/app/war-videos/[videoId]/page.recordings.test.ts' web/src/lib/war-death-summary.test.ts web/src/components/war-planning/war-death-summary.test.ts web/src/app/analysis/season-overview/season-data.test.ts --maxWorkers=1
 
       - name: Verify recording migration, concurrent submissions and historical statistics
         env:
