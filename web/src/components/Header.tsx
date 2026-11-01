@@ -183,14 +183,14 @@ export default function Header({ userButton, isInAlliance, hasPlayerProfile }: {
                   <span className="sr-only">Open menu</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[300px] border-l border-slate-800 bg-slate-950 p-6">
-                <SheetHeader className="mb-8">
+              <SheetContent side="right" className="flex h-dvh w-[300px] flex-col overflow-hidden border-l border-slate-800 bg-slate-950 p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
+                <SheetHeader className="mb-8 shrink-0">
                   <SheetTitle className="flex items-center gap-3">
                     <Image src="/CereBro_logo_256.png" alt="CereBro Logo" width={32} height={32} className="rounded-xl" />
                     <span className="font-bold text-white">CereBro</span>
                   </SheetTitle>
                 </SheetHeader>
-                <nav className="flex flex-col gap-6">
+                <nav className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-contain">
                   <div className="flex flex-col gap-4">
                                       <Link
                                           href="/search"
