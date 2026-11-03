@@ -93,17 +93,24 @@ export const hashChampionInput = (input: Omit<ChampionEnrichmentInput, 'inputHas
   return artifactHash(content);
 };
 
-/** Keep the same explicit teammate/rarity requirements used by the interactive editor. */
-export function buildEnrichmentSynergyRequirement(document: EnrichmentDocument, championIds: number[]): string {
+const hasAllPartnerEvidence = (document: EnrichmentDocument) => /\bif all synergy champions are present\b/i.test(document.text);
+const hasCompletePartnerSet = (document: EnrichmentDocument, championIds: number[]) =>
+  new Set(championIds).size === championIds.length && championIds.length === document.synergy?.partners.length &&
+  document.synergy.partners.every(partner => championIds.includes(partner.id));
+
+/** Opt in to all-partner bonuses only with explicit imported evidence; preserve historical OR artifacts. */
+export function buildEnrichmentSynergyRequirement(document: EnrichmentDocument, championIds: number[], requireAllPartners = false): string {
   const synergy = document.synergy;
   if (document.kind !== 'synergy' || !synergy || !championIds.length) throw new Error('Applicable synergy context is required.');
+  if (requireAllPartners && !hasAllPartnerEvidence(document)) throw new Error('Explicit all-partner evidence is required.');
+  if (requireAllPartners && !hasCompletePartnerSet(document, championIds)) throw new Error('The complete partner set is required.');
   const stars = (rarities: number[]) => rarities.map(r => `${r}★`).join('/');
   const partners = [...championIds].sort((a, b) => a - b).map(id => {
     const partner = synergy.partners.find(p => p.id === id);
     if (!partner) throw new Error('Unsupported synergy teammate.');
     return `${partner.name} (${stars(partner.rarities)})`;
   });
-  return `Synergy: ${document.title} (${stars(synergy.championRarities)}) with ${partners.join(' OR ')}${synergy.unique ? '; does not stack' : ''}`;
+  return `Synergy: ${document.title} (${stars(synergy.championRarities)}) with ${partners.join(requireAllPartners ? ' AND ' : ' OR ')}${synergy.unique ? '; does not stack' : ''}`;
 }
 
 const identity = (item: Pick<EffectCandidate, 'name' | 'type' | 'source' | 'effectForm' | 'effectDirection'>) =>
@@ -135,7 +142,9 @@ export function validateEnrichment(
       const synergyDocs = evidence.map(c => documents.get(c.documentId)!).filter(doc => doc.kind === 'synergy');
       if (item.synergyChampionIds.length) {
         const context = synergyDocs.find(doc => item.synergyChampionIds.every(id => doc.synergy?.partners.some(partner => partner.id === id)) &&
-          item.source?.startsWith(buildEnrichmentSynergyRequirement(doc, item.synergyChampionIds)));
+          (item.source?.startsWith(buildEnrichmentSynergyRequirement(doc, item.synergyChampionIds)) ||
+            (hasAllPartnerEvidence(doc) && hasCompletePartnerSet(doc, item.synergyChampionIds) &&
+              item.source?.startsWith(buildEnrichmentSynergyRequirement(doc, item.synergyChampionIds, true)))));
         if (!context) {
           throw new Error(`Synergy teammates lack applicable context for ${item.name}.`);
         }

@@ -59,6 +59,19 @@ describe("champion kit overview", () => {
     expect(buildChampionKitOverviewEffects([{ ...links[2], source: "Synergy: EXAMPLE (7★) with Havok (3★): Gain Fury." }], new Map(), 7)).toHaveLength(1)
   })
 
+  it("retains rarity and all-partner requirements when an enrichment header ends with a period", () => {
+    const partners = [partner, { name: "Mr. Example", slug: "mr-example", images: null }]
+    const source = "Synergy: EXAMPLE Lv. 1 (6★/7★) with Havok (5★/6★/7★) AND Mr. Example (6★/7★); does not stack. With all partners present: gain Fury."
+    const links = [{ id: 1, type: "ABILITY" as const, source, ability, synergyChampions: partners.map(champion => ({ champion })) }]
+    expect(buildChampionKitOverviewEffects(links, new Map(), 5)).toEqual([])
+    const [effect] = buildChampionKitOverviewEffects(links, new Map(), 6)
+    const view = prepareChampionAbilityTextView({ records: [] })
+    const groups = groupChampionKitSources(effect, view)
+    expect(groups[0].synergies[0]).toMatchObject({ unique: true,
+      partnerRequirement: "Havok (5★/6★/7★) AND Mr. Example (6★/7★)",
+      links: [{ label: "EXAMPLE Lv. 1", rarities: [6, 7], conditions: ["With all partners present: gain Fury."] }] })
+  })
+
   it("keeps synergy-only effects and their partners, showing a short synergy source instead of its full prose", () => {
     const links = [
       { id: 1, type: "ABILITY" as const, source: "Charging Heavy: gain Unstoppable for {2} seconds.", ability: { ...ability, name: "Unstoppable" }, synergyChampions: [] },
