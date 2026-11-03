@@ -35,6 +35,29 @@ function candidate(): EffectCandidate {
 }
 
 describe('champion effect enrichment integrity', () => {
+  it('retains explicit all-partner conditions without changing historical OR requirements', () => {
+    const champion = input(), document = champion.documents[1];
+    document.text = 'Example: If all Synergy Champions are present, gain a Fury Buff.';
+    document.synergy!.partners.push({ id: 30, name: 'Second Partner', rarities: [6, 7] });
+    const source = buildEnrichmentSynergyRequirement(document, [20, 30], true);
+    expect(source).toContain('Partner (5★/6★/7★) AND Second Partner (6★/7★)');
+    expect(buildEnrichmentSynergyRequirement(document, [20, 30])).toContain(' OR ');
+    expect(() => buildEnrichmentSynergyRequirement(document, [20], true)).toThrow(/complete partner set/i);
+    champion.inputHash = hashChampionInput(champion);
+    const proposal = draft(); proposal.inputHash = champion.inputHash;
+    proposal.additions.push({ ...candidate(), source: `${source}: Gain a Fury Buff.`, synergyChampionIds: [20, 30],
+      evidence: [{ documentId: document.id, quote: document.text }] });
+    expect(validateEnrichment(champion, catalog, proposal).effects).toHaveLength(2);
+    // AND must not authorize a partial team or unsupported imported condition.
+    proposal.additions[0].synergyChampionIds = [20];
+    expect(() => validateEnrichment(champion, catalog, proposal)).toThrow(/applicable context/i);
+    document.text = 'Example: Gain a Fury Buff.';
+    expect(() => buildEnrichmentSynergyRequirement(document, [20, 30], true)).toThrow(/all-partner evidence/i);
+    champion.inputHash = hashChampionInput(champion); proposal.inputHash = champion.inputHash;
+    proposal.additions[0].synergyChampionIds = [20, 30];
+    proposal.additions[0].evidence[0].quote = document.text;
+    expect(() => validateEnrichment(champion, catalog, proposal)).toThrow(/applicable context/i);
+  });
   it('hashes objects independent of object key insertion order while preserving array order', () => {
     expect(artifactHash({ b: 2, a: { d: 4, c: 3 } })).toBe(artifactHash({ a: { c: 3, d: 4 }, b: 2 }));
     expect(artifactHash([1, 2])).not.toBe(artifactHash([2, 1]));

@@ -112,7 +112,11 @@ type KitSynergyHeader = { name: string; rarities: number[]; partners: string; un
 
 /** Only the canonical imported header establishes star requirements; legacy prose stays visible. */
 function readKitSynergyHeader(source: string): KitSynergyHeader | null {
-  const match = source.match(/^\s*Synergy:\s*(.+?)\s+\(([1-7]★(?:\/[1-7]★)*)\)\s+with\s+(.+?)(; does not stack)?:\s*/i)
+  // Accept a sentence separator only after a complete partner rarity group.
+  // Match it before the legacy colon form, since the condition can itself contain
+  // a colon. Dots in names (Mr.) and synergy levels (Lv.) are not separators.
+  const match = source.match(/^\s*Synergy:\s*(.+?)\s+\(([1-7]★(?:\/[1-7]★)*)\)\s+with\s+([^:\r\n]+?\([1-7]★(?:\/[1-7]★)*\))(; does not stack)?\.\s+/i)
+    ?? source.match(/^\s*Synergy:\s*(.+?)\s+\(([1-7]★(?:\/[1-7]★)*)\)\s+with\s+(.+?)(; does not stack)?:\s*/i)
   if (!match) return null
   // This known enrichment annotation describes a catalog flag discrepancy,
   // not an activation requirement. Preserve the raw source and original flag.
