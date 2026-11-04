@@ -1,0 +1,13 @@
+{
+  "round": "round1",
+  "semanticCases": 8,
+  "allFit": true,
+  "errors": [],
+  "criteria": {
+    "profileBefore": 181,
+    "profileAfter": 128,
+    "reduction": 0.2928176795580111,
+    "firstMoveBefore": 356,
+    "firstMoveAfter": 299
+  }
+}

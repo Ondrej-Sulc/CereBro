@@ -1,0 +1,17 @@
+{
+  "round": "round3",
+  "files": [
+    {
+      "path": "web/src/app/champions/[slug]/champion-attack-profile.tsx",
+      "sha256": "5c41468712ea12658591d56b351928fe75e648e574ba6477443004c5f3c69dbd"
+    },
+    {
+      "path": "web/src/app/champions/[slug]/champion-details-client.tsx",
+      "sha256": "a16751ec199d71c6ce63f705fa7efc15f8cdcbe6ea7643fc32113617a0fa4854"
+    },
+    {
+      "path": "web/src/app/champions/[slug]/champion-dossier.module.css",
+      "sha256": "bba133443455da3b868887cf4eeabbd79222e6ad6239066693332d73f0f32e66"
+    }
+  ]
+}

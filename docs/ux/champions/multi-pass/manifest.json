@@ -1,0 +1,320 @@
+{
+  "createdAt": "2026-11-04T16:23:03.752Z",
+  "sequentialSourcesMatch": true,
+  "approvedSourceFilesPreserved": [
+    "web/src/app/champions/[slug]/champion-ability-reader.tsx",
+    "web/src/app/champions/[slug]/champion-kit-overview.tsx",
+    "web/src/app/champions/[slug]/champion-stats-panel.tsx"
+  ],
+  "semanticCases": [
+    8,
+    10,
+    6
+  ],
+  "files": [
+    {
+      "path": "README.md",
+      "sha256": "80c8a40df551f703c93bfab2621967092e8643096a7cf6ed9d2da6d336a56a96"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/browser-smoke.json",
+      "sha256": "09f1f4355258a81fd3ff5bdafe90c58669c08e8a926210c97da42f2bcc843e10"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/comparison.html",
+      "sha256": "5be0635514a68060bc4cc107691bc918fd01c4ed3f5847d707d9266a562d0369"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/experiment.md",
+      "sha256": "4194a30742343c7ac181b7d17a3e9e0f3e4ac21963b55f1cc694c8338238938a"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/layout-checks.json",
+      "sha256": "149ec512bfb903e0ade8820712138e1d76cc45060d9cc2f71627335ae42459b6"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/notes.md",
+      "sha256": "1ee4e7aacb9d72a25b697e60672591dbd4863f9947fec28539ce254442ef3931"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/after/01-profile-mobile.png",
+      "sha256": "15c91c33ab1b6b614542a2c2a292248c08d74c9dd2053b7f9836c4b92c5d5206"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/after/02-profile-desktop.png",
+      "sha256": "2adb400599c0d0fdfe5c0473aea5eebab01c121372329c59c73fc24111f5cf7a"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/after/03-profile-small.png",
+      "sha256": "e72c3eed5c745c9d3eabd0a3448476ac1ac8f78e75621b7962b32997f3438eca"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/after/04-specials-mobile.png",
+      "sha256": "463f1fb80760ba9598f1e3ed73bb798958f4439afaa65446fbb00d68f413dcf0"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/after/05-specials-small.png",
+      "sha256": "0647cbaa387829189336c3ece87140a89a20c7d2b5937e9cc4d8eefa5cbcee4b"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/after/06-basic-mobile.png",
+      "sha256": "d284472f22b6aee1661e7bd5b5453a9cbcc06e56204549dffdad12b3cb0ed348"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/after/07-long-name-specials.png",
+      "sha256": "8bcd5da39aba0510b8b1c06ac6b6c0900bd5f828f745c1edae90e2d555ba37e2"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/after/08-profile-reference.png",
+      "sha256": "1ffd05492d5d5ed6f59168a571c7c7a1958f0003ccce76f45751290d9ef4eef7"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/after/evidence.json",
+      "sha256": "b975ff80c87da5ca3a3575e1c6a85dd109a96c7426d75f62d8f418b3a806ab59"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/before/01-profile-mobile.png",
+      "sha256": "7995cddb88cd36f2a92f45fd953216ddd77446cf813a0a5763531cd48ae5d1e1"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/before/02-profile-desktop.png",
+      "sha256": "f6953d8a36fa732bd664516b06be4d2940318174d7572e1f2eceb262eee1de81"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/before/03-profile-small.png",
+      "sha256": "d5c944c9be98c5d3682576325432e20098b4e2ec5296c07848f6aef64b5e337c"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/before/04-specials-mobile.png",
+      "sha256": "bbc06b719872eca0a3ffe28664e38591345f6bfa6add44508f0e8f1e0005df85"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/before/05-specials-small.png",
+      "sha256": "894c61f2f8cde7dd6552bbe2856c199977489bbc31b20ee67e6d3db5fe0c7b8a"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/before/06-basic-mobile.png",
+      "sha256": "9fb72597cfc6ff6617b096b2087987eaf71bb5adbfa0c4ad61b16115aecac699"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/before/07-long-name-specials.png",
+      "sha256": "c1f188f9d5f174291fa8b0ee6e50c55c4cc79ae563cb980bb0b15d3cde56f80b"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/before/08-profile-reference.png",
+      "sha256": "5c04a5f932e30fb4f7344e3e935d28c93abed1bf6c9f6dc352ebf3c55b689dfb"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/before/evidence.json",
+      "sha256": "648e94ad4614dd32a2e1c1f59ce05bec2541da13cde25461c65d7c8fa8b24d12"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/incumbent-manifest.json",
+      "sha256": "a0b7c05b1a72d698fbddc25b65200f0ac4b1c3d4cab956e2a24a9a7b13f59965"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/retained-source-manifest.json",
+      "sha256": "a1d373065873fe9431f1e006dc9e5cf02a645b86ac8f8efe8d8d5c50a8541d4a"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/review-mapping.json",
+      "sha256": "a98e1dd72346f34a903ee68170d442057465617a983dce926278b4a6ec89f9ab"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round1/verification.json",
+      "sha256": "ad092772a7b19c0edfe1be5f0da560fa8c431a86bd2e25fb331e65ae047807a7"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/after/01-profile-mobile.png",
+      "sha256": "15c91c33ab1b6b614542a2c2a292248c08d74c9dd2053b7f9836c4b92c5d5206"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/after/02-profile-desktop.png",
+      "sha256": "f76429bedbde31c54db06ee699b3338dff0f924e04c19f96c611634fd28e0766"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/after/03-profile-small.png",
+      "sha256": "e72c3eed5c745c9d3eabd0a3448476ac1ac8f78e75621b7962b32997f3438eca"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/after/04-specials-mobile.png",
+      "sha256": "84af58d62e30257b327498072331541e5edc47d1e86969ea090075970e79b667"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/after/05-specials-small.png",
+      "sha256": "f43791009c1bcec2e63e119a356fae81d8a801e5cb0baf855af401c48fc0a7a6"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/after/06-basic-mobile.png",
+      "sha256": "d284472f22b6aee1661e7bd5b5453a9cbcc06e56204549dffdad12b3cb0ed348"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/after/07-long-name-specials.png",
+      "sha256": "8bcd5da39aba0510b8b1c06ac6b6c0900bd5f828f745c1edae90e2d555ba37e2"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/after/08-profile-reference.png",
+      "sha256": "1ffd05492d5d5ed6f59168a571c7c7a1958f0003ccce76f45751290d9ef4eef7"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/after/09-special-collapsed.png",
+      "sha256": "80fdfd40145c83df2ce77ad5c8aff78cd41315180fde48fcce90a73d6977c52d"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/after/10-three-property-small.png",
+      "sha256": "13b4f0e14027c9473a3c22d49a52219bb621e9100c4761e59f0780b60d56be4c"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/after/evidence.json",
+      "sha256": "813a0cd5355fc6d4602cb3b3f8ee951d8540b040ddfcfba77daacbc4652636f2"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/before/01-profile-mobile.png",
+      "sha256": "15c91c33ab1b6b614542a2c2a292248c08d74c9dd2053b7f9836c4b92c5d5206"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/before/02-profile-desktop.png",
+      "sha256": "2adb400599c0d0fdfe5c0473aea5eebab01c121372329c59c73fc24111f5cf7a"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/before/03-profile-small.png",
+      "sha256": "e72c3eed5c745c9d3eabd0a3448476ac1ac8f78e75621b7962b32997f3438eca"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/before/04-specials-mobile.png",
+      "sha256": "463f1fb80760ba9598f1e3ed73bb798958f4439afaa65446fbb00d68f413dcf0"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/before/05-specials-small.png",
+      "sha256": "0647cbaa387829189336c3ece87140a89a20c7d2b5937e9cc4d8eefa5cbcee4b"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/before/06-basic-mobile.png",
+      "sha256": "d284472f22b6aee1661e7bd5b5453a9cbcc06e56204549dffdad12b3cb0ed348"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/before/07-long-name-specials.png",
+      "sha256": "8bcd5da39aba0510b8b1c06ac6b6c0900bd5f828f745c1edae90e2d555ba37e2"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/before/08-profile-reference.png",
+      "sha256": "1ffd05492d5d5ed6f59168a571c7c7a1958f0003ccce76f45751290d9ef4eef7"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/before/09-special-collapsed.png",
+      "sha256": "0636cb133c63a994b9c787fb4d8585c383218c2732807c0bdaa2f9fcd6447d3d"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/before/10-three-property-small.png",
+      "sha256": "3d5c0e1107473c08cf8502ac3fd93eb8e6a846c6aa9055da95284f1f11130ca1"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/before/evidence.json",
+      "sha256": "51f99569b40e0f40190e5a0f81ef11e78c95b84298e165eead9458fa8f755799"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/browser-interactions.json",
+      "sha256": "2c459fd83816c1e053e0e874e37e88994b0c5ada20de825d83307f0c74fdc13b"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/incumbent-manifest.json",
+      "sha256": "2aaec500adccfe4128a49dcee4134f0795fe2355ad8b5531a7409465b3d4ecc3"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/retained-source-manifest.json",
+      "sha256": "39c8af7307383aafa34e8affe05b86f7cec51378ff5998851d0d8de306e81459"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/review-mapping.json",
+      "sha256": "7607fe3eadb630ad1bb7ad013fbe5d9736fe322e8231c59076f2c200c9e6af5a"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round2/verification.json",
+      "sha256": "7f4ef615ef25eeedbcec274ef6aede44ef68be56f6630c899d12cddc89026ef7"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round3/after/01-build-mobile.png",
+      "sha256": "ecc46b5d74976e7baa58d18f70bafbb62035066007007c2f553413ca2ebedfb6"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round3/after/02-build-desktop.png",
+      "sha256": "b935badb8f001ed94c00917e3716a08184c869cd86ac2b2c1241e76d3b5d70f1"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round3/after/03-build-small.png",
+      "sha256": "0d0cfb1f7c7063c03bae321caa46049de8ac5fa02366acee8212289125edd3f7"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round3/after/04-build-long-name.png",
+      "sha256": "2673aecb02d00320d556e1d957fb58b3196ff5131ef62038ac04b52ac6b4e60e"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round3/after/05-build-six-star.png",
+      "sha256": "331374ac635056ea0246987b0faed35d13be5419da1f2ecb5762c7a009dd99af"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round3/after/06-build-unawakened.png",
+      "sha256": "bf9a4a3ad0b2ec3b9d68b6ae9c44b663bac48723b254b33f48879e9ee3f13533"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round3/after/evidence.json",
+      "sha256": "8d7af506c1a8d4229ffd11e834b4478d77c2ecf577c71330e500c211e2739572"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round3/before/01-build-mobile.png",
+      "sha256": "ae4b7aa09b7b198ef1f583969ab72bff18954cb938e0f6ae5ab9887280343bab"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round3/before/02-build-desktop.png",
+      "sha256": "59a985f23b480cb887013d567587fc60f56975102e119ceb5554a51071f8ad6a"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round3/before/03-build-small.png",
+      "sha256": "9f720cff42e74db5247f1f7fd07ff5caf1b40e71bca66af6f6eb49a4a4d52de5"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round3/before/04-build-long-name.png",
+      "sha256": "382a7d2002779a2880881a6b257b823edc4c6bb70f0a0f5fcc1904e47ab7588a"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round3/before/05-build-six-star.png",
+      "sha256": "331374ac635056ea0246987b0faed35d13be5419da1f2ecb5762c7a009dd99af"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round3/before/06-build-unawakened.png",
+      "sha256": "14652e8ec6b45599fd71960e62fb83955c9b15eb1ad4d42005f2f8ec0031ce6b"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round3/before/evidence.json",
+      "sha256": "c7a318a47a9c119f3ca45ef4418d250cfc26bf030ae2e25a5551e111ca44652b"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round3/incumbent-manifest.json",
+      "sha256": "87038931d6bf43af420c987e24ea588dc4ebe3f49799556e0dcf79a0fe34f940"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round3/retained-source-manifest.json",
+      "sha256": "40ce9c0078466de18b2cea0de6b3099798c3ca2ace2e21114104e589c6c4c4fa"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round3/review-mapping.json",
+      "sha256": "a98e1dd72346f34a903ee68170d442057465617a983dce926278b4a6ec89f9ab"
+    },
+    {
+      "path": "docs/ux/champions/multi-pass/round3/verification.json",
+      "sha256": "c95f1f7cc02e811b6db97ab3599474cc4e3f90e00c1538bcc1b009a359919690"
+    },
+    {
+      "path": "web/src/app/champions/[slug]/champion-attack-profile.tsx",
+      "sha256": "5c41468712ea12658591d56b351928fe75e648e574ba6477443004c5f3c69dbd"
+    },
+    {
+      "path": "web/src/app/champions/[slug]/champion-details-client.tsx",
+      "sha256": "a16751ec199d71c6ce63f705fa7efc15f8cdcbe6ea7643fc32113617a0fa4854"
+    },
+    {
+      "path": "web/src/app/champions/[slug]/champion-dossier.module.css",
+      "sha256": "bba133443455da3b868887cf4eeabbd79222e6ad6239066693332d73f0f32e66"
+    }
+  ]
+}

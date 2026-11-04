@@ -1,0 +1,13 @@
+{
+  "description": "Approved local overview/stats candidate with released reader",
+  "files": [
+    {
+      "path": "web/src/app/champions/[slug]/champion-ability-reader.tsx",
+      "sha256": "aaa97961ee5ab3830671023a530859cc936810ce766152c8331b06a774dca9df"
+    },
+    {
+      "path": "web/src/app/champions/[slug]/champion-dossier.module.css",
+      "sha256": "8b55d653882d7bdff628a66e0b2e921c7ace64737d81a74e27edc68b88ef451e"
+    }
+  ]
+}

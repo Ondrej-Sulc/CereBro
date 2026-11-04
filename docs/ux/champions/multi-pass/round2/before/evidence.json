@@ -1,0 +1,2736 @@
+{
+  "round": "round2",
+  "phase": "before",
+  "captures": [
+    {
+      "name": "01-profile-mobile",
+      "target": "profile",
+      "toggled": false,
+      "url": "http://localhost:3000/champions/absorbing-man?tab=stats&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 1194,
+      "profileHeight": 128,
+      "profileText": "Recorded hits by damage typePhysical16 hits16 contact hits0 projectile hits",
+      "firstMoveOffset": 299,
+      "headers": [
+        {
+          "label": "Light 1",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Light 2",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Light 3",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Light 4",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Medium 1",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Medium 2",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Heavy",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 181.6875
+        },
+        {
+          "label": "Special 1",
+          "height": 75,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 181.6875
+        },
+        {
+          "label": "Special 2",
+          "height": 75,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 181.6875
+        }
+      ],
+      "buildHeight": null,
+      "buildWidth": null,
+      "semantics": {
+        "moves": [
+          {
+            "name": "Basic attacks7",
+            "moves": [
+              {
+                "text": "Light 1ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 2ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 3ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 4ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Medium 1ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Medium 2ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "HeavyContactPhysical2 hits0102Hits 1–2Contact · Physical",
+                "open": false,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Physical",
+                  "Hit 2: Contact, Physical"
+                ],
+                "abilityLinks": []
+              }
+            ]
+          },
+          {
+            "name": "Special attacks2",
+            "moves": [
+              {
+                "text": "Special 1ContactPhysical3 hitsUru Rush010203Hits 1–3Contact · PhysicalRead ability",
+                "open": true,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Physical",
+                  "Hit 2: Contact, Physical",
+                  "Hit 3: Contact, Physical"
+                ],
+                "abilityLinks": [
+                  "Read Special 1 ability"
+                ]
+              },
+              {
+                "text": "Special 2ContactPhysical5 hitsMagma Spin0102030405Hits 1–5Contact · PhysicalRead ability",
+                "open": true,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Physical",
+                  "Hit 2: Contact, Physical",
+                  "Hit 3: Contact, Physical",
+                  "Hit 4: Contact, Physical",
+                  "Hit 5: Contact, Physical"
+                ],
+                "abilityLinks": [
+                  "Read Special 2 ability"
+                ]
+              }
+            ]
+          }
+        ],
+        "profile": {
+          "legend": [
+            "Physical16 hits"
+          ],
+          "contact": [
+            "16 contact hits",
+            "0 projectile hits"
+          ],
+          "bars": [
+            {
+              "grow": "16",
+              "color": "rgb(252, 214, 155)"
+            }
+          ]
+        },
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "306"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,018"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "448"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "4,125"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "688"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "build": null
+      }
+    },
+    {
+      "name": "02-profile-desktop",
+      "target": "profile",
+      "toggled": false,
+      "url": "http://localhost:3000/champions/absorbing-man?tab=stats&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        1280,
+        900
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 1280,
+      "scrollY": 806,
+      "profileHeight": 72,
+      "profileText": "Recorded hits by damage typePhysical16 hits16 contact hits0 projectile hits",
+      "firstMoveOffset": 207,
+      "headers": [
+        {
+          "label": "Light 1",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 360.703125
+        },
+        {
+          "label": "Light 2",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 360.703125
+        },
+        {
+          "label": "Light 3",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 360.703125
+        },
+        {
+          "label": "Light 4",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 360.703125
+        },
+        {
+          "label": "Medium 1",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 360.703125
+        },
+        {
+          "label": "Medium 2",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 360.703125
+        },
+        {
+          "label": "Heavy",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 354.65625
+        },
+        {
+          "label": "Special 1",
+          "height": 75,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 436.71875
+        },
+        {
+          "label": "Special 2",
+          "height": 75,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 436.71875
+        }
+      ],
+      "buildHeight": null,
+      "buildWidth": null,
+      "semantics": {
+        "moves": [
+          {
+            "name": "Basic attacks7",
+            "moves": [
+              {
+                "text": "Light 1ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 2ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 3ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 4ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Medium 1ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Medium 2ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "HeavyContactPhysical2 hits0102Hits 1–2Contact · Physical",
+                "open": false,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Physical",
+                  "Hit 2: Contact, Physical"
+                ],
+                "abilityLinks": []
+              }
+            ]
+          },
+          {
+            "name": "Special attacks2",
+            "moves": [
+              {
+                "text": "Special 1ContactPhysical3 hitsUru Rush010203Hits 1–3Contact · PhysicalRead ability",
+                "open": true,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Physical",
+                  "Hit 2: Contact, Physical",
+                  "Hit 3: Contact, Physical"
+                ],
+                "abilityLinks": [
+                  "Read Special 1 ability"
+                ]
+              },
+              {
+                "text": "Special 2ContactPhysical5 hitsMagma Spin0102030405Hits 1–5Contact · PhysicalRead ability",
+                "open": true,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Physical",
+                  "Hit 2: Contact, Physical",
+                  "Hit 3: Contact, Physical",
+                  "Hit 4: Contact, Physical",
+                  "Hit 5: Contact, Physical"
+                ],
+                "abilityLinks": [
+                  "Read Special 2 ability"
+                ]
+              }
+            ]
+          }
+        ],
+        "profile": {
+          "legend": [
+            "Physical16 hits"
+          ],
+          "contact": [
+            "16 contact hits",
+            "0 projectile hits"
+          ],
+          "bars": [
+            {
+              "grow": "16",
+              "color": "rgb(252, 214, 155)"
+            }
+          ]
+        },
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "306"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,018"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "448"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "4,125"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "688"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "build": null
+      }
+    },
+    {
+      "name": "03-profile-small",
+      "target": "profile",
+      "toggled": false,
+      "url": "http://localhost:3000/champions/absorbing-man?tab=stats&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        320,
+        568
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 320,
+      "scrollY": 1190,
+      "profileHeight": 128,
+      "profileText": "Recorded hits by damage typePhysical16 hits16 contact hits0 projectile hits",
+      "firstMoveOffset": 323,
+      "headers": [
+        {
+          "label": "Light 1",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 117.734375
+        },
+        {
+          "label": "Light 2",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 117.734375
+        },
+        {
+          "label": "Light 3",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 117.734375
+        },
+        {
+          "label": "Light 4",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 117.734375
+        },
+        {
+          "label": "Medium 1",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 117.734375
+        },
+        {
+          "label": "Medium 2",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 117.734375
+        },
+        {
+          "label": "Heavy",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 111.6875
+        },
+        {
+          "label": "Special 1",
+          "height": 104,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 111.6875
+        },
+        {
+          "label": "Special 2",
+          "height": 104,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 111.6875
+        }
+      ],
+      "buildHeight": null,
+      "buildWidth": null,
+      "semantics": {
+        "moves": [
+          {
+            "name": "Basic attacks7",
+            "moves": [
+              {
+                "text": "Light 1ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 2ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 3ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 4ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Medium 1ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Medium 2ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "HeavyContactPhysical2 hits0102Hits 1–2Contact · Physical",
+                "open": false,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Physical",
+                  "Hit 2: Contact, Physical"
+                ],
+                "abilityLinks": []
+              }
+            ]
+          },
+          {
+            "name": "Special attacks2",
+            "moves": [
+              {
+                "text": "Special 1ContactPhysical3 hitsUru Rush010203Hits 1–3Contact · PhysicalRead ability",
+                "open": true,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Physical",
+                  "Hit 2: Contact, Physical",
+                  "Hit 3: Contact, Physical"
+                ],
+                "abilityLinks": [
+                  "Read Special 1 ability"
+                ]
+              },
+              {
+                "text": "Special 2ContactPhysical5 hitsMagma Spin0102030405Hits 1–5Contact · PhysicalRead ability",
+                "open": true,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Physical",
+                  "Hit 2: Contact, Physical",
+                  "Hit 3: Contact, Physical",
+                  "Hit 4: Contact, Physical",
+                  "Hit 5: Contact, Physical"
+                ],
+                "abilityLinks": [
+                  "Read Special 2 ability"
+                ]
+              }
+            ]
+          }
+        ],
+        "profile": {
+          "legend": [
+            "Physical16 hits"
+          ],
+          "contact": [
+            "16 contact hits",
+            "0 projectile hits"
+          ],
+          "bars": [
+            {
+              "grow": "16",
+              "color": "rgb(252, 214, 155)"
+            }
+          ]
+        },
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "306"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,018"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "448"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "4,125"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "688"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "build": null
+      }
+    },
+    {
+      "name": "04-specials-mobile",
+      "target": "specials",
+      "toggled": false,
+      "url": "http://localhost:3000/champions/ms-marvel?tab=stats&rarity=6&rank=5&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 1887,
+      "profileHeight": 128,
+      "profileText": "Recorded hits by damage typePhysical10 hitsEnergy3 hits12 contact hits1 projectile hits",
+      "firstMoveOffset": 299,
+      "headers": [
+        {
+          "label": "Light 1",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Light 2",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Light 3",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Light 4",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Medium 1",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Medium 2",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Heavy",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 181.6875
+        },
+        {
+          "label": "Special 1",
+          "height": 76,
+          "propertyCount": 5,
+          "propertyLines": 2,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Special 2",
+          "height": 76,
+          "propertyCount": 4,
+          "propertyLines": 2,
+          "propertiesWidth": 181.6875
+        }
+      ],
+      "buildHeight": null,
+      "buildWidth": null,
+      "semantics": {
+        "moves": [
+          {
+            "name": "Basic attacks7",
+            "moves": [
+              {
+                "text": "Light 1ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 2ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 3ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 4ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Medium 1ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Medium 2ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "HeavyContactPhysical4 hits01020304Hits 1–4Contact · Physical",
+                "open": false,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Physical",
+                  "Hit 2: Contact, Physical",
+                  "Hit 3: Contact, Physical",
+                  "Hit 4: Contact, Physical"
+                ],
+                "abilityLinks": []
+              }
+            ]
+          },
+          {
+            "name": "Special attacks2",
+            "moves": [
+              {
+                "text": "Special 1ProjectileEnergyHeatBeamCosmic1 hit",
+                "open": null,
+                "properties": [
+                  "Projectile",
+                  "Energy",
+                  "Heat",
+                  "Beam",
+                  "Cosmic"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Special 2ContactEnergyCosmicKick2 hits0102Hit 1Contact · Energy · Cosmic · KickHit 2Contact · Energy",
+                "open": true,
+                "properties": [
+                  "Contact",
+                  "Energy",
+                  "Cosmic",
+                  "Kick"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Energy, Cosmic, Kick",
+                  "Hit 2: Contact, Energy"
+                ],
+                "abilityLinks": []
+              }
+            ]
+          }
+        ],
+        "profile": {
+          "legend": [
+            "Physical10 hits",
+            "Energy3 hits"
+          ],
+          "contact": [
+            "12 contact hits",
+            "1 projectile hits"
+          ],
+          "bars": [
+            {
+              "grow": "10",
+              "color": "rgb(252, 214, 155)"
+            },
+            {
+              "grow": "3",
+              "color": "rgb(125, 211, 252)"
+            }
+          ]
+        },
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "65"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "150"
+          },
+          {
+            "label": "Critical rating",
+            "value": "791"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,500"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "563"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "3,238"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "build": null
+      }
+    },
+    {
+      "name": "05-specials-small",
+      "target": "specials",
+      "toggled": false,
+      "url": "http://localhost:3000/champions/ms-marvel?tab=stats&rarity=6&rank=5&sig=200&ascension=0",
+      "viewport": [
+        320,
+        568
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 320,
+      "scrollY": 2152,
+      "profileHeight": 128,
+      "profileText": "Recorded hits by damage typePhysical10 hitsEnergy3 hits12 contact hits1 projectile hits",
+      "firstMoveOffset": 323,
+      "headers": [
+        {
+          "label": "Light 1",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 117.734375
+        },
+        {
+          "label": "Light 2",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 117.734375
+        },
+        {
+          "label": "Light 3",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 117.734375
+        },
+        {
+          "label": "Light 4",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 117.734375
+        },
+        {
+          "label": "Medium 1",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 117.734375
+        },
+        {
+          "label": "Medium 2",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 117.734375
+        },
+        {
+          "label": "Heavy",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 111.6875
+        },
+        {
+          "label": "Special 1",
+          "height": 105,
+          "propertyCount": 5,
+          "propertyLines": 3,
+          "propertiesWidth": 117.734375
+        },
+        {
+          "label": "Special 2",
+          "height": 76,
+          "propertyCount": 4,
+          "propertyLines": 2,
+          "propertiesWidth": 111.6875
+        }
+      ],
+      "buildHeight": null,
+      "buildWidth": null,
+      "semantics": {
+        "moves": [
+          {
+            "name": "Basic attacks7",
+            "moves": [
+              {
+                "text": "Light 1ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 2ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 3ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 4ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Medium 1ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Medium 2ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "HeavyContactPhysical4 hits01020304Hits 1–4Contact · Physical",
+                "open": false,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Physical",
+                  "Hit 2: Contact, Physical",
+                  "Hit 3: Contact, Physical",
+                  "Hit 4: Contact, Physical"
+                ],
+                "abilityLinks": []
+              }
+            ]
+          },
+          {
+            "name": "Special attacks2",
+            "moves": [
+              {
+                "text": "Special 1ProjectileEnergyHeatBeamCosmic1 hit",
+                "open": null,
+                "properties": [
+                  "Projectile",
+                  "Energy",
+                  "Heat",
+                  "Beam",
+                  "Cosmic"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Special 2ContactEnergyCosmicKick2 hits0102Hit 1Contact · Energy · Cosmic · KickHit 2Contact · Energy",
+                "open": true,
+                "properties": [
+                  "Contact",
+                  "Energy",
+                  "Cosmic",
+                  "Kick"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Energy, Cosmic, Kick",
+                  "Hit 2: Contact, Energy"
+                ],
+                "abilityLinks": []
+              }
+            ]
+          }
+        ],
+        "profile": {
+          "legend": [
+            "Physical10 hits",
+            "Energy3 hits"
+          ],
+          "contact": [
+            "12 contact hits",
+            "1 projectile hits"
+          ],
+          "bars": [
+            {
+              "grow": "10",
+              "color": "rgb(252, 214, 155)"
+            },
+            {
+              "grow": "3",
+              "color": "rgb(125, 211, 252)"
+            }
+          ]
+        },
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "65"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "150"
+          },
+          {
+            "label": "Critical rating",
+            "value": "791"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,500"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "563"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "3,238"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "build": null
+      }
+    },
+    {
+      "name": "06-basic-mobile",
+      "target": "basics",
+      "toggled": false,
+      "url": "http://localhost:3000/champions/absorbing-man?tab=stats&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 1493,
+      "profileHeight": 128,
+      "profileText": "Recorded hits by damage typePhysical16 hits16 contact hits0 projectile hits",
+      "firstMoveOffset": 299,
+      "headers": [
+        {
+          "label": "Light 1",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Light 2",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Light 3",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Light 4",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Medium 1",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Medium 2",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Heavy",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 181.6875
+        },
+        {
+          "label": "Special 1",
+          "height": 75,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 181.6875
+        },
+        {
+          "label": "Special 2",
+          "height": 75,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 181.6875
+        }
+      ],
+      "buildHeight": null,
+      "buildWidth": null,
+      "semantics": {
+        "moves": [
+          {
+            "name": "Basic attacks7",
+            "moves": [
+              {
+                "text": "Light 1ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 2ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 3ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 4ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Medium 1ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Medium 2ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "HeavyContactPhysical2 hits0102Hits 1–2Contact · Physical",
+                "open": false,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Physical",
+                  "Hit 2: Contact, Physical"
+                ],
+                "abilityLinks": []
+              }
+            ]
+          },
+          {
+            "name": "Special attacks2",
+            "moves": [
+              {
+                "text": "Special 1ContactPhysical3 hitsUru Rush010203Hits 1–3Contact · PhysicalRead ability",
+                "open": true,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Physical",
+                  "Hit 2: Contact, Physical",
+                  "Hit 3: Contact, Physical"
+                ],
+                "abilityLinks": [
+                  "Read Special 1 ability"
+                ]
+              },
+              {
+                "text": "Special 2ContactPhysical5 hitsMagma Spin0102030405Hits 1–5Contact · PhysicalRead ability",
+                "open": true,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Physical",
+                  "Hit 2: Contact, Physical",
+                  "Hit 3: Contact, Physical",
+                  "Hit 4: Contact, Physical",
+                  "Hit 5: Contact, Physical"
+                ],
+                "abilityLinks": [
+                  "Read Special 2 ability"
+                ]
+              }
+            ]
+          }
+        ],
+        "profile": {
+          "legend": [
+            "Physical16 hits"
+          ],
+          "contact": [
+            "16 contact hits",
+            "0 projectile hits"
+          ],
+          "bars": [
+            {
+              "grow": "16",
+              "color": "rgb(252, 214, 155)"
+            }
+          ]
+        },
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "306"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,018"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "448"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "4,125"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "688"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "build": null
+      }
+    },
+    {
+      "name": "07-long-name-specials",
+      "target": "specials",
+      "toggled": false,
+      "url": "http://localhost:3000/champions/star-lord-kitty-pryde?tab=stats&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 2012,
+      "profileHeight": 128,
+      "profileText": "Recorded hits by damage typePhysical16 hitsEnergy2 hits10 contact hits8 projectile hits",
+      "firstMoveOffset": 299,
+      "headers": [
+        {
+          "label": "Light 1",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Light 2",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Light 3",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Light 4",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Medium 1",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Medium 2",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Heavy",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 181.6875
+        },
+        {
+          "label": "Special 1",
+          "height": 75,
+          "propertyCount": 3,
+          "propertyLines": 1,
+          "propertiesWidth": 181.6875
+        },
+        {
+          "label": "Special 2",
+          "height": 75,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 181.6875
+        }
+      ],
+      "buildHeight": null,
+      "buildWidth": null,
+      "semantics": {
+        "moves": [
+          {
+            "name": "Basic attacks7",
+            "moves": [
+              {
+                "text": "Light 1ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 2ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 3ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 4ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Medium 1ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Medium 2ProjectilePhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Projectile",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "HeavyProjectilePhysical2 hits0102Hits 1–2Projectile · Physical",
+                "open": false,
+                "properties": [
+                  "Projectile",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Projectile, Physical",
+                  "Hit 2: Projectile, Physical"
+                ],
+                "abilityLinks": []
+              }
+            ]
+          },
+          {
+            "name": "Special attacks2",
+            "moves": [
+              {
+                "text": "Special 1ContactPhysicalEnergy5 hitsMeteor Heeldrop0102030405Hits 1–3Contact · PhysicalHits 4–5Contact · EnergyRead ability",
+                "open": true,
+                "properties": [
+                  "Contact",
+                  "Physical",
+                  "Energy"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Physical",
+                  "Hit 2: Contact, Physical",
+                  "Hit 3: Contact, Physical",
+                  "Hit 4: Contact, Energy",
+                  "Hit 5: Contact, Energy"
+                ],
+                "abilityLinks": [
+                  "Read Special 1 ability"
+                ]
+              },
+              {
+                "text": "Special 2ProjectilePhysical5 hitsPew Pew Pew Pew Pew0102030405Hits 1–5Projectile · PhysicalRead ability",
+                "open": true,
+                "properties": [
+                  "Projectile",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Projectile, Physical",
+                  "Hit 2: Projectile, Physical",
+                  "Hit 3: Projectile, Physical",
+                  "Hit 4: Projectile, Physical",
+                  "Hit 5: Projectile, Physical"
+                ],
+                "abilityLinks": [
+                  "Read Special 2 ability"
+                ]
+              }
+            ]
+          }
+        ],
+        "profile": {
+          "legend": [
+            "Physical16 hits",
+            "Energy2 hits"
+          ],
+          "contact": [
+            "10 contact hits",
+            "8 projectile hits"
+          ],
+          "bars": [
+            {
+              "grow": "16",
+              "color": "rgb(252, 214, 155)"
+            },
+            {
+              "grow": "2",
+              "color": "rgb(125, 211, 252)"
+            }
+          ]
+        },
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "1,236"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,468"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "1,124"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "5,108"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "build": null
+      }
+    },
+    {
+      "name": "08-profile-reference",
+      "target": "profile",
+      "toggled": false,
+      "url": "http://localhost:3000/champions/ms-marvel?tab=stats&rarity=6&rank=5&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 1155,
+      "profileHeight": 128,
+      "profileText": "Recorded hits by damage typePhysical10 hitsEnergy3 hits12 contact hits1 projectile hits",
+      "firstMoveOffset": 299,
+      "headers": [
+        {
+          "label": "Light 1",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Light 2",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Light 3",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Light 4",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Medium 1",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Medium 2",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Heavy",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 181.6875
+        },
+        {
+          "label": "Special 1",
+          "height": 76,
+          "propertyCount": 5,
+          "propertyLines": 2,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Special 2",
+          "height": 76,
+          "propertyCount": 4,
+          "propertyLines": 2,
+          "propertiesWidth": 181.6875
+        }
+      ],
+      "buildHeight": null,
+      "buildWidth": null,
+      "semantics": {
+        "moves": [
+          {
+            "name": "Basic attacks7",
+            "moves": [
+              {
+                "text": "Light 1ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 2ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 3ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 4ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Medium 1ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Medium 2ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "HeavyContactPhysical4 hits01020304Hits 1–4Contact · Physical",
+                "open": false,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Physical",
+                  "Hit 2: Contact, Physical",
+                  "Hit 3: Contact, Physical",
+                  "Hit 4: Contact, Physical"
+                ],
+                "abilityLinks": []
+              }
+            ]
+          },
+          {
+            "name": "Special attacks2",
+            "moves": [
+              {
+                "text": "Special 1ProjectileEnergyHeatBeamCosmic1 hit",
+                "open": null,
+                "properties": [
+                  "Projectile",
+                  "Energy",
+                  "Heat",
+                  "Beam",
+                  "Cosmic"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Special 2ContactEnergyCosmicKick2 hits0102Hit 1Contact · Energy · Cosmic · KickHit 2Contact · Energy",
+                "open": true,
+                "properties": [
+                  "Contact",
+                  "Energy",
+                  "Cosmic",
+                  "Kick"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Energy, Cosmic, Kick",
+                  "Hit 2: Contact, Energy"
+                ],
+                "abilityLinks": []
+              }
+            ]
+          }
+        ],
+        "profile": {
+          "legend": [
+            "Physical10 hits",
+            "Energy3 hits"
+          ],
+          "contact": [
+            "12 contact hits",
+            "1 projectile hits"
+          ],
+          "bars": [
+            {
+              "grow": "10",
+              "color": "rgb(252, 214, 155)"
+            },
+            {
+              "grow": "3",
+              "color": "rgb(125, 211, 252)"
+            }
+          ]
+        },
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "65"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "150"
+          },
+          {
+            "label": "Critical rating",
+            "value": "791"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,500"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "563"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "3,238"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "build": null
+      }
+    },
+    {
+      "name": "09-special-collapsed",
+      "target": "specials",
+      "toggled": true,
+      "url": "http://localhost:3000/champions/absorbing-man?tab=stats&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 1949,
+      "profileHeight": 128,
+      "profileText": "Recorded hits by damage typePhysical16 hits16 contact hits0 projectile hits",
+      "firstMoveOffset": 299,
+      "headers": [
+        {
+          "label": "Light 1",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Light 2",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Light 3",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Light 4",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Medium 1",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Medium 2",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 187.734375
+        },
+        {
+          "label": "Heavy",
+          "height": 56,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 181.6875
+        },
+        {
+          "label": "Special 1",
+          "height": 75,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 181.6875
+        },
+        {
+          "label": "Special 2",
+          "height": 75,
+          "propertyCount": 2,
+          "propertyLines": 1,
+          "propertiesWidth": 181.6875
+        }
+      ],
+      "buildHeight": null,
+      "buildWidth": null,
+      "semantics": {
+        "moves": [
+          {
+            "name": "Basic attacks7",
+            "moves": [
+              {
+                "text": "Light 1ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 2ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 3ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 4ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Medium 1ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Medium 2ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "HeavyContactPhysical2 hits0102Hits 1–2Contact · Physical",
+                "open": false,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Physical",
+                  "Hit 2: Contact, Physical"
+                ],
+                "abilityLinks": []
+              }
+            ]
+          },
+          {
+            "name": "Special attacks2",
+            "moves": [
+              {
+                "text": "Special 1ContactPhysical3 hitsUru Rush010203Hits 1–3Contact · PhysicalRead ability",
+                "open": false,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Physical",
+                  "Hit 2: Contact, Physical",
+                  "Hit 3: Contact, Physical"
+                ],
+                "abilityLinks": [
+                  "Read Special 1 ability"
+                ]
+              },
+              {
+                "text": "Special 2ContactPhysical5 hitsMagma Spin0102030405Hits 1–5Contact · PhysicalRead ability",
+                "open": true,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Physical",
+                  "Hit 2: Contact, Physical",
+                  "Hit 3: Contact, Physical",
+                  "Hit 4: Contact, Physical",
+                  "Hit 5: Contact, Physical"
+                ],
+                "abilityLinks": [
+                  "Read Special 2 ability"
+                ]
+              }
+            ]
+          }
+        ],
+        "profile": {
+          "legend": [
+            "Physical16 hits"
+          ],
+          "contact": [
+            "16 contact hits",
+            "0 projectile hits"
+          ],
+          "bars": [
+            {
+              "grow": "16",
+              "color": "rgb(252, 214, 155)"
+            }
+          ]
+        },
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "306"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,018"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "448"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "4,125"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "688"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "build": null
+      }
+    },
+    {
+      "name": "10-three-property-small",
+      "target": "specials",
+      "toggled": false,
+      "url": "http://localhost:3000/champions/star-lord-kitty-pryde?tab=stats&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        320,
+        568
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 320,
+      "scrollY": 2181,
+      "profileHeight": 128,
+      "profileText": "Recorded hits by damage typePhysical16 hitsEnergy2 hits10 contact hits8 projectile hits",
+      "firstMoveOffset": 323,
+      "headers": [
+        {
+          "label": "Light 1",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 117.734375
+        },
+        {
+          "label": "Light 2",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 117.734375
+        },
+        {
+          "label": "Light 3",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 117.734375
+        },
+        {
+          "label": "Light 4",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 117.734375
+        },
+        {
+          "label": "Medium 1",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 117.734375
+        },
+        {
+          "label": "Medium 2",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 117.734375
+        },
+        {
+          "label": "Heavy",
+          "height": 76,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 111.6875
+        },
+        {
+          "label": "Special 1",
+          "height": 133,
+          "propertyCount": 3,
+          "propertyLines": 3,
+          "propertiesWidth": 111.6875
+        },
+        {
+          "label": "Special 2",
+          "height": 104,
+          "propertyCount": 2,
+          "propertyLines": 2,
+          "propertiesWidth": 111.6875
+        }
+      ],
+      "buildHeight": null,
+      "buildWidth": null,
+      "semantics": {
+        "moves": [
+          {
+            "name": "Basic attacks7",
+            "moves": [
+              {
+                "text": "Light 1ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 2ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 3ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Light 4ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Medium 1ContactPhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Contact",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "Medium 2ProjectilePhysical1 hit",
+                "open": null,
+                "properties": [
+                  "Projectile",
+                  "Physical"
+                ],
+                "hitLabels": [],
+                "abilityLinks": []
+              },
+              {
+                "text": "HeavyProjectilePhysical2 hits0102Hits 1–2Projectile · Physical",
+                "open": false,
+                "properties": [
+                  "Projectile",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Projectile, Physical",
+                  "Hit 2: Projectile, Physical"
+                ],
+                "abilityLinks": []
+              }
+            ]
+          },
+          {
+            "name": "Special attacks2",
+            "moves": [
+              {
+                "text": "Special 1ContactPhysicalEnergy5 hitsMeteor Heeldrop0102030405Hits 1–3Contact · PhysicalHits 4–5Contact · EnergyRead ability",
+                "open": true,
+                "properties": [
+                  "Contact",
+                  "Physical",
+                  "Energy"
+                ],
+                "hitLabels": [
+                  "Hit 1: Contact, Physical",
+                  "Hit 2: Contact, Physical",
+                  "Hit 3: Contact, Physical",
+                  "Hit 4: Contact, Energy",
+                  "Hit 5: Contact, Energy"
+                ],
+                "abilityLinks": [
+                  "Read Special 1 ability"
+                ]
+              },
+              {
+                "text": "Special 2ProjectilePhysical5 hitsPew Pew Pew Pew Pew0102030405Hits 1–5Projectile · PhysicalRead ability",
+                "open": true,
+                "properties": [
+                  "Projectile",
+                  "Physical"
+                ],
+                "hitLabels": [
+                  "Hit 1: Projectile, Physical",
+                  "Hit 2: Projectile, Physical",
+                  "Hit 3: Projectile, Physical",
+                  "Hit 4: Projectile, Physical",
+                  "Hit 5: Projectile, Physical"
+                ],
+                "abilityLinks": [
+                  "Read Special 2 ability"
+                ]
+              }
+            ]
+          }
+        ],
+        "profile": {
+          "legend": [
+            "Physical16 hits",
+            "Energy2 hits"
+          ],
+          "contact": [
+            "10 contact hits",
+            "8 projectile hits"
+          ],
+          "bars": [
+            {
+              "grow": "16",
+              "color": "rgb(252, 214, 155)"
+            },
+            {
+              "grow": "2",
+              "color": "rgb(125, 211, 252)"
+            }
+          ]
+        },
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "1,236"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,468"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "1,124"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "5,108"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "build": null
+      }
+    }
+  ],
+  "errors": []
+}

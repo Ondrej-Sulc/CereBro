@@ -1,0 +1,11 @@
+{
+  "round": "round3",
+  "semanticCases": 6,
+  "allFit": true,
+  "errors": [],
+  "criteria": {
+    "buildBefore": 441,
+    "buildAfter": 363,
+    "heightSaved": 78
+  }
+}

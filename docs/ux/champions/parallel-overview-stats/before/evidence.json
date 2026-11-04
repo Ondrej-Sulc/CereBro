@@ -1,0 +1,3070 @@
+{
+  "phase": "before",
+  "captures": [
+    {
+      "name": "01-kit-protections-mobile",
+      "slug": "absorbing-man",
+      "tab": "overview",
+      "target": "champion-kit-protections",
+      "display": "detailed",
+      "url": "http://localhost:3000/champions/absorbing-man?tab=overview&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 756,
+      "targetTop": 195.90625,
+      "barBottom": 172,
+      "protectionHeight": 2506.5,
+      "protectionCount": 10,
+      "fullyVisible": 3,
+      "statsToAttacks": null,
+      "semantics": {
+        "effects": [
+          {
+            "id": "champion-kit-gain",
+            "label": "Gains",
+            "articles": [
+              {
+                "text": "Black Uru FormSP1 or the chosen starting Form activates Black Uru, the default starting Form; re-entry Refines and refreshes it, a Buff ending on the Opponent, Debuff immunity or Light interrupts of Basic Attacks pause it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends Form duration.SynergyAbomination (Immortal)Hulk (Immortal)The Green Door — This synergy extends Black Uru Form duration, entered by SP1 or starting-Form selection; re-entry Refines and refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, signature extends its duration further, and duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Abomination (Immortal)",
+                    "href": "/champions/abomination-immortal"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "Read Black Uru Form: Special 1",
+                    "text": "SP1"
+                  },
+                  {
+                    "label": "View Black Uru Form synergy: The Green Door",
+                    "text": "The Green Door"
+                  }
+                ]
+              },
+              {
+                "text": "Crit Through BlockCritical Hits can pass through Block only in Refined Black Uru, reached by re-entry, sufficient Charge consumption via MLM or a Special at maximum Charges, or SP3 restoring the most recent Form Refined; a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "CrueltyPassive SP3 grants indefinite Cruelty increasing Critical Damage Rating, with additional Cruelty if a Refined Form is already active, subject to a stack cap.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Cruelty",
+                    "text": "Cruelty"
+                  },
+                  {
+                    "label": "Read Cruelty: Special 3",
+                    "text": "SP3"
+                  }
+                ]
+              },
+              {
+                "text": "Gain PowerBlocking a hit reduces the Opponent's Ability Power Rate and transfers the denied Power to Absorbing Man until he stops blocking.",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "Magma FormSP2 or the chosen starting Form activates Magma; re-entry Refines and refreshes it, a Buff ending on the Opponent, Debuff immunity or Light interrupts of Basic Attacks pause it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends Form duration.SynergyAbomination (Immortal)Hulk (Immortal)The Green Door — This synergy extends Magma Form duration, entered by SP2 or starting-Form selection; re-entry Refines and refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, signature extends its duration further, and duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Abomination (Immortal)",
+                    "href": "/champions/abomination-immortal"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "Read Magma Form: Special 2",
+                    "text": "SP2"
+                  },
+                  {
+                    "label": "View Magma Form synergy: The Green Door",
+                    "text": "The Green Door"
+                  }
+                ]
+              },
+              {
+                "text": "Morph ChargeActivating a Special after the preceding attack's opening hit lands grants Morph Charges and carries that attack's bonus Critical Rating into the Special; the qualifying preceding attack and its Stun condition are unspecified.Refreshing or changing Forms grants Morph Charges based on the previous Form's remaining duration; sufficient Charges are consumed by MLM or a Special at maximum Charges to Refine the current Form and inflict temporary Vulnerability Passives.Being immune to an Armor Break or Armor Shattered Debuff grants Morph Charges; sufficient Charges are consumed by MLM or a Special at maximum Charges to Refine the current Form and inflict temporary Vulnerability Passives.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "Read Morph Charge: Morph Charges",
+                    "text": "Morph Charges"
+                  },
+                  {
+                    "label": "Read Morph Charge: Morph Charges",
+                    "text": "Morph Charges"
+                  },
+                  {
+                    "label": "Read Morph Charge: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "PauseOmni-Morph Forms — Interrupting the Opponent's Basic Attack with a Light Attack temporarily pauses the current Form and inflicts a temporary Vulnerability Passive, subject to a stack cap.Omni-Morph Forms — A Buff ending on the Opponent or Absorbing Man being immune to a Debuff temporarily pauses his current Form.SP3 activates the most recent Form in its Refined state and pauses it, granting Critical Rating only during that pause.SynergyBlack TarantulaPuñO Cerrado — Punishing a Special Attack with a Light Attack temporarily pauses Omni-Morph Forms through this synergy; duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Black Tarantula",
+                    "href": "/champions/black-tarantula"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "Read Pause: Omni-Morph Forms",
+                    "text": "Omni-Morph Forms"
+                  },
+                  {
+                    "label": "Read Pause: Omni-Morph Forms",
+                    "text": "Omni-Morph Forms"
+                  },
+                  {
+                    "label": "Read Pause: Special 3",
+                    "text": "SP3"
+                  },
+                  {
+                    "label": "View Pause synergy: PuñO Cerrado",
+                    "text": "PuñO Cerrado"
+                  }
+                ]
+              },
+              {
+                "text": "Pre-Fight AbilityChoose the starting Form in the Pre-Fight Menu, with Black Uru as the default; the choice persists until changed.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Pre-Fight Ability",
+                    "text": "Pre-Fight Ability"
+                  }
+                ]
+              },
+              {
+                "text": "Refined Black Uru FormRe-enter Black Uru or consume sufficient Charges via MLM or a Special at maximum Charges to Refine it; SP3 restores the most recent Form Refined, starting-Form selection alone does not Refine, a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.SynergyAbomination (Immortal)Hulk (Immortal)The Green Door — This synergy extends Refined Black Uru duration, reached by re-entry or sufficient Charges via MLM or a Special at maximum Charges; SP3 restores the most recent Form Refined, a Heavy hit during Special recovery can deactivate it subject to cooldown, signature extends duration further, and duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Abomination (Immortal)",
+                    "href": "/champions/abomination-immortal"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "View Refined Black Uru Form synergy: The Green Door",
+                    "text": "The Green Door"
+                  }
+                ]
+              },
+              {
+                "text": "Refined Magma FormRe-enter Magma or consume sufficient Charges via MLM or a Special at maximum Charges to Refine it; SP3 restores the most recent Form Refined, starting-Form selection alone does not Refine, a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.SynergyAbomination (Immortal)Hulk (Immortal)The Green Door — This synergy extends Refined Magma duration, reached by re-entry or sufficient Charges via MLM or a Special at maximum Charges; SP3 restores the most recent Form Refined, a Heavy hit during Special recovery can deactivate it subject to cooldown, signature extends duration further, and duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Abomination (Immortal)",
+                    "href": "/champions/abomination-immortal"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "View Refined Magma Form synergy: The Green Door",
+                    "text": "The Green Door"
+                  }
+                ]
+              },
+              {
+                "text": "RegenerationPassive Signature ability: consuming Morph Charges grants temporary, non-stacking Regeneration based on missing Health, also triggered by entering or refreshing a Form as a Defender; True Damage hits pause personal Regeneration, and early Form deactivation from a Heavy hit during Special recovery removes it.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Regeneration",
+                    "text": "Regeneration"
+                  },
+                  {
+                    "label": "Read Regeneration: Signature ability",
+                    "text": "Signature ability"
+                  }
+                ]
+              },
+              {
+                "text": "UnblockablePassive Molecular Duplication - Always Active — Special Attacks are Unblockable in a Refined Form, reached by re-entering the active Form, consuming sufficient Charges with MLM or a Special at maximum Charges, or SP3 restoring the most recent Form Refined; a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Unblockable",
+                    "text": "Unblockable"
+                  },
+                  {
+                    "label": "Read Unblockable: Molecular Duplication - Always Active",
+                    "text": "Molecular Duplication - Always Active"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "champion-kit-inflict",
+            "label": "Inflicts",
+            "articles": [
+              {
+                "text": "Ability Power Rate ReductionBlocking a hit reduces the Opponent's Ability Power Rate until Absorbing Man stops blocking.",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "Armor BreakSynergyThorThor (Jane Foster)Debuff The Worthy — This synergy lets the second Medium Attack inflict temporary Armor Break on the Opponent, subject to a stack cap; duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Thor",
+                    "href": "/champions/thor"
+                  },
+                  {
+                    "label": "Thor (Jane Foster)",
+                    "href": "/champions/thor-jane-foster"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "About Armor Break",
+                    "text": "Armor Break"
+                  },
+                  {
+                    "label": "View Armor Break synergy: The Worthy",
+                    "text": "The Worthy"
+                  }
+                ]
+              },
+              {
+                "text": "AtrophyAbsorbing Man shortens the Opponent's Indestructible, Immortality, Unstoppable and Unblockable Buffs.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Atrophy",
+                    "text": "Atrophy"
+                  }
+                ]
+              },
+              {
+                "text": "Burst DamageBlack Uru attacks deal Physical Damage bursts whose Ability Accuracy cannot be modified and which benefit from Critical Damage on Critical Hits; Refined bursts can trigger through Block and be Critical, while a Heavy hit during Special recovery can deactivate the Form subject to cooldown and signature extends its duration.Magma attacks deal Energy Damage bursts whose Ability Accuracy cannot be modified and which benefit from Critical Damage on Critical Hits; Refined bursts can be Critical, while a Heavy hit during Special recovery can deactivate the Form subject to cooldown and signature extends its duration.SynergyThe SerpentThe Main Event — For Absorbing Man as a #Cul's Worthy recipient, this synergy strengthens Black Uru Physical bursts; Refined bursts can trigger through Block and be Critical, their Ability Accuracy cannot be modified, a Heavy hit during Special recovery can deactivate the Form subject to cooldown, and duplicate synergies do not stack.For Absorbing Man as a #Cul's Worthy recipient, this synergy strengthens Magma Energy bursts; their Ability Accuracy cannot be modified, Critical Hits enhance them, Refined bursts can be Critical, a Heavy hit during Special recovery can deactivate the Form subject to cooldown, and duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "The Serpent",
+                    "href": "/champions/the-serpent"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "View Burst Damage synergy: The Main Event",
+                    "text": "The Main Event"
+                  }
+                ]
+              },
+              {
+                "text": "Energy DamageMorph Charges — In Magma or Refined Magma Form, all attacks deal Energy instead of Physical Damage; SP2 or the starting-Form choice enters Magma, re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "Read Energy Damage: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "IncineratePassive Morph Charges — Contact with the Opponent inflicts Incinerate Passives only in Refined Magma, reached by re-entering Magma, consuming sufficient Charges with MLM or a Special at maximum Charges, or SP3 restoring the most recent Form Refined; a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Incinerate",
+                    "text": "Incinerate"
+                  },
+                  {
+                    "label": "Read Incinerate: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "VulnerabilityPassive A Medium-Light-Medium combo with sufficient Morph Charges, or a Special Attack at maximum Charges, consumes available Charges to Refine the current Form and inflict temporary Vulnerability Passives based on Charges spent.Passive Omni-Morph Forms — Interrupting the Opponent's Basic Attack with a Light Attack inflicts a temporary Vulnerability Passive, subject to a stack cap, and temporarily pauses the current Form.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Vulnerability",
+                    "text": "Vulnerability"
+                  },
+                  {
+                    "label": "Read Vulnerability: Morph Charges",
+                    "text": "Morph Charges"
+                  },
+                  {
+                    "label": "Read Vulnerability: Omni-Morph Forms",
+                    "text": "Omni-Morph Forms"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "champion-kit-protections",
+            "label": "Immunities & resistances",
+            "articles": [
+              {
+                "text": "Ability Accuracy ModificationImmunityOmni-Morph Forms — Form changes cannot fail due to Ability Accuracy Modification; this protection applies only to Form changes.Omni-Morph Forms — Absorbing Man's personal damage bursts cannot have their Ability Accuracy modified.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "Read Ability Accuracy Modification: Omni-Morph Forms",
+                    "text": "Omni-Morph Forms"
+                  },
+                  {
+                    "label": "Read Ability Accuracy Modification: Omni-Morph Forms",
+                    "text": "Omni-Morph Forms"
+                  }
+                ]
+              },
+              {
+                "text": "Armor BreakImmunityDebuff",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Armor Break",
+                    "text": "Armor BreakImmunityDebuff"
+                  }
+                ]
+              },
+              {
+                "text": "Armor ShatterImmunityDebuff",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "BleedImmunityMorph Charges — Immune to Bleed only while Black Uru or Refined Black Uru is active; SP1 or the starting-Form choice enters Black Uru, re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends its duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Bleed",
+                    "text": "BleedImmunity"
+                  },
+                  {
+                    "label": "Read Bleed: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "ColdsnapImmunityMorph Charges — Immune to Coldsnap only in Magma or Refined Magma Form, entered through SP2 or the starting-Form choice; re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends Form duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Coldsnap",
+                    "text": "ColdsnapImmunity"
+                  },
+                  {
+                    "label": "Read Coldsnap: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "DebuffsResistanceSynergyRogueduration reduction· See source conditionsHands-On Approach — This synergy shortens Non-Damaging Debuffs on Absorbing Man, excluding Stuns; duplicate synergies do not stack.Synergy values · 7★Absorbing Man: Reduce the duration of Non-Damaging Debuffs other than Stuns by 50%.",
+                "links": [
+                  {
+                    "label": "Rogue",
+                    "href": "/champions/rogue"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "View Debuffs synergy: Hands-On Approach",
+                    "text": "Hands-On Approach"
+                  }
+                ]
+              },
+              {
+                "text": "FrostbiteImmunityMorph Charges — Immune to Frostbite only while Magma or Refined Magma is active; SP2 or the starting-Form choice enters Magma, re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends its duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Frostbite",
+                    "text": "FrostbiteImmunity"
+                  },
+                  {
+                    "label": "Read Frostbite: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "IncinerateImmunityMorph Charges — Immune to Incinerate only while Magma or Refined Magma is active; SP2 or the starting-Form choice enters Magma, re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends its duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Incinerate",
+                    "text": "IncinerateImmunity"
+                  },
+                  {
+                    "label": "Read Incinerate: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "PoisonImmunitySynergyAbomination (Immortal)Hulk (Immortal)The Green Door — This synergy grants Absorbing Man Poison immunity and extends Omni-Morph Form duration; duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Abomination (Immortal)",
+                    "href": "/champions/abomination-immortal"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "About Poison",
+                    "text": "PoisonImmunity"
+                  },
+                  {
+                    "label": "View Poison synergy: The Green Door",
+                    "text": "The Green Door"
+                  }
+                ]
+              },
+              {
+                "text": "ShockImmunityMorph Charges — Immune to Shock only in Black Uru or Refined Black Uru Form, entered through SP1 or the starting-Form choice; re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends Form duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Shock",
+                    "text": "ShockImmunity"
+                  },
+                  {
+                    "label": "Read Shock: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "02-kit-protections-desktop",
+      "slug": "absorbing-man",
+      "tab": "overview",
+      "target": "champion-kit-protections",
+      "display": "detailed",
+      "url": "http://localhost:3000/champions/absorbing-man?tab=overview&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        1280,
+        900
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 1280,
+      "scrollY": 605,
+      "targetTop": 228.78125,
+      "barBottom": 204.390625,
+      "protectionHeight": 2670.5,
+      "protectionCount": 10,
+      "fullyVisible": 3,
+      "statsToAttacks": null,
+      "semantics": {
+        "effects": [
+          {
+            "id": "champion-kit-gain",
+            "label": "Gains",
+            "articles": [
+              {
+                "text": "Black Uru FormSP1 or the chosen starting Form activates Black Uru, the default starting Form; re-entry Refines and refreshes it, a Buff ending on the Opponent, Debuff immunity or Light interrupts of Basic Attacks pause it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends Form duration.SynergyAbomination (Immortal)Hulk (Immortal)The Green Door — This synergy extends Black Uru Form duration, entered by SP1 or starting-Form selection; re-entry Refines and refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, signature extends its duration further, and duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Abomination (Immortal)",
+                    "href": "/champions/abomination-immortal"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "Read Black Uru Form: Special 1",
+                    "text": "SP1"
+                  },
+                  {
+                    "label": "View Black Uru Form synergy: The Green Door",
+                    "text": "The Green Door"
+                  }
+                ]
+              },
+              {
+                "text": "Crit Through BlockCritical Hits can pass through Block only in Refined Black Uru, reached by re-entry, sufficient Charge consumption via MLM or a Special at maximum Charges, or SP3 restoring the most recent Form Refined; a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "CrueltyPassive SP3 grants indefinite Cruelty increasing Critical Damage Rating, with additional Cruelty if a Refined Form is already active, subject to a stack cap.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Cruelty",
+                    "text": "Cruelty"
+                  },
+                  {
+                    "label": "Read Cruelty: Special 3",
+                    "text": "SP3"
+                  }
+                ]
+              },
+              {
+                "text": "Gain PowerBlocking a hit reduces the Opponent's Ability Power Rate and transfers the denied Power to Absorbing Man until he stops blocking.",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "Magma FormSP2 or the chosen starting Form activates Magma; re-entry Refines and refreshes it, a Buff ending on the Opponent, Debuff immunity or Light interrupts of Basic Attacks pause it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends Form duration.SynergyAbomination (Immortal)Hulk (Immortal)The Green Door — This synergy extends Magma Form duration, entered by SP2 or starting-Form selection; re-entry Refines and refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, signature extends its duration further, and duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Abomination (Immortal)",
+                    "href": "/champions/abomination-immortal"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "Read Magma Form: Special 2",
+                    "text": "SP2"
+                  },
+                  {
+                    "label": "View Magma Form synergy: The Green Door",
+                    "text": "The Green Door"
+                  }
+                ]
+              },
+              {
+                "text": "Morph ChargeActivating a Special after the preceding attack's opening hit lands grants Morph Charges and carries that attack's bonus Critical Rating into the Special; the qualifying preceding attack and its Stun condition are unspecified.Refreshing or changing Forms grants Morph Charges based on the previous Form's remaining duration; sufficient Charges are consumed by MLM or a Special at maximum Charges to Refine the current Form and inflict temporary Vulnerability Passives.Being immune to an Armor Break or Armor Shattered Debuff grants Morph Charges; sufficient Charges are consumed by MLM or a Special at maximum Charges to Refine the current Form and inflict temporary Vulnerability Passives.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "Read Morph Charge: Morph Charges",
+                    "text": "Morph Charges"
+                  },
+                  {
+                    "label": "Read Morph Charge: Morph Charges",
+                    "text": "Morph Charges"
+                  },
+                  {
+                    "label": "Read Morph Charge: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "PauseOmni-Morph Forms — Interrupting the Opponent's Basic Attack with a Light Attack temporarily pauses the current Form and inflicts a temporary Vulnerability Passive, subject to a stack cap.Omni-Morph Forms — A Buff ending on the Opponent or Absorbing Man being immune to a Debuff temporarily pauses his current Form.SP3 activates the most recent Form in its Refined state and pauses it, granting Critical Rating only during that pause.SynergyBlack TarantulaPuñO Cerrado — Punishing a Special Attack with a Light Attack temporarily pauses Omni-Morph Forms through this synergy; duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Black Tarantula",
+                    "href": "/champions/black-tarantula"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "Read Pause: Omni-Morph Forms",
+                    "text": "Omni-Morph Forms"
+                  },
+                  {
+                    "label": "Read Pause: Omni-Morph Forms",
+                    "text": "Omni-Morph Forms"
+                  },
+                  {
+                    "label": "Read Pause: Special 3",
+                    "text": "SP3"
+                  },
+                  {
+                    "label": "View Pause synergy: PuñO Cerrado",
+                    "text": "PuñO Cerrado"
+                  }
+                ]
+              },
+              {
+                "text": "Pre-Fight AbilityChoose the starting Form in the Pre-Fight Menu, with Black Uru as the default; the choice persists until changed.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Pre-Fight Ability",
+                    "text": "Pre-Fight Ability"
+                  }
+                ]
+              },
+              {
+                "text": "Refined Black Uru FormRe-enter Black Uru or consume sufficient Charges via MLM or a Special at maximum Charges to Refine it; SP3 restores the most recent Form Refined, starting-Form selection alone does not Refine, a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.SynergyAbomination (Immortal)Hulk (Immortal)The Green Door — This synergy extends Refined Black Uru duration, reached by re-entry or sufficient Charges via MLM or a Special at maximum Charges; SP3 restores the most recent Form Refined, a Heavy hit during Special recovery can deactivate it subject to cooldown, signature extends duration further, and duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Abomination (Immortal)",
+                    "href": "/champions/abomination-immortal"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "View Refined Black Uru Form synergy: The Green Door",
+                    "text": "The Green Door"
+                  }
+                ]
+              },
+              {
+                "text": "Refined Magma FormRe-enter Magma or consume sufficient Charges via MLM or a Special at maximum Charges to Refine it; SP3 restores the most recent Form Refined, starting-Form selection alone does not Refine, a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.SynergyAbomination (Immortal)Hulk (Immortal)The Green Door — This synergy extends Refined Magma duration, reached by re-entry or sufficient Charges via MLM or a Special at maximum Charges; SP3 restores the most recent Form Refined, a Heavy hit during Special recovery can deactivate it subject to cooldown, signature extends duration further, and duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Abomination (Immortal)",
+                    "href": "/champions/abomination-immortal"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "View Refined Magma Form synergy: The Green Door",
+                    "text": "The Green Door"
+                  }
+                ]
+              },
+              {
+                "text": "RegenerationPassive Signature ability: consuming Morph Charges grants temporary, non-stacking Regeneration based on missing Health, also triggered by entering or refreshing a Form as a Defender; True Damage hits pause personal Regeneration, and early Form deactivation from a Heavy hit during Special recovery removes it.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Regeneration",
+                    "text": "Regeneration"
+                  },
+                  {
+                    "label": "Read Regeneration: Signature ability",
+                    "text": "Signature ability"
+                  }
+                ]
+              },
+              {
+                "text": "UnblockablePassive Molecular Duplication - Always Active — Special Attacks are Unblockable in a Refined Form, reached by re-entering the active Form, consuming sufficient Charges with MLM or a Special at maximum Charges, or SP3 restoring the most recent Form Refined; a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Unblockable",
+                    "text": "Unblockable"
+                  },
+                  {
+                    "label": "Read Unblockable: Molecular Duplication - Always Active",
+                    "text": "Molecular Duplication - Always Active"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "champion-kit-inflict",
+            "label": "Inflicts",
+            "articles": [
+              {
+                "text": "Ability Power Rate ReductionBlocking a hit reduces the Opponent's Ability Power Rate until Absorbing Man stops blocking.",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "Armor BreakSynergyThorThor (Jane Foster)Debuff The Worthy — This synergy lets the second Medium Attack inflict temporary Armor Break on the Opponent, subject to a stack cap; duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Thor",
+                    "href": "/champions/thor"
+                  },
+                  {
+                    "label": "Thor (Jane Foster)",
+                    "href": "/champions/thor-jane-foster"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "About Armor Break",
+                    "text": "Armor Break"
+                  },
+                  {
+                    "label": "View Armor Break synergy: The Worthy",
+                    "text": "The Worthy"
+                  }
+                ]
+              },
+              {
+                "text": "AtrophyAbsorbing Man shortens the Opponent's Indestructible, Immortality, Unstoppable and Unblockable Buffs.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Atrophy",
+                    "text": "Atrophy"
+                  }
+                ]
+              },
+              {
+                "text": "Burst DamageBlack Uru attacks deal Physical Damage bursts whose Ability Accuracy cannot be modified and which benefit from Critical Damage on Critical Hits; Refined bursts can trigger through Block and be Critical, while a Heavy hit during Special recovery can deactivate the Form subject to cooldown and signature extends its duration.Magma attacks deal Energy Damage bursts whose Ability Accuracy cannot be modified and which benefit from Critical Damage on Critical Hits; Refined bursts can be Critical, while a Heavy hit during Special recovery can deactivate the Form subject to cooldown and signature extends its duration.SynergyThe SerpentThe Main Event — For Absorbing Man as a #Cul's Worthy recipient, this synergy strengthens Black Uru Physical bursts; Refined bursts can trigger through Block and be Critical, their Ability Accuracy cannot be modified, a Heavy hit during Special recovery can deactivate the Form subject to cooldown, and duplicate synergies do not stack.For Absorbing Man as a #Cul's Worthy recipient, this synergy strengthens Magma Energy bursts; their Ability Accuracy cannot be modified, Critical Hits enhance them, Refined bursts can be Critical, a Heavy hit during Special recovery can deactivate the Form subject to cooldown, and duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "The Serpent",
+                    "href": "/champions/the-serpent"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "View Burst Damage synergy: The Main Event",
+                    "text": "The Main Event"
+                  }
+                ]
+              },
+              {
+                "text": "Energy DamageMorph Charges — In Magma or Refined Magma Form, all attacks deal Energy instead of Physical Damage; SP2 or the starting-Form choice enters Magma, re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "Read Energy Damage: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "IncineratePassive Morph Charges — Contact with the Opponent inflicts Incinerate Passives only in Refined Magma, reached by re-entering Magma, consuming sufficient Charges with MLM or a Special at maximum Charges, or SP3 restoring the most recent Form Refined; a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Incinerate",
+                    "text": "Incinerate"
+                  },
+                  {
+                    "label": "Read Incinerate: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "VulnerabilityPassive A Medium-Light-Medium combo with sufficient Morph Charges, or a Special Attack at maximum Charges, consumes available Charges to Refine the current Form and inflict temporary Vulnerability Passives based on Charges spent.Passive Omni-Morph Forms — Interrupting the Opponent's Basic Attack with a Light Attack inflicts a temporary Vulnerability Passive, subject to a stack cap, and temporarily pauses the current Form.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Vulnerability",
+                    "text": "Vulnerability"
+                  },
+                  {
+                    "label": "Read Vulnerability: Morph Charges",
+                    "text": "Morph Charges"
+                  },
+                  {
+                    "label": "Read Vulnerability: Omni-Morph Forms",
+                    "text": "Omni-Morph Forms"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "champion-kit-protections",
+            "label": "Immunities & resistances",
+            "articles": [
+              {
+                "text": "Ability Accuracy ModificationImmunityOmni-Morph Forms — Form changes cannot fail due to Ability Accuracy Modification; this protection applies only to Form changes.Omni-Morph Forms — Absorbing Man's personal damage bursts cannot have their Ability Accuracy modified.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "Read Ability Accuracy Modification: Omni-Morph Forms",
+                    "text": "Omni-Morph Forms"
+                  },
+                  {
+                    "label": "Read Ability Accuracy Modification: Omni-Morph Forms",
+                    "text": "Omni-Morph Forms"
+                  }
+                ]
+              },
+              {
+                "text": "Armor BreakImmunityDebuff",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Armor Break",
+                    "text": "Armor BreakImmunityDebuff"
+                  }
+                ]
+              },
+              {
+                "text": "Armor ShatterImmunityDebuff",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "BleedImmunityMorph Charges — Immune to Bleed only while Black Uru or Refined Black Uru is active; SP1 or the starting-Form choice enters Black Uru, re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends its duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Bleed",
+                    "text": "BleedImmunity"
+                  },
+                  {
+                    "label": "Read Bleed: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "ColdsnapImmunityMorph Charges — Immune to Coldsnap only in Magma or Refined Magma Form, entered through SP2 or the starting-Form choice; re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends Form duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Coldsnap",
+                    "text": "ColdsnapImmunity"
+                  },
+                  {
+                    "label": "Read Coldsnap: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "DebuffsResistanceSynergyRogueduration reduction· See source conditionsHands-On Approach — This synergy shortens Non-Damaging Debuffs on Absorbing Man, excluding Stuns; duplicate synergies do not stack.Synergy values · 7★Absorbing Man: Reduce the duration of Non-Damaging Debuffs other than Stuns by 50%.",
+                "links": [
+                  {
+                    "label": "Rogue",
+                    "href": "/champions/rogue"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "View Debuffs synergy: Hands-On Approach",
+                    "text": "Hands-On Approach"
+                  }
+                ]
+              },
+              {
+                "text": "FrostbiteImmunityMorph Charges — Immune to Frostbite only while Magma or Refined Magma is active; SP2 or the starting-Form choice enters Magma, re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends its duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Frostbite",
+                    "text": "FrostbiteImmunity"
+                  },
+                  {
+                    "label": "Read Frostbite: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "IncinerateImmunityMorph Charges — Immune to Incinerate only while Magma or Refined Magma is active; SP2 or the starting-Form choice enters Magma, re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends its duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Incinerate",
+                    "text": "IncinerateImmunity"
+                  },
+                  {
+                    "label": "Read Incinerate: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "PoisonImmunitySynergyAbomination (Immortal)Hulk (Immortal)The Green Door — This synergy grants Absorbing Man Poison immunity and extends Omni-Morph Form duration; duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Abomination (Immortal)",
+                    "href": "/champions/abomination-immortal"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "About Poison",
+                    "text": "PoisonImmunity"
+                  },
+                  {
+                    "label": "View Poison synergy: The Green Door",
+                    "text": "The Green Door"
+                  }
+                ]
+              },
+              {
+                "text": "ShockImmunityMorph Charges — Immune to Shock only in Black Uru or Refined Black Uru Form, entered through SP1 or the starting-Form choice; re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends Form duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Shock",
+                    "text": "ShockImmunity"
+                  },
+                  {
+                    "label": "Read Shock: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "03-kit-protections-small",
+      "slug": "absorbing-man",
+      "tab": "overview",
+      "target": "champion-kit-protections",
+      "display": "detailed",
+      "url": "http://localhost:3000/champions/absorbing-man?tab=overview&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        320,
+        568
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 320,
+      "scrollY": 775,
+      "targetTop": 196.203125,
+      "barBottom": 172,
+      "protectionHeight": 3058.5,
+      "protectionCount": 10,
+      "fullyVisible": 0,
+      "statsToAttacks": null,
+      "semantics": {
+        "effects": [
+          {
+            "id": "champion-kit-gain",
+            "label": "Gains",
+            "articles": [
+              {
+                "text": "Black Uru FormSP1 or the chosen starting Form activates Black Uru, the default starting Form; re-entry Refines and refreshes it, a Buff ending on the Opponent, Debuff immunity or Light interrupts of Basic Attacks pause it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends Form duration.SynergyAbomination (Immortal)Hulk (Immortal)The Green Door — This synergy extends Black Uru Form duration, entered by SP1 or starting-Form selection; re-entry Refines and refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, signature extends its duration further, and duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Abomination (Immortal)",
+                    "href": "/champions/abomination-immortal"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "Read Black Uru Form: Special 1",
+                    "text": "SP1"
+                  },
+                  {
+                    "label": "View Black Uru Form synergy: The Green Door",
+                    "text": "The Green Door"
+                  }
+                ]
+              },
+              {
+                "text": "Crit Through BlockCritical Hits can pass through Block only in Refined Black Uru, reached by re-entry, sufficient Charge consumption via MLM or a Special at maximum Charges, or SP3 restoring the most recent Form Refined; a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "CrueltyPassive SP3 grants indefinite Cruelty increasing Critical Damage Rating, with additional Cruelty if a Refined Form is already active, subject to a stack cap.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Cruelty",
+                    "text": "Cruelty"
+                  },
+                  {
+                    "label": "Read Cruelty: Special 3",
+                    "text": "SP3"
+                  }
+                ]
+              },
+              {
+                "text": "Gain PowerBlocking a hit reduces the Opponent's Ability Power Rate and transfers the denied Power to Absorbing Man until he stops blocking.",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "Magma FormSP2 or the chosen starting Form activates Magma; re-entry Refines and refreshes it, a Buff ending on the Opponent, Debuff immunity or Light interrupts of Basic Attacks pause it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends Form duration.SynergyAbomination (Immortal)Hulk (Immortal)The Green Door — This synergy extends Magma Form duration, entered by SP2 or starting-Form selection; re-entry Refines and refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, signature extends its duration further, and duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Abomination (Immortal)",
+                    "href": "/champions/abomination-immortal"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "Read Magma Form: Special 2",
+                    "text": "SP2"
+                  },
+                  {
+                    "label": "View Magma Form synergy: The Green Door",
+                    "text": "The Green Door"
+                  }
+                ]
+              },
+              {
+                "text": "Morph ChargeActivating a Special after the preceding attack's opening hit lands grants Morph Charges and carries that attack's bonus Critical Rating into the Special; the qualifying preceding attack and its Stun condition are unspecified.Refreshing or changing Forms grants Morph Charges based on the previous Form's remaining duration; sufficient Charges are consumed by MLM or a Special at maximum Charges to Refine the current Form and inflict temporary Vulnerability Passives.Being immune to an Armor Break or Armor Shattered Debuff grants Morph Charges; sufficient Charges are consumed by MLM or a Special at maximum Charges to Refine the current Form and inflict temporary Vulnerability Passives.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "Read Morph Charge: Morph Charges",
+                    "text": "Morph Charges"
+                  },
+                  {
+                    "label": "Read Morph Charge: Morph Charges",
+                    "text": "Morph Charges"
+                  },
+                  {
+                    "label": "Read Morph Charge: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "PauseOmni-Morph Forms — Interrupting the Opponent's Basic Attack with a Light Attack temporarily pauses the current Form and inflicts a temporary Vulnerability Passive, subject to a stack cap.Omni-Morph Forms — A Buff ending on the Opponent or Absorbing Man being immune to a Debuff temporarily pauses his current Form.SP3 activates the most recent Form in its Refined state and pauses it, granting Critical Rating only during that pause.SynergyBlack TarantulaPuñO Cerrado — Punishing a Special Attack with a Light Attack temporarily pauses Omni-Morph Forms through this synergy; duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Black Tarantula",
+                    "href": "/champions/black-tarantula"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "Read Pause: Omni-Morph Forms",
+                    "text": "Omni-Morph Forms"
+                  },
+                  {
+                    "label": "Read Pause: Omni-Morph Forms",
+                    "text": "Omni-Morph Forms"
+                  },
+                  {
+                    "label": "Read Pause: Special 3",
+                    "text": "SP3"
+                  },
+                  {
+                    "label": "View Pause synergy: PuñO Cerrado",
+                    "text": "PuñO Cerrado"
+                  }
+                ]
+              },
+              {
+                "text": "Pre-Fight AbilityChoose the starting Form in the Pre-Fight Menu, with Black Uru as the default; the choice persists until changed.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Pre-Fight Ability",
+                    "text": "Pre-Fight Ability"
+                  }
+                ]
+              },
+              {
+                "text": "Refined Black Uru FormRe-enter Black Uru or consume sufficient Charges via MLM or a Special at maximum Charges to Refine it; SP3 restores the most recent Form Refined, starting-Form selection alone does not Refine, a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.SynergyAbomination (Immortal)Hulk (Immortal)The Green Door — This synergy extends Refined Black Uru duration, reached by re-entry or sufficient Charges via MLM or a Special at maximum Charges; SP3 restores the most recent Form Refined, a Heavy hit during Special recovery can deactivate it subject to cooldown, signature extends duration further, and duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Abomination (Immortal)",
+                    "href": "/champions/abomination-immortal"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "View Refined Black Uru Form synergy: The Green Door",
+                    "text": "The Green Door"
+                  }
+                ]
+              },
+              {
+                "text": "Refined Magma FormRe-enter Magma or consume sufficient Charges via MLM or a Special at maximum Charges to Refine it; SP3 restores the most recent Form Refined, starting-Form selection alone does not Refine, a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.SynergyAbomination (Immortal)Hulk (Immortal)The Green Door — This synergy extends Refined Magma duration, reached by re-entry or sufficient Charges via MLM or a Special at maximum Charges; SP3 restores the most recent Form Refined, a Heavy hit during Special recovery can deactivate it subject to cooldown, signature extends duration further, and duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Abomination (Immortal)",
+                    "href": "/champions/abomination-immortal"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "View Refined Magma Form synergy: The Green Door",
+                    "text": "The Green Door"
+                  }
+                ]
+              },
+              {
+                "text": "RegenerationPassive Signature ability: consuming Morph Charges grants temporary, non-stacking Regeneration based on missing Health, also triggered by entering or refreshing a Form as a Defender; True Damage hits pause personal Regeneration, and early Form deactivation from a Heavy hit during Special recovery removes it.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Regeneration",
+                    "text": "Regeneration"
+                  },
+                  {
+                    "label": "Read Regeneration: Signature ability",
+                    "text": "Signature ability"
+                  }
+                ]
+              },
+              {
+                "text": "UnblockablePassive Molecular Duplication - Always Active — Special Attacks are Unblockable in a Refined Form, reached by re-entering the active Form, consuming sufficient Charges with MLM or a Special at maximum Charges, or SP3 restoring the most recent Form Refined; a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Unblockable",
+                    "text": "Unblockable"
+                  },
+                  {
+                    "label": "Read Unblockable: Molecular Duplication - Always Active",
+                    "text": "Molecular Duplication - Always Active"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "champion-kit-inflict",
+            "label": "Inflicts",
+            "articles": [
+              {
+                "text": "Ability Power Rate ReductionBlocking a hit reduces the Opponent's Ability Power Rate until Absorbing Man stops blocking.",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "Armor BreakSynergyThorThor (Jane Foster)Debuff The Worthy — This synergy lets the second Medium Attack inflict temporary Armor Break on the Opponent, subject to a stack cap; duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Thor",
+                    "href": "/champions/thor"
+                  },
+                  {
+                    "label": "Thor (Jane Foster)",
+                    "href": "/champions/thor-jane-foster"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "About Armor Break",
+                    "text": "Armor Break"
+                  },
+                  {
+                    "label": "View Armor Break synergy: The Worthy",
+                    "text": "The Worthy"
+                  }
+                ]
+              },
+              {
+                "text": "AtrophyAbsorbing Man shortens the Opponent's Indestructible, Immortality, Unstoppable and Unblockable Buffs.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Atrophy",
+                    "text": "Atrophy"
+                  }
+                ]
+              },
+              {
+                "text": "Burst DamageBlack Uru attacks deal Physical Damage bursts whose Ability Accuracy cannot be modified and which benefit from Critical Damage on Critical Hits; Refined bursts can trigger through Block and be Critical, while a Heavy hit during Special recovery can deactivate the Form subject to cooldown and signature extends its duration.Magma attacks deal Energy Damage bursts whose Ability Accuracy cannot be modified and which benefit from Critical Damage on Critical Hits; Refined bursts can be Critical, while a Heavy hit during Special recovery can deactivate the Form subject to cooldown and signature extends its duration.SynergyThe SerpentThe Main Event — For Absorbing Man as a #Cul's Worthy recipient, this synergy strengthens Black Uru Physical bursts; Refined bursts can trigger through Block and be Critical, their Ability Accuracy cannot be modified, a Heavy hit during Special recovery can deactivate the Form subject to cooldown, and duplicate synergies do not stack.For Absorbing Man as a #Cul's Worthy recipient, this synergy strengthens Magma Energy bursts; their Ability Accuracy cannot be modified, Critical Hits enhance them, Refined bursts can be Critical, a Heavy hit during Special recovery can deactivate the Form subject to cooldown, and duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "The Serpent",
+                    "href": "/champions/the-serpent"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "View Burst Damage synergy: The Main Event",
+                    "text": "The Main Event"
+                  }
+                ]
+              },
+              {
+                "text": "Energy DamageMorph Charges — In Magma or Refined Magma Form, all attacks deal Energy instead of Physical Damage; SP2 or the starting-Form choice enters Magma, re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "Read Energy Damage: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "IncineratePassive Morph Charges — Contact with the Opponent inflicts Incinerate Passives only in Refined Magma, reached by re-entering Magma, consuming sufficient Charges with MLM or a Special at maximum Charges, or SP3 restoring the most recent Form Refined; a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Incinerate",
+                    "text": "Incinerate"
+                  },
+                  {
+                    "label": "Read Incinerate: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "VulnerabilityPassive A Medium-Light-Medium combo with sufficient Morph Charges, or a Special Attack at maximum Charges, consumes available Charges to Refine the current Form and inflict temporary Vulnerability Passives based on Charges spent.Passive Omni-Morph Forms — Interrupting the Opponent's Basic Attack with a Light Attack inflicts a temporary Vulnerability Passive, subject to a stack cap, and temporarily pauses the current Form.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Vulnerability",
+                    "text": "Vulnerability"
+                  },
+                  {
+                    "label": "Read Vulnerability: Morph Charges",
+                    "text": "Morph Charges"
+                  },
+                  {
+                    "label": "Read Vulnerability: Omni-Morph Forms",
+                    "text": "Omni-Morph Forms"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "champion-kit-protections",
+            "label": "Immunities & resistances",
+            "articles": [
+              {
+                "text": "Ability Accuracy ModificationImmunityOmni-Morph Forms — Form changes cannot fail due to Ability Accuracy Modification; this protection applies only to Form changes.Omni-Morph Forms — Absorbing Man's personal damage bursts cannot have their Ability Accuracy modified.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "Read Ability Accuracy Modification: Omni-Morph Forms",
+                    "text": "Omni-Morph Forms"
+                  },
+                  {
+                    "label": "Read Ability Accuracy Modification: Omni-Morph Forms",
+                    "text": "Omni-Morph Forms"
+                  }
+                ]
+              },
+              {
+                "text": "Armor BreakImmunityDebuff",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Armor Break",
+                    "text": "Armor BreakImmunityDebuff"
+                  }
+                ]
+              },
+              {
+                "text": "Armor ShatterImmunityDebuff",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "BleedImmunityMorph Charges — Immune to Bleed only while Black Uru or Refined Black Uru is active; SP1 or the starting-Form choice enters Black Uru, re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends its duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Bleed",
+                    "text": "BleedImmunity"
+                  },
+                  {
+                    "label": "Read Bleed: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "ColdsnapImmunityMorph Charges — Immune to Coldsnap only in Magma or Refined Magma Form, entered through SP2 or the starting-Form choice; re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends Form duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Coldsnap",
+                    "text": "ColdsnapImmunity"
+                  },
+                  {
+                    "label": "Read Coldsnap: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "DebuffsResistanceSynergyRogueduration reduction· See source conditionsHands-On Approach — This synergy shortens Non-Damaging Debuffs on Absorbing Man, excluding Stuns; duplicate synergies do not stack.Synergy values · 7★Absorbing Man: Reduce the duration of Non-Damaging Debuffs other than Stuns by 50%.",
+                "links": [
+                  {
+                    "label": "Rogue",
+                    "href": "/champions/rogue"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "View Debuffs synergy: Hands-On Approach",
+                    "text": "Hands-On Approach"
+                  }
+                ]
+              },
+              {
+                "text": "FrostbiteImmunityMorph Charges — Immune to Frostbite only while Magma or Refined Magma is active; SP2 or the starting-Form choice enters Magma, re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends its duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Frostbite",
+                    "text": "FrostbiteImmunity"
+                  },
+                  {
+                    "label": "Read Frostbite: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "IncinerateImmunityMorph Charges — Immune to Incinerate only while Magma or Refined Magma is active; SP2 or the starting-Form choice enters Magma, re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends its duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Incinerate",
+                    "text": "IncinerateImmunity"
+                  },
+                  {
+                    "label": "Read Incinerate: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "PoisonImmunitySynergyAbomination (Immortal)Hulk (Immortal)The Green Door — This synergy grants Absorbing Man Poison immunity and extends Omni-Morph Form duration; duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Abomination (Immortal)",
+                    "href": "/champions/abomination-immortal"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "About Poison",
+                    "text": "PoisonImmunity"
+                  },
+                  {
+                    "label": "View Poison synergy: The Green Door",
+                    "text": "The Green Door"
+                  }
+                ]
+              },
+              {
+                "text": "ShockImmunityMorph Charges — Immune to Shock only in Black Uru or Refined Black Uru Form, entered through SP1 or the starting-Form choice; re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends Form duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Shock",
+                    "text": "ShockImmunity"
+                  },
+                  {
+                    "label": "Read Shock: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "04-kit-long-name",
+      "slug": "star-lord-kitty-pryde",
+      "tab": "overview",
+      "target": "champion-kit-gain",
+      "display": "detailed",
+      "url": "http://localhost:3000/champions/star-lord-kitty-pryde?tab=overview&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 1745,
+      "targetTop": 195.65625,
+      "barBottom": 172,
+      "protectionHeight": 961.5,
+      "protectionCount": 5,
+      "fullyVisible": 0,
+      "statsToAttacks": null,
+      "semantics": {
+        "effects": [
+          {
+            "id": "champion-kit-gain",
+            "label": "Gains",
+            "articles": [
+              {
+                "text": "AmbushBuff Signature ability — Awakened: the base potency of personal Ambush Buffs is increased.Buff Special 1 grants a non-stacking Ambush Buff when enough Element Blasts are active, or when defending. It pauses during Specials and Phase, and lasts no later than the end of the next Special Attack.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Ambush",
+                    "text": "Ambush"
+                  },
+                  {
+                    "label": "Read Ambush: Signature ability",
+                    "text": "Signature ability"
+                  },
+                  {
+                    "label": "Read Ambush: Special 1",
+                    "text": "Special 1"
+                  }
+                ]
+              },
+              {
+                "text": "Armor RatingSignature ability — Awakened: each Element Blast on the opponent grants additional Armor Rating.SynergyAgent VenomBeta Ray BillMantisStar-Lord (Stellar-Forged)FRIENDS Lv. 3 — All champions gain additional Armor Rating.SynergyColossusStar-LordIT'S COMPLICATED Lv. 3 — All champions gain additional Armor Rating.SynergyKarolina DeanKitty PrydeMoondragonPhyla-VellShatterstarPRIDE Lv. 3 — All champions gain additional Armor Rating.",
+                "links": [
+                  {
+                    "label": "Agent Venom",
+                    "href": "/champions/agent-venom"
+                  },
+                  {
+                    "label": "Beta Ray Bill",
+                    "href": "/champions/beta-ray-bill"
+                  },
+                  {
+                    "label": "Mantis",
+                    "href": "/champions/mantis"
+                  },
+                  {
+                    "label": "Star-Lord (Stellar-Forged)",
+                    "href": "/champions/star-lord-stellar-forged"
+                  },
+                  {
+                    "label": "Colossus",
+                    "href": "/champions/colossus"
+                  },
+                  {
+                    "label": "Star-Lord",
+                    "href": "/champions/star-lord"
+                  },
+                  {
+                    "label": "Karolina Dean",
+                    "href": "/champions/karolina-dean"
+                  },
+                  {
+                    "label": "Kitty Pryde",
+                    "href": "/champions/kitty-pryde"
+                  },
+                  {
+                    "label": "Moondragon",
+                    "href": "/champions/moondragon"
+                  },
+                  {
+                    "label": "Phyla-Vell",
+                    "href": "/champions/phyla-vell"
+                  },
+                  {
+                    "label": "Shatterstar",
+                    "href": "/champions/shatterstar"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "About Armor Rating",
+                    "text": "Armor Rating"
+                  },
+                  {
+                    "label": "Read Armor Rating: Signature ability",
+                    "text": "Signature ability"
+                  },
+                  {
+                    "label": "View Armor Rating synergy: FRIENDS Lv. 3",
+                    "text": "FRIENDS Lv. 3"
+                  },
+                  {
+                    "label": "View Armor Rating synergy: IT'S COMPLICATED Lv. 3",
+                    "text": "IT'S COMPLICATED Lv. 3"
+                  },
+                  {
+                    "label": "View Armor Rating synergy: PRIDE Lv. 3",
+                    "text": "PRIDE Lv. 3"
+                  }
+                ]
+              },
+              {
+                "text": "Block ProficiencySynergyKarolina DeanKitty PrydeMoondragonPhyla-VellShatterstarPRIDE Lv. 3 — All champions gain additional Block Proficiency.",
+                "links": [
+                  {
+                    "label": "Karolina Dean",
+                    "href": "/champions/karolina-dean"
+                  },
+                  {
+                    "label": "Kitty Pryde",
+                    "href": "/champions/kitty-pryde"
+                  },
+                  {
+                    "label": "Moondragon",
+                    "href": "/champions/moondragon"
+                  },
+                  {
+                    "label": "Phyla-Vell",
+                    "href": "/champions/phyla-vell"
+                  },
+                  {
+                    "label": "Shatterstar",
+                    "href": "/champions/shatterstar"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "About Block Proficiency",
+                    "text": "Block Proficiency"
+                  },
+                  {
+                    "label": "View Block Proficiency synergy: PRIDE Lv. 3",
+                    "text": "PRIDE Lv. 3"
+                  }
+                ]
+              },
+              {
+                "text": "Combat Power RateSynergyColossusStar-LordIT'S COMPLICATED Lv. 3 — All champions gain additional Combat Power Rate.",
+                "links": [
+                  {
+                    "label": "Colossus",
+                    "href": "/champions/colossus"
+                  },
+                  {
+                    "label": "Star-Lord",
+                    "href": "/champions/star-lord"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "About Combat Power Rate",
+                    "text": "Combat Power Rate"
+                  },
+                  {
+                    "label": "View Combat Power Rate synergy: IT'S COMPLICATED Lv. 3",
+                    "text": "IT'S COMPLICATED Lv. 3"
+                  }
+                ]
+              },
+              {
+                "text": "Energy ResistanceComin' Atcha - Phase Dash — While Phase is active, gain Energy Resistance.SynergyKarolina DeanKitty PrydeMoondragonPhyla-VellShatterstarPRIDE Lv. 3 — All champions gain additional Energy Resistance.",
+                "links": [
+                  {
+                    "label": "Karolina Dean",
+                    "href": "/champions/karolina-dean"
+                  },
+                  {
+                    "label": "Kitty Pryde",
+                    "href": "/champions/kitty-pryde"
+                  },
+                  {
+                    "label": "Moondragon",
+                    "href": "/champions/moondragon"
+                  },
+                  {
+                    "label": "Phyla-Vell",
+                    "href": "/champions/phyla-vell"
+                  },
+                  {
+                    "label": "Shatterstar",
+                    "href": "/champions/shatterstar"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "About Energy Resistance",
+                    "text": "Energy Resistance"
+                  },
+                  {
+                    "label": "Read Energy Resistance: Comin' Atcha - Phase Dash",
+                    "text": "Comin' Atcha - Phase Dash"
+                  },
+                  {
+                    "label": "View Energy Resistance synergy: PRIDE Lv. 3",
+                    "text": "PRIDE Lv. 3"
+                  }
+                ]
+              },
+              {
+                "text": "Ignore DamageWhile Phase is active, prevent damage taken from the Recoil Mastery.",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "MissGotta Refocus - Phase Cooldown — While Phase is active, incoming attacks have a chance to Miss.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Miss",
+                    "text": "Miss"
+                  },
+                  {
+                    "label": "Read Miss: Gotta Refocus - Phase Cooldown",
+                    "text": "Gotta Refocus - Phase Cooldown"
+                  }
+                ]
+              },
+              {
+                "text": "Parry Non-ContactCan trigger the Parry Mastery against non-contact attacks.",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "PauseComin' Atcha - Phase Dash — Phase pauses during dashes, Heavy charges, Strikers and Specials, and when landing Basic Attacks as an Attacker.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "Read Pause: Comin' Atcha - Phase Dash",
+                    "text": "Comin' Atcha - Phase Dash"
+                  }
+                ]
+              },
+              {
+                "text": "Perfect BlockSynergyDraxGamoraGrootRocket RaccoonTEAMMATES Lv. 3 — All champions gain additional Perfect Block chance.",
+                "links": [
+                  {
+                    "label": "Drax",
+                    "href": "/champions/drax"
+                  },
+                  {
+                    "label": "Gamora",
+                    "href": "/champions/gamora"
+                  },
+                  {
+                    "label": "Groot",
+                    "href": "/champions/groot"
+                  },
+                  {
+                    "label": "Rocket Raccoon",
+                    "href": "/champions/rocket-raccoon"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "About Perfect Block",
+                    "text": "Perfect Block"
+                  },
+                  {
+                    "label": "View Perfect Block synergy: TEAMMATES Lv. 3",
+                    "text": "TEAMMATES Lv. 3"
+                  }
+                ]
+              },
+              {
+                "text": "PhaseBuff As attacker — As an Attacker, releasing a Heavy ends Phase without triggering its cooldown; attacks and Well-Timed Blocks shorten the cooldown. Neuroshock on Kitty accelerates the Phase cooldown, up to a limit.Buff Special 3 grants Phase, ignoring its cooldown, and pauses it temporarily.Buff Special 2 grants Phase on activation when enough Element Blasts are active. Phase ends after the attack and triggers its cooldown.Buff Comin' Atcha - Phase Dash — Dash while holding Block as an Attacker, or dash as a Defender, while the opponent has sufficiently few unique Buffs. Phase is subject to its cooldown.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Phase",
+                    "text": "Phase"
+                  },
+                  {
+                    "label": "Read Phase: As attacker",
+                    "text": "As attacker"
+                  },
+                  {
+                    "label": "Read Phase: Special 3",
+                    "text": "Special 3"
+                  },
+                  {
+                    "label": "Read Phase: Special 2",
+                    "text": "Special 2"
+                  },
+                  {
+                    "label": "Read Phase: Comin' Atcha - Phase Dash",
+                    "text": "Comin' Atcha - Phase Dash"
+                  }
+                ]
+              },
+              {
+                "text": "Physical ResistanceSynergyKarolina DeanKitty PrydeMoondragonPhyla-VellShatterstarPRIDE Lv. 3 — All champions gain additional Physical Resistance.",
+                "links": [
+                  {
+                    "label": "Karolina Dean",
+                    "href": "/champions/karolina-dean"
+                  },
+                  {
+                    "label": "Kitty Pryde",
+                    "href": "/champions/kitty-pryde"
+                  },
+                  {
+                    "label": "Moondragon",
+                    "href": "/champions/moondragon"
+                  },
+                  {
+                    "label": "Phyla-Vell",
+                    "href": "/champions/phyla-vell"
+                  },
+                  {
+                    "label": "Shatterstar",
+                    "href": "/champions/shatterstar"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "About Physical Resistance",
+                    "text": "Physical Resistance"
+                  },
+                  {
+                    "label": "View Physical Resistance synergy: PRIDE Lv. 3",
+                    "text": "PRIDE Lv. 3"
+                  }
+                ]
+              },
+              {
+                "text": "Power GainSynergyAngelaCaptain MarvelIron ManThingPassive All-New All-Different — At fight start, gain Power Gain based on the number of synergy or #Guardians of the Galaxy champions on the team. Does not stack with duplicate synergies.",
+                "links": [
+                  {
+                    "label": "Angela",
+                    "href": "/champions/angela"
+                  },
+                  {
+                    "label": "Captain Marvel",
+                    "href": "/champions/captain-marvel"
+                  },
+                  {
+                    "label": "Iron Man",
+                    "href": "/champions/iron-man"
+                  },
+                  {
+                    "label": "Thing",
+                    "href": "/champions/thing"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "About Power Gain",
+                    "text": "Power Gain"
+                  },
+                  {
+                    "label": "View Power Gain synergy: All-New All-Different",
+                    "text": "All-New All-Different"
+                  }
+                ]
+              },
+              {
+                "text": "ProwessSynergyDazzlerLongshotPsylockeRoguePassive Way Way Back In The 1980s — At fight start, gain indefinite Prowess Passives; remove one at the end of each Special Attack. Does not stack with duplicate synergies.",
+                "links": [
+                  {
+                    "label": "Dazzler",
+                    "href": "/champions/dazzler"
+                  },
+                  {
+                    "label": "Longshot",
+                    "href": "/champions/longshot"
+                  },
+                  {
+                    "label": "Psylocke",
+                    "href": "/champions/psylocke"
+                  },
+                  {
+                    "label": "Rogue",
+                    "href": "/champions/rogue"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "About Prowess",
+                    "text": "Prowess"
+                  },
+                  {
+                    "label": "View Prowess synergy: Way Way Back In The 1980s",
+                    "text": "Way Way Back In The 1980s"
+                  }
+                ]
+              },
+              {
+                "text": "Special LockAs an Attacker with Special 2 or 3 available, the fourth Light temporarily disables the highest available Special.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Special Lock",
+                    "text": "Special Lock"
+                  }
+                ]
+              },
+              {
+                "text": "UnblockablePassive Comin' Atcha - Phase Dash — While Phase is active, the second Medium, Heavy and Special 2 are Passively Unblockable.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Unblockable",
+                    "text": "Unblockable"
+                  },
+                  {
+                    "label": "Read Unblockable: Comin' Atcha - Phase Dash",
+                    "text": "Comin' Atcha - Phase Dash"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "champion-kit-inflict",
+            "label": "Inflicts",
+            "articles": [
+              {
+                "text": "BatteredPassive Element Guns - Element Blasts — The second Medium inflicts this non-stacking Element Blast after three Lights or Mediums in the current combo. Element Blasts pause during Specials; the fourth Light refreshes a limited number.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Battered",
+                    "text": "Battered"
+                  },
+                  {
+                    "label": "Read Battered: Element Guns - Element Blasts",
+                    "text": "Element Guns - Element Blasts"
+                  }
+                ]
+              },
+              {
+                "text": "Burst DamageEach Special 2 hit deals a burst of Physical Damage, with additional bursts per Element Blast. The final hit removes all Element Blasts.",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "CowardicePassive Element Guns - Element Blasts — The second Medium inflicts this non-stacking Element Blast after four Lights or Mediums in the current combo. Element Blasts pause during Specials; the fourth Light refreshes a limited number.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Cowardice",
+                    "text": "Cowardice"
+                  },
+                  {
+                    "label": "Read Cowardice: Element Guns - Element Blasts",
+                    "text": "Element Guns - Element Blasts"
+                  }
+                ]
+              },
+              {
+                "text": "Heal BlockPassive Base kit — The final hit of Special 1 inflicts the Heart Element Blast, which Heal Blocks the opponent.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Heal Block",
+                    "text": "Heal Block"
+                  },
+                  {
+                    "label": "Read Heal Block: Base kit",
+                    "text": "Base kit"
+                  }
+                ]
+              },
+              {
+                "text": "IncinerateDebuff Special 3 inflicts Incinerate, with increased base potency per Element Blast. Element Blasts expire more slowly while this Incinerate is active.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Incinerate",
+                    "text": "Incinerate"
+                  },
+                  {
+                    "label": "Read Incinerate: Special 3",
+                    "text": "Special 3"
+                  }
+                ]
+              },
+              {
+                "text": "Inequity Mastery Effectiveness ReductionAwakened: Mutant opponents have reduced Inequity Mastery effectiveness.",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "Power ReroutePassive Element Guns - Element Blasts — The second Medium inflicts this non-stacking Element Blast after two Lights or Mediums in the current combo. Element Blasts pause during Specials; the fourth Light refreshes a limited number.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Power Reroute",
+                    "text": "Power Reroute"
+                  },
+                  {
+                    "label": "Read Power Reroute: Element Guns - Element Blasts",
+                    "text": "Element Guns - Element Blasts"
+                  }
+                ]
+              },
+              {
+                "text": "SuppressionPassive Element Guns - Element Blasts — The second Medium inflicts this non-stacking Element Blast after one Light or Medium in the current combo. Element Blasts pause during Specials; the fourth Light refreshes a limited number.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Suppression",
+                    "text": "Suppression"
+                  },
+                  {
+                    "label": "Read Suppression: Element Guns - Element Blasts",
+                    "text": "Element Guns - Element Blasts"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "champion-kit-protections",
+            "label": "Immunities & resistances",
+            "articles": [
+              {
+                "text": "Ability Accuracy ReductionImmunityAgainst Mutant opponents, Element Blasts, Phase and Unblockable are unaffected by Ability Accuracy changes.",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "DeliriumImmunityStar-Lady - Always Active — Against Mutant opponents, Kitty is immune to Delirium and Reversed Controls.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Delirium",
+                    "text": "DeliriumImmunity"
+                  },
+                  {
+                    "label": "Read Delirium: Star-Lady - Always Active",
+                    "text": "Star-Lady - Always Active"
+                  }
+                ]
+              },
+              {
+                "text": "NeuroshockImmunityComin' Atcha - Phase Dash — Immune to Stun and Neuroshock while Phase is active.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Neuroshock",
+                    "text": "NeuroshockImmunity"
+                  },
+                  {
+                    "label": "Read Neuroshock: Comin' Atcha - Phase Dash",
+                    "text": "Comin' Atcha - Phase Dash"
+                  }
+                ]
+              },
+              {
+                "text": "Reversed ControlsImmunityStar-Lady - Always Active — Against Mutant opponents, Kitty is immune to Delirium and Reversed Controls.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Reversed Controls",
+                    "text": "Reversed ControlsImmunity"
+                  },
+                  {
+                    "label": "Read Reversed Controls: Star-Lady - Always Active",
+                    "text": "Star-Lady - Always Active"
+                  }
+                ]
+              },
+              {
+                "text": "StunImmunityComin' Atcha - Phase Dash — Immune to Stun and Neuroshock while Phase is active.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Stun",
+                    "text": "StunImmunity"
+                  },
+                  {
+                    "label": "Read Stun: Comin' Atcha - Phase Dash",
+                    "text": "Comin' Atcha - Phase Dash"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "05-kit-sparse",
+      "slug": "ms-marvel",
+      "tab": "overview",
+      "target": "champion-kit-protections",
+      "display": "detailed",
+      "url": "http://localhost:3000/champions/ms-marvel?tab=overview&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 717,
+      "targetTop": 196.21875,
+      "barBottom": 172,
+      "protectionHeight": 134.5,
+      "protectionCount": 1,
+      "fullyVisible": 1,
+      "statsToAttacks": null,
+      "semantics": {
+        "effects": [
+          {
+            "id": "champion-kit-gain",
+            "label": "Gains",
+            "articles": [
+              {
+                "text": "FuryBuff Base kit — All attacks have a chance to grant a temporary Attack Fury Buff.SynergyNick FuryBuff Contingency Plan — While Nick Fury is alive, all Fury Buffs last longer and all attacks retain their chance to grant temporary Attack Fury; this synergy does not stack.SynergyHulk (Immortal)Buff Alpha Flight Space Station — All attacks have a chance to grant a temporary Fury Buff with increased potency; this synergy does not stack.",
+                "links": [
+                  {
+                    "label": "Nick Fury",
+                    "href": "/champions/nick-fury"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "About Fury",
+                    "text": "Fury"
+                  },
+                  {
+                    "label": "Read Fury: Base kit",
+                    "text": "Base kit"
+                  },
+                  {
+                    "label": "View Fury synergy: Contingency Plan",
+                    "text": "Contingency Plan"
+                  },
+                  {
+                    "label": "View Fury synergy: Alpha Flight Space Station",
+                    "text": "Alpha Flight Space Station"
+                  }
+                ]
+              },
+              {
+                "text": "Gain PowerWith Signature, blocking energy-based attacks partially absorbs their energy to gain Power.",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "True DamageSP1 ignores all opponent Armor.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About True Damage",
+                    "text": "True Damage"
+                  },
+                  {
+                    "label": "Read True Damage: Special 1",
+                    "text": "SP1"
+                  }
+                ]
+              },
+              {
+                "text": "UnblockableSynergyCaptain MarvelMarvelous — While Fury is active, Beam Attacks are Unblockable; this synergy does not stack.",
+                "links": [
+                  {
+                    "label": "Captain Marvel",
+                    "href": "/champions/captain-marvel"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "About Unblockable",
+                    "text": "Unblockable"
+                  },
+                  {
+                    "label": "View Unblockable synergy: Marvelous",
+                    "text": "Marvelous"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "champion-kit-protections",
+            "label": "Immunities & resistances",
+            "articles": [
+              {
+                "text": "PoisonImmunity",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Poison",
+                    "text": "PoisonImmunity"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "06-kit-split-wide",
+      "slug": "absorbing-man",
+      "tab": "overview",
+      "target": "champion-kit-gain",
+      "display": "detailed",
+      "url": "http://localhost:3000/champions/absorbing-man?tab=overview&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        1536,
+        900
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 1536,
+      "scrollY": 605,
+      "targetTop": 228.78125,
+      "barBottom": 204.390625,
+      "protectionHeight": 2482.5,
+      "protectionCount": 10,
+      "fullyVisible": 3,
+      "statsToAttacks": null,
+      "semantics": {
+        "effects": [
+          {
+            "id": "champion-kit-gain",
+            "label": "Gains",
+            "articles": [
+              {
+                "text": "Black Uru FormSP1 or the chosen starting Form activates Black Uru, the default starting Form; re-entry Refines and refreshes it, a Buff ending on the Opponent, Debuff immunity or Light interrupts of Basic Attacks pause it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends Form duration.SynergyAbomination (Immortal)Hulk (Immortal)The Green Door — This synergy extends Black Uru Form duration, entered by SP1 or starting-Form selection; re-entry Refines and refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, signature extends its duration further, and duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Abomination (Immortal)",
+                    "href": "/champions/abomination-immortal"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "Read Black Uru Form: Special 1",
+                    "text": "SP1"
+                  },
+                  {
+                    "label": "View Black Uru Form synergy: The Green Door",
+                    "text": "The Green Door"
+                  }
+                ]
+              },
+              {
+                "text": "Crit Through BlockCritical Hits can pass through Block only in Refined Black Uru, reached by re-entry, sufficient Charge consumption via MLM or a Special at maximum Charges, or SP3 restoring the most recent Form Refined; a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "CrueltyPassive SP3 grants indefinite Cruelty increasing Critical Damage Rating, with additional Cruelty if a Refined Form is already active, subject to a stack cap.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Cruelty",
+                    "text": "Cruelty"
+                  },
+                  {
+                    "label": "Read Cruelty: Special 3",
+                    "text": "SP3"
+                  }
+                ]
+              },
+              {
+                "text": "Gain PowerBlocking a hit reduces the Opponent's Ability Power Rate and transfers the denied Power to Absorbing Man until he stops blocking.",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "Magma FormSP2 or the chosen starting Form activates Magma; re-entry Refines and refreshes it, a Buff ending on the Opponent, Debuff immunity or Light interrupts of Basic Attacks pause it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends Form duration.SynergyAbomination (Immortal)Hulk (Immortal)The Green Door — This synergy extends Magma Form duration, entered by SP2 or starting-Form selection; re-entry Refines and refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, signature extends its duration further, and duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Abomination (Immortal)",
+                    "href": "/champions/abomination-immortal"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "Read Magma Form: Special 2",
+                    "text": "SP2"
+                  },
+                  {
+                    "label": "View Magma Form synergy: The Green Door",
+                    "text": "The Green Door"
+                  }
+                ]
+              },
+              {
+                "text": "Morph ChargeActivating a Special after the preceding attack's opening hit lands grants Morph Charges and carries that attack's bonus Critical Rating into the Special; the qualifying preceding attack and its Stun condition are unspecified.Refreshing or changing Forms grants Morph Charges based on the previous Form's remaining duration; sufficient Charges are consumed by MLM or a Special at maximum Charges to Refine the current Form and inflict temporary Vulnerability Passives.Being immune to an Armor Break or Armor Shattered Debuff grants Morph Charges; sufficient Charges are consumed by MLM or a Special at maximum Charges to Refine the current Form and inflict temporary Vulnerability Passives.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "Read Morph Charge: Morph Charges",
+                    "text": "Morph Charges"
+                  },
+                  {
+                    "label": "Read Morph Charge: Morph Charges",
+                    "text": "Morph Charges"
+                  },
+                  {
+                    "label": "Read Morph Charge: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "PauseOmni-Morph Forms — Interrupting the Opponent's Basic Attack with a Light Attack temporarily pauses the current Form and inflicts a temporary Vulnerability Passive, subject to a stack cap.Omni-Morph Forms — A Buff ending on the Opponent or Absorbing Man being immune to a Debuff temporarily pauses his current Form.SP3 activates the most recent Form in its Refined state and pauses it, granting Critical Rating only during that pause.SynergyBlack TarantulaPuñO Cerrado — Punishing a Special Attack with a Light Attack temporarily pauses Omni-Morph Forms through this synergy; duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Black Tarantula",
+                    "href": "/champions/black-tarantula"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "Read Pause: Omni-Morph Forms",
+                    "text": "Omni-Morph Forms"
+                  },
+                  {
+                    "label": "Read Pause: Omni-Morph Forms",
+                    "text": "Omni-Morph Forms"
+                  },
+                  {
+                    "label": "Read Pause: Special 3",
+                    "text": "SP3"
+                  },
+                  {
+                    "label": "View Pause synergy: PuñO Cerrado",
+                    "text": "PuñO Cerrado"
+                  }
+                ]
+              },
+              {
+                "text": "Pre-Fight AbilityChoose the starting Form in the Pre-Fight Menu, with Black Uru as the default; the choice persists until changed.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Pre-Fight Ability",
+                    "text": "Pre-Fight Ability"
+                  }
+                ]
+              },
+              {
+                "text": "Refined Black Uru FormRe-enter Black Uru or consume sufficient Charges via MLM or a Special at maximum Charges to Refine it; SP3 restores the most recent Form Refined, starting-Form selection alone does not Refine, a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.SynergyAbomination (Immortal)Hulk (Immortal)The Green Door — This synergy extends Refined Black Uru duration, reached by re-entry or sufficient Charges via MLM or a Special at maximum Charges; SP3 restores the most recent Form Refined, a Heavy hit during Special recovery can deactivate it subject to cooldown, signature extends duration further, and duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Abomination (Immortal)",
+                    "href": "/champions/abomination-immortal"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "View Refined Black Uru Form synergy: The Green Door",
+                    "text": "The Green Door"
+                  }
+                ]
+              },
+              {
+                "text": "Refined Magma FormRe-enter Magma or consume sufficient Charges via MLM or a Special at maximum Charges to Refine it; SP3 restores the most recent Form Refined, starting-Form selection alone does not Refine, a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.SynergyAbomination (Immortal)Hulk (Immortal)The Green Door — This synergy extends Refined Magma duration, reached by re-entry or sufficient Charges via MLM or a Special at maximum Charges; SP3 restores the most recent Form Refined, a Heavy hit during Special recovery can deactivate it subject to cooldown, signature extends duration further, and duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Abomination (Immortal)",
+                    "href": "/champions/abomination-immortal"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "View Refined Magma Form synergy: The Green Door",
+                    "text": "The Green Door"
+                  }
+                ]
+              },
+              {
+                "text": "RegenerationPassive Signature ability: consuming Morph Charges grants temporary, non-stacking Regeneration based on missing Health, also triggered by entering or refreshing a Form as a Defender; True Damage hits pause personal Regeneration, and early Form deactivation from a Heavy hit during Special recovery removes it.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Regeneration",
+                    "text": "Regeneration"
+                  },
+                  {
+                    "label": "Read Regeneration: Signature ability",
+                    "text": "Signature ability"
+                  }
+                ]
+              },
+              {
+                "text": "UnblockablePassive Molecular Duplication - Always Active — Special Attacks are Unblockable in a Refined Form, reached by re-entering the active Form, consuming sufficient Charges with MLM or a Special at maximum Charges, or SP3 restoring the most recent Form Refined; a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Unblockable",
+                    "text": "Unblockable"
+                  },
+                  {
+                    "label": "Read Unblockable: Molecular Duplication - Always Active",
+                    "text": "Molecular Duplication - Always Active"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "champion-kit-inflict",
+            "label": "Inflicts",
+            "articles": [
+              {
+                "text": "Ability Power Rate ReductionBlocking a hit reduces the Opponent's Ability Power Rate until Absorbing Man stops blocking.",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "Armor BreakSynergyThorThor (Jane Foster)Debuff The Worthy — This synergy lets the second Medium Attack inflict temporary Armor Break on the Opponent, subject to a stack cap; duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Thor",
+                    "href": "/champions/thor"
+                  },
+                  {
+                    "label": "Thor (Jane Foster)",
+                    "href": "/champions/thor-jane-foster"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "About Armor Break",
+                    "text": "Armor Break"
+                  },
+                  {
+                    "label": "View Armor Break synergy: The Worthy",
+                    "text": "The Worthy"
+                  }
+                ]
+              },
+              {
+                "text": "AtrophyAbsorbing Man shortens the Opponent's Indestructible, Immortality, Unstoppable and Unblockable Buffs.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Atrophy",
+                    "text": "Atrophy"
+                  }
+                ]
+              },
+              {
+                "text": "Burst DamageBlack Uru attacks deal Physical Damage bursts whose Ability Accuracy cannot be modified and which benefit from Critical Damage on Critical Hits; Refined bursts can trigger through Block and be Critical, while a Heavy hit during Special recovery can deactivate the Form subject to cooldown and signature extends its duration.Magma attacks deal Energy Damage bursts whose Ability Accuracy cannot be modified and which benefit from Critical Damage on Critical Hits; Refined bursts can be Critical, while a Heavy hit during Special recovery can deactivate the Form subject to cooldown and signature extends its duration.SynergyThe SerpentThe Main Event — For Absorbing Man as a #Cul's Worthy recipient, this synergy strengthens Black Uru Physical bursts; Refined bursts can trigger through Block and be Critical, their Ability Accuracy cannot be modified, a Heavy hit during Special recovery can deactivate the Form subject to cooldown, and duplicate synergies do not stack.For Absorbing Man as a #Cul's Worthy recipient, this synergy strengthens Magma Energy bursts; their Ability Accuracy cannot be modified, Critical Hits enhance them, Refined bursts can be Critical, a Heavy hit during Special recovery can deactivate the Form subject to cooldown, and duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "The Serpent",
+                    "href": "/champions/the-serpent"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "View Burst Damage synergy: The Main Event",
+                    "text": "The Main Event"
+                  }
+                ]
+              },
+              {
+                "text": "Energy DamageMorph Charges — In Magma or Refined Magma Form, all attacks deal Energy instead of Physical Damage; SP2 or the starting-Form choice enters Magma, re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "Read Energy Damage: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "IncineratePassive Morph Charges — Contact with the Opponent inflicts Incinerate Passives only in Refined Magma, reached by re-entering Magma, consuming sufficient Charges with MLM or a Special at maximum Charges, or SP3 restoring the most recent Form Refined; a Heavy hit during Special recovery can deactivate it subject to cooldown, and signature extends Form duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Incinerate",
+                    "text": "Incinerate"
+                  },
+                  {
+                    "label": "Read Incinerate: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "VulnerabilityPassive A Medium-Light-Medium combo with sufficient Morph Charges, or a Special Attack at maximum Charges, consumes available Charges to Refine the current Form and inflict temporary Vulnerability Passives based on Charges spent.Passive Omni-Morph Forms — Interrupting the Opponent's Basic Attack with a Light Attack inflicts a temporary Vulnerability Passive, subject to a stack cap, and temporarily pauses the current Form.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Vulnerability",
+                    "text": "Vulnerability"
+                  },
+                  {
+                    "label": "Read Vulnerability: Morph Charges",
+                    "text": "Morph Charges"
+                  },
+                  {
+                    "label": "Read Vulnerability: Omni-Morph Forms",
+                    "text": "Omni-Morph Forms"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "champion-kit-protections",
+            "label": "Immunities & resistances",
+            "articles": [
+              {
+                "text": "Ability Accuracy ModificationImmunityOmni-Morph Forms — Form changes cannot fail due to Ability Accuracy Modification; this protection applies only to Form changes.Omni-Morph Forms — Absorbing Man's personal damage bursts cannot have their Ability Accuracy modified.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "Read Ability Accuracy Modification: Omni-Morph Forms",
+                    "text": "Omni-Morph Forms"
+                  },
+                  {
+                    "label": "Read Ability Accuracy Modification: Omni-Morph Forms",
+                    "text": "Omni-Morph Forms"
+                  }
+                ]
+              },
+              {
+                "text": "Armor BreakImmunityDebuff",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Armor Break",
+                    "text": "Armor BreakImmunityDebuff"
+                  }
+                ]
+              },
+              {
+                "text": "Armor ShatterImmunityDebuff",
+                "links": [],
+                "buttons": []
+              },
+              {
+                "text": "BleedImmunityMorph Charges — Immune to Bleed only while Black Uru or Refined Black Uru is active; SP1 or the starting-Form choice enters Black Uru, re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends its duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Bleed",
+                    "text": "BleedImmunity"
+                  },
+                  {
+                    "label": "Read Bleed: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "ColdsnapImmunityMorph Charges — Immune to Coldsnap only in Magma or Refined Magma Form, entered through SP2 or the starting-Form choice; re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends Form duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Coldsnap",
+                    "text": "ColdsnapImmunity"
+                  },
+                  {
+                    "label": "Read Coldsnap: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "DebuffsResistanceSynergyRogueduration reduction· See source conditionsHands-On Approach — This synergy shortens Non-Damaging Debuffs on Absorbing Man, excluding Stuns; duplicate synergies do not stack.Synergy values · 7★Absorbing Man: Reduce the duration of Non-Damaging Debuffs other than Stuns by 50%.",
+                "links": [
+                  {
+                    "label": "Rogue",
+                    "href": "/champions/rogue"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "View Debuffs synergy: Hands-On Approach",
+                    "text": "Hands-On Approach"
+                  }
+                ]
+              },
+              {
+                "text": "FrostbiteImmunityMorph Charges — Immune to Frostbite only while Magma or Refined Magma is active; SP2 or the starting-Form choice enters Magma, re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends its duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Frostbite",
+                    "text": "FrostbiteImmunity"
+                  },
+                  {
+                    "label": "Read Frostbite: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "IncinerateImmunityMorph Charges — Immune to Incinerate only while Magma or Refined Magma is active; SP2 or the starting-Form choice enters Magma, re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends its duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Incinerate",
+                    "text": "IncinerateImmunity"
+                  },
+                  {
+                    "label": "Read Incinerate: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              },
+              {
+                "text": "PoisonImmunitySynergyAbomination (Immortal)Hulk (Immortal)The Green Door — This synergy grants Absorbing Man Poison immunity and extends Omni-Morph Form duration; duplicate synergies do not stack.",
+                "links": [
+                  {
+                    "label": "Abomination (Immortal)",
+                    "href": "/champions/abomination-immortal"
+                  },
+                  {
+                    "label": "Hulk (Immortal)",
+                    "href": "/champions/hulk-immortal"
+                  }
+                ],
+                "buttons": [
+                  {
+                    "label": "About Poison",
+                    "text": "PoisonImmunity"
+                  },
+                  {
+                    "label": "View Poison synergy: The Green Door",
+                    "text": "The Green Door"
+                  }
+                ]
+              },
+              {
+                "text": "ShockImmunityMorph Charges — Immune to Shock only in Black Uru or Refined Black Uru Form, entered through SP1 or the starting-Form choice; re-entry refreshes it, a Heavy hit during Special recovery can deactivate it subject to cooldown, and the signature ability extends Form duration.",
+                "links": [],
+                "buttons": [
+                  {
+                    "label": "About Shock",
+                    "text": "ShockImmunity"
+                  },
+                  {
+                    "label": "Read Shock: Morph Charges",
+                    "text": "Morph Charges"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "07-kit-compact-control",
+      "slug": "absorbing-man",
+      "tab": "overview",
+      "target": "champion-kit-protections",
+      "display": "compact",
+      "url": "http://localhost:3000/champions/absorbing-man?tab=overview&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 733,
+      "targetTop": 195.90625,
+      "barBottom": 172,
+      "protectionHeight": 822,
+      "protectionCount": 0,
+      "fullyVisible": 0,
+      "statsToAttacks": null,
+      "semantics": {
+        "effects": [
+          {
+            "id": "champion-kit-gain",
+            "label": "Gains",
+            "articles": []
+          },
+          {
+            "id": "champion-kit-inflict",
+            "label": "Inflicts",
+            "articles": []
+          },
+          {
+            "id": "champion-kit-protections",
+            "label": "Immunities & resistances",
+            "articles": []
+          }
+        ]
+      }
+    },
+    {
+      "name": "08-stats-desktop",
+      "slug": "absorbing-man",
+      "tab": "stats",
+      "target": "champion-stats-heading",
+      "display": "detailed",
+      "url": "http://localhost:3000/champions/absorbing-man?tab=stats&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        1280,
+        900
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 1280,
+      "scrollY": 447,
+      "targetTop": 228.390625,
+      "barBottom": 204.390625,
+      "protectionHeight": null,
+      "protectionCount": 0,
+      "fullyVisible": 0,
+      "statsToAttacks": 492.796875,
+      "semantics": {
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "306"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,018"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "448"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "4,125"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "688"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "attacks": "Attack breakdownDamage types, contact properties, and individual hits.9 moves · 16 hitsHit profileRecorded hits by damage typePhysical16 hits16 contact hits0 projectile hitsBasic attacks7Light 1ContactPhysical1 hitLight 2ContactPhysical1 hitLight 3ContactPhysical1 hitLight 4ContactPhysical1 hitMedium 1ContactPhysical1 hitMedium 2ContactPhysical1 hitHeavyContactPhysical2 hits0102Hits 1–2Contact · PhysicalSpecial attacks2Special 1ContactPhysical3 hitsUru Rush010203Hits 1–3Contact · PhysicalRead abilitySpecial 2ContactPhysical5 hitsMagma Spin0102030405Hits 1–5Contact · PhysicalRead ability",
+        "details": [
+          {
+            "open": false,
+            "text": "HeavyContactPhysical2 hits0102Hits 1–2Contact · Physical"
+          },
+          {
+            "open": true,
+            "text": "Special 1ContactPhysical3 hitsUru Rush010203Hits 1–3Contact · PhysicalRead ability"
+          },
+          {
+            "open": true,
+            "text": "Special 2ContactPhysical5 hitsMagma Spin0102030405Hits 1–5Contact · PhysicalRead ability"
+          }
+        ]
+      }
+    },
+    {
+      "name": "09-stats-mobile",
+      "slug": "absorbing-man",
+      "tab": "stats",
+      "target": "champion-stats-heading",
+      "display": "detailed",
+      "url": "http://localhost:3000/champions/absorbing-man?tab=stats&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 520,
+      "targetTop": 195.90625,
+      "barBottom": 172,
+      "protectionHeight": null,
+      "protectionCount": 0,
+      "fullyVisible": 0,
+      "statsToAttacks": 931.09375,
+      "semantics": {
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "306"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,018"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "448"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "4,125"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "688"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "attacks": "Attack breakdownDamage types, contact properties, and individual hits.9 moves · 16 hitsHit profileRecorded hits by damage typePhysical16 hits16 contact hits0 projectile hitsBasic attacks7Light 1ContactPhysical1 hitLight 2ContactPhysical1 hitLight 3ContactPhysical1 hitLight 4ContactPhysical1 hitMedium 1ContactPhysical1 hitMedium 2ContactPhysical1 hitHeavyContactPhysical2 hits0102Hits 1–2Contact · PhysicalSpecial attacks2Special 1ContactPhysical3 hitsUru Rush010203Hits 1–3Contact · PhysicalRead abilitySpecial 2ContactPhysical5 hitsMagma Spin0102030405Hits 1–5Contact · PhysicalRead ability",
+        "details": [
+          {
+            "open": false,
+            "text": "HeavyContactPhysical2 hits0102Hits 1–2Contact · Physical"
+          },
+          {
+            "open": true,
+            "text": "Special 1ContactPhysical3 hitsUru Rush010203Hits 1–3Contact · PhysicalRead ability"
+          },
+          {
+            "open": true,
+            "text": "Special 2ContactPhysical5 hitsMagma Spin0102030405Hits 1–5Contact · PhysicalRead ability"
+          }
+        ]
+      }
+    },
+    {
+      "name": "10-stats-small",
+      "slug": "absorbing-man",
+      "tab": "stats",
+      "target": "champion-stats-heading",
+      "display": "detailed",
+      "url": "http://localhost:3000/champions/absorbing-man?tab=stats&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        320,
+        568
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 320,
+      "scrollY": 496,
+      "targetTop": 196.015625,
+      "barBottom": 172,
+      "protectionHeight": null,
+      "protectionCount": 0,
+      "fullyVisible": 0,
+      "statsToAttacks": 951.09375,
+      "semantics": {
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "306"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,018"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "448"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "4,125"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "688"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "attacks": "Attack breakdownDamage types, contact properties, and individual hits.9 moves · 16 hitsHit profileRecorded hits by damage typePhysical16 hits16 contact hits0 projectile hitsBasic attacks7Light 1ContactPhysical1 hitLight 2ContactPhysical1 hitLight 3ContactPhysical1 hitLight 4ContactPhysical1 hitMedium 1ContactPhysical1 hitMedium 2ContactPhysical1 hitHeavyContactPhysical2 hits0102Hits 1–2Contact · PhysicalSpecial attacks2Special 1ContactPhysical3 hitsUru Rush010203Hits 1–3Contact · PhysicalRead abilitySpecial 2ContactPhysical5 hitsMagma Spin0102030405Hits 1–5Contact · PhysicalRead ability",
+        "details": [
+          {
+            "open": false,
+            "text": "HeavyContactPhysical2 hits0102Hits 1–2Contact · Physical"
+          },
+          {
+            "open": true,
+            "text": "Special 1ContactPhysical3 hitsUru Rush010203Hits 1–3Contact · PhysicalRead ability"
+          },
+          {
+            "open": true,
+            "text": "Special 2ContactPhysical5 hitsMagma Spin0102030405Hits 1–5Contact · PhysicalRead ability"
+          }
+        ]
+      }
+    },
+    {
+      "name": "11-stats-long-name",
+      "slug": "star-lord-kitty-pryde",
+      "tab": "stats",
+      "target": "champion-stats-heading",
+      "display": "detailed",
+      "url": "http://localhost:3000/champions/star-lord-kitty-pryde?tab=stats&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 515,
+      "targetTop": 196.15625,
+      "barBottom": 172,
+      "protectionHeight": null,
+      "protectionCount": 0,
+      "fullyVisible": 0,
+      "statsToAttacks": 931.09375,
+      "semantics": {
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "1,236"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,468"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "1,124"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "5,108"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "attacks": "Attack breakdownDamage types, contact properties, and individual hits.9 moves · 18 hitsHit profileRecorded hits by damage typePhysical16 hitsEnergy2 hits10 contact hits8 projectile hitsBasic attacks7Light 1ContactPhysical1 hitLight 2ContactPhysical1 hitLight 3ContactPhysical1 hitLight 4ContactPhysical1 hitMedium 1ContactPhysical1 hitMedium 2ProjectilePhysical1 hitHeavyProjectilePhysical2 hits0102Hits 1–2Projectile · PhysicalSpecial attacks2Special 1ContactPhysicalEnergy5 hitsMeteor Heeldrop0102030405Hits 1–3Contact · PhysicalHits 4–5Contact · EnergyRead abilitySpecial 2ProjectilePhysical5 hitsPew Pew Pew Pew Pew0102030405Hits 1–5Projectile · PhysicalRead ability",
+        "details": [
+          {
+            "open": false,
+            "text": "HeavyProjectilePhysical2 hits0102Hits 1–2Projectile · Physical"
+          },
+          {
+            "open": true,
+            "text": "Special 1ContactPhysicalEnergy5 hitsMeteor Heeldrop0102030405Hits 1–3Contact · PhysicalHits 4–5Contact · EnergyRead ability"
+          },
+          {
+            "open": true,
+            "text": "Special 2ProjectilePhysical5 hitsPew Pew Pew Pew Pew0102030405Hits 1–5Projectile · PhysicalRead ability"
+          }
+        ]
+      }
+    },
+    {
+      "name": "12-stats-sparse",
+      "slug": "ms-marvel",
+      "tab": "stats",
+      "target": "champion-stats-heading",
+      "display": "detailed",
+      "url": "http://localhost:3000/champions/ms-marvel?tab=stats&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 481,
+      "targetTop": 196.21875,
+      "barBottom": 172,
+      "protectionHeight": null,
+      "protectionCount": 0,
+      "fullyVisible": 0,
+      "statsToAttacks": 931.09375,
+      "semantics": {
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "65"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "150"
+          },
+          {
+            "label": "Critical rating",
+            "value": "791"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,500"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "563"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "3,238"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "attacks": "Attack breakdownDamage types, contact properties, and individual hits.9 moves · 13 hitsHit profileRecorded hits by damage typePhysical10 hitsEnergy3 hits12 contact hits1 projectile hitsBasic attacks7Light 1ContactPhysical1 hitLight 2ContactPhysical1 hitLight 3ContactPhysical1 hitLight 4ContactPhysical1 hitMedium 1ContactPhysical1 hitMedium 2ContactPhysical1 hitHeavyContactPhysical4 hits01020304Hits 1–4Contact · PhysicalSpecial attacks2Special 1ProjectileEnergyHeatBeamCosmic1 hitSpecial 2ContactEnergyCosmicKick2 hits0102Hit 1Contact · Energy · Cosmic · KickHit 2Contact · Energy",
+        "details": [
+          {
+            "open": false,
+            "text": "HeavyContactPhysical4 hits01020304Hits 1–4Contact · Physical"
+          },
+          {
+            "open": true,
+            "text": "Special 2ContactEnergyCosmicKick2 hits0102Hit 1Contact · Energy · Cosmic · KickHit 2Contact · Energy"
+          }
+        ]
+      }
+    }
+  ],
+  "diagnostics": []
+}

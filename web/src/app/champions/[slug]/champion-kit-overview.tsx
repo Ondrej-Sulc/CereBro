@@ -101,7 +101,7 @@ function ChampionEffectList({ id, title, description, icon, effects, view, syner
         <span className={styles.kitSectionCount}>{effects.length}</span>
       </div>
       {display === "compact" ? <CompactEffectGrid>{effects.map(effect => <CompactEffectCard key={`${effect.type}:${effect.name}`} effect={effect} view={view} synergyCards={synergyCards} {...navigation} />)}</CompactEffectGrid>
-        : <div className="space-y-3">{effects.map(effect => <EffectCard key={`${effect.type}:${effect.name}`} effect={effect} view={view} synergyCards={synergyCards} wide={!immunity} {...navigation} />)}</div>}
+        : <div className={effects.length ? styles.kitDetailedEffects : undefined}>{effects.map(effect => <EffectCard key={`${effect.type}:${effect.name}`} effect={effect} view={view} synergyCards={synergyCards} wide={!immunity} {...navigation} />)}</div>}
       {!effects.length && <p className="rounded-xl border border-dashed border-white/10 px-5 py-6 text-sm leading-6 text-slate-400">No {title.toLowerCase()} recorded for this champion.</p>}
     </section>
   )
@@ -142,11 +142,11 @@ function EffectDefinition({ effect, showAllForms }: { effect: ChampionKitEffect;
   const forms = [...new Set(effect.sources.map(source => source.effectForm))]
   const label = <>
     <EffectIcon effect={effect} />
-    <span className="min-w-0 space-y-1.5 text-left"><span className="block text-base font-semibold leading-6" style={{ color: `color-mix(in srgb, ${effect.color} 82%, white)` }}>{effect.name}</span>{(effect.type !== "ABILITY" || showAllForms) && <span className="flex flex-wrap gap-1.5">{effect.type !== "ABILITY" && <span className="text-[11px] font-medium text-cyan-200">{effect.type === "IMMUNITY" ? "Immunity" : "Resistance"}</span>}{showAllForms && forms.map(form => form !== "UNKNOWN" && <EffectFormBadge key={form} form={form} />)}</span>}</span>
+    <span className={styles.kitEffectLabel}><span className={styles.kitEffectName} style={{ color: `color-mix(in srgb, ${effect.color} 82%, white)` }}>{effect.name}</span>{(effect.type !== "ABILITY" || showAllForms) && <span className={styles.kitEffectMeta}>{effect.type !== "ABILITY" && <span className="text-[11px] font-medium text-cyan-200">{effect.type === "IMMUNITY" ? "Immunity" : "Resistance"}</span>}{showAllForms && forms.map(form => form !== "UNKNOWN" && <EffectFormBadge key={form} form={form} />)}</span>}</span>
   </>
-  if (!effect.description) return <div className="flex items-center gap-3.5 px-5 py-4">{label}</div>
+  if (!effect.description) return <div className={styles.kitEffectHeader}>{label}</div>
   return <Tooltip open={open} onOpenChange={setOpen} delayDuration={180}>
-    <TooltipTrigger asChild><button type="button" aria-label={`About ${effect.name}${effect.type === "RESISTANCE" ? " resistance" : ""}`} onClick={event => { event.preventDefault(); setOpen(value => !value) }} className="flex w-full items-center gap-3.5 px-5 py-4 transition-colors hover:bg-white/[.025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400">{label}</button></TooltipTrigger>
+    <TooltipTrigger asChild><button type="button" aria-label={`About ${effect.name}${effect.type === "RESISTANCE" ? " resistance" : ""}`} onClick={event => { event.preventDefault(); setOpen(value => !value) }} className={styles.kitEffectHeader}>{label}</button></TooltipTrigger>
     <TooltipContent side="top" align="start" sideOffset={8} className="max-w-[min(360px,calc(100vw-2rem))] rounded-xl border-white/15 bg-[#151b26] p-4 text-slate-300 shadow-2xl"><p className="mb-2 text-base font-semibold" style={{ color: effect.color }}>{effect.name}</p><p className="text-sm leading-6">{effect.description}</p></TooltipContent>
   </Tooltip>
 }

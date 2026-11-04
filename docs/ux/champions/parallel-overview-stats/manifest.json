@@ -1,0 +1,150 @@
+﻿{
+    "description":  "Local parallel overview and stats candidate, production verification and matched evidence",
+    "createdAt":  "2026-11-04T15:47:38.5476500+01:00",
+    "files":  [
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/after/01-kit-protections-mobile.png",
+                      "sha256":  "cd1dbc3753e04938a6c091a0f9fc2fc3827dac6d1dcc0f17f6e2ff99ff6746b0"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/after/02-kit-protections-desktop.png",
+                      "sha256":  "fff0ca9db76fd6dd86d2e4054f180258d06af1cefccd798dce443de93830a316"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/after/03-kit-protections-small.png",
+                      "sha256":  "d49b320103b49c08dc219387ed4aa9edb0a6679a768fff967e37ef7f54f17167"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/after/04-kit-long-name.png",
+                      "sha256":  "42a61190a421b5b966081ce79dcf45b01e572a31671e248960f06e4629428a53"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/after/05-kit-sparse.png",
+                      "sha256":  "55cea5c62c4c48e36ab635547882dd745846397f9b9bdf7c770340ffb4070b7e"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/after/06-kit-split-wide.png",
+                      "sha256":  "eb3a7ee531ec2d3a5da207143265814f9d14bc4726048444a0b6764f8b45227a"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/after/07-kit-compact-control.png",
+                      "sha256":  "e28198213a526486158dba087476ec518d6f9fde0361353e77a32dfcbed0f0ca"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/after/08-stats-desktop.png",
+                      "sha256":  "75e4df1820600e4a9852d2ef100155161aa36f2b9c9e61a43f2b96396de2829a"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/after/09-stats-mobile.png",
+                      "sha256":  "f8b9dd70d2f3b77c50f8861e05da348688e9f0a9dc71889483c192e998d10d51"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/after/10-stats-small.png",
+                      "sha256":  "a18d9d09a4260954bd27d93084d786a7cf72d8a4e41b8223b73e73062f36bcdb"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/after/11-stats-long-name.png",
+                      "sha256":  "ab33d356dac5cb58f2beca6039c5ef33090d36d406e3bc7b523e3da166c16e90"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/after/12-stats-sparse.png",
+                      "sha256":  "cb4e0cac0f1ca993ba88be5475d2bad98470d51e2b0274a0cc2cadcf30bee900"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/after/evidence.json",
+                      "sha256":  "4b513475e9f2b57194f711aa0e3ac150c02abbe7dfd557a7f668c6af7c6faba7"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/before/01-kit-protections-mobile.png",
+                      "sha256":  "fc4a7920a6fbe37d19739c485777309684aaa88b222f473dc2fd99f698470fb2"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/before/02-kit-protections-desktop.png",
+                      "sha256":  "3a9e050d71be0fdbb77cedd6bf0c82620f6c69f8c0879506a58682c25c6eb869"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/before/03-kit-protections-small.png",
+                      "sha256":  "9e1ae51f784e81ca7931e9b745c5ea10a6ac3ec5d38af5537b53db0b013e71c0"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/before/04-kit-long-name.png",
+                      "sha256":  "45c1216d63d4ad17dd964695d4bc036e5e46face283b78f53d9f9b35d32d5530"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/before/05-kit-sparse.png",
+                      "sha256":  "bf35585b395d0d440ae8131d3a1df99b33496909be6049e55ff5f59c9fba13fe"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/before/06-kit-split-wide.png",
+                      "sha256":  "10332045cfe11c60857f1b3ec27815c71e85eb87c0ca6d7d8477b5879a54e9f7"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/before/07-kit-compact-control.png",
+                      "sha256":  "e28198213a526486158dba087476ec518d6f9fde0361353e77a32dfcbed0f0ca"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/before/08-stats-desktop.png",
+                      "sha256":  "63e15e6c25ba936191512f2a81686a2be00f14a43dc62dfdd8df796cf8cb819d"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/before/09-stats-mobile.png",
+                      "sha256":  "f39e72b2ba21454e0b5c9bda205cdd9b4332e91d569348cacb04d98800eaabf6"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/before/10-stats-small.png",
+                      "sha256":  "4f5529643967c5eb699a594e87b6b5f64c90e94086e5a199498d7a8bcfcdf51d"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/before/11-stats-long-name.png",
+                      "sha256":  "00877e00e12b2f230ea1da9358d7678ad5261f2783b6beeb1961e01b7af8d23b"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/before/12-stats-sparse.png",
+                      "sha256":  "bf00ca50a6684eabacd3795a1928f5fe27f663606e7d50ca91da3139790d506b"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/before/evidence.json",
+                      "sha256":  "1a7de3e9a3b0fd9239c1e0f5c753e280297bc1411fd4ce891dc0cf459440380a"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/browser-smoke.json",
+                      "sha256":  "5ea316bb8fdd3803d04a0b28f5b91b8206cd3f51687609f334eb2bda4ee8b68a"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/comparison.html",
+                      "sha256":  "fcdc3cb2a3ed50dba8152e9261359c63c58b7056ace34483179ff34587bda96a"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/incumbent-manifest.json",
+                      "sha256":  "1f6e1b91a4240c759c9287c9dcb20466351b65d750360b91209b904405da55b0"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/layout-checks.json",
+                      "sha256":  "7ab0d162ade804a7825033b8effe5460a2e9c00c0629d238d5e8acf8fc415c12"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/notes.md",
+                      "sha256":  "b8cab765d1685411d83f86c797c62d08e9faccc94f32842f4835e2ca91cbc3b1"
+                  },
+                  {
+                      "path":  "docs/ux/champions/parallel-overview-stats/release.json",
+                      "sha256":  "169e4a2cc46937c9b8dfb1c29debf302fe7dc81ada1754920d4d212203c19bd7"
+                  },
+                  {
+                      "path":  "README.md",
+                      "sha256":  "546e3a8da5510b4607a9db3b5f641d78f0434f2177044cc86ced404539fa0c8c"
+                  },
+                  {
+                      "path":  "web/src/app/champions/[slug]/champion-dossier.module.css",
+                      "sha256":  "8b55d653882d7bdff628a66e0b2e921c7ace64737d81a74e27edc68b88ef451e"
+                  },
+                  {
+                      "path":  "web/src/app/champions/[slug]/champion-kit-overview.tsx",
+                      "sha256":  "a3c134884f84c507306a37198308407a592f8fae88db8f63df69e4e74cd85469"
+                  },
+                  {
+                      "path":  "web/src/app/champions/[slug]/champion-stats-panel.tsx",
+                      "sha256":  "4a446438b494dd222e04358472d17c1549e794588d9c88c649639fa5167dc947"
+                  }
+              ]
+}

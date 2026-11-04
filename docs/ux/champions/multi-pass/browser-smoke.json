@@ -1,0 +1,602 @@
+{
+  "layouts": [
+    {
+      "slug": "absorbing-man",
+      "width": 320,
+      "attacks": {
+        "documentWidth": 320,
+        "smallProfileText": 0,
+        "clippedProfile": 0,
+        "clippedChips": 0
+      },
+      "build": {
+        "top": 62,
+        "bottom": 523,
+        "height": 461,
+        "width": 288,
+        "controls": [
+          {
+            "label": "Rarity",
+            "width": 113,
+            "needed": 67.5771484375
+          },
+          {
+            "label": "Rank",
+            "width": 113,
+            "needed": 87.4560546875
+          },
+          {
+            "label": "Ascension",
+            "width": 113,
+            "needed": 61.4658203125
+          }
+        ],
+        "clippedLabels": 0
+      }
+    },
+    {
+      "slug": "star-lord-kitty-pryde",
+      "width": 320,
+      "attacks": {
+        "documentWidth": 320,
+        "smallProfileText": 0,
+        "clippedProfile": 0,
+        "clippedChips": 0
+      },
+      "build": {
+        "top": 62,
+        "bottom": 523,
+        "height": 461,
+        "width": 288,
+        "controls": [
+          {
+            "label": "Rarity",
+            "width": 113,
+            "needed": 67.5771484375
+          },
+          {
+            "label": "Rank",
+            "width": 113,
+            "needed": 87.4560546875
+          },
+          {
+            "label": "Ascension",
+            "width": 113,
+            "needed": 61.4658203125
+          }
+        ],
+        "clippedLabels": 0
+      }
+    },
+    {
+      "slug": "ms-marvel",
+      "width": 320,
+      "attacks": {
+        "documentWidth": 320,
+        "smallProfileText": 0,
+        "clippedProfile": 0,
+        "clippedChips": 0
+      },
+      "build": {
+        "top": 62,
+        "bottom": 445,
+        "height": 383,
+        "width": 288,
+        "controls": [
+          {
+            "label": "Rarity",
+            "width": 113,
+            "needed": 67.5771484375
+          },
+          {
+            "label": "Rank",
+            "width": 113,
+            "needed": 87.4560546875
+          }
+        ],
+        "clippedLabels": 0
+      }
+    },
+    {
+      "slug": "absorbing-man",
+      "width": 390,
+      "attacks": {
+        "documentWidth": 390,
+        "smallProfileText": 0,
+        "clippedProfile": 0,
+        "clippedChips": 0
+      },
+      "build": {
+        "top": 62,
+        "bottom": 425,
+        "height": 363,
+        "width": 358,
+        "controls": [
+          {
+            "label": "Rarity",
+            "width": 93,
+            "needed": 67.5771484375
+          },
+          {
+            "label": "Rank",
+            "width": 93,
+            "needed": 87.4560546875
+          },
+          {
+            "label": "Ascension",
+            "width": 93,
+            "needed": 61.4658203125
+          }
+        ],
+        "clippedLabels": 0
+      }
+    },
+    {
+      "slug": "star-lord-kitty-pryde",
+      "width": 390,
+      "attacks": {
+        "documentWidth": 390,
+        "smallProfileText": 0,
+        "clippedProfile": 0,
+        "clippedChips": 0
+      },
+      "build": {
+        "top": 62,
+        "bottom": 425,
+        "height": 363,
+        "width": 358,
+        "controls": [
+          {
+            "label": "Rarity",
+            "width": 93,
+            "needed": 67.5771484375
+          },
+          {
+            "label": "Rank",
+            "width": 93,
+            "needed": 87.4560546875
+          },
+          {
+            "label": "Ascension",
+            "width": 93,
+            "needed": 61.4658203125
+          }
+        ],
+        "clippedLabels": 0
+      }
+    },
+    {
+      "slug": "ms-marvel",
+      "width": 390,
+      "attacks": {
+        "documentWidth": 390,
+        "smallProfileText": 0,
+        "clippedProfile": 0,
+        "clippedChips": 0
+      },
+      "build": {
+        "top": 62,
+        "bottom": 425,
+        "height": 363,
+        "width": 358,
+        "controls": [
+          {
+            "label": "Rarity",
+            "width": 148,
+            "needed": 67.5771484375
+          },
+          {
+            "label": "Rank",
+            "width": 148,
+            "needed": 87.4560546875
+          }
+        ],
+        "clippedLabels": 0
+      }
+    },
+    {
+      "slug": "absorbing-man",
+      "width": 640,
+      "attacks": {
+        "documentWidth": 640,
+        "smallProfileText": 0,
+        "clippedProfile": 0,
+        "clippedChips": 0
+      },
+      "build": {
+        "top": 62,
+        "bottom": 425,
+        "height": 363,
+        "width": 420,
+        "controls": [
+          {
+            "label": "Rarity",
+            "width": 113,
+            "needed": 67.5771484375
+          },
+          {
+            "label": "Rank",
+            "width": 113,
+            "needed": 87.4560546875
+          },
+          {
+            "label": "Ascension",
+            "width": 113,
+            "needed": 61.4658203125
+          }
+        ],
+        "clippedLabels": 0
+      }
+    },
+    {
+      "slug": "star-lord-kitty-pryde",
+      "width": 640,
+      "attacks": {
+        "documentWidth": 640,
+        "smallProfileText": 0,
+        "clippedProfile": 0,
+        "clippedChips": 0
+      },
+      "build": {
+        "top": 62,
+        "bottom": 425,
+        "height": 363,
+        "width": 420,
+        "controls": [
+          {
+            "label": "Rarity",
+            "width": 113,
+            "needed": 67.5771484375
+          },
+          {
+            "label": "Rank",
+            "width": 113,
+            "needed": 87.4560546875
+          },
+          {
+            "label": "Ascension",
+            "width": 113,
+            "needed": 61.4658203125
+          }
+        ],
+        "clippedLabels": 0
+      }
+    },
+    {
+      "slug": "ms-marvel",
+      "width": 640,
+      "attacks": {
+        "documentWidth": 640,
+        "smallProfileText": 0,
+        "clippedProfile": 0,
+        "clippedChips": 0
+      },
+      "build": {
+        "top": 62,
+        "bottom": 425,
+        "height": 363,
+        "width": 420,
+        "controls": [
+          {
+            "label": "Rarity",
+            "width": 179,
+            "needed": 67.5771484375
+          },
+          {
+            "label": "Rank",
+            "width": 179,
+            "needed": 87.4560546875
+          }
+        ],
+        "clippedLabels": 0
+      }
+    },
+    {
+      "slug": "absorbing-man",
+      "width": 768,
+      "attacks": {
+        "documentWidth": 768,
+        "smallProfileText": 0,
+        "clippedProfile": 0,
+        "clippedChips": 0
+      },
+      "build": {
+        "top": 126,
+        "bottom": 489,
+        "height": 363,
+        "width": 420,
+        "controls": [
+          {
+            "label": "Rarity",
+            "width": 113,
+            "needed": 67.5771484375
+          },
+          {
+            "label": "Rank",
+            "width": 113,
+            "needed": 87.4560546875
+          },
+          {
+            "label": "Ascension",
+            "width": 113,
+            "needed": 61.4658203125
+          }
+        ],
+        "clippedLabels": 0
+      }
+    },
+    {
+      "slug": "star-lord-kitty-pryde",
+      "width": 768,
+      "attacks": {
+        "documentWidth": 768,
+        "smallProfileText": 0,
+        "clippedProfile": 0,
+        "clippedChips": 0
+      },
+      "build": {
+        "top": 126,
+        "bottom": 489,
+        "height": 363,
+        "width": 420,
+        "controls": [
+          {
+            "label": "Rarity",
+            "width": 113,
+            "needed": 67.5771484375
+          },
+          {
+            "label": "Rank",
+            "width": 113,
+            "needed": 87.4560546875
+          },
+          {
+            "label": "Ascension",
+            "width": 113,
+            "needed": 61.4658203125
+          }
+        ],
+        "clippedLabels": 0
+      }
+    },
+    {
+      "slug": "ms-marvel",
+      "width": 768,
+      "attacks": {
+        "documentWidth": 768,
+        "smallProfileText": 0,
+        "clippedProfile": 0,
+        "clippedChips": 0
+      },
+      "build": {
+        "top": 126,
+        "bottom": 489,
+        "height": 363,
+        "width": 420,
+        "controls": [
+          {
+            "label": "Rarity",
+            "width": 179,
+            "needed": 67.5771484375
+          },
+          {
+            "label": "Rank",
+            "width": 179,
+            "needed": 87.4560546875
+          }
+        ],
+        "clippedLabels": 0
+      }
+    },
+    {
+      "slug": "absorbing-man",
+      "width": 1024,
+      "attacks": {
+        "documentWidth": 1024,
+        "smallProfileText": 0,
+        "clippedProfile": 0,
+        "clippedChips": 0
+      },
+      "build": {
+        "top": 126,
+        "bottom": 489,
+        "height": 363,
+        "width": 420,
+        "controls": [
+          {
+            "label": "Rarity",
+            "width": 113,
+            "needed": 67.5771484375
+          },
+          {
+            "label": "Rank",
+            "width": 113,
+            "needed": 87.4560546875
+          },
+          {
+            "label": "Ascension",
+            "width": 113,
+            "needed": 61.4658203125
+          }
+        ],
+        "clippedLabels": 0
+      }
+    },
+    {
+      "slug": "star-lord-kitty-pryde",
+      "width": 1024,
+      "attacks": {
+        "documentWidth": 1024,
+        "smallProfileText": 0,
+        "clippedProfile": 0,
+        "clippedChips": 0
+      },
+      "build": {
+        "top": 126,
+        "bottom": 489,
+        "height": 363,
+        "width": 420,
+        "controls": [
+          {
+            "label": "Rarity",
+            "width": 113,
+            "needed": 67.5771484375
+          },
+          {
+            "label": "Rank",
+            "width": 113,
+            "needed": 87.4560546875
+          },
+          {
+            "label": "Ascension",
+            "width": 113,
+            "needed": 61.4658203125
+          }
+        ],
+        "clippedLabels": 0
+      }
+    },
+    {
+      "slug": "ms-marvel",
+      "width": 1024,
+      "attacks": {
+        "documentWidth": 1024,
+        "smallProfileText": 0,
+        "clippedProfile": 0,
+        "clippedChips": 0
+      },
+      "build": {
+        "top": 126,
+        "bottom": 489,
+        "height": 363,
+        "width": 420,
+        "controls": [
+          {
+            "label": "Rarity",
+            "width": 179,
+            "needed": 67.5771484375
+          },
+          {
+            "label": "Rank",
+            "width": 179,
+            "needed": 87.4560546875
+          }
+        ],
+        "clippedLabels": 0
+      }
+    },
+    {
+      "slug": "absorbing-man",
+      "width": 1536,
+      "attacks": {
+        "documentWidth": 1536,
+        "smallProfileText": 0,
+        "clippedProfile": 0,
+        "clippedChips": 0
+      },
+      "build": {
+        "top": 126,
+        "bottom": 489,
+        "height": 363,
+        "width": 420,
+        "controls": [
+          {
+            "label": "Rarity",
+            "width": 113,
+            "needed": 67.5771484375
+          },
+          {
+            "label": "Rank",
+            "width": 113,
+            "needed": 87.4560546875
+          },
+          {
+            "label": "Ascension",
+            "width": 113,
+            "needed": 61.4658203125
+          }
+        ],
+        "clippedLabels": 0
+      }
+    },
+    {
+      "slug": "star-lord-kitty-pryde",
+      "width": 1536,
+      "attacks": {
+        "documentWidth": 1536,
+        "smallProfileText": 0,
+        "clippedProfile": 0,
+        "clippedChips": 0
+      },
+      "build": {
+        "top": 126,
+        "bottom": 489,
+        "height": 363,
+        "width": 420,
+        "controls": [
+          {
+            "label": "Rarity",
+            "width": 113,
+            "needed": 67.5771484375
+          },
+          {
+            "label": "Rank",
+            "width": 113,
+            "needed": 87.4560546875
+          },
+          {
+            "label": "Ascension",
+            "width": 113,
+            "needed": 61.4658203125
+          }
+        ],
+        "clippedLabels": 0
+      }
+    },
+    {
+      "slug": "ms-marvel",
+      "width": 1536,
+      "attacks": {
+        "documentWidth": 1536,
+        "smallProfileText": 0,
+        "clippedProfile": 0,
+        "clippedChips": 0
+      },
+      "build": {
+        "top": 126,
+        "bottom": 489,
+        "height": 363,
+        "width": 420,
+        "controls": [
+          {
+            "label": "Rarity",
+            "width": 179,
+            "needed": 67.5771484375
+          },
+          {
+            "label": "Rank",
+            "width": 179,
+            "needed": 87.4560546875
+          }
+        ],
+        "clippedLabels": 0
+      }
+    }
+  ],
+  "tabOrder": [
+    "Rarity",
+    "Rank",
+    "Ascension",
+    "Signature level",
+    "Signature level value"
+  ],
+  "rankAndAscension": true,
+  "signatureDraftCommit": true,
+  "signatureZeroAndClamp": true,
+  "copiedUrl": "http://localhost:3000/champions/absorbing-man?tab=stats&rarity=7&rank=4&sig=75&ascension=2",
+  "copyFeedbackDismissedBeforePopoverEscape": true,
+  "rarityConditionalAndRankMemory": true,
+  "escapeFocus": true,
+  "touchCommitAndClose": true,
+  "errors": []
+}

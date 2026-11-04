@@ -1,0 +1,18 @@
+﻿{
+    "description":  "Released source before the parallel overview and stats candidate",
+    "commit":  "2443380c61911c499d2efc13ede361f68d22ec6d",
+    "files":  [
+                  {
+                      "path":  "web/src/app/champions/[slug]/champion-kit-overview.tsx",
+                      "gitBlob":  "9c1aa49d9c2004dfebee6bc4a1330dc4393a49de"
+                  },
+                  {
+                      "path":  "web/src/app/champions/[slug]/champion-stats-panel.tsx",
+                      "gitBlob":  "ebe05fe01895b6fc4933210bb027d3b25b7da0bb"
+                  },
+                  {
+                      "path":  "web/src/app/champions/[slug]/champion-dossier.module.css",
+                      "gitBlob":  "6e9a89a583dacd613c1414a28e4c6c429a9cf7ab"
+                  }
+              ]
+}

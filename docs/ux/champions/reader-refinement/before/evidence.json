@@ -1,0 +1,4068 @@
+{
+  "phase": "before",
+  "captures": [
+    {
+      "name": "01-mobile-all",
+      "slug": "absorbing-man",
+      "chapter": "all",
+      "target": "entry",
+      "sig": 200,
+      "query": "",
+      "url": "http://localhost:3000/champions/absorbing-man?tab=abilities&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 520,
+      "targetTop": 195.90625,
+      "barBottom": 172,
+      "readerHeight": 5041.1875,
+      "firstPassageOffset": 400.6875,
+      "transitions": [
+        {
+          "from": "Always Active",
+          "to": "Molecular Duplication - Always Active",
+          "gap": 278.5,
+          "headingHeight": 24
+        },
+        {
+          "from": "Molecular Duplication - Always Active",
+          "to": "Omni-Morph Forms",
+          "gap": 82,
+          "headingHeight": 24
+        },
+        {
+          "from": "Omni-Morph Forms",
+          "to": "Refined Forms",
+          "gap": 82,
+          "headingHeight": 24
+        },
+        {
+          "from": "Refined Forms",
+          "to": "Morph Charges",
+          "gap": 82,
+          "headingHeight": 24
+        },
+        {
+          "from": "Morph Charges",
+          "to": "Always Active",
+          "gap": 306,
+          "headingHeight": 24
+        },
+        {
+          "from": "Always Active",
+          "to": "Always Active",
+          "gap": 306,
+          "headingHeight": 24
+        },
+        {
+          "from": "Always Active",
+          "to": "Cruelty",
+          "gap": 337.5,
+          "headingHeight": 28
+        }
+      ],
+      "paragraphGeometry": [
+        {
+          "id": "ability-record-79032",
+          "width": 297,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79033",
+          "width": 297,
+          "height": 178.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79034",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-78995",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-78996",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-78997",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79002",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79003",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79005",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79007",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79009",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79010",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79012",
+          "width": 297,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79013",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79014",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79015",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79016",
+          "width": 297,
+          "height": 178.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79019",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79020",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79021",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79023",
+          "width": 297,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79024",
+          "width": 297,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79025",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79027",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79028",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79029",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79022",
+          "width": 297,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79026",
+          "width": 297,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79030",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79031",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        }
+      ],
+      "semantics": {
+        "articles": [
+          {
+            "id": "dossier-signature-ability",
+            "text": "Signature AbilityAlways ActiveAbsorbing Man’s Omni-Morph Forms last 40% longer.When Absorbing Man consumes Morph Charges, he gains a non-stacking Regeneration Passive, healing 30.01% of his missing Health over 12 seconds. As a Defender, this effect also triggers whenever Absorbing Man enters or refreshes any Form.Personal Regeneration effects pause for 3 seconds when Absorbing Man is struck with True Damage and are removed when a form is deactivated early.Signature curves3 effects · Combined viewDuration Id Percent40Regen30Regen30.01Mixed units share a normalized range. Hover, tap, or focus the chart to see actual values.100%75%50%25%0%EFFECT RANGE150100150200Sig 200: Duration Id Percent 40, Regen 30, Regen 30.01Y-axis · Effect rangeActual values in legend and tooltipX-axis · Signature level",
+            "records": [
+              {
+                "id": "ability-record-79032",
+                "text": "Absorbing Man’s Omni-Morph Forms last 40% longer."
+              },
+              {
+                "id": "ability-record-79033",
+                "text": "When Absorbing Man consumes Morph Charges, he gains a non-stacking Regeneration Passive, healing 30.01% of his missing Health over 12 seconds. As a Defender, this effect also triggers whenever Absorbing Man enters or refreshes any Form."
+              },
+              {
+                "id": "ability-record-79034",
+                "text": "Personal Regeneration effects pause for 3 seconds when Absorbing Man is struck with True Damage and are removed when a form is deactivated early."
+              }
+            ],
+            "links": [],
+            "controls": [
+              {
+                "label": "About 40",
+                "text": "40"
+              },
+              {
+                "label": "About 30.01",
+                "text": "30.01"
+              },
+              {
+                "label": "About 12",
+                "text": "12"
+              },
+              {
+                "label": "About 3",
+                "text": "3"
+              }
+            ]
+          },
+          {
+            "id": "dossier-base-abilities",
+            "text": "Base AbilitiesMolecular Duplication - Always ActiveA fluid molecular structure grants Absorbing Man 20% Crit Resistance and Immunity to Armor Break and Armor Shattered Debuffs, but reduces his Critical Penetration by 20% flat.Absorbing Man is no stranger to brawling with beings of otherworldly resilience. He reduces the duration of his Opponent’s Indestructible, Immortality, Unstoppable, and Unblockable Buffs by 90%.Omni-Morph FormsAbsorbing Man’s Special Attacks transform him into powerful altered Forms. He can only be in one Form at a time, and Form changes cannot fail due to Ability Accuracy Modification.Absorbing Man starts each fight in his Black Uru Form by default, but can use the Pre-Fight Menu to change this default, which persists until changed again.Being struck by a Heavy Attack while recovering from a Special Attack deactivates the current Form, which cannot be deactivated again in this way for 20 seconds.Whenever a Buff ends on the Opponent or Absorbing Man is Immune to a Debuff, the current Form pauses for 3 seconds.Interrupting an Opponent's Basic Attack with a Light Attack pauses the current Form for 6 seconds and inflicts a 485.29 potency Vulnerability Passive for 15 seconds. Max Stacks: 5.Refined FormsIf Absorbing Man would enter a Form that is already active, he instead Refines the Form, refreshing its duration and granting additional benefits.Personal bursts of damage benefit from 300% of Absorbing Man's Critical Damage Multiplier when he lands a Critical Hit and cannot have their Ability Accuracy modified.Special Attacks are Passively Unblockable.Blocking a Hit reduces the Opponent’s Ability Power Rate by 72% until Absorbing Man stops blocking. The Power denied is transferred to Absorbing Man.Morph ChargesWhen Absorbing Man refreshes or changes Forms, he gains Morph Charges equal to the remaining percentage of his previous Form’s base duration. Max 600.Whenever Absorbing Man is Immune to an Armor Break or Armor Shattered Debuff, he gains 90 Morph Charges.Performing a Medium, Light, Medium Combo with at least 150 Morph Charges, or activating a Special Attack at max charges consumes available Charges to Refine the current Form and inflict one 30 second Vulnerability Passive with 2,750 potency for every 150 Charges consumed.This attack gains 2,250 Critical Rating if the Opponent is Stunned as the first hit lands.This attack instead gains 24,749.99 Critical Rating if the Opponent is not Stunned as the first hit lands.Activating a Special Attack after the first hit lands applies this bonus Critical Rating to the entire Special and grants 30 Morph Charges.Gain Immunity to all Bleed and Shock effects and +11,000 Physical Resistance.All attacks deal a burst of 2,014.2 Physical Damage.Refined: Absorbing Man can perform Critical Hits and trigger personal bursts of damage through the Opponent’s Block.Gain Immunity to all Incinerate, Coldsnap, and Frostbite effects and +11,000 Energy Resistance.All attacks deal Energy Damage instead of Physical, as well as a burst of 2,014.2 Energy Damage.Refined: Contact with the Opponent inflicts an Incinerate Passive, dealing 3,524.85 Energy Damage over 1 second.",
+            "records": [
+              {
+                "id": "ability-record-78995",
+                "text": "A fluid molecular structure grants Absorbing Man 20% Crit Resistance and Immunity to Armor Break and Armor Shattered Debuffs, but reduces his Critical Penetration by 20% flat."
+              },
+              {
+                "id": "ability-record-78996",
+                "text": "Absorbing Man is no stranger to brawling with beings of otherworldly resilience. He reduces the duration of his Opponent’s Indestructible, Immortality, Unstoppable, and Unblockable Buffs by 90%."
+              },
+              {
+                "id": "ability-record-78997",
+                "text": "Absorbing Man’s Special Attacks transform him into powerful altered Forms. He can only be in one Form at a time, and Form changes cannot fail due to Ability Accuracy Modification."
+              },
+              {
+                "id": "ability-record-79002",
+                "text": "Absorbing Man starts each fight in his Black Uru Form by default, but can use the Pre-Fight Menu to change this default, which persists until changed again."
+              },
+              {
+                "id": "ability-record-79003",
+                "text": "Being struck by a Heavy Attack while recovering from a Special Attack deactivates the current Form, which cannot be deactivated again in this way for 20 seconds."
+              },
+              {
+                "id": "ability-record-79005",
+                "text": "Whenever a Buff ends on the Opponent or Absorbing Man is Immune to a Debuff, the current Form pauses for 3 seconds."
+              },
+              {
+                "id": "ability-record-79007",
+                "text": "Interrupting an Opponent's Basic Attack with a Light Attack pauses the current Form for 6 seconds and inflicts a 485.29 potency Vulnerability Passive for 15 seconds. Max Stacks: 5."
+              },
+              {
+                "id": "ability-record-79009",
+                "text": "If Absorbing Man would enter a Form that is already active, he instead Refines the Form, refreshing its duration and granting additional benefits."
+              },
+              {
+                "id": "ability-record-79010",
+                "text": "Personal bursts of damage benefit from 300% of Absorbing Man's Critical Damage Multiplier when he lands a Critical Hit and cannot have their Ability Accuracy modified."
+              },
+              {
+                "id": "ability-record-79012",
+                "text": "Special Attacks are Passively Unblockable."
+              },
+              {
+                "id": "ability-record-79013",
+                "text": "Blocking a Hit reduces the Opponent’s Ability Power Rate by 72% until Absorbing Man stops blocking. The Power denied is transferred to Absorbing Man."
+              },
+              {
+                "id": "ability-record-79014",
+                "text": "When Absorbing Man refreshes or changes Forms, he gains Morph Charges equal to the remaining percentage of his previous Form’s base duration. Max 600."
+              },
+              {
+                "id": "ability-record-79015",
+                "text": "Whenever Absorbing Man is Immune to an Armor Break or Armor Shattered Debuff, he gains 90 Morph Charges."
+              },
+              {
+                "id": "ability-record-79016",
+                "text": "Performing a Medium, Light, Medium Combo with at least 150 Morph Charges, or activating a Special Attack at max charges consumes available Charges to Refine the current Form and inflict one 30 second Vulnerability Passive with 2,750 potency for every 150 Charges consumed."
+              },
+              {
+                "id": "ability-record-79019",
+                "text": "This attack gains 2,250 Critical Rating if the Opponent is Stunned as the first hit lands."
+              },
+              {
+                "id": "ability-record-79020",
+                "text": "This attack instead gains 24,749.99 Critical Rating if the Opponent is not Stunned as the first hit lands."
+              },
+              {
+                "id": "ability-record-79021",
+                "text": "Activating a Special Attack after the first hit lands applies this bonus Critical Rating to the entire Special and grants 30 Morph Charges."
+              },
+              {
+                "id": "ability-record-79023",
+                "text": "Gain Immunity to all Bleed and Shock effects and +11,000 Physical Resistance."
+              },
+              {
+                "id": "ability-record-79024",
+                "text": "All attacks deal a burst of 2,014.2 Physical Damage."
+              },
+              {
+                "id": "ability-record-79025",
+                "text": "Refined: Absorbing Man can perform Critical Hits and trigger personal bursts of damage through the Opponent’s Block."
+              },
+              {
+                "id": "ability-record-79027",
+                "text": "Gain Immunity to all Incinerate, Coldsnap, and Frostbite effects and +11,000 Energy Resistance."
+              },
+              {
+                "id": "ability-record-79028",
+                "text": "All attacks deal Energy Damage instead of Physical, as well as a burst of 2,014.2 Energy Damage."
+              },
+              {
+                "id": "ability-record-79029",
+                "text": "Refined: Contact with the Opponent inflicts an Incinerate Passive, dealing 3,524.85 Energy Damage over 1 second."
+              }
+            ],
+            "links": [],
+            "controls": [
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": null,
+                "text": "Critical Penetration"
+              },
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": "About 90",
+                "text": "90"
+              },
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": "About 3",
+                "text": "3"
+              },
+              {
+                "label": "About 6",
+                "text": "6"
+              },
+              {
+                "label": "About 485.29",
+                "text": "485.29"
+              },
+              {
+                "label": null,
+                "text": "Vulnerability"
+              },
+              {
+                "label": "About 15",
+                "text": "15"
+              },
+              {
+                "label": "About 300",
+                "text": "300"
+              },
+              {
+                "label": null,
+                "text": "Unblockable"
+              },
+              {
+                "label": "About 72",
+                "text": "72"
+              },
+              {
+                "label": "About 600",
+                "text": "600"
+              },
+              {
+                "label": "About 90",
+                "text": "90"
+              },
+              {
+                "label": "About 150",
+                "text": "150"
+              },
+              {
+                "label": "About 30",
+                "text": "30"
+              },
+              {
+                "label": null,
+                "text": "Vulnerability"
+              },
+              {
+                "label": "About 2,750",
+                "text": "2,750"
+              },
+              {
+                "label": "About 150",
+                "text": "150"
+              },
+              {
+                "label": "About 2,250",
+                "text": "2,250"
+              },
+              {
+                "label": "About 24,749.99",
+                "text": "24,749.99"
+              },
+              {
+                "label": "About 30",
+                "text": "30"
+              },
+              {
+                "label": "About 11,000",
+                "text": "11,000"
+              },
+              {
+                "label": "About 2,014.2",
+                "text": "2,014.2"
+              },
+              {
+                "label": "About 11,000",
+                "text": "11,000"
+              },
+              {
+                "label": "About 2,014.2",
+                "text": "2,014.2"
+              },
+              {
+                "label": "About 3,524.85",
+                "text": "3,524.85"
+              },
+              {
+                "label": "About 1",
+                "text": "1"
+              }
+            ]
+          },
+          {
+            "id": "dossier-special-attack-1-uru-rush",
+            "text": "Special Attack 1 - Uru RushAbsorbing Man takes on the composition of his trusty ball-and-chain as he whips it forward to knock the Opponent off balance before rushing forward with a vicious shoulder check.Always ActiveOn activation, enter Black Uru Form for 0 seconds, granting the following benefits:",
+            "records": [
+              {
+                "id": "ability-record-79022",
+                "text": "On activation, enter Black Uru Form for 0 seconds, granting the following benefits:"
+              }
+            ],
+            "links": [],
+            "controls": [
+              {
+                "label": "About 0",
+                "text": "0"
+              }
+            ]
+          },
+          {
+            "id": "dossier-special-attack-2-magma-spin",
+            "text": "Special Attack 2 - Magma SpinCarl Creel absorbs the molten underbelly of the Battlerealm as he spins his ball-and-chain in a powerful hammer throw, lifting himself into the air before slamming into his Opponent in an explosion of liquid rock.Always ActiveOn activation, enter Magma Form for 0 seconds, granting the following benefits:",
+            "records": [
+              {
+                "id": "ability-record-79026",
+                "text": "On activation, enter Magma Form for 0 seconds, granting the following benefits:"
+              }
+            ],
+            "links": [],
+            "controls": [
+              {
+                "label": "About 0",
+                "text": "0"
+              }
+            ]
+          },
+          {
+            "id": "dossier-special-attack-3-forbidden-fruit",
+            "text": "Special Attack 3 - Forbidden FruitTemporarily drawing on the dangerous energies of Black-ISO itself, Absorbing Man encases his Opponent in crystal before shattering them beneath his trademark wrecking ball.CrueltyGain an indefinite Cruelty Passive, increasing Critical Damage Rating by 144.74. If a Refined Form is already active, gain a second Cruelty Passive. Max Stacks: 5.Activate the most recent Form in its Refined state. Pause it for 15 seconds. While this Pause is active, Absorbing Man gains 11,000 Critical Rating.",
+            "records": [
+              {
+                "id": "ability-record-79030",
+                "text": "Gain an indefinite Cruelty Passive, increasing Critical Damage Rating by 144.74. If a Refined Form is already active, gain a second Cruelty Passive. Max Stacks: 5."
+              },
+              {
+                "id": "ability-record-79031",
+                "text": "Activate the most recent Form in its Refined state. Pause it for 15 seconds. While this Pause is active, Absorbing Man gains 11,000 Critical Rating."
+              }
+            ],
+            "links": [],
+            "controls": [
+              {
+                "label": "About 144.74",
+                "text": "144.74"
+              },
+              {
+                "label": "About 5",
+                "text": "5"
+              },
+              {
+                "label": "About 15",
+                "text": "15"
+              },
+              {
+                "label": "About 11,000",
+                "text": "11,000"
+              }
+            ]
+          }
+        ],
+        "status": "33 passages in All abilities",
+        "options": [
+          {
+            "value": "all",
+            "label": "All abilities"
+          },
+          {
+            "value": "signature",
+            "label": "Signature Ability"
+          },
+          {
+            "value": "base",
+            "label": "Base Abilities"
+          },
+          {
+            "value": "special1",
+            "label": "Special 1"
+          },
+          {
+            "value": "special2",
+            "label": "Special 2"
+          },
+          {
+            "value": "special3",
+            "label": "Special 3"
+          },
+          {
+            "value": "biography",
+            "label": "Biography"
+          }
+        ]
+      }
+    },
+    {
+      "name": "02-desktop-all",
+      "slug": "absorbing-man",
+      "chapter": "all",
+      "target": "entry",
+      "sig": 200,
+      "query": "",
+      "url": "http://localhost:3000/champions/absorbing-man?tab=abilities&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        1280,
+        900
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 1280,
+      "scrollY": 447,
+      "targetTop": 228.390625,
+      "barBottom": 204.390625,
+      "readerHeight": 3166.890625,
+      "firstPassageOffset": 320.390625,
+      "transitions": [
+        {
+          "from": "Always Active",
+          "to": "Molecular Duplication - Always Active",
+          "gap": 281,
+          "headingHeight": 24
+        },
+        {
+          "from": "Molecular Duplication - Always Active",
+          "to": "Omni-Morph Forms",
+          "gap": 94,
+          "headingHeight": 24
+        },
+        {
+          "from": "Omni-Morph Forms",
+          "to": "Refined Forms",
+          "gap": 94,
+          "headingHeight": 24
+        },
+        {
+          "from": "Refined Forms",
+          "to": "Morph Charges",
+          "gap": 94,
+          "headingHeight": 24
+        },
+        {
+          "from": "Morph Charges",
+          "to": "Always Active",
+          "gap": 248,
+          "headingHeight": 24
+        },
+        {
+          "from": "Always Active",
+          "to": "Always Active",
+          "gap": 248,
+          "headingHeight": 24
+        },
+        {
+          "from": "Always Active",
+          "to": "Cruelty",
+          "gap": 252,
+          "headingHeight": 28
+        }
+      ],
+      "paragraphGeometry": [
+        {
+          "id": "ability-record-79032",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79033",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79034",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-78995",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-78996",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-78997",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79002",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79003",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79005",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79007",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79009",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79010",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79012",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79013",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79014",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79015",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79016",
+          "width": 906,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79019",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79020",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79021",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79023",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79024",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79025",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79027",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79028",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79029",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79022",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79026",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79030",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79031",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        }
+      ],
+      "semantics": {
+        "articles": [
+          {
+            "id": "dossier-signature-ability",
+            "text": "Signature AbilityAlways ActiveAbsorbing Man’s Omni-Morph Forms last 40% longer.When Absorbing Man consumes Morph Charges, he gains a non-stacking Regeneration Passive, healing 30.01% of his missing Health over 12 seconds. As a Defender, this effect also triggers whenever Absorbing Man enters or refreshes any Form.Personal Regeneration effects pause for 3 seconds when Absorbing Man is struck with True Damage and are removed when a form is deactivated early.Signature curves3 effects · Combined viewDuration Id Percent40Regen30Regen30.01Mixed units share a normalized range. Hover, tap, or focus the chart to see actual values.100%75%50%25%0%EFFECT RANGE150100150200Sig 200: Duration Id Percent 40, Regen 30, Regen 30.01Y-axis · Effect rangeActual values in legend and tooltipX-axis · Signature level",
+            "records": [
+              {
+                "id": "ability-record-79032",
+                "text": "Absorbing Man’s Omni-Morph Forms last 40% longer."
+              },
+              {
+                "id": "ability-record-79033",
+                "text": "When Absorbing Man consumes Morph Charges, he gains a non-stacking Regeneration Passive, healing 30.01% of his missing Health over 12 seconds. As a Defender, this effect also triggers whenever Absorbing Man enters or refreshes any Form."
+              },
+              {
+                "id": "ability-record-79034",
+                "text": "Personal Regeneration effects pause for 3 seconds when Absorbing Man is struck with True Damage and are removed when a form is deactivated early."
+              }
+            ],
+            "links": [],
+            "controls": [
+              {
+                "label": "About 40",
+                "text": "40"
+              },
+              {
+                "label": "About 30.01",
+                "text": "30.01"
+              },
+              {
+                "label": "About 12",
+                "text": "12"
+              },
+              {
+                "label": "About 3",
+                "text": "3"
+              }
+            ]
+          },
+          {
+            "id": "dossier-base-abilities",
+            "text": "Base AbilitiesMolecular Duplication - Always ActiveA fluid molecular structure grants Absorbing Man 20% Crit Resistance and Immunity to Armor Break and Armor Shattered Debuffs, but reduces his Critical Penetration by 20% flat.Absorbing Man is no stranger to brawling with beings of otherworldly resilience. He reduces the duration of his Opponent’s Indestructible, Immortality, Unstoppable, and Unblockable Buffs by 90%.Omni-Morph FormsAbsorbing Man’s Special Attacks transform him into powerful altered Forms. He can only be in one Form at a time, and Form changes cannot fail due to Ability Accuracy Modification.Absorbing Man starts each fight in his Black Uru Form by default, but can use the Pre-Fight Menu to change this default, which persists until changed again.Being struck by a Heavy Attack while recovering from a Special Attack deactivates the current Form, which cannot be deactivated again in this way for 20 seconds.Whenever a Buff ends on the Opponent or Absorbing Man is Immune to a Debuff, the current Form pauses for 3 seconds.Interrupting an Opponent's Basic Attack with a Light Attack pauses the current Form for 6 seconds and inflicts a 485.29 potency Vulnerability Passive for 15 seconds. Max Stacks: 5.Refined FormsIf Absorbing Man would enter a Form that is already active, he instead Refines the Form, refreshing its duration and granting additional benefits.Personal bursts of damage benefit from 300% of Absorbing Man's Critical Damage Multiplier when he lands a Critical Hit and cannot have their Ability Accuracy modified.Special Attacks are Passively Unblockable.Blocking a Hit reduces the Opponent’s Ability Power Rate by 72% until Absorbing Man stops blocking. The Power denied is transferred to Absorbing Man.Morph ChargesWhen Absorbing Man refreshes or changes Forms, he gains Morph Charges equal to the remaining percentage of his previous Form’s base duration. Max 600.Whenever Absorbing Man is Immune to an Armor Break or Armor Shattered Debuff, he gains 90 Morph Charges.Performing a Medium, Light, Medium Combo with at least 150 Morph Charges, or activating a Special Attack at max charges consumes available Charges to Refine the current Form and inflict one 30 second Vulnerability Passive with 2,750 potency for every 150 Charges consumed.This attack gains 2,250 Critical Rating if the Opponent is Stunned as the first hit lands.This attack instead gains 24,749.99 Critical Rating if the Opponent is not Stunned as the first hit lands.Activating a Special Attack after the first hit lands applies this bonus Critical Rating to the entire Special and grants 30 Morph Charges.Gain Immunity to all Bleed and Shock effects and +11,000 Physical Resistance.All attacks deal a burst of 2,014.2 Physical Damage.Refined: Absorbing Man can perform Critical Hits and trigger personal bursts of damage through the Opponent’s Block.Gain Immunity to all Incinerate, Coldsnap, and Frostbite effects and +11,000 Energy Resistance.All attacks deal Energy Damage instead of Physical, as well as a burst of 2,014.2 Energy Damage.Refined: Contact with the Opponent inflicts an Incinerate Passive, dealing 3,524.85 Energy Damage over 1 second.",
+            "records": [
+              {
+                "id": "ability-record-78995",
+                "text": "A fluid molecular structure grants Absorbing Man 20% Crit Resistance and Immunity to Armor Break and Armor Shattered Debuffs, but reduces his Critical Penetration by 20% flat."
+              },
+              {
+                "id": "ability-record-78996",
+                "text": "Absorbing Man is no stranger to brawling with beings of otherworldly resilience. He reduces the duration of his Opponent’s Indestructible, Immortality, Unstoppable, and Unblockable Buffs by 90%."
+              },
+              {
+                "id": "ability-record-78997",
+                "text": "Absorbing Man’s Special Attacks transform him into powerful altered Forms. He can only be in one Form at a time, and Form changes cannot fail due to Ability Accuracy Modification."
+              },
+              {
+                "id": "ability-record-79002",
+                "text": "Absorbing Man starts each fight in his Black Uru Form by default, but can use the Pre-Fight Menu to change this default, which persists until changed again."
+              },
+              {
+                "id": "ability-record-79003",
+                "text": "Being struck by a Heavy Attack while recovering from a Special Attack deactivates the current Form, which cannot be deactivated again in this way for 20 seconds."
+              },
+              {
+                "id": "ability-record-79005",
+                "text": "Whenever a Buff ends on the Opponent or Absorbing Man is Immune to a Debuff, the current Form pauses for 3 seconds."
+              },
+              {
+                "id": "ability-record-79007",
+                "text": "Interrupting an Opponent's Basic Attack with a Light Attack pauses the current Form for 6 seconds and inflicts a 485.29 potency Vulnerability Passive for 15 seconds. Max Stacks: 5."
+              },
+              {
+                "id": "ability-record-79009",
+                "text": "If Absorbing Man would enter a Form that is already active, he instead Refines the Form, refreshing its duration and granting additional benefits."
+              },
+              {
+                "id": "ability-record-79010",
+                "text": "Personal bursts of damage benefit from 300% of Absorbing Man's Critical Damage Multiplier when he lands a Critical Hit and cannot have their Ability Accuracy modified."
+              },
+              {
+                "id": "ability-record-79012",
+                "text": "Special Attacks are Passively Unblockable."
+              },
+              {
+                "id": "ability-record-79013",
+                "text": "Blocking a Hit reduces the Opponent’s Ability Power Rate by 72% until Absorbing Man stops blocking. The Power denied is transferred to Absorbing Man."
+              },
+              {
+                "id": "ability-record-79014",
+                "text": "When Absorbing Man refreshes or changes Forms, he gains Morph Charges equal to the remaining percentage of his previous Form’s base duration. Max 600."
+              },
+              {
+                "id": "ability-record-79015",
+                "text": "Whenever Absorbing Man is Immune to an Armor Break or Armor Shattered Debuff, he gains 90 Morph Charges."
+              },
+              {
+                "id": "ability-record-79016",
+                "text": "Performing a Medium, Light, Medium Combo with at least 150 Morph Charges, or activating a Special Attack at max charges consumes available Charges to Refine the current Form and inflict one 30 second Vulnerability Passive with 2,750 potency for every 150 Charges consumed."
+              },
+              {
+                "id": "ability-record-79019",
+                "text": "This attack gains 2,250 Critical Rating if the Opponent is Stunned as the first hit lands."
+              },
+              {
+                "id": "ability-record-79020",
+                "text": "This attack instead gains 24,749.99 Critical Rating if the Opponent is not Stunned as the first hit lands."
+              },
+              {
+                "id": "ability-record-79021",
+                "text": "Activating a Special Attack after the first hit lands applies this bonus Critical Rating to the entire Special and grants 30 Morph Charges."
+              },
+              {
+                "id": "ability-record-79023",
+                "text": "Gain Immunity to all Bleed and Shock effects and +11,000 Physical Resistance."
+              },
+              {
+                "id": "ability-record-79024",
+                "text": "All attacks deal a burst of 2,014.2 Physical Damage."
+              },
+              {
+                "id": "ability-record-79025",
+                "text": "Refined: Absorbing Man can perform Critical Hits and trigger personal bursts of damage through the Opponent’s Block."
+              },
+              {
+                "id": "ability-record-79027",
+                "text": "Gain Immunity to all Incinerate, Coldsnap, and Frostbite effects and +11,000 Energy Resistance."
+              },
+              {
+                "id": "ability-record-79028",
+                "text": "All attacks deal Energy Damage instead of Physical, as well as a burst of 2,014.2 Energy Damage."
+              },
+              {
+                "id": "ability-record-79029",
+                "text": "Refined: Contact with the Opponent inflicts an Incinerate Passive, dealing 3,524.85 Energy Damage over 1 second."
+              }
+            ],
+            "links": [],
+            "controls": [
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": null,
+                "text": "Critical Penetration"
+              },
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": "About 90",
+                "text": "90"
+              },
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": "About 3",
+                "text": "3"
+              },
+              {
+                "label": "About 6",
+                "text": "6"
+              },
+              {
+                "label": "About 485.29",
+                "text": "485.29"
+              },
+              {
+                "label": null,
+                "text": "Vulnerability"
+              },
+              {
+                "label": "About 15",
+                "text": "15"
+              },
+              {
+                "label": "About 300",
+                "text": "300"
+              },
+              {
+                "label": null,
+                "text": "Unblockable"
+              },
+              {
+                "label": "About 72",
+                "text": "72"
+              },
+              {
+                "label": "About 600",
+                "text": "600"
+              },
+              {
+                "label": "About 90",
+                "text": "90"
+              },
+              {
+                "label": "About 150",
+                "text": "150"
+              },
+              {
+                "label": "About 30",
+                "text": "30"
+              },
+              {
+                "label": null,
+                "text": "Vulnerability"
+              },
+              {
+                "label": "About 2,750",
+                "text": "2,750"
+              },
+              {
+                "label": "About 150",
+                "text": "150"
+              },
+              {
+                "label": "About 2,250",
+                "text": "2,250"
+              },
+              {
+                "label": "About 24,749.99",
+                "text": "24,749.99"
+              },
+              {
+                "label": "About 30",
+                "text": "30"
+              },
+              {
+                "label": "About 11,000",
+                "text": "11,000"
+              },
+              {
+                "label": "About 2,014.2",
+                "text": "2,014.2"
+              },
+              {
+                "label": "About 11,000",
+                "text": "11,000"
+              },
+              {
+                "label": "About 2,014.2",
+                "text": "2,014.2"
+              },
+              {
+                "label": "About 3,524.85",
+                "text": "3,524.85"
+              },
+              {
+                "label": "About 1",
+                "text": "1"
+              }
+            ]
+          },
+          {
+            "id": "dossier-special-attack-1-uru-rush",
+            "text": "Special Attack 1 - Uru RushAbsorbing Man takes on the composition of his trusty ball-and-chain as he whips it forward to knock the Opponent off balance before rushing forward with a vicious shoulder check.Always ActiveOn activation, enter Black Uru Form for 0 seconds, granting the following benefits:",
+            "records": [
+              {
+                "id": "ability-record-79022",
+                "text": "On activation, enter Black Uru Form for 0 seconds, granting the following benefits:"
+              }
+            ],
+            "links": [],
+            "controls": [
+              {
+                "label": "About 0",
+                "text": "0"
+              }
+            ]
+          },
+          {
+            "id": "dossier-special-attack-2-magma-spin",
+            "text": "Special Attack 2 - Magma SpinCarl Creel absorbs the molten underbelly of the Battlerealm as he spins his ball-and-chain in a powerful hammer throw, lifting himself into the air before slamming into his Opponent in an explosion of liquid rock.Always ActiveOn activation, enter Magma Form for 0 seconds, granting the following benefits:",
+            "records": [
+              {
+                "id": "ability-record-79026",
+                "text": "On activation, enter Magma Form for 0 seconds, granting the following benefits:"
+              }
+            ],
+            "links": [],
+            "controls": [
+              {
+                "label": "About 0",
+                "text": "0"
+              }
+            ]
+          },
+          {
+            "id": "dossier-special-attack-3-forbidden-fruit",
+            "text": "Special Attack 3 - Forbidden FruitTemporarily drawing on the dangerous energies of Black-ISO itself, Absorbing Man encases his Opponent in crystal before shattering them beneath his trademark wrecking ball.CrueltyGain an indefinite Cruelty Passive, increasing Critical Damage Rating by 144.74. If a Refined Form is already active, gain a second Cruelty Passive. Max Stacks: 5.Activate the most recent Form in its Refined state. Pause it for 15 seconds. While this Pause is active, Absorbing Man gains 11,000 Critical Rating.",
+            "records": [
+              {
+                "id": "ability-record-79030",
+                "text": "Gain an indefinite Cruelty Passive, increasing Critical Damage Rating by 144.74. If a Refined Form is already active, gain a second Cruelty Passive. Max Stacks: 5."
+              },
+              {
+                "id": "ability-record-79031",
+                "text": "Activate the most recent Form in its Refined state. Pause it for 15 seconds. While this Pause is active, Absorbing Man gains 11,000 Critical Rating."
+              }
+            ],
+            "links": [],
+            "controls": [
+              {
+                "label": "About 144.74",
+                "text": "144.74"
+              },
+              {
+                "label": "About 5",
+                "text": "5"
+              },
+              {
+                "label": "About 15",
+                "text": "15"
+              },
+              {
+                "label": "About 11,000",
+                "text": "11,000"
+              }
+            ]
+          }
+        ],
+        "status": "33 passages in All abilities",
+        "options": [
+          {
+            "value": "all",
+            "label": "All abilities"
+          },
+          {
+            "value": "signature",
+            "label": "Signature Ability"
+          },
+          {
+            "value": "base",
+            "label": "Base Abilities"
+          },
+          {
+            "value": "special1",
+            "label": "Special 1"
+          },
+          {
+            "value": "special2",
+            "label": "Special 2"
+          },
+          {
+            "value": "special3",
+            "label": "Special 3"
+          },
+          {
+            "value": "biography",
+            "label": "Biography"
+          }
+        ]
+      }
+    },
+    {
+      "name": "03-mobile-base",
+      "slug": "absorbing-man",
+      "chapter": "base",
+      "target": "entry",
+      "sig": 200,
+      "query": "",
+      "url": "http://localhost:3000/champions/absorbing-man?tab=abilities&rarity=7&rank=6&sig=200&ascension=0&chapter=base",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 520,
+      "targetTop": 195.90625,
+      "barBottom": 172,
+      "readerHeight": 3196.1875,
+      "firstPassageOffset": 482.6875,
+      "transitions": [
+        {
+          "from": "Molecular Duplication - Always Active",
+          "to": "Omni-Morph Forms",
+          "gap": 82,
+          "headingHeight": 24
+        },
+        {
+          "from": "Omni-Morph Forms",
+          "to": "Refined Forms",
+          "gap": 82,
+          "headingHeight": 24
+        },
+        {
+          "from": "Refined Forms",
+          "to": "Morph Charges",
+          "gap": 82,
+          "headingHeight": 24
+        }
+      ],
+      "paragraphGeometry": [
+        {
+          "id": "ability-record-78995",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-78996",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-78997",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79002",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79003",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79005",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79007",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79009",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79010",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79012",
+          "width": 297,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79013",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79014",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79015",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79016",
+          "width": 297,
+          "height": 178.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79019",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79020",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79021",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79023",
+          "width": 297,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79024",
+          "width": 297,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79025",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79027",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79028",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79029",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        }
+      ],
+      "semantics": {
+        "articles": [
+          {
+            "id": "dossier-base-abilities",
+            "text": "Base AbilitiesMolecular Duplication - Always ActiveA fluid molecular structure grants Absorbing Man 20% Crit Resistance and Immunity to Armor Break and Armor Shattered Debuffs, but reduces his Critical Penetration by 20% flat.Absorbing Man is no stranger to brawling with beings of otherworldly resilience. He reduces the duration of his Opponent’s Indestructible, Immortality, Unstoppable, and Unblockable Buffs by 90%.Omni-Morph FormsAbsorbing Man’s Special Attacks transform him into powerful altered Forms. He can only be in one Form at a time, and Form changes cannot fail due to Ability Accuracy Modification.Absorbing Man starts each fight in his Black Uru Form by default, but can use the Pre-Fight Menu to change this default, which persists until changed again.Being struck by a Heavy Attack while recovering from a Special Attack deactivates the current Form, which cannot be deactivated again in this way for 20 seconds.Whenever a Buff ends on the Opponent or Absorbing Man is Immune to a Debuff, the current Form pauses for 3 seconds.Interrupting an Opponent's Basic Attack with a Light Attack pauses the current Form for 6 seconds and inflicts a 485.29 potency Vulnerability Passive for 15 seconds. Max Stacks: 5.Refined FormsIf Absorbing Man would enter a Form that is already active, he instead Refines the Form, refreshing its duration and granting additional benefits.Personal bursts of damage benefit from 300% of Absorbing Man's Critical Damage Multiplier when he lands a Critical Hit and cannot have their Ability Accuracy modified.Special Attacks are Passively Unblockable.Blocking a Hit reduces the Opponent’s Ability Power Rate by 72% until Absorbing Man stops blocking. The Power denied is transferred to Absorbing Man.Morph ChargesWhen Absorbing Man refreshes or changes Forms, he gains Morph Charges equal to the remaining percentage of his previous Form’s base duration. Max 600.Whenever Absorbing Man is Immune to an Armor Break or Armor Shattered Debuff, he gains 90 Morph Charges.Performing a Medium, Light, Medium Combo with at least 150 Morph Charges, or activating a Special Attack at max charges consumes available Charges to Refine the current Form and inflict one 30 second Vulnerability Passive with 2,750 potency for every 150 Charges consumed.This attack gains 2,250 Critical Rating if the Opponent is Stunned as the first hit lands.This attack instead gains 24,749.99 Critical Rating if the Opponent is not Stunned as the first hit lands.Activating a Special Attack after the first hit lands applies this bonus Critical Rating to the entire Special and grants 30 Morph Charges.Gain Immunity to all Bleed and Shock effects and +11,000 Physical Resistance.All attacks deal a burst of 2,014.2 Physical Damage.Refined: Absorbing Man can perform Critical Hits and trigger personal bursts of damage through the Opponent’s Block.Gain Immunity to all Incinerate, Coldsnap, and Frostbite effects and +11,000 Energy Resistance.All attacks deal Energy Damage instead of Physical, as well as a burst of 2,014.2 Energy Damage.Refined: Contact with the Opponent inflicts an Incinerate Passive, dealing 3,524.85 Energy Damage over 1 second.",
+            "records": [
+              {
+                "id": "ability-record-78995",
+                "text": "A fluid molecular structure grants Absorbing Man 20% Crit Resistance and Immunity to Armor Break and Armor Shattered Debuffs, but reduces his Critical Penetration by 20% flat."
+              },
+              {
+                "id": "ability-record-78996",
+                "text": "Absorbing Man is no stranger to brawling with beings of otherworldly resilience. He reduces the duration of his Opponent’s Indestructible, Immortality, Unstoppable, and Unblockable Buffs by 90%."
+              },
+              {
+                "id": "ability-record-78997",
+                "text": "Absorbing Man’s Special Attacks transform him into powerful altered Forms. He can only be in one Form at a time, and Form changes cannot fail due to Ability Accuracy Modification."
+              },
+              {
+                "id": "ability-record-79002",
+                "text": "Absorbing Man starts each fight in his Black Uru Form by default, but can use the Pre-Fight Menu to change this default, which persists until changed again."
+              },
+              {
+                "id": "ability-record-79003",
+                "text": "Being struck by a Heavy Attack while recovering from a Special Attack deactivates the current Form, which cannot be deactivated again in this way for 20 seconds."
+              },
+              {
+                "id": "ability-record-79005",
+                "text": "Whenever a Buff ends on the Opponent or Absorbing Man is Immune to a Debuff, the current Form pauses for 3 seconds."
+              },
+              {
+                "id": "ability-record-79007",
+                "text": "Interrupting an Opponent's Basic Attack with a Light Attack pauses the current Form for 6 seconds and inflicts a 485.29 potency Vulnerability Passive for 15 seconds. Max Stacks: 5."
+              },
+              {
+                "id": "ability-record-79009",
+                "text": "If Absorbing Man would enter a Form that is already active, he instead Refines the Form, refreshing its duration and granting additional benefits."
+              },
+              {
+                "id": "ability-record-79010",
+                "text": "Personal bursts of damage benefit from 300% of Absorbing Man's Critical Damage Multiplier when he lands a Critical Hit and cannot have their Ability Accuracy modified."
+              },
+              {
+                "id": "ability-record-79012",
+                "text": "Special Attacks are Passively Unblockable."
+              },
+              {
+                "id": "ability-record-79013",
+                "text": "Blocking a Hit reduces the Opponent’s Ability Power Rate by 72% until Absorbing Man stops blocking. The Power denied is transferred to Absorbing Man."
+              },
+              {
+                "id": "ability-record-79014",
+                "text": "When Absorbing Man refreshes or changes Forms, he gains Morph Charges equal to the remaining percentage of his previous Form’s base duration. Max 600."
+              },
+              {
+                "id": "ability-record-79015",
+                "text": "Whenever Absorbing Man is Immune to an Armor Break or Armor Shattered Debuff, he gains 90 Morph Charges."
+              },
+              {
+                "id": "ability-record-79016",
+                "text": "Performing a Medium, Light, Medium Combo with at least 150 Morph Charges, or activating a Special Attack at max charges consumes available Charges to Refine the current Form and inflict one 30 second Vulnerability Passive with 2,750 potency for every 150 Charges consumed."
+              },
+              {
+                "id": "ability-record-79019",
+                "text": "This attack gains 2,250 Critical Rating if the Opponent is Stunned as the first hit lands."
+              },
+              {
+                "id": "ability-record-79020",
+                "text": "This attack instead gains 24,749.99 Critical Rating if the Opponent is not Stunned as the first hit lands."
+              },
+              {
+                "id": "ability-record-79021",
+                "text": "Activating a Special Attack after the first hit lands applies this bonus Critical Rating to the entire Special and grants 30 Morph Charges."
+              },
+              {
+                "id": "ability-record-79023",
+                "text": "Gain Immunity to all Bleed and Shock effects and +11,000 Physical Resistance."
+              },
+              {
+                "id": "ability-record-79024",
+                "text": "All attacks deal a burst of 2,014.2 Physical Damage."
+              },
+              {
+                "id": "ability-record-79025",
+                "text": "Refined: Absorbing Man can perform Critical Hits and trigger personal bursts of damage through the Opponent’s Block."
+              },
+              {
+                "id": "ability-record-79027",
+                "text": "Gain Immunity to all Incinerate, Coldsnap, and Frostbite effects and +11,000 Energy Resistance."
+              },
+              {
+                "id": "ability-record-79028",
+                "text": "All attacks deal Energy Damage instead of Physical, as well as a burst of 2,014.2 Energy Damage."
+              },
+              {
+                "id": "ability-record-79029",
+                "text": "Refined: Contact with the Opponent inflicts an Incinerate Passive, dealing 3,524.85 Energy Damage over 1 second."
+              }
+            ],
+            "links": [],
+            "controls": [
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": null,
+                "text": "Critical Penetration"
+              },
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": "About 90",
+                "text": "90"
+              },
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": "About 3",
+                "text": "3"
+              },
+              {
+                "label": "About 6",
+                "text": "6"
+              },
+              {
+                "label": "About 485.29",
+                "text": "485.29"
+              },
+              {
+                "label": null,
+                "text": "Vulnerability"
+              },
+              {
+                "label": "About 15",
+                "text": "15"
+              },
+              {
+                "label": "About 300",
+                "text": "300"
+              },
+              {
+                "label": null,
+                "text": "Unblockable"
+              },
+              {
+                "label": "About 72",
+                "text": "72"
+              },
+              {
+                "label": "About 600",
+                "text": "600"
+              },
+              {
+                "label": "About 90",
+                "text": "90"
+              },
+              {
+                "label": "About 150",
+                "text": "150"
+              },
+              {
+                "label": "About 30",
+                "text": "30"
+              },
+              {
+                "label": null,
+                "text": "Vulnerability"
+              },
+              {
+                "label": "About 2,750",
+                "text": "2,750"
+              },
+              {
+                "label": "About 150",
+                "text": "150"
+              },
+              {
+                "label": "About 2,250",
+                "text": "2,250"
+              },
+              {
+                "label": "About 24,749.99",
+                "text": "24,749.99"
+              },
+              {
+                "label": "About 30",
+                "text": "30"
+              },
+              {
+                "label": "About 11,000",
+                "text": "11,000"
+              },
+              {
+                "label": "About 2,014.2",
+                "text": "2,014.2"
+              },
+              {
+                "label": "About 11,000",
+                "text": "11,000"
+              },
+              {
+                "label": "About 2,014.2",
+                "text": "2,014.2"
+              },
+              {
+                "label": "About 3,524.85",
+                "text": "3,524.85"
+              },
+              {
+                "label": "About 1",
+                "text": "1"
+              }
+            ]
+          }
+        ],
+        "status": "23 passages in Base Abilities",
+        "options": [
+          {
+            "value": "all",
+            "label": "All abilities"
+          },
+          {
+            "value": "signature",
+            "label": "Signature Ability"
+          },
+          {
+            "value": "base",
+            "label": "Base Abilities"
+          },
+          {
+            "value": "special1",
+            "label": "Special 1"
+          },
+          {
+            "value": "special2",
+            "label": "Special 2"
+          },
+          {
+            "value": "special3",
+            "label": "Special 3"
+          },
+          {
+            "value": "biography",
+            "label": "Biography"
+          }
+        ]
+      }
+    },
+    {
+      "name": "04-desktop-base",
+      "slug": "absorbing-man",
+      "chapter": "base",
+      "target": "entry",
+      "sig": 200,
+      "query": "",
+      "url": "http://localhost:3000/champions/absorbing-man?tab=abilities&rarity=7&rank=6&sig=200&ascension=0&chapter=base",
+      "viewport": [
+        1280,
+        900
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 1280,
+      "scrollY": 447,
+      "targetTop": 228.390625,
+      "barBottom": 204.390625,
+      "readerHeight": 1897.390625,
+      "firstPassageOffset": 402.390625,
+      "transitions": [
+        {
+          "from": "Molecular Duplication - Always Active",
+          "to": "Omni-Morph Forms",
+          "gap": 94,
+          "headingHeight": 24
+        },
+        {
+          "from": "Omni-Morph Forms",
+          "to": "Refined Forms",
+          "gap": 94,
+          "headingHeight": 24
+        },
+        {
+          "from": "Refined Forms",
+          "to": "Morph Charges",
+          "gap": 94,
+          "headingHeight": 24
+        }
+      ],
+      "paragraphGeometry": [
+        {
+          "id": "ability-record-78995",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-78996",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-78997",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79002",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79003",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79005",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79007",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79009",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79010",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79012",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79013",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79014",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79015",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79016",
+          "width": 906,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79019",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79020",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79021",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79023",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79024",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79025",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79027",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79028",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79029",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        }
+      ],
+      "semantics": {
+        "articles": [
+          {
+            "id": "dossier-base-abilities",
+            "text": "Base AbilitiesMolecular Duplication - Always ActiveA fluid molecular structure grants Absorbing Man 20% Crit Resistance and Immunity to Armor Break and Armor Shattered Debuffs, but reduces his Critical Penetration by 20% flat.Absorbing Man is no stranger to brawling with beings of otherworldly resilience. He reduces the duration of his Opponent’s Indestructible, Immortality, Unstoppable, and Unblockable Buffs by 90%.Omni-Morph FormsAbsorbing Man’s Special Attacks transform him into powerful altered Forms. He can only be in one Form at a time, and Form changes cannot fail due to Ability Accuracy Modification.Absorbing Man starts each fight in his Black Uru Form by default, but can use the Pre-Fight Menu to change this default, which persists until changed again.Being struck by a Heavy Attack while recovering from a Special Attack deactivates the current Form, which cannot be deactivated again in this way for 20 seconds.Whenever a Buff ends on the Opponent or Absorbing Man is Immune to a Debuff, the current Form pauses for 3 seconds.Interrupting an Opponent's Basic Attack with a Light Attack pauses the current Form for 6 seconds and inflicts a 485.29 potency Vulnerability Passive for 15 seconds. Max Stacks: 5.Refined FormsIf Absorbing Man would enter a Form that is already active, he instead Refines the Form, refreshing its duration and granting additional benefits.Personal bursts of damage benefit from 300% of Absorbing Man's Critical Damage Multiplier when he lands a Critical Hit and cannot have their Ability Accuracy modified.Special Attacks are Passively Unblockable.Blocking a Hit reduces the Opponent’s Ability Power Rate by 72% until Absorbing Man stops blocking. The Power denied is transferred to Absorbing Man.Morph ChargesWhen Absorbing Man refreshes or changes Forms, he gains Morph Charges equal to the remaining percentage of his previous Form’s base duration. Max 600.Whenever Absorbing Man is Immune to an Armor Break or Armor Shattered Debuff, he gains 90 Morph Charges.Performing a Medium, Light, Medium Combo with at least 150 Morph Charges, or activating a Special Attack at max charges consumes available Charges to Refine the current Form and inflict one 30 second Vulnerability Passive with 2,750 potency for every 150 Charges consumed.This attack gains 2,250 Critical Rating if the Opponent is Stunned as the first hit lands.This attack instead gains 24,749.99 Critical Rating if the Opponent is not Stunned as the first hit lands.Activating a Special Attack after the first hit lands applies this bonus Critical Rating to the entire Special and grants 30 Morph Charges.Gain Immunity to all Bleed and Shock effects and +11,000 Physical Resistance.All attacks deal a burst of 2,014.2 Physical Damage.Refined: Absorbing Man can perform Critical Hits and trigger personal bursts of damage through the Opponent’s Block.Gain Immunity to all Incinerate, Coldsnap, and Frostbite effects and +11,000 Energy Resistance.All attacks deal Energy Damage instead of Physical, as well as a burst of 2,014.2 Energy Damage.Refined: Contact with the Opponent inflicts an Incinerate Passive, dealing 3,524.85 Energy Damage over 1 second.",
+            "records": [
+              {
+                "id": "ability-record-78995",
+                "text": "A fluid molecular structure grants Absorbing Man 20% Crit Resistance and Immunity to Armor Break and Armor Shattered Debuffs, but reduces his Critical Penetration by 20% flat."
+              },
+              {
+                "id": "ability-record-78996",
+                "text": "Absorbing Man is no stranger to brawling with beings of otherworldly resilience. He reduces the duration of his Opponent’s Indestructible, Immortality, Unstoppable, and Unblockable Buffs by 90%."
+              },
+              {
+                "id": "ability-record-78997",
+                "text": "Absorbing Man’s Special Attacks transform him into powerful altered Forms. He can only be in one Form at a time, and Form changes cannot fail due to Ability Accuracy Modification."
+              },
+              {
+                "id": "ability-record-79002",
+                "text": "Absorbing Man starts each fight in his Black Uru Form by default, but can use the Pre-Fight Menu to change this default, which persists until changed again."
+              },
+              {
+                "id": "ability-record-79003",
+                "text": "Being struck by a Heavy Attack while recovering from a Special Attack deactivates the current Form, which cannot be deactivated again in this way for 20 seconds."
+              },
+              {
+                "id": "ability-record-79005",
+                "text": "Whenever a Buff ends on the Opponent or Absorbing Man is Immune to a Debuff, the current Form pauses for 3 seconds."
+              },
+              {
+                "id": "ability-record-79007",
+                "text": "Interrupting an Opponent's Basic Attack with a Light Attack pauses the current Form for 6 seconds and inflicts a 485.29 potency Vulnerability Passive for 15 seconds. Max Stacks: 5."
+              },
+              {
+                "id": "ability-record-79009",
+                "text": "If Absorbing Man would enter a Form that is already active, he instead Refines the Form, refreshing its duration and granting additional benefits."
+              },
+              {
+                "id": "ability-record-79010",
+                "text": "Personal bursts of damage benefit from 300% of Absorbing Man's Critical Damage Multiplier when he lands a Critical Hit and cannot have their Ability Accuracy modified."
+              },
+              {
+                "id": "ability-record-79012",
+                "text": "Special Attacks are Passively Unblockable."
+              },
+              {
+                "id": "ability-record-79013",
+                "text": "Blocking a Hit reduces the Opponent’s Ability Power Rate by 72% until Absorbing Man stops blocking. The Power denied is transferred to Absorbing Man."
+              },
+              {
+                "id": "ability-record-79014",
+                "text": "When Absorbing Man refreshes or changes Forms, he gains Morph Charges equal to the remaining percentage of his previous Form’s base duration. Max 600."
+              },
+              {
+                "id": "ability-record-79015",
+                "text": "Whenever Absorbing Man is Immune to an Armor Break or Armor Shattered Debuff, he gains 90 Morph Charges."
+              },
+              {
+                "id": "ability-record-79016",
+                "text": "Performing a Medium, Light, Medium Combo with at least 150 Morph Charges, or activating a Special Attack at max charges consumes available Charges to Refine the current Form and inflict one 30 second Vulnerability Passive with 2,750 potency for every 150 Charges consumed."
+              },
+              {
+                "id": "ability-record-79019",
+                "text": "This attack gains 2,250 Critical Rating if the Opponent is Stunned as the first hit lands."
+              },
+              {
+                "id": "ability-record-79020",
+                "text": "This attack instead gains 24,749.99 Critical Rating if the Opponent is not Stunned as the first hit lands."
+              },
+              {
+                "id": "ability-record-79021",
+                "text": "Activating a Special Attack after the first hit lands applies this bonus Critical Rating to the entire Special and grants 30 Morph Charges."
+              },
+              {
+                "id": "ability-record-79023",
+                "text": "Gain Immunity to all Bleed and Shock effects and +11,000 Physical Resistance."
+              },
+              {
+                "id": "ability-record-79024",
+                "text": "All attacks deal a burst of 2,014.2 Physical Damage."
+              },
+              {
+                "id": "ability-record-79025",
+                "text": "Refined: Absorbing Man can perform Critical Hits and trigger personal bursts of damage through the Opponent’s Block."
+              },
+              {
+                "id": "ability-record-79027",
+                "text": "Gain Immunity to all Incinerate, Coldsnap, and Frostbite effects and +11,000 Energy Resistance."
+              },
+              {
+                "id": "ability-record-79028",
+                "text": "All attacks deal Energy Damage instead of Physical, as well as a burst of 2,014.2 Energy Damage."
+              },
+              {
+                "id": "ability-record-79029",
+                "text": "Refined: Contact with the Opponent inflicts an Incinerate Passive, dealing 3,524.85 Energy Damage over 1 second."
+              }
+            ],
+            "links": [],
+            "controls": [
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": null,
+                "text": "Critical Penetration"
+              },
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": "About 90",
+                "text": "90"
+              },
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": "About 3",
+                "text": "3"
+              },
+              {
+                "label": "About 6",
+                "text": "6"
+              },
+              {
+                "label": "About 485.29",
+                "text": "485.29"
+              },
+              {
+                "label": null,
+                "text": "Vulnerability"
+              },
+              {
+                "label": "About 15",
+                "text": "15"
+              },
+              {
+                "label": "About 300",
+                "text": "300"
+              },
+              {
+                "label": null,
+                "text": "Unblockable"
+              },
+              {
+                "label": "About 72",
+                "text": "72"
+              },
+              {
+                "label": "About 600",
+                "text": "600"
+              },
+              {
+                "label": "About 90",
+                "text": "90"
+              },
+              {
+                "label": "About 150",
+                "text": "150"
+              },
+              {
+                "label": "About 30",
+                "text": "30"
+              },
+              {
+                "label": null,
+                "text": "Vulnerability"
+              },
+              {
+                "label": "About 2,750",
+                "text": "2,750"
+              },
+              {
+                "label": "About 150",
+                "text": "150"
+              },
+              {
+                "label": "About 2,250",
+                "text": "2,250"
+              },
+              {
+                "label": "About 24,749.99",
+                "text": "24,749.99"
+              },
+              {
+                "label": "About 30",
+                "text": "30"
+              },
+              {
+                "label": "About 11,000",
+                "text": "11,000"
+              },
+              {
+                "label": "About 2,014.2",
+                "text": "2,014.2"
+              },
+              {
+                "label": "About 11,000",
+                "text": "11,000"
+              },
+              {
+                "label": "About 2,014.2",
+                "text": "2,014.2"
+              },
+              {
+                "label": "About 3,524.85",
+                "text": "3,524.85"
+              },
+              {
+                "label": "About 1",
+                "text": "1"
+              }
+            ]
+          }
+        ],
+        "status": "23 passages in Base Abilities",
+        "options": [
+          {
+            "value": "all",
+            "label": "All abilities"
+          },
+          {
+            "value": "signature",
+            "label": "Signature Ability"
+          },
+          {
+            "value": "base",
+            "label": "Base Abilities"
+          },
+          {
+            "value": "special1",
+            "label": "Special 1"
+          },
+          {
+            "value": "special2",
+            "label": "Special 2"
+          },
+          {
+            "value": "special3",
+            "label": "Special 3"
+          },
+          {
+            "value": "biography",
+            "label": "Biography"
+          }
+        ]
+      }
+    },
+    {
+      "name": "05-small-base",
+      "slug": "absorbing-man",
+      "chapter": "base",
+      "target": "entry",
+      "sig": 200,
+      "query": "",
+      "url": "http://localhost:3000/champions/absorbing-man?tab=abilities&rarity=7&rank=6&sig=200&ascension=0&chapter=base",
+      "viewport": [
+        320,
+        568
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 320,
+      "scrollY": 496,
+      "targetTop": 196.015625,
+      "barBottom": 172,
+      "readerHeight": 3908.6875,
+      "firstPassageOffset": 557.6875,
+      "transitions": [
+        {
+          "from": "Molecular Duplication - Always Active",
+          "to": "Omni-Morph Forms",
+          "gap": 82,
+          "headingHeight": 24
+        },
+        {
+          "from": "Omni-Morph Forms",
+          "to": "Refined Forms",
+          "gap": 82,
+          "headingHeight": 24
+        },
+        {
+          "from": "Refined Forms",
+          "to": "Morph Charges",
+          "gap": 82,
+          "headingHeight": 24
+        }
+      ],
+      "paragraphGeometry": [
+        {
+          "id": "ability-record-78995",
+          "width": 227,
+          "height": 178.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-78996",
+          "width": 227,
+          "height": 178.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-78997",
+          "width": 227,
+          "height": 153,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79002",
+          "width": 227,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79003",
+          "width": 227,
+          "height": 153,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79005",
+          "width": 227,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79007",
+          "width": 227,
+          "height": 153,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79009",
+          "width": 227,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79010",
+          "width": 227,
+          "height": 153,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79012",
+          "width": 227,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79013",
+          "width": 227,
+          "height": 153,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79014",
+          "width": 227,
+          "height": 153,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79015",
+          "width": 227,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79016",
+          "width": 227,
+          "height": 255,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79019",
+          "width": 227,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79020",
+          "width": 227,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79021",
+          "width": 227,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79023",
+          "width": 227,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79024",
+          "width": 227,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79025",
+          "width": 227,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79027",
+          "width": 227,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79028",
+          "width": 227,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79029",
+          "width": 227,
+          "height": 102,
+          "font": "16px"
+        }
+      ],
+      "semantics": {
+        "articles": [
+          {
+            "id": "dossier-base-abilities",
+            "text": "Base AbilitiesMolecular Duplication - Always ActiveA fluid molecular structure grants Absorbing Man 20% Crit Resistance and Immunity to Armor Break and Armor Shattered Debuffs, but reduces his Critical Penetration by 20% flat.Absorbing Man is no stranger to brawling with beings of otherworldly resilience. He reduces the duration of his Opponent’s Indestructible, Immortality, Unstoppable, and Unblockable Buffs by 90%.Omni-Morph FormsAbsorbing Man’s Special Attacks transform him into powerful altered Forms. He can only be in one Form at a time, and Form changes cannot fail due to Ability Accuracy Modification.Absorbing Man starts each fight in his Black Uru Form by default, but can use the Pre-Fight Menu to change this default, which persists until changed again.Being struck by a Heavy Attack while recovering from a Special Attack deactivates the current Form, which cannot be deactivated again in this way for 20 seconds.Whenever a Buff ends on the Opponent or Absorbing Man is Immune to a Debuff, the current Form pauses for 3 seconds.Interrupting an Opponent's Basic Attack with a Light Attack pauses the current Form for 6 seconds and inflicts a 485.29 potency Vulnerability Passive for 15 seconds. Max Stacks: 5.Refined FormsIf Absorbing Man would enter a Form that is already active, he instead Refines the Form, refreshing its duration and granting additional benefits.Personal bursts of damage benefit from 300% of Absorbing Man's Critical Damage Multiplier when he lands a Critical Hit and cannot have their Ability Accuracy modified.Special Attacks are Passively Unblockable.Blocking a Hit reduces the Opponent’s Ability Power Rate by 72% until Absorbing Man stops blocking. The Power denied is transferred to Absorbing Man.Morph ChargesWhen Absorbing Man refreshes or changes Forms, he gains Morph Charges equal to the remaining percentage of his previous Form’s base duration. Max 600.Whenever Absorbing Man is Immune to an Armor Break or Armor Shattered Debuff, he gains 90 Morph Charges.Performing a Medium, Light, Medium Combo with at least 150 Morph Charges, or activating a Special Attack at max charges consumes available Charges to Refine the current Form and inflict one 30 second Vulnerability Passive with 2,750 potency for every 150 Charges consumed.This attack gains 2,250 Critical Rating if the Opponent is Stunned as the first hit lands.This attack instead gains 24,749.99 Critical Rating if the Opponent is not Stunned as the first hit lands.Activating a Special Attack after the first hit lands applies this bonus Critical Rating to the entire Special and grants 30 Morph Charges.Gain Immunity to all Bleed and Shock effects and +11,000 Physical Resistance.All attacks deal a burst of 2,014.2 Physical Damage.Refined: Absorbing Man can perform Critical Hits and trigger personal bursts of damage through the Opponent’s Block.Gain Immunity to all Incinerate, Coldsnap, and Frostbite effects and +11,000 Energy Resistance.All attacks deal Energy Damage instead of Physical, as well as a burst of 2,014.2 Energy Damage.Refined: Contact with the Opponent inflicts an Incinerate Passive, dealing 3,524.85 Energy Damage over 1 second.",
+            "records": [
+              {
+                "id": "ability-record-78995",
+                "text": "A fluid molecular structure grants Absorbing Man 20% Crit Resistance and Immunity to Armor Break and Armor Shattered Debuffs, but reduces his Critical Penetration by 20% flat."
+              },
+              {
+                "id": "ability-record-78996",
+                "text": "Absorbing Man is no stranger to brawling with beings of otherworldly resilience. He reduces the duration of his Opponent’s Indestructible, Immortality, Unstoppable, and Unblockable Buffs by 90%."
+              },
+              {
+                "id": "ability-record-78997",
+                "text": "Absorbing Man’s Special Attacks transform him into powerful altered Forms. He can only be in one Form at a time, and Form changes cannot fail due to Ability Accuracy Modification."
+              },
+              {
+                "id": "ability-record-79002",
+                "text": "Absorbing Man starts each fight in his Black Uru Form by default, but can use the Pre-Fight Menu to change this default, which persists until changed again."
+              },
+              {
+                "id": "ability-record-79003",
+                "text": "Being struck by a Heavy Attack while recovering from a Special Attack deactivates the current Form, which cannot be deactivated again in this way for 20 seconds."
+              },
+              {
+                "id": "ability-record-79005",
+                "text": "Whenever a Buff ends on the Opponent or Absorbing Man is Immune to a Debuff, the current Form pauses for 3 seconds."
+              },
+              {
+                "id": "ability-record-79007",
+                "text": "Interrupting an Opponent's Basic Attack with a Light Attack pauses the current Form for 6 seconds and inflicts a 485.29 potency Vulnerability Passive for 15 seconds. Max Stacks: 5."
+              },
+              {
+                "id": "ability-record-79009",
+                "text": "If Absorbing Man would enter a Form that is already active, he instead Refines the Form, refreshing its duration and granting additional benefits."
+              },
+              {
+                "id": "ability-record-79010",
+                "text": "Personal bursts of damage benefit from 300% of Absorbing Man's Critical Damage Multiplier when he lands a Critical Hit and cannot have their Ability Accuracy modified."
+              },
+              {
+                "id": "ability-record-79012",
+                "text": "Special Attacks are Passively Unblockable."
+              },
+              {
+                "id": "ability-record-79013",
+                "text": "Blocking a Hit reduces the Opponent’s Ability Power Rate by 72% until Absorbing Man stops blocking. The Power denied is transferred to Absorbing Man."
+              },
+              {
+                "id": "ability-record-79014",
+                "text": "When Absorbing Man refreshes or changes Forms, he gains Morph Charges equal to the remaining percentage of his previous Form’s base duration. Max 600."
+              },
+              {
+                "id": "ability-record-79015",
+                "text": "Whenever Absorbing Man is Immune to an Armor Break or Armor Shattered Debuff, he gains 90 Morph Charges."
+              },
+              {
+                "id": "ability-record-79016",
+                "text": "Performing a Medium, Light, Medium Combo with at least 150 Morph Charges, or activating a Special Attack at max charges consumes available Charges to Refine the current Form and inflict one 30 second Vulnerability Passive with 2,750 potency for every 150 Charges consumed."
+              },
+              {
+                "id": "ability-record-79019",
+                "text": "This attack gains 2,250 Critical Rating if the Opponent is Stunned as the first hit lands."
+              },
+              {
+                "id": "ability-record-79020",
+                "text": "This attack instead gains 24,749.99 Critical Rating if the Opponent is not Stunned as the first hit lands."
+              },
+              {
+                "id": "ability-record-79021",
+                "text": "Activating a Special Attack after the first hit lands applies this bonus Critical Rating to the entire Special and grants 30 Morph Charges."
+              },
+              {
+                "id": "ability-record-79023",
+                "text": "Gain Immunity to all Bleed and Shock effects and +11,000 Physical Resistance."
+              },
+              {
+                "id": "ability-record-79024",
+                "text": "All attacks deal a burst of 2,014.2 Physical Damage."
+              },
+              {
+                "id": "ability-record-79025",
+                "text": "Refined: Absorbing Man can perform Critical Hits and trigger personal bursts of damage through the Opponent’s Block."
+              },
+              {
+                "id": "ability-record-79027",
+                "text": "Gain Immunity to all Incinerate, Coldsnap, and Frostbite effects and +11,000 Energy Resistance."
+              },
+              {
+                "id": "ability-record-79028",
+                "text": "All attacks deal Energy Damage instead of Physical, as well as a burst of 2,014.2 Energy Damage."
+              },
+              {
+                "id": "ability-record-79029",
+                "text": "Refined: Contact with the Opponent inflicts an Incinerate Passive, dealing 3,524.85 Energy Damage over 1 second."
+              }
+            ],
+            "links": [],
+            "controls": [
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": null,
+                "text": "Critical Penetration"
+              },
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": "About 90",
+                "text": "90"
+              },
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": "About 3",
+                "text": "3"
+              },
+              {
+                "label": "About 6",
+                "text": "6"
+              },
+              {
+                "label": "About 485.29",
+                "text": "485.29"
+              },
+              {
+                "label": null,
+                "text": "Vulnerability"
+              },
+              {
+                "label": "About 15",
+                "text": "15"
+              },
+              {
+                "label": "About 300",
+                "text": "300"
+              },
+              {
+                "label": null,
+                "text": "Unblockable"
+              },
+              {
+                "label": "About 72",
+                "text": "72"
+              },
+              {
+                "label": "About 600",
+                "text": "600"
+              },
+              {
+                "label": "About 90",
+                "text": "90"
+              },
+              {
+                "label": "About 150",
+                "text": "150"
+              },
+              {
+                "label": "About 30",
+                "text": "30"
+              },
+              {
+                "label": null,
+                "text": "Vulnerability"
+              },
+              {
+                "label": "About 2,750",
+                "text": "2,750"
+              },
+              {
+                "label": "About 150",
+                "text": "150"
+              },
+              {
+                "label": "About 2,250",
+                "text": "2,250"
+              },
+              {
+                "label": "About 24,749.99",
+                "text": "24,749.99"
+              },
+              {
+                "label": "About 30",
+                "text": "30"
+              },
+              {
+                "label": "About 11,000",
+                "text": "11,000"
+              },
+              {
+                "label": "About 2,014.2",
+                "text": "2,014.2"
+              },
+              {
+                "label": "About 11,000",
+                "text": "11,000"
+              },
+              {
+                "label": "About 2,014.2",
+                "text": "2,014.2"
+              },
+              {
+                "label": "About 3,524.85",
+                "text": "3,524.85"
+              },
+              {
+                "label": "About 1",
+                "text": "1"
+              }
+            ]
+          }
+        ],
+        "status": "23 passages in Base Abilities",
+        "options": [
+          {
+            "value": "all",
+            "label": "All abilities"
+          },
+          {
+            "value": "signature",
+            "label": "Signature Ability"
+          },
+          {
+            "value": "base",
+            "label": "Base Abilities"
+          },
+          {
+            "value": "special1",
+            "label": "Special 1"
+          },
+          {
+            "value": "special2",
+            "label": "Special 2"
+          },
+          {
+            "value": "special3",
+            "label": "Special 3"
+          },
+          {
+            "value": "biography",
+            "label": "Biography"
+          }
+        ]
+      }
+    },
+    {
+      "name": "06-mobile-group-transition",
+      "slug": "absorbing-man",
+      "chapter": "base",
+      "target": "group",
+      "sig": 200,
+      "query": "",
+      "url": "http://localhost:3000/champions/absorbing-man?tab=abilities&rarity=7&rank=6&sig=200&ascension=0&chapter=base",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 1142,
+      "targetTop": 196.09375,
+      "barBottom": 172,
+      "readerHeight": 3196.1875,
+      "firstPassageOffset": 482.6875,
+      "transitions": [
+        {
+          "from": "Molecular Duplication - Always Active",
+          "to": "Omni-Morph Forms",
+          "gap": 82,
+          "headingHeight": 24
+        },
+        {
+          "from": "Omni-Morph Forms",
+          "to": "Refined Forms",
+          "gap": 82,
+          "headingHeight": 24
+        },
+        {
+          "from": "Refined Forms",
+          "to": "Morph Charges",
+          "gap": 82,
+          "headingHeight": 24
+        }
+      ],
+      "paragraphGeometry": [
+        {
+          "id": "ability-record-78995",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-78996",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-78997",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79002",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79003",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79005",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79007",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79009",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79010",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79012",
+          "width": 297,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79013",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79014",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79015",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79016",
+          "width": 297,
+          "height": 178.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79019",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79020",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79021",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79023",
+          "width": 297,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79024",
+          "width": 297,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79025",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79027",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79028",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79029",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        }
+      ],
+      "semantics": {
+        "articles": [
+          {
+            "id": "dossier-base-abilities",
+            "text": "Base AbilitiesMolecular Duplication - Always ActiveA fluid molecular structure grants Absorbing Man 20% Crit Resistance and Immunity to Armor Break and Armor Shattered Debuffs, but reduces his Critical Penetration by 20% flat.Absorbing Man is no stranger to brawling with beings of otherworldly resilience. He reduces the duration of his Opponent’s Indestructible, Immortality, Unstoppable, and Unblockable Buffs by 90%.Omni-Morph FormsAbsorbing Man’s Special Attacks transform him into powerful altered Forms. He can only be in one Form at a time, and Form changes cannot fail due to Ability Accuracy Modification.Absorbing Man starts each fight in his Black Uru Form by default, but can use the Pre-Fight Menu to change this default, which persists until changed again.Being struck by a Heavy Attack while recovering from a Special Attack deactivates the current Form, which cannot be deactivated again in this way for 20 seconds.Whenever a Buff ends on the Opponent or Absorbing Man is Immune to a Debuff, the current Form pauses for 3 seconds.Interrupting an Opponent's Basic Attack with a Light Attack pauses the current Form for 6 seconds and inflicts a 485.29 potency Vulnerability Passive for 15 seconds. Max Stacks: 5.Refined FormsIf Absorbing Man would enter a Form that is already active, he instead Refines the Form, refreshing its duration and granting additional benefits.Personal bursts of damage benefit from 300% of Absorbing Man's Critical Damage Multiplier when he lands a Critical Hit and cannot have their Ability Accuracy modified.Special Attacks are Passively Unblockable.Blocking a Hit reduces the Opponent’s Ability Power Rate by 72% until Absorbing Man stops blocking. The Power denied is transferred to Absorbing Man.Morph ChargesWhen Absorbing Man refreshes or changes Forms, he gains Morph Charges equal to the remaining percentage of his previous Form’s base duration. Max 600.Whenever Absorbing Man is Immune to an Armor Break or Armor Shattered Debuff, he gains 90 Morph Charges.Performing a Medium, Light, Medium Combo with at least 150 Morph Charges, or activating a Special Attack at max charges consumes available Charges to Refine the current Form and inflict one 30 second Vulnerability Passive with 2,750 potency for every 150 Charges consumed.This attack gains 2,250 Critical Rating if the Opponent is Stunned as the first hit lands.This attack instead gains 24,749.99 Critical Rating if the Opponent is not Stunned as the first hit lands.Activating a Special Attack after the first hit lands applies this bonus Critical Rating to the entire Special and grants 30 Morph Charges.Gain Immunity to all Bleed and Shock effects and +11,000 Physical Resistance.All attacks deal a burst of 2,014.2 Physical Damage.Refined: Absorbing Man can perform Critical Hits and trigger personal bursts of damage through the Opponent’s Block.Gain Immunity to all Incinerate, Coldsnap, and Frostbite effects and +11,000 Energy Resistance.All attacks deal Energy Damage instead of Physical, as well as a burst of 2,014.2 Energy Damage.Refined: Contact with the Opponent inflicts an Incinerate Passive, dealing 3,524.85 Energy Damage over 1 second.",
+            "records": [
+              {
+                "id": "ability-record-78995",
+                "text": "A fluid molecular structure grants Absorbing Man 20% Crit Resistance and Immunity to Armor Break and Armor Shattered Debuffs, but reduces his Critical Penetration by 20% flat."
+              },
+              {
+                "id": "ability-record-78996",
+                "text": "Absorbing Man is no stranger to brawling with beings of otherworldly resilience. He reduces the duration of his Opponent’s Indestructible, Immortality, Unstoppable, and Unblockable Buffs by 90%."
+              },
+              {
+                "id": "ability-record-78997",
+                "text": "Absorbing Man’s Special Attacks transform him into powerful altered Forms. He can only be in one Form at a time, and Form changes cannot fail due to Ability Accuracy Modification."
+              },
+              {
+                "id": "ability-record-79002",
+                "text": "Absorbing Man starts each fight in his Black Uru Form by default, but can use the Pre-Fight Menu to change this default, which persists until changed again."
+              },
+              {
+                "id": "ability-record-79003",
+                "text": "Being struck by a Heavy Attack while recovering from a Special Attack deactivates the current Form, which cannot be deactivated again in this way for 20 seconds."
+              },
+              {
+                "id": "ability-record-79005",
+                "text": "Whenever a Buff ends on the Opponent or Absorbing Man is Immune to a Debuff, the current Form pauses for 3 seconds."
+              },
+              {
+                "id": "ability-record-79007",
+                "text": "Interrupting an Opponent's Basic Attack with a Light Attack pauses the current Form for 6 seconds and inflicts a 485.29 potency Vulnerability Passive for 15 seconds. Max Stacks: 5."
+              },
+              {
+                "id": "ability-record-79009",
+                "text": "If Absorbing Man would enter a Form that is already active, he instead Refines the Form, refreshing its duration and granting additional benefits."
+              },
+              {
+                "id": "ability-record-79010",
+                "text": "Personal bursts of damage benefit from 300% of Absorbing Man's Critical Damage Multiplier when he lands a Critical Hit and cannot have their Ability Accuracy modified."
+              },
+              {
+                "id": "ability-record-79012",
+                "text": "Special Attacks are Passively Unblockable."
+              },
+              {
+                "id": "ability-record-79013",
+                "text": "Blocking a Hit reduces the Opponent’s Ability Power Rate by 72% until Absorbing Man stops blocking. The Power denied is transferred to Absorbing Man."
+              },
+              {
+                "id": "ability-record-79014",
+                "text": "When Absorbing Man refreshes or changes Forms, he gains Morph Charges equal to the remaining percentage of his previous Form’s base duration. Max 600."
+              },
+              {
+                "id": "ability-record-79015",
+                "text": "Whenever Absorbing Man is Immune to an Armor Break or Armor Shattered Debuff, he gains 90 Morph Charges."
+              },
+              {
+                "id": "ability-record-79016",
+                "text": "Performing a Medium, Light, Medium Combo with at least 150 Morph Charges, or activating a Special Attack at max charges consumes available Charges to Refine the current Form and inflict one 30 second Vulnerability Passive with 2,750 potency for every 150 Charges consumed."
+              },
+              {
+                "id": "ability-record-79019",
+                "text": "This attack gains 2,250 Critical Rating if the Opponent is Stunned as the first hit lands."
+              },
+              {
+                "id": "ability-record-79020",
+                "text": "This attack instead gains 24,749.99 Critical Rating if the Opponent is not Stunned as the first hit lands."
+              },
+              {
+                "id": "ability-record-79021",
+                "text": "Activating a Special Attack after the first hit lands applies this bonus Critical Rating to the entire Special and grants 30 Morph Charges."
+              },
+              {
+                "id": "ability-record-79023",
+                "text": "Gain Immunity to all Bleed and Shock effects and +11,000 Physical Resistance."
+              },
+              {
+                "id": "ability-record-79024",
+                "text": "All attacks deal a burst of 2,014.2 Physical Damage."
+              },
+              {
+                "id": "ability-record-79025",
+                "text": "Refined: Absorbing Man can perform Critical Hits and trigger personal bursts of damage through the Opponent’s Block."
+              },
+              {
+                "id": "ability-record-79027",
+                "text": "Gain Immunity to all Incinerate, Coldsnap, and Frostbite effects and +11,000 Energy Resistance."
+              },
+              {
+                "id": "ability-record-79028",
+                "text": "All attacks deal Energy Damage instead of Physical, as well as a burst of 2,014.2 Energy Damage."
+              },
+              {
+                "id": "ability-record-79029",
+                "text": "Refined: Contact with the Opponent inflicts an Incinerate Passive, dealing 3,524.85 Energy Damage over 1 second."
+              }
+            ],
+            "links": [],
+            "controls": [
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": null,
+                "text": "Critical Penetration"
+              },
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": "About 90",
+                "text": "90"
+              },
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": "About 3",
+                "text": "3"
+              },
+              {
+                "label": "About 6",
+                "text": "6"
+              },
+              {
+                "label": "About 485.29",
+                "text": "485.29"
+              },
+              {
+                "label": null,
+                "text": "Vulnerability"
+              },
+              {
+                "label": "About 15",
+                "text": "15"
+              },
+              {
+                "label": "About 300",
+                "text": "300"
+              },
+              {
+                "label": null,
+                "text": "Unblockable"
+              },
+              {
+                "label": "About 72",
+                "text": "72"
+              },
+              {
+                "label": "About 600",
+                "text": "600"
+              },
+              {
+                "label": "About 90",
+                "text": "90"
+              },
+              {
+                "label": "About 150",
+                "text": "150"
+              },
+              {
+                "label": "About 30",
+                "text": "30"
+              },
+              {
+                "label": null,
+                "text": "Vulnerability"
+              },
+              {
+                "label": "About 2,750",
+                "text": "2,750"
+              },
+              {
+                "label": "About 150",
+                "text": "150"
+              },
+              {
+                "label": "About 2,250",
+                "text": "2,250"
+              },
+              {
+                "label": "About 24,749.99",
+                "text": "24,749.99"
+              },
+              {
+                "label": "About 30",
+                "text": "30"
+              },
+              {
+                "label": "About 11,000",
+                "text": "11,000"
+              },
+              {
+                "label": "About 2,014.2",
+                "text": "2,014.2"
+              },
+              {
+                "label": "About 11,000",
+                "text": "11,000"
+              },
+              {
+                "label": "About 2,014.2",
+                "text": "2,014.2"
+              },
+              {
+                "label": "About 3,524.85",
+                "text": "3,524.85"
+              },
+              {
+                "label": "About 1",
+                "text": "1"
+              }
+            ]
+          }
+        ],
+        "status": "23 passages in Base Abilities",
+        "options": [
+          {
+            "value": "all",
+            "label": "All abilities"
+          },
+          {
+            "value": "signature",
+            "label": "Signature Ability"
+          },
+          {
+            "value": "base",
+            "label": "Base Abilities"
+          },
+          {
+            "value": "special1",
+            "label": "Special 1"
+          },
+          {
+            "value": "special2",
+            "label": "Special 2"
+          },
+          {
+            "value": "special3",
+            "label": "Special 3"
+          },
+          {
+            "value": "biography",
+            "label": "Biography"
+          }
+        ]
+      }
+    },
+    {
+      "name": "07-desktop-group-transition",
+      "slug": "absorbing-man",
+      "chapter": "base",
+      "target": "group",
+      "sig": 200,
+      "query": "",
+      "url": "http://localhost:3000/champions/absorbing-man?tab=abilities&rarity=7&rank=6&sig=200&ascension=0&chapter=base",
+      "viewport": [
+        1280,
+        900
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 1280,
+      "scrollY": 914,
+      "targetTop": 228.78125,
+      "barBottom": 204.390625,
+      "readerHeight": 1897.390625,
+      "firstPassageOffset": 402.390625,
+      "transitions": [
+        {
+          "from": "Molecular Duplication - Always Active",
+          "to": "Omni-Morph Forms",
+          "gap": 94,
+          "headingHeight": 24
+        },
+        {
+          "from": "Omni-Morph Forms",
+          "to": "Refined Forms",
+          "gap": 94,
+          "headingHeight": 24
+        },
+        {
+          "from": "Refined Forms",
+          "to": "Morph Charges",
+          "gap": 94,
+          "headingHeight": 24
+        }
+      ],
+      "paragraphGeometry": [
+        {
+          "id": "ability-record-78995",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-78996",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-78997",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79002",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79003",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79005",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79007",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79009",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79010",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79012",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79013",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79014",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79015",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79016",
+          "width": 906,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79019",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79020",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79021",
+          "width": 906,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79023",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79024",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79025",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79027",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79028",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79029",
+          "width": 906,
+          "height": 25.5,
+          "font": "16px"
+        }
+      ],
+      "semantics": {
+        "articles": [
+          {
+            "id": "dossier-base-abilities",
+            "text": "Base AbilitiesMolecular Duplication - Always ActiveA fluid molecular structure grants Absorbing Man 20% Crit Resistance and Immunity to Armor Break and Armor Shattered Debuffs, but reduces his Critical Penetration by 20% flat.Absorbing Man is no stranger to brawling with beings of otherworldly resilience. He reduces the duration of his Opponent’s Indestructible, Immortality, Unstoppable, and Unblockable Buffs by 90%.Omni-Morph FormsAbsorbing Man’s Special Attacks transform him into powerful altered Forms. He can only be in one Form at a time, and Form changes cannot fail due to Ability Accuracy Modification.Absorbing Man starts each fight in his Black Uru Form by default, but can use the Pre-Fight Menu to change this default, which persists until changed again.Being struck by a Heavy Attack while recovering from a Special Attack deactivates the current Form, which cannot be deactivated again in this way for 20 seconds.Whenever a Buff ends on the Opponent or Absorbing Man is Immune to a Debuff, the current Form pauses for 3 seconds.Interrupting an Opponent's Basic Attack with a Light Attack pauses the current Form for 6 seconds and inflicts a 485.29 potency Vulnerability Passive for 15 seconds. Max Stacks: 5.Refined FormsIf Absorbing Man would enter a Form that is already active, he instead Refines the Form, refreshing its duration and granting additional benefits.Personal bursts of damage benefit from 300% of Absorbing Man's Critical Damage Multiplier when he lands a Critical Hit and cannot have their Ability Accuracy modified.Special Attacks are Passively Unblockable.Blocking a Hit reduces the Opponent’s Ability Power Rate by 72% until Absorbing Man stops blocking. The Power denied is transferred to Absorbing Man.Morph ChargesWhen Absorbing Man refreshes or changes Forms, he gains Morph Charges equal to the remaining percentage of his previous Form’s base duration. Max 600.Whenever Absorbing Man is Immune to an Armor Break or Armor Shattered Debuff, he gains 90 Morph Charges.Performing a Medium, Light, Medium Combo with at least 150 Morph Charges, or activating a Special Attack at max charges consumes available Charges to Refine the current Form and inflict one 30 second Vulnerability Passive with 2,750 potency for every 150 Charges consumed.This attack gains 2,250 Critical Rating if the Opponent is Stunned as the first hit lands.This attack instead gains 24,749.99 Critical Rating if the Opponent is not Stunned as the first hit lands.Activating a Special Attack after the first hit lands applies this bonus Critical Rating to the entire Special and grants 30 Morph Charges.Gain Immunity to all Bleed and Shock effects and +11,000 Physical Resistance.All attacks deal a burst of 2,014.2 Physical Damage.Refined: Absorbing Man can perform Critical Hits and trigger personal bursts of damage through the Opponent’s Block.Gain Immunity to all Incinerate, Coldsnap, and Frostbite effects and +11,000 Energy Resistance.All attacks deal Energy Damage instead of Physical, as well as a burst of 2,014.2 Energy Damage.Refined: Contact with the Opponent inflicts an Incinerate Passive, dealing 3,524.85 Energy Damage over 1 second.",
+            "records": [
+              {
+                "id": "ability-record-78995",
+                "text": "A fluid molecular structure grants Absorbing Man 20% Crit Resistance and Immunity to Armor Break and Armor Shattered Debuffs, but reduces his Critical Penetration by 20% flat."
+              },
+              {
+                "id": "ability-record-78996",
+                "text": "Absorbing Man is no stranger to brawling with beings of otherworldly resilience. He reduces the duration of his Opponent’s Indestructible, Immortality, Unstoppable, and Unblockable Buffs by 90%."
+              },
+              {
+                "id": "ability-record-78997",
+                "text": "Absorbing Man’s Special Attacks transform him into powerful altered Forms. He can only be in one Form at a time, and Form changes cannot fail due to Ability Accuracy Modification."
+              },
+              {
+                "id": "ability-record-79002",
+                "text": "Absorbing Man starts each fight in his Black Uru Form by default, but can use the Pre-Fight Menu to change this default, which persists until changed again."
+              },
+              {
+                "id": "ability-record-79003",
+                "text": "Being struck by a Heavy Attack while recovering from a Special Attack deactivates the current Form, which cannot be deactivated again in this way for 20 seconds."
+              },
+              {
+                "id": "ability-record-79005",
+                "text": "Whenever a Buff ends on the Opponent or Absorbing Man is Immune to a Debuff, the current Form pauses for 3 seconds."
+              },
+              {
+                "id": "ability-record-79007",
+                "text": "Interrupting an Opponent's Basic Attack with a Light Attack pauses the current Form for 6 seconds and inflicts a 485.29 potency Vulnerability Passive for 15 seconds. Max Stacks: 5."
+              },
+              {
+                "id": "ability-record-79009",
+                "text": "If Absorbing Man would enter a Form that is already active, he instead Refines the Form, refreshing its duration and granting additional benefits."
+              },
+              {
+                "id": "ability-record-79010",
+                "text": "Personal bursts of damage benefit from 300% of Absorbing Man's Critical Damage Multiplier when he lands a Critical Hit and cannot have their Ability Accuracy modified."
+              },
+              {
+                "id": "ability-record-79012",
+                "text": "Special Attacks are Passively Unblockable."
+              },
+              {
+                "id": "ability-record-79013",
+                "text": "Blocking a Hit reduces the Opponent’s Ability Power Rate by 72% until Absorbing Man stops blocking. The Power denied is transferred to Absorbing Man."
+              },
+              {
+                "id": "ability-record-79014",
+                "text": "When Absorbing Man refreshes or changes Forms, he gains Morph Charges equal to the remaining percentage of his previous Form’s base duration. Max 600."
+              },
+              {
+                "id": "ability-record-79015",
+                "text": "Whenever Absorbing Man is Immune to an Armor Break or Armor Shattered Debuff, he gains 90 Morph Charges."
+              },
+              {
+                "id": "ability-record-79016",
+                "text": "Performing a Medium, Light, Medium Combo with at least 150 Morph Charges, or activating a Special Attack at max charges consumes available Charges to Refine the current Form and inflict one 30 second Vulnerability Passive with 2,750 potency for every 150 Charges consumed."
+              },
+              {
+                "id": "ability-record-79019",
+                "text": "This attack gains 2,250 Critical Rating if the Opponent is Stunned as the first hit lands."
+              },
+              {
+                "id": "ability-record-79020",
+                "text": "This attack instead gains 24,749.99 Critical Rating if the Opponent is not Stunned as the first hit lands."
+              },
+              {
+                "id": "ability-record-79021",
+                "text": "Activating a Special Attack after the first hit lands applies this bonus Critical Rating to the entire Special and grants 30 Morph Charges."
+              },
+              {
+                "id": "ability-record-79023",
+                "text": "Gain Immunity to all Bleed and Shock effects and +11,000 Physical Resistance."
+              },
+              {
+                "id": "ability-record-79024",
+                "text": "All attacks deal a burst of 2,014.2 Physical Damage."
+              },
+              {
+                "id": "ability-record-79025",
+                "text": "Refined: Absorbing Man can perform Critical Hits and trigger personal bursts of damage through the Opponent’s Block."
+              },
+              {
+                "id": "ability-record-79027",
+                "text": "Gain Immunity to all Incinerate, Coldsnap, and Frostbite effects and +11,000 Energy Resistance."
+              },
+              {
+                "id": "ability-record-79028",
+                "text": "All attacks deal Energy Damage instead of Physical, as well as a burst of 2,014.2 Energy Damage."
+              },
+              {
+                "id": "ability-record-79029",
+                "text": "Refined: Contact with the Opponent inflicts an Incinerate Passive, dealing 3,524.85 Energy Damage over 1 second."
+              }
+            ],
+            "links": [],
+            "controls": [
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": null,
+                "text": "Critical Penetration"
+              },
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": "About 90",
+                "text": "90"
+              },
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": "About 3",
+                "text": "3"
+              },
+              {
+                "label": "About 6",
+                "text": "6"
+              },
+              {
+                "label": "About 485.29",
+                "text": "485.29"
+              },
+              {
+                "label": null,
+                "text": "Vulnerability"
+              },
+              {
+                "label": "About 15",
+                "text": "15"
+              },
+              {
+                "label": "About 300",
+                "text": "300"
+              },
+              {
+                "label": null,
+                "text": "Unblockable"
+              },
+              {
+                "label": "About 72",
+                "text": "72"
+              },
+              {
+                "label": "About 600",
+                "text": "600"
+              },
+              {
+                "label": "About 90",
+                "text": "90"
+              },
+              {
+                "label": "About 150",
+                "text": "150"
+              },
+              {
+                "label": "About 30",
+                "text": "30"
+              },
+              {
+                "label": null,
+                "text": "Vulnerability"
+              },
+              {
+                "label": "About 2,750",
+                "text": "2,750"
+              },
+              {
+                "label": "About 150",
+                "text": "150"
+              },
+              {
+                "label": "About 2,250",
+                "text": "2,250"
+              },
+              {
+                "label": "About 24,749.99",
+                "text": "24,749.99"
+              },
+              {
+                "label": "About 30",
+                "text": "30"
+              },
+              {
+                "label": "About 11,000",
+                "text": "11,000"
+              },
+              {
+                "label": "About 2,014.2",
+                "text": "2,014.2"
+              },
+              {
+                "label": "About 11,000",
+                "text": "11,000"
+              },
+              {
+                "label": "About 2,014.2",
+                "text": "2,014.2"
+              },
+              {
+                "label": "About 3,524.85",
+                "text": "3,524.85"
+              },
+              {
+                "label": "About 1",
+                "text": "1"
+              }
+            ]
+          }
+        ],
+        "status": "23 passages in Base Abilities",
+        "options": [
+          {
+            "value": "all",
+            "label": "All abilities"
+          },
+          {
+            "value": "signature",
+            "label": "Signature Ability"
+          },
+          {
+            "value": "base",
+            "label": "Base Abilities"
+          },
+          {
+            "value": "special1",
+            "label": "Special 1"
+          },
+          {
+            "value": "special2",
+            "label": "Special 2"
+          },
+          {
+            "value": "special3",
+            "label": "Special 3"
+          },
+          {
+            "value": "biography",
+            "label": "Biography"
+          }
+        ]
+      }
+    },
+    {
+      "name": "08-linked-passage",
+      "slug": "absorbing-man",
+      "chapter": "all",
+      "target": "ability",
+      "sig": 200,
+      "query": "",
+      "url": "http://localhost:3000/champions/absorbing-man?tab=abilities&rarity=7&rank=6&sig=200&ascension=0&ability=79022",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 931,
+      "targetTop": 517.09375,
+      "barBottom": 172,
+      "readerHeight": 845.6875,
+      "firstPassageOffset": 740.1875,
+      "transitions": [],
+      "paragraphGeometry": [
+        {
+          "id": "ability-record-79022",
+          "width": 267,
+          "height": 76.5,
+          "font": "16px"
+        }
+      ],
+      "semantics": {
+        "articles": [
+          {
+            "id": "dossier-special-attack-1-uru-rush",
+            "text": "Special Attack 1 - Uru RushAbsorbing Man takes on the composition of his trusty ball-and-chain as he whips it forward to knock the Opponent off balance before rushing forward with a vicious shoulder check.Always ActiveOn activation, enter Black Uru Form for 0 seconds, granting the following benefits:",
+            "records": [
+              {
+                "id": "ability-record-79022",
+                "text": "On activation, enter Black Uru Form for 0 seconds, granting the following benefits:"
+              }
+            ],
+            "links": [],
+            "controls": [
+              {
+                "label": "About 0",
+                "text": "0"
+              }
+            ]
+          }
+        ],
+        "status": "2 passages in Special 1",
+        "options": [
+          {
+            "value": "all",
+            "label": "All abilities"
+          },
+          {
+            "value": "signature",
+            "label": "Signature Ability"
+          },
+          {
+            "value": "base",
+            "label": "Base Abilities"
+          },
+          {
+            "value": "special1",
+            "label": "Special 1"
+          },
+          {
+            "value": "special2",
+            "label": "Special 2"
+          },
+          {
+            "value": "special3",
+            "label": "Special 3"
+          },
+          {
+            "value": "biography",
+            "label": "Biography"
+          }
+        ]
+      }
+    },
+    {
+      "name": "09-unawakened",
+      "slug": "absorbing-man",
+      "chapter": "signature",
+      "target": "entry",
+      "sig": 0,
+      "query": "",
+      "url": "http://localhost:3000/champions/absorbing-man?tab=abilities&rarity=7&rank=6&sig=0&ascension=0&chapter=signature",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 520,
+      "targetTop": 195.90625,
+      "barBottom": 172,
+      "readerHeight": 1105.1875,
+      "firstPassageOffset": 608.6875,
+      "transitions": [],
+      "paragraphGeometry": [
+        {
+          "id": "ability-record-79032",
+          "width": 297,
+          "height": 51,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79033",
+          "width": 297,
+          "height": 178.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-79034",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        }
+      ],
+      "semantics": {
+        "articles": [
+          {
+            "id": "dossier-signature-ability",
+            "text": "Signature AbilityUnawakened at Sig 0. The signature ability becomes active after awakening.Always ActiveAbsorbing Man’s Omni-Morph Forms last 0% longer.When Absorbing Man consumes Morph Charges, he gains a non-stacking Regeneration Passive, healing 0% of his missing Health over 12 seconds. As a Defender, this effect also triggers whenever Absorbing Man enters or refreshes any Form.Personal Regeneration effects pause for 3 seconds when Absorbing Man is struck with True Damage and are removed when a form is deactivated early.Signature curves3 effects · Combined viewDuration Id Percent10Regen10Regen10Mixed units share a normalized range. Hover, tap, or focus the chart to see actual values.100%75%50%25%0%EFFECT RANGE150100150200Sig 1: Duration Id Percent 10, Regen 10, Regen 10Y-axis · Effect rangeActual values in legend and tooltipX-axis · Signature level",
+            "records": [
+              {
+                "id": "ability-record-79032",
+                "text": "Absorbing Man’s Omni-Morph Forms last 0% longer."
+              },
+              {
+                "id": "ability-record-79033",
+                "text": "When Absorbing Man consumes Morph Charges, he gains a non-stacking Regeneration Passive, healing 0% of his missing Health over 12 seconds. As a Defender, this effect also triggers whenever Absorbing Man enters or refreshes any Form."
+              },
+              {
+                "id": "ability-record-79034",
+                "text": "Personal Regeneration effects pause for 3 seconds when Absorbing Man is struck with True Damage and are removed when a form is deactivated early."
+              }
+            ],
+            "links": [],
+            "controls": [
+              {
+                "label": "About 0",
+                "text": "0"
+              },
+              {
+                "label": "About 0",
+                "text": "0"
+              },
+              {
+                "label": "About 12",
+                "text": "12"
+              },
+              {
+                "label": "About 3",
+                "text": "3"
+              }
+            ]
+          }
+        ],
+        "status": "3 passages in Signature Ability",
+        "options": [
+          {
+            "value": "all",
+            "label": "All abilities"
+          },
+          {
+            "value": "signature",
+            "label": "Signature Ability"
+          },
+          {
+            "value": "base",
+            "label": "Base Abilities"
+          },
+          {
+            "value": "special1",
+            "label": "Special 1"
+          },
+          {
+            "value": "special2",
+            "label": "Special 2"
+          },
+          {
+            "value": "special3",
+            "label": "Special 3"
+          },
+          {
+            "value": "biography",
+            "label": "Biography"
+          }
+        ]
+      }
+    },
+    {
+      "name": "10-sparse-signature",
+      "slug": "ms-marvel",
+      "chapter": "signature",
+      "target": "entry",
+      "sig": 200,
+      "query": "",
+      "url": "http://localhost:3000/champions/ms-marvel?tab=abilities&rarity=6&rank=5&sig=200&ascension=0&chapter=signature",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 481,
+      "targetTop": 196.21875,
+      "barBottom": 172,
+      "readerHeight": 737.6875,
+      "firstPassageOffset": 510.6875,
+      "transitions": [],
+      "paragraphGeometry": [
+        {
+          "id": "ability-record-85149",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        }
+      ],
+      "semantics": {
+        "articles": [
+          {
+            "id": "dossier-signature-ability",
+            "text": "Signature AbilityENERGY ABSORPTIONAttack is increased by up to 5,263.88 based on stored Power. In addition, blocking partially absorbs energy-based attacks, fueling Ms. Marvel's Power Meter.Signature curves1 effects · Combined viewFury5,264Mixed units share a normalized range. Hover, tap, or focus the chart to see actual values.100%75%50%25%0%EFFECT RANGE150100150200Sig 200: Fury 5,264Y-axis · Effect rangeActual values in legend and tooltipX-axis · Signature level",
+            "records": [
+              {
+                "id": "ability-record-85149",
+                "text": "Attack is increased by up to 5,263.88 based on stored Power. In addition, blocking partially absorbs energy-based attacks, fueling Ms. Marvel's Power Meter."
+              }
+            ],
+            "links": [],
+            "controls": [
+              {
+                "label": "About 5,263.88",
+                "text": "5,263.88"
+              }
+            ]
+          }
+        ],
+        "status": "1 passage in Signature Ability",
+        "options": [
+          {
+            "value": "all",
+            "label": "All abilities"
+          },
+          {
+            "value": "signature",
+            "label": "Signature Ability"
+          },
+          {
+            "value": "base",
+            "label": "Base Abilities"
+          },
+          {
+            "value": "biography",
+            "label": "Biography"
+          }
+        ]
+      }
+    },
+    {
+      "name": "11-long-name-base",
+      "slug": "star-lord-kitty-pryde",
+      "chapter": "base",
+      "target": "entry",
+      "sig": 200,
+      "query": "",
+      "url": "http://localhost:3000/champions/star-lord-kitty-pryde?tab=abilities&rarity=7&rank=6&sig=200&ascension=0&chapter=base",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 515,
+      "targetTop": 196.15625,
+      "barBottom": 172,
+      "readerHeight": 2280.1875,
+      "firstPassageOffset": 482.6875,
+      "transitions": [
+        {
+          "from": "Star-Lady - Always Active",
+          "to": "Comin' Atcha - Phase Dash",
+          "gap": 82,
+          "headingHeight": 24
+        },
+        {
+          "from": "Comin' Atcha - Phase Dash",
+          "to": "Gotta Refocus - Phase Cooldown",
+          "gap": 82,
+          "headingHeight": 24
+        },
+        {
+          "from": "Gotta Refocus - Phase Cooldown",
+          "to": "Element Guns - Element Blasts",
+          "gap": 82,
+          "headingHeight": 24
+        }
+      ],
+      "paragraphGeometry": [
+        {
+          "id": "ability-record-89178",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-89180",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-89183",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-89186",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-89187",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-89188",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-89190",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-89192",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-89193",
+          "width": 297,
+          "height": 127.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-89194",
+          "width": 297,
+          "height": 76.5,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-89195",
+          "width": 297,
+          "height": 102,
+          "font": "16px"
+        },
+        {
+          "id": "ability-record-89196",
+          "width": 297,
+          "height": 210.5,
+          "font": "16px"
+        }
+      ],
+      "semantics": {
+        "articles": [
+          {
+            "id": "dossier-base-abilities",
+            "text": "Base AbilitiesStar-Lady - Always ActiveKitty’s Light Attacks do not increase her Combo Meter, and she can trigger the Parry Mastery against non-contact attacks.Against Mutants, Kitty’s advanced mastery of her mutation grants her Immunity to Delirium and Reversed Controls, and her Element Blasts, Phase, and Unblockable are unaffected by Ability Accuracy.Comin' Atcha - Phase DashWhile holding Block as an Attacker, or any time as a Defender: Dashing while the Opponent has 3 or less unique Buffs grants a Phase Buff for 1.1 seconds.While this Phase is active, Kitty can still perform Well-Timed Blocks. Phase pauses during her Dashes, Heavy Charges, Strikers, Specials, and when landing Basic Attacks as an Attacker.This Phase grants +1,178.57 Energy Resistance, Stun and Neuroshock Immunity, prevents the damage taken from the Recoil Mastery, and increases the Opponent’s aggression.While this Phase is active, Kitty’s second Medium, Heavy, and Special 2 are Passively Unblockable, and her Heavy releases instantly when charged.Gotta Refocus - Phase CooldownIf Kitty’s Phase triggers a Miss twice or a Stun Immunity once, when it ends it goes on cooldown for 20 seconds, plus 15 seconds for each time the cooldown has activated. Max: 50 seconds.As a Defender, Kitty’s Phase always goes on cooldown when it ends, and it starts the fight on cooldown when fighting Cosmic Champions.As an Attacker, releasing Kitty’s Heavy Attack ends Phase without triggering its cooldown, and all of her attacks and Well-Timed Blocks remove 1 second from its duration.Kitty’s Phase cooldown expires 300% faster per Neuroshock on her, up to a max of 3.Element Guns - Element BlastsElement Blast Passives are non-stacking, last 15 seconds, pause during all Specials, and 2 of them refresh on Kitty’s fourth Light.Kitty’s second Medium inflicts an Element Blast based on the amount of Lights or Mediums performed in her current combo:•Fire: One Hit - 30% Suppression.•Air: Two Hits - 20% Power Reroute.•Water: Three Hits - 2,209.6 Battered.•Earth: Four Hits - 30% Cowardice.",
+            "records": [
+              {
+                "id": "ability-record-89178",
+                "text": "Kitty’s Light Attacks do not increase her Combo Meter, and she can trigger the Parry Mastery against non-contact attacks."
+              },
+              {
+                "id": "ability-record-89180",
+                "text": "Against Mutants, Kitty’s advanced mastery of her mutation grants her Immunity to Delirium and Reversed Controls, and her Element Blasts, Phase, and Unblockable are unaffected by Ability Accuracy."
+              },
+              {
+                "id": "ability-record-89183",
+                "text": "While holding Block as an Attacker, or any time as a Defender: Dashing while the Opponent has 3 or less unique Buffs grants a Phase Buff for 1.1 seconds."
+              },
+              {
+                "id": "ability-record-89186",
+                "text": "While this Phase is active, Kitty can still perform Well-Timed Blocks. Phase pauses during her Dashes, Heavy Charges, Strikers, Specials, and when landing Basic Attacks as an Attacker."
+              },
+              {
+                "id": "ability-record-89187",
+                "text": "This Phase grants +1,178.57 Energy Resistance, Stun and Neuroshock Immunity, prevents the damage taken from the Recoil Mastery, and increases the Opponent’s aggression."
+              },
+              {
+                "id": "ability-record-89188",
+                "text": "While this Phase is active, Kitty’s second Medium, Heavy, and Special 2 are Passively Unblockable, and her Heavy releases instantly when charged."
+              },
+              {
+                "id": "ability-record-89190",
+                "text": "If Kitty’s Phase triggers a Miss twice or a Stun Immunity once, when it ends it goes on cooldown for 20 seconds, plus 15 seconds for each time the cooldown has activated. Max: 50 seconds."
+              },
+              {
+                "id": "ability-record-89192",
+                "text": "As a Defender, Kitty’s Phase always goes on cooldown when it ends, and it starts the fight on cooldown when fighting Cosmic Champions."
+              },
+              {
+                "id": "ability-record-89193",
+                "text": "As an Attacker, releasing Kitty’s Heavy Attack ends Phase without triggering its cooldown, and all of her attacks and Well-Timed Blocks remove 1 second from its duration."
+              },
+              {
+                "id": "ability-record-89194",
+                "text": "Kitty’s Phase cooldown expires 300% faster per Neuroshock on her, up to a max of 3."
+              },
+              {
+                "id": "ability-record-89195",
+                "text": "Element Blast Passives are non-stacking, last 15 seconds, pause during all Specials, and 2 of them refresh on Kitty’s fourth Light."
+              },
+              {
+                "id": "ability-record-89196",
+                "text": "Kitty’s second Medium inflicts an Element Blast based on the amount of Lights or Mediums performed in her current combo:•Fire: One Hit - 30% Suppression.•Air: Two Hits - 20% Power Reroute.•Water: Three Hits - 2,209.6 Battered.•Earth: Four Hits - 30% Cowardice."
+              }
+            ],
+            "links": [],
+            "controls": [
+              {
+                "label": null,
+                "text": "Parry"
+              },
+              {
+                "label": "About 3",
+                "text": "3"
+              },
+              {
+                "label": null,
+                "text": "Phase"
+              },
+              {
+                "label": "About 1.1",
+                "text": "1.1"
+              },
+              {
+                "label": "About 1,178.57",
+                "text": "1,178.57"
+              },
+              {
+                "label": null,
+                "text": "Energy Resistance"
+              },
+              {
+                "label": null,
+                "text": "Unblockable"
+              },
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": "About 15",
+                "text": "15"
+              },
+              {
+                "label": "About 50",
+                "text": "50"
+              },
+              {
+                "label": "About 1",
+                "text": "1"
+              },
+              {
+                "label": "About 300",
+                "text": "300"
+              },
+              {
+                "label": "About 3",
+                "text": "3"
+              },
+              {
+                "label": "About 15",
+                "text": "15"
+              },
+              {
+                "label": "About 2",
+                "text": "2"
+              },
+              {
+                "label": null,
+                "text": "combo"
+              },
+              {
+                "label": "About 30",
+                "text": "30"
+              },
+              {
+                "label": null,
+                "text": "Suppression"
+              },
+              {
+                "label": "About 20",
+                "text": "20"
+              },
+              {
+                "label": null,
+                "text": "Power Reroute"
+              },
+              {
+                "label": "About 2,209.6",
+                "text": "2,209.6"
+              },
+              {
+                "label": null,
+                "text": "Battered"
+              },
+              {
+                "label": "About 30",
+                "text": "30"
+              },
+              {
+                "label": null,
+                "text": "Cowardice"
+              }
+            ]
+          }
+        ],
+        "status": "12 passages in Base Abilities",
+        "options": [
+          {
+            "value": "all",
+            "label": "All abilities"
+          },
+          {
+            "value": "signature",
+            "label": "Signature Ability"
+          },
+          {
+            "value": "base",
+            "label": "Base Abilities"
+          },
+          {
+            "value": "special1",
+            "label": "Special 1"
+          },
+          {
+            "value": "special2",
+            "label": "Special 2"
+          },
+          {
+            "value": "special3",
+            "label": "Special 3"
+          },
+          {
+            "value": "biography",
+            "label": "Biography"
+          }
+        ]
+      }
+    },
+    {
+      "name": "12-scoped-no-results",
+      "slug": "absorbing-man",
+      "chapter": "signature",
+      "target": "entry",
+      "sig": 200,
+      "query": "zzzznomatch",
+      "url": "http://localhost:3000/champions/absorbing-man?tab=abilities&rarity=7&rank=6&sig=200&ascension=0&chapter=signature",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 520,
+      "targetTop": 195.90625,
+      "barBottom": 172,
+      "readerHeight": 587.1875,
+      "firstPassageOffset": null,
+      "transitions": [],
+      "paragraphGeometry": [],
+      "semantics": {
+        "articles": [],
+        "status": "0 passages found in Signature Ability",
+        "options": [
+          {
+            "value": "all",
+            "label": "All abilities"
+          },
+          {
+            "value": "signature",
+            "label": "Signature Ability"
+          },
+          {
+            "value": "base",
+            "label": "Base Abilities"
+          },
+          {
+            "value": "special1",
+            "label": "Special 1"
+          },
+          {
+            "value": "special2",
+            "label": "Special 2"
+          },
+          {
+            "value": "special3",
+            "label": "Special 3"
+          },
+          {
+            "value": "biography",
+            "label": "Biography"
+          }
+        ]
+      }
+    },
+    {
+      "name": "13-biography",
+      "slug": "absorbing-man",
+      "chapter": "biography",
+      "target": "entry",
+      "sig": 200,
+      "query": "",
+      "url": "http://localhost:3000/champions/absorbing-man?tab=abilities&rarity=7&rank=6&sig=200&ascension=0&chapter=biography",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "documentWidth": 390,
+      "scrollY": 520,
+      "targetTop": 195.90625,
+      "barBottom": 172,
+      "readerHeight": 811.6875,
+      "firstPassageOffset": null,
+      "transitions": [],
+      "paragraphGeometry": [],
+      "semantics": {
+        "articles": [
+          {
+            "id": "dossier-biography",
+            "text": "BiographyCarl Crusher Creel was an American professional Heavyweight boxer turned enforcer. While locked up in prison he was mutated using Asgardian magic by the trickster god Loki using a special potion. Creel then obtained the ability to absorb the properties of anything he touches and used his new-found power to break free from prison and soon became a villain for hire. He was later recruited into the Masters of Evil by Baron Zemo.",
+            "records": [],
+            "links": [],
+            "controls": []
+          }
+        ],
+        "status": "1 passage in Biography",
+        "options": [
+          {
+            "value": "all",
+            "label": "All abilities"
+          },
+          {
+            "value": "signature",
+            "label": "Signature Ability"
+          },
+          {
+            "value": "base",
+            "label": "Base Abilities"
+          },
+          {
+            "value": "special1",
+            "label": "Special 1"
+          },
+          {
+            "value": "special2",
+            "label": "Special 2"
+          },
+          {
+            "value": "special3",
+            "label": "Special 3"
+          },
+          {
+            "value": "biography",
+            "label": "Biography"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": []
+}

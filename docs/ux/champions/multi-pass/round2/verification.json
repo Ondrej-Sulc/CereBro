@@ -1,0 +1,81 @@
+{
+  "round": "round2",
+  "semanticCases": 10,
+  "allFit": true,
+  "errors": [],
+  "criteria": {
+    "richHeaders": [
+      {
+        "name": "04-specials-mobile",
+        "before": [
+          {
+            "label": "Special 1",
+            "height": 76,
+            "propertyCount": 5,
+            "propertyLines": 2,
+            "propertiesWidth": 187.734375
+          },
+          {
+            "label": "Special 2",
+            "height": 76,
+            "propertyCount": 4,
+            "propertyLines": 2,
+            "propertiesWidth": 181.6875
+          }
+        ],
+        "after": [
+          {
+            "label": "Special 1",
+            "height": 76,
+            "propertyCount": 5,
+            "propertyLines": 1,
+            "propertiesWidth": 324
+          },
+          {
+            "label": "Special 2",
+            "height": 76,
+            "propertyCount": 4,
+            "propertyLines": 1,
+            "propertiesWidth": 324
+          }
+        ]
+      },
+      {
+        "name": "05-specials-small",
+        "before": [
+          {
+            "label": "Special 1",
+            "height": 105,
+            "propertyCount": 5,
+            "propertyLines": 3,
+            "propertiesWidth": 117.734375
+          },
+          {
+            "label": "Special 2",
+            "height": 76,
+            "propertyCount": 4,
+            "propertyLines": 2,
+            "propertiesWidth": 111.6875
+          }
+        ],
+        "after": [
+          {
+            "label": "Special 1",
+            "height": 105,
+            "propertyCount": 5,
+            "propertyLines": 2,
+            "propertiesWidth": 254
+          },
+          {
+            "label": "Special 2",
+            "height": 76,
+            "propertyCount": 4,
+            "propertyLines": 1,
+            "propertiesWidth": 254
+          }
+        ]
+      }
+    ],
+    "ordinaryHeadersUnchanged": true
+  }
+}

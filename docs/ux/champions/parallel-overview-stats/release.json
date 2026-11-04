@@ -1,0 +1,49 @@
+{
+  "verifiedAt": "2026-11-04T14:47:07.831Z",
+  "url": "https://cerebro-bot.com",
+  "releaseCommit": "2443380c61911c499d2efc13ede361f68d22ec6d",
+  "production": [
+    {
+      "service": "CereBro - Website",
+      "deploymentId": "4dff30f7-0ae7-4053-9fa4-16a5f9bc5b1c",
+      "status": "SUCCESS"
+    },
+    {
+      "service": "CereBro - Bot",
+      "deploymentId": "12bd2e96-f5dd-476a-a704-83ac69b34ef7",
+      "status": "SUCCESS"
+    }
+  ],
+  "httpChecks": [
+    {
+      "path": "/champions/star-lord-kitty-pryde?tab=synergies&rarity=7&rank=6&sig=200",
+      "status": 200,
+      "version": "2443380c61911c499d2efc13ede361f68d22ec6d",
+      "nativeIconReferences": 20,
+      "titlePresent": true
+    },
+    {
+      "path": "/champions/absorbing-man?tab=stats&rarity=7&rank=6&sig=200",
+      "status": 200,
+      "version": "2443380c61911c499d2efc13ede361f68d22ec6d",
+      "ratingsAndAttacksPresent": true
+    }
+  ],
+  "ci": {
+    "originalRun": "https://github.com/Ondrej-Sulc/CereBro/actions/runs/41848108261",
+    "originalFailure": "Web build TypeScript worker exhausted the default approximately 2GB Node heap; all preceding checks passed.",
+    "correctionCommit": "58e871facc94469147c395efc95d7c78fd6c927f",
+    "change": "Set the CI web-build step NODE_OPTIONS to --max-old-space-size=4096, matching the Railway Docker build.",
+    "run": "https://github.com/Ondrej-Sulc/CereBro/actions/runs/41849495763",
+    "status": "completed",
+    "conclusion": "success"
+  },
+  "nextCandidate": {
+    "status": "local, uncommitted, not deployed",
+    "productionFiles": [
+      "web/src/app/champions/[slug]/champion-kit-overview.tsx",
+      "web/src/app/champions/[slug]/champion-stats-panel.tsx",
+      "web/src/app/champions/[slug]/champion-dossier.module.css"
+    ]
+  }
+}

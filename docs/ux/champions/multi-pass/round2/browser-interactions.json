@@ -1,0 +1,12 @@
+{
+  "specialCollapseAndExpand": true,
+  "hitKeyboardHelp": true,
+  "hitTouchHelp": true,
+  "specialAbilityNavigation": true,
+  "destination": {
+    "url": "http://localhost:3000/champions/absorbing-man?tab=abilities&rarity=7&rank=6&sig=200&ascension=0&chapter=special1",
+    "chapter": "special1",
+    "heading": "Special Attack 1 - Uru Rush"
+  },
+  "errors": []
+}

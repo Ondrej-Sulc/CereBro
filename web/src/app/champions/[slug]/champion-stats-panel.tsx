@@ -10,10 +10,7 @@ export function ChampionStatsPanel({ view, onViewAbility }: { view: ChampionDeta
   return (
     <section aria-labelledby="champion-stats-heading">
       <div className={styles.statsHeader}>
-        <div>
-          <h2 id="champion-stats-heading" className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Combat ratings</h2>
-          <p className="mt-3 text-base leading-7 text-slate-400">The offensive and defensive details of your selected build.</p>
-        </div>
+        <h2 id="champion-stats-heading" className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">Combat ratings</h2>
         {stat && <dl className={styles.statsBuildContext}>
           <div><dt>Level</dt><dd>{stat.level ?? "—"}</dd></div>
           <div><dt>Challenger rating</dt><dd>{stat.challengeRating}</dd></div>

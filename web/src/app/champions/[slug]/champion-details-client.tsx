@@ -266,10 +266,11 @@ function DossierBuildControls({ view }: { view: ChampionDetailsView }) {
         <PopoverTrigger asChild><button type="button" className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-white/15 bg-white/[.035] px-3 text-sm font-medium text-slate-200 transition-colors hover:border-white/30 hover:bg-white/[.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"><SlidersHorizontal aria-hidden="true" className="h-4 w-4" />Adjust build</button></PopoverTrigger>
         <PopoverContent align="end" sideOffset={12} collisionPadding={16} aria-label="Adjust champion build" aria-describedby="champion-build-description" className="w-[min(420px,calc(100vw-2rem))] max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-xl border-white/15 bg-[#101620] p-5 text-slate-200 shadow-2xl">
           <div className="mb-5"><h2 className="text-lg font-semibold text-white">Adjust build</h2><p id="champion-build-description" className="mt-1 text-sm leading-6 text-slate-400">Stats and abilities update as you adjust.</p></div>
-          <div className="grid grid-cols-2 items-end gap-4">
+          <div className={styles.buildFields} data-ascendable={view.selectedStat.rarity === 7}>
             <BuildSelect label="Rarity" value={view.selectedRarity} onChange={view.setRarity} options={view.rarityOptions.map(rarity => ({ value: String(rarity), label: `${rarity} ★` }))} />
             <BuildSelect label="Rank" value={view.selectedRank} onChange={view.setRank} options={view.rankOptions.map(rank => ({ value: String(rank), label: `Rank ${rank}` }))} />
-            <div className="col-span-2">
+            {view.selectedStat.rarity === 7 && <BuildSelect label="Ascension" value={String(view.ascensionLevel)} onChange={value => view.setAscensionLevel(Number(value))} options={[0, 1, 2, 3, 4, 5].map(level => ({ value: String(level), label: `A${level}` }))} />}
+            <div className={styles.buildSignature}>
               <label htmlFor="champion-signature-value" className="mb-1.5 block text-xs font-medium text-slate-400">Signature</label>
               <div className="flex h-10 items-center gap-4">
                 <input aria-label="Signature level" type="range" min={0} max={view.maxSig} value={view.sigLevel} onChange={event => view.setSigLevel(Number(event.target.value))} className="h-1.5 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-white/10" style={{ accentColor: view.accent }} />
@@ -277,7 +278,6 @@ function DossierBuildControls({ view }: { view: ChampionDetailsView }) {
               </div>
               <p id="champion-signature-help" className="mt-2 text-xs leading-5 text-slate-400">0–{view.maxSig}. Press Enter or leave the number field to apply.</p>
             </div>
-            {view.selectedStat.rarity === 7 && <BuildSelect label="Ascension" value={String(view.ascensionLevel)} onChange={value => view.setAscensionLevel(Number(value))} options={[0, 1, 2, 3, 4, 5].map(level => ({ value: String(level), label: `A${level}` }))} />}
           </div>
           <div className="mt-5 flex items-center justify-between gap-3 border-t border-white/10 pt-4"><CopyPageLink onClick={copyLink} /><button type="button" onClick={() => setOpen(false)} className="min-h-10 rounded-lg bg-slate-200 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#101620]">Done</button></div>
         </PopoverContent>

@@ -1,0 +1,1298 @@
+{
+  "layouts": [
+    {
+      "width": 320,
+      "slug": "absorbing-man",
+      "kit": {
+        "documentWidth": 320,
+        "shortDefinitions": 0,
+        "smallSources": 0,
+        "clippedCards": 0
+      },
+      "stats": {
+        "documentWidth": 320,
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "306"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,018"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "448"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "4,125"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "688"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "smallLabels": 0,
+        "clippedLabels": 0
+      }
+    },
+    {
+      "width": 320,
+      "slug": "star-lord-kitty-pryde",
+      "kit": {
+        "documentWidth": 320,
+        "shortDefinitions": 0,
+        "smallSources": 0,
+        "clippedCards": 0
+      },
+      "stats": {
+        "documentWidth": 320,
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "1,236"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,468"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "1,124"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "5,108"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "smallLabels": 0,
+        "clippedLabels": 0
+      }
+    },
+    {
+      "width": 320,
+      "slug": "ms-marvel",
+      "kit": {
+        "documentWidth": 320,
+        "shortDefinitions": 0,
+        "smallSources": 0,
+        "clippedCards": 0
+      },
+      "stats": {
+        "documentWidth": 320,
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "65"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "150"
+          },
+          {
+            "label": "Critical rating",
+            "value": "791"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,500"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "563"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "3,238"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "smallLabels": 0,
+        "clippedLabels": 0
+      }
+    },
+    {
+      "width": 390,
+      "slug": "absorbing-man",
+      "kit": {
+        "documentWidth": 390,
+        "shortDefinitions": 0,
+        "smallSources": 0,
+        "clippedCards": 0
+      },
+      "stats": {
+        "documentWidth": 390,
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "306"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,018"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "448"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "4,125"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "688"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "smallLabels": 0,
+        "clippedLabels": 0
+      }
+    },
+    {
+      "width": 390,
+      "slug": "star-lord-kitty-pryde",
+      "kit": {
+        "documentWidth": 390,
+        "shortDefinitions": 0,
+        "smallSources": 0,
+        "clippedCards": 0
+      },
+      "stats": {
+        "documentWidth": 390,
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "1,236"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,468"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "1,124"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "5,108"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "smallLabels": 0,
+        "clippedLabels": 0
+      }
+    },
+    {
+      "width": 390,
+      "slug": "ms-marvel",
+      "kit": {
+        "documentWidth": 390,
+        "shortDefinitions": 0,
+        "smallSources": 0,
+        "clippedCards": 0
+      },
+      "stats": {
+        "documentWidth": 390,
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "65"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "150"
+          },
+          {
+            "label": "Critical rating",
+            "value": "791"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,500"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "563"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "3,238"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "smallLabels": 0,
+        "clippedLabels": 0
+      }
+    },
+    {
+      "width": 640,
+      "slug": "absorbing-man",
+      "kit": {
+        "documentWidth": 640,
+        "shortDefinitions": 0,
+        "smallSources": 0,
+        "clippedCards": 0
+      },
+      "stats": {
+        "documentWidth": 640,
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "306"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,018"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "448"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "4,125"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "688"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "smallLabels": 0,
+        "clippedLabels": 0
+      }
+    },
+    {
+      "width": 640,
+      "slug": "star-lord-kitty-pryde",
+      "kit": {
+        "documentWidth": 640,
+        "shortDefinitions": 0,
+        "smallSources": 0,
+        "clippedCards": 0
+      },
+      "stats": {
+        "documentWidth": 640,
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "1,236"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,468"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "1,124"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "5,108"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "smallLabels": 0,
+        "clippedLabels": 0
+      }
+    },
+    {
+      "width": 640,
+      "slug": "ms-marvel",
+      "kit": {
+        "documentWidth": 640,
+        "shortDefinitions": 0,
+        "smallSources": 0,
+        "clippedCards": 0
+      },
+      "stats": {
+        "documentWidth": 640,
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "65"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "150"
+          },
+          {
+            "label": "Critical rating",
+            "value": "791"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,500"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "563"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "3,238"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "smallLabels": 0,
+        "clippedLabels": 0
+      }
+    },
+    {
+      "width": 768,
+      "slug": "absorbing-man",
+      "kit": {
+        "documentWidth": 768,
+        "shortDefinitions": 0,
+        "smallSources": 0,
+        "clippedCards": 0
+      },
+      "stats": {
+        "documentWidth": 768,
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "306"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,018"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "448"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "4,125"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "688"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "smallLabels": 0,
+        "clippedLabels": 0
+      }
+    },
+    {
+      "width": 768,
+      "slug": "star-lord-kitty-pryde",
+      "kit": {
+        "documentWidth": 768,
+        "shortDefinitions": 0,
+        "smallSources": 0,
+        "clippedCards": 0
+      },
+      "stats": {
+        "documentWidth": 768,
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "1,236"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,468"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "1,124"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "5,108"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "smallLabels": 0,
+        "clippedLabels": 0
+      }
+    },
+    {
+      "width": 768,
+      "slug": "ms-marvel",
+      "kit": {
+        "documentWidth": 768,
+        "shortDefinitions": 0,
+        "smallSources": 0,
+        "clippedCards": 0
+      },
+      "stats": {
+        "documentWidth": 768,
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "65"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "150"
+          },
+          {
+            "label": "Critical rating",
+            "value": "791"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,500"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "563"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "3,238"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "smallLabels": 0,
+        "clippedLabels": 0
+      }
+    },
+    {
+      "width": 1024,
+      "slug": "absorbing-man",
+      "kit": {
+        "documentWidth": 1024,
+        "shortDefinitions": 0,
+        "smallSources": 0,
+        "clippedCards": 0
+      },
+      "stats": {
+        "documentWidth": 1024,
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "306"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,018"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "448"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "4,125"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "688"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "smallLabels": 0,
+        "clippedLabels": 0
+      }
+    },
+    {
+      "width": 1024,
+      "slug": "star-lord-kitty-pryde",
+      "kit": {
+        "documentWidth": 1024,
+        "shortDefinitions": 0,
+        "smallSources": 0,
+        "clippedCards": 0
+      },
+      "stats": {
+        "documentWidth": 1024,
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "1,236"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,468"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "1,124"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "5,108"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "smallLabels": 0,
+        "clippedLabels": 0
+      }
+    },
+    {
+      "width": 1024,
+      "slug": "ms-marvel",
+      "kit": {
+        "documentWidth": 1024,
+        "shortDefinitions": 0,
+        "smallSources": 0,
+        "clippedCards": 0
+      },
+      "stats": {
+        "documentWidth": 1024,
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "65"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "150"
+          },
+          {
+            "label": "Critical rating",
+            "value": "791"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,500"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "563"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "3,238"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "smallLabels": 0,
+        "clippedLabels": 0
+      }
+    },
+    {
+      "width": 1536,
+      "slug": "absorbing-man",
+      "kit": {
+        "documentWidth": 1536,
+        "shortDefinitions": 0,
+        "smallSources": 0,
+        "clippedCards": 0
+      },
+      "stats": {
+        "documentWidth": 1536,
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "306"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,018"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "448"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "4,125"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "688"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "smallLabels": 0,
+        "clippedLabels": 0
+      }
+    },
+    {
+      "width": 1536,
+      "slug": "star-lord-kitty-pryde",
+      "kit": {
+        "documentWidth": 1536,
+        "shortDefinitions": 0,
+        "smallSources": 0,
+        "clippedCards": 0
+      },
+      "stats": {
+        "documentWidth": 1536,
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "75"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "250"
+          },
+          {
+            "label": "Critical rating",
+            "value": "1,236"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,468"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "1,124"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "5,108"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "smallLabels": 0,
+        "clippedLabels": 0
+      }
+    },
+    {
+      "width": 1536,
+      "slug": "ms-marvel",
+      "kit": {
+        "documentWidth": 1536,
+        "shortDefinitions": 0,
+        "smallSources": 0,
+        "clippedCards": 0
+      },
+      "stats": {
+        "documentWidth": 1536,
+        "ratings": [
+          {
+            "label": "Level",
+            "value": "65"
+          },
+          {
+            "label": "Challenger rating",
+            "value": "150"
+          },
+          {
+            "label": "Critical rating",
+            "value": "791"
+          },
+          {
+            "label": "Critical damage rating",
+            "value": "1,500"
+          },
+          {
+            "label": "Armor penetration",
+            "value": "0"
+          },
+          {
+            "label": "Block penetration",
+            "value": "0"
+          },
+          {
+            "label": "Special damage multiplier",
+            "value": "1.20×"
+          },
+          {
+            "label": "Armor rating",
+            "value": "563"
+          },
+          {
+            "label": "Block proficiency",
+            "value": "3,238"
+          },
+          {
+            "label": "Critical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Physical resistance",
+            "value": "0"
+          },
+          {
+            "label": "Energy resistance",
+            "value": "0"
+          }
+        ],
+        "smallLabels": 0,
+        "clippedLabels": 0
+      }
+    }
+  ],
+  "jump": {
+    "top": 195.90625,
+    "barBottom": 172
+  },
+  "definitionKeyboard": true,
+  "definitionTouch": true,
+  "sourceName": "Read Black Uru Form: Special 1",
+  "ability": {
+    "url": "http://localhost:3000/champions/absorbing-man?tab=abilities&rarity=7&rank=6&sig=200&ascension=0&ability=79022",
+    "id": "ability-record-79022",
+    "top": 517.09375,
+    "barBottom": 172
+  },
+  "synergy": {
+    "url": "http://localhost:3000/champions/absorbing-man?tab=synergies&rarity=7&rank=6&sig=200&ascension=0&synergy=absorb_05",
+    "id": "champion-synergy-absorb_05",
+    "top": 196.09375,
+    "barBottom": 172
+  },
+  "rankChange": {
+    "before": [
+      {
+        "label": "Level",
+        "value": "75"
+      },
+      {
+        "label": "Challenger rating",
+        "value": "250"
+      },
+      {
+        "label": "Critical rating",
+        "value": "306"
+      },
+      {
+        "label": "Critical damage rating",
+        "value": "1,018"
+      },
+      {
+        "label": "Armor penetration",
+        "value": "0"
+      },
+      {
+        "label": "Block penetration",
+        "value": "0"
+      },
+      {
+        "label": "Special damage multiplier",
+        "value": "1.20×"
+      },
+      {
+        "label": "Armor rating",
+        "value": "448"
+      },
+      {
+        "label": "Block proficiency",
+        "value": "4,125"
+      },
+      {
+        "label": "Critical resistance",
+        "value": "688"
+      },
+      {
+        "label": "Physical resistance",
+        "value": "0"
+      },
+      {
+        "label": "Energy resistance",
+        "value": "0"
+      }
+    ],
+    "after": [
+      {
+        "label": "Level",
+        "value": "55"
+      },
+      {
+        "label": "Challenger rating",
+        "value": "230"
+      },
+      {
+        "label": "Critical rating",
+        "value": "295"
+      },
+      {
+        "label": "Critical damage rating",
+        "value": "981"
+      },
+      {
+        "label": "Armor penetration",
+        "value": "0"
+      },
+      {
+        "label": "Block penetration",
+        "value": "0"
+      },
+      {
+        "label": "Special damage multiplier",
+        "value": "1.20×"
+      },
+      {
+        "label": "Armor rating",
+        "value": "396"
+      },
+      {
+        "label": "Block proficiency",
+        "value": "3,975"
+      },
+      {
+        "label": "Critical resistance",
+        "value": "663"
+      },
+      {
+        "label": "Physical resistance",
+        "value": "0"
+      },
+      {
+        "label": "Energy resistance",
+        "value": "0"
+      }
+    ]
+  },
+  "buildFocusReturn": true,
+  "attackDisclosure": true,
+  "errors": []
+}

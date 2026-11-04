@@ -1,0 +1,9 @@
+# Three-iteration champion visual pilot
+
+2026-11-04. User explicitly requested multiple iterations. The previously approved local overview, ratings and reader refinements are the incumbent. Run three sequential candidates, retaining each only after matched evidence, relevant checks and an independent review. No deployment is planned.
+
+1. Recorded-hit summary: remove repeated structural height while keeping the damage-type bar, every category/count and independent contact/projectile totals. Target at least 20% less profile height at 390px, no clipping at 320px, and legend/contact type at least 12px (previously 11px). Counts describe recorded hits, not damage percentages.
+2. Property-heavy attack headers: on narrow screens give moves with four or more properties a full-width property line; below 360px do the same for three-property moves. The baseline shows the three-property reference already fits at 390px but wraps heavily at 320px. Target fewer wrapped property lines for Ms. Marvel at 320/390px; ordinary two-property header height and the wider three-property reference must stay unchanged. Preserve every chip, move/title/count, read-ability destination and disclosure default.
+3. Build editor: align Rarity, Rank and Ascension together when space permits, followed by full-width Signature. Target at least 48px less popover height for a 7★ build at 390px. Keep narrow and 6★ layouts usable, exact options/values, signature draft/commit, clipboard URL, Escape and focus return intact.
+
+Each round captures its actual incumbent before editing. Three public champions and phone/desktop/320px cases cover the source facts and main layouts; retain a reference case that each candidate does not affect. Keep imported data/calculations unchanged. At the end, stop this pilot and show comparisons for all retained rounds, reporting any failed criterion or limitation.

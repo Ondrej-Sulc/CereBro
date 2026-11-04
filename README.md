@@ -59,6 +59,9 @@ The [second visual pass](docs/ux/champions/visual-2/notes.md) extends that styli
 The [synergy-card pass](docs/ux/champions/visual-3/notes.md) clarifies partners, recipients, levels and star requirements, completing the visual pilot.
 The user's reference then prompted a [compact synergy-row redesign](docs/ux/champions/compact-synergies/notes.md), fitting the same six desktop synergies into 53% less list height without hiding bonus text. A [quieter follow-up](docs/ux/champions/compact-refinement/notes.md) removes repeated row wording and improves mobile density further.
 The [requirements-panel follow-up](docs/ux/champions/requirements-panels/notes.md) aligns full-name partner links and exact star ranges while preserving compact closed rows and native synergy icons.
+After that release, the [parallel overview and ratings pass](docs/ux/champions/parallel-overview-stats/notes.md) reduces structural spacing while preserving source conditions and exact stats.
+The [reader refinement](docs/ux/champions/reader-refinement/notes.md) consolidates scoped search feedback and removes compounded group spacing without changing paragraph dimensions.
+The [three-iteration follow-up](docs/ux/champions/multi-pass/notes.md) improves recorded-hit summaries, narrow attack headers and build-editor alignment, with a baseline and review for each candidate.
 
 Before deploying code that reads synergies, apply the database migrations with `pnpm exec prisma migrate deploy` and generate the client with `pnpm prisma:generate`. Refresh the champion catalog first so its game IDs and obtainable rarities are current.
 

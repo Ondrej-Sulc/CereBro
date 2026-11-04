@@ -1,0 +1,154 @@
+﻿{
+    "description":  "Retained local reader refinement with matched incumbent evidence",
+    "createdAt":  "2026-11-04T16:31:26.8314166+01:00",
+    "files":  [
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/after/01-mobile-all.png",
+                      "sha256":  "d4783dfaadada91dedee56832ccf804930edadf0f1da1beaaee0dba6c15fd183"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/after/02-desktop-all.png",
+                      "sha256":  "70074325fef5a7ec672a38384423dd4cd06126e14758e42cc0ccbbad0779a54f"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/after/03-mobile-base.png",
+                      "sha256":  "dbe3a44381c1d59c323db7633683bc4412166626d1c82f522072da40e00d9090"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/after/04-desktop-base.png",
+                      "sha256":  "ea438945b439ed649b6dc7642f43519821735d41ab9f06a11581f6c3bf9bef44"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/after/05-small-base.png",
+                      "sha256":  "2c00a4d50c3976445355575be4f2d0b7194eefa1c2fcc1bb9f5742cb9977e854"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/after/06-mobile-group-transition.png",
+                      "sha256":  "dd397d784c584f2a715bca26eff13c7805662699691a405008fa3e78eb2ddf76"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/after/07-desktop-group-transition.png",
+                      "sha256":  "1b52778ad55f9fd5aa893accbd10b3086ae496d92903b86f58ff8777cd248e48"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/after/08-linked-passage.png",
+                      "sha256":  "0118c38dde63940cd211b6ec095a0f367f725b686393448192a0d91bd4a499a5"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/after/09-unawakened.png",
+                      "sha256":  "e80e4e73528c856792c641b89bf985277a335053c949fa24e97a11c97a67c9e4"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/after/10-sparse-signature.png",
+                      "sha256":  "4d3d8bfaa2ec753b468529c7d299b1443bef1ca80607dbc0a18dde52a082d039"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/after/11-long-name-base.png",
+                      "sha256":  "6752a559cfbe1fcc9796cf446dc2dd7ad6df08a06c45569b734f94dfdb14d599"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/after/12-scoped-no-results.png",
+                      "sha256":  "e5488606eb44be9250a4412285b9c3d38c3122e37731294460d1fb3331def3b0"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/after/13-biography.png",
+                      "sha256":  "2790345e63c758ee642439cefb6f7fe127234ac306c84b0fc1f4fd3565e8641b"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/after/evidence.json",
+                      "sha256":  "07a4ea33608ede57c34d45cc425b87e6a61cff79ca756b99bd08f62151bcab83"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/before/01-mobile-all.png",
+                      "sha256":  "998e0fb319cbcb220ee511c257c4bc594b1e9c2c2b33419c4f602e701cb89696"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/before/02-desktop-all.png",
+                      "sha256":  "bbacb43957deeefe7f15fce2b4f7d390684b8ac1f9f5b63d30d1131092f85ab6"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/before/03-mobile-base.png",
+                      "sha256":  "3b484dad82555a0e7e4f2daed0eb218782d414818fee028d0d60fcdac39f114d"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/before/04-desktop-base.png",
+                      "sha256":  "d8aa1f0f54d10c9cf9681aa186c2531167737754ac47d2c6762c8f710c34caf8"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/before/05-small-base.png",
+                      "sha256":  "34610c470a85e6e9be4b66bc729e04592d34e865385157837fc2591362bb8be0"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/before/06-mobile-group-transition.png",
+                      "sha256":  "71410507f49365ba50715a720a48e7d240c2e8f7133a3fab3298b26841073db5"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/before/07-desktop-group-transition.png",
+                      "sha256":  "9748044909733eb769a2f7c077f848752f6d569f1937d39ea130ca0bd8343d9c"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/before/08-linked-passage.png",
+                      "sha256":  "f6f0b97419aedf1a677daeb2ee9c67afba661d6f3f87c02a712c711b3257c2a0"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/before/09-unawakened.png",
+                      "sha256":  "803d7dee903c7b3fd2a99ad57d60a005e3d78327166a40d316db4fc5e2f15f8d"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/before/10-sparse-signature.png",
+                      "sha256":  "d23d13aaa63e3cecee468e48470ce1cd97cd2f7785de8889025429a940aff8c7"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/before/11-long-name-base.png",
+                      "sha256":  "34521cb57e700e89f3fa11f5a41247c001ce69c44a323484e718e18d0e7a710c"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/before/12-scoped-no-results.png",
+                      "sha256":  "bfcfafdae5d7b6ac56c7e33b3f8d5f2fc6c10d31bd5bc7e1077f1652ff6a1748"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/before/13-biography.png",
+                      "sha256":  "da35aa623e1c8299b0ca20d11fd2bb26b5ac83273d094ff2030892c588648617"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/before/evidence.json",
+                      "sha256":  "33db766496f011afe0eda1200138eff5c7638798dd72b44821211f89561cb558"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/browser-smoke.json",
+                      "sha256":  "e6aa392c6015e32b6fc1767f6d2ce7e0db9a7cf7ec32dc7e130412ed416abf5a"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/comparison.html",
+                      "sha256":  "be10d37054f7d7c4ec25443d2ce837d730066a6c89ae564918a602ae54ae96e7"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/experiment.md",
+                      "sha256":  "02e581b543691858c8c5a9a378b6416a999c261828e169845a937ffae30bbad3"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/incumbent-manifest.json",
+                      "sha256":  "56790b49769af9409fbaf103d20c5c085f102538d1b12b42a18f31377bb543aa"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/layout-checks.json",
+                      "sha256":  "3d6e9b7bbf2c6e2f96af398045863488b54f9618ae03dd948947f13902e7b97d"
+                  },
+                  {
+                      "path":  "docs/ux/champions/reader-refinement/notes.md",
+                      "sha256":  "71b90bd3fb99a798120538d998b659e8c7df49f3f21adc8742b83ff9be38fe64"
+                  },
+                  {
+                      "path":  "README.md",
+                      "sha256":  "f5a3955a69825bbb2555ff0adfe096cd2611ce56bd68067ccd5a9b4773d2046b"
+                  },
+                  {
+                      "path":  "web/src/app/champions/[slug]/champion-ability-reader.tsx",
+                      "sha256":  "e61aa32d8382a10760420f31f1e2c41df58c3c842941808d3b07ec026feafc89"
+                  },
+                  {
+                      "path":  "web/src/app/champions/[slug]/champion-dossier.module.css",
+                      "sha256":  "1898af5cb363c68d976710f9be7c9d6ee18e0fb577b7c3a39693f4720ee29222"
+                  }
+              ]
+}

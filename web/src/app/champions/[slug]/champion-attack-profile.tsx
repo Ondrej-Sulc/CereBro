@@ -48,7 +48,7 @@ function AttackHitProfile({ attacks }: { attacks: Attack[] }) {
     { label: "Other / unspecified", count: profile.damage.other, color: "#94a3b8" },
   ].filter(type => type.count > 0)
   return <figure className={styles.attackHitProfile}>
-    <figcaption className={styles.attackHitProfileLabel}><Orbit aria-hidden="true" /><div><p>Hit profile</p><span>Recorded hits by damage type</span></div></figcaption>
+    <figcaption className={styles.attackHitProfileLabel}><Orbit aria-hidden="true" /><p>Recorded hits by damage type</p></figcaption>
     <div className={styles.attackHitDistribution}>
       <div aria-hidden="true" className={styles.attackHitBar}>{damageTypes.map(type => <span key={type.label} style={{ flexGrow: type.count, backgroundColor: type.color }} />)}</div>
       <ul className={styles.attackHitLegend}>{damageTypes.map(type => <li key={type.label}><span aria-hidden="true" style={{ backgroundColor: type.color }} />{type.label}<strong>{type.count} {type.count === 1 ? "hit" : "hits"}</strong></li>)}</ul>
@@ -62,6 +62,7 @@ function AttackHitProfile({ attacks }: { attacks: Attack[] }) {
 
 function AttackMove({ attack, panels, onViewAbility }: { attack: Attack } & AttackNavigation) {
   const properties = Array.from(new Set(attack.hits.flatMap(hit => hit.properties)))
+  const propertyLayout = properties.length >= 4 ? "rich" : properties.length === 3 ? "triple" : undefined
   const hasSequence = attack.hits.length > 1
   const specialNumber = Number(attack.type.slice(1))
   const panel = attack.type.startsWith("S") ? panels.find(panel => championAbilityPanelMatchesChapter(panel, `special${specialNumber}`)) : undefined
@@ -71,18 +72,18 @@ function AttackMove({ attack, panels, onViewAbility }: { attack: Attack } & Atta
     : null
   const summary = <>
     <span className={styles.attackMoveLabel} data-special={attack.type.startsWith("S")}>{attackLabel(attack.type)}</span>
-    <span className="flex min-w-0 flex-wrap gap-1.5">{properties.map(property => <Property key={property} property={property} />)}</span>
-    <span className="flex shrink-0 items-center justify-end gap-2 whitespace-nowrap text-xs tabular-nums text-slate-400">{attack.hits.length} {attack.hits.length === 1 ? "hit" : "hits"}<span className="w-4">{hasSequence && <ChevronDown aria-hidden="true" className="h-4 w-4 transition-transform group-open/move:rotate-180" />}</span></span>
+    <span className={`${styles.attackMoveProperties} flex min-w-0 flex-wrap gap-1.5`}>{properties.map(property => <Property key={property} property={property} />)}</span>
+    <span className={`${styles.attackMoveHitCount} flex shrink-0 items-center justify-end gap-2 whitespace-nowrap text-xs tabular-nums text-slate-400`}>{attack.hits.length} {attack.hits.length === 1 ? "hit" : "hits"}<span className="w-4">{hasSequence && <ChevronDown aria-hidden="true" className="h-4 w-4 transition-transform group-open/move:rotate-180" />}</span></span>
     {title && <span className="col-span-full text-sm leading-5 text-slate-400">{title}</span>}
   </>
-  const rowClassName = "grid min-h-14 grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 px-3 py-3 sm:grid-cols-[5rem_minmax(0,1fr)_auto] sm:gap-x-3 sm:px-4"
+  const rowClassName = `${styles.attackMoveHeader} grid min-h-14 grid-cols-[4.5rem_minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 px-3 py-3 sm:grid-cols-[5rem_minmax(0,1fr)_auto] sm:gap-x-3 sm:px-4`
 
   if (!hasSequence) {
-    return <div className={styles.attackMove}><div className={rowClassName}>{summary}</div>{abilityLink}</div>
+    return <div className={styles.attackMove}><div className={rowClassName} data-property-layout={propertyLayout}>{summary}</div>{abilityLink}</div>
   }
 
   return <details open={attack.type.startsWith("S")} className={`group/move ${styles.attackMove}`}>
-    <summary className={`${rowClassName} cursor-pointer list-none transition-colors hover:bg-white/[.025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 [&::-webkit-details-marker]:hidden`}>{summary}</summary>
+    <summary data-property-layout={propertyLayout} className={`${rowClassName} cursor-pointer list-none transition-colors hover:bg-white/[.025] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-slate-400 [&::-webkit-details-marker]:hidden`}>{summary}</summary>
     <HitSequence attack={attack} />
     {abilityLink}
   </details>
