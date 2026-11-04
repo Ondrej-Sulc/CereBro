@@ -1,0 +1,114 @@
+{
+  "tests": {
+    "passed": 76,
+    "files": 5
+  },
+  "webTypeScript": "passed",
+  "changedUiEslint": "passed; existing baseline-browser-mapping freshness notice",
+  "linkedPassage": {
+    "button": [
+      {
+        "aria": "dialog",
+        "text": "25"
+      },
+      {
+        "aria": "dialog",
+        "text": "Combat Power Rate"
+      },
+      {
+        "aria": "dialog",
+        "text": "12"
+      }
+    ],
+    "effect": "Energize",
+    "focused": "ability-record-84357",
+    "markers": [
+      {
+        "effect": "Disorient",
+        "hidden": "true",
+        "mask": "url(\"https://storage.googleapis.com/champion-images/mcoc/glossary-icons/disorient.svg\")"
+      },
+      {
+        "effect": "Energize",
+        "hidden": "true",
+        "mask": "url(\"https://storage.googleapis.com/champion-images/mcoc/glossary-icons/energize.svg\")"
+      }
+    ],
+    "target": "Cosmic Mode: Gain an Energize Buff, granting 25% increased Combat Power Rate for 12 second(s)."
+  },
+  "search": {
+    "headings": [],
+    "marks": [
+      "Energize"
+    ],
+    "records": [
+      {
+        "effect": "Energize",
+        "id": "ability-record-84357",
+        "text": "Cosmic Mode: Gain an Energize Buff, granting 25% increased Combat Power Rate for 12 second(s)."
+      }
+    ],
+    "status": [
+      "1 passage found in Special 2"
+    ]
+  },
+  "layouts": [
+    {
+      "clipped": [],
+      "documentWidth": 312,
+      "width": 320
+    },
+    {
+      "clipped": [],
+      "documentWidth": 382,
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "documentWidth": 760,
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "documentWidth": 1272,
+      "width": 1280
+    }
+  ],
+  "preservation": [
+    {
+      "case": "01-overseer-special2-desktop",
+      "recordsMatch": true,
+      "chaptersMatch": true,
+      "beforePanelHeight": 323,
+      "afterPanelHeight": 236
+    },
+    {
+      "case": "02-overseer-special2-mobile",
+      "recordsMatch": true,
+      "chaptersMatch": true,
+      "beforePanelHeight": 506.5,
+      "afterPanelHeight": 427.5
+    },
+    {
+      "case": "03-overseer-special2-small",
+      "recordsMatch": true,
+      "chaptersMatch": true,
+      "beforePanelHeight": 608.5,
+      "afterPanelHeight": 555
+    },
+    {
+      "case": "04-overseer-base-desktop",
+      "recordsMatch": true,
+      "chaptersMatch": true,
+      "beforePanelHeight": 875.5,
+      "afterPanelHeight": 875.5
+    },
+    {
+      "case": "05-absorbing-base-mobile",
+      "recordsMatch": true,
+      "chaptersMatch": true,
+      "beforePanelHeight": 2770,
+      "afterPanelHeight": 2770
+    }
+  ]
+}

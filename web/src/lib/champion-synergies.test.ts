@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { buildChampionSynergyView, buildSynergyCardContent, highlightSynergyChampionNames, parseSynergyDescription, type ChampionSynergy, type SynergyChampion } from './champion-synergies';
 
 const colossus = { id: 1, name: 'Colossus (AoA)', slug: 'colossus-age-of-apocalypse', images: {} };
@@ -15,6 +15,26 @@ const row: ChampionSynergy = {
 };
 
 describe('champion synergy view', () => {
+  it.each(['cs', 'en'])('keeps English card and partner order consistent when the host locale is %s', locale => {
+    const original = String.prototype.localeCompare;
+    const hostCompare = new Intl.Collator(locale).compare;
+    const comparison = vi.spyOn(String.prototype, 'localeCompare').mockImplementation(function (this: string, other, locales, options) {
+      return locales ? original.call(this, other, locales, options) : hostCompare(String(this), other);
+    });
+    try {
+      const champions = ['Hulk', 'Cyclops', 'Charlie'].map((name, index) => ({ ...magik, id: index + 10, name }));
+      const cards = ['HEROES', 'CROWD PLEASERS', 'CHALLENGER'].map(name => ({ ...row, id: name, name,
+        members: [row.members[0], ...champions.map(champion => ({ role: 'REQUIRED' as const, rarity: 6, champion }))],
+      }));
+      const owned = buildChampionSynergyView(cards, colossus.id, 6).owned;
+      expect(owned.map(card => card.name)).toEqual(['CHALLENGER', 'CROWD PLEASERS', 'HEROES']);
+      expect(owned[0].partners.map(partner => partner.name)).toEqual(['Charlie', 'Cyclops', 'Hulk']);
+      expect(buildChampionSynergyView(cards, champions[0].id, 6).incoming.map(card => card.name)).toEqual(['CHALLENGER', 'CROWD PLEASERS', 'HEROES']);
+    } finally {
+      comparison.mockRestore();
+    }
+  });
+
   it('carries actual classes and both owner/partner identities into each card once', () => {
     const typedRow: ChampionSynergy = { ...row, members: row.members.map(member => ({ ...member, champion: { ...member.champion, class: member.champion.id === 1 ? 'MUTANT' : 'MYSTIC' } })) };
     const owned = buildChampionSynergyView([typedRow], 1, 7).owned[0];

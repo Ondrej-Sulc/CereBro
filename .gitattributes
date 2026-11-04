@@ -3,3 +3,4 @@
 
 # Extracted icons have byte hashes in the verified source manifest.
 web/public/icons/synergies/*.svg text eol=lf
+web/public/icons/stats/*.svg text eol=lf

@@ -1,0 +1,255 @@
+{
+  "tests": {
+    "passed": 86,
+    "files": 7
+  },
+  "rootTypeScript": "passed",
+  "webTypeScript": "passed",
+  "changedUiEslint": "passed; existing baseline-browser-mapping freshness notice",
+  "layouts": [
+    {
+      "clipped": [],
+      "columns": "270px",
+      "documentWidth": 312,
+      "smallTargets": [],
+      "width": 320
+    },
+    {
+      "clipped": [],
+      "columns": "340px",
+      "documentWidth": 382,
+      "smallTargets": [],
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "columns": "694px",
+      "documentWidth": 760,
+      "smallTargets": [],
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "columns": "934px",
+      "documentWidth": 1016,
+      "smallTargets": [],
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "columns": "990px",
+      "documentWidth": 1072,
+      "smallTargets": [],
+      "width": 1080
+    },
+    {
+      "clipped": [],
+      "columns": "494px 494px",
+      "documentWidth": 1080,
+      "smallTargets": [],
+      "width": 1088
+    },
+    {
+      "clipped": [],
+      "columns": "590px 590px",
+      "documentWidth": 1272,
+      "smallTargets": [],
+      "width": 1280
+    },
+    {
+      "clipped": [],
+      "columns": "710px 710px",
+      "documentWidth": 1528,
+      "smallTargets": [],
+      "width": 1536
+    }
+  ],
+  "hydration": {
+    "client": [
+      "champion-synergy-lullaby_1",
+      "champion-synergy-offlimits_1",
+      "champion-synergy-punygod_1",
+      "champion-synergy-teambuilding_1",
+      "champion-synergy-shlk_1",
+      "champion-synergy-joef_02",
+      "champion-synergy-betaraybill_01",
+      "champion-synergy-anni_chall",
+      "champion-synergy-mojo_crowd",
+      "champion-synergy-hbuster_new_banner",
+      "champion-synergy-family-enemy_329",
+      "champion-synergy-family-enemy_359",
+      "champion-synergy-thru_02",
+      "champion-synergy-family-odin_buddy1",
+      "champion-synergy-sorcsup_sb_5",
+      "champion-synergy-grandchamps_1",
+      "champion-synergy-cull_hero",
+      "champion-synergy-overseer_sb_1",
+      "champion-synergy-herc_sb_hulks",
+      "champion-synergy-family-infinityenemies_1",
+      "champion-synergy-family-comp_006",
+      "champion-synergy-gladiator_03",
+      "champion-synergy-thing_hulk",
+      "champion-synergy-capsci_1",
+      "champion-synergy-valk_sb_1",
+      "champion-synergy-falc_new_17",
+      "champion-synergy-cheeilth_06"
+    ],
+    "issues": null,
+    "orderMatches": true,
+    "server": [
+      "champion-synergy-lullaby_1",
+      "champion-synergy-offlimits_1",
+      "champion-synergy-punygod_1",
+      "champion-synergy-teambuilding_1",
+      "champion-synergy-shlk_1",
+      "champion-synergy-joef_02",
+      "champion-synergy-betaraybill_01",
+      "champion-synergy-anni_chall",
+      "champion-synergy-mojo_crowd",
+      "champion-synergy-hbuster_new_banner",
+      "champion-synergy-family-enemy_329",
+      "champion-synergy-family-enemy_359",
+      "champion-synergy-thru_02",
+      "champion-synergy-family-odin_buddy1",
+      "champion-synergy-sorcsup_sb_5",
+      "champion-synergy-grandchamps_1",
+      "champion-synergy-cull_hero",
+      "champion-synergy-overseer_sb_1",
+      "champion-synergy-herc_sb_hulks",
+      "champion-synergy-family-infinityenemies_1",
+      "champion-synergy-family-comp_006",
+      "champion-synergy-gladiator_03",
+      "champion-synergy-thing_hulk",
+      "champion-synergy-capsci_1",
+      "champion-synergy-valk_sb_1",
+      "champion-synergy-falc_new_17",
+      "champion-synergy-cheeilth_06"
+    ]
+  },
+  "escape": {
+    "expanded": "false",
+    "focus": "Show partners and star requirements for IT'S COMPLICATED",
+    "hidden": true
+  },
+  "tooltip": {
+    "tooltip": [
+      "Black Widow (Deadly Origin)"
+    ],
+    "visibleImages": [
+      {
+        "loaded": true,
+        "src": "/_next/image?url=https%3A%2F%2Fstorage.googleapis.com%2Fchampion-images%2F64%2Fthor_ragnarok_primary.png&w=96&q=75"
+      },
+      {
+        "loaded": true,
+        "src": "/_next/image?url=%2Fassets%2Ficons%2FSkill.png&w=32&q=75"
+      },
+      {
+        "loaded": true,
+        "src": "/_next/image?url=https%3A%2F%2Fstorage.googleapis.com%2Fchampion-images%2F64%2Fodin_primary.png&w=96&q=75"
+      },
+      {
+        "loaded": true,
+        "src": "/_next/image?url=%2Fassets%2Ficons%2FCosmic.png&w=32&q=75"
+      },
+      {
+        "loaded": true,
+        "src": "/_next/image?url=https%3A%2F%2Fstorage.googleapis.com%2Fchampion-images%2F64%2Fsorcerer_supreme_primary.png&w=96&q=75"
+      },
+      {
+        "loaded": true,
+        "src": "/_next/image?url=%2Fassets%2Ficons%2FMystic.png&w=32&q=75"
+      },
+      {
+        "loaded": true,
+        "src": "/_next/image?url=https%3A%2F%2Fstorage.googleapis.com%2Fchampion-images%2F64%2Fkorg_primary.png&w=96&q=75"
+      },
+      {
+        "loaded": true,
+        "src": "/_next/image?url=%2Fassets%2Ficons%2FSkill.png&w=32&q=75"
+      },
+      {
+        "loaded": true,
+        "src": "/_next/image?url=https%3A%2F%2Fstorage.googleapis.com%2Fchampion-images%2F64%2Fcull_obsidian_primary.png&w=96&q=75"
+      },
+      {
+        "loaded": true,
+        "src": "/_next/image?url=%2Fassets%2Ficons%2FCosmic.png&w=32&q=75"
+      },
+      {
+        "loaded": true,
+        "src": "/_next/image?url=https%3A%2F%2Fstorage.googleapis.com%2Fchampion-images%2F64%2Fthe_overseer_primary.png&w=96&q=75"
+      },
+      {
+        "loaded": true,
+        "src": "/_next/image?url=%2Fassets%2Ficons%2FScience.png&w=32&q=75"
+      },
+      {
+        "loaded": true,
+        "src": "/_next/image?url=https%3A%2F%2Fstorage.googleapis.com%2Fchampion-images%2F64%2Fhercules_primary.png&w=96&q=75"
+      },
+      {
+        "loaded": true,
+        "src": "/_next/image?url=%2Fassets%2Ficons%2FCosmic.png&w=32&q=75"
+      },
+      {
+        "loaded": true,
+        "src": "/_next/image?url=https%3A%2F%2Fstorage.googleapis.com%2Fchampion-images%2F64%2Fproxima_midnight_primary.png&w=96&q=75"
+      },
+      {
+        "loaded": true,
+        "src": "/_next/image?url=%2Fassets%2Ficons%2FCosmic.png&w=32&q=75"
+      },
+      {
+        "loaded": true,
+        "src": "/_next/image?url=https%3A%2F%2Fstorage.googleapis.com%2Fchampion-images%2F64%2Fblack_widow_deadly_origin_primary.png&w=96&q=75"
+      },
+      {
+        "loaded": true,
+        "src": "/_next/image?url=%2Fassets%2Ficons%2FSkill.png&w=32&q=75"
+      },
+      {
+        "loaded": true,
+        "src": "/_next/image?url=https%3A%2F%2Fstorage.googleapis.com%2Fchampion-images%2F64%2Fgladiator_primary.png&w=96&q=75"
+      },
+      {
+        "loaded": true,
+        "src": "/_next/image?url=%2Fassets%2Ficons%2FCosmic.png&w=32&q=75"
+      }
+    ]
+  },
+  "semanticMatches": [
+    {
+      "case": "01-overseer-desktop",
+      "matches": true
+    },
+    {
+      "case": "02-overseer-wide",
+      "matches": true
+    },
+    {
+      "case": "03-overseer-tablet",
+      "matches": true
+    },
+    {
+      "case": "04-overseer-mobile",
+      "matches": true
+    },
+    {
+      "case": "05-overseer-small",
+      "matches": true
+    },
+    {
+      "case": "06-overseer-expanded",
+      "matches": true
+    },
+    {
+      "case": "07-hulk-family",
+      "matches": true
+    },
+    {
+      "case": "08-hulk-family-small",
+      "matches": true
+    }
+  ]
+}

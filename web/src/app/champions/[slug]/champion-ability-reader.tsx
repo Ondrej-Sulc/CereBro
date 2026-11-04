@@ -4,7 +4,7 @@ import Image from "next/image"
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { ChevronRight, Search, Sparkles, X } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { championAbilityPanelMatchesChapter, formatGameText, type ChampionAbilityTextRecord, type PreparedChampionAbilityText, type PreparedChampionAbilityTextNode, type PreparedChampionAbilityTextPanel, type PreparedChampionAbilityCurveSeries } from "@/lib/champion-ability-text"
+import { championAbilityPanelMatchesChapter, formatGameText, type ChampionAbilityTextRecord, type PreparedChampionAbilityText, type PreparedChampionAbilityTextNode, type PreparedChampionAbilityTextPanel, type PreparedChampionAbilityTextRecordGroup, type PreparedChampionAbilityCurveSeries } from "@/lib/champion-ability-text"
 import { cn } from "@/lib/utils"
 import { buildChampionKitEffects, getGameEffectColors, type ChampionKitEffect } from "@/lib/champion-kit"
 import { championAbilityTextContent, filterChampionAbilityPanels } from "@/lib/champion-ability-search"
@@ -118,10 +118,7 @@ function DossierDescriptions({ view, panels, targetRecordId, chapter, onSelectCh
             {panel.group === "signature" && view.sigLevel === 0 && <p className="mb-6 rounded-lg border border-amber-300/15 bg-amber-300/[.04] px-4 py-3 text-sm leading-6 text-amber-100/80">Unawakened at Sig 0. The signature ability becomes active after awakening.</p>}
             {panel.introRecord && <div className="mb-5 italic text-slate-400"><RenderedDescriptionTemplate prepared={panel.introRecord.prepared} glossaryById={view.glossaryById} theme={DESCRIPTION_THEME} query={query} /></div>}
             {panel.specialAttackIntros && panel.specialAttackIntros.length > 0 && <div className="mb-6 grid gap-5 border-b border-white/10 pb-6 xl:grid-cols-2">{panel.specialAttackIntros.map(({ number, record }) => <div key={record.id}><p className="mb-2 text-sm font-semibold text-slate-200">Special {number}{record.displayTitle ? ` · ${record.displayTitle}` : ""}</p><div className="italic text-slate-400"><RenderedDescriptionTemplate prepared={record.prepared} glossaryById={view.glossaryById} theme={DESCRIPTION_THEME} query={query} /></div></div>)}</div>}
-            <div className={styles.abilityGroups}>{panel.recordGroups.map(group => <section key={group.id} className={styles.abilityGroup}>
-              {!(panel.specialAttackNumbers && group.title === panel.title) && <div className={styles.abilityGroupHeader}><AbilityGroupHeading title={group.title || "Details"} query={query} effect={effectsByName.get(effectKey(group.title))} glossaryById={view.glossaryById} /></div>}
-              <ul className={styles.abilityRules}>{group.records.map(record => <li key={record.id} id={`ability-record-${record.id}`} tabIndex={String(record.id) === targetRecordId ? -1 : undefined} className={cn(styles.abilityRule, "relative scroll-mt-[calc(var(--champion-header-height,4rem)+var(--champion-tabs-height)+2rem)]", String(record.id) === targetRecordId && "rounded-r-lg border-l-2 bg-white/[.045] py-2 pl-3 pr-4 outline-none")} style={String(record.id) === targetRecordId ? { borderColor: view.accent } : undefined}><span aria-hidden="true" className={styles.abilityRuleMarker} /><div className={styles.abilityRuleBody}><RenderedDescriptionTemplate prepared={record.prepared} glossaryById={view.glossaryById} theme={DESCRIPTION_THEME} query={query} /></div></li>)}</ul>
-            </section>)}</div>
+            <div className={styles.abilityGroups}>{panel.recordGroups.map(group => <AbilityRecordGroup key={group.id} group={group} query={query} effect={effectsByName.get(effectKey(group.title))} glossaryById={view.glossaryById} omitPanelHeading={Boolean(panel.specialAttackNumbers && group.title === panel.title)} targetRecordId={targetRecordId} accent={view.accent} />)}</div>
             {panel.group === "signature" && !query.trim() && <ChampionSignatureChart view={view} />}
           </article>)}
           {activeChapter === "biography" && biography.length > 0 && <article id="dossier-biography" className="rounded-2xl border border-white/[.09] bg-[#0d131c] p-5 sm:p-8"><div className="mb-6 flex items-center justify-between gap-5"><h3 className="text-2xl font-semibold tracking-tight text-white">Biography</h3><Image src={view.secondaryUrl} alt="" width={96} height={96} className="h-24 w-24 object-contain" /></div><div className="space-y-5">{biography.map(record => <RenderedDescriptionTemplate key={record.id} prepared={record.prepared} glossaryById={view.glossaryById} theme={DESCRIPTION_THEME} query={query} />)}</div></article>}
@@ -133,25 +130,41 @@ function DossierDescriptions({ view, panels, targetRecordId, chapter, onSelectCh
   )
 }
 
-function AbilityGroupHeading({ title, effect, glossaryById, query }: {
-  title: string
+function AbilityRecordGroup({ group, effect, glossaryById, query, omitPanelHeading, targetRecordId, accent }: {
+  group: PreparedChampionAbilityTextRecordGroup
   effect: ChampionKitEffect | undefined
   glossaryById: Map<string, GlossaryTerm>
   query: string
+  omitPanelHeading: boolean
+  targetRecordId?: string | null
+  accent: string
 }) {
-  const term = glossaryById.get(effectKey(title))
+  const key = effectKey(group.title)
+  const term = glossaryById.get(key)
   const iconUrl = effect?.iconUrl ?? term?.iconUrl
   const color = effect?.color ?? getGameEffectColors(term?.raw).color
+  // The imported group establishes the effect. Other effects mentioned in the
+  // prose may be conditions or immunities, so they must not choose its marker.
+  const records = group.records.map(record => ({
+    record,
+    hasEffectIcon: Boolean(iconUrl && key && record.prepared.status === "ready"
+      && `_${effectKey(championAbilityTextContent(record.prepared))}_`.includes(`_${key}_`)),
+  }))
+  // A continuation may need the heading to explain "this effect" or a value.
+  // Evaluate the visible records so filtered search results keep that context.
+  const redundantHeading = records.length > 0 && records.every(item => item.hasEffectIcon)
 
   return (
-    <h4 className="flex items-center gap-2.5 text-[15px] font-semibold leading-6 text-slate-100">
-      {iconUrl && (
-        <span aria-hidden="true" className="grid h-7 w-7 shrink-0 place-items-center rounded-full border" style={{ backgroundColor: `${color}16`, borderColor: `${color}40` }}>
-          <span className="h-4 w-4" style={{ backgroundColor: color, mask: `url(${iconUrl}) center / contain no-repeat`, WebkitMask: `url(${iconUrl}) center / contain no-repeat` }} />
-        </span>
-      )}
-      <span><SearchMatch text={title} query={query} /></span>
-    </h4>
+    <section className={styles.abilityGroup} data-inline-effect={redundantHeading}>
+      {!omitPanelHeading && !redundantHeading && <div className={styles.abilityGroupHeader}><h4 className="text-[15px] font-semibold leading-6 text-slate-100"><SearchMatch text={group.title || "Details"} query={query} /></h4></div>}
+      <ul className={styles.abilityRules}>{records.map(({ record, hasEffectIcon }) => {
+        const targeted = String(record.id) === targetRecordId
+        return <li key={record.id} id={`ability-record-${record.id}`} tabIndex={targeted ? -1 : undefined} className={cn(styles.abilityRule, hasEffectIcon && styles.abilityRuleWithEffect, "relative scroll-mt-[calc(var(--champion-header-height,4rem)+var(--champion-tabs-height)+2rem)]", targeted && "rounded-r-lg border-l-2 bg-white/[.045] py-2 pl-3 pr-4 outline-none")} style={targeted ? { borderColor: accent } : undefined}>
+          {hasEffectIcon ? <span aria-hidden="true" data-ability-effect={group.title} className={styles.abilityRuleEffect} style={{ backgroundColor: `${color}16`, borderColor: `${color}40` }}><span style={{ backgroundColor: color, mask: `url(${iconUrl}) center / contain no-repeat`, WebkitMask: `url(${iconUrl}) center / contain no-repeat` }} /></span> : <span aria-hidden="true" className={styles.abilityRuleMarker} />}
+          <div className={styles.abilityRuleBody}><RenderedDescriptionTemplate prepared={record.prepared} glossaryById={glossaryById} theme={DESCRIPTION_THEME} query={query} /></div>
+        </li>
+      })}</ul>
+    </section>
   )
 }
 

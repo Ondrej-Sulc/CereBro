@@ -68,7 +68,7 @@ export function groupChampionSynergyFamilies(cards: ChampionSynergyCard[]): Cham
     family.variants.push({ ...card, level: match ? Number(match[2]) : null })
   }
   for (const family of families) {
-    family.variants.sort((a, b) => (a.level ?? 0) - (b.level ?? 0) || a.id.localeCompare(b.id))
+    family.variants.sort((a, b) => (a.level ?? 0) - (b.level ?? 0) || a.id.localeCompare(b.id, "en"))
     family.id = family.variants[0].id
     if (family.variants.length === 1) family.name = family.variants[0].name
   }

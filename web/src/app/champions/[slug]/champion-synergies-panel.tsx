@@ -14,6 +14,7 @@ import { scrollToChampionSection } from "@/lib/champion-page-navigation"
 import { readChampionSynergyHash } from "@/lib/champion-page-state"
 import type { ChampionImages } from "@/types/champion"
 import styles from "./champion-dossier.module.css"
+import { SynergyCardFlow } from "./synergy-card-flow"
 
 type GlossaryEntry = { name: string; description: string | null }
 
@@ -81,7 +82,7 @@ export function ChampionSynergiesPanel({ owned, incoming, rarity, glossaryById, 
         <div role="group" aria-label="Synergy direction" className={styles.synergyDirection}>{directionOptions.map(filter => <button key={filter.value} type="button" aria-pressed={direction === filter.value} onClick={() => setFilters(current => ({ ...current, direction: filter.value }))}><span>{filter.label}</span><span className={styles.synergyDirectionCount}>{filter.count}</span></button>)}</div>
         <p role="status" aria-live="polite" className={styles.synergyResultCount}>Showing {visibleCount} of {totalCount} {totalCount === 1 ? "synergy" : "synergies"}{rarity ? ` for this ${rarity}-star build` : ""} · {scope}</p>
       </div>
-      <div className="space-y-10">
+      <div className={cn("space-y-10", styles.synergyGroups)}>
         {visibleOwned.length > 0 && <SynergyGroup title="From this champion" description="Add one of the listed partners to activate each bonus." cards={visibleOwned} incoming={false} rarity={rarity} glossaryById={glossaryById} targetSynergyId={target} />}
         {visibleIncoming.length > 0 && <SynergyGroup title="From teammates" description="These champions bring a synergy that this champion helps activate." cards={visibleIncoming} incoming rarity={rarity} glossaryById={glossaryById} targetSynergyId={target} />}
         {!visibleOwned.length && !visibleIncoming.length && <div className="rounded-xl border border-dashed border-white/10 px-6 py-12 text-center"><Users className="mx-auto mb-4 h-7 w-7 text-slate-600" /><p className="break-words text-base font-medium text-slate-200">{totalCount ? query.trim() ? `No synergies match “${query.trim()}” in ${scope}.` : `No synergies in ${scope} for the selected build.` : `No synergies available${rarity ? ` for this ${rarity}-star build` : ""}.`}</p>{(query || direction !== "all") && <button type="button" onClick={() => clearSearch(true)} className="mt-4 min-h-10 rounded px-2 text-sm text-slate-300 underline underline-offset-4 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">Show all synergies</button>}</div>}
@@ -91,7 +92,7 @@ export function ChampionSynergiesPanel({ owned, incoming, rarity, glossaryById, 
 }
 
 function SynergyGroup({ title, description, cards, incoming, rarity, glossaryById, targetSynergyId }: { title: string; description: string; cards: ChampionSynergyFamily[]; incoming: boolean; rarity: number | null; glossaryById: Map<string, GlossaryEntry>; targetSynergyId?: string | null }) {
-  return <section aria-label={title}><div className={styles.synergyGroupHeader}><h3>{title}<span>{cards.length}</span></h3><p>{description}</p><p className={styles.synergyDisclosureHint}><ChevronDown aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />Expand rows for names and star requirements.</p></div><div className={styles.synergyCards}>{cards.map(family => <SynergyFamilyCard key={family.id} family={family} incoming={incoming} rarity={rarity} glossaryById={glossaryById} targetSynergyId={targetSynergyId} />)}</div></section>
+  return <section aria-label={title}><div className={styles.synergyGroupHeader}><h3>{title}<span>{cards.length}</span></h3><p>{description}</p><p className={styles.synergyDisclosureHint}><ChevronDown aria-hidden="true" className="h-3.5 w-3.5 shrink-0" />Expand rows for names and star requirements.</p></div><SynergyCardFlow className={styles.synergyCards}>{cards.map(family => <SynergyFamilyCard key={family.id} family={family} incoming={incoming} rarity={rarity} glossaryById={glossaryById} targetSynergyId={targetSynergyId} />)}</SynergyCardFlow></section>
 }
 
 function SynergyFamilyCard({ family, incoming, rarity, glossaryById, targetSynergyId }: { family: ChampionSynergyFamily; incoming: boolean; rarity: number | null; glossaryById: Map<string, GlossaryEntry>; targetSynergyId?: string | null }) {
@@ -187,7 +188,7 @@ function PartnerRequirementRow({ partner, showStars = true }: { partner: Synergy
   const style = partner.class ? { "--synergy-class-color": getChampionClassColors(partner.class).color } as CSSProperties : undefined
   const label = showStars ? partner.rarities.length ? `${partner.name} available at ${partner.rarities.join(", ")} stars` : `${partner.name}, star requirements not recorded` : partner.name
   const content = <>
-    <Image src={getChampionImageUrlOrPlaceholder(partner.images as ChampionImages, "64")} alt="" width={28} height={28} className={cn(styles.synergyPartnerPortrait, "h-7 w-7 shrink-0 rounded-md bg-black/15 object-contain")} />
+    <SynergyPartnerPortrait partner={partner} compact />
     <span data-partner-name className={cn(styles.synergyRequirementName, styles.synergyChampionName)}>{partner.name}</span>
     {showStars && <span className={styles.synergyRequirementStars}>{formatSynergyRarities(partner.rarities)}</span>}
   </>
@@ -236,10 +237,18 @@ function SynergyText({ segments, glossaryById, muted = false, champions = [] }: 
   )
 }
 
+function SynergyPartnerPortrait({ partner, compact = false }: { partner: SynergyPartner; compact?: boolean }) {
+  const classIcon = partner.class ? `/assets/icons/${partner.class[0]}${partner.class.slice(1).toLowerCase()}.png` : null
+  return <span aria-hidden="true" data-partner-portrait="" className={cn(styles.synergyPortraitFrame, compact && styles.synergyPortraitCompact)}>
+    <span className={styles.synergyPortraitWindow}><Image src={getChampionImageUrlOrPlaceholder(partner.images as ChampionImages, "64")} alt="" width={40} height={40} className={styles.synergyPortraitImage} /></span>
+    {classIcon && <span data-partner-class={partner.class} className={styles.synergyPortraitClass}><Image src={classIcon} alt="" width={12} height={12} /></span>}
+  </span>
+}
+
 function Partner({ partner, showRequirements = true }: { partner: SynergyPartner; showRequirements?: boolean }) {
   const style = partner.class ? { "--synergy-class-color": getChampionClassColors(partner.class).color } as CSSProperties : undefined
   const content = <>
-    <Image src={getChampionImageUrlOrPlaceholder(partner.images as ChampionImages, "64")} alt="" width={28} height={28} className={cn(styles.synergyPartnerPortrait, "h-7 w-7 rounded-md bg-black/15 object-contain")} />
+    <SynergyPartnerPortrait partner={partner} />
     <span className="sr-only">{partner.name}</span>
   </>
   const className = styles.synergyPartner

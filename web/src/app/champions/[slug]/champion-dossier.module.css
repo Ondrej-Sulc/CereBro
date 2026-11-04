@@ -17,6 +17,7 @@
 .heroMetric:last-child { padding-right: 0; border-right: 0; }
 .metricValue { font-size: 26px; line-height: 1.2; font-weight: 750; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .metricLabel { margin-top: 5px; color: rgb(255 255 255 / .6); font-size: 10px; line-height: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: .14em; }
+.metricLabelWithIcon { display: flex; align-items: center; gap: 6px; }
 .sectionToolbar { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 20px; padding: 0 6px 10px; }
 .buildFields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; gap: 16px; }
 .buildSignature { grid-column: 1 / -1; }
@@ -311,6 +312,11 @@ button.kitEffectHeader:focus-visible { outline: 2px solid #94a3b8; outline-offse
 }
 .abilityRules { display: grid; gap: 14px; margin: 0; padding: 10px 0 4px; list-style: none; }
 .abilityRule { display: grid; grid-template-columns: 10px minmax(0, 1fr); align-items: start; column-gap: 12px; }
+.abilityGroup[data-inline-effect="true"] > .abilityRules { padding-block: 0; }
+.abilityGroup[data-inline-effect="true"] + .abilityGroup[data-inline-effect="true"] { padding-top: 14px; border-top: 0; }
+.abilityRuleWithEffect { grid-template-columns: 24px minmax(0, 1fr); column-gap: 10px; }
+.abilityRuleEffect { display: grid; width: 24px; height: 24px; margin-top: 1px; place-items: center; border: 1px solid; border-radius: 50%; }
+.abilityRuleEffect > span { display: block; width: 16px; height: 16px; }
 .abilityRuleMarker {
   width: 6px;
   height: 6px;
@@ -341,11 +347,11 @@ button.kitEffectHeader:focus-visible { outline: 2px solid #94a3b8; outline-offse
 .statsFeaturedRatings > div { display: flex; min-width: 0; flex-direction: column; justify-content: space-between; gap: 6px; }
 .statsFeaturedRatings > div + div { padding-left: 16px; border-left: 1px solid rgb(255 255 255 / .07); }
 .statsFeaturedRatings dt { color: #a1aec0; font-size: 13px; line-height: 20px; }
-.statsFeaturedRatings dd { color: var(--rating-accent); font-size: 26px; font-weight: 600; line-height: 1.15; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
+.statsFeaturedRatings dd { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; color: var(--rating-accent); font-size: 26px; font-weight: 600; line-height: 1.15; letter-spacing: -.035em; font-variant-numeric: tabular-nums; }
 .statsRatingList { padding: 0 20px 4px; border-top: 1px solid rgb(255 255 255 / .065); background: rgb(0 0 0 / .08); }
 .statsRatingList > div { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding-block: 9px; }
 .statsRatingList > div + div { border-top: 1px solid rgb(255 255 255 / .045); }
-.statsRatingList dt { color: #98a6ba; font-size: 13px; line-height: 22px; }
+.statsRatingList dt { display: flex; min-width: 0; align-items: center; gap: 8px; color: #98a6ba; font-size: 13px; line-height: 22px; }
 .statsRatingList dd { flex-shrink: 0; color: #e2e8f0; font-size: 16px; font-weight: 550; line-height: 22px; font-variant-numeric: tabular-nums; }
 .statsRatingPanel dd[data-empty="true"] { color: #7f8da2; }
 .statsEmpty { padding: 24px; border: 1px dashed rgb(255 255 255 / .1); border-radius: 12px; color: #94a3b8; font-size: 14px; line-height: 24px; }
@@ -409,31 +415,46 @@ button.kitEffectHeader:focus-visible { outline: 2px solid #94a3b8; outline-offse
 }
 
 /* Compact synergy rows read in DOM order, with complete bonus text always visible. */
+.synergyGroups { container: champion-synergies / inline-size; }
 .synergyGroupHeader { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 6px 20px; margin-bottom: 18px; }
 .synergyGroupHeader h3 { grid-column: 1 / -1; color: #f1f5f9; font-size: 18px; font-weight: 600; line-height: 26px; letter-spacing: -.02em; }
 .synergyGroupHeader h3 span { margin-left: 9px; color: #8e9db2; font-size: 12px; font-weight: 400; font-variant-numeric: tabular-nums; letter-spacing: 0; }
 .synergyGroupHeader > p { color: #9aa8bc; font-size: 13px; line-height: 21px; }
 .synergyGroupHeader > .synergyDisclosureHint { display: flex; align-items: center; gap: 5px; color: #8b9aaf; font-size: 12px; line-height: 20px; }
 .synergyCards { display: grid; grid-template-columns: minmax(0, 1fr); overflow: clip; border: 1px solid rgb(255 255 255 / .09); border-radius: 12px; background: #0b1019; }
-.synergyCard { position: relative; min-width: 0; padding: 8px 12px; outline: none; scroll-margin-top: calc(var(--champion-header-height, 4rem) + var(--champion-tabs-height, 0rem) + 1.5rem); }
+.synergyCard { container: synergy-card / inline-size; position: relative; min-width: 0; padding: 8px 12px; outline: none; scroll-margin-top: calc(var(--champion-header-height, 4rem) + var(--champion-tabs-height, 0rem) + 1.5rem); }
 .synergyCard + .synergyCard { border-top: 1px solid rgb(255 255 255 / .075); }
 .synergyCard:nth-child(even) { background: rgb(148 163 184 / .035); }
+@container champion-synergies (min-width: 1000px) {
+  .synergyCards { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; gap: 12px; overflow: visible; border: 0; border-radius: 0; background: none; }
+  .synergyCards[data-card-flow="masonry"] { grid-auto-rows: 1px; row-gap: 0; margin-bottom: -12px; }
+  .synergyCard { padding: 12px 14px; border: 1px solid rgb(255 255 255 / .09); border-radius: 12px; background: #0d141e; }
+  .synergyCard + .synergyCard { border-top-color: rgb(255 255 255 / .09); }
+  .synergyCard:nth-child(even) { background: #0d141e; }
+}
 .synergyCard[data-selected="true"], .synergyCard:target, .synergyCard:has(.synergyAlias:target), .synergyCard:has(.synergyLevel:target) { background: rgb(165 180 252 / .075); box-shadow: inset 3px 0 rgb(165 180 252 / .65); }
 .synergyAlias { position: absolute; top: 0; left: 0; display: block; width: 0; height: 0; outline: none; scroll-margin-top: calc(var(--champion-header-height, 4rem) + var(--champion-tabs-height, 0rem) + 1.5rem); }
-.synergyCardHeader { display: grid; grid-template-columns: minmax(0, 1fr) auto 32px; align-items: center; gap: 8px; min-height: 32px; }
-.synergyRowTitle { display: flex; min-width: 0; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
+.synergyCardHeader { display: grid; grid-template-columns: minmax(0, 1fr) 44px; align-items: center; gap: 4px 8px; }
+.synergyRowTitle { grid-column: 1 / -1; grid-row: 1; display: flex; min-width: 0; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; }
 .synergyTitleWithIcon { display: flex; min-width: 0; align-items: center; gap: 8px; }
 .synergyNativeIcon { display: block; width: 20px; height: 20px; flex-shrink: 0; background-color: #c5d2e3; mask-size: contain; mask-repeat: no-repeat; mask-position: center; }
 .synergyCardHeader h4 { min-width: 0; color: #f1f5f9; font-size: 14px; font-weight: 650; line-height: 20px; overflow-wrap: anywhere; }
 .synergyCardMeta { color: #8f9db1; font-size: 11px; font-weight: 400; line-height: 18px; white-space: nowrap; }
-.synergyPartnerList { display: flex; max-width: min(35vw, 420px); flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
-.synergyPartner { display: grid; width: 32px; height: 32px; flex-shrink: 0; place-items: center; border-radius: 7px; transition: background-color .15s; }
-.synergyPartner:hover { background: rgb(255 255 255 / .075); }
+.synergyPartnerList { grid-column: 1; grid-row: 2; display: flex; min-width: 0; flex-wrap: wrap; justify-content: flex-start; gap: 6px; }
+.synergyPartner { display: grid; width: 44px; height: 44px; flex-shrink: 0; place-items: center; border-radius: 12px; }
+.synergyPortraitFrame { position: relative; display: block; width: 40px; height: 40px; flex-shrink: 0; padding: 2px; border: 1px solid color-mix(in srgb, var(--synergy-class-color, #94a3b8) 65%, transparent); border-radius: 12px; background: linear-gradient(145deg, color-mix(in srgb, var(--synergy-class-color, #94a3b8) 25%, #111925), #0b1019); box-shadow: inset 0 1px rgb(255 255 255 / .1), 0 2px 5px rgb(0 0 0 / .25); transition: transform .15s, border-color .15s, box-shadow .15s; }
+.synergyPortraitWindow { display: block; width: 100%; height: 100%; overflow: hidden; border-radius: 9px; background: radial-gradient(ellipse at bottom, color-mix(in srgb, var(--synergy-class-color, #94a3b8) 16%, transparent), transparent 80%), #080d14; }
+.synergyPortraitImage { display: block; width: 100%; height: 100%; object-fit: contain; }
+.synergyPortraitClass { position: absolute; right: -3px; bottom: -3px; display: grid; width: 15px; height: 15px; place-items: center; padding: 1px; border: 1px solid color-mix(in srgb, var(--synergy-class-color, #94a3b8) 60%, #17202c); border-radius: 50%; background: #0b1019; box-shadow: 0 1px 3px rgb(0 0 0 / .5); }
+.synergyPortraitClass img { width: 100%; height: 100%; object-fit: contain; }
+.synergyPortraitCompact { width: 32px; height: 32px; border-radius: 10px; }
+.synergyPortraitCompact > .synergyPortraitWindow { border-radius: 7px; }
+.synergyPortraitCompact > .synergyPortraitClass { width: 13px; height: 13px; }
+.synergyPartner:hover .synergyPortraitFrame { transform: translateY(-2px); border-color: var(--synergy-class-color, #cbd5e1); box-shadow: inset 0 1px rgb(255 255 255 / .14), 0 3px 10px color-mix(in srgb, var(--synergy-class-color, #94a3b8) 18%, transparent); }
 .synergyPartner:focus-visible { outline: 2px solid #cbd5e1; outline-offset: 1px; }
-.synergyPartnerPortrait { border: 1px solid color-mix(in srgb, var(--synergy-class-color, #94a3b8) 60%, transparent); }
 /* Preserve class identity in names shown by the expanded legend and recipients. */
 .synergyChampionName { color: color-mix(in srgb, var(--synergy-class-color, #cbd5e1) 75%, white); }
-.synergyRequirementsToggle { display: grid; width: 32px; height: 32px; flex-shrink: 0; place-items: center; border: 1px solid transparent; border-radius: 7px; color: #9ba9bd; scroll-margin-top: calc(var(--champion-header-height, 4rem) + var(--champion-tabs-height, 0rem) + 1.5rem); }
+.synergyRequirementsToggle { grid-column: 2; grid-row: 2; display: grid; width: 44px; height: 44px; flex-shrink: 0; place-items: center; border: 1px solid transparent; border-radius: 9px; color: #9ba9bd; scroll-margin-top: calc(var(--champion-header-height, 4rem) + var(--champion-tabs-height, 0rem) + 1.5rem); }
 .synergyRequirementsToggle:hover { border-color: rgb(255 255 255 / .1); background: rgb(255 255 255 / .045); color: #e2e8f0; }
 .synergyRequirementsToggle[aria-expanded="true"] { background: rgb(255 255 255 / .055); color: #e2e8f0; }
 .synergyRequirementsToggle[aria-expanded="true"] svg { transform: rotate(180deg); }
@@ -441,7 +462,7 @@ button.kitEffectHeader:focus-visible { outline: 2px solid #94a3b8; outline-offse
 .synergyRequirementsBody { margin-block: 6px; padding: 10px 12px; border: 1px solid rgb(255 255 255 / .09); border-radius: 8px; background: #111925; color: #cbd5e1; font-size: 13px; line-height: 21px; }
 .synergyRequirementGrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 6px; margin: 0; padding: 0; list-style: none; }
 .synergyRequirementGrid > li { min-width: 0; }
-.synergyRequirementRow { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; min-width: 0; min-height: 44px; align-items: center; gap: 9px; padding: 6px 8px; border: 1px solid rgb(255 255 255 / .07); border-radius: 7px; background: rgb(255 255 255 / .018); }
+.synergyRequirementRow { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; min-width: 0; min-height: 44px; align-items: center; gap: 9px; padding: 6px 8px; border: 1px solid rgb(255 255 255 / .07); border-radius: 7px; background: rgb(255 255 255 / .018); }
 a.synergyRequirementRow:hover { border-color: rgb(255 255 255 / .16); background: rgb(255 255 255 / .045); }
 a.synergyRequirementRow:focus-visible { outline: 2px solid #cbd5e1; outline-offset: 1px; }
 .synergyRequirementName { min-width: 0; font-size: 13px; font-weight: 500; line-height: 20px; overflow-wrap: anywhere; }
@@ -455,7 +476,7 @@ a.synergyRequirementRow:focus-visible { outline: 2px solid #cbd5e1; outline-offs
 .synergyBenefit + .synergyBenefit { margin-top: 3px; }
 .synergyRecipient { font-size: inherit; font-weight: 650; line-height: inherit; }
 .synergyUniqueNote { max-width: 115ch; padding-block: 2px; color: #c4ac7c; font-size: 12px; line-height: 20px; overflow-wrap: anywhere; }
-.synergyLevel { position: relative; display: grid; grid-template-columns: 190px minmax(0, 1fr); align-items: start; gap: 4px 10px; padding-block: 7px; border-top: 1px solid rgb(255 255 255 / .065); outline: none; scroll-margin-top: calc(var(--champion-header-height, 4rem) + var(--champion-tabs-height, 0rem) + 1.5rem); }
+.synergyLevel { position: relative; display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 4px 10px; padding-block: 7px; border-top: 1px solid rgb(255 255 255 / .065); outline: none; scroll-margin-top: calc(var(--champion-header-height, 4rem) + var(--champion-tabs-height, 0rem) + 1.5rem); }
 .synergyLevel:target, .synergyLevel:has(.synergyAlias:target), .synergyLevel[data-targeted="true"] { background: rgb(165 180 252 / .07); }
 .synergyLevelHeader { display: flex; min-width: 0; align-items: baseline; flex-wrap: wrap; gap: 4px 8px; }
 .synergyLevelHeader h5 { flex-shrink: 0; padding: 1px 5px; border-radius: 4px; background: rgb(255 255 255 / .04); color: #d9e2ef; font-size: 11px; font-weight: 600; line-height: 20px; }
@@ -465,22 +486,28 @@ a.synergyRequirementRow:focus-visible { outline: 2px solid #cbd5e1; outline-offs
 .synergyLevelAvailability > div + div { margin-top: 4px; }
 .synergyLevel .synergyBenefitsBlock { padding: 0; }
 .synergyLevel > .synergyUniqueNote { grid-column: 1 / -1; }
-@media (prefers-reduced-motion: reduce) { .synergyPartner { transition: none; } }
-@media (min-width: 900px) { .synergyRequirementGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (prefers-reduced-motion: reduce) {
+  .synergyPortraitFrame { transition: none; }
+  .synergyPartner:hover .synergyPortraitFrame { transform: none; }
+}
+@container synergy-card (min-width: 520px) {
+  .synergyCardHeader { grid-template-columns: minmax(0, 1fr) auto 44px; gap: 8px; }
+  .synergyRowTitle { grid-column: 1; grid-row: 1; }
+  .synergyPartnerList { grid-column: 2; grid-row: 1; max-width: 380px; justify-content: flex-end; }
+  .synergyRequirementsToggle { grid-column: 3; grid-row: 1; }
+}
+@container synergy-card (min-width: 640px) {
+  .synergyRequirementGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .synergyLevel { grid-template-columns: 190px minmax(0, 1fr); }
+}
 @media (max-width: 900px) {
   .synergyGroupHeader { grid-template-columns: minmax(0, 1fr); gap: 4px; }
 }
 @media (max-width: 639px) {
   .synergyCard { padding: 8px 10px; }
-  .synergyCardHeader { grid-template-columns: minmax(0, 1fr) 40px; gap: 2px 6px; }
-  .synergyRowTitle { grid-column: 1 / -1; grid-row: 1; }
-  .synergyPartnerList { grid-column: 1; grid-row: 2; max-width: none; justify-content: flex-start; gap: 4px; }
-  .synergyRequirementsToggle { grid-column: 2; grid-row: 2; width: 40px; height: 40px; }
-  .synergyPartner { width: 40px; height: 40px; }
   .synergyBenefits { max-width: none; }
   .synergyLevel { grid-template-columns: minmax(0, 1fr); gap: 3px; }
   .abilityRules { gap: 12px; padding: 8px 0 2px; }
   .abilityRule { column-gap: 9px; }
 }
-@media (max-width: 379px) { .synergyPartnerList { gap: 2px; } }
 @media (max-width: 359px) { .tabIcon { display: none; } }

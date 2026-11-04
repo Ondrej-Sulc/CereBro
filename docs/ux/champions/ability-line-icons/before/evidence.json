@@ -1,0 +1,789 @@
+[
+  {
+    "name": "01-overseer-special2-desktop",
+    "slug": "the-overseer",
+    "chapter": "special2",
+    "width": 1280,
+    "height": 900,
+    "chapters": [
+      {
+        "key": "all",
+        "title": "All abilities"
+      },
+      {
+        "key": "signature",
+        "title": "Signature Ability"
+      },
+      {
+        "key": "base",
+        "title": "Base Abilities"
+      },
+      {
+        "key": "special1",
+        "title": "Special 1"
+      },
+      {
+        "key": "special2",
+        "title": "Special 2"
+      },
+      {
+        "key": "special3",
+        "title": "Special 3"
+      },
+      {
+        "key": "biography",
+        "title": "Biography"
+      }
+    ],
+    "clipped": [],
+    "documentWidth": 1272,
+    "dpr": 1,
+    "panels": [
+      {
+        "headings": [
+          "Disorient",
+          "Energize"
+        ],
+        "height": 323,
+        "id": "dossier-special-attack-2-cleaving-strike"
+      }
+    ],
+    "records": [
+      {
+        "id": "ability-record-84356",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "40"
+          },
+          {
+            "expanded": "false",
+            "text": "12"
+          }
+        ],
+        "text": "Inflicts a Disorient Debuff, reducing Defensive Ability Accuracy by 40% and Block Proficiency by 50% for 12 second(s). Ability Accuracy reduction scales with Gamma Power."
+      },
+      {
+        "id": "ability-record-84357",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "25"
+          },
+          {
+            "expanded": "false",
+            "text": "Combat Power Rate"
+          },
+          {
+            "expanded": "false",
+            "text": "12"
+          }
+        ],
+        "text": "Cosmic Mode: Gain an Energize Buff, granting 25% increased Combat Power Rate for 12 second(s)."
+      }
+    ],
+    "scrollY": 529,
+    "url": "http://localhost:3000/champions/the-overseer?tab=abilities&chapter=special2&rarity=7&rank=6&sig=200&ascension=0",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) T3CodeNightly/0.1.8-nightly.20261104.4179 Chrome/152.0.7977.169 Electron/44.10.1 Safari/537.36",
+    "viewport": [
+      1280,
+      900
+    ],
+    "screenshot": "C:\\Users\\ossul\\.t3\\userdata\\browser-artifacts\\browser-screenshot-localhost-mw2kkqyi-39ce9fa5.png"
+  },
+  {
+    "name": "02-overseer-special2-mobile",
+    "slug": "the-overseer",
+    "chapter": "special2",
+    "width": 390,
+    "height": 844,
+    "chapters": [
+      {
+        "key": "all",
+        "title": "All abilities"
+      },
+      {
+        "key": "signature",
+        "title": "Signature Ability"
+      },
+      {
+        "key": "base",
+        "title": "Base Abilities"
+      },
+      {
+        "key": "special1",
+        "title": "Special 1"
+      },
+      {
+        "key": "special2",
+        "title": "Special 2"
+      },
+      {
+        "key": "special3",
+        "title": "Special 3"
+      },
+      {
+        "key": "biography",
+        "title": "Biography"
+      }
+    ],
+    "clipped": [],
+    "documentWidth": 382,
+    "dpr": 1,
+    "panels": [
+      {
+        "headings": [
+          "Disorient",
+          "Energize"
+        ],
+        "height": 506.5,
+        "id": "dossier-special-attack-2-cleaving-strike"
+      }
+    ],
+    "records": [
+      {
+        "id": "ability-record-84356",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "40"
+          },
+          {
+            "expanded": "false",
+            "text": "12"
+          }
+        ],
+        "text": "Inflicts a Disorient Debuff, reducing Defensive Ability Accuracy by 40% and Block Proficiency by 50% for 12 second(s). Ability Accuracy reduction scales with Gamma Power."
+      },
+      {
+        "id": "ability-record-84357",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "25"
+          },
+          {
+            "expanded": "false",
+            "text": "Combat Power Rate"
+          },
+          {
+            "expanded": "false",
+            "text": "12"
+          }
+        ],
+        "text": "Cosmic Mode: Gain an Energize Buff, granting 25% increased Combat Power Rate for 12 second(s)."
+      }
+    ],
+    "scrollY": 795,
+    "url": "http://localhost:3000/champions/the-overseer?tab=abilities&chapter=special2&rarity=7&rank=6&sig=200&ascension=0",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) T3CodeNightly/0.1.8-nightly.20261104.4179 Chrome/152.0.7977.169 Electron/44.10.1 Safari/537.36",
+    "viewport": [
+      390,
+      844
+    ],
+    "screenshot": "C:\\Users\\ossul\\.t3\\userdata\\browser-artifacts\\browser-screenshot-localhost-mw2kkxqt-634fbea8.png"
+  },
+  {
+    "name": "03-overseer-special2-small",
+    "slug": "the-overseer",
+    "chapter": "special2",
+    "width": 320,
+    "height": 568,
+    "chapters": [
+      {
+        "key": "all",
+        "title": "All abilities"
+      },
+      {
+        "key": "signature",
+        "title": "Signature Ability"
+      },
+      {
+        "key": "base",
+        "title": "Base Abilities"
+      },
+      {
+        "key": "special1",
+        "title": "Special 1"
+      },
+      {
+        "key": "special2",
+        "title": "Special 2"
+      },
+      {
+        "key": "special3",
+        "title": "Special 3"
+      },
+      {
+        "key": "biography",
+        "title": "Biography"
+      }
+    ],
+    "clipped": [],
+    "documentWidth": 312,
+    "dpr": 1,
+    "panels": [
+      {
+        "headings": [
+          "Disorient",
+          "Energize"
+        ],
+        "height": 608.5,
+        "id": "dossier-special-attack-2-cleaving-strike"
+      }
+    ],
+    "records": [
+      {
+        "id": "ability-record-84356",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "40"
+          },
+          {
+            "expanded": "false",
+            "text": "12"
+          }
+        ],
+        "text": "Inflicts a Disorient Debuff, reducing Defensive Ability Accuracy by 40% and Block Proficiency by 50% for 12 second(s). Ability Accuracy reduction scales with Gamma Power."
+      },
+      {
+        "id": "ability-record-84357",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "25"
+          },
+          {
+            "expanded": "false",
+            "text": "Combat Power Rate"
+          },
+          {
+            "expanded": "false",
+            "text": "12"
+          }
+        ],
+        "text": "Cosmic Mode: Gain an Energize Buff, granting 25% increased Combat Power Rate for 12 second(s)."
+      }
+    ],
+    "scrollY": 809,
+    "url": "http://localhost:3000/champions/the-overseer?tab=abilities&chapter=special2&rarity=7&rank=6&sig=200&ascension=0",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) T3CodeNightly/0.1.8-nightly.20261104.4179 Chrome/152.0.7977.169 Electron/44.10.1 Safari/537.36",
+    "viewport": [
+      320,
+      568
+    ],
+    "screenshot": "C:\\Users\\ossul\\.t3\\userdata\\browser-artifacts\\browser-screenshot-localhost-mw2kkzxw-d63adb72.png"
+  },
+  {
+    "name": "04-overseer-base-desktop",
+    "slug": "the-overseer",
+    "chapter": "base",
+    "width": 1280,
+    "height": 900,
+    "chapters": [
+      {
+        "key": "all",
+        "title": "All abilities"
+      },
+      {
+        "key": "signature",
+        "title": "Signature Ability"
+      },
+      {
+        "key": "base",
+        "title": "Base Abilities"
+      },
+      {
+        "key": "special1",
+        "title": "Special 1"
+      },
+      {
+        "key": "special2",
+        "title": "Special 2"
+      },
+      {
+        "key": "special3",
+        "title": "Special 3"
+      },
+      {
+        "key": "biography",
+        "title": "Biography"
+      }
+    ],
+    "clipped": [],
+    "documentWidth": 1272,
+    "dpr": 1,
+    "panels": [
+      {
+        "headings": [
+          "Always Active",
+          "Gamma Power",
+          "Cosmic Mode",
+          "After Opponent Launches a Special - Special Concussion",
+          "After a Special - Cap’s Shield"
+        ],
+        "height": 875.5,
+        "id": "dossier-base-abilities"
+      }
+    ],
+    "records": [
+      {
+        "id": "ability-record-84336",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "Stagger"
+          }
+        ],
+        "text": "Immune to Nullify, Fateseal and Stagger effects."
+      },
+      {
+        "id": "ability-record-84337",
+        "links": [],
+        "text": "An enhanced immune system provides full immunity to the Poisons of the Battlerealm."
+      },
+      {
+        "id": "ability-record-84338",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "1,525.2"
+          },
+          {
+            "expanded": "false",
+            "text": "17"
+          },
+          {
+            "expanded": "false",
+            "text": "6"
+          }
+        ],
+        "text": "When the Opponent gains a Bar of Power gain an indefinite Gamma Power granting 1,525.2 Attack Rating and 17% Potency of his personal Debuffs from Specials. Max 6 Stacks."
+      },
+      {
+        "id": "ability-record-84340",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "3"
+          },
+          {
+            "expanded": "false",
+            "text": "3.33"
+          },
+          {
+            "expanded": "false",
+            "text": "50"
+          }
+        ],
+        "text": "At 3 or more Stacks of Gamma Power, after launching a Special consumes all stacks and activates Cosmic Mode, lasting 3.33 second(s) per Gamma Power, but it is paused during Specials from the Overseer or the Opponent. Cosmic Mode lasts 50% longer for Defenders."
+      },
+      {
+        "id": "ability-record-84343",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "2,542"
+          }
+        ],
+        "text": "For each Gamma Power gained while in Cosmic Mode, instead gain a non-stacking Fury Buff granting 2,542 Attack Rating per Gamma Power used to enter the mode, with its total duration equalling its Cosmic Mode starting duration."
+      },
+      {
+        "id": "ability-record-84344",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "6,710.88"
+          }
+        ],
+        "text": "Light Attacks deal a Burst of 6,710.88 Physical Damage."
+      },
+      {
+        "id": "ability-record-84345",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "10"
+          },
+          {
+            "expanded": "false",
+            "text": "7"
+          }
+        ],
+        "text": "Inflict an indefinite Special Concussion Debuff, reducing Ability Accuracy by 10% during Special attacks. Max 7."
+      },
+      {
+        "id": "ability-record-84347",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "3"
+          }
+        ],
+        "text": "Reducing a Combo of 3 or more to a lower amount removes one stack of Special Concussion."
+      },
+      {
+        "id": "ability-record-84348",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "Taunt"
+          },
+          {
+            "expanded": "false",
+            "text": "10"
+          },
+          {
+            "expanded": "false",
+            "text": "20"
+          },
+          {
+            "expanded": "false",
+            "text": "20"
+          }
+        ],
+        "text": "Inflict a non-stacking Taunt Debuff for 10 seconds, reducing their Attack Rating by 20%. This ability goes on cooldown for 20 second(s) if activated."
+      },
+      {
+        "id": "ability-record-84351",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "100"
+          },
+          {
+            "expanded": "false",
+            "text": "7"
+          }
+        ],
+        "text": "Gain an Auto-Block Passive, giving 100% chance to Auto-Block Basic Attacks when Struck twice, it lasts for 7 second(s) or until triggered."
+      },
+      {
+        "id": "ability-record-84352",
+        "links": [],
+        "text": "The Overseer is Stun immune while Auto-Block is active."
+      }
+    ],
+    "scrollY": 647,
+    "url": "http://localhost:3000/champions/the-overseer?tab=abilities&chapter=base&rarity=7&rank=6&sig=200&ascension=0",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) T3CodeNightly/0.1.8-nightly.20261104.4179 Chrome/152.0.7977.169 Electron/44.10.1 Safari/537.36",
+    "viewport": [
+      1280,
+      900
+    ],
+    "screenshot": "C:\\Users\\ossul\\.t3\\userdata\\browser-artifacts\\browser-screenshot-localhost-mw2kl6vq-25db7d93.png"
+  },
+  {
+    "name": "05-absorbing-base-mobile",
+    "slug": "absorbing-man",
+    "chapter": "base",
+    "width": 390,
+    "height": 844,
+    "chapters": [
+      {
+        "key": "all",
+        "title": "All abilities"
+      },
+      {
+        "key": "signature",
+        "title": "Signature Ability"
+      },
+      {
+        "key": "base",
+        "title": "Base Abilities"
+      },
+      {
+        "key": "special1",
+        "title": "Special 1"
+      },
+      {
+        "key": "special2",
+        "title": "Special 2"
+      },
+      {
+        "key": "special3",
+        "title": "Special 3"
+      },
+      {
+        "key": "biography",
+        "title": "Biography"
+      }
+    ],
+    "clipped": [],
+    "documentWidth": 382,
+    "dpr": 1,
+    "panels": [
+      {
+        "headings": [
+          "Molecular Duplication - Always Active",
+          "Omni-Morph Forms",
+          "Refined Forms",
+          "Morph Charges"
+        ],
+        "height": 2770,
+        "id": "dossier-base-abilities"
+      }
+    ],
+    "records": [
+      {
+        "id": "ability-record-78995",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "20"
+          },
+          {
+            "expanded": "false",
+            "text": "Critical Penetration"
+          },
+          {
+            "expanded": "false",
+            "text": "20"
+          }
+        ],
+        "text": "A fluid molecular structure grants Absorbing Man 20% Crit Resistance and Immunity to Armor Break and Armor Shattered Debuffs, but reduces his Critical Penetration by 20% flat."
+      },
+      {
+        "id": "ability-record-78996",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "90"
+          }
+        ],
+        "text": "Absorbing Man is no stranger to brawling with beings of otherworldly resilience. He reduces the duration of his Opponent’s Indestructible, Immortality, Unstoppable, and Unblockable Buffs by 90%."
+      },
+      {
+        "id": "ability-record-78997",
+        "links": [],
+        "text": "Absorbing Man’s Special Attacks transform him into powerful altered Forms. He can only be in one Form at a time, and Form changes cannot fail due to Ability Accuracy Modification."
+      },
+      {
+        "id": "ability-record-79002",
+        "links": [],
+        "text": "Absorbing Man starts each fight in his Black Uru Form by default, but can use the Pre-Fight Menu to change this default, which persists until changed again."
+      },
+      {
+        "id": "ability-record-79003",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "20"
+          }
+        ],
+        "text": "Being struck by a Heavy Attack while recovering from a Special Attack deactivates the current Form, which cannot be deactivated again in this way for 20 seconds."
+      },
+      {
+        "id": "ability-record-79005",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "3"
+          }
+        ],
+        "text": "Whenever a Buff ends on the Opponent or Absorbing Man is Immune to a Debuff, the current Form pauses for 3 seconds."
+      },
+      {
+        "id": "ability-record-79007",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "6"
+          },
+          {
+            "expanded": "false",
+            "text": "485.29"
+          },
+          {
+            "expanded": "false",
+            "text": "Vulnerability"
+          },
+          {
+            "expanded": "false",
+            "text": "15"
+          }
+        ],
+        "text": "Interrupting an Opponent's Basic Attack with a Light Attack pauses the current Form for 6 seconds and inflicts a 485.29 potency Vulnerability Passive for 15 seconds. Max Stacks: 5."
+      },
+      {
+        "id": "ability-record-79009",
+        "links": [],
+        "text": "If Absorbing Man would enter a Form that is already active, he instead Refines the Form, refreshing its duration and granting additional benefits."
+      },
+      {
+        "id": "ability-record-79010",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "300"
+          }
+        ],
+        "text": "Personal bursts of damage benefit from 300% of Absorbing Man's Critical Damage Multiplier when he lands a Critical Hit and cannot have their Ability Accuracy modified."
+      },
+      {
+        "id": "ability-record-79012",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "Unblockable"
+          }
+        ],
+        "text": "Special Attacks are Passively Unblockable."
+      },
+      {
+        "id": "ability-record-79013",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "72"
+          }
+        ],
+        "text": "Blocking a Hit reduces the Opponent’s Ability Power Rate by 72% until Absorbing Man stops blocking. The Power denied is transferred to Absorbing Man."
+      },
+      {
+        "id": "ability-record-79014",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "600"
+          }
+        ],
+        "text": "When Absorbing Man refreshes or changes Forms, he gains Morph Charges equal to the remaining percentage of his previous Form’s base duration. Max 600."
+      },
+      {
+        "id": "ability-record-79015",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "90"
+          }
+        ],
+        "text": "Whenever Absorbing Man is Immune to an Armor Break or Armor Shattered Debuff, he gains 90 Morph Charges."
+      },
+      {
+        "id": "ability-record-79016",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "150"
+          },
+          {
+            "expanded": "false",
+            "text": "30"
+          },
+          {
+            "expanded": "false",
+            "text": "Vulnerability"
+          },
+          {
+            "expanded": "false",
+            "text": "2,750"
+          },
+          {
+            "expanded": "false",
+            "text": "150"
+          }
+        ],
+        "text": "Performing a Medium, Light, Medium Combo with at least 150 Morph Charges, or activating a Special Attack at max charges consumes available Charges to Refine the current Form and inflict one 30 second Vulnerability Passive with 2,750 potency for every 150 Charges consumed."
+      },
+      {
+        "id": "ability-record-79019",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "2,250"
+          }
+        ],
+        "text": "This attack gains 2,250 Critical Rating if the Opponent is Stunned as the first hit lands."
+      },
+      {
+        "id": "ability-record-79020",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "24,749.99"
+          }
+        ],
+        "text": "This attack instead gains 24,749.99 Critical Rating if the Opponent is not Stunned as the first hit lands."
+      },
+      {
+        "id": "ability-record-79021",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "30"
+          }
+        ],
+        "text": "Activating a Special Attack after the first hit lands applies this bonus Critical Rating to the entire Special and grants 30 Morph Charges."
+      },
+      {
+        "id": "ability-record-79023",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "11,000"
+          }
+        ],
+        "text": "Gain Immunity to all Bleed and Shock effects and +11,000 Physical Resistance."
+      },
+      {
+        "id": "ability-record-79024",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "2,014.2"
+          }
+        ],
+        "text": "All attacks deal a burst of 2,014.2 Physical Damage."
+      },
+      {
+        "id": "ability-record-79025",
+        "links": [],
+        "text": "Refined: Absorbing Man can perform Critical Hits and trigger personal bursts of damage through the Opponent’s Block."
+      },
+      {
+        "id": "ability-record-79027",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "11,000"
+          }
+        ],
+        "text": "Gain Immunity to all Incinerate, Coldsnap, and Frostbite effects and +11,000 Energy Resistance."
+      },
+      {
+        "id": "ability-record-79028",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "2,014.2"
+          }
+        ],
+        "text": "All attacks deal Energy Damage instead of Physical, as well as a burst of 2,014.2 Energy Damage."
+      },
+      {
+        "id": "ability-record-79029",
+        "links": [
+          {
+            "expanded": "false",
+            "text": "3,524.85"
+          },
+          {
+            "expanded": "false",
+            "text": "1"
+          }
+        ],
+        "text": "Refined: Contact with the Opponent inflicts an Incinerate Passive, dealing 3,524.85 Energy Damage over 1 second."
+      }
+    ],
+    "scrollY": 833,
+    "url": "http://localhost:3000/champions/absorbing-man?tab=abilities&chapter=base&rarity=7&rank=6&sig=200&ascension=0",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) T3CodeNightly/0.1.8-nightly.20261104.4179 Chrome/152.0.7977.169 Electron/44.10.1 Safari/537.36",
+    "viewport": [
+      390,
+      844
+    ],
+    "screenshot": "C:\\Users\\ossul\\.t3\\userdata\\browser-artifacts\\browser-screenshot-localhost-mw2kl99n-0334a36d.png"
+  }
+]

@@ -1,9 +1,10 @@
 import { Shield, Swords } from "lucide-react"
+import { ChampionStatIcon, type ChampionStatIconKey } from "@/components/champions/champion-stat-icon"
 import { ChampionAttackProfile } from "./champion-attack-profile"
 import type { ChampionDetailsView } from "./champion-details-types"
 import styles from "./champion-dossier.module.css"
 
-type Rating = { label: string; value: number | string | null }
+type Rating = { label: string; value: number | string | null; icon?: ChampionStatIconKey }
 
 export function ChampionStatsPanel({ view, onViewAbility }: { view: ChampionDetailsView; onViewAbility?: (chapter: string) => void }) {
   const stat = view.selectedStat
@@ -19,18 +20,18 @@ export function ChampionStatsPanel({ view, onViewAbility }: { view: ChampionDeta
       {stat ? (
         <div className={styles.statsRatingGrid}>
           <RatingPanel name="Offense" detail="Criticals & penetration" tone="offense" icon={Swords}
-            featured={[{ label: "Critical rating", value: stat.criticalRating }, { label: "Critical damage rating", value: stat.criticalDamageRating }]}
+            featured={[{ label: "Critical rating", value: stat.criticalRating, icon: "criticalRating" }, { label: "Critical damage rating", value: stat.criticalDamageRating, icon: "criticalDamageRating" }]}
             ratings={[
-              { label: "Armor penetration", value: stat.armorPenetration },
-              { label: "Block penetration", value: stat.blockPenetration },
+              { label: "Armor penetration", value: stat.armorPenetration, icon: "armorPenetration" },
+              { label: "Block penetration", value: stat.blockPenetration, icon: "blockPenetration" },
               { label: "Special damage multiplier", value: stat.specialDamageMultiplier == null ? null : `${stat.specialDamageMultiplier.toFixed(2)}×` },
             ]} />
           <RatingPanel name="Defense" detail="Armor, blocking & resistance" tone="defense" icon={Shield}
-            featured={[{ label: "Armor rating", value: stat.armorRating }, { label: "Block proficiency", value: stat.blockProficiency }]}
+            featured={[{ label: "Armor rating", value: stat.armorRating, icon: "armorRating" }, { label: "Block proficiency", value: stat.blockProficiency, icon: "blockProficiency" }]}
             ratings={[
-              { label: "Critical resistance", value: stat.criticalResistance },
-              { label: "Physical resistance", value: stat.physicalResistance },
-              { label: "Energy resistance", value: stat.energyResistance },
+              { label: "Critical resistance", value: stat.criticalResistance, icon: "criticalResistance" },
+              { label: "Physical resistance", value: stat.physicalResistance, icon: "physicalResistance" },
+              { label: "Energy resistance", value: stat.energyResistance, icon: "energyResistance" },
             ]} />
         </div>
       ) : <p className={styles.statsEmpty}>Build stats are not available for this champion yet.</p>}
@@ -51,12 +52,12 @@ function RatingPanel({ name, detail, tone, icon: Icon, featured, ratings }: {
       </header>
       <dl className={styles.statsFeaturedRatings}>
         {featured.map(rating => <div key={rating.label}>
-          <dt>{rating.label}</dt><dd data-empty={rating.value == null || rating.value === 0}>{formatStat(rating.value)}</dd>
+          <dt>{rating.label}</dt><dd data-empty={rating.value == null || rating.value === 0}>{rating.icon && <ChampionStatIcon stat={rating.icon} />}<span>{formatStat(rating.value)}</span></dd>
         </div>)}
       </dl>
       <dl className={styles.statsRatingList}>
         {ratings.map(rating => <div key={rating.label}>
-          <dt>{rating.label}</dt><dd data-empty={rating.value == null || rating.value === 0}>{formatStat(rating.value)}</dd>
+          <dt>{rating.icon && <ChampionStatIcon stat={rating.icon} />}<span>{rating.label}</span></dt><dd data-empty={rating.value == null || rating.value === 0}>{formatStat(rating.value)}</dd>
         </div>)}
       </dl>
     </section>

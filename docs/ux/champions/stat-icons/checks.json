@@ -1,0 +1,127 @@
+{
+  "layout": [
+    {
+      "clipped": [],
+      "iconCount": 11,
+      "scrollWidth": 312,
+      "width": 320
+    },
+    {
+      "clipped": [],
+      "iconCount": 11,
+      "scrollWidth": 382,
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "iconCount": 11,
+      "scrollWidth": 760,
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "iconCount": 11,
+      "scrollWidth": 1016,
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "iconCount": 11,
+      "scrollWidth": 1272,
+      "width": 1280
+    },
+    {
+      "clipped": [],
+      "iconCount": 11,
+      "scrollWidth": 1528,
+      "width": 1536
+    }
+  ],
+  "rankChange": {
+    "iconKeys": [
+      "health",
+      "attack",
+      "criticalRating",
+      "criticalDamageRating",
+      "armorPenetration",
+      "blockPenetration",
+      "armorRating",
+      "blockProficiency",
+      "criticalResistance",
+      "physicalResistance",
+      "energyResistance"
+    ],
+    "metrics": [
+      "14,920PrestigeSig curve",
+      "46,298Health",
+      "3,792Attack"
+    ],
+    "url": "http://localhost:3000/champions/ms-marvel?tab=stats&rarity=6&rank=4&sig=200&ascension=0",
+    "dialogAfterEscape": false,
+    "focusAfterEscape": "Adjust build"
+  },
+  "assets": [
+    {
+      "src": "/icons/stats/health.svg",
+      "status": 200,
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icons/stats/attack.svg",
+      "status": 200,
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icons/stats/critical-rating.svg",
+      "status": 200,
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icons/stats/critical-damage-rating.svg",
+      "status": 200,
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icons/stats/armor-penetration.svg",
+      "status": 200,
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icons/stats/block-penetration.svg",
+      "status": 200,
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icons/stats/armor-rating.svg",
+      "status": 200,
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icons/stats/block-proficiency.svg",
+      "status": 200,
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icons/stats/critical-resistance.svg",
+      "status": 200,
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icons/stats/physical-resistance.svg",
+      "status": 200,
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "/icons/stats/energy-resistance.svg",
+      "status": 200,
+      "type": "image/svg+xml"
+    }
+  ],
+  "tests": {
+    "passed": 23,
+    "files": 4
+  },
+  "rootTypeScript": "passed",
+  "webTypeScript": "passed",
+  "uiEslint": "passed; existing baseline-browser-mapping freshness warning"
+}

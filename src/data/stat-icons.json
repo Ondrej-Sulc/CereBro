@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "icons": {
+    "criticalRating": {
+      "src": "/icons/stats/critical-rating.svg",
+      "color": "#a99024"
+    },
+    "criticalDamageRating": {
+      "src": "/icons/stats/critical-damage-rating.svg",
+      "color": "#a99024"
+    },
+    "armorPenetration": {
+      "src": "/icons/stats/armor-penetration.svg",
+      "color": "#872d13"
+    },
+    "blockPenetration": {
+      "src": "/icons/stats/block-penetration.svg",
+      "color": "#712986"
+    },
+    "criticalResistance": {
+      "src": "/icons/stats/critical-resistance.svg",
+      "color": "#a99024"
+    },
+    "armorRating": {
+      "src": "/icons/stats/armor-rating.svg",
+      "color": "#117986"
+    },
+    "blockProficiency": {
+      "src": "/icons/stats/block-proficiency.svg",
+      "color": "#115526"
+    },
+    "physicalResistance": {
+      "src": "/icons/stats/physical-resistance.svg",
+      "color": "#11772f"
+    },
+    "energyResistance": {
+      "src": "/icons/stats/energy-resistance.svg",
+      "color": "#724986"
+    },
+    "health": {
+      "src": "/icons/stats/health.svg",
+      "color": "#11772f"
+    },
+    "attack": {
+      "src": "/icons/stats/attack.svg",
+      "color": "#82542b"
+    }
+  }
+}

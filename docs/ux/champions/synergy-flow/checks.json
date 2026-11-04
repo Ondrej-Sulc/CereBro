@@ -1,0 +1,762 @@
+{
+  "tests": {
+    "passed": 73,
+    "files": 5
+  },
+  "webTypeScript": "passed",
+  "changedUiEslint": "passed; existing baseline-browser-mapping freshness notice",
+  "layouts": [
+    {
+      "clipped": [],
+      "documentWidth": 312,
+      "grids": [
+        {
+          "cards": 4,
+          "columns": "270px",
+          "flow": null,
+          "maxGap": 0,
+          "minGap": 0,
+          "overlaps": false,
+          "spanCount": 0
+        },
+        {
+          "cards": 23,
+          "columns": "270px",
+          "flow": null,
+          "maxGap": 0,
+          "minGap": 0,
+          "overlaps": false,
+          "spanCount": 0
+        }
+      ],
+      "width": 320
+    },
+    {
+      "clipped": [],
+      "documentWidth": 382,
+      "grids": [
+        {
+          "cards": 4,
+          "columns": "340px",
+          "flow": null,
+          "maxGap": 0,
+          "minGap": 0,
+          "overlaps": false,
+          "spanCount": 0
+        },
+        {
+          "cards": 23,
+          "columns": "340px",
+          "flow": null,
+          "maxGap": 0,
+          "minGap": 0,
+          "overlaps": false,
+          "spanCount": 0
+        }
+      ],
+      "width": 390
+    },
+    {
+      "clipped": [],
+      "documentWidth": 760,
+      "grids": [
+        {
+          "cards": 4,
+          "columns": "694px",
+          "flow": null,
+          "maxGap": 0,
+          "minGap": 0,
+          "overlaps": false,
+          "spanCount": 0
+        },
+        {
+          "cards": 23,
+          "columns": "694px",
+          "flow": null,
+          "maxGap": 0,
+          "minGap": 0,
+          "overlaps": false,
+          "spanCount": 0
+        }
+      ],
+      "width": 768
+    },
+    {
+      "clipped": [],
+      "documentWidth": 1016,
+      "grids": [
+        {
+          "cards": 4,
+          "columns": "934px",
+          "flow": null,
+          "maxGap": 0,
+          "minGap": 0,
+          "overlaps": false,
+          "spanCount": 0
+        },
+        {
+          "cards": 23,
+          "columns": "934px",
+          "flow": null,
+          "maxGap": 0,
+          "minGap": 0,
+          "overlaps": false,
+          "spanCount": 0
+        }
+      ],
+      "width": 1024
+    },
+    {
+      "clipped": [],
+      "documentWidth": 1072,
+      "grids": [
+        {
+          "cards": 4,
+          "columns": "990px",
+          "flow": null,
+          "maxGap": 0,
+          "minGap": 0,
+          "overlaps": false,
+          "spanCount": 0
+        },
+        {
+          "cards": 23,
+          "columns": "990px",
+          "flow": null,
+          "maxGap": 0,
+          "minGap": 0,
+          "overlaps": false,
+          "spanCount": 0
+        }
+      ],
+      "width": 1080
+    },
+    {
+      "clipped": [],
+      "documentWidth": 1080,
+      "grids": [
+        {
+          "cards": 4,
+          "columns": "494px 494px",
+          "flow": "masonry",
+          "maxGap": 12,
+          "minGap": 12,
+          "overlaps": false,
+          "spanCount": 4
+        },
+        {
+          "cards": 23,
+          "columns": "494px 494px",
+          "flow": "masonry",
+          "maxGap": 12,
+          "minGap": 12,
+          "overlaps": false,
+          "spanCount": 23
+        }
+      ],
+      "width": 1088
+    },
+    {
+      "clipped": [],
+      "documentWidth": 1272,
+      "grids": [
+        {
+          "cards": 4,
+          "columns": "590px 590px",
+          "flow": "masonry",
+          "maxGap": 12,
+          "minGap": 12,
+          "overlaps": false,
+          "spanCount": 4
+        },
+        {
+          "cards": 23,
+          "columns": "590px 590px",
+          "flow": "masonry",
+          "maxGap": 12,
+          "minGap": 12,
+          "overlaps": false,
+          "spanCount": 23
+        }
+      ],
+      "width": 1280
+    },
+    {
+      "clipped": [],
+      "documentWidth": 1528,
+      "grids": [
+        {
+          "cards": 4,
+          "columns": "710px 710px",
+          "flow": "masonry",
+          "maxGap": 12,
+          "minGap": 12,
+          "overlaps": false,
+          "spanCount": 4
+        },
+        {
+          "cards": 23,
+          "columns": "710px 710px",
+          "flow": "masonry",
+          "maxGap": 12,
+          "minGap": 12,
+          "overlaps": false,
+          "spanCount": 23
+        }
+      ],
+      "width": 1536
+    }
+  ],
+  "gapChecks": [
+    {
+      "name": "01-hulk-family-expanded",
+      "before": [
+        {
+          "gridHeight": 368,
+          "gaps": [
+            34,
+            12
+          ],
+          "maxGap": 34,
+          "overlaps": false
+        },
+        {
+          "gridHeight": 2856,
+          "gaps": [
+            12,
+            84,
+            34,
+            12,
+            104,
+            59,
+            12,
+            73,
+            12,
+            58,
+            12,
+            40,
+            12,
+            12,
+            12,
+            12,
+            12,
+            34,
+            12,
+            233,
+            12
+          ],
+          "maxGap": 233,
+          "overlaps": false
+        }
+      ],
+      "after": [
+        {
+          "gridHeight": 380,
+          "gaps": [
+            12,
+            12
+          ],
+          "maxGap": 12,
+          "overlaps": false
+        },
+        {
+          "gridHeight": 2485,
+          "gaps": [
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
+          "maxGap": 12,
+          "overlaps": false
+        }
+      ]
+    },
+    {
+      "name": "02-hulk-incoming",
+      "before": [
+        {
+          "gridHeight": 368,
+          "gaps": [
+            34,
+            12
+          ],
+          "maxGap": 34,
+          "overlaps": false
+        },
+        {
+          "gridHeight": 2730,
+          "gaps": [
+            12,
+            84,
+            34,
+            12,
+            104,
+            59,
+            12,
+            73,
+            12,
+            58,
+            12,
+            40,
+            12,
+            12,
+            12,
+            12,
+            12,
+            34,
+            12,
+            107,
+            12
+          ],
+          "maxGap": 107,
+          "overlaps": false
+        }
+      ],
+      "after": [
+        {
+          "gridHeight": 380,
+          "gaps": [
+            12,
+            12
+          ],
+          "maxGap": 12,
+          "overlaps": false
+        },
+        {
+          "gridHeight": 2400,
+          "gaps": [
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
+          "maxGap": 12,
+          "overlaps": false
+        }
+      ]
+    },
+    {
+      "name": "03-overseer-desktop",
+      "before": [
+        {
+          "gridHeight": 591,
+          "gaps": [
+            81,
+            58,
+            12,
+            12
+          ],
+          "maxGap": 81,
+          "overlaps": false
+        },
+        {
+          "gridHeight": 986,
+          "gaps": [
+            12,
+            12,
+            12,
+            106,
+            109
+          ],
+          "maxGap": 109,
+          "overlaps": false
+        }
+      ],
+      "after": [
+        {
+          "gridHeight": 581,
+          "gaps": [
+            12,
+            12,
+            12,
+            12
+          ],
+          "maxGap": 12,
+          "overlaps": false
+        },
+        {
+          "gridHeight": 879,
+          "gaps": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
+          "maxGap": 12,
+          "overlaps": false
+        }
+      ]
+    },
+    {
+      "name": "04-overseer-wide",
+      "before": [
+        {
+          "gridHeight": 525,
+          "gaps": [
+            59,
+            36,
+            12,
+            12
+          ],
+          "maxGap": 59,
+          "overlaps": false
+        },
+        {
+          "gridHeight": 876,
+          "gaps": [
+            12,
+            12,
+            12,
+            62,
+            87
+          ],
+          "maxGap": 87,
+          "overlaps": false
+        }
+      ],
+      "after": [
+        {
+          "gridHeight": 515,
+          "gaps": [
+            12,
+            12,
+            12,
+            12
+          ],
+          "maxGap": 12,
+          "overlaps": false
+        },
+        {
+          "gridHeight": 813,
+          "gaps": [
+            12,
+            12,
+            12,
+            12,
+            12
+          ],
+          "maxGap": 12,
+          "overlaps": false
+        }
+      ]
+    },
+    {
+      "name": "05-hulk-mobile",
+      "before": [
+        {
+          "gridHeight": 883,
+          "gaps": [
+            0,
+            0,
+            0
+          ],
+          "maxGap": 0,
+          "overlaps": false
+        },
+        {
+          "gridHeight": 5739,
+          "gaps": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "maxGap": 0,
+          "overlaps": false
+        }
+      ],
+      "after": [
+        {
+          "gridHeight": 883,
+          "gaps": [
+            0,
+            0,
+            0
+          ],
+          "maxGap": 0,
+          "overlaps": false
+        },
+        {
+          "gridHeight": 5739,
+          "gaps": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "maxGap": 0,
+          "overlaps": false
+        }
+      ]
+    },
+    {
+      "name": "06-hulk-small",
+      "before": [
+        {
+          "gridHeight": 1073,
+          "gaps": [
+            0,
+            0,
+            0
+          ],
+          "maxGap": 0,
+          "overlaps": false
+        },
+        {
+          "gridHeight": 6637,
+          "gaps": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "maxGap": 0,
+          "overlaps": false
+        }
+      ],
+      "after": [
+        {
+          "gridHeight": 1073,
+          "gaps": [
+            0,
+            0,
+            0
+          ],
+          "maxGap": 0,
+          "overlaps": false
+        },
+        {
+          "gridHeight": 6637,
+          "gaps": [
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0
+          ],
+          "maxGap": 0,
+          "overlaps": false
+        }
+      ]
+    }
+  ],
+  "linkedPassage": {
+    "focused": "champion-synergy-comp_009",
+    "issues": null,
+    "selected": "champion-synergy-family-comp_006",
+    "target": {
+      "bottom": 665.359375,
+      "height": 0,
+      "left": 63,
+      "right": 63,
+      "top": 665.359375,
+      "width": 0,
+      "x": 63,
+      "y": 665.359375
+    }
+  },
+  "filtered": {
+    "clipped": [],
+    "documentWidth": 1528,
+    "grids": [
+      {
+        "cards": 1,
+        "columns": "710px 710px",
+        "flow": "masonry",
+        "maxGap": 0,
+        "minGap": 12,
+        "overlaps": false,
+        "spanCount": 1
+      },
+      {
+        "cards": 4,
+        "columns": "710px 710px",
+        "flow": "masonry",
+        "maxGap": 12,
+        "minGap": 12,
+        "overlaps": false,
+        "spanCount": 4
+      }
+    ],
+    "width": 1536
+  },
+  "keyboard": {
+    "card": "champion-synergy-family-comp_006",
+    "focus": "Show partners and star requirements for IT'S COMPLICATED"
+  },
+  "beforeToggle": {
+    "cardLeft": 48,
+    "cardTop": 2860.359375,
+    "focused": "Black Widow (Deadly Origin)"
+  },
+  "afterToggle": {
+    "cardLeft": 48,
+    "cardTop": 2860.359375,
+    "focus": "Hide partners and star requirements for IT'S COMPLICATED",
+    "open": "true"
+  },
+  "expanded": {
+    "clipped": [],
+    "documentWidth": 1528,
+    "grids": [
+      {
+        "cards": 4,
+        "columns": "710px 710px",
+        "flow": "masonry",
+        "maxGap": 12,
+        "minGap": 12,
+        "overlaps": false,
+        "spanCount": 4
+      },
+      {
+        "cards": 23,
+        "columns": "710px 710px",
+        "flow": "masonry",
+        "maxGap": 12,
+        "minGap": 12,
+        "overlaps": false,
+        "spanCount": 23
+      }
+    ],
+    "width": 1536
+  },
+  "escape": {
+    "count": 27,
+    "focus": "Show partners and star requirements for IT'S COMPLICATED",
+    "hidden": true,
+    "issues": null
+  },
+  "semanticMatches": [
+    {
+      "case": "01-hulk-family-expanded",
+      "matches": true
+    },
+    {
+      "case": "02-hulk-incoming",
+      "matches": true
+    },
+    {
+      "case": "03-overseer-desktop",
+      "matches": true
+    },
+    {
+      "case": "04-overseer-wide",
+      "matches": true
+    },
+    {
+      "case": "05-hulk-mobile",
+      "matches": true
+    },
+    {
+      "case": "06-hulk-small",
+      "matches": true
+    }
+  ]
+}

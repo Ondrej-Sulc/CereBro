@@ -1,0 +1,215 @@
+{
+  "schemaVersion": 1,
+  "source": {
+    "bcg": "371DB0131A906AB077B58A9AE3F5D62D7E087C3A.bin",
+    "bcgSha256": "9e95551a68cfeeebf395f49b0bff676c5a2406ba7c30795c228cc48bd89ede61",
+    "tableField": 24,
+    "textureField": 5,
+    "colorField": 6,
+    "bundle": "ui.assetbundle",
+    "bundleSha256": "91679c15633f0336087415828a089a9ba0d28e7c71a73442216b4ac379aca28e",
+    "font": "Marvel-Icons-Font",
+    "fontSha256": "8a8784655a64d06a8c51b1ea20a14ed605bf6f81ef4556ff8412aa0ca0016b61"
+  },
+  "code": {
+    "HeroAttributesPanel": {
+      "file": "Marvel.Runtime/HeroAttributesPanel.txt",
+      "sha256": "f0c36d48cc29cd2fecae6c41c3b563405cb449a412faeb685d8aed44295c8fc0"
+    },
+    "HeroAttributeStatItem": {
+      "file": "Marvel.Runtime/HeroAttributeStatItem.txt",
+      "sha256": "1f33a94c06b2d75801c4984fba8acc054935f8d37cfdc9cabbc07241796bc3b2"
+    },
+    "StatFocusUtils": {
+      "file": "Marvel.Runtime/StatFocusUtils.txt",
+      "sha256": "bfc8030bbf85c33f1fb037e3b0c8e61b57f77e94162018907578fe7590923af8"
+    },
+    "StatFocusTuning": {
+      "file": "Marvel.Runtime/StatFocusTuning.txt",
+      "sha256": "273339ff0e0a35c78c55f90711d65bda41678f58a163b04beb87d8194cf174a2"
+    }
+  },
+  "binding": [
+    {
+      "object": "HeroAttributesPanel",
+      "pathId": "-7784077365821970594",
+      "field": "_attributeStatItemPrefab"
+    },
+    {
+      "object": "HeroAttributeStatItem",
+      "pathId": "7245765433682183347",
+      "field": "m_Component"
+    },
+    {
+      "object": "HeroAttributeStatItem",
+      "pathId": "-6195129331827931718",
+      "field": "_statIcon"
+    },
+    {
+      "object": "UILabel",
+      "pathId": "-7871379491077498935",
+      "field": "mCustomFont"
+    },
+    {
+      "object": "FontLocalizer",
+      "pathId": "3598631262208381323",
+      "fontPath": "UI/Fonts/Marvel-Icons-Font"
+    },
+    {
+      "object": "Marvel-Icons-Font",
+      "pathId": "7950789115386770100"
+    }
+  ],
+  "stats": {
+    "criticalRating": {
+      "nativeId": "crit_rating",
+      "texture": "P",
+      "color": "#a99024",
+      "contexts": [
+        "atk"
+      ],
+      "nameStringId": "ID_UI_ATTRIBUTE_CRIT_RATING_PROPERCASE",
+      "recordSha256": "ba0f350f30958d312d689b829c5d3a6a7c77a6ede0b5585bcbaf5c3ab1ee5fbc",
+      "codepoint": 80,
+      "glyphIndex": 51,
+      "src": "/icons/stats/critical-rating.svg",
+      "sha256": "91d73edbafbf83ff3fd305a8eaa2716dca9b84fb5b78646319e1a00326be77e4"
+    },
+    "criticalDamageRating": {
+      "nativeId": "crit_damage",
+      "texture": "D",
+      "color": "#a99024",
+      "contexts": [
+        "atk"
+      ],
+      "nameStringId": "ID_UI_ATTRIBUTE_CRIT_DMG_RATING_PROPERCASE",
+      "recordSha256": "c2f84970964e01e70f8b751bb1f75dee0834816b384a052e484cd9f2aea6ec70",
+      "codepoint": 68,
+      "glyphIndex": 39,
+      "src": "/icons/stats/critical-damage-rating.svg",
+      "sha256": "7d302aecd833b34ca745c5432af103ba8df1755c65589213481e0d0206282ac2"
+    },
+    "armorPenetration": {
+      "nativeId": "armor_pen",
+      "texture": "",
+      "color": "#872d13",
+      "contexts": [
+        "atk",
+        "def"
+      ],
+      "nameStringId": "ID_UI_ATTRIBUTE_ARMPEN_PROPERCASE",
+      "recordSha256": "c95374d746a63623c9b5979ae21b85b28796880a671ecb7cb626438d98465af1",
+      "codepoint": 58464,
+      "glyphIndex": 290,
+      "src": "/icons/stats/armor-penetration.svg",
+      "sha256": "e9bbc666c45db116c0454ec2ea252a55485320df05e7edce4528dcea1ab4d66c"
+    },
+    "blockPenetration": {
+      "nativeId": "block_pen",
+      "texture": "",
+      "color": "#712986",
+      "contexts": [
+        "atk"
+      ],
+      "nameStringId": "ID_UI_ATTRIBUTE_BLOCKPEN_PROPERCASE",
+      "recordSha256": "2292c4681d8c57f621f79c0fa0605b0b2accb210c17f2da45c91638b3626d611",
+      "codepoint": 59024,
+      "glyphIndex": 500,
+      "src": "/icons/stats/block-penetration.svg",
+      "sha256": "ceb24ac00f7b0d74c8cbf17b644698142b0cd7ff86bbbf6dc9f969e8ba917a2a"
+    },
+    "criticalResistance": {
+      "nativeId": "crit_hit_resist",
+      "texture": "q",
+      "color": "#a99024",
+      "contexts": [],
+      "nameStringId": "ID_UI_ATTRIBUTE_CRIT_RES_PROPERCASE",
+      "recordSha256": "dc944aca61e41e8b1f5607d1180e0f16d366888016a059e29b17fbc2888fc03b",
+      "codepoint": 113,
+      "glyphIndex": 84,
+      "src": "/icons/stats/critical-resistance.svg",
+      "sha256": "ec137e62bfb49f4be0668e91c8f02ee3d3596642c352e0bc838f9538a51c4f31"
+    },
+    "armorRating": {
+      "nativeId": "armor",
+      "texture": "a",
+      "color": "#117986",
+      "contexts": [
+        "atk"
+      ],
+      "nameStringId": "ID_UI_ATTRIBUTE_ARM_RATING_PROPERCASE",
+      "recordSha256": "2d2f9390508e38a9b6bddb4b0242115a0e10d94c04931e09e0dc1d71e5d744da",
+      "codepoint": 97,
+      "glyphIndex": 68,
+      "src": "/icons/stats/armor-rating.svg",
+      "sha256": "06df39376e8c87b8c6d0052d66b1a43216564b018d36ba06720858a212acc0f4"
+    },
+    "blockProficiency": {
+      "nativeId": "block_proficiency",
+      "texture": "B",
+      "color": "#115526",
+      "contexts": [
+        "atk"
+      ],
+      "nameStringId": "ID_UI_ATTRIBUTE_BLOCK_PROF_PROPERCASE",
+      "recordSha256": "b731de3d14804fddf679c53e255f3ad2e320e7db231aa72c3ff64ddb0ef6790b",
+      "codepoint": 66,
+      "glyphIndex": 37,
+      "src": "/icons/stats/block-proficiency.svg",
+      "sha256": "091dd1200c7402a9199911a66e9c1be26be277dba0b5773b5ab5c38d622ba99c"
+    },
+    "physicalResistance": {
+      "nativeId": "resist_physical",
+      "texture": "u",
+      "color": "#11772f",
+      "contexts": [
+        "atk"
+      ],
+      "nameStringId": "ID_UI_ATTRIBUTE_PHYSICAL_RESISTANCE_PROPERCASE",
+      "recordSha256": "4bdf0edd2d2bba51e365fca446cc44e3e5a1751e0d476ed958d4f7c67a2cd2f3",
+      "codepoint": 117,
+      "glyphIndex": 88,
+      "src": "/icons/stats/physical-resistance.svg",
+      "sha256": "34e7bce8867ed893e0c9409a95033f4c90642333cbcc3fcf036e25ce78ce579b"
+    },
+    "energyResistance": {
+      "nativeId": "resist_magic",
+      "texture": "t",
+      "color": "#724986",
+      "contexts": [
+        "atk"
+      ],
+      "nameStringId": "ID_UI_ATTRIBUTE_ENERGY_RESISTANCE_PROPERCASE",
+      "recordSha256": "5cc422dee153f23f297440a0dcd36574bfd9d7bd6216f13df54023c0e205b1fa",
+      "codepoint": 116,
+      "glyphIndex": 87,
+      "src": "/icons/stats/energy-resistance.svg",
+      "sha256": "f18c98e3bd526263b6c5ae338b1a24d4fc15c847ae254bb3bb45eb7bd5e7ae40"
+    },
+    "health": {
+      "nativeId": "health",
+      "texture": "H",
+      "color": "#11772f",
+      "contexts": [],
+      "nameStringId": "",
+      "recordSha256": "5614f4ced3b0a68d5edfea76777d8f5dd39a294afb6414de2d140eb3100e94a1",
+      "codepoint": 72,
+      "glyphIndex": 43,
+      "src": "/icons/stats/health.svg",
+      "sha256": "e168115b25953603a928cac787f4abdb45050d215eddaf5fdec3b6c301763f89"
+    },
+    "attack": {
+      "nativeId": "attack",
+      "texture": "W",
+      "color": "#82542b",
+      "contexts": [],
+      "nameStringId": "",
+      "recordSha256": "88e7c853009004f5afaf5c4b98b49e164cce9c4a9c988ad29b4b44ae7db0220e",
+      "codepoint": 87,
+      "glyphIndex": 58,
+      "src": "/icons/stats/attack.svg",
+      "sha256": "645f045899e7b81c074bb34c764354ba64db960736c9afc0aac60f9d41efc2dd"
+    }
+  },
+  "unresolved": []
+}

@@ -35,6 +35,94 @@ const render = async (targetSynergyId: string | null = null) => {
   await act(async () => new Promise<void>(resolve => window.requestAnimationFrame(() => resolve())))
 }
 const input = () => document.querySelector<HTMLInputElement>('input[type="search"]')!
+
+function observeCardSizes() {
+  const model = { columns: 2, heights: [130.25, 65.5, 90], notify: () => {}, disconnect: vi.fn() }
+  const readStyle = window.getComputedStyle.bind(window)
+  vi.stubGlobal("getComputedStyle", (element: Element) => {
+    const style = readStyle(element)
+    style.gridTemplateColumns = model.columns === 2 ? "500px 500px" : "1012px"
+    style.columnGap = "12px"
+    return style
+  })
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function (this: HTMLElement) {
+    const index = Number(this.id.match(/^champion-synergy-flow_(\d)$/)?.[1])
+    return new DOMRect(0, 0, 500, model.heights[index] ?? 0)
+  })
+  vi.stubGlobal("ResizeObserver", class implements ResizeObserver {
+    constructor(callback: ResizeObserverCallback) { model.notify = () => callback([], this) }
+    observe() {}
+    unobserve() {}
+    disconnect = model.disconnect
+  })
+  return model
+}
+
+async function renderFlow() {
+  const cards = [0, 1, 2].map(index => ({ ...view.owned[0], id: `flow_${index}`, name: `FLOW ${index}` }))
+  await act(async () => root.render(<TooltipProvider><ChampionSynergiesPanel owned={cards} incoming={[]} rarity={7} glossaryById={new Map()} /></TooltipProvider>))
+  return [...document.querySelectorAll<HTMLElement>("article")]
+}
+
+it("fits unequal card heights into the flow without changing catalog order and remeasures expanded content", async () => {
+  const sizes = observeCardSizes()
+  const cards = await renderFlow()
+  expect(cards.map(card => card.id)).toEqual(["champion-synergy-flow_0", "champion-synergy-flow_1", "champion-synergy-flow_2"])
+  expect(cards.map(card => card.style.gridRowEnd)).toEqual(["span 143", "span 78", "span 102"])
+  sizes.heights[0] = 240
+  await act(async () => { sizes.notify(); await new Promise<void>(resolve => requestAnimationFrame(() => resolve())) })
+  expect(cards[0].style.gridRowEnd).toBe("span 252")
+  expect(cards[1].style.gridRowEnd).toBe("span 78")
+  expect(cards[0].parentElement?.dataset.cardFlow).toBe("masonry")
+})
+
+it("restores natural single-column rows and cleans up its pending measurement when filtered away", async () => {
+  const sizes = observeCardSizes()
+  const cards = await renderFlow()
+  sizes.columns = 1
+  await act(async () => { sizes.notify(); await new Promise<void>(resolve => requestAnimationFrame(() => resolve())) })
+  expect(cards.every(card => card.style.gridRowEnd === "")).toBe(true)
+  expect(cards[0].parentElement?.dataset.cardFlow).toBeUndefined()
+  sizes.columns = 2
+  await act(async () => { sizes.notify(); await new Promise<void>(resolve => requestAnimationFrame(() => resolve())) })
+  expect(cards[0].style.gridRowEnd).toBe("span 143")
+  const cancel = vi.spyOn(window, "cancelAnimationFrame")
+  await act(async () => { sizes.notify(); root.render(<div />) })
+  expect(sizes.disconnect).toHaveBeenCalled()
+  expect(cancel).toHaveBeenCalled()
+})
+
+it("adds the partner's native class crest without repeating its accessible name or changing its champion link", async () => {
+  const decoratedRows = rows.map(row => ({ ...row, members: row.members.map(member => ({ ...member,
+    champion: { ...member.champion, class: "SCIENCE" as const },
+  })) }))
+  const decorated = buildChampionSynergyView(decoratedRows, current.id, 7)
+  await act(async () => root.render(<TooltipProvider><ChampionSynergiesPanel {...decorated} rarity={7} glossaryById={new Map()} /></TooltipProvider>))
+  const article = document.getElementById("champion-synergy-native_1")!
+  const link = article.querySelector<HTMLAnchorElement>('header a[href="/champions/partner"]')!
+  expect(link.textContent).toBe("Partner")
+  const portrait = link.querySelector('[data-partner-portrait]')!
+  expect(portrait.getAttribute("aria-hidden")).toBe("true")
+  expect(portrait.querySelector('[data-partner-class="SCIENCE"] img')?.getAttribute("src")).toContain("Science.png")
+  expect([...portrait.querySelectorAll("img")].every(image => image.alt === "")).toBe(true)
+  await act(async () => link.focus())
+  expect(document.activeElement).toBe(link)
+})
+
+it("keeps an unlinked partner keyboard-accessible without inventing a missing class crest", async () => {
+  const unknownRows = rows.map(row => ({ ...row, members: row.members.map(member => ({ ...member,
+    champion: { ...member.champion, slug: null },
+  })) }))
+  const unknown = buildChampionSynergyView(unknownRows, current.id, 7)
+  await act(async () => root.render(<TooltipProvider><ChampionSynergiesPanel {...unknown} rarity={7} glossaryById={new Map()} /></TooltipProvider>))
+  const badge = document.querySelector<HTMLElement>('article header [role="group"] [tabindex="0"]')!
+  expect(badge.textContent).toBe("Partner")
+  expect(badge.querySelector('[data-partner-portrait]')?.getAttribute("aria-hidden")).toBe("true")
+  expect(badge.querySelector('[data-partner-class]')).toBeNull()
+  await act(async () => badge.focus())
+  expect(document.activeElement).toBe(badge)
+})
+
 async function search(value: string) {
   await act(async () => {
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input(), value)

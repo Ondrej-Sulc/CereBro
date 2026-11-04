@@ -38,10 +38,12 @@ export function buildChampionSynergyView(rows: ChampionSynergy[], championId: nu
       rarities: [...new Set(matches.map(member => member.rarity))].sort((a, b) => a - b),
       champions: [...new Map(row.members.map(member => [member.champion.id, member.champion])).values()],
       partners: [...partners.values()].map(p => ({ ...p, rarities: p.rarities.sort((a, b) => a - b) }))
-        .sort((a, b) => a.name.localeCompare(b.name)),
+        .sort((a, b) => a.name.localeCompare(b.name, 'en')),
     });
   }
-  for (const cards of [owned, incoming]) cards.sort((a, b) => a.name.localeCompare(b.name) || a.id.localeCompare(b.id));
+  // SSR and the browser can have different host locales (for example Czech CH
+  // collation). English game labels must use the same order during hydration.
+  for (const cards of [owned, incoming]) cards.sort((a, b) => a.name.localeCompare(b.name, 'en') || a.id.localeCompare(b.id, 'en'));
   return { owned, incoming };
 }
 

@@ -1,0 +1,650 @@
+[
+  {
+    "name": "01-stats-mobile",
+    "width": 390,
+    "height": 844,
+    "slug": "absorbing-man",
+    "rarity": 7,
+    "rank": 6,
+    "target": "stats",
+    "documentWidth": 382,
+    "dpr": 1,
+    "heroHeight": 388.84375,
+    "icons": [],
+    "scrollY": 518,
+    "semantics": {
+      "attacks": "Attack breakdownDamage types, contact properties, and individual hits.9 moves · 16 hitsRecorded hits by damage typePhysical16 hits16 contact hits0 projectile hitsBasic attacks7Light 1ContactPhysical1 hitLight 2ContactPhysical1 hitLight 3ContactPhysical1 hitLight 4ContactPhysical1 hitMedium 1ContactPhysical1 hitMedium 2ContactPhysical1 hitHeavyContactPhysical2 hits0102Hits 1–2Contact · PhysicalSpecial attacks2Special 1ContactPhysical3 hitsUru Rush010203Hits 1–3Contact · PhysicalRead abilitySpecial 2ContactPhysical5 hitsMagma Spin0102030405Hits 1–5Contact · PhysicalRead ability",
+      "heroMetrics": [
+        "46,350PrestigeSig curve",
+        "134,100Health",
+        "10,071Attack"
+      ],
+      "heroName": "Absorbing Man",
+      "ratings": [
+        {
+          "label": "Level",
+          "value": "75"
+        },
+        {
+          "label": "Challenger rating",
+          "value": "250"
+        },
+        {
+          "label": "Critical rating",
+          "value": "306"
+        },
+        {
+          "label": "Critical damage rating",
+          "value": "1,018"
+        },
+        {
+          "label": "Armor penetration",
+          "value": "0"
+        },
+        {
+          "label": "Block penetration",
+          "value": "0"
+        },
+        {
+          "label": "Special damage multiplier",
+          "value": "1.20×"
+        },
+        {
+          "label": "Armor rating",
+          "value": "448"
+        },
+        {
+          "label": "Block proficiency",
+          "value": "4,125"
+        },
+        {
+          "label": "Critical resistance",
+          "value": "688"
+        },
+        {
+          "label": "Physical resistance",
+          "value": "0"
+        },
+        {
+          "label": "Energy resistance",
+          "value": "0"
+        }
+      ]
+    },
+    "statsHeight": 2027.78125,
+    "url": "http://localhost:3000/champions/absorbing-man?tab=stats&rarity=7&rank=6&sig=200&ascension=0",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) T3CodeNightly/0.1.8-nightly.20261104.4179 Chrome/152.0.7977.169 Electron/44.10.1 Safari/537.36",
+    "viewport": [
+      390,
+      844
+    ],
+    "screenshot": "C:\\Users\\ossul\\.t3\\userdata\\browser-artifacts\\browser-screenshot-localhost-mw2jxxpy-e520f231.png"
+  },
+  {
+    "name": "02-stats-desktop",
+    "width": 1280,
+    "height": 900,
+    "slug": "absorbing-man",
+    "rarity": 7,
+    "rank": 6,
+    "target": "stats",
+    "documentWidth": 1272,
+    "dpr": 1,
+    "heroHeight": 382,
+    "icons": [],
+    "scrollY": 447,
+    "semantics": {
+      "attacks": "Attack breakdownDamage types, contact properties, and individual hits.9 moves · 16 hitsRecorded hits by damage typePhysical16 hits16 contact hits0 projectile hitsBasic attacks7Light 1ContactPhysical1 hitLight 2ContactPhysical1 hitLight 3ContactPhysical1 hitLight 4ContactPhysical1 hitMedium 1ContactPhysical1 hitMedium 2ContactPhysical1 hitHeavyContactPhysical2 hits0102Hits 1–2Contact · PhysicalSpecial attacks2Special 1ContactPhysical3 hitsUru Rush010203Hits 1–3Contact · PhysicalRead abilitySpecial 2ContactPhysical5 hitsMagma Spin0102030405Hits 1–5Contact · PhysicalRead ability",
+      "heroMetrics": [
+        "46,350PrestigeSig curve",
+        "134,100Health",
+        "10,071Attack"
+      ],
+      "heroName": "Absorbing Man",
+      "ratings": [
+        {
+          "label": "Level",
+          "value": "75"
+        },
+        {
+          "label": "Challenger rating",
+          "value": "250"
+        },
+        {
+          "label": "Critical rating",
+          "value": "306"
+        },
+        {
+          "label": "Critical damage rating",
+          "value": "1,018"
+        },
+        {
+          "label": "Armor penetration",
+          "value": "0"
+        },
+        {
+          "label": "Block penetration",
+          "value": "0"
+        },
+        {
+          "label": "Special damage multiplier",
+          "value": "1.20×"
+        },
+        {
+          "label": "Armor rating",
+          "value": "448"
+        },
+        {
+          "label": "Block proficiency",
+          "value": "4,125"
+        },
+        {
+          "label": "Critical resistance",
+          "value": "688"
+        },
+        {
+          "label": "Physical resistance",
+          "value": "0"
+        },
+        {
+          "label": "Energy resistance",
+          "value": "0"
+        }
+      ]
+    },
+    "statsHeight": 1096.890625,
+    "url": "http://localhost:3000/champions/absorbing-man?tab=stats&rarity=7&rank=6&sig=200&ascension=0",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) T3CodeNightly/0.1.8-nightly.20261104.4179 Chrome/152.0.7977.169 Electron/44.10.1 Safari/537.36",
+    "viewport": [
+      1280,
+      900
+    ],
+    "screenshot": "C:\\Users\\ossul\\.t3\\userdata\\browser-artifacts\\browser-screenshot-localhost-mw2jy6z9-dce90a53.png"
+  },
+  {
+    "name": "03-stats-small",
+    "width": 320,
+    "height": 568,
+    "slug": "absorbing-man",
+    "rarity": 7,
+    "rank": 6,
+    "target": "stats",
+    "documentWidth": 312,
+    "dpr": 1,
+    "heroHeight": 366.515625,
+    "icons": [],
+    "scrollY": 496,
+    "semantics": {
+      "attacks": "Attack breakdownDamage types, contact properties, and individual hits.9 moves · 16 hitsRecorded hits by damage typePhysical16 hits16 contact hits0 projectile hitsBasic attacks7Light 1ContactPhysical1 hitLight 2ContactPhysical1 hitLight 3ContactPhysical1 hitLight 4ContactPhysical1 hitMedium 1ContactPhysical1 hitMedium 2ContactPhysical1 hitHeavyContactPhysical2 hits0102Hits 1–2Contact · PhysicalSpecial attacks2Special 1ContactPhysical3 hitsUru Rush010203Hits 1–3Contact · PhysicalRead abilitySpecial 2ContactPhysical5 hitsMagma Spin0102030405Hits 1–5Contact · PhysicalRead ability",
+      "heroMetrics": [
+        "46,350PrestigeSig curve",
+        "134,100Health",
+        "10,071Attack"
+      ],
+      "heroName": "Absorbing Man",
+      "ratings": [
+        {
+          "label": "Level",
+          "value": "75"
+        },
+        {
+          "label": "Challenger rating",
+          "value": "250"
+        },
+        {
+          "label": "Critical rating",
+          "value": "306"
+        },
+        {
+          "label": "Critical damage rating",
+          "value": "1,018"
+        },
+        {
+          "label": "Armor penetration",
+          "value": "0"
+        },
+        {
+          "label": "Block penetration",
+          "value": "0"
+        },
+        {
+          "label": "Special damage multiplier",
+          "value": "1.20×"
+        },
+        {
+          "label": "Armor rating",
+          "value": "448"
+        },
+        {
+          "label": "Block proficiency",
+          "value": "4,125"
+        },
+        {
+          "label": "Critical resistance",
+          "value": "688"
+        },
+        {
+          "label": "Physical resistance",
+          "value": "0"
+        },
+        {
+          "label": "Energy resistance",
+          "value": "0"
+        }
+      ]
+    },
+    "statsHeight": 2325.78125,
+    "url": "http://localhost:3000/champions/absorbing-man?tab=stats&rarity=7&rank=6&sig=200&ascension=0",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) T3CodeNightly/0.1.8-nightly.20261104.4179 Chrome/152.0.7977.169 Electron/44.10.1 Safari/537.36",
+    "viewport": [
+      320,
+      568
+    ],
+    "screenshot": "C:\\Users\\ossul\\.t3\\userdata\\browser-artifacts\\browser-screenshot-localhost-mw2jy9x6-ef114bc0.png"
+  },
+  {
+    "name": "04-hero-mobile",
+    "width": 390,
+    "height": 844,
+    "slug": "absorbing-man",
+    "rarity": 7,
+    "rank": 6,
+    "target": "hero",
+    "documentWidth": 382,
+    "dpr": 1,
+    "heroHeight": 388.84375,
+    "icons": [],
+    "scrollY": 0,
+    "semantics": {
+      "attacks": "Attack breakdownDamage types, contact properties, and individual hits.9 moves · 16 hitsRecorded hits by damage typePhysical16 hits16 contact hits0 projectile hitsBasic attacks7Light 1ContactPhysical1 hitLight 2ContactPhysical1 hitLight 3ContactPhysical1 hitLight 4ContactPhysical1 hitMedium 1ContactPhysical1 hitMedium 2ContactPhysical1 hitHeavyContactPhysical2 hits0102Hits 1–2Contact · PhysicalSpecial attacks2Special 1ContactPhysical3 hitsUru Rush010203Hits 1–3Contact · PhysicalRead abilitySpecial 2ContactPhysical5 hitsMagma Spin0102030405Hits 1–5Contact · PhysicalRead ability",
+      "heroMetrics": [
+        "46,350PrestigeSig curve",
+        "134,100Health",
+        "10,071Attack"
+      ],
+      "heroName": "Absorbing Man",
+      "ratings": [
+        {
+          "label": "Level",
+          "value": "75"
+        },
+        {
+          "label": "Challenger rating",
+          "value": "250"
+        },
+        {
+          "label": "Critical rating",
+          "value": "306"
+        },
+        {
+          "label": "Critical damage rating",
+          "value": "1,018"
+        },
+        {
+          "label": "Armor penetration",
+          "value": "0"
+        },
+        {
+          "label": "Block penetration",
+          "value": "0"
+        },
+        {
+          "label": "Special damage multiplier",
+          "value": "1.20×"
+        },
+        {
+          "label": "Armor rating",
+          "value": "448"
+        },
+        {
+          "label": "Block proficiency",
+          "value": "4,125"
+        },
+        {
+          "label": "Critical resistance",
+          "value": "688"
+        },
+        {
+          "label": "Physical resistance",
+          "value": "0"
+        },
+        {
+          "label": "Energy resistance",
+          "value": "0"
+        }
+      ]
+    },
+    "statsHeight": 2027.78125,
+    "url": "http://localhost:3000/champions/absorbing-man?tab=stats&rarity=7&rank=6&sig=200&ascension=0",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) T3CodeNightly/0.1.8-nightly.20261104.4179 Chrome/152.0.7977.169 Electron/44.10.1 Safari/537.36",
+    "viewport": [
+      390,
+      844
+    ],
+    "screenshot": "C:\\Users\\ossul\\.t3\\userdata\\browser-artifacts\\browser-screenshot-localhost-mw2jyc52-038f5ff3.png"
+  },
+  {
+    "name": "05-hero-desktop",
+    "width": 1280,
+    "height": 900,
+    "slug": "absorbing-man",
+    "rarity": 7,
+    "rank": 6,
+    "target": "hero",
+    "documentWidth": 1272,
+    "dpr": 1,
+    "heroHeight": 382,
+    "icons": [],
+    "scrollY": 0,
+    "semantics": {
+      "attacks": "Attack breakdownDamage types, contact properties, and individual hits.9 moves · 16 hitsRecorded hits by damage typePhysical16 hits16 contact hits0 projectile hitsBasic attacks7Light 1ContactPhysical1 hitLight 2ContactPhysical1 hitLight 3ContactPhysical1 hitLight 4ContactPhysical1 hitMedium 1ContactPhysical1 hitMedium 2ContactPhysical1 hitHeavyContactPhysical2 hits0102Hits 1–2Contact · PhysicalSpecial attacks2Special 1ContactPhysical3 hitsUru Rush010203Hits 1–3Contact · PhysicalRead abilitySpecial 2ContactPhysical5 hitsMagma Spin0102030405Hits 1–5Contact · PhysicalRead ability",
+      "heroMetrics": [
+        "46,350PrestigeSig curve",
+        "134,100Health",
+        "10,071Attack"
+      ],
+      "heroName": "Absorbing Man",
+      "ratings": [
+        {
+          "label": "Level",
+          "value": "75"
+        },
+        {
+          "label": "Challenger rating",
+          "value": "250"
+        },
+        {
+          "label": "Critical rating",
+          "value": "306"
+        },
+        {
+          "label": "Critical damage rating",
+          "value": "1,018"
+        },
+        {
+          "label": "Armor penetration",
+          "value": "0"
+        },
+        {
+          "label": "Block penetration",
+          "value": "0"
+        },
+        {
+          "label": "Special damage multiplier",
+          "value": "1.20×"
+        },
+        {
+          "label": "Armor rating",
+          "value": "448"
+        },
+        {
+          "label": "Block proficiency",
+          "value": "4,125"
+        },
+        {
+          "label": "Critical resistance",
+          "value": "688"
+        },
+        {
+          "label": "Physical resistance",
+          "value": "0"
+        },
+        {
+          "label": "Energy resistance",
+          "value": "0"
+        }
+      ]
+    },
+    "statsHeight": 1096.890625,
+    "url": "http://localhost:3000/champions/absorbing-man?tab=stats&rarity=7&rank=6&sig=200&ascension=0",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) T3CodeNightly/0.1.8-nightly.20261104.4179 Chrome/152.0.7977.169 Electron/44.10.1 Safari/537.36",
+    "viewport": [
+      1280,
+      900
+    ],
+    "screenshot": "C:\\Users\\ossul\\.t3\\userdata\\browser-artifacts\\browser-screenshot-localhost-mw2jylfh-67191cd0.png"
+  },
+  {
+    "name": "06-hero-small-long",
+    "width": 320,
+    "height": 568,
+    "slug": "star-lord-kitty-pryde",
+    "rarity": 7,
+    "rank": 6,
+    "target": "hero",
+    "documentWidth": 312,
+    "dpr": 1,
+    "heroHeight": 371.15625,
+    "icons": [],
+    "scrollY": 0,
+    "semantics": {
+      "attacks": "Attack breakdownDamage types, contact properties, and individual hits.9 moves · 18 hitsRecorded hits by damage typePhysical16 hitsEnergy2 hits10 contact hits8 projectile hitsBasic attacks7Light 1ContactPhysical1 hitLight 2ContactPhysical1 hitLight 3ContactPhysical1 hitLight 4ContactPhysical1 hitMedium 1ContactPhysical1 hitMedium 2ProjectilePhysical1 hitHeavyProjectilePhysical2 hits0102Hits 1–2Projectile · PhysicalSpecial attacks2Special 1ContactPhysicalEnergy5 hitsMeteor Heeldrop0102030405Hits 1–3Contact · PhysicalHits 4–5Contact · EnergyRead abilitySpecial 2ProjectilePhysical5 hitsPew Pew Pew Pew Pew0102030405Hits 1–5Projectile · PhysicalRead ability",
+      "heroMetrics": [
+        "47,640PrestigeSig curve",
+        "110,979Health",
+        "11,048Attack"
+      ],
+      "heroName": "Star-LordKitty Pryde",
+      "ratings": [
+        {
+          "label": "Level",
+          "value": "75"
+        },
+        {
+          "label": "Challenger rating",
+          "value": "250"
+        },
+        {
+          "label": "Critical rating",
+          "value": "1,236"
+        },
+        {
+          "label": "Critical damage rating",
+          "value": "1,468"
+        },
+        {
+          "label": "Armor penetration",
+          "value": "0"
+        },
+        {
+          "label": "Block penetration",
+          "value": "0"
+        },
+        {
+          "label": "Special damage multiplier",
+          "value": "1.20×"
+        },
+        {
+          "label": "Armor rating",
+          "value": "1,124"
+        },
+        {
+          "label": "Block proficiency",
+          "value": "5,108"
+        },
+        {
+          "label": "Critical resistance",
+          "value": "0"
+        },
+        {
+          "label": "Physical resistance",
+          "value": "0"
+        },
+        {
+          "label": "Energy resistance",
+          "value": "0"
+        }
+      ]
+    },
+    "statsHeight": 2407.78125,
+    "url": "http://localhost:3000/champions/star-lord-kitty-pryde?tab=stats&rarity=7&rank=6&sig=200&ascension=0",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) T3CodeNightly/0.1.8-nightly.20261104.4179 Chrome/152.0.7977.169 Electron/44.10.1 Safari/537.36",
+    "viewport": [
+      320,
+      568
+    ],
+    "screenshot": "C:\\Users\\ossul\\.t3\\userdata\\browser-artifacts\\browser-screenshot-localhost-mw2jynne-e8acb93a.png"
+  },
+  {
+    "name": "07-stats-long",
+    "width": 390,
+    "height": 844,
+    "slug": "star-lord-kitty-pryde",
+    "rarity": 7,
+    "rank": 6,
+    "target": "stats",
+    "documentWidth": 382,
+    "dpr": 1,
+    "heroHeight": 385.125,
+    "icons": [],
+    "scrollY": 514,
+    "semantics": {
+      "attacks": "Attack breakdownDamage types, contact properties, and individual hits.9 moves · 18 hitsRecorded hits by damage typePhysical16 hitsEnergy2 hits10 contact hits8 projectile hitsBasic attacks7Light 1ContactPhysical1 hitLight 2ContactPhysical1 hitLight 3ContactPhysical1 hitLight 4ContactPhysical1 hitMedium 1ContactPhysical1 hitMedium 2ProjectilePhysical1 hitHeavyProjectilePhysical2 hits0102Hits 1–2Projectile · PhysicalSpecial attacks2Special 1ContactPhysicalEnergy5 hitsMeteor Heeldrop0102030405Hits 1–3Contact · PhysicalHits 4–5Contact · EnergyRead abilitySpecial 2ProjectilePhysical5 hitsPew Pew Pew Pew Pew0102030405Hits 1–5Projectile · PhysicalRead ability",
+      "heroMetrics": [
+        "47,640PrestigeSig curve",
+        "110,979Health",
+        "11,048Attack"
+      ],
+      "heroName": "Star-LordKitty Pryde",
+      "ratings": [
+        {
+          "label": "Level",
+          "value": "75"
+        },
+        {
+          "label": "Challenger rating",
+          "value": "250"
+        },
+        {
+          "label": "Critical rating",
+          "value": "1,236"
+        },
+        {
+          "label": "Critical damage rating",
+          "value": "1,468"
+        },
+        {
+          "label": "Armor penetration",
+          "value": "0"
+        },
+        {
+          "label": "Block penetration",
+          "value": "0"
+        },
+        {
+          "label": "Special damage multiplier",
+          "value": "1.20×"
+        },
+        {
+          "label": "Armor rating",
+          "value": "1,124"
+        },
+        {
+          "label": "Block proficiency",
+          "value": "5,108"
+        },
+        {
+          "label": "Critical resistance",
+          "value": "0"
+        },
+        {
+          "label": "Physical resistance",
+          "value": "0"
+        },
+        {
+          "label": "Energy resistance",
+          "value": "0"
+        }
+      ]
+    },
+    "statsHeight": 2082.78125,
+    "url": "http://localhost:3000/champions/star-lord-kitty-pryde?tab=stats&rarity=7&rank=6&sig=200&ascension=0",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) T3CodeNightly/0.1.8-nightly.20261104.4179 Chrome/152.0.7977.169 Electron/44.10.1 Safari/537.36",
+    "viewport": [
+      390,
+      844
+    ],
+    "screenshot": "C:\\Users\\ossul\\.t3\\userdata\\browser-artifacts\\browser-screenshot-localhost-mw2jyqoo-5e908dd1.png"
+  },
+  {
+    "name": "08-stats-six-star",
+    "width": 390,
+    "height": 844,
+    "slug": "ms-marvel",
+    "rarity": 6,
+    "rank": 5,
+    "target": "stats",
+    "documentWidth": 382,
+    "dpr": 1,
+    "heroHeight": 351.109375,
+    "icons": [],
+    "scrollY": 480,
+    "semantics": {
+      "attacks": "Attack breakdownDamage types, contact properties, and individual hits.9 moves · 13 hitsRecorded hits by damage typePhysical10 hitsEnergy3 hits12 contact hits1 projectile hitsBasic attacks7Light 1ContactPhysical1 hitLight 2ContactPhysical1 hitLight 3ContactPhysical1 hitLight 4ContactPhysical1 hitMedium 1ContactPhysical1 hitMedium 2ContactPhysical1 hitHeavyContactPhysical4 hits01020304Hits 1–4Contact · PhysicalSpecial attacks2Special 1ProjectileEnergyHeatBeamCosmic1 hitSpecial 2ContactEnergyCosmicKick2 hits0102Hit 1Contact · Energy · Cosmic · KickHit 2Contact · Energy",
+      "heroMetrics": [
+        "17,300PrestigeSig curve",
+        "53,576Health",
+        "4,388Attack"
+      ],
+      "heroName": "Ms. Marvel",
+      "ratings": [
+        {
+          "label": "Level",
+          "value": "65"
+        },
+        {
+          "label": "Challenger rating",
+          "value": "150"
+        },
+        {
+          "label": "Critical rating",
+          "value": "791"
+        },
+        {
+          "label": "Critical damage rating",
+          "value": "1,500"
+        },
+        {
+          "label": "Armor penetration",
+          "value": "0"
+        },
+        {
+          "label": "Block penetration",
+          "value": "0"
+        },
+        {
+          "label": "Special damage multiplier",
+          "value": "1.20×"
+        },
+        {
+          "label": "Armor rating",
+          "value": "563"
+        },
+        {
+          "label": "Block proficiency",
+          "value": "3,238"
+        },
+        {
+          "label": "Critical resistance",
+          "value": "0"
+        },
+        {
+          "label": "Physical resistance",
+          "value": "0"
+        },
+        {
+          "label": "Energy resistance",
+          "value": "0"
+        }
+      ]
+    },
+    "statsHeight": 1840.78125,
+    "url": "http://localhost:3000/champions/ms-marvel?tab=stats&rarity=6&rank=5&sig=200&ascension=0",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) T3CodeNightly/0.1.8-nightly.20261104.4179 Chrome/152.0.7977.169 Electron/44.10.1 Safari/537.36",
+    "viewport": [
+      390,
+      844
+    ],
+    "screenshot": "C:\\Users\\ossul\\.t3\\userdata\\browser-artifacts\\browser-screenshot-localhost-mw2jyspr-49313bdd.png"
+  }
+]

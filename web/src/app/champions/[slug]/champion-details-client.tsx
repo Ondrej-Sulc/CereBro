@@ -6,6 +6,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperti
 import { BookOpen, Check, ChevronDown, Copy, Crosshair, Layers3, Link2, SlidersHorizontal, Swords, Target, Users } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TooltipProvider } from "@/components/ui/tooltip"
+import { ChampionStatIcon, type ChampionStatIconKey } from "@/components/champions/champion-stat-icon"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { getChampionClassColors } from "@/lib/championClassHelper"
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
@@ -190,8 +191,8 @@ function ChampionDossier({ view, pageState, updatePageState }: {
             <div className={styles.heroMetricStrip}>
               <div className={styles.heroMetrics}>
                 <DossierPrestigeMetric view={view} />
-                <DossierMetric label="Health" value={format(view.health)} />
-                <DossierMetric label="Attack" value={format(view.attack)} />
+                <DossierMetric label="Health" value={format(view.health)} icon="health" />
+                <DossierMetric label="Attack" value={format(view.attack)} icon="attack" />
               </div>
             </div>
           </div>
@@ -324,8 +325,8 @@ function DossierTraits({ view }: { view: ChampionDetailsView }) {
   return <section aria-label="Champion tags" className="mt-10 border-t border-white/10 pt-6"><h3 className="mb-4 text-sm font-medium text-slate-400">Champion tags</h3><div className="flex flex-wrap gap-2">{view.champion.tags.map(tag => <span key={tag.id} className="rounded-md border border-white/[.08] bg-white/[.025] px-3 py-1.5 text-xs text-slate-400">{tag.name}</span>)}</div></section>
 }
 
-function DossierMetric({ label, value }: { label: string; value: string }) {
-  return <div className={styles.heroMetric}><div className={styles.metricValue}>{value}</div><div className={styles.metricLabel}>{label}</div></div>
+function DossierMetric({ label, value, icon }: { label: string; value: string; icon?: ChampionStatIconKey }) {
+  return <div className={styles.heroMetric}><div className={styles.metricValue}>{value}</div><div className={cn(styles.metricLabel, icon && styles.metricLabelWithIcon)}>{icon && <ChampionStatIcon stat={icon} plain />}{label}</div></div>
 }
 
 function DossierPrestigeMetric({ view }: { view: ChampionDetailsView }) {

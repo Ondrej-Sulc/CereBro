@@ -108,6 +108,16 @@ it("reopens and copies a linked synergy with its exact source ID and selected bu
   expect(copied.searchParams.get("sig")).toBe("75")
 })
 
+it("shows decorative game glyphs beside the visible Health and Attack labels", async () => {
+  await act(async () => root.render(<ChampionDetailsClient {...props} />))
+  const icons = [...document.querySelectorAll<HTMLElement>("[data-stat-icon]")]
+  expect(icons.map(icon => icon.dataset.statIcon)).toEqual(["health", "attack"])
+  for (const icon of icons) {
+    expect(icon.getAttribute("aria-hidden")).toBe("true")
+    expect(icon.parentElement?.textContent).toBe(icon.dataset.statIcon === "health" ? "Health" : "Attack")
+  }
+})
+
 it("drops a legacy source fragment on a deliberate section change and restores it with Back", async () => {
   window.history.replaceState(null, "", "/champions/current?tab=synergies#champion-synergy-catalog_alias")
   await act(async () => root.render(<ChampionDetailsClient {...props} />))
