@@ -15,6 +15,7 @@ We use separate, optimized `Dockerfile`s for the Bot and Web services.
 *   **Deployment Identity:** Next.js uses deployment metadata (`APP_VERSION`, `RAILWAY_GIT_COMMIT_SHA`, `RAILWAY_DEPLOYMENT_ID`, etc.) as the build id and response version so clients can detect stale deployments.
 *   **PostHog source maps:** Upload is disabled in the Railway Docker build, whose builder rejects secret mounts. The optional Next.js integration requires a separate CI build with a build-only write credential; see [error tracking setup](error-tracking-fixes.md#private-source-maps).
 *   **Server Actions:** Self-hosted deploys must provide a stable `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` at build time, or provide `AUTH_SECRET`/`NEXTAUTH_SECRET` at build time so the build can derive one. This prevents Server Action id mismatches across instances.
+*   **CI build memory:** The GitHub Actions web-build step uses `NODE_OPTIONS=--max-old-space-size=4096`, matching the Railway Docker build. The default approximately 2GB Node heap can exhaust memory during Next.js TypeScript checking even after compilation succeeds.
 
 ### Bot Service (`Dockerfile`)
 *   **Manual Packaging:** `pnpm deploy` is avoided because it ignored the `dist` folder.
