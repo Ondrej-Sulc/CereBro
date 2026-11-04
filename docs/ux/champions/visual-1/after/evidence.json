@@ -1,0 +1,149 @@
+{
+  "phase": "after",
+  "captures": [
+    {
+      "name": "01-desktop-landing",
+      "url": "http://localhost:3000/champions/absorbing-man?rarity=7&rank=6&sig=200&ascension=0",
+      "scrollY": 0,
+      "viewport": [
+        1280,
+        800
+      ],
+      "documentWidth": 1280,
+      "heading": "Absorbing Man",
+      "effectHeadings": [
+        "Gains",
+        "Inflicts",
+        "Immunities & resistances",
+        "Champion tags"
+      ],
+      "missingImages": [
+        ""
+      ],
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36"
+    },
+    {
+      "name": "02-desktop-overview",
+      "url": "http://localhost:3000/champions/absorbing-man?rarity=7&rank=6&sig=200&ascension=0",
+      "scrollY": 431,
+      "viewport": [
+        1280,
+        800
+      ],
+      "documentWidth": 1280,
+      "heading": "Absorbing Man",
+      "effectHeadings": [
+        "Gains",
+        "Inflicts",
+        "Immunities & resistances",
+        "Champion tags"
+      ],
+      "missingImages": [],
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36"
+    },
+    {
+      "name": "03-mobile-landing",
+      "url": "http://localhost:3000/champions/absorbing-man?rarity=7&rank=6&sig=200&ascension=0",
+      "scrollY": 0,
+      "viewport": [
+        390,
+        844
+      ],
+      "documentWidth": 390,
+      "heading": "Absorbing Man",
+      "effectHeadings": [
+        "Gains",
+        "Inflicts",
+        "Immunities & resistances",
+        "Champion tags"
+      ],
+      "missingImages": [],
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36"
+    },
+    {
+      "name": "04-mobile-overview",
+      "url": "http://localhost:3000/champions/absorbing-man?rarity=7&rank=6&sig=200&ascension=0",
+      "scrollY": 504,
+      "viewport": [
+        390,
+        844
+      ],
+      "documentWidth": 390,
+      "heading": "Absorbing Man",
+      "effectHeadings": [
+        "Gains",
+        "Inflicts",
+        "Immunities & resistances",
+        "Champion tags"
+      ],
+      "missingImages": [],
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36"
+    },
+    {
+      "name": "05-small-mobile",
+      "url": "http://localhost:3000/champions/absorbing-man?rarity=7&rank=6&sig=200&ascension=0",
+      "scrollY": 0,
+      "viewport": [
+        320,
+        568
+      ],
+      "documentWidth": 320,
+      "heading": "Absorbing Man",
+      "effectHeadings": [
+        "Gains",
+        "Inflicts",
+        "Immunities & resistances",
+        "Champion tags"
+      ],
+      "missingImages": [],
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36"
+    },
+    {
+      "name": "06-long-name",
+      "url": "http://localhost:3000/champions/abomination-immortal?rarity=7&rank=6&sig=200&ascension=0",
+      "scrollY": 0,
+      "viewport": [
+        320,
+        568
+      ],
+      "documentWidth": 320,
+      "heading": "AbominationImmortal",
+      "effectHeadings": [
+        "Gains",
+        "Inflicts",
+        "Immunities & resistances",
+        "Champion tags"
+      ],
+      "missingImages": [
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        ""
+      ],
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36"
+    },
+    {
+      "name": "07-sparse-overview",
+      "url": "http://localhost:3000/champions/ms-marvel?rarity=7&rank=6&sig=200&ascension=0",
+      "scrollY": 465,
+      "viewport": [
+        390,
+        844
+      ],
+      "documentWidth": 390,
+      "heading": "Ms. Marvel",
+      "effectHeadings": [
+        "Gains",
+        "Immunities & resistances",
+        "Champion tags"
+      ],
+      "missingImages": [],
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36"
+    }
+  ],
+  "diagnostics": []
+}

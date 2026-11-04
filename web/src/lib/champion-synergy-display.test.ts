@@ -9,6 +9,18 @@ const card = (id: string, stars: number[], championStars = [6]): ChampionSynergy
 })
 
 describe("leveled synergy families", () => {
+  it("retains distinct icons and every original alias instead of borrowing another level's icon", () => {
+    const first = { ...card("a", [4]), iconUrl: "/native-a.svg" }
+    const same = { ...card("b", [5]), iconUrl: first.iconUrl }
+    const different = { ...card("c", [6]), iconUrl: "/native-b.svg" }
+    const unknown = { ...card("d", [7]) }
+    const cards = [first, same, different, unknown]
+    expect(groupChampionSynergyCards(cards).map(c => c.ids)).toEqual([["a", "b"], ["c"], ["d"]])
+    const families = groupChampionSynergyFamilies(cards.map((c, i) => ({ ...c, name: `FAMILY Lv. ${i + 1}` })))
+    expect(families).toHaveLength(3)
+    expect(families.flatMap(f => f.variants.flatMap(v => v.ids))).toEqual(["a", "b", "c", "d"])
+  })
+
   it("keeps exact bonuses and star rules under a shared family, ordered numerically", () => {
     const first = { ...card("level-one", [2, 3]), name: "FRIENDS Lv. 1", description: "All Champions gain +70 Armor Rating." }
     const second = { ...card("level-two", [4]), name: "FRIENDS Lv. 2", description: "All Champions gain +95 Armor Rating." }

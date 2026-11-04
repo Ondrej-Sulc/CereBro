@@ -1,0 +1,98 @@
+﻿{
+    "files":  [
+                  {
+                      "sha256":  "9f343dcfafbbd3e2dbe9f6fb40cee693ee1c0f980d09a80964a8231e03ffd32c",
+                      "path":  "web/src/app/champions/[slug]/champion-synergies-panel.tsx"
+                  },
+                  {
+                      "sha256":  "aaa9a8671c99ef6b14314b58d26e4b1c5c081a917e10995755b94e1e47aa036f",
+                      "path":  "web/src/app/champions/[slug]/champion-dossier.module.css"
+                  },
+                  {
+                      "sha256":  "ffab9dd4360883824ee558cf514d90f668841c479b56ae5601918769fe8ddeac",
+                      "path":  "web/src/app/champions/[slug]/champion-details-client.tsx"
+                  },
+                  {
+                      "sha256":  "f852f05d351fce294f23489dc45883b8277534b7a45ded71504f9ad28ed664a0",
+                      "path":  "docs/ux/champions/visual-3/before/01-desktop-partners.png"
+                  },
+                  {
+                      "sha256":  "cc4995d274b6b1a0f7e8ea6a5b121d54fd50047960e483375ff419deb82697bb",
+                      "path":  "docs/ux/champions/visual-3/before/02-mobile-partners.png"
+                  },
+                  {
+                      "sha256":  "758a9a1b636a905850dba9e9525d6fd57421c67ae53aeb5c96c52a1b59b6e22e",
+                      "path":  "docs/ux/champions/visual-3/before/03-mobile-bonuses.png"
+                  },
+                  {
+                      "sha256":  "84ba59c77aeb7579b0f50ee1595e451f7d5d5990d9a2a9dcfc2827899b1d0ff0",
+                      "path":  "docs/ux/champions/visual-3/before/04-mobile-requirements.png"
+                  },
+                  {
+                      "sha256":  "5b3f11b416bde41c1fc59f76cdf83d8923d2fd77e75af29fbff905f27614f273",
+                      "path":  "docs/ux/champions/visual-3/before/05-desktop-levels.png"
+                  },
+                  {
+                      "sha256":  "4505bc026b01e4d89173930056322b4853268aee4d4f7467c1eb093eb22d1807",
+                      "path":  "docs/ux/champions/visual-3/before/06-mobile-levels.png"
+                  },
+                  {
+                      "sha256":  "cb442ed28dbff15c5525525efcfecef0da21cf38ba73700f3cda02ac599a6364",
+                      "path":  "docs/ux/champions/visual-3/before/07-small-partners.png"
+                  },
+                  {
+                      "sha256":  "319db3f51658adaa24be3e59beb22dd7d097bdab6898e047676afdb6b546112d",
+                      "path":  "docs/ux/champions/visual-3/before/08-small-levels.png"
+                  },
+                  {
+                      "sha256":  "97b98d5558a204cc2650b08fade79ee856946e03cc988ec2bb5554eff828f77d",
+                      "path":  "docs/ux/champions/visual-3/before/evidence.json"
+                  },
+                  {
+                      "sha256":  "392992448a62e2f9c6e4988ea1d28dd2da914e9df8547b2c4c5fe1136fbdfb91",
+                      "path":  "docs/ux/champions/visual-3/after/01-desktop-partners.png"
+                  },
+                  {
+                      "sha256":  "d59cb05fa30dac9b6abd17ef3a9e96a76480ad3cf4f35bb1f6281d94cb85f762",
+                      "path":  "docs/ux/champions/visual-3/after/02-mobile-partners.png"
+                  },
+                  {
+                      "sha256":  "4d909c5e3fad9f1ba030c4ea72da00c9f329397de1d3c2aeadc710577a4f0182",
+                      "path":  "docs/ux/champions/visual-3/after/03-mobile-bonuses.png"
+                  },
+                  {
+                      "sha256":  "7674a6b4f5885375389b19f57d9d9f175d38486325e43358061dc58cb60d15cf",
+                      "path":  "docs/ux/champions/visual-3/after/04-mobile-requirements.png"
+                  },
+                  {
+                      "sha256":  "2d5186ca24ce0f9acece2a64ba825bb7769da3ab390e08ca90a469d6885a44da",
+                      "path":  "docs/ux/champions/visual-3/after/05-desktop-levels.png"
+                  },
+                  {
+                      "sha256":  "9354bace9ea36d981f2a44fa952a64500eb1d049b5ddd39e9367f1a9a0b879f5",
+                      "path":  "docs/ux/champions/visual-3/after/06-mobile-levels.png"
+                  },
+                  {
+                      "sha256":  "93ca60dc28aa9c3cacc190e3d10aa55c0e010b4093ab792535fe9f75d775b9c6",
+                      "path":  "docs/ux/champions/visual-3/after/07-small-partners.png"
+                  },
+                  {
+                      "sha256":  "991f63dc4a84c671d371350bdb788900e858b35f1cc70b28c554fce3ab5ca305",
+                      "path":  "docs/ux/champions/visual-3/after/08-small-levels.png"
+                  },
+                  {
+                      "sha256":  "8fe3f9be40c31f74abccf144058a1a5722b3f38b03a474e3e523161db87945a1",
+                      "path":  "docs/ux/champions/visual-3/after/evidence.json"
+                  },
+                  {
+                      "sha256":  "648efb176411c7f0d8e7466c875be42154c17de08ff0cabf3787a4f560e4477e",
+                      "path":  "docs/ux/champions/visual-3/comparison.html"
+                  },
+                  {
+                      "sha256":  "f823f841e1cb91cfac290e48d20920d4429f59141df0a0d84128799967a4f636",
+                      "path":  "docs/ux/champions/visual-3/browser-smoke.json"
+                  }
+              ],
+    "incumbent":  "incumbent-manifest.json",
+    "state":  "local retained synergy-card candidate"
+}

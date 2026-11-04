@@ -17,6 +17,19 @@ const rows: ChampionSynergy[] = variants.map(([id, stars]) => ({
 const renderPanel = (props: Parameters<typeof ChampionSynergiesPanel>[0]) => renderToStaticMarkup(createElement(TooltipProvider, null, createElement(ChampionSynergiesPanel, props)))
 
 describe("full synergy card display", () => {
+  it("shows native icons decoratively for single rows and leveled families, with no generic fallback", () => {
+    const view = buildChampionSynergyView(rows, hulk.id, 6)
+    const iconUrl = "/icons/synergies/source-verified.svg"
+    const first = { ...view.incoming[0], iconUrl }
+    const second = { ...first, id: "level2", name: "IT'S COMPLICATED Lv. 2", description: "A second exact bonus." }
+    const html = renderPanel({ owned: [], incoming: [first, second], rarity: 6, glossaryById: new Map() })
+    expect(html.match(/source-verified\.svg/g)).toHaveLength(1)
+    expect(html).toMatch(/aria-hidden="true"[^>]*mask-image:url\(&quot;\/icons\/synergies\/source-verified\.svg/)
+    const missing = renderPanel({ owned: [], incoming: view.incoming, rarity: 6, glossaryById: new Map() })
+    expect(missing).not.toContain("mask-image")
+    expect(missing).toContain("IT&#x27;S COMPLICATED Lv. 3")
+  })
+
   it("shows a leveled family once, with one partner header and each level's exact bonus and stars", () => {
     const leveledRows: ChampionSynergy[] = [
       ...rows,
@@ -25,7 +38,8 @@ describe("full synergy card display", () => {
     ]
     const html = renderPanel({ ...buildChampionSynergyView(leveledRows, hulk.id, 6), rarity: 6, glossaryById: new Map(), targetSynergyId: "comp_009" })
     expect(html.match(/<article\b/g)).toHaveLength(1)
-    expect(html.match(/href="\/champions\/black-widow-deadly-origin"/g)).toHaveLength(1)
+    // One portrait link and one full-name link in the expandable partner legend.
+    expect(html.match(/href="\/champions\/black-widow-deadly-origin"/g)).toHaveLength(2)
     expect(html).toMatch(/<h4[^>]*>IT&#x27;S COMPLICATED<\/h4>/)
     for (const level of [1, 2, 3]) expect(html).toMatch(new RegExp(`<h5[^>]*><span[^>]*>IT&#x27;S COMPLICATED </span>Lv\\. ${level}</h5>`))
     for (const amount of [15, 35, 60]) expect(html.match(new RegExp(`All Champions gain \\+${amount} Armor Rating`, "g"))).toHaveLength(1)
@@ -41,9 +55,9 @@ describe("full synergy card display", () => {
     const html = renderPanel({ ...view, rarity: 6, glossaryById: new Map() })
     expect(html.match(/<article\b/g)).toHaveLength(1)
     expect(html.match(/All Champions gain \+60 Armor Rating/g)).toHaveLength(1)
-    expect(html).toMatch(/<details\b/)
-    expect(html).not.toMatch(/<details[^>]*\bopen/)
-    expect(html).toContain("Star requirements")
+    expect(html).toMatch(/<button[^>]*aria-expanded="false"[^>]*aria-controls=/)
+    expect(html).toMatch(/role="region"[^>]*hidden=""/)
+    expect(html).toContain("partners and star requirements")
     expect(html).toContain("4–7★")
     expect(html).not.toContain("4★/5★/6★/7★")
     const partnerLink = html.match(/<a\b[^>]*href="\/champions\/black-widow-deadly-origin"[^>]*>(.*?)<\/a>/)?.[1]

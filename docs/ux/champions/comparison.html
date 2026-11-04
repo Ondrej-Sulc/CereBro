@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CereBro champion UX comparison</title>
+<style>
+:root{color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;color:var(--foreground,CanvasText);font:14px/1.5 var(--font-sans,system-ui),sans-serif}
+.controls{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-bottom:12px}
+label{font-size:12px;color:var(--muted-foreground,GrayText)}select,button{min-height:38px;padding:8px 10px;border:1px solid var(--border,GrayText);border-radius:var(--radius,8px);color:var(--foreground,CanvasText);background:var(--card,Canvas);font:inherit}
+button{cursor:pointer}button[aria-pressed=true]{border-color:var(--primary,Highlight);color:var(--primary,Highlight)}
+:focus-visible{outline:2px solid var(--ring,Highlight);outline-offset:3px}
+#note{margin:0 0 12px;color:var(--muted-foreground,GrayText);font-size:13px}
+.pair{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start}
+figure{min-width:0;margin:0;border:1px solid var(--border,GrayText);border-radius:var(--radius,8px);overflow:hidden;background:var(--card,Canvas)}
+figcaption{padding:9px 12px;font-weight:600;border-bottom:1px solid var(--border,GrayText)}
+img{display:block;width:100%;height:auto}
+.pair[hidden]{display:none}.single{grid-template-columns:minmax(0,1fr)}
+.fine{font-size:11px;color:var(--muted-foreground,GrayText);margin:12px 0 0}
+</style></head><body>
+<div class="controls"><label for="view">Compare</label><select id="view" aria-label="Screenshot comparison"></select><button id="both" aria-pressed="true">Side by side</button><button id="before" aria-pressed="false">Before only</button><button id="after" aria-pressed="false">After only</button></div>
+<p id="note"></p><section class="pair" data-pair="0" ><figure data-side="before"><figcaption>Before</figcaption><img src="baseline/07-mobile-landing.png" alt="Mobile landing before, 390 × 844"></figure><figure data-side="after"><figcaption>After</figcaption><img src="after/07-mobile-landing.png" alt="Mobile landing after, 390 × 844"></figure></section>
+<section class="pair" data-pair="1" hidden><figure data-side="before"><figcaption>Before</figcaption><img src="baseline/01-desktop-landing.png" alt="Desktop landing before, 1280 × 800"></figure><figure data-side="after"><figcaption>After</figcaption><img src="after/01-desktop-landing-final.png" alt="Desktop landing after, 1280 × 800"></figure></section>
+<section class="pair" data-pair="2" hidden><figure data-side="before"><figcaption>Before</figcaption><img src="baseline/06-desktop-stats.png" alt="Build access in Stats before, 1280 × 800"></figure><figure data-side="after"><figcaption>After</figcaption><img src="after/06-desktop-stats.png" alt="Build access in Stats after, 1280 × 800"></figure></section>
+<section class="pair" data-pair="3" hidden><figure data-side="before"><figcaption>Before</figcaption><img src="baseline/08-mobile-overview.png" alt="Mobile overview before, 390 × 844"></figure><figure data-side="after"><figcaption>After</figcaption><img src="after/08-mobile-overview-final.png" alt="Mobile overview after, 390 × 844"></figure></section>
+<section class="pair" data-pair="4" hidden><figure data-side="before"><figcaption>Before</figcaption><img src="baseline/04-desktop-scoped-search.png" alt="Scoped ability search before, 1280 × 800"></figure><figure data-side="after"><figcaption>After</figcaption><img src="after/04-desktop-scoped-search.png" alt="Scoped ability search after, 1280 × 800"></figure></section>
+<section class="pair" data-pair="5" hidden><figure data-side="before"><figcaption>Before</figcaption><img src="baseline/11-small-mobile-landing.png" alt="Small mobile stress check before, 320 × 568"></figure><figure data-side="after"><figcaption>After</figcaption><img src="after/11-small-mobile-landing.png" alt="Small mobile stress check after, 320 × 568"></figure></section>
+<p class="fine">Same champion and build. Matched CSS viewport; section views align the reading location. Before: Chromium, signed out. After: Firefox fallback, signed in. Font rendering, scrollbars and account controls can differ. Screenshots are actual captures.</p>
+<script>
+const pairs=[{"title":"Mobile landing","size":"390 × 844","before":"baseline/07-mobile-landing.png","after":"after/07-mobile-landing.png","note":"Whole-word title wrapping, separated metrics, and all section labels visible on entry."},{"title":"Desktop landing","size":"1280 × 800","before":"baseline/01-desktop-landing.png","after":"after/01-desktop-landing-final.png","note":"A shorter hero brings section navigation into the first viewport."},{"title":"Build access in Stats","size":"1280 × 800","before":"baseline/06-desktop-stats.png","after":"after/06-desktop-stats.png","note":"The current build and editor remain reachable beside section navigation."},{"title":"Mobile overview","size":"390 × 844","before":"baseline/08-mobile-overview.png","after":"after/08-mobile-overview-final.png","note":"Category jumps offer direct access while preserving the detailed source conditions."},{"title":"Scoped ability search","size":"1280 × 800","before":"baseline/04-desktop-scoped-search.png","after":"after/04-desktop-scoped-search.png","note":"The active chapter is named. Search all abilities keeps the query and restores focus to search."},{"title":"Small mobile stress check","size":"320 × 568","before":"baseline/11-small-mobile-landing.png","after":"after/11-small-mobile-landing.png","note":"The name stays intact and the metric values remain distinct at the smallest tested size."}];
+const select=document.getElementById('view');const note=document.getElementById('note');
+pairs.forEach((p,i)=>{const o=document.createElement('option');o.value=i;o.textContent=p.title+' · '+p.size;select.appendChild(o)});
+function update(){const p=pairs[Number(select.value)];document.querySelectorAll('[data-pair]').forEach(el=>el.hidden=el.dataset.pair!==select.value);note.textContent=p.note}
+select.addEventListener('change',update);
+for(const mode of ['both','before','after'])document.getElementById(mode).onclick=()=>{for(const m of ['both','before','after'])document.getElementById(m).setAttribute('aria-pressed',String(m===mode));document.querySelectorAll('[data-side=before]').forEach(el=>el.style.display=mode==='after'?'none':'');document.querySelectorAll('[data-side=after]').forEach(el=>el.style.display=mode==='before'?'none':'');document.querySelectorAll('[data-pair]').forEach(el=>el.classList.toggle('single',mode!=='both'))};
+update();
+</script></body></html>

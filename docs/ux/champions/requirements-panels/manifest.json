@@ -1,0 +1,142 @@
+﻿{
+    "description":  "Retained requirements-panel candidate and matched evidence",
+    "createdAt":  "2026-11-04T15:00:31.2300206+01:00",
+    "files":  [
+                  {
+                      "path":  "docs/champion-synergy-display.md",
+                      "sha256":  "30b370206404bb0f673424610eb17dacc12e7295594fb47ae27ab2a14231ca95"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/after/01-reference-desktop.png",
+                      "sha256":  "d4ce7a8f729a6b65e4f4a64fbd62c5638ac61f76d827c2e09764dfe97ce64533"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/after/02-reference-mobile.png",
+                      "sha256":  "2563db7715d77c5c3bcc89042eadb2d14232a72a02efda74dce5a99b8537a81b"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/after/03-reference-small.png",
+                      "sha256":  "cf437d9a7558ec673e9b1dd59c54fa06536898c567835bf16da7b4fce88d853b"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/after/04-reference-requirements.png",
+                      "sha256":  "c1be505f3c19ebe9c2a10376faff8a7bc0b064aa308a40f06bd8a192fa426f04"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/after/05-multiple-recipients.png",
+                      "sha256":  "37374152692d29e7c50d491ea7cc9775cfc446abd6b06803889f092b3f9d38a5"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/after/06-family-desktop.png",
+                      "sha256":  "eaf4c4b3289e2effff1d45797e31f1633273c5f9ce54acd9a1ec76e8fcd16150"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/after/07-family-mobile.png",
+                      "sha256":  "1277d6c810533ceb7686fe4aa05cba909c89fff092d18e2c835bb65a21036ee2"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/after/08-reference-wide.png",
+                      "sha256":  "2df068d695b125670aa345e4a11040176c7b25f24f417106e65265fc55cef877"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/after/09-desktop-requirements.png",
+                      "sha256":  "87ea95bc6e78819f91e0694ef7cb2fbbe4d9781a3f89845527c3e50e9f2de442"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/after/10-family-requirements.png",
+                      "sha256":  "2d12ed99808c698aa53d4f11db3531842a275a7da41ac8f660c862c2b28a1b07"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/after/evidence.json",
+                      "sha256":  "b484b44ccc6550cc08a81096a18b1312c556be0cb92675777e5771c2a807cf74"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/before/01-reference-desktop.png",
+                      "sha256":  "d4ce7a8f729a6b65e4f4a64fbd62c5638ac61f76d827c2e09764dfe97ce64533"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/before/02-reference-mobile.png",
+                      "sha256":  "2563db7715d77c5c3bcc89042eadb2d14232a72a02efda74dce5a99b8537a81b"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/before/03-reference-small.png",
+                      "sha256":  "cf437d9a7558ec673e9b1dd59c54fa06536898c567835bf16da7b4fce88d853b"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/before/04-reference-requirements.png",
+                      "sha256":  "aa0492fcfb9bae60aea9c0ca98c9a90a45f8f2e7f295cb7fe5512b3391afa435"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/before/05-multiple-recipients.png",
+                      "sha256":  "34ead084bd54eb05d9b4c754ab83d5978a9dee65a2c32a2f4ef2ddff7bffa40d"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/before/06-family-desktop.png",
+                      "sha256":  "eaf4c4b3289e2effff1d45797e31f1633273c5f9ce54acd9a1ec76e8fcd16150"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/before/07-family-mobile.png",
+                      "sha256":  "1277d6c810533ceb7686fe4aa05cba909c89fff092d18e2c835bb65a21036ee2"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/before/08-reference-wide.png",
+                      "sha256":  "7a56743e5537a2ac6461cadf36332bb1ccf89cd36c7aa6cae3e082b1e965fcd2"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/before/09-desktop-requirements.png",
+                      "sha256":  "d53a99bdaa3de1b8dfdcdb856a5f5c50d56da78f6a8e3cb5e0fc3955735a6f8d"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/before/10-family-requirements.png",
+                      "sha256":  "86d67845d5d1d71afbd3e963766dc73aba67d864a6703edfbf32141eb75c2234"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/before/evidence.json",
+                      "sha256":  "17931ee572b84b8d6d6fc618c1a4ffdd9da0190621e6c087c9c98cead0f76833"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/browser-smoke.json",
+                      "sha256":  "7a95648d77839056f57304d9e36f1191966a0275647ededf982ea7864168568c"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/comparison.html",
+                      "sha256":  "9ac15f47c7b2d7736535e706c2db562b1fe42cfb98dec960366f086dd2743ea9"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/escape-focus.json",
+                      "sha256":  "fee672e757f6a4b684b21c7256f112ab4506cc05a0c318b9197567ff1d2aeae9"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/incumbent-manifest.json",
+                      "sha256":  "e44f5e86e6b9124532bef2ef2bae6dcdda6a93a0828d5718b8132d212077f560"
+                  },
+                  {
+                      "path":  "docs/ux/champions/requirements-panels/notes.md",
+                      "sha256":  "fa6d06e2ab19303c0a2ebd4c786a860582dcc4f72cd719042953e533a5f6e507"
+                  },
+                  {
+                      "path":  "README.md",
+                      "sha256":  "efbc8607738ae13419c41d033f58186e68721e06ad7e6ed42edb61e2995bb2dc"
+                  },
+                  {
+                      "path":  "src/data/synergy-icons.json",
+                      "sha256":  "e6ffcd13a609847eef33dc5f5d65e039cf1803a80c2cea9972b08ab83f88aa17"
+                  },
+                  {
+                      "path":  "web/src/app/champions/[slug]/champion-dossier.module.css",
+                      "sha256":  "fac25238f03ded3057626e9cb545ac72d2c7da7fdc3d6b2dc3330e3d7b56ecec"
+                  },
+                  {
+                      "path":  "web/src/app/champions/[slug]/champion-synergies-interaction.test.tsx",
+                      "sha256":  "8a9665a745ec7adb7892b0a92f78ec2a369fa871d39eb2dbaa9568c9c2479c9d"
+                  },
+                  {
+                      "path":  "web/src/app/champions/[slug]/champion-synergies-panel.test.ts",
+                      "sha256":  "312345b2d257904ee95037372eb080af658f8dda2ba696aef489eac69b3fa987"
+                  },
+                  {
+                      "path":  "web/src/app/champions/[slug]/champion-synergies-panel.tsx",
+                      "sha256":  "6e1d4f9bf5e8a6dee49174e0ac60950d26e3957d2ab1cb731ab042b27546e79e"
+                  }
+              ]
+}

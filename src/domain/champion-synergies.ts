@@ -5,9 +5,10 @@ export type SynergyPartner = SynergyChampion & { rarities: number[] };
 export type ChampionSynergy = {
   id: string; name: string; description: string; enabled: boolean; unique: boolean;
   requiredHeroGroups: boolean;
+  iconUrl?: string | null;
   members: Array<{ role: 'OWNER' | 'REQUIRED'; rarity: number; champion: SynergyChampion }>;
 };
-export type ChampionSynergyCard = Pick<ChampionSynergy, 'id' | 'name' | 'description' | 'unique'> & {
+export type ChampionSynergyCard = Pick<ChampionSynergy, 'id' | 'name' | 'description' | 'unique' | 'iconUrl'> & {
   partners: SynergyPartner[];
   champions?: SynergyChampion[];
   rarities?: number[];
@@ -33,6 +34,7 @@ export function buildChampionSynergyView(rows: ChampionSynergy[], championId: nu
     if (!partners.size) continue;
     (isOwner ? owned : incoming).push({
       id: row.id, name: parseSynergyDescription(row.name).map(s => s.text).join(''), description: row.description, unique: row.unique,
+      ...(row.iconUrl ? { iconUrl: row.iconUrl } : {}),
       rarities: [...new Set(matches.map(member => member.rarity))].sort((a, b) => a - b),
       champions: [...new Map(row.members.map(member => [member.champion.id, member.champion])).values()],
       partners: [...partners.values()].map(p => ({ ...p, rarities: p.rarities.sort((a, b) => a - b) }))

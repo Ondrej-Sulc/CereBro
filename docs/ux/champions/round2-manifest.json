@@ -1,0 +1,38 @@
+{
+  "incumbent": "round2-incumbent-manifest.json",
+  "state": "uncommitted round-2 candidate",
+  "files": [
+    {
+      "path": "web/src/app/champions/[slug]/champion-details-client.tsx",
+      "sha256": "7ca3c11810fdbf4d322c59e2b4e4b40e6d1a54e3ff828d0086365cfac65ee4ce"
+    },
+    {
+      "path": "web/src/app/champions/[slug]/champion-ability-reader.tsx",
+      "sha256": "3a5d1a8b2d963aadf1f5f5cb9184c2498d433b7c55623706f73bd6ea6c314b43"
+    },
+    {
+      "path": "web/src/app/champions/[slug]/champion-synergies-panel.tsx",
+      "sha256": "53532be79c35c674761bad20d36cd1344cbc7492222e4de788c0659ed2edeeee"
+    },
+    {
+      "path": "web/src/app/champions/[slug]/champion-ability-reader.test.tsx",
+      "sha256": "cdb1c80bc3ffd2f1a056a07975b6f95fff41781517d0bf3223a58a5f56a3461e"
+    },
+    {
+      "path": "web/src/lib/champion-page-state.ts",
+      "sha256": "b1ecdde5dce767e40f0b376256ab474d830a75a18e839624ef4accd5f7b899aa"
+    },
+    {
+      "path": "web/src/lib/champion-page-state.test.ts",
+      "sha256": "52115615129301f668cb102e5fe16de4f8c6a1c223e4f3ed6d40d530d0e31218"
+    },
+    {
+      "path": "web/src/app/champions/[slug]/champion-synergies-interaction.test.tsx",
+      "sha256": "5317278fdaf3e27a5c8c05d4ceae0cd48f42785cff64949d60a629220b7a436c"
+    },
+    {
+      "path": "web/src/app/champions/[slug]/champion-details-navigation.test.tsx",
+      "sha256": "99ec223eaab90cf28ef0f62cd1f119bab73b7992febe9a397eacb68edc2fc985"
+    }
+  ]
+}

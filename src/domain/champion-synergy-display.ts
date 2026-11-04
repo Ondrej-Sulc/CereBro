@@ -29,7 +29,7 @@ export function groupChampionSynergyCards(cards: ChampionSynergyCard[]): Champio
   const equivalent = new Map<string, ChampionSynergyDisplayCard>()
   for (const card of cards) {
     const identity = hasKnownAvailability(card) ? JSON.stringify([
-      card.name, buildSynergyCardContent(card.description, card.unique), card.unique,
+      card.name, buildSynergyCardContent(card.description, card.unique), card.unique, card.iconUrl ?? null,
       ...memberKey(card),
     ]) : null
     let display = identity ? equivalent.get(identity) : undefined
@@ -58,7 +58,7 @@ export function groupChampionSynergyFamilies(cards: ChampionSynergyCard[]): Cham
   for (const card of groupChampionSynergyCards(cards)) {
     const match = card.name.match(/^(.+?)\s+(?:-\s*)?Lv\.?\s*(\d+)$/i)
     const name = match?.[1] ?? card.name
-    const identity = match && hasKnownAvailability(card) ? JSON.stringify([name, card.unique, ...memberKey(card)]) : null
+    const identity = match && hasKnownAvailability(card) ? JSON.stringify([name, card.unique, card.iconUrl ?? null, ...memberKey(card)]) : null
     let family = identity ? byIdentity.get(identity) : undefined
     if (!family) {
       family = { id: card.id, name, variants: [] }

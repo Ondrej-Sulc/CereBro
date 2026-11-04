@@ -1,0 +1,21 @@
+﻿{
+    "description":  "Approved compact rows with native synergy icons",
+    "files":  [
+                  {
+                      "sha256":  "a0f3a7721d9a7a272d2d983176a94e0d95f8a2097975f6348a6e54c2b3d1fd35",
+                      "path":  "web/src/app/champions/[slug]/champion-synergies-panel.tsx"
+                  },
+                  {
+                      "sha256":  "35c4d395bb8d0e0749e8fe63cb70185c3f16631fe1e752157b5ab246c183e30f",
+                      "path":  "web/src/app/champions/[slug]/champion-dossier.module.css"
+                  },
+                  {
+                      "sha256":  "af4fa0dcc1fda4a8911cf56729bce6c92e7bf8d70c38b43e84f709381f25afb1",
+                      "path":  "web/src/app/champions/[slug]/champion-synergies-interaction.test.tsx"
+                  },
+                  {
+                      "sha256":  "c32c28b9ea2af14ed80cf6935d3d62b1a7e32fe60ae9d4466a5e0d108267bb56",
+                      "path":  "web/src/app/champions/[slug]/champion-synergies-panel.test.ts"
+                  }
+              ]
+}

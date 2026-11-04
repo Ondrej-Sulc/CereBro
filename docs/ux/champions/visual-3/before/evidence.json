@@ -1,0 +1,3483 @@
+{
+  "phase": "before",
+  "captures": [
+    {
+      "name": "01-desktop-partners",
+      "target": "champion-synergy-absorb_06",
+      "open": false,
+      "url": "http://localhost:3000/champions/absorbing-man?tab=synergies&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        1280,
+        900
+      ],
+      "documentWidth": 1280,
+      "scrollY": 763,
+      "cardTop": 228.78125,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "articles": [
+        {
+          "id": "champion-synergy-absorb_06",
+          "title": "ENEMIES Lv. 2",
+          "partners": [
+            {
+              "href": "/champions/ant-man",
+              "name": "Ant-Man"
+            },
+            {
+              "href": "/champions/black-bolt",
+              "name": "Black Bolt"
+            },
+            {
+              "href": "/champions/hulk",
+              "name": "Hulk"
+            },
+            {
+              "href": "/champions/thor",
+              "name": "Thor"
+            },
+            {
+              "href": "/champions/wasp",
+              "name": "Wasp"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +115 Critical Rating."
+          ],
+          "requirements": [
+            "Ant-Man: 2–7★Black Bolt: 2–6★Hulk: 2–7★Thor: 2–6★Wasp: 2–6★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-absorb_06-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_04",
+          "title": "HANDS-ON APPROACH",
+          "partners": [
+            {
+              "href": "/champions/rogue",
+              "name": "Rogue"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: Reduce the duration of Non-Damaging Debuffs other than Stuns by 50%. ",
+            "Rogue: The timer for Rogue's Replicated Buffs is paused during the Opponent's Special Attacks. "
+          ],
+          "requirements": [
+            "Rogue: 2–6★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_04-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_01",
+          "title": "ROGUE'S ROMANCE",
+          "partners": [
+            {
+              "href": "/champions/titania",
+              "name": "Titania"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: Medium and Heavy Attacks gain 600 Critical Damage Rating. ",
+            "Titania: Gain Immunity to Bleed effects. "
+          ],
+          "requirements": [
+            "Titania: 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_01-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_03",
+          "title": "SINS OF THE FATHER",
+          "partners": [
+            {
+              "href": "/champions/daredevil-hell-s-kitchen",
+              "name": "Daredevil (Hell'S Kitchen)"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: While at or below 15 Combo Meter, gain 1000 Block Proficiency, and while above, gain 1000 Critical Rating. ",
+            "Devil of H.K.: Personal Buffs last for an additional 7 seconds. "
+          ],
+          "requirements": [
+            "Daredevil (Hell'S Kitchen): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_03-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_05",
+          "title": "THE GREEN DOOR",
+          "partners": [
+            {
+              "href": "/champions/abomination-immortal",
+              "name": "Abomination (Immortal)"
+            },
+            {
+              "href": "/champions/hulk-immortal",
+              "name": "Hulk (Immortal)"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: Gain Immunity to all Poison effects, and Omni-Morph Forms last 3 seconds longer. ",
+            "Abomination (Immortal): Gain 250 Energy Resistance for each Poison effect on himself. ",
+            "Hulk (Immortal): Personal Immortality effects gain +20% Ability Accuracy. "
+          ],
+          "requirements": [
+            "Abomination (Immortal): 2–7★Hulk (Immortal): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_05-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_02",
+          "title": "THE WORTHY",
+          "partners": [
+            {
+              "href": "/champions/thor",
+              "name": "Thor"
+            },
+            {
+              "href": "/champions/thor-jane-foster",
+              "name": "Thor (Jane Foster)"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: The second Medium Attack inflicts an Armor Break Debuff, reducing Armor by 500 for 9 seconds. Max stacks: 5 ",
+            "Thor: Thor’s Heavy attack inflicts an Armor Break Debuff, reducing Armor by 1800 for 4.5 seconds. Max stacks: 2 ",
+            "Thor (Jane Foster): When facing Cosmic champions, The Mighty Thor's Special Attack 2 inflicts Degeneration Debuffs instead of Shocks. "
+          ],
+          "requirements": [
+            "Thor: 2–6★Thor (Jane Foster): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-attuma_02",
+          "title": "FEAR ITSELF",
+          "partners": [
+            {
+              "href": "/champions/attuma",
+              "name": "Attuma"
+            }
+          ],
+          "bonuses": [
+            "Synergy Champions: Gain +20% Attack Rating when fighting at Class Advantage, and regain the Attack Rating penalty when fighting at Disadvantage."
+          ],
+          "requirements": [
+            "Attuma: 5–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-attuma_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-ylb_02",
+          "title": "MERCENARY COMPETITION",
+          "partners": [
+            {
+              "href": "/champions/yelena-belova",
+              "name": "Yelena Belova"
+            }
+          ],
+          "bonuses": [
+            "Yelena Belova: Personal Impact and Disarm effects start paused for 6 seconds.",
+            "#Mercenary & #Villain Champions: +5% Attack Rating and +400 Critical Damage Rating."
+          ],
+          "requirements": [
+            "Yelena Belova: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-ylb_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-blktrnt_2",
+          "title": "PUÑO CERRADO",
+          "partners": [
+            {
+              "href": "/champions/black-tarantula",
+              "name": "Black Tarantula"
+            }
+          ],
+          "bonuses": [
+            "Black Tarantula: Purify Ability Accuracy is increased by 200% while Stunned by non-Mutant Champions.",
+            "Daredevil: Evading during the Opponent's Special Attacks grants a +15% Fury Passive for 20 seconds. Max stacks: 3.",
+            "Absorbing Man: Punishing a Special Attack with a Light Attack pauses Omni-Morph Forms for 3 seconds."
+          ],
+          "requirements": [
+            "Black Tarantula: 5–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-blktrnt_2-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-serpent_04",
+          "title": "THE MAIN EVENT",
+          "partners": [
+            {
+              "href": "/champions/the-serpent",
+              "name": "The Serpent"
+            }
+          ],
+          "bonuses": [
+            "#Cul's Worthy: Instant Damaging effects gain 15% potency. ",
+            "The Serpent: Personal Fury effects are 8% more potent for each #Cul's Worthy Champion on the team. ",
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "requirements": [
+            "The Serpent: 6–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-serpent_04-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-cheeilth_06",
+          "title": "WHAT YOU DON'T KNOW, YOU'LL FEAR",
+          "partners": [
+            {
+              "href": "/champions/chee-ilth",
+              "name": "Chee'Ilth"
+            }
+          ],
+          "bonuses": [
+            "Chee'ilth: When Blocking a Heavy Attack, become Passively Unstoppable for 3 seconds. Cooldown: 45 seconds. [Gamma]: Cooldown becomes 5 seconds.",
+            "Synergy Champions: +8% Attack Rating."
+          ],
+          "requirements": [
+            "Chee'Ilth: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-cheeilth_06-title"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02-mobile-partners",
+      "target": "champion-synergy-absorb_06",
+      "open": false,
+      "url": "http://localhost:3000/champions/absorbing-man?tab=synergies&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "documentWidth": 390,
+      "scrollY": 950,
+      "cardTop": 196.09375,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "articles": [
+        {
+          "id": "champion-synergy-absorb_06",
+          "title": "ENEMIES Lv. 2",
+          "partners": [
+            {
+              "href": "/champions/ant-man",
+              "name": "Ant-Man"
+            },
+            {
+              "href": "/champions/black-bolt",
+              "name": "Black Bolt"
+            },
+            {
+              "href": "/champions/hulk",
+              "name": "Hulk"
+            },
+            {
+              "href": "/champions/thor",
+              "name": "Thor"
+            },
+            {
+              "href": "/champions/wasp",
+              "name": "Wasp"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +115 Critical Rating."
+          ],
+          "requirements": [
+            "Ant-Man: 2–7★Black Bolt: 2–6★Hulk: 2–7★Thor: 2–6★Wasp: 2–6★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-absorb_06-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_04",
+          "title": "HANDS-ON APPROACH",
+          "partners": [
+            {
+              "href": "/champions/rogue",
+              "name": "Rogue"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: Reduce the duration of Non-Damaging Debuffs other than Stuns by 50%. ",
+            "Rogue: The timer for Rogue's Replicated Buffs is paused during the Opponent's Special Attacks. "
+          ],
+          "requirements": [
+            "Rogue: 2–6★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_04-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_01",
+          "title": "ROGUE'S ROMANCE",
+          "partners": [
+            {
+              "href": "/champions/titania",
+              "name": "Titania"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: Medium and Heavy Attacks gain 600 Critical Damage Rating. ",
+            "Titania: Gain Immunity to Bleed effects. "
+          ],
+          "requirements": [
+            "Titania: 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_01-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_03",
+          "title": "SINS OF THE FATHER",
+          "partners": [
+            {
+              "href": "/champions/daredevil-hell-s-kitchen",
+              "name": "Daredevil (Hell'S Kitchen)"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: While at or below 15 Combo Meter, gain 1000 Block Proficiency, and while above, gain 1000 Critical Rating. ",
+            "Devil of H.K.: Personal Buffs last for an additional 7 seconds. "
+          ],
+          "requirements": [
+            "Daredevil (Hell'S Kitchen): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_03-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_05",
+          "title": "THE GREEN DOOR",
+          "partners": [
+            {
+              "href": "/champions/abomination-immortal",
+              "name": "Abomination (Immortal)"
+            },
+            {
+              "href": "/champions/hulk-immortal",
+              "name": "Hulk (Immortal)"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: Gain Immunity to all Poison effects, and Omni-Morph Forms last 3 seconds longer. ",
+            "Abomination (Immortal): Gain 250 Energy Resistance for each Poison effect on himself. ",
+            "Hulk (Immortal): Personal Immortality effects gain +20% Ability Accuracy. "
+          ],
+          "requirements": [
+            "Abomination (Immortal): 2–7★Hulk (Immortal): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_05-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_02",
+          "title": "THE WORTHY",
+          "partners": [
+            {
+              "href": "/champions/thor",
+              "name": "Thor"
+            },
+            {
+              "href": "/champions/thor-jane-foster",
+              "name": "Thor (Jane Foster)"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: The second Medium Attack inflicts an Armor Break Debuff, reducing Armor by 500 for 9 seconds. Max stacks: 5 ",
+            "Thor: Thor’s Heavy attack inflicts an Armor Break Debuff, reducing Armor by 1800 for 4.5 seconds. Max stacks: 2 ",
+            "Thor (Jane Foster): When facing Cosmic champions, The Mighty Thor's Special Attack 2 inflicts Degeneration Debuffs instead of Shocks. "
+          ],
+          "requirements": [
+            "Thor: 2–6★Thor (Jane Foster): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-attuma_02",
+          "title": "FEAR ITSELF",
+          "partners": [
+            {
+              "href": "/champions/attuma",
+              "name": "Attuma"
+            }
+          ],
+          "bonuses": [
+            "Synergy Champions: Gain +20% Attack Rating when fighting at Class Advantage, and regain the Attack Rating penalty when fighting at Disadvantage."
+          ],
+          "requirements": [
+            "Attuma: 5–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-attuma_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-ylb_02",
+          "title": "MERCENARY COMPETITION",
+          "partners": [
+            {
+              "href": "/champions/yelena-belova",
+              "name": "Yelena Belova"
+            }
+          ],
+          "bonuses": [
+            "Yelena Belova: Personal Impact and Disarm effects start paused for 6 seconds.",
+            "#Mercenary & #Villain Champions: +5% Attack Rating and +400 Critical Damage Rating."
+          ],
+          "requirements": [
+            "Yelena Belova: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-ylb_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-blktrnt_2",
+          "title": "PUÑO CERRADO",
+          "partners": [
+            {
+              "href": "/champions/black-tarantula",
+              "name": "Black Tarantula"
+            }
+          ],
+          "bonuses": [
+            "Black Tarantula: Purify Ability Accuracy is increased by 200% while Stunned by non-Mutant Champions.",
+            "Daredevil: Evading during the Opponent's Special Attacks grants a +15% Fury Passive for 20 seconds. Max stacks: 3.",
+            "Absorbing Man: Punishing a Special Attack with a Light Attack pauses Omni-Morph Forms for 3 seconds."
+          ],
+          "requirements": [
+            "Black Tarantula: 5–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-blktrnt_2-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-serpent_04",
+          "title": "THE MAIN EVENT",
+          "partners": [
+            {
+              "href": "/champions/the-serpent",
+              "name": "The Serpent"
+            }
+          ],
+          "bonuses": [
+            "#Cul's Worthy: Instant Damaging effects gain 15% potency. ",
+            "The Serpent: Personal Fury effects are 8% more potent for each #Cul's Worthy Champion on the team. ",
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "requirements": [
+            "The Serpent: 6–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-serpent_04-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-cheeilth_06",
+          "title": "WHAT YOU DON'T KNOW, YOU'LL FEAR",
+          "partners": [
+            {
+              "href": "/champions/chee-ilth",
+              "name": "Chee'Ilth"
+            }
+          ],
+          "bonuses": [
+            "Chee'ilth: When Blocking a Heavy Attack, become Passively Unstoppable for 3 seconds. Cooldown: 45 seconds. [Gamma]: Cooldown becomes 5 seconds.",
+            "Synergy Champions: +8% Attack Rating."
+          ],
+          "requirements": [
+            "Chee'Ilth: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-cheeilth_06-title"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03-mobile-bonuses",
+      "target": "champion-synergy-absorb_03",
+      "open": false,
+      "url": "http://localhost:3000/champions/absorbing-man?tab=synergies&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "documentWidth": 390,
+      "scrollY": 2261,
+      "cardTop": 196.09375,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "articles": [
+        {
+          "id": "champion-synergy-absorb_06",
+          "title": "ENEMIES Lv. 2",
+          "partners": [
+            {
+              "href": "/champions/ant-man",
+              "name": "Ant-Man"
+            },
+            {
+              "href": "/champions/black-bolt",
+              "name": "Black Bolt"
+            },
+            {
+              "href": "/champions/hulk",
+              "name": "Hulk"
+            },
+            {
+              "href": "/champions/thor",
+              "name": "Thor"
+            },
+            {
+              "href": "/champions/wasp",
+              "name": "Wasp"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +115 Critical Rating."
+          ],
+          "requirements": [
+            "Ant-Man: 2–7★Black Bolt: 2–6★Hulk: 2–7★Thor: 2–6★Wasp: 2–6★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-absorb_06-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_04",
+          "title": "HANDS-ON APPROACH",
+          "partners": [
+            {
+              "href": "/champions/rogue",
+              "name": "Rogue"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: Reduce the duration of Non-Damaging Debuffs other than Stuns by 50%. ",
+            "Rogue: The timer for Rogue's Replicated Buffs is paused during the Opponent's Special Attacks. "
+          ],
+          "requirements": [
+            "Rogue: 2–6★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_04-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_01",
+          "title": "ROGUE'S ROMANCE",
+          "partners": [
+            {
+              "href": "/champions/titania",
+              "name": "Titania"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: Medium and Heavy Attacks gain 600 Critical Damage Rating. ",
+            "Titania: Gain Immunity to Bleed effects. "
+          ],
+          "requirements": [
+            "Titania: 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_01-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_03",
+          "title": "SINS OF THE FATHER",
+          "partners": [
+            {
+              "href": "/champions/daredevil-hell-s-kitchen",
+              "name": "Daredevil (Hell'S Kitchen)"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: While at or below 15 Combo Meter, gain 1000 Block Proficiency, and while above, gain 1000 Critical Rating. ",
+            "Devil of H.K.: Personal Buffs last for an additional 7 seconds. "
+          ],
+          "requirements": [
+            "Daredevil (Hell'S Kitchen): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_03-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_05",
+          "title": "THE GREEN DOOR",
+          "partners": [
+            {
+              "href": "/champions/abomination-immortal",
+              "name": "Abomination (Immortal)"
+            },
+            {
+              "href": "/champions/hulk-immortal",
+              "name": "Hulk (Immortal)"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: Gain Immunity to all Poison effects, and Omni-Morph Forms last 3 seconds longer. ",
+            "Abomination (Immortal): Gain 250 Energy Resistance for each Poison effect on himself. ",
+            "Hulk (Immortal): Personal Immortality effects gain +20% Ability Accuracy. "
+          ],
+          "requirements": [
+            "Abomination (Immortal): 2–7★Hulk (Immortal): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_05-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_02",
+          "title": "THE WORTHY",
+          "partners": [
+            {
+              "href": "/champions/thor",
+              "name": "Thor"
+            },
+            {
+              "href": "/champions/thor-jane-foster",
+              "name": "Thor (Jane Foster)"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: The second Medium Attack inflicts an Armor Break Debuff, reducing Armor by 500 for 9 seconds. Max stacks: 5 ",
+            "Thor: Thor’s Heavy attack inflicts an Armor Break Debuff, reducing Armor by 1800 for 4.5 seconds. Max stacks: 2 ",
+            "Thor (Jane Foster): When facing Cosmic champions, The Mighty Thor's Special Attack 2 inflicts Degeneration Debuffs instead of Shocks. "
+          ],
+          "requirements": [
+            "Thor: 2–6★Thor (Jane Foster): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-attuma_02",
+          "title": "FEAR ITSELF",
+          "partners": [
+            {
+              "href": "/champions/attuma",
+              "name": "Attuma"
+            }
+          ],
+          "bonuses": [
+            "Synergy Champions: Gain +20% Attack Rating when fighting at Class Advantage, and regain the Attack Rating penalty when fighting at Disadvantage."
+          ],
+          "requirements": [
+            "Attuma: 5–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-attuma_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-ylb_02",
+          "title": "MERCENARY COMPETITION",
+          "partners": [
+            {
+              "href": "/champions/yelena-belova",
+              "name": "Yelena Belova"
+            }
+          ],
+          "bonuses": [
+            "Yelena Belova: Personal Impact and Disarm effects start paused for 6 seconds.",
+            "#Mercenary & #Villain Champions: +5% Attack Rating and +400 Critical Damage Rating."
+          ],
+          "requirements": [
+            "Yelena Belova: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-ylb_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-blktrnt_2",
+          "title": "PUÑO CERRADO",
+          "partners": [
+            {
+              "href": "/champions/black-tarantula",
+              "name": "Black Tarantula"
+            }
+          ],
+          "bonuses": [
+            "Black Tarantula: Purify Ability Accuracy is increased by 200% while Stunned by non-Mutant Champions.",
+            "Daredevil: Evading during the Opponent's Special Attacks grants a +15% Fury Passive for 20 seconds. Max stacks: 3.",
+            "Absorbing Man: Punishing a Special Attack with a Light Attack pauses Omni-Morph Forms for 3 seconds."
+          ],
+          "requirements": [
+            "Black Tarantula: 5–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-blktrnt_2-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-serpent_04",
+          "title": "THE MAIN EVENT",
+          "partners": [
+            {
+              "href": "/champions/the-serpent",
+              "name": "The Serpent"
+            }
+          ],
+          "bonuses": [
+            "#Cul's Worthy: Instant Damaging effects gain 15% potency. ",
+            "The Serpent: Personal Fury effects are 8% more potent for each #Cul's Worthy Champion on the team. ",
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "requirements": [
+            "The Serpent: 6–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-serpent_04-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-cheeilth_06",
+          "title": "WHAT YOU DON'T KNOW, YOU'LL FEAR",
+          "partners": [
+            {
+              "href": "/champions/chee-ilth",
+              "name": "Chee'Ilth"
+            }
+          ],
+          "bonuses": [
+            "Chee'ilth: When Blocking a Heavy Attack, become Passively Unstoppable for 3 seconds. Cooldown: 45 seconds. [Gamma]: Cooldown becomes 5 seconds.",
+            "Synergy Champions: +8% Attack Rating."
+          ],
+          "requirements": [
+            "Chee'Ilth: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-cheeilth_06-title"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04-mobile-requirements",
+      "target": "champion-synergy-absorb_06",
+      "open": true,
+      "url": "http://localhost:3000/champions/absorbing-man?tab=synergies&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "documentWidth": 390,
+      "scrollY": 950,
+      "cardTop": 196.09375,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "articles": [
+        {
+          "id": "champion-synergy-absorb_06",
+          "title": "ENEMIES Lv. 2",
+          "partners": [
+            {
+              "href": "/champions/ant-man",
+              "name": "Ant-Man"
+            },
+            {
+              "href": "/champions/black-bolt",
+              "name": "Black Bolt"
+            },
+            {
+              "href": "/champions/hulk",
+              "name": "Hulk"
+            },
+            {
+              "href": "/champions/thor",
+              "name": "Thor"
+            },
+            {
+              "href": "/champions/wasp",
+              "name": "Wasp"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +115 Critical Rating."
+          ],
+          "requirements": [
+            "Ant-Man: 2–7★Black Bolt: 2–6★Hulk: 2–7★Thor: 2–6★Wasp: 2–6★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-absorb_06-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_04",
+          "title": "HANDS-ON APPROACH",
+          "partners": [
+            {
+              "href": "/champions/rogue",
+              "name": "Rogue"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: Reduce the duration of Non-Damaging Debuffs other than Stuns by 50%. ",
+            "Rogue: The timer for Rogue's Replicated Buffs is paused during the Opponent's Special Attacks. "
+          ],
+          "requirements": [
+            "Rogue: 2–6★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_04-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_01",
+          "title": "ROGUE'S ROMANCE",
+          "partners": [
+            {
+              "href": "/champions/titania",
+              "name": "Titania"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: Medium and Heavy Attacks gain 600 Critical Damage Rating. ",
+            "Titania: Gain Immunity to Bleed effects. "
+          ],
+          "requirements": [
+            "Titania: 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_01-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_03",
+          "title": "SINS OF THE FATHER",
+          "partners": [
+            {
+              "href": "/champions/daredevil-hell-s-kitchen",
+              "name": "Daredevil (Hell'S Kitchen)"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: While at or below 15 Combo Meter, gain 1000 Block Proficiency, and while above, gain 1000 Critical Rating. ",
+            "Devil of H.K.: Personal Buffs last for an additional 7 seconds. "
+          ],
+          "requirements": [
+            "Daredevil (Hell'S Kitchen): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_03-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_05",
+          "title": "THE GREEN DOOR",
+          "partners": [
+            {
+              "href": "/champions/abomination-immortal",
+              "name": "Abomination (Immortal)"
+            },
+            {
+              "href": "/champions/hulk-immortal",
+              "name": "Hulk (Immortal)"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: Gain Immunity to all Poison effects, and Omni-Morph Forms last 3 seconds longer. ",
+            "Abomination (Immortal): Gain 250 Energy Resistance for each Poison effect on himself. ",
+            "Hulk (Immortal): Personal Immortality effects gain +20% Ability Accuracy. "
+          ],
+          "requirements": [
+            "Abomination (Immortal): 2–7★Hulk (Immortal): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_05-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_02",
+          "title": "THE WORTHY",
+          "partners": [
+            {
+              "href": "/champions/thor",
+              "name": "Thor"
+            },
+            {
+              "href": "/champions/thor-jane-foster",
+              "name": "Thor (Jane Foster)"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: The second Medium Attack inflicts an Armor Break Debuff, reducing Armor by 500 for 9 seconds. Max stacks: 5 ",
+            "Thor: Thor’s Heavy attack inflicts an Armor Break Debuff, reducing Armor by 1800 for 4.5 seconds. Max stacks: 2 ",
+            "Thor (Jane Foster): When facing Cosmic champions, The Mighty Thor's Special Attack 2 inflicts Degeneration Debuffs instead of Shocks. "
+          ],
+          "requirements": [
+            "Thor: 2–6★Thor (Jane Foster): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-attuma_02",
+          "title": "FEAR ITSELF",
+          "partners": [
+            {
+              "href": "/champions/attuma",
+              "name": "Attuma"
+            }
+          ],
+          "bonuses": [
+            "Synergy Champions: Gain +20% Attack Rating when fighting at Class Advantage, and regain the Attack Rating penalty when fighting at Disadvantage."
+          ],
+          "requirements": [
+            "Attuma: 5–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-attuma_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-ylb_02",
+          "title": "MERCENARY COMPETITION",
+          "partners": [
+            {
+              "href": "/champions/yelena-belova",
+              "name": "Yelena Belova"
+            }
+          ],
+          "bonuses": [
+            "Yelena Belova: Personal Impact and Disarm effects start paused for 6 seconds.",
+            "#Mercenary & #Villain Champions: +5% Attack Rating and +400 Critical Damage Rating."
+          ],
+          "requirements": [
+            "Yelena Belova: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-ylb_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-blktrnt_2",
+          "title": "PUÑO CERRADO",
+          "partners": [
+            {
+              "href": "/champions/black-tarantula",
+              "name": "Black Tarantula"
+            }
+          ],
+          "bonuses": [
+            "Black Tarantula: Purify Ability Accuracy is increased by 200% while Stunned by non-Mutant Champions.",
+            "Daredevil: Evading during the Opponent's Special Attacks grants a +15% Fury Passive for 20 seconds. Max stacks: 3.",
+            "Absorbing Man: Punishing a Special Attack with a Light Attack pauses Omni-Morph Forms for 3 seconds."
+          ],
+          "requirements": [
+            "Black Tarantula: 5–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-blktrnt_2-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-serpent_04",
+          "title": "THE MAIN EVENT",
+          "partners": [
+            {
+              "href": "/champions/the-serpent",
+              "name": "The Serpent"
+            }
+          ],
+          "bonuses": [
+            "#Cul's Worthy: Instant Damaging effects gain 15% potency. ",
+            "The Serpent: Personal Fury effects are 8% more potent for each #Cul's Worthy Champion on the team. ",
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "requirements": [
+            "The Serpent: 6–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-serpent_04-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-cheeilth_06",
+          "title": "WHAT YOU DON'T KNOW, YOU'LL FEAR",
+          "partners": [
+            {
+              "href": "/champions/chee-ilth",
+              "name": "Chee'Ilth"
+            }
+          ],
+          "bonuses": [
+            "Chee'ilth: When Blocking a Heavy Attack, become Passively Unstoppable for 3 seconds. Cooldown: 45 seconds. [Gamma]: Cooldown becomes 5 seconds.",
+            "Synergy Champions: +8% Attack Rating."
+          ],
+          "requirements": [
+            "Chee'Ilth: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-cheeilth_06-title"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05-desktop-levels",
+      "target": "champion-synergy-family-comp_006",
+      "open": false,
+      "url": "http://localhost:3000/champions/hulk-ragnarok?tab=synergies&rarity=6&rank=5&sig=200&ascension=0",
+      "viewport": [
+        1280,
+        900
+      ],
+      "documentWidth": 1280,
+      "scrollY": 3825,
+      "cardTop": 228.75,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "articles": [
+        {
+          "id": "champion-synergy-lullaby_1",
+          "title": "LULLABY",
+          "partners": [
+            {
+              "href": "/champions/black-widow",
+              "name": "Black Widow"
+            }
+          ],
+          "bonuses": [
+            "Hulk (Ragnarok): When Struck Hulk has a 20% chance to ready a SMASH for his next attack.",
+            "Black Widow: Evade chance increases by 100%."
+          ],
+          "requirements": [
+            "Black Widow: 2–6★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-lullaby_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-offlimits_1",
+          "title": "OFF LIMITS",
+          "partners": [
+            {
+              "href": "/champions/hela",
+              "name": "Hela"
+            }
+          ],
+          "bonuses": [
+            "Hulk (Ragnarok): Hulk's chance to SMASH on Attacks increases by 400% while Face Me is active.",
+            "Hela: Hela begins the fight with 1 Fury Buff, and if she is ever without a Fury Buff for 10 seconds, she gains one."
+          ],
+          "requirements": [
+            "Hela: 2–6★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-offlimits_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-punygod_1",
+          "title": "PUNY GOD",
+          "partners": [
+            {
+              "href": "/champions/loki",
+              "name": "Loki"
+            }
+          ],
+          "bonuses": [
+            "Hulk (Ragnarok): +1000 Physical Resistance while Unstoppable. ",
+            "Loki: Basic Attacks against Loki have a 10% chance to miss, while his Opponent is under the effect of any Buff. "
+          ],
+          "requirements": [
+            "Loki: 2–6★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-punygod_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-teambuilding_1",
+          "title": "TEAM BUILDING EXERCISE",
+          "partners": [
+            {
+              "href": "/champions/thor-ragnarok",
+              "name": "Thor (Ragnarok)"
+            }
+          ],
+          "bonuses": [
+            "Hulk (Ragnarok): SMASH attacks have a 20% chance to be Unblockable. ",
+            "Thor (Ragnarok): Special attacks activated while the Boon of the Gods Power Gain is active become Passively Unblockable. "
+          ],
+          "requirements": [
+            "Thor (Ragnarok): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-teambuilding_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-shlk_1",
+          "title": "AGENTS OF S.M.A.S.H.",
+          "partners": [
+            {
+              "href": "/champions/she-hulk",
+              "name": "She-Hulk"
+            }
+          ],
+          "bonuses": [
+            "She-Hulk, Hulk: Personal Fury Passives gain +20% potency.",
+            "Hulk (Ragnarok): SMASH attacks gain +15% attack.",
+            "Red Hulk: +2% attack for each Heat charge."
+          ],
+          "requirements": [
+            "She-Hulk: 4–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-shlk_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-joef_02",
+          "title": "BANNER HORDE",
+          "partners": [
+            {
+              "href": "/champions/joe-fixit",
+              "name": "Joe Fixit"
+            }
+          ],
+          "bonuses": [
+            "Synergy Champions: For each Synergy Champion on the team, gain up to +6% Attack Rating and up to +500 Armor Rating based on lost Health."
+          ],
+          "requirements": [
+            "Joe Fixit: 4–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-joef_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-betaraybill_01",
+          "title": "CAGE FIGHTERS",
+          "partners": [
+            {
+              "href": "/champions/beta-ray-bill",
+              "name": "Beta Ray Bill"
+            }
+          ],
+          "bonuses": [
+            "Synergy Champions: When Rooted, Passively gain up to the nearest Bar of Power over 1.5 seconds. The Power Gain is removed if the Root expires, and does not trigger during the Opponent’s Special Attacks."
+          ],
+          "requirements": [
+            "Beta Ray Bill: 5–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-betaraybill_01-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-mojo_crowd",
+          "title": "CROWD PLEASERS",
+          "partners": [
+            {
+              "href": "/champions/mojo",
+              "name": "Mojo"
+            }
+          ],
+          "bonuses": [
+            "Mojo: When a Prompt is completed, Mojo gains an Unstoppable Buff for 5 second(s).",
+            "Hulk (Ragnarok): Passively increase Attack Rating by up to 25% based on Crowd Excitement.",
+            "Korg: Korg’s personal Armor Break has 50% increased Potency and duration."
+          ],
+          "requirements": [
+            "Mojo: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-mojo_crowd-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-hbuster_new_banner",
+          "title": "DON'T MENTION PUNY BANNER!",
+          "partners": [
+            {
+              "href": "/champions/hulkbuster",
+              "name": "Hulkbuster"
+            }
+          ],
+          "bonuses": [
+            "Hulkbuster: Up to +1000 Armor Rating based on how low Hulkbuster’s current Health is. ",
+            "Hulk: Immunity to Nullify, Fate Seal and Stagger. ",
+            "Hulk (Ragnarok): Gains up to +1000 Physical Resistance based on how high the Crowd Meter is. "
+          ],
+          "requirements": [
+            "Hulkbuster: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate Synergies."
+          ],
+          "targets": [
+            "champion-synergy-hbuster_new_banner-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-enemy_329",
+          "title": "ENEMIES",
+          "partners": [
+            {
+              "href": "/champions/ebony-maw",
+              "name": "Ebony Maw"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +85 Critical Rating.",
+            "All Champions gain +115 Critical Rating.",
+            "All Champions gain +155 Critical Rating."
+          ],
+          "requirements": [
+            "2★",
+            "3★",
+            "4–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-enemy_329-title",
+            "champion-synergy-enemy_329",
+            "champion-synergy-enemy_329-title",
+            "champion-synergy-enemy_330",
+            "champion-synergy-enemy_330-title",
+            "champion-synergy-enemy_331",
+            "champion-synergy-enemy_331-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-enemy_359",
+          "title": "ENEMIES",
+          "partners": [
+            {
+              "href": "/champions/abomination-immortal",
+              "name": "Abomination (Immortal)"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +85 Critical Rating.",
+            "All Champions gain +115 Critical Rating.",
+            "All Champions gain +155 Critical Rating."
+          ],
+          "requirements": [
+            "2★",
+            "3★",
+            "4–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-enemy_359-title",
+            "champion-synergy-enemy_359",
+            "champion-synergy-enemy_359-title",
+            "champion-synergy-enemy_360",
+            "champion-synergy-enemy_360-title",
+            "champion-synergy-enemy_361",
+            "champion-synergy-enemy_361-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-thru_02",
+          "title": "FRIEND FROM WORK",
+          "partners": [
+            {
+              "href": "/champions/thor-ragnarok",
+              "name": "Thor (Ragnarok)"
+            }
+          ],
+          "bonuses": [
+            "Thor (Ragnarok): Personal Furies gain 10% increased potency. ",
+            "Other Synergy Champions: When brought below 20% Max Health, gain an Indestructible Passive lasting 5 seconds. "
+          ],
+          "requirements": [
+            "Thor (Ragnarok): 4–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-thru_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-odin_buddy1",
+          "title": "FRIENDS",
+          "partners": [
+            {
+              "href": "/champions/odin",
+              "name": "Odin"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +70 Armor Rating.",
+            "All Champions gain +95 Armor Rating.",
+            "All Champions gain +130 Armor Rating."
+          ],
+          "requirements": [
+            "2–3★",
+            "4★",
+            "5–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-odin_buddy1-title",
+            "champion-synergy-odin_buddy1",
+            "champion-synergy-odin_buddy1-title",
+            "champion-synergy-odin_buddy2",
+            "champion-synergy-odin_buddy2-title",
+            "champion-synergy-odin_buddy3",
+            "champion-synergy-odin_buddy3-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-sorcsup_sb_5",
+          "title": "GAMMA HORDE",
+          "partners": [
+            {
+              "href": "/champions/sorcerer-supreme",
+              "name": "Sorcerer Supreme"
+            }
+          ],
+          "bonuses": [
+            "Synergy Champions: Stun Debuffs inflicted on the Opponent last 25% longer."
+          ],
+          "requirements": [
+            "Sorcerer Supreme: 4–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-sorcsup_sb_5-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-grandchamps_1",
+          "title": "GRANDMASTER’S CHAMPIONS",
+          "partners": [
+            {
+              "href": "/champions/korg",
+              "name": "Korg"
+            }
+          ],
+          "bonuses": [
+            "Hulk Ragnarok: Crowd Excitement is locked at 100 for an additional 3 seconds.",
+            "Korg: When Korg spends 13 or more Crowd Excitement charges through his Heavy Attack, the Armor Break lasts 20 seconds instead. Max Stack: 1."
+          ],
+          "requirements": [
+            "Korg: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate Synergies."
+          ],
+          "targets": [
+            "champion-synergy-grandchamps_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-cull_hero",
+          "title": "HEROES NEVER LEARN",
+          "partners": [
+            {
+              "href": "/champions/cull-obsidian",
+              "name": "Cull Obsidian"
+            }
+          ],
+          "bonuses": [
+            "Cull Obsidian: Activating a Special Attack grants a non-stacking Fury Buff increasing Attack by +50% for 4 seconds. This Buff gains 150% increased duration while fighting #Hero Champions."
+          ],
+          "requirements": [
+            "Cull Obsidian: 4–7★"
+          ],
+          "notes": [
+            "Solo: Only affects this Champion and does not stack."
+          ],
+          "targets": [
+            "champion-synergy-cull_hero-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-anni_chall",
+          "title": "CHALLENGER",
+          "partners": [
+            {
+              "href": "/champions/annihilus",
+              "name": "Annihilus"
+            }
+          ],
+          "bonuses": [
+            "Annihilus: Every time Annihilus’ Opponent activates a Fury effect, Annihilus gains an Armor Up Buff increasing Armor Rating by 8% for 4 seconds.",
+            "Hulk (Ragnarok): While Face Me is active, Hulk gains a Passive Fury boosting attack damage by 12%.",
+            "Contingency Plan: Whenever Hulk (Ragnarok) Strikes Annihilus with a SMASH attack, Annihilus gains 1 Fury Buff increasing Attack Rating by 100% for 4 seconds."
+          ],
+          "requirements": [
+            "Annihilus: 3–6★"
+          ],
+          "notes": [
+            "Unique synergy. Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-anni_chall-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-overseer_sb_1",
+          "title": "IDENTITY DISORDER",
+          "partners": [
+            {
+              "href": "/champions/the-overseer",
+              "name": "The Overseer"
+            }
+          ],
+          "bonuses": [
+            "Synergy Champions: Their scrambled personality makes them immune to reverse controls."
+          ],
+          "requirements": [
+            "The Overseer: 3–7★"
+          ],
+          "notes": [
+            "Unique synergy. Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-overseer_sb_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-herc_sb_hulks",
+          "title": "INCREDIBLE SUBSTITUTE",
+          "partners": [
+            {
+              "href": "/champions/hercules",
+              "name": "Hercules"
+            }
+          ],
+          "bonuses": [
+            "Hercules: Start the fight with +3 Strength.",
+            "Hulk: +15% Fury effect Potency.",
+            "Hulk (Immortal): While Immortality is on Cooldown, Well-Timed Blocks gain +100% Perfect Block chance.",
+            "Hulk (Ragnarok): When Crowd Excitement reaches 100, gain a Fury Buff increasing Attack Rating by +55% and inflict a Weakness Debuff reducing Attack Rating by 30%. These last 15 seconds."
+          ],
+          "requirements": [
+            "Hercules: 4–6★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-herc_sb_hulks-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-infinityenemies_1",
+          "title": "INFINITY ENEMIES",
+          "partners": [
+            {
+              "href": "/champions/proxima-midnight",
+              "name": "Proxima Midnight"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +4% Attack Rating.",
+            "All Champions gain +5% Attack Rating.",
+            "All Champions gain +6% Attack Rating.",
+            "All Champions gain +7% Attack Rating."
+          ],
+          "requirements": [
+            "2★",
+            "3★",
+            "4★",
+            "5–6★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-infinityenemies_1-title",
+            "champion-synergy-infinityenemies_1",
+            "champion-synergy-infinityenemies_1-title",
+            "champion-synergy-infinityenemies_2",
+            "champion-synergy-infinityenemies_2-title",
+            "champion-synergy-infinityenemies_3",
+            "champion-synergy-infinityenemies_3-title",
+            "champion-synergy-infinityenemies_4",
+            "champion-synergy-infinityenemies_5",
+            "champion-synergy-infinityenemies_4-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-comp_006",
+          "title": "IT'S COMPLICATED",
+          "partners": [
+            {
+              "href": "/champions/black-widow-deadly-origin",
+              "name": "Black Widow (Deadly Origin)"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +15 Armor Rating & +3% Combat Power Rate.",
+            "All Champions gain +35 Armor Rating & +3% Combat Power Rate.",
+            "All Champions gain +60 Armor Rating & +3% Combat Power Rate."
+          ],
+          "requirements": [
+            "2★",
+            "3★",
+            "4–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-comp_006-title",
+            "champion-synergy-comp_006",
+            "champion-synergy-comp_006-title",
+            "champion-synergy-comp_007",
+            "champion-synergy-comp_007-title",
+            "champion-synergy-comp_008",
+            "champion-synergy-comp_009",
+            "champion-synergy-comp_010",
+            "champion-synergy-comp_008-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-gladiator_03",
+          "title": "PUNK'S PIZZAZZ",
+          "partners": [
+            {
+              "href": "/champions/gladiator",
+              "name": "Gladiator"
+            }
+          ],
+          "bonuses": [
+            "Synergy Champions: Heavy Attacks are Passively Unblockable if Gladiator is alive, and they gain +10% Attack Rating if Sorcerer Supreme is alive, +750 Critical Rating if Hulk (Ragnarok) is alive, and +400 Critical Damage Rating if Spider-Punk is alive."
+          ],
+          "requirements": [
+            "Gladiator: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-gladiator_03-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-thing_hulk",
+          "title": "RIVALS Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/thing",
+              "name": "Thing"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +115 Critical Damage Rating."
+          ],
+          "requirements": [
+            "Thing: 2–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-thing_hulk-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-capsci_1",
+          "title": "SCIENCE EXPERIMENT",
+          "partners": [
+            {
+              "href": "/champions/captain-america-infinity-war",
+              "name": "Captain America (Infinity War)"
+            }
+          ],
+          "bonuses": [
+            "Science Champions place a Passive Weakness on the Opponent reducing their Attack by 50% except while being struck by them."
+          ],
+          "requirements": [
+            "Captain America (Infinity War): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-capsci_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-valk_sb_1",
+          "title": "STRAIGHT OUTTA SAKAAR",
+          "partners": [
+            {
+              "href": "/champions/valkyrie",
+              "name": "Valkyrie"
+            }
+          ],
+          "bonuses": [
+            "Valkyrie: Valkyrie starts the fight with one of her Bulwark Buffs.",
+            "Thor: Striking into the Opponent’s Block inflicts an instant Shock dealing 50% of the damage that would’ve been dealt by the unblocked attack.",
+            "Korg: The maximum amount of Crowd Excitement Korg can generate from Blocking is doubled.",
+            "Hulk: While SMASHing, Hulk gains +70% Block Penetration."
+          ],
+          "requirements": [
+            "Valkyrie: 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-valk_sb_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-falc_new_17",
+          "title": "TEAMMATES Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/falcon",
+              "name": "Falcon"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +5% Perfect Block Chance & +3% Attack Rating."
+          ],
+          "requirements": [
+            "Falcon: 4–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-falc_new_17-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-cheeilth_06",
+          "title": "WHAT YOU DON'T KNOW, YOU'LL FEAR",
+          "partners": [
+            {
+              "href": "/champions/chee-ilth",
+              "name": "Chee'Ilth"
+            }
+          ],
+          "bonuses": [
+            "Chee'ilth: When Blocking a Heavy Attack, become Passively Unstoppable for 3 seconds. Cooldown: 45 seconds. [Gamma]: Cooldown becomes 5 seconds.",
+            "Synergy Champions: +8% Attack Rating."
+          ],
+          "requirements": [
+            "Chee'Ilth: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-cheeilth_06-title"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06-mobile-levels",
+      "target": "champion-synergy-family-comp_006",
+      "open": false,
+      "url": "http://localhost:3000/champions/hulk-ragnarok?tab=synergies&rarity=6&rank=5&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "documentWidth": 390,
+      "scrollY": 10948,
+      "cardTop": 196.40625,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "articles": [
+        {
+          "id": "champion-synergy-lullaby_1",
+          "title": "LULLABY",
+          "partners": [
+            {
+              "href": "/champions/black-widow",
+              "name": "Black Widow"
+            }
+          ],
+          "bonuses": [
+            "Hulk (Ragnarok): When Struck Hulk has a 20% chance to ready a SMASH for his next attack.",
+            "Black Widow: Evade chance increases by 100%."
+          ],
+          "requirements": [
+            "Black Widow: 2–6★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-lullaby_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-offlimits_1",
+          "title": "OFF LIMITS",
+          "partners": [
+            {
+              "href": "/champions/hela",
+              "name": "Hela"
+            }
+          ],
+          "bonuses": [
+            "Hulk (Ragnarok): Hulk's chance to SMASH on Attacks increases by 400% while Face Me is active.",
+            "Hela: Hela begins the fight with 1 Fury Buff, and if she is ever without a Fury Buff for 10 seconds, she gains one."
+          ],
+          "requirements": [
+            "Hela: 2–6★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-offlimits_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-punygod_1",
+          "title": "PUNY GOD",
+          "partners": [
+            {
+              "href": "/champions/loki",
+              "name": "Loki"
+            }
+          ],
+          "bonuses": [
+            "Hulk (Ragnarok): +1000 Physical Resistance while Unstoppable. ",
+            "Loki: Basic Attacks against Loki have a 10% chance to miss, while his Opponent is under the effect of any Buff. "
+          ],
+          "requirements": [
+            "Loki: 2–6★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-punygod_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-teambuilding_1",
+          "title": "TEAM BUILDING EXERCISE",
+          "partners": [
+            {
+              "href": "/champions/thor-ragnarok",
+              "name": "Thor (Ragnarok)"
+            }
+          ],
+          "bonuses": [
+            "Hulk (Ragnarok): SMASH attacks have a 20% chance to be Unblockable. ",
+            "Thor (Ragnarok): Special attacks activated while the Boon of the Gods Power Gain is active become Passively Unblockable. "
+          ],
+          "requirements": [
+            "Thor (Ragnarok): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-teambuilding_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-shlk_1",
+          "title": "AGENTS OF S.M.A.S.H.",
+          "partners": [
+            {
+              "href": "/champions/she-hulk",
+              "name": "She-Hulk"
+            }
+          ],
+          "bonuses": [
+            "She-Hulk, Hulk: Personal Fury Passives gain +20% potency.",
+            "Hulk (Ragnarok): SMASH attacks gain +15% attack.",
+            "Red Hulk: +2% attack for each Heat charge."
+          ],
+          "requirements": [
+            "She-Hulk: 4–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-shlk_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-joef_02",
+          "title": "BANNER HORDE",
+          "partners": [
+            {
+              "href": "/champions/joe-fixit",
+              "name": "Joe Fixit"
+            }
+          ],
+          "bonuses": [
+            "Synergy Champions: For each Synergy Champion on the team, gain up to +6% Attack Rating and up to +500 Armor Rating based on lost Health."
+          ],
+          "requirements": [
+            "Joe Fixit: 4–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-joef_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-betaraybill_01",
+          "title": "CAGE FIGHTERS",
+          "partners": [
+            {
+              "href": "/champions/beta-ray-bill",
+              "name": "Beta Ray Bill"
+            }
+          ],
+          "bonuses": [
+            "Synergy Champions: When Rooted, Passively gain up to the nearest Bar of Power over 1.5 seconds. The Power Gain is removed if the Root expires, and does not trigger during the Opponent’s Special Attacks."
+          ],
+          "requirements": [
+            "Beta Ray Bill: 5–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-betaraybill_01-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-mojo_crowd",
+          "title": "CROWD PLEASERS",
+          "partners": [
+            {
+              "href": "/champions/mojo",
+              "name": "Mojo"
+            }
+          ],
+          "bonuses": [
+            "Mojo: When a Prompt is completed, Mojo gains an Unstoppable Buff for 5 second(s).",
+            "Hulk (Ragnarok): Passively increase Attack Rating by up to 25% based on Crowd Excitement.",
+            "Korg: Korg’s personal Armor Break has 50% increased Potency and duration."
+          ],
+          "requirements": [
+            "Mojo: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-mojo_crowd-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-hbuster_new_banner",
+          "title": "DON'T MENTION PUNY BANNER!",
+          "partners": [
+            {
+              "href": "/champions/hulkbuster",
+              "name": "Hulkbuster"
+            }
+          ],
+          "bonuses": [
+            "Hulkbuster: Up to +1000 Armor Rating based on how low Hulkbuster’s current Health is. ",
+            "Hulk: Immunity to Nullify, Fate Seal and Stagger. ",
+            "Hulk (Ragnarok): Gains up to +1000 Physical Resistance based on how high the Crowd Meter is. "
+          ],
+          "requirements": [
+            "Hulkbuster: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate Synergies."
+          ],
+          "targets": [
+            "champion-synergy-hbuster_new_banner-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-enemy_329",
+          "title": "ENEMIES",
+          "partners": [
+            {
+              "href": "/champions/ebony-maw",
+              "name": "Ebony Maw"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +85 Critical Rating.",
+            "All Champions gain +115 Critical Rating.",
+            "All Champions gain +155 Critical Rating."
+          ],
+          "requirements": [
+            "2★",
+            "3★",
+            "4–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-enemy_329-title",
+            "champion-synergy-enemy_329",
+            "champion-synergy-enemy_329-title",
+            "champion-synergy-enemy_330",
+            "champion-synergy-enemy_330-title",
+            "champion-synergy-enemy_331",
+            "champion-synergy-enemy_331-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-enemy_359",
+          "title": "ENEMIES",
+          "partners": [
+            {
+              "href": "/champions/abomination-immortal",
+              "name": "Abomination (Immortal)"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +85 Critical Rating.",
+            "All Champions gain +115 Critical Rating.",
+            "All Champions gain +155 Critical Rating."
+          ],
+          "requirements": [
+            "2★",
+            "3★",
+            "4–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-enemy_359-title",
+            "champion-synergy-enemy_359",
+            "champion-synergy-enemy_359-title",
+            "champion-synergy-enemy_360",
+            "champion-synergy-enemy_360-title",
+            "champion-synergy-enemy_361",
+            "champion-synergy-enemy_361-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-thru_02",
+          "title": "FRIEND FROM WORK",
+          "partners": [
+            {
+              "href": "/champions/thor-ragnarok",
+              "name": "Thor (Ragnarok)"
+            }
+          ],
+          "bonuses": [
+            "Thor (Ragnarok): Personal Furies gain 10% increased potency. ",
+            "Other Synergy Champions: When brought below 20% Max Health, gain an Indestructible Passive lasting 5 seconds. "
+          ],
+          "requirements": [
+            "Thor (Ragnarok): 4–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-thru_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-odin_buddy1",
+          "title": "FRIENDS",
+          "partners": [
+            {
+              "href": "/champions/odin",
+              "name": "Odin"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +70 Armor Rating.",
+            "All Champions gain +95 Armor Rating.",
+            "All Champions gain +130 Armor Rating."
+          ],
+          "requirements": [
+            "2–3★",
+            "4★",
+            "5–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-odin_buddy1-title",
+            "champion-synergy-odin_buddy1",
+            "champion-synergy-odin_buddy1-title",
+            "champion-synergy-odin_buddy2",
+            "champion-synergy-odin_buddy2-title",
+            "champion-synergy-odin_buddy3",
+            "champion-synergy-odin_buddy3-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-sorcsup_sb_5",
+          "title": "GAMMA HORDE",
+          "partners": [
+            {
+              "href": "/champions/sorcerer-supreme",
+              "name": "Sorcerer Supreme"
+            }
+          ],
+          "bonuses": [
+            "Synergy Champions: Stun Debuffs inflicted on the Opponent last 25% longer."
+          ],
+          "requirements": [
+            "Sorcerer Supreme: 4–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-sorcsup_sb_5-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-grandchamps_1",
+          "title": "GRANDMASTER’S CHAMPIONS",
+          "partners": [
+            {
+              "href": "/champions/korg",
+              "name": "Korg"
+            }
+          ],
+          "bonuses": [
+            "Hulk Ragnarok: Crowd Excitement is locked at 100 for an additional 3 seconds.",
+            "Korg: When Korg spends 13 or more Crowd Excitement charges through his Heavy Attack, the Armor Break lasts 20 seconds instead. Max Stack: 1."
+          ],
+          "requirements": [
+            "Korg: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate Synergies."
+          ],
+          "targets": [
+            "champion-synergy-grandchamps_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-cull_hero",
+          "title": "HEROES NEVER LEARN",
+          "partners": [
+            {
+              "href": "/champions/cull-obsidian",
+              "name": "Cull Obsidian"
+            }
+          ],
+          "bonuses": [
+            "Cull Obsidian: Activating a Special Attack grants a non-stacking Fury Buff increasing Attack by +50% for 4 seconds. This Buff gains 150% increased duration while fighting #Hero Champions."
+          ],
+          "requirements": [
+            "Cull Obsidian: 4–7★"
+          ],
+          "notes": [
+            "Solo: Only affects this Champion and does not stack."
+          ],
+          "targets": [
+            "champion-synergy-cull_hero-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-anni_chall",
+          "title": "CHALLENGER",
+          "partners": [
+            {
+              "href": "/champions/annihilus",
+              "name": "Annihilus"
+            }
+          ],
+          "bonuses": [
+            "Annihilus: Every time Annihilus’ Opponent activates a Fury effect, Annihilus gains an Armor Up Buff increasing Armor Rating by 8% for 4 seconds.",
+            "Hulk (Ragnarok): While Face Me is active, Hulk gains a Passive Fury boosting attack damage by 12%.",
+            "Contingency Plan: Whenever Hulk (Ragnarok) Strikes Annihilus with a SMASH attack, Annihilus gains 1 Fury Buff increasing Attack Rating by 100% for 4 seconds."
+          ],
+          "requirements": [
+            "Annihilus: 3–6★"
+          ],
+          "notes": [
+            "Unique synergy. Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-anni_chall-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-overseer_sb_1",
+          "title": "IDENTITY DISORDER",
+          "partners": [
+            {
+              "href": "/champions/the-overseer",
+              "name": "The Overseer"
+            }
+          ],
+          "bonuses": [
+            "Synergy Champions: Their scrambled personality makes them immune to reverse controls."
+          ],
+          "requirements": [
+            "The Overseer: 3–7★"
+          ],
+          "notes": [
+            "Unique synergy. Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-overseer_sb_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-herc_sb_hulks",
+          "title": "INCREDIBLE SUBSTITUTE",
+          "partners": [
+            {
+              "href": "/champions/hercules",
+              "name": "Hercules"
+            }
+          ],
+          "bonuses": [
+            "Hercules: Start the fight with +3 Strength.",
+            "Hulk: +15% Fury effect Potency.",
+            "Hulk (Immortal): While Immortality is on Cooldown, Well-Timed Blocks gain +100% Perfect Block chance.",
+            "Hulk (Ragnarok): When Crowd Excitement reaches 100, gain a Fury Buff increasing Attack Rating by +55% and inflict a Weakness Debuff reducing Attack Rating by 30%. These last 15 seconds."
+          ],
+          "requirements": [
+            "Hercules: 4–6★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-herc_sb_hulks-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-infinityenemies_1",
+          "title": "INFINITY ENEMIES",
+          "partners": [
+            {
+              "href": "/champions/proxima-midnight",
+              "name": "Proxima Midnight"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +4% Attack Rating.",
+            "All Champions gain +5% Attack Rating.",
+            "All Champions gain +6% Attack Rating.",
+            "All Champions gain +7% Attack Rating."
+          ],
+          "requirements": [
+            "2★",
+            "3★",
+            "4★",
+            "5–6★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-infinityenemies_1-title",
+            "champion-synergy-infinityenemies_1",
+            "champion-synergy-infinityenemies_1-title",
+            "champion-synergy-infinityenemies_2",
+            "champion-synergy-infinityenemies_2-title",
+            "champion-synergy-infinityenemies_3",
+            "champion-synergy-infinityenemies_3-title",
+            "champion-synergy-infinityenemies_4",
+            "champion-synergy-infinityenemies_5",
+            "champion-synergy-infinityenemies_4-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-comp_006",
+          "title": "IT'S COMPLICATED",
+          "partners": [
+            {
+              "href": "/champions/black-widow-deadly-origin",
+              "name": "Black Widow (Deadly Origin)"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +15 Armor Rating & +3% Combat Power Rate.",
+            "All Champions gain +35 Armor Rating & +3% Combat Power Rate.",
+            "All Champions gain +60 Armor Rating & +3% Combat Power Rate."
+          ],
+          "requirements": [
+            "2★",
+            "3★",
+            "4–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-comp_006-title",
+            "champion-synergy-comp_006",
+            "champion-synergy-comp_006-title",
+            "champion-synergy-comp_007",
+            "champion-synergy-comp_007-title",
+            "champion-synergy-comp_008",
+            "champion-synergy-comp_009",
+            "champion-synergy-comp_010",
+            "champion-synergy-comp_008-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-gladiator_03",
+          "title": "PUNK'S PIZZAZZ",
+          "partners": [
+            {
+              "href": "/champions/gladiator",
+              "name": "Gladiator"
+            }
+          ],
+          "bonuses": [
+            "Synergy Champions: Heavy Attacks are Passively Unblockable if Gladiator is alive, and they gain +10% Attack Rating if Sorcerer Supreme is alive, +750 Critical Rating if Hulk (Ragnarok) is alive, and +400 Critical Damage Rating if Spider-Punk is alive."
+          ],
+          "requirements": [
+            "Gladiator: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-gladiator_03-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-thing_hulk",
+          "title": "RIVALS Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/thing",
+              "name": "Thing"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +115 Critical Damage Rating."
+          ],
+          "requirements": [
+            "Thing: 2–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-thing_hulk-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-capsci_1",
+          "title": "SCIENCE EXPERIMENT",
+          "partners": [
+            {
+              "href": "/champions/captain-america-infinity-war",
+              "name": "Captain America (Infinity War)"
+            }
+          ],
+          "bonuses": [
+            "Science Champions place a Passive Weakness on the Opponent reducing their Attack by 50% except while being struck by them."
+          ],
+          "requirements": [
+            "Captain America (Infinity War): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-capsci_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-valk_sb_1",
+          "title": "STRAIGHT OUTTA SAKAAR",
+          "partners": [
+            {
+              "href": "/champions/valkyrie",
+              "name": "Valkyrie"
+            }
+          ],
+          "bonuses": [
+            "Valkyrie: Valkyrie starts the fight with one of her Bulwark Buffs.",
+            "Thor: Striking into the Opponent’s Block inflicts an instant Shock dealing 50% of the damage that would’ve been dealt by the unblocked attack.",
+            "Korg: The maximum amount of Crowd Excitement Korg can generate from Blocking is doubled.",
+            "Hulk: While SMASHing, Hulk gains +70% Block Penetration."
+          ],
+          "requirements": [
+            "Valkyrie: 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-valk_sb_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-falc_new_17",
+          "title": "TEAMMATES Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/falcon",
+              "name": "Falcon"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +5% Perfect Block Chance & +3% Attack Rating."
+          ],
+          "requirements": [
+            "Falcon: 4–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-falc_new_17-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-cheeilth_06",
+          "title": "WHAT YOU DON'T KNOW, YOU'LL FEAR",
+          "partners": [
+            {
+              "href": "/champions/chee-ilth",
+              "name": "Chee'Ilth"
+            }
+          ],
+          "bonuses": [
+            "Chee'ilth: When Blocking a Heavy Attack, become Passively Unstoppable for 3 seconds. Cooldown: 45 seconds. [Gamma]: Cooldown becomes 5 seconds.",
+            "Synergy Champions: +8% Attack Rating."
+          ],
+          "requirements": [
+            "Chee'Ilth: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-cheeilth_06-title"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07-small-partners",
+      "target": "champion-synergy-absorb_06",
+      "open": false,
+      "url": "http://localhost:3000/champions/absorbing-man?tab=synergies&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        320,
+        568
+      ],
+      "documentWidth": 320,
+      "scrollY": 950,
+      "cardTop": 209.390625,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "articles": [
+        {
+          "id": "champion-synergy-absorb_06",
+          "title": "ENEMIES Lv. 2",
+          "partners": [
+            {
+              "href": "/champions/ant-man",
+              "name": "Ant-Man"
+            },
+            {
+              "href": "/champions/black-bolt",
+              "name": "Black Bolt"
+            },
+            {
+              "href": "/champions/hulk",
+              "name": "Hulk"
+            },
+            {
+              "href": "/champions/thor",
+              "name": "Thor"
+            },
+            {
+              "href": "/champions/wasp",
+              "name": "Wasp"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +115 Critical Rating."
+          ],
+          "requirements": [
+            "Ant-Man: 2–7★Black Bolt: 2–6★Hulk: 2–7★Thor: 2–6★Wasp: 2–6★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-absorb_06-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_04",
+          "title": "HANDS-ON APPROACH",
+          "partners": [
+            {
+              "href": "/champions/rogue",
+              "name": "Rogue"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: Reduce the duration of Non-Damaging Debuffs other than Stuns by 50%. ",
+            "Rogue: The timer for Rogue's Replicated Buffs is paused during the Opponent's Special Attacks. "
+          ],
+          "requirements": [
+            "Rogue: 2–6★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_04-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_01",
+          "title": "ROGUE'S ROMANCE",
+          "partners": [
+            {
+              "href": "/champions/titania",
+              "name": "Titania"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: Medium and Heavy Attacks gain 600 Critical Damage Rating. ",
+            "Titania: Gain Immunity to Bleed effects. "
+          ],
+          "requirements": [
+            "Titania: 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_01-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_03",
+          "title": "SINS OF THE FATHER",
+          "partners": [
+            {
+              "href": "/champions/daredevil-hell-s-kitchen",
+              "name": "Daredevil (Hell'S Kitchen)"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: While at or below 15 Combo Meter, gain 1000 Block Proficiency, and while above, gain 1000 Critical Rating. ",
+            "Devil of H.K.: Personal Buffs last for an additional 7 seconds. "
+          ],
+          "requirements": [
+            "Daredevil (Hell'S Kitchen): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_03-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_05",
+          "title": "THE GREEN DOOR",
+          "partners": [
+            {
+              "href": "/champions/abomination-immortal",
+              "name": "Abomination (Immortal)"
+            },
+            {
+              "href": "/champions/hulk-immortal",
+              "name": "Hulk (Immortal)"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: Gain Immunity to all Poison effects, and Omni-Morph Forms last 3 seconds longer. ",
+            "Abomination (Immortal): Gain 250 Energy Resistance for each Poison effect on himself. ",
+            "Hulk (Immortal): Personal Immortality effects gain +20% Ability Accuracy. "
+          ],
+          "requirements": [
+            "Abomination (Immortal): 2–7★Hulk (Immortal): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_05-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_02",
+          "title": "THE WORTHY",
+          "partners": [
+            {
+              "href": "/champions/thor",
+              "name": "Thor"
+            },
+            {
+              "href": "/champions/thor-jane-foster",
+              "name": "Thor (Jane Foster)"
+            }
+          ],
+          "bonuses": [
+            "Absorbing Man: The second Medium Attack inflicts an Armor Break Debuff, reducing Armor by 500 for 9 seconds. Max stacks: 5 ",
+            "Thor: Thor’s Heavy attack inflicts an Armor Break Debuff, reducing Armor by 1800 for 4.5 seconds. Max stacks: 2 ",
+            "Thor (Jane Foster): When facing Cosmic champions, The Mighty Thor's Special Attack 2 inflicts Degeneration Debuffs instead of Shocks. "
+          ],
+          "requirements": [
+            "Thor: 2–6★Thor (Jane Foster): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-attuma_02",
+          "title": "FEAR ITSELF",
+          "partners": [
+            {
+              "href": "/champions/attuma",
+              "name": "Attuma"
+            }
+          ],
+          "bonuses": [
+            "Synergy Champions: Gain +20% Attack Rating when fighting at Class Advantage, and regain the Attack Rating penalty when fighting at Disadvantage."
+          ],
+          "requirements": [
+            "Attuma: 5–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-attuma_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-ylb_02",
+          "title": "MERCENARY COMPETITION",
+          "partners": [
+            {
+              "href": "/champions/yelena-belova",
+              "name": "Yelena Belova"
+            }
+          ],
+          "bonuses": [
+            "Yelena Belova: Personal Impact and Disarm effects start paused for 6 seconds.",
+            "#Mercenary & #Villain Champions: +5% Attack Rating and +400 Critical Damage Rating."
+          ],
+          "requirements": [
+            "Yelena Belova: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-ylb_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-blktrnt_2",
+          "title": "PUÑO CERRADO",
+          "partners": [
+            {
+              "href": "/champions/black-tarantula",
+              "name": "Black Tarantula"
+            }
+          ],
+          "bonuses": [
+            "Black Tarantula: Purify Ability Accuracy is increased by 200% while Stunned by non-Mutant Champions.",
+            "Daredevil: Evading during the Opponent's Special Attacks grants a +15% Fury Passive for 20 seconds. Max stacks: 3.",
+            "Absorbing Man: Punishing a Special Attack with a Light Attack pauses Omni-Morph Forms for 3 seconds."
+          ],
+          "requirements": [
+            "Black Tarantula: 5–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-blktrnt_2-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-serpent_04",
+          "title": "THE MAIN EVENT",
+          "partners": [
+            {
+              "href": "/champions/the-serpent",
+              "name": "The Serpent"
+            }
+          ],
+          "bonuses": [
+            "#Cul's Worthy: Instant Damaging effects gain 15% potency. ",
+            "The Serpent: Personal Fury effects are 8% more potent for each #Cul's Worthy Champion on the team. ",
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "requirements": [
+            "The Serpent: 6–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-serpent_04-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-cheeilth_06",
+          "title": "WHAT YOU DON'T KNOW, YOU'LL FEAR",
+          "partners": [
+            {
+              "href": "/champions/chee-ilth",
+              "name": "Chee'Ilth"
+            }
+          ],
+          "bonuses": [
+            "Chee'ilth: When Blocking a Heavy Attack, become Passively Unstoppable for 3 seconds. Cooldown: 45 seconds. [Gamma]: Cooldown becomes 5 seconds.",
+            "Synergy Champions: +8% Attack Rating."
+          ],
+          "requirements": [
+            "Chee'Ilth: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-cheeilth_06-title"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08-small-levels",
+      "target": "champion-synergy-family-comp_006",
+      "open": false,
+      "url": "http://localhost:3000/champions/hulk-ragnarok?tab=synergies&rarity=6&rank=5&sig=200&ascension=0",
+      "viewport": [
+        320,
+        568
+      ],
+      "documentWidth": 320,
+      "scrollY": 11902,
+      "cardTop": 209.359375,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "articles": [
+        {
+          "id": "champion-synergy-lullaby_1",
+          "title": "LULLABY",
+          "partners": [
+            {
+              "href": "/champions/black-widow",
+              "name": "Black Widow"
+            }
+          ],
+          "bonuses": [
+            "Hulk (Ragnarok): When Struck Hulk has a 20% chance to ready a SMASH for his next attack.",
+            "Black Widow: Evade chance increases by 100%."
+          ],
+          "requirements": [
+            "Black Widow: 2–6★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-lullaby_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-offlimits_1",
+          "title": "OFF LIMITS",
+          "partners": [
+            {
+              "href": "/champions/hela",
+              "name": "Hela"
+            }
+          ],
+          "bonuses": [
+            "Hulk (Ragnarok): Hulk's chance to SMASH on Attacks increases by 400% while Face Me is active.",
+            "Hela: Hela begins the fight with 1 Fury Buff, and if she is ever without a Fury Buff for 10 seconds, she gains one."
+          ],
+          "requirements": [
+            "Hela: 2–6★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-offlimits_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-punygod_1",
+          "title": "PUNY GOD",
+          "partners": [
+            {
+              "href": "/champions/loki",
+              "name": "Loki"
+            }
+          ],
+          "bonuses": [
+            "Hulk (Ragnarok): +1000 Physical Resistance while Unstoppable. ",
+            "Loki: Basic Attacks against Loki have a 10% chance to miss, while his Opponent is under the effect of any Buff. "
+          ],
+          "requirements": [
+            "Loki: 2–6★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-punygod_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-teambuilding_1",
+          "title": "TEAM BUILDING EXERCISE",
+          "partners": [
+            {
+              "href": "/champions/thor-ragnarok",
+              "name": "Thor (Ragnarok)"
+            }
+          ],
+          "bonuses": [
+            "Hulk (Ragnarok): SMASH attacks have a 20% chance to be Unblockable. ",
+            "Thor (Ragnarok): Special attacks activated while the Boon of the Gods Power Gain is active become Passively Unblockable. "
+          ],
+          "requirements": [
+            "Thor (Ragnarok): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-teambuilding_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-shlk_1",
+          "title": "AGENTS OF S.M.A.S.H.",
+          "partners": [
+            {
+              "href": "/champions/she-hulk",
+              "name": "She-Hulk"
+            }
+          ],
+          "bonuses": [
+            "She-Hulk, Hulk: Personal Fury Passives gain +20% potency.",
+            "Hulk (Ragnarok): SMASH attacks gain +15% attack.",
+            "Red Hulk: +2% attack for each Heat charge."
+          ],
+          "requirements": [
+            "She-Hulk: 4–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-shlk_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-joef_02",
+          "title": "BANNER HORDE",
+          "partners": [
+            {
+              "href": "/champions/joe-fixit",
+              "name": "Joe Fixit"
+            }
+          ],
+          "bonuses": [
+            "Synergy Champions: For each Synergy Champion on the team, gain up to +6% Attack Rating and up to +500 Armor Rating based on lost Health."
+          ],
+          "requirements": [
+            "Joe Fixit: 4–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-joef_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-betaraybill_01",
+          "title": "CAGE FIGHTERS",
+          "partners": [
+            {
+              "href": "/champions/beta-ray-bill",
+              "name": "Beta Ray Bill"
+            }
+          ],
+          "bonuses": [
+            "Synergy Champions: When Rooted, Passively gain up to the nearest Bar of Power over 1.5 seconds. The Power Gain is removed if the Root expires, and does not trigger during the Opponent’s Special Attacks."
+          ],
+          "requirements": [
+            "Beta Ray Bill: 5–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-betaraybill_01-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-mojo_crowd",
+          "title": "CROWD PLEASERS",
+          "partners": [
+            {
+              "href": "/champions/mojo",
+              "name": "Mojo"
+            }
+          ],
+          "bonuses": [
+            "Mojo: When a Prompt is completed, Mojo gains an Unstoppable Buff for 5 second(s).",
+            "Hulk (Ragnarok): Passively increase Attack Rating by up to 25% based on Crowd Excitement.",
+            "Korg: Korg’s personal Armor Break has 50% increased Potency and duration."
+          ],
+          "requirements": [
+            "Mojo: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-mojo_crowd-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-hbuster_new_banner",
+          "title": "DON'T MENTION PUNY BANNER!",
+          "partners": [
+            {
+              "href": "/champions/hulkbuster",
+              "name": "Hulkbuster"
+            }
+          ],
+          "bonuses": [
+            "Hulkbuster: Up to +1000 Armor Rating based on how low Hulkbuster’s current Health is. ",
+            "Hulk: Immunity to Nullify, Fate Seal and Stagger. ",
+            "Hulk (Ragnarok): Gains up to +1000 Physical Resistance based on how high the Crowd Meter is. "
+          ],
+          "requirements": [
+            "Hulkbuster: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate Synergies."
+          ],
+          "targets": [
+            "champion-synergy-hbuster_new_banner-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-enemy_329",
+          "title": "ENEMIES",
+          "partners": [
+            {
+              "href": "/champions/ebony-maw",
+              "name": "Ebony Maw"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +85 Critical Rating.",
+            "All Champions gain +115 Critical Rating.",
+            "All Champions gain +155 Critical Rating."
+          ],
+          "requirements": [
+            "2★",
+            "3★",
+            "4–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-enemy_329-title",
+            "champion-synergy-enemy_329",
+            "champion-synergy-enemy_329-title",
+            "champion-synergy-enemy_330",
+            "champion-synergy-enemy_330-title",
+            "champion-synergy-enemy_331",
+            "champion-synergy-enemy_331-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-enemy_359",
+          "title": "ENEMIES",
+          "partners": [
+            {
+              "href": "/champions/abomination-immortal",
+              "name": "Abomination (Immortal)"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +85 Critical Rating.",
+            "All Champions gain +115 Critical Rating.",
+            "All Champions gain +155 Critical Rating."
+          ],
+          "requirements": [
+            "2★",
+            "3★",
+            "4–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-enemy_359-title",
+            "champion-synergy-enemy_359",
+            "champion-synergy-enemy_359-title",
+            "champion-synergy-enemy_360",
+            "champion-synergy-enemy_360-title",
+            "champion-synergy-enemy_361",
+            "champion-synergy-enemy_361-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-thru_02",
+          "title": "FRIEND FROM WORK",
+          "partners": [
+            {
+              "href": "/champions/thor-ragnarok",
+              "name": "Thor (Ragnarok)"
+            }
+          ],
+          "bonuses": [
+            "Thor (Ragnarok): Personal Furies gain 10% increased potency. ",
+            "Other Synergy Champions: When brought below 20% Max Health, gain an Indestructible Passive lasting 5 seconds. "
+          ],
+          "requirements": [
+            "Thor (Ragnarok): 4–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-thru_02-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-odin_buddy1",
+          "title": "FRIENDS",
+          "partners": [
+            {
+              "href": "/champions/odin",
+              "name": "Odin"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +70 Armor Rating.",
+            "All Champions gain +95 Armor Rating.",
+            "All Champions gain +130 Armor Rating."
+          ],
+          "requirements": [
+            "2–3★",
+            "4★",
+            "5–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-odin_buddy1-title",
+            "champion-synergy-odin_buddy1",
+            "champion-synergy-odin_buddy1-title",
+            "champion-synergy-odin_buddy2",
+            "champion-synergy-odin_buddy2-title",
+            "champion-synergy-odin_buddy3",
+            "champion-synergy-odin_buddy3-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-sorcsup_sb_5",
+          "title": "GAMMA HORDE",
+          "partners": [
+            {
+              "href": "/champions/sorcerer-supreme",
+              "name": "Sorcerer Supreme"
+            }
+          ],
+          "bonuses": [
+            "Synergy Champions: Stun Debuffs inflicted on the Opponent last 25% longer."
+          ],
+          "requirements": [
+            "Sorcerer Supreme: 4–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-sorcsup_sb_5-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-grandchamps_1",
+          "title": "GRANDMASTER’S CHAMPIONS",
+          "partners": [
+            {
+              "href": "/champions/korg",
+              "name": "Korg"
+            }
+          ],
+          "bonuses": [
+            "Hulk Ragnarok: Crowd Excitement is locked at 100 for an additional 3 seconds.",
+            "Korg: When Korg spends 13 or more Crowd Excitement charges through his Heavy Attack, the Armor Break lasts 20 seconds instead. Max Stack: 1."
+          ],
+          "requirements": [
+            "Korg: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate Synergies."
+          ],
+          "targets": [
+            "champion-synergy-grandchamps_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-cull_hero",
+          "title": "HEROES NEVER LEARN",
+          "partners": [
+            {
+              "href": "/champions/cull-obsidian",
+              "name": "Cull Obsidian"
+            }
+          ],
+          "bonuses": [
+            "Cull Obsidian: Activating a Special Attack grants a non-stacking Fury Buff increasing Attack by +50% for 4 seconds. This Buff gains 150% increased duration while fighting #Hero Champions."
+          ],
+          "requirements": [
+            "Cull Obsidian: 4–7★"
+          ],
+          "notes": [
+            "Solo: Only affects this Champion and does not stack."
+          ],
+          "targets": [
+            "champion-synergy-cull_hero-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-anni_chall",
+          "title": "CHALLENGER",
+          "partners": [
+            {
+              "href": "/champions/annihilus",
+              "name": "Annihilus"
+            }
+          ],
+          "bonuses": [
+            "Annihilus: Every time Annihilus’ Opponent activates a Fury effect, Annihilus gains an Armor Up Buff increasing Armor Rating by 8% for 4 seconds.",
+            "Hulk (Ragnarok): While Face Me is active, Hulk gains a Passive Fury boosting attack damage by 12%.",
+            "Contingency Plan: Whenever Hulk (Ragnarok) Strikes Annihilus with a SMASH attack, Annihilus gains 1 Fury Buff increasing Attack Rating by 100% for 4 seconds."
+          ],
+          "requirements": [
+            "Annihilus: 3–6★"
+          ],
+          "notes": [
+            "Unique synergy. Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-anni_chall-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-overseer_sb_1",
+          "title": "IDENTITY DISORDER",
+          "partners": [
+            {
+              "href": "/champions/the-overseer",
+              "name": "The Overseer"
+            }
+          ],
+          "bonuses": [
+            "Synergy Champions: Their scrambled personality makes them immune to reverse controls."
+          ],
+          "requirements": [
+            "The Overseer: 3–7★"
+          ],
+          "notes": [
+            "Unique synergy. Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-overseer_sb_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-herc_sb_hulks",
+          "title": "INCREDIBLE SUBSTITUTE",
+          "partners": [
+            {
+              "href": "/champions/hercules",
+              "name": "Hercules"
+            }
+          ],
+          "bonuses": [
+            "Hercules: Start the fight with +3 Strength.",
+            "Hulk: +15% Fury effect Potency.",
+            "Hulk (Immortal): While Immortality is on Cooldown, Well-Timed Blocks gain +100% Perfect Block chance.",
+            "Hulk (Ragnarok): When Crowd Excitement reaches 100, gain a Fury Buff increasing Attack Rating by +55% and inflict a Weakness Debuff reducing Attack Rating by 30%. These last 15 seconds."
+          ],
+          "requirements": [
+            "Hercules: 4–6★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-herc_sb_hulks-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-infinityenemies_1",
+          "title": "INFINITY ENEMIES",
+          "partners": [
+            {
+              "href": "/champions/proxima-midnight",
+              "name": "Proxima Midnight"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +4% Attack Rating.",
+            "All Champions gain +5% Attack Rating.",
+            "All Champions gain +6% Attack Rating.",
+            "All Champions gain +7% Attack Rating."
+          ],
+          "requirements": [
+            "2★",
+            "3★",
+            "4★",
+            "5–6★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-infinityenemies_1-title",
+            "champion-synergy-infinityenemies_1",
+            "champion-synergy-infinityenemies_1-title",
+            "champion-synergy-infinityenemies_2",
+            "champion-synergy-infinityenemies_2-title",
+            "champion-synergy-infinityenemies_3",
+            "champion-synergy-infinityenemies_3-title",
+            "champion-synergy-infinityenemies_4",
+            "champion-synergy-infinityenemies_5",
+            "champion-synergy-infinityenemies_4-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-comp_006",
+          "title": "IT'S COMPLICATED",
+          "partners": [
+            {
+              "href": "/champions/black-widow-deadly-origin",
+              "name": "Black Widow (Deadly Origin)"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +15 Armor Rating & +3% Combat Power Rate.",
+            "All Champions gain +35 Armor Rating & +3% Combat Power Rate.",
+            "All Champions gain +60 Armor Rating & +3% Combat Power Rate."
+          ],
+          "requirements": [
+            "2★",
+            "3★",
+            "4–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-comp_006-title",
+            "champion-synergy-comp_006",
+            "champion-synergy-comp_006-title",
+            "champion-synergy-comp_007",
+            "champion-synergy-comp_007-title",
+            "champion-synergy-comp_008",
+            "champion-synergy-comp_009",
+            "champion-synergy-comp_010",
+            "champion-synergy-comp_008-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-gladiator_03",
+          "title": "PUNK'S PIZZAZZ",
+          "partners": [
+            {
+              "href": "/champions/gladiator",
+              "name": "Gladiator"
+            }
+          ],
+          "bonuses": [
+            "Synergy Champions: Heavy Attacks are Passively Unblockable if Gladiator is alive, and they gain +10% Attack Rating if Sorcerer Supreme is alive, +750 Critical Rating if Hulk (Ragnarok) is alive, and +400 Critical Damage Rating if Spider-Punk is alive."
+          ],
+          "requirements": [
+            "Gladiator: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-gladiator_03-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-thing_hulk",
+          "title": "RIVALS Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/thing",
+              "name": "Thing"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +115 Critical Damage Rating."
+          ],
+          "requirements": [
+            "Thing: 2–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-thing_hulk-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-capsci_1",
+          "title": "SCIENCE EXPERIMENT",
+          "partners": [
+            {
+              "href": "/champions/captain-america-infinity-war",
+              "name": "Captain America (Infinity War)"
+            }
+          ],
+          "bonuses": [
+            "Science Champions place a Passive Weakness on the Opponent reducing their Attack by 50% except while being struck by them."
+          ],
+          "requirements": [
+            "Captain America (Infinity War): 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-capsci_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-valk_sb_1",
+          "title": "STRAIGHT OUTTA SAKAAR",
+          "partners": [
+            {
+              "href": "/champions/valkyrie",
+              "name": "Valkyrie"
+            }
+          ],
+          "bonuses": [
+            "Valkyrie: Valkyrie starts the fight with one of her Bulwark Buffs.",
+            "Thor: Striking into the Opponent’s Block inflicts an instant Shock dealing 50% of the damage that would’ve been dealt by the unblocked attack.",
+            "Korg: The maximum amount of Crowd Excitement Korg can generate from Blocking is doubled.",
+            "Hulk: While SMASHing, Hulk gains +70% Block Penetration."
+          ],
+          "requirements": [
+            "Valkyrie: 2–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-valk_sb_1-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-falc_new_17",
+          "title": "TEAMMATES Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/falcon",
+              "name": "Falcon"
+            }
+          ],
+          "bonuses": [
+            "All Champions gain +5% Perfect Block Chance & +3% Attack Rating."
+          ],
+          "requirements": [
+            "Falcon: 4–7★"
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-falc_new_17-title"
+          ]
+        },
+        {
+          "id": "champion-synergy-cheeilth_06",
+          "title": "WHAT YOU DON'T KNOW, YOU'LL FEAR",
+          "partners": [
+            {
+              "href": "/champions/chee-ilth",
+              "name": "Chee'Ilth"
+            }
+          ],
+          "bonuses": [
+            "Chee'ilth: When Blocking a Heavy Attack, become Passively Unstoppable for 3 seconds. Cooldown: 45 seconds. [Gamma]: Cooldown becomes 5 seconds.",
+            "Synergy Champions: +8% Attack Rating."
+          ],
+          "requirements": [
+            "Chee'Ilth: 3–7★"
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-cheeilth_06-title"
+          ]
+        }
+      ]
+    }
+  ],
+  "diagnostics": []
+}

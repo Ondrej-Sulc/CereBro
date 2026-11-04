@@ -1,0 +1,22 @@
+﻿{
+    "state":  "uncommitted round-3 candidate retained after verification",
+    "files":  [
+                  {
+                      "sha256":  "1f7318e42157fd95b6b070f9eb1a0af1015b6ee34f06c00331f7fafc50e910eb",
+                      "path":  "web/src/app/champions/[slug]/champion-details-client.tsx"
+                  },
+                  {
+                      "sha256":  "063a1c86a94d4ad46e7871a10a277c1eecfb0b214f63741a2350a66134a99309",
+                      "path":  "web/src/app/champions/[slug]/champion-ability-reader.tsx"
+                  },
+                  {
+                      "sha256":  "0576cbdd52ee70e25cfa986d6bfc778b5ce6255c2c534b80c6aa7494c87ac507",
+                      "path":  "web/src/app/champions/[slug]/champion-ability-reader.test.tsx"
+                  },
+                  {
+                      "sha256":  "bbd55c9675ffd3c3bc8aeb44e2c01a72fc8436ba1880738baba80bfbcd2c4002",
+                      "path":  "web/src/app/champions/[slug]/champion-details-navigation.test.tsx"
+                  }
+              ],
+    "incumbent":  "round3-incumbent-manifest.json"
+}

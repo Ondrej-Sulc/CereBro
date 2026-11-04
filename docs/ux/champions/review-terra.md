@@ -1,0 +1,28 @@
+# Independent review: gpt-6.1-terra
+
+2026-11-04. Native Codex delegation, fresh context, inherited xhigh reasoning. Read-only review of the frozen [evidence packet](evidence.md) and listed source at `eef079255376a0905913442568b5a71ab1804ec1`. No target score, coordinator backlog, or peer review supplied. The following is the reviewer's returned assessment.
+
+Scores are judgments of the supplied evidence, not measurements of user success.
+
+| Dimension | Score | Evidence and confidence | Limitation |
+| --- | --- | --- | --- |
+| Task clarity | 6/10 | Section labels, descriptions, build label, and the scoped-search empty state give useful cues. The fresh landing places navigation below the initial viewport. Medium confidence. | Discovery and completion were not observed with users. |
+| Information hierarchy | 5/10 | Champion identity dominates the landing; section navigation starts at document y=825 on desktop and y=785 on mobile. Detailed mobile protections precede Gains by thousands of pixels. High confidence for this capture. | Only one dense champion and build were captured. |
+| Typography and readability | 5/10 | Body copy is reasonably spaced, but mobile hero metrics collide and the champion name breaks within words. Some secondary labels are small and muted. High confidence for the visible collisions. | No contrast measurements, zoom tests, or long-name champion coverage. |
+| Visual consistency and identity | 8/10 | Artwork, class purple, effect colors, cards, and selected states form a coherent champion-led design. Medium confidence. | This is an aesthetic assessment of one champion, not a catalog-wide review. |
+| Interaction and state | 6/10 | The packet records working scoped filtering, persistent display preference, and build-popover Escape/focus return. Search scope could be clearer; the build control is above the viewport at Stats entry. Medium confidence. | Build changes, source round trips, clipboard, and history were not exercised. |
+| Responsive and accessible use | N/O | Captures show mobile layout and one observed keyboard focus/return path, but also visible text collisions. | These observations are insufficient to score the full keyboard, touch, zoom, screen-reader, and reduced-motion flow. |
+
+## Prioritized findings
+
+1. **T1, T7: Mobile hero text collides.** At 390 x 844, the Health and Attack values run together and ABSORBING splits across lines; at 320 x 568 the name breaks into three fragments. This makes identity and values harder to scan even though no document-level overflow was reported. Evidence: 07 and 11. Experiment: allow the metrics to wrap into fewer columns at narrow widths. Acceptance: at both widths, each value and label has a distinct non-overlapping box, with the same values and build controls visible; separately check a long-name champion. The name treatment is an additional aesthetic/readability concern, not proof of an interaction failure.
+2. **T1, T7: Navigation is below the fresh landing viewport.** At desktop scroll 0 the 700-pixel hero occupies nearly the entire viewport; on mobile the tabs begin at document y=785. Players seeking kit details must first scroll to discover sections. Evidence: 01, 07, observations 1 and 5. Experiment: reduce hero vertical space enough to expose a section-navigation cue on fresh landing. Acceptance: at 1280 x 800 and 390 x 844, at least the section labels or an explicit navigation cue appear without scrolling, while artwork, identity, and build remain legible. Position is established; user discovery failure is not.
+3. **T3: Build adjustment is distant from inspected values.** At Stats entry, Adjust build is at viewport y=-58 and remains in the hero. A deep passage may require upward travel and risk losing context. Evidence: 06 and observation 4. Experiment: expose a compact adjustment entry near section navigation. Acceptance: from Stats entry and a deep passage, reach it without returning to the hero; after changing rank/signature, values update and the same passage/rating remains in view. Hypothesis until full replay.
+4. **T1: Detailed mobile overview separates groups by a long scroll.** Gains at y approximately 3083.5 and Inflicts at y approximately 8221.4 follow protections. Evidence: 08 and observation 6. Experiment: concise in-page links to the three groups. Acceptance: links land with headings visible below sticky UI, remove no source conditions, and reduce measured task scroll distance. Impact is inferred from positions.
+5. **T2: Scoped search recovery could state active scope explicitly.** Bleed under Signature Ability gives zero results; All abilities with the same query gives one. The empty state refers to this section without naming it or offering direct all-abilities search. Evidence: 04 and observation 3. Experiment: name the chapter and offer an All abilities action. Acceptance: it identifies Signature Ability, preserves Bleed, and displays the existing one-passage result. Confusion is a hypothesis, not an observed wrong turn.
+
+## Strengths, risks, coverage
+
+Preserve explicit immunity/resistance labels and conditions, source links, Compact/Detailed choice, section descriptions, and observed Escape/focus return. Risks: extra sticky controls obscure content, artwork loses prominence, source semantics change, or anchors land beneath navigation.
+
+One champion, emulated viewports, and recorded actions only. Source round trips, build changes, clipboard/history, star requirements, physical touch, zoom, reduced motion, screen readers, and missing data are unobserved. Missing tabs in 05 are a capture artifact, not a defect.

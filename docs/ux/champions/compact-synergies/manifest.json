@@ -1,0 +1,114 @@
+﻿{
+    "files":  [
+                  {
+                      "sha256":  "f0dcd2c725369fd4f8bf867126904b7d8e40ebcefcd181dd3ee291813355a30e",
+                      "path":  "web/src/app/champions/[slug]/champion-synergies-panel.tsx"
+                  },
+                  {
+                      "sha256":  "ef5a9b20f51b5997e49b0cd33b3acc252fdc88530e288d8f6575aa748111b676",
+                      "path":  "web/src/app/champions/[slug]/champion-dossier.module.css"
+                  },
+                  {
+                      "sha256":  "bfd276928bd5341078c6bdb05e0451583c0c26e8a12a2e2397e203a183fcd4d0",
+                      "path":  "web/src/app/champions/[slug]/champion-details-client.tsx"
+                  },
+                  {
+                      "sha256":  "e82e874e30242856634e1d5cfb3887618fbe7a1c86157c6d853f0b0e6aa31eb3",
+                      "path":  "web/src/app/champions/[slug]/champion-synergies-panel.test.ts"
+                  },
+                  {
+                      "sha256":  "af4fa0dcc1fda4a8911cf56729bce6c92e7bf8d70c38b43e84f709381f25afb1",
+                      "path":  "web/src/app/champions/[slug]/champion-synergies-interaction.test.tsx"
+                  },
+                  {
+                      "sha256":  "1efaac3df436e7818bd66de601b9664ad8f0918b783a2524d4fa7c0ed86aba01",
+                      "path":  "web/src/app/champions/[slug]/champion-details-navigation.test.tsx"
+                  },
+                  {
+                      "sha256":  "2fc394e05294bec555baa33883d1980c56ed3ab68968be2235ce517e085e7bb8",
+                      "path":  "docs/champion-synergy-display.md"
+                  },
+                  {
+                      "sha256":  "a955c71d2cf85283dfacaf21d2041c99aecd5be3f56bdd2fb4b5f506bd504254",
+                      "path":  "docs/ux/champions/compact-synergies/before/01-reference-desktop.png"
+                  },
+                  {
+                      "sha256":  "2605c86c43d71eff1554af9270543569606a6a0e2f450df12c8388c3ea946906",
+                      "path":  "docs/ux/champions/compact-synergies/before/02-reference-mobile.png"
+                  },
+                  {
+                      "sha256":  "73da006a77e68dc1ad70905ab90b1ad94dbeff8be50060b459692136daa6ae22",
+                      "path":  "docs/ux/champions/compact-synergies/before/03-reference-small.png"
+                  },
+                  {
+                      "sha256":  "1a43a2811e5d82528410ec6fd4be0b62e278cf6762e79b4840b48ade5e9bd163",
+                      "path":  "docs/ux/champions/compact-synergies/before/04-reference-requirements.png"
+                  },
+                  {
+                      "sha256":  "4d909c5e3fad9f1ba030c4ea72da00c9f329397de1d3c2aeadc710577a4f0182",
+                      "path":  "docs/ux/champions/compact-synergies/before/05-multiple-recipients.png"
+                  },
+                  {
+                      "sha256":  "70c5fa4a61989b8ec9545aa1cc9794779d4008b03ab13fb056fb1ac99c871660",
+                      "path":  "docs/ux/champions/compact-synergies/before/06-family-desktop.png"
+                  },
+                  {
+                      "sha256":  "9354bace9ea36d981f2a44fa952a64500eb1d049b5ddd39e9367f1a9a0b879f5",
+                      "path":  "docs/ux/champions/compact-synergies/before/07-family-mobile.png"
+                  },
+                  {
+                      "sha256":  "fafe50a36299bc3b9ee254f8a0fb6dde9c172fe366a077aa69a4339af62cb554",
+                      "path":  "docs/ux/champions/compact-synergies/before/08-reference-wide.png"
+                  },
+                  {
+                      "sha256":  "3a611cbce8c6cb56b46ed3b819e594fa891dbd8feda590104294abf73bbbd4e5",
+                      "path":  "docs/ux/champions/compact-synergies/before/evidence.json"
+                  },
+                  {
+                      "sha256":  "7a99bbb095ce92fbfe194f29c482c543128b96008a8169a3e5c8f710b2711d8b",
+                      "path":  "docs/ux/champions/compact-synergies/after/01-reference-desktop.png"
+                  },
+                  {
+                      "sha256":  "03007c4a63db638a164c8f89c67077885b0ee6904e698f5911ab6bb056e81e66",
+                      "path":  "docs/ux/champions/compact-synergies/after/02-reference-mobile.png"
+                  },
+                  {
+                      "sha256":  "c3d23822f8b84114b934a3f68bb8187eeba675682973e82c6a9a79ce1d67239d",
+                      "path":  "docs/ux/champions/compact-synergies/after/03-reference-small.png"
+                  },
+                  {
+                      "sha256":  "de9838d1fb1a1ea3edc4f7d41c5c53fe121507d2d0b8c483afbe8ae3a8147868",
+                      "path":  "docs/ux/champions/compact-synergies/after/04-reference-requirements.png"
+                  },
+                  {
+                      "sha256":  "8f854311b214f7eaca5d2bd985f8ebbb4b6538da4f188e882e3f1610f43e0f37",
+                      "path":  "docs/ux/champions/compact-synergies/after/05-multiple-recipients.png"
+                  },
+                  {
+                      "sha256":  "39492f09ea8e9f67c2e2f94e159d47047f8d308a72185950b03565283801df66",
+                      "path":  "docs/ux/champions/compact-synergies/after/06-family-desktop.png"
+                  },
+                  {
+                      "sha256":  "33909416062b442c20b74074fcb4be9dee4af3dfc118a12e67536e866ace43a9",
+                      "path":  "docs/ux/champions/compact-synergies/after/07-family-mobile.png"
+                  },
+                  {
+                      "sha256":  "873a48b3a33abd2a1506003fa26f309ba1063e3a120367c031b0fe7d295fdbe3",
+                      "path":  "docs/ux/champions/compact-synergies/after/08-reference-wide.png"
+                  },
+                  {
+                      "sha256":  "74d437f4d5fde69129e62f36278ec0f5606ffc266acc5561a2f770999e6a90ae",
+                      "path":  "docs/ux/champions/compact-synergies/after/evidence.json"
+                  },
+                  {
+                      "sha256":  "71197411dbb54488b4c7134d428e2f966de70085449c7ea659dbc28f200a4730",
+                      "path":  "docs/ux/champions/compact-synergies/comparison.html"
+                  },
+                  {
+                      "sha256":  "f863090a046b637db36804711da63cc4f067b5d1cd459b986ae019de3194260a",
+                      "path":  "docs/ux/champions/compact-synergies/browser-smoke.json"
+                  }
+              ],
+    "incumbent":  "incumbent-manifest.json",
+    "state":  "local retained compact synergy-row candidate"
+}

@@ -1,0 +1,13 @@
+﻿{
+    "description":  "User-approved compact rows before quieter control refinement",
+    "files":  [
+                  {
+                      "sha256":  "f0dcd2c725369fd4f8bf867126904b7d8e40ebcefcd181dd3ee291813355a30e",
+                      "path":  "web/src/app/champions/[slug]/champion-synergies-panel.tsx"
+                  },
+                  {
+                      "sha256":  "ef5a9b20f51b5997e49b0cd33b3acc252fdc88530e288d8f6575aa748111b676",
+                      "path":  "web/src/app/champions/[slug]/champion-dossier.module.css"
+                  }
+              ]
+}

@@ -10,6 +10,19 @@ export type ChampionPageState = {
   ascension: number
   ability: string | null
   chapter: string | null
+  synergy: string | null
+}
+
+export const CHAMPION_SYNERGY_HASH_PREFIX = "#champion-synergy-"
+
+function validSynergyId(value: string | null) {
+  if (!value || value.length > 200 || /\s/.test(value)) return null
+  return [...value].some(character => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127) ? null : value
+}
+
+export function readChampionSynergyHash(hash: string) {
+  if (!hash.startsWith(CHAMPION_SYNERGY_HASH_PREFIX)) return null
+  try { return validSynergyId(decodeURIComponent(hash.slice(CHAMPION_SYNERGY_HASH_PREFIX.length))) } catch { return null }
 }
 
 type StatTier = { rarity: number | null; rank: number }
@@ -34,6 +47,7 @@ export function readChampionPageState(params: Pick<URLSearchParams, "get">, stat
     ascension: clampAscensionLevelForRarity(integer("ascension", 0), rarity),
     ability: tab === "abilities" && ability && /^\d+$/.test(ability) ? ability : null,
     chapter: tab === "abilities" && chapter && chapter !== "all" && /^[a-z][a-z0-9_-]{0,63}$/.test(chapter) ? chapter : null,
+    synergy: tab === "synergies" ? validSynergyId(params.get("synergy")) : null,
   }
 }
 
@@ -48,5 +62,14 @@ export function championPageSearchParams(current: string, state: ChampionPageSta
   else params.delete("ability")
   if (state.tab === "abilities" && state.chapter) params.set("chapter", state.chapter)
   else params.delete("chapter")
+  if (state.tab === "synergies" && state.synergy) params.set("synergy", state.synergy)
+  else params.delete("synergy")
   return params
+}
+
+export function championPageHref(currentHref: string, state: ChampionPageState, clearLegacyTarget = false) {
+  const url = new URL(currentHref)
+  url.search = championPageSearchParams(url.search, state).toString()
+  if (url.hash.startsWith(CHAMPION_SYNERGY_HASH_PREFIX) && (state.tab !== "synergies" || state.synergy || clearLegacyTarget)) url.hash = ""
+  return `${url.pathname}${url.search}${url.hash}`
 }

@@ -1,0 +1,29 @@
+﻿{
+    "description":  "Approved synergy-card visual pass, before compact redesign",
+    "files":  [
+                  {
+                      "sha256":  "9f343dcfafbbd3e2dbe9f6fb40cee693ee1c0f980d09a80964a8231e03ffd32c",
+                      "path":  "web/src/app/champions/[slug]/champion-synergies-panel.tsx"
+                  },
+                  {
+                      "sha256":  "aaa9a8671c99ef6b14314b58d26e4b1c5c081a917e10995755b94e1e47aa036f",
+                      "path":  "web/src/app/champions/[slug]/champion-dossier.module.css"
+                  },
+                  {
+                      "sha256":  "5317278fdaf3e27a5c8c05d4ceae0cd48f42785cff64949d60a629220b7a436c",
+                      "path":  "web/src/app/champions/[slug]/champion-synergies-interaction.test.tsx"
+                  },
+                  {
+                      "sha256":  "34afcdffe6df201dfcb6ca43fbffb83a2b30e18fe68d8a3c9872fcbafc82fcf7",
+                      "path":  "web/src/app/champions/[slug]/champion-synergies-panel.test.ts"
+                  },
+                  {
+                      "sha256":  "ffab9dd4360883824ee558cf514d90f668841c479b56ae5601918769fe8ddeac",
+                      "path":  "web/src/app/champions/[slug]/champion-details-client.tsx"
+                  },
+                  {
+                      "sha256":  "bbd55c9675ffd3c3bc8aeb44e2c01a72fc8436ba1880738baba80bfbcd2c4002",
+                      "path":  "web/src/app/champions/[slug]/champion-details-navigation.test.tsx"
+                  }
+              ]
+}

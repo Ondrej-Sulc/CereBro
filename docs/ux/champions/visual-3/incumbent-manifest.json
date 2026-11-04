@@ -1,0 +1,17 @@
+﻿{
+    "description":  "User-approved second visual pass",
+    "files":  [
+                  {
+                      "sha256":  "54c2c63a686af70e155a2f4083a63b3f090a373fdd7533f2497bdeb9da4a3556",
+                      "path":  "web/src/app/champions/[slug]/champion-synergies-panel.tsx"
+                  },
+                  {
+                      "sha256":  "7fff39417bc95ef7d71258afaaa0cbebeb8fe6f0a04d2fefb8fd2a8749125fe0",
+                      "path":  "web/src/app/champions/[slug]/champion-dossier.module.css"
+                  },
+                  {
+                      "sha256":  "d8f48cc8df4ce4429bb491c69ad05c88973396a4734e41fe4a34dc3e895d4044",
+                      "path":  "web/src/app/champions/[slug]/champion-details-client.tsx"
+                  }
+              ]
+}

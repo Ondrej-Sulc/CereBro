@@ -8,6 +8,7 @@ import { championAbilityPanelMatchesChapter, formatGameText, type ChampionAbilit
 import { cn } from "@/lib/utils"
 import { buildChampionKitEffects, getGameEffectColors, type ChampionKitEffect } from "@/lib/champion-kit"
 import { championAbilityTextContent, filterChampionAbilityPanels } from "@/lib/champion-ability-search"
+import { scrollToChampionSection } from "@/lib/champion-page-navigation"
 import type { ChampionDetailsView, GlossaryTerm } from "./champion-details-types"
 import styles from "./champion-dossier.module.css"
 
@@ -50,47 +51,70 @@ function DossierDescriptions({ view, panels, targetRecordId, chapter, onSelectCh
   panels: DescriptionPanelData[]
 } & ReaderNavigation) {
   const targetPanel = panels.find(panel => panel.recordGroups.some(group => group.records.some(record => String(record.id) === targetRecordId)))
+  const targetAvailable = !!targetPanel
   const selectedPanel = panels.find(panel => championAbilityPanelMatchesChapter(panel, chapter))
   const activeChapter = targetPanel?.group ?? selectedPanel?.group ?? (chapter === "biography" && view.descriptionView.bioRecords.length > 0 ? "biography" : "all")
   const [query, setQuery] = useState("")
+  const [previousTarget, setPreviousTarget] = useState(targetRecordId)
+  if (previousTarget !== targetRecordId) {
+    setPreviousTarget(targetRecordId)
+    if (targetRecordId) setQuery("")
+  }
   const search = filterChampionAbilityPanels(panels, query)
   const visiblePanels = search.panels.filter(panel => activeChapter === "all" || panel.group === activeChapter)
   const biography = view.descriptionView.bioRecords.filter(record => !query.trim() || championAbilityTextContent(record.prepared).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()))
   const visibleCount = activeChapter === "biography" ? biography.length : filterChampionAbilityPanels(visiblePanels, "").passageCount
-  const readerRef = useRef<HTMLDivElement>(null)
+  const readerRef = useRef<HTMLElement>(null)
+  const searchRef = useRef<HTMLInputElement>(null)
+  const unavailableRef = useRef<HTMLDivElement>(null)
+  const focusSearch = () => window.requestAnimationFrame(() => {
+    scrollToChampionSection(readerRef.current)
+    searchRef.current?.focus({ preventScroll: true })
+  })
+  const clearSearch = () => {
+    setQuery("")
+    focusSearch()
+  }
+  const showFullKit = () => {
+    if (onClearTarget) onClearTarget()
+    else onSelectChapter("all")
+    focusSearch()
+  }
   useEffect(() => {
     if (!targetRecordId) return
     const frame = window.requestAnimationFrame(() => {
-      const target = document.getElementById(`ability-record-${targetRecordId}`)
-      target?.scrollIntoView({ block: "start" })
-      target?.focus({ preventScroll: true })
+      const target = targetAvailable ? document.getElementById(`ability-record-${targetRecordId}`) : unavailableRef.current
+      scrollToChampionSection(target, true)
     })
     return () => window.cancelAnimationFrame(frame)
-  }, [targetRecordId])
+  }, [targetRecordId, targetAvailable])
   const effectsByName = new Map(buildChampionKitEffects(view.champion.abilities, view.glossaryById)
     .map(effect => [effectKey(effect.name), effect]))
   const selectChapter = (chapter: string) => {
     onSelectChapter(chapter)
-    window.requestAnimationFrame(() => readerRef.current?.scrollIntoView({ behavior: "smooth", block: "start" }))
+    window.requestAnimationFrame(() => scrollToChampionSection(readerRef.current))
   }
   const chapters = [{ key: "all", label: "All abilities" }, ...panels.map(panel => ({ key: panel.group, label: chapterLabel(panel.title) })), ...(view.descriptionView.bioRecords.length ? [{ key: "biography", label: "Biography" }] : [])]
+  const activeChapterLabel = chapters.find(item => item.key === activeChapter)?.label ?? "All abilities"
   return (
-    <section id="champion-descriptions" aria-label="Full ability descriptions" className="scroll-mt-[calc(var(--champion-header-height,4rem)+var(--champion-tabs-height)+1.5rem)]">
-      <div className="mb-8 flex flex-wrap items-end justify-between gap-5"><div><h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Full abilities</h2><p className="mt-3 text-base leading-7 text-slate-400">Signature, base abilities, and special attacks. Read together or focus on a section.</p></div><BuildReadout view={view} className="text-slate-400" /></div>
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
-        <div className="relative w-full max-w-xl"><Search aria-hidden="true" className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-slate-500" /><input aria-label="Search ability text" type="search" value={query} maxLength={200} onChange={event => setQuery(event.target.value)} placeholder="Find an effect, condition, or value…" className="h-11 w-full rounded-xl border border-white/10 bg-[#0d131c] pl-11 pr-11 text-sm text-slate-100 placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 [&::-webkit-search-cancel-button]:appearance-none" />{query && <button type="button" aria-label="Clear ability search" onClick={() => setQuery("")} className="absolute right-1.5 top-1.5 grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-white/5 hover:text-white"><X aria-hidden="true" className="h-4 w-4" /></button>}</div>
-        <p role="status" aria-live="polite" className="text-sm tabular-nums text-slate-500">{visibleCount} {visibleCount === 1 ? "passage" : "passages"}{query.trim() ? " found" : " in this view"}</p>
+    <section ref={readerRef} id="champion-descriptions" aria-label="Full ability descriptions" className="scroll-mt-[calc(var(--champion-header-height,4rem)+var(--champion-tabs-height)+1.5rem)]">
+      <div className={styles.sectionHeader}><h2>Full abilities</h2><p>Signature, base abilities, and special attacks. Read together or focus on a section.</p></div>
+      <div className={styles.readerTools}>
+        <div className="relative min-w-0"><Search aria-hidden="true" className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-slate-500" /><input ref={searchRef} aria-label="Search ability text" type="search" value={query} maxLength={200} onChange={event => setQuery(event.target.value)} placeholder="Find an effect, condition, or value…" className="h-11 w-full rounded-lg border border-white/10 bg-[#080d14] pl-11 pr-11 text-sm text-slate-100 placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 [&::-webkit-search-cancel-button]:appearance-none" />{query && <button type="button" aria-label="Clear ability search" onClick={clearSearch} className="absolute right-1.5 top-1.5 grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-white/5 hover:text-white"><X aria-hidden="true" className="h-4 w-4" /></button>}</div>
+        <select aria-label="Ability section" value={activeChapter} onChange={event => selectChapter(event.target.value)} className={styles.readerSectionSelect}>{chapters.map(chapter => <option key={chapter.key} value={chapter.key}>{chapter.label}</option>)}</select>
+        <p role="status" aria-live="polite" className={styles.readerResultCount}>{visibleCount} {visibleCount === 1 ? "passage" : "passages"}{query.trim() ? " found" : ""} in {activeChapterLabel}</p>
       </div>
-      {targetPanel && !query.trim() && <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[.035] px-5 py-3 text-sm"><p className="text-slate-300">Linked passage in <span className="font-semibold text-white">{targetPanel.title}</span></p><button type="button" onClick={() => { onClearTarget?.(); window.requestAnimationFrame(() => document.getElementById("champion-descriptions")?.scrollIntoView({ block: "start" })) }} className="rounded text-sm font-medium text-slate-400 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">Show full kit</button></div>}
-      <div ref={readerRef} className="grid min-w-0 grid-cols-1 scroll-mt-[calc(var(--champion-header-height,4rem)+var(--champion-tabs-height)+1.5rem)] items-start gap-6 lg:grid-cols-[190px_minmax(0,1fr)] lg:gap-8">
-        <aside className="min-w-0 lg:sticky lg:top-[calc(var(--champion-header-height,4rem)+var(--champion-tabs-height)+1.5rem)]">
+      {activeChapter !== "all" && <div className="mb-6 flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[.025] px-4 py-2 text-sm text-slate-400"><p>Searching in <span className="font-medium text-slate-200">{activeChapterLabel}</span></p><button type="button" onClick={() => { selectChapter("all"); window.requestAnimationFrame(() => searchRef.current?.focus({ preventScroll: true })) }} className="min-h-10 rounded px-2 font-medium text-sky-300 hover:text-sky-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">Search all abilities</button></div>}
+      {targetRecordId && !targetAvailable && <div ref={unavailableRef} role="status" tabIndex={-1} className="mb-6 flex scroll-mt-[calc(var(--champion-header-height,4rem)+var(--champion-tabs-height)+1.5rem)] flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-300/20 bg-amber-300/[.04] px-5 py-3 text-sm text-slate-300 outline-none focus-visible:ring-2 focus-visible:ring-slate-400"><p>The linked ability passage is not available for this champion.</p><button type="button" onClick={showFullKit} className="min-h-10 rounded px-2 font-medium text-sky-300 hover:text-sky-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">Browse all abilities</button></div>}
+      {targetPanel && !query.trim() && <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-white/10 bg-white/[.035] px-5 py-3 text-sm"><p>Linked passage in <span className="font-semibold text-white">{targetPanel.title}</span></p><button type="button" onClick={showFullKit} className="rounded text-sm font-medium text-slate-400 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">Show full kit</button></div>}
+      <div className="grid min-w-0 grid-cols-1 items-start gap-6 lg:grid-cols-[190px_minmax(0,1fr)] lg:gap-8">
+        <aside className="hidden min-w-0 lg:sticky lg:top-[calc(var(--champion-header-height,4rem)+var(--champion-tabs-height)+1.5rem)] lg:block">
           <p className="mb-3 text-sm font-medium text-slate-500">In this kit</p>
-          <select aria-label="Ability section" value={activeChapter} onChange={event => selectChapter(event.target.value)} className="h-12 w-full rounded-lg border border-white/15 bg-[#111823] px-4 text-sm font-medium text-slate-200 lg:hidden">{chapters.map(chapter => <option key={chapter.key} value={chapter.key}>{chapter.label}</option>)}</select>
-          <nav aria-label="Champion description chapters" className="hidden space-y-1 lg:block">{chapters.map(chapter => <button key={chapter.key} type="button" aria-pressed={activeChapter === chapter.key} onClick={() => selectChapter(chapter.key)} className={cn("w-full rounded-lg border px-4 py-3 text-left text-sm font-medium transition-colors", activeChapter === chapter.key ? "border-white/15 bg-white/[.06] text-white" : "border-transparent text-slate-400 hover:bg-white/[.025] hover:text-slate-200")}>{chapter.label}</button>)}</nav>
+          <nav aria-label="Champion description chapters" className={styles.readerChapterNav}>{chapters.map(chapter => <button key={chapter.key} type="button" aria-pressed={activeChapter === chapter.key} onClick={() => selectChapter(chapter.key)}>{chapter.label}</button>)}</nav>
         </aside>
         <div className="min-w-0 space-y-6">
-          {visiblePanels.map(panel => <article key={panel.group} id={dossierAnchor(panel.title)} className="rounded-2xl border border-white/[.09] bg-[#0d131c] p-4 sm:p-6">
-            <h3 className="mb-5 text-2xl font-semibold leading-tight tracking-tight text-white"><SearchMatch text={panel.title} query={query} /></h3>
+          {visiblePanels.map(panel => <article key={panel.group} id={dossierAnchor(panel.title)} className={styles.readerPanel}>
+            <h3 className={styles.readerPanelTitle}><SearchMatch text={panel.title} query={query} /></h3>
             {panel.group === "signature" && view.sigLevel === 0 && <p className="mb-6 rounded-lg border border-amber-300/15 bg-amber-300/[.04] px-4 py-3 text-sm leading-6 text-amber-100/80">Unawakened at Sig 0. The signature ability becomes active after awakening.</p>}
             {panel.introRecord && <div className="mb-5 italic text-slate-400"><RenderedDescriptionTemplate prepared={panel.introRecord.prepared} glossaryById={view.glossaryById} theme={DESCRIPTION_THEME} query={query} /></div>}
             {panel.specialAttackIntros && panel.specialAttackIntros.length > 0 && <div className="mb-6 grid gap-5 border-b border-white/10 pb-6 xl:grid-cols-2">{panel.specialAttackIntros.map(({ number, record }) => <div key={record.id}><p className="mb-2 text-sm font-semibold text-slate-200">Special {number}{record.displayTitle ? ` · ${record.displayTitle}` : ""}</p><div className="italic text-slate-400"><RenderedDescriptionTemplate prepared={record.prepared} glossaryById={view.glossaryById} theme={DESCRIPTION_THEME} query={query} /></div></div>)}</div>}
@@ -101,7 +125,7 @@ function DossierDescriptions({ view, panels, targetRecordId, chapter, onSelectCh
             {panel.group === "signature" && !query.trim() && <ChampionSignatureChart view={view} />}
           </article>)}
           {activeChapter === "biography" && biography.length > 0 && <article id="dossier-biography" className="rounded-2xl border border-white/[.09] bg-[#0d131c] p-5 sm:p-8"><div className="mb-6 flex items-center justify-between gap-5"><h3 className="text-2xl font-semibold tracking-tight text-white">Biography</h3><Image src={view.secondaryUrl} alt="" width={96} height={96} className="h-24 w-24 object-contain" /></div><div className="space-y-5">{biography.map(record => <RenderedDescriptionTemplate key={record.id} prepared={record.prepared} glossaryById={view.glossaryById} theme={DESCRIPTION_THEME} query={query} />)}</div></article>}
-          {query.trim() && visibleCount === 0 && <div className="rounded-xl border border-dashed border-white/10 p-6 text-sm leading-6 text-slate-400"><p>No passages match <span className="break-words font-medium text-slate-200">“{query.trim()}”</span> in this section.</p><p className="mt-1">Try another term or choose a different chapter.</p><button type="button" onClick={() => setQuery("")} className="mt-4 rounded font-semibold text-slate-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">Clear search</button></div>}
+          {query.trim() && visibleCount === 0 && <div className="rounded-xl border border-dashed border-white/10 p-6 text-sm leading-6 text-slate-400"><p>No passages match <span className="break-words font-medium text-slate-200">“{query.trim()}”</span> in {activeChapterLabel}.</p><p className="mt-1">{activeChapter === "all" ? "Try another term." : "Choose Search all abilities to search the complete kit."}</p><button type="button" onClick={clearSearch} className="mt-4 rounded font-semibold text-slate-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">Clear search</button></div>}
           {!panels.length && activeChapter !== "biography" && !query.trim() && <p className="rounded-xl border border-dashed border-white/10 p-6 text-sm text-slate-400">Full descriptions are not available for this champion yet.</p>}
         </div>
       </div>

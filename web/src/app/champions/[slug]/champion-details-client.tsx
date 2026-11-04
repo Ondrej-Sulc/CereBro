@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import { useSearchParams } from "next/navigation"
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react"
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { BookOpen, Check, ChevronDown, Copy, Crosshair, Layers3, Link2, SlidersHorizontal, Swords, Target, Users } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -13,7 +13,8 @@ import { applyAscensionToStatValue, maxSigForRarity, projectMcocPrestige } from 
 import { prepareChampionAbilityTextView } from "@/lib/champion-ability-text"
 import { buildChampionSynergyView } from "@/lib/champion-synergies"
 import { cn } from "@/lib/utils"
-import { championPageSearchParams, readChampionPageState, type ChampionPageState } from "@/lib/champion-page-state"
+import { championPageHref, championPageSearchParams, readChampionPageState, type ChampionPageState } from "@/lib/champion-page-state"
+import { scrollToChampionSection } from "@/lib/champion-page-navigation"
 import { useToast } from "@/hooks/use-toast"
 import type { ChampionImages } from "@/types/champion"
 import type { ChampionDetailsProps, ChampionDetailsView } from "./champion-details-types"
@@ -36,8 +37,8 @@ export function ChampionDetailsClient(props: ChampionDetailsProps) {
     const url = new URL(window.location.href)
     const current = readChampionPageState(url.searchParams, stats)
     const next = readChampionPageState(championPageSearchParams(url.search, { ...current, ...patch }), stats)
-    url.search = championPageSearchParams(url.search, next).toString()
-    const href = `${url.pathname}${url.search}${url.hash}`
+    const changesDestination = patch.tab !== undefined || patch.ability !== undefined || patch.chapter !== undefined || patch.synergy !== undefined
+    const href = championPageHref(url.href, next, changesDestination)
     if (push) window.history.pushState(null, "", href)
     else window.history.replaceState(null, "", href)
   }
@@ -121,42 +122,43 @@ function ChampionDossier({ view, pageState, updatePageState }: {
   const dossierRef = useRef<HTMLDivElement>(null)
   const tabsRef = useRef<HTMLDivElement>(null)
   const sectionsRef = useRef<HTMLDivElement>(null)
-  const [synergyTarget, setSynergyTarget] = useState<string | null>(null)
-  useEffect(() => {
+  useLayoutEffect(() => {
     const bar = tabsRef.current
     if (!bar) return
-    const observer = new ResizeObserver(() => dossierRef.current?.style.setProperty("--champion-tabs-height", `${bar.getBoundingClientRect().height}px`))
+    const measureBar = () => dossierRef.current?.style.setProperty("--champion-tabs-height", `${bar.getBoundingClientRect().height}px`)
+    // Deep-link effects must read the actual toolbar height on their first scroll.
+    measureBar()
+    const observer = new ResizeObserver(measureBar)
     observer.observe(bar)
     return () => observer.disconnect()
   }, [])
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
-    if (params.has("tab") && !params.has("ability") && !window.location.hash) {
-      sectionsRef.current?.scrollIntoView({ block: "start" })
+    if (window.scrollY === 0 && params.has("tab") && !params.has("ability") && !params.has("synergy") && !window.location.hash) {
+      scrollToChampionSection(sectionsRef.current)
     }
-    // Restore a shared section on entry; later tab changes scroll in selectSection.
+    // Preserve user/browser scroll and exact targets if hydration completes after interaction.
+    // Later deliberate tab changes scroll in selectSection.
   }, [])
   const selectSection = (value: string) => {
-    setSynergyTarget(null)
-    updatePageState({ tab: value as ChampionPageState["tab"], ability: null }, true)
-    window.requestAnimationFrame(() => sectionsRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }))
+    updatePageState({ tab: value as ChampionPageState["tab"], ability: null, synergy: null }, true)
+    window.requestAnimationFrame(() => scrollToChampionSection(sectionsRef.current))
   }
   const openAbility = (recordId: string) => updatePageState({ tab: "abilities", ability: recordId }, true)
   const openSynergy = (synergyId?: string) => {
-    setSynergyTarget(synergyId ?? null)
-    updatePageState({ tab: "synergies", ability: null }, true)
-    if (!synergyId) window.requestAnimationFrame(() => sectionsRef.current?.scrollIntoView({ block: "start", behavior: "smooth" }))
+    updatePageState({ tab: "synergies", ability: null, synergy: synergyId ?? null }, true)
+    if (!synergyId) window.requestAnimationFrame(() => scrollToChampionSection(sectionsRef.current))
   }
   const openChapter = (chapter: string) => {
     updatePageState({ tab: "abilities", chapter: chapter === "all" ? null : chapter, ability: null }, true)
-    window.requestAnimationFrame(() => document.getElementById("champion-descriptions")?.scrollIntoView({ block: "start", behavior: "smooth" }))
+    window.requestAnimationFrame(() => scrollToChampionSection(document.getElementById("champion-descriptions")))
   }
 
   return (
     <div ref={dossierRef} className={cn(styles.dossier, "relative min-h-screen overflow-x-clip bg-[#080b10] pb-16 text-slate-200")} style={{ "--champion-accent": view.accent } as CSSProperties}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[900px] bg-[radial-gradient(circle_at_76%_22%,rgba(255,255,255,.05),transparent_42%)]" />
       <div className="relative w-full px-5 py-7 sm:px-8 lg:px-10 2xl:px-12">
-        <section className="relative min-h-[660px] overflow-hidden border-y border-white/10 sm:min-h-[720px] lg:min-h-[700px]">
+        <section className={styles.hero}>
           <div className={styles.heroArt}>
             <Image src={view.heroUrl} alt="" fill priority sizes="(max-width: 1024px) 100vw, 78vw" className="object-cover object-center" />
           </div>
@@ -165,34 +167,32 @@ function ChampionDossier({ view, pageState, updatePageState }: {
           <div className="pointer-events-none absolute inset-0 opacity-[.045] [background-image:linear-gradient(rgba(255,255,255,.5)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.5)_1px,transparent_1px)] [background-size:88px_88px]" />
           <div className="pointer-events-none absolute bottom-0 left-0 h-1 w-32" style={{ background: view.accent }} />
 
-          <div className="relative z-10 flex min-h-[660px] flex-col justify-between px-5 py-7 sm:min-h-[720px] sm:px-8 sm:py-9 lg:min-h-[700px] lg:px-10">
+          <div className={styles.heroContent}>
             <div className="flex items-start justify-between gap-5">
               <div className="flex items-center gap-4">
-                <div className="relative h-20 w-20 shrink-0 overflow-hidden border border-white/20 bg-black/40 shadow-2xl sm:h-24 sm:w-24">
-                  <Image src={view.portraitUrl} alt={`${view.champion.name} portrait`} fill sizes="96px" className="object-cover" />
+                <div className={styles.heroPortrait}>
+                  <Image src={view.portraitUrl} alt={`${view.champion.name} portrait`} fill sizes="64px" className="object-cover" />
                   <span className="pointer-events-none absolute inset-1 border border-white/10" />
                   <span className="pointer-events-none absolute bottom-0 left-0 h-1 w-8" style={{ background: view.accent }} />
                 </div>
                 <div>
-                  <div className="text-xs font-semibold uppercase tracking-[.18em] text-white/50">Champion dossier</div>
-                  <div className="mt-2 flex items-center gap-2 text-xs font-black uppercase tracking-[.2em]" style={{ color: view.accent }}><span className="h-1.5 w-1.5 rounded-full" style={{ background: view.accent, boxShadow: `0 0 14px ${view.accent}` }} />{view.champion.class} class</div>
+                  <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[.2em]" style={{ color: view.accent }}><span className="h-1.5 w-1.5 rounded-full" style={{ background: view.accent, boxShadow: `0 0 14px ${view.accent}` }} />{view.champion.class} class</div>
                   {view.champion.shortName && view.champion.shortName !== view.champion.name && <div className="mt-2 text-xs font-bold text-white/40">{view.champion.shortName}</div>}
                 </div>
               </div>
             </div>
 
-            <div className="my-auto py-10 sm:py-14">
+            <div className={styles.heroTitle}>
               <ChampionHeroWordmark name={view.champion.name} accent={view.accent} />
-              <div className="mt-7 h-1 w-24" style={{ background: view.accent }} />
+              <div className="mt-5 h-1 w-24" style={{ background: view.accent }} />
             </div>
 
-            <div className="flex max-w-5xl flex-col gap-4 border-y border-white/15 bg-black/20 px-4 py-5 backdrop-blur-sm sm:px-6 sm:py-6 lg:flex-row lg:items-center lg:gap-6">
-              <div className="grid min-w-0 flex-1 grid-cols-3">
+            <div className={styles.heroMetricStrip}>
+              <div className={styles.heroMetrics}>
                 <DossierPrestigeMetric view={view} />
                 <DossierMetric label="Health" value={format(view.health)} />
                 <DossierMetric label="Attack" value={format(view.attack)} />
               </div>
-              <DossierBuildControls view={view} />
             </div>
           </div>
         </section>
@@ -200,6 +200,10 @@ function ChampionDossier({ view, pageState, updatePageState }: {
 
         <Tabs ref={sectionsRef} value={pageState.tab} onValueChange={selectSection} className="mt-5 scroll-mt-[var(--champion-header-height)]">
           <div ref={tabsRef} className={styles.tabsBar}>
+            <div className={styles.sectionToolbar}>
+              <span className="hidden min-w-0 flex-1 truncate text-sm font-semibold text-slate-300 sm:block">{view.champion.name}</span>
+              <DossierBuildControls view={view} />
+            </div>
             <TabsList aria-label="Champion sections" className={styles.tabsList}>
               {DOSSIER_TABS.map(tab => <TabsTrigger key={tab.value} value={tab.value} className={styles.tab}>
                 <tab.icon aria-hidden="true" className={styles.tabIcon} />
@@ -211,8 +215,8 @@ function ChampionDossier({ view, pageState, updatePageState }: {
             <ChampionKitOverview view={view} onViewAbility={openAbility} onViewSynergies={openSynergy} sideContent={view.champion.duels.length > 0 ? <DossierDuelTargets view={view} /> : undefined} />
             <DossierTraits view={view} />
           </TabsContent>
-          <TabsContent value="abilities" className="mt-0 pb-8 pt-10"><ChampionAbilityReader key={pageState.ability ?? "all"} view={view} targetRecordId={pageState.ability} chapter={pageState.chapter} onSelectChapter={openChapter} onClearTarget={() => updatePageState({ ability: null, chapter: null })} /></TabsContent>
-          <TabsContent value="synergies" className="mt-0 pb-8 pt-10"><DossierSynergies view={view} targetSynergyId={synergyTarget} /></TabsContent>
+          <TabsContent value="abilities" className="mt-0 pb-8 pt-10"><ChampionAbilityReader view={view} targetRecordId={pageState.ability} chapter={pageState.chapter} onSelectChapter={openChapter} onClearTarget={() => updatePageState({ ability: null, chapter: null })} /></TabsContent>
+          <TabsContent value="synergies" className="mt-0 pb-8 pt-10"><DossierSynergies view={view} targetSynergyId={pageState.synergy} onClearTarget={() => updatePageState({ synergy: null }, true)} /></TabsContent>
           <TabsContent value="stats" className="mt-0 pb-8 pt-10"><ChampionStatsPanel view={view} onViewAbility={openChapter} /></TabsContent>
         </Tabs>
       </div>
@@ -224,18 +228,14 @@ function ChampionHeroWordmark({ name, accent }: { name: string; accent: string }
   const variantMatch = name.match(/^(.+?)\s*\(([^)]+)\)\s*$/)
   const primaryName = (variantMatch?.[1] ?? name).trim()
   const variantName = variantMatch?.[2]?.trim()
-  const sizeClass = primaryName.length <= 8
-    ? "text-[clamp(5rem,13vw,12rem)]"
-    : primaryName.length <= 16
-      ? "text-[clamp(4rem,10vw,9rem)]"
-      : "text-[clamp(3.1rem,7.6vw,6.75rem)]"
-  const wordmarkClass = cn("block max-w-5xl text-balance break-words font-black uppercase leading-[.74] tracking-[-.075em]", sizeClass)
+  const longestWord = Math.max(...primaryName.split(/\s+/).map(word => word.length))
+  const wordmarkClass = styles.heroWordmark
+  const wordmarkStyle = { "--champion-name-size": `${Math.min(14, 120 / longestWord)}cqw` } as CSSProperties
 
   return (
-    <div className="relative w-fit max-w-full">
-      <span aria-hidden className={cn("pointer-events-none absolute left-1.5 top-[-6px] w-full text-transparent opacity-45", wordmarkClass)} style={{ WebkitTextStroke: "1px rgba(255,255,255,.38)" }}>{primaryName}</span>
+    <div className={styles.heroWordmarkContainer} style={wordmarkStyle}>
       <h1 className="relative w-full max-w-5xl">
-        <span className={cn("text-white [text-shadow:0_12px_50px_rgba(0,0,0,.55)]", wordmarkClass)} style={{ maskImage: "linear-gradient(90deg,#000 0%,#000 88%,rgba(0,0,0,.48) 100%)", WebkitMaskImage: "linear-gradient(90deg,#000 0%,#000 88%,rgba(0,0,0,.48) 100%)" }}>{primaryName}</span>
+        <span className={cn("text-white [text-shadow:0_12px_50px_rgba(0,0,0,.55)]", wordmarkClass)}>{primaryName}</span>
         {variantName && <span className="mt-4 block max-w-3xl text-balance text-[clamp(1rem,2.4vw,2rem)] font-black uppercase leading-tight tracking-[.12em]" style={{ color: accent }}>{variantName}</span>}
       </h1>
     </div>
@@ -260,7 +260,7 @@ function DossierBuildControls({ view }: { view: ChampionDetailsView }) {
   }
   if (!view.selectedStat) return null
   return (
-    <div aria-label="Champion build" className="flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4 lg:shrink-0 lg:flex-col lg:items-start lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+    <div aria-label="Champion build" className="flex w-full items-center justify-between gap-3 sm:w-auto">
       <BuildReadout view={view} className="text-white/55" />
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild><button type="button" className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-white/15 bg-white/[.035] px-3 text-sm font-medium text-slate-200 transition-colors hover:border-white/30 hover:bg-white/[.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"><SlidersHorizontal aria-hidden="true" className="h-4 w-4" />Adjust build</button></PopoverTrigger>
@@ -273,8 +273,9 @@ function DossierBuildControls({ view }: { view: ChampionDetailsView }) {
               <label htmlFor="champion-signature-value" className="mb-1.5 block text-xs font-medium text-slate-400">Signature</label>
               <div className="flex h-10 items-center gap-4">
                 <input aria-label="Signature level" type="range" min={0} max={view.maxSig} value={view.sigLevel} onChange={event => view.setSigLevel(Number(event.target.value))} className="h-1.5 min-w-0 flex-1 cursor-pointer appearance-none rounded-full bg-white/10" style={{ accentColor: view.accent }} />
-                <input id="champion-signature-value" aria-label="Signature level value" type="number" min={0} max={view.maxSig} value={view.sigLevel} onChange={event => { if (Number.isFinite(event.target.valueAsNumber)) view.setSigLevel(event.target.valueAsNumber) }} className="h-10 w-16 rounded-lg border border-white/10 bg-white/[.035] px-2 text-center text-sm tabular-nums text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400" />
+                <SignatureLevelInput key={`${view.selectedRarity}-${view.selectedRank}`} value={view.sigLevel} max={view.maxSig} onChange={view.setSigLevel} />
               </div>
+              <p id="champion-signature-help" className="mt-2 text-xs leading-5 text-slate-400">0–{view.maxSig}. Press Enter or leave the number field to apply.</p>
             </div>
             {view.selectedStat.rarity === 7 && <BuildSelect label="Ascension" value={String(view.ascensionLevel)} onChange={value => view.setAscensionLevel(Number(value))} options={[0, 1, 2, 3, 4, 5].map(level => ({ value: String(level), label: `A${level}` }))} />}
           </div>
@@ -283,6 +284,26 @@ function DossierBuildControls({ view }: { view: ChampionDetailsView }) {
       </Popover>
     </div>
   )
+}
+
+function SignatureLevelInput({ value, max, onChange }: { value: number; max: number; onChange: (value: number) => void }) {
+  const [draft, setDraft] = useState(String(value))
+  const [previousValue, setPreviousValue] = useState(value)
+  if (previousValue !== value) {
+    setPreviousValue(value)
+    setDraft(String(value))
+  }
+  const commit = () => {
+    const parsed = draft.trim() ? Number(draft) : Number.NaN
+    if (!Number.isFinite(parsed)) {
+      setDraft(String(value))
+      return
+    }
+    const next = Math.max(0, Math.min(max, Math.round(parsed)))
+    setDraft(String(next))
+    if (next !== value) onChange(next)
+  }
+  return <input id="champion-signature-value" aria-label="Signature level value" aria-describedby="champion-signature-help" type="number" min={0} max={max} step={1} value={draft} onChange={event => setDraft(event.target.value)} onBlur={commit} onKeyDown={event => { if (event.key === "Enter") { event.preventDefault(); commit() } }} className="h-10 w-16 rounded-lg border border-white/10 bg-white/[.035] px-2 text-center text-sm tabular-nums text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400" />
 }
 
 function BuildSelect({ label, value, options, onChange }: {
@@ -304,7 +325,7 @@ function DossierTraits({ view }: { view: ChampionDetailsView }) {
 }
 
 function DossierMetric({ label, value }: { label: string; value: string }) {
-  return <div className="border-r border-white/10 px-2 first:pl-0 last:border-0 sm:px-4"><div className="text-lg font-black min-[380px]:text-2xl sm:text-3xl">{value}</div><div className="mt-1 text-[10px] font-bold uppercase tracking-[.18em] text-white/55">{label}</div></div>
+  return <div className={styles.heroMetric}><div className={styles.metricValue}>{value}</div><div className={styles.metricLabel}>{label}</div></div>
 }
 
 function DossierPrestigeMetric({ view }: { view: ChampionDetailsView }) {
@@ -333,15 +354,15 @@ function DossierPrestigeMetric({ view }: { view: ChampionDetailsView }) {
   const selectedPoint = points.reduce((nearest, point) => Math.abs(point.sig - view.sigLevel) < Math.abs(nearest.sig - view.sigLevel) ? point : nearest)
 
   return (
-    <div className="border-r border-white/10 pr-2 sm:pr-4">
-      <div className="sm:flex sm:items-end sm:justify-between sm:gap-2">
-        <div className="text-lg font-black min-[380px]:text-2xl sm:text-3xl">{format(view.prestige)}</div>
-        <svg role="img" aria-label="Prestige by signature level" viewBox={`0 0 ${width} ${height}`} className="mt-1 h-3 w-[76px] max-w-full overflow-visible sm:mb-1 sm:mt-0 sm:h-8 sm:w-[88px]">
+    <div className={styles.heroMetric}>
+      <div className="flex items-end justify-between gap-2">
+        <div className={styles.metricValue}>{format(view.prestige)}</div>
+        <svg role="img" aria-label="Prestige by signature level" viewBox={`0 0 ${width} ${height}`} className="h-6 w-[88px] shrink-0 overflow-visible">
           <path d={path} fill="none" stroke={view.accent} strokeWidth="1.6" vectorEffect="non-scaling-stroke" opacity=".55" />
           <circle cx={x(selectedPoint.sig)} cy={y(selectedPoint.value)} r="3" fill={view.accent} />
         </svg>
       </div>
-      <div className="mt-1 flex items-center justify-between gap-2 text-[10px] font-bold uppercase tracking-[.18em] text-white/55">
+      <div className={cn(styles.metricLabel, "flex items-center justify-between gap-2")}>
         <span>Prestige</span>
         <span className="hidden truncate text-right text-[10px] tracking-[.1em] text-white/20 sm:block">Sig curve</span>
       </div>
@@ -422,7 +443,7 @@ function format(value: number | null | undefined) {
   return value == null ? "—" : Math.round(value).toLocaleString("en-US")
 }
 
-function DossierSynergies({ view, targetSynergyId }: { view: ChampionDetailsView; targetSynergyId: string | null }) {
+function DossierSynergies({ view, targetSynergyId, onClearTarget }: { view: ChampionDetailsView; targetSynergyId: string | null; onClearTarget: () => void }) {
   const synergyView = useMemo(() => buildChampionSynergyView(view.champion.gameSynergies, view.champion.id, view.selectedStat?.rarity ?? null), [view.champion.gameSynergies, view.champion.id, view.selectedStat?.rarity])
-  return <section id="champion-synergies" aria-labelledby="champion-synergies-heading"><div className="mb-8"><h2 id="champion-synergies-heading" className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Team synergies</h2><p className="mt-3 text-base leading-7 text-slate-400">Find partners and explore the bonuses they bring to your team.</p></div><ChampionSynergiesPanel {...synergyView} rarity={view.selectedStat?.rarity ?? null} glossaryById={view.glossaryById} targetSynergyId={targetSynergyId} /></section>
+  return <section id="champion-synergies" aria-labelledby="champion-synergies-heading"><div className={styles.sectionHeader}><h2 id="champion-synergies-heading">Team synergies</h2><p>Find partners and explore the bonuses they bring to your team.</p></div><ChampionSynergiesPanel {...synergyView} rarity={view.selectedStat?.rarity ?? null} glossaryById={view.glossaryById} targetSynergyId={targetSynergyId} onClearTarget={onClearTarget} /></section>
 }

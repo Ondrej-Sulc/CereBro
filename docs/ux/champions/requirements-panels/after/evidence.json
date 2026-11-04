@@ -1,0 +1,5505 @@
+{
+  "phase": "after",
+  "captures": [
+    {
+      "name": "01-reference-desktop",
+      "target": null,
+      "open": false,
+      "url": "http://localhost:3000/champions/star-lord-kitty-pryde?tab=synergies&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        1280,
+        900
+      ],
+      "zoom": 1,
+      "documentWidth": 1280,
+      "scrollY": 786,
+      "cardTop": 228.75,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "ownGroupHeight": 521,
+      "ownCount": 6,
+      "fullyVisible": 6,
+      "articles": [
+        {
+          "id": "champion-synergy-starlord_kittypryde_01",
+          "title": "ALL-NEW ALL-DIFFERENT",
+          "partners": [
+            {
+              "href": "/champions/angela",
+              "name": "Angela"
+            },
+            {
+              "href": "/champions/captain-marvel",
+              "name": "Captain Marvel"
+            },
+            {
+              "href": "/champions/iron-man",
+              "name": "Iron Man"
+            },
+            {
+              "href": "/champions/thing",
+              "name": "Thing"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy and #Guardians of the Galaxy Champions:",
+              "body": " At the start of each fight, gain a Power Gain Passive that grants 10% of a Bar of Power for each Synergy or #Guardians of the Galaxy Champion on the team over 10 seconds."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Angela available at 2, 3, 4, 5, 6, 7 stars",
+                  "Captain Marvel available at 2, 3, 4, 5, 6, 7 stars",
+                  "Iron Man available at 2, 3, 4, 5, 6, 7 stars",
+                  "Thing available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_01"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_11",
+          "title": "FRIENDS Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/agent-venom",
+              "name": "Agent Venom"
+            },
+            {
+              "href": "/champions/beta-ray-bill",
+              "name": "Beta Ray Bill"
+            },
+            {
+              "href": "/champions/mantis",
+              "name": "Mantis"
+            },
+            {
+              "href": "/champions/star-lord-stellar-forged",
+              "name": "Star-Lord (Stellar-Forged)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +130 Armor Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Agent Venom available at 2, 3, 4, 5, 6 stars",
+                  "Beta Ray Bill available at 2, 3, 4, 5, 6, 7 stars",
+                  "Mantis available at 2, 3, 4, 5, 6, 7 stars",
+                  "Star-Lord (Stellar-Forged) available at 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_11"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_08",
+          "title": "IT'S COMPLICATED Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/colossus",
+              "name": "Colossus"
+            },
+            {
+              "href": "/champions/star-lord",
+              "name": "Star-Lord"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +60 Armor Rating & +3% Combat Power Rate."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Colossus available at 2, 3, 4, 5, 6, 7 stars",
+                  "Star-Lord available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_08"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_05",
+          "title": "PRIDE Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/karolina-dean",
+              "name": "Karolina Dean"
+            },
+            {
+              "href": "/champions/kitty-pryde",
+              "name": "Kitty Pryde"
+            },
+            {
+              "href": "/champions/moondragon",
+              "name": "Moondragon"
+            },
+            {
+              "href": "/champions/phyla-vell",
+              "name": "Phyla-Vell"
+            },
+            {
+              "href": "/champions/shatterstar",
+              "name": "Shatterstar"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +90 Armor Rating, Block Proficiency, Energy Resistance and Physical Resistance."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Karolina Dean available at 2, 3, 4, 5, 6, 7 stars",
+                  "Kitty Pryde available at 2, 3, 4, 5, 6, 7 stars",
+                  "Moondragon available at 2, 3, 4, 5, 6, 7 stars",
+                  "Phyla-Vell available at 2, 3, 4, 5, 6, 7 stars",
+                  "Shatterstar available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_05"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_14",
+          "title": "TEAMMATES Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/drax",
+              "name": "Drax"
+            },
+            {
+              "href": "/champions/gamora",
+              "name": "Gamora"
+            },
+            {
+              "href": "/champions/groot",
+              "name": "Groot"
+            },
+            {
+              "href": "/champions/rocket-raccoon",
+              "name": "Rocket Raccoon"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +5% Perfect Block Chance."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Drax available at 2, 3, 4, 5, 6 stars",
+                  "Gamora available at 2, 3, 4, 5, 6, 7 stars",
+                  "Groot available at 2, 3, 4, 5, 6 stars",
+                  "Rocket Raccoon available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_14"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_02",
+          "title": "WAY WAY BACK IN THE 1980S",
+          "partners": [
+            {
+              "href": "/champions/dazzler",
+              "name": "Dazzler"
+            },
+            {
+              "href": "/champions/longshot",
+              "name": "Longshot"
+            },
+            {
+              "href": "/champions/psylocke",
+              "name": "Psylocke"
+            },
+            {
+              "href": "/champions/rogue",
+              "name": "Rogue"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " At the start of each fight, gain 3 indefinite +20% Prowess Passives. Remove 1 at the end of each Special Attack."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Dazzler available at 2, 3, 4, 5, 6, 7 stars",
+                  "Longshot available at 2, 3, 4, 5, 6, 7 stars",
+                  "Psylocke available at 2, 3, 4, 5, 6 stars",
+                  "Rogue available at 2, 3, 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_02"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02-reference-mobile",
+      "target": null,
+      "open": false,
+      "url": "http://localhost:3000/champions/star-lord-kitty-pryde?tab=synergies&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "documentWidth": 390,
+      "scrollY": 961,
+      "cardTop": 196.34375,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "ownGroupHeight": 877,
+      "ownCount": 6,
+      "fullyVisible": 4,
+      "articles": [
+        {
+          "id": "champion-synergy-starlord_kittypryde_01",
+          "title": "ALL-NEW ALL-DIFFERENT",
+          "partners": [
+            {
+              "href": "/champions/angela",
+              "name": "Angela"
+            },
+            {
+              "href": "/champions/captain-marvel",
+              "name": "Captain Marvel"
+            },
+            {
+              "href": "/champions/iron-man",
+              "name": "Iron Man"
+            },
+            {
+              "href": "/champions/thing",
+              "name": "Thing"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy and #Guardians of the Galaxy Champions:",
+              "body": " At the start of each fight, gain a Power Gain Passive that grants 10% of a Bar of Power for each Synergy or #Guardians of the Galaxy Champion on the team over 10 seconds."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Angela available at 2, 3, 4, 5, 6, 7 stars",
+                  "Captain Marvel available at 2, 3, 4, 5, 6, 7 stars",
+                  "Iron Man available at 2, 3, 4, 5, 6, 7 stars",
+                  "Thing available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_01"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_11",
+          "title": "FRIENDS Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/agent-venom",
+              "name": "Agent Venom"
+            },
+            {
+              "href": "/champions/beta-ray-bill",
+              "name": "Beta Ray Bill"
+            },
+            {
+              "href": "/champions/mantis",
+              "name": "Mantis"
+            },
+            {
+              "href": "/champions/star-lord-stellar-forged",
+              "name": "Star-Lord (Stellar-Forged)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +130 Armor Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Agent Venom available at 2, 3, 4, 5, 6 stars",
+                  "Beta Ray Bill available at 2, 3, 4, 5, 6, 7 stars",
+                  "Mantis available at 2, 3, 4, 5, 6, 7 stars",
+                  "Star-Lord (Stellar-Forged) available at 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_11"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_08",
+          "title": "IT'S COMPLICATED Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/colossus",
+              "name": "Colossus"
+            },
+            {
+              "href": "/champions/star-lord",
+              "name": "Star-Lord"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +60 Armor Rating & +3% Combat Power Rate."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Colossus available at 2, 3, 4, 5, 6, 7 stars",
+                  "Star-Lord available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_08"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_05",
+          "title": "PRIDE Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/karolina-dean",
+              "name": "Karolina Dean"
+            },
+            {
+              "href": "/champions/kitty-pryde",
+              "name": "Kitty Pryde"
+            },
+            {
+              "href": "/champions/moondragon",
+              "name": "Moondragon"
+            },
+            {
+              "href": "/champions/phyla-vell",
+              "name": "Phyla-Vell"
+            },
+            {
+              "href": "/champions/shatterstar",
+              "name": "Shatterstar"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +90 Armor Rating, Block Proficiency, Energy Resistance and Physical Resistance."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Karolina Dean available at 2, 3, 4, 5, 6, 7 stars",
+                  "Kitty Pryde available at 2, 3, 4, 5, 6, 7 stars",
+                  "Moondragon available at 2, 3, 4, 5, 6, 7 stars",
+                  "Phyla-Vell available at 2, 3, 4, 5, 6, 7 stars",
+                  "Shatterstar available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_05"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_14",
+          "title": "TEAMMATES Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/drax",
+              "name": "Drax"
+            },
+            {
+              "href": "/champions/gamora",
+              "name": "Gamora"
+            },
+            {
+              "href": "/champions/groot",
+              "name": "Groot"
+            },
+            {
+              "href": "/champions/rocket-raccoon",
+              "name": "Rocket Raccoon"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +5% Perfect Block Chance."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Drax available at 2, 3, 4, 5, 6 stars",
+                  "Gamora available at 2, 3, 4, 5, 6, 7 stars",
+                  "Groot available at 2, 3, 4, 5, 6 stars",
+                  "Rocket Raccoon available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_14"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_02",
+          "title": "WAY WAY BACK IN THE 1980S",
+          "partners": [
+            {
+              "href": "/champions/dazzler",
+              "name": "Dazzler"
+            },
+            {
+              "href": "/champions/longshot",
+              "name": "Longshot"
+            },
+            {
+              "href": "/champions/psylocke",
+              "name": "Psylocke"
+            },
+            {
+              "href": "/champions/rogue",
+              "name": "Rogue"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " At the start of each fight, gain 3 indefinite +20% Prowess Passives. Remove 1 at the end of each Special Attack."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Dazzler available at 2, 3, 4, 5, 6, 7 stars",
+                  "Longshot available at 2, 3, 4, 5, 6, 7 stars",
+                  "Psylocke available at 2, 3, 4, 5, 6 stars",
+                  "Rogue available at 2, 3, 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_02"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03-reference-small",
+      "target": null,
+      "open": false,
+      "url": "http://localhost:3000/champions/star-lord-kitty-pryde?tab=synergies&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        320,
+        568
+      ],
+      "zoom": 1,
+      "documentWidth": 320,
+      "scrollY": 968,
+      "cardTop": 195.59375,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "ownGroupHeight": 983,
+      "ownCount": 6,
+      "fullyVisible": 2,
+      "articles": [
+        {
+          "id": "champion-synergy-starlord_kittypryde_01",
+          "title": "ALL-NEW ALL-DIFFERENT",
+          "partners": [
+            {
+              "href": "/champions/angela",
+              "name": "Angela"
+            },
+            {
+              "href": "/champions/captain-marvel",
+              "name": "Captain Marvel"
+            },
+            {
+              "href": "/champions/iron-man",
+              "name": "Iron Man"
+            },
+            {
+              "href": "/champions/thing",
+              "name": "Thing"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy and #Guardians of the Galaxy Champions:",
+              "body": " At the start of each fight, gain a Power Gain Passive that grants 10% of a Bar of Power for each Synergy or #Guardians of the Galaxy Champion on the team over 10 seconds."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Angela available at 2, 3, 4, 5, 6, 7 stars",
+                  "Captain Marvel available at 2, 3, 4, 5, 6, 7 stars",
+                  "Iron Man available at 2, 3, 4, 5, 6, 7 stars",
+                  "Thing available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_01"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_11",
+          "title": "FRIENDS Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/agent-venom",
+              "name": "Agent Venom"
+            },
+            {
+              "href": "/champions/beta-ray-bill",
+              "name": "Beta Ray Bill"
+            },
+            {
+              "href": "/champions/mantis",
+              "name": "Mantis"
+            },
+            {
+              "href": "/champions/star-lord-stellar-forged",
+              "name": "Star-Lord (Stellar-Forged)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +130 Armor Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Agent Venom available at 2, 3, 4, 5, 6 stars",
+                  "Beta Ray Bill available at 2, 3, 4, 5, 6, 7 stars",
+                  "Mantis available at 2, 3, 4, 5, 6, 7 stars",
+                  "Star-Lord (Stellar-Forged) available at 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_11"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_08",
+          "title": "IT'S COMPLICATED Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/colossus",
+              "name": "Colossus"
+            },
+            {
+              "href": "/champions/star-lord",
+              "name": "Star-Lord"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +60 Armor Rating & +3% Combat Power Rate."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Colossus available at 2, 3, 4, 5, 6, 7 stars",
+                  "Star-Lord available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_08"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_05",
+          "title": "PRIDE Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/karolina-dean",
+              "name": "Karolina Dean"
+            },
+            {
+              "href": "/champions/kitty-pryde",
+              "name": "Kitty Pryde"
+            },
+            {
+              "href": "/champions/moondragon",
+              "name": "Moondragon"
+            },
+            {
+              "href": "/champions/phyla-vell",
+              "name": "Phyla-Vell"
+            },
+            {
+              "href": "/champions/shatterstar",
+              "name": "Shatterstar"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +90 Armor Rating, Block Proficiency, Energy Resistance and Physical Resistance."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Karolina Dean available at 2, 3, 4, 5, 6, 7 stars",
+                  "Kitty Pryde available at 2, 3, 4, 5, 6, 7 stars",
+                  "Moondragon available at 2, 3, 4, 5, 6, 7 stars",
+                  "Phyla-Vell available at 2, 3, 4, 5, 6, 7 stars",
+                  "Shatterstar available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_05"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_14",
+          "title": "TEAMMATES Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/drax",
+              "name": "Drax"
+            },
+            {
+              "href": "/champions/gamora",
+              "name": "Gamora"
+            },
+            {
+              "href": "/champions/groot",
+              "name": "Groot"
+            },
+            {
+              "href": "/champions/rocket-raccoon",
+              "name": "Rocket Raccoon"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +5% Perfect Block Chance."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Drax available at 2, 3, 4, 5, 6 stars",
+                  "Gamora available at 2, 3, 4, 5, 6, 7 stars",
+                  "Groot available at 2, 3, 4, 5, 6 stars",
+                  "Rocket Raccoon available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_14"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_02",
+          "title": "WAY WAY BACK IN THE 1980S",
+          "partners": [
+            {
+              "href": "/champions/dazzler",
+              "name": "Dazzler"
+            },
+            {
+              "href": "/champions/longshot",
+              "name": "Longshot"
+            },
+            {
+              "href": "/champions/psylocke",
+              "name": "Psylocke"
+            },
+            {
+              "href": "/champions/rogue",
+              "name": "Rogue"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " At the start of each fight, gain 3 indefinite +20% Prowess Passives. Remove 1 at the end of each Special Attack."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Dazzler available at 2, 3, 4, 5, 6, 7 stars",
+                  "Longshot available at 2, 3, 4, 5, 6, 7 stars",
+                  "Psylocke available at 2, 3, 4, 5, 6 stars",
+                  "Rogue available at 2, 3, 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_02"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "04-reference-requirements",
+      "target": null,
+      "open": true,
+      "url": "http://localhost:3000/champions/star-lord-kitty-pryde?tab=synergies&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "documentWidth": 390,
+      "scrollY": 961,
+      "cardTop": 196.34375,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "ownGroupHeight": 1126,
+      "ownCount": 6,
+      "fullyVisible": 2,
+      "articles": [
+        {
+          "id": "champion-synergy-starlord_kittypryde_01",
+          "title": "ALL-NEW ALL-DIFFERENT",
+          "partners": [
+            {
+              "href": "/champions/angela",
+              "name": "Angela"
+            },
+            {
+              "href": "/champions/captain-marvel",
+              "name": "Captain Marvel"
+            },
+            {
+              "href": "/champions/iron-man",
+              "name": "Iron Man"
+            },
+            {
+              "href": "/champions/thing",
+              "name": "Thing"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy and #Guardians of the Galaxy Champions:",
+              "body": " At the start of each fight, gain a Power Gain Passive that grants 10% of a Bar of Power for each Synergy or #Guardians of the Galaxy Champion on the team over 10 seconds."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Angela available at 2, 3, 4, 5, 6, 7 stars",
+                  "Captain Marvel available at 2, 3, 4, 5, 6, 7 stars",
+                  "Iron Man available at 2, 3, 4, 5, 6, 7 stars",
+                  "Thing available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_01"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_11",
+          "title": "FRIENDS Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/agent-venom",
+              "name": "Agent Venom"
+            },
+            {
+              "href": "/champions/beta-ray-bill",
+              "name": "Beta Ray Bill"
+            },
+            {
+              "href": "/champions/mantis",
+              "name": "Mantis"
+            },
+            {
+              "href": "/champions/star-lord-stellar-forged",
+              "name": "Star-Lord (Stellar-Forged)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +130 Armor Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Agent Venom available at 2, 3, 4, 5, 6 stars",
+                  "Beta Ray Bill available at 2, 3, 4, 5, 6, 7 stars",
+                  "Mantis available at 2, 3, 4, 5, 6, 7 stars",
+                  "Star-Lord (Stellar-Forged) available at 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_11"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_08",
+          "title": "IT'S COMPLICATED Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/colossus",
+              "name": "Colossus"
+            },
+            {
+              "href": "/champions/star-lord",
+              "name": "Star-Lord"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +60 Armor Rating & +3% Combat Power Rate."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Colossus available at 2, 3, 4, 5, 6, 7 stars",
+                  "Star-Lord available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_08"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_05",
+          "title": "PRIDE Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/karolina-dean",
+              "name": "Karolina Dean"
+            },
+            {
+              "href": "/champions/kitty-pryde",
+              "name": "Kitty Pryde"
+            },
+            {
+              "href": "/champions/moondragon",
+              "name": "Moondragon"
+            },
+            {
+              "href": "/champions/phyla-vell",
+              "name": "Phyla-Vell"
+            },
+            {
+              "href": "/champions/shatterstar",
+              "name": "Shatterstar"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +90 Armor Rating, Block Proficiency, Energy Resistance and Physical Resistance."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Karolina Dean available at 2, 3, 4, 5, 6, 7 stars",
+                  "Kitty Pryde available at 2, 3, 4, 5, 6, 7 stars",
+                  "Moondragon available at 2, 3, 4, 5, 6, 7 stars",
+                  "Phyla-Vell available at 2, 3, 4, 5, 6, 7 stars",
+                  "Shatterstar available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_05"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_14",
+          "title": "TEAMMATES Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/drax",
+              "name": "Drax"
+            },
+            {
+              "href": "/champions/gamora",
+              "name": "Gamora"
+            },
+            {
+              "href": "/champions/groot",
+              "name": "Groot"
+            },
+            {
+              "href": "/champions/rocket-raccoon",
+              "name": "Rocket Raccoon"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +5% Perfect Block Chance."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Drax available at 2, 3, 4, 5, 6 stars",
+                  "Gamora available at 2, 3, 4, 5, 6, 7 stars",
+                  "Groot available at 2, 3, 4, 5, 6 stars",
+                  "Rocket Raccoon available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_14"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_02",
+          "title": "WAY WAY BACK IN THE 1980S",
+          "partners": [
+            {
+              "href": "/champions/dazzler",
+              "name": "Dazzler"
+            },
+            {
+              "href": "/champions/longshot",
+              "name": "Longshot"
+            },
+            {
+              "href": "/champions/psylocke",
+              "name": "Psylocke"
+            },
+            {
+              "href": "/champions/rogue",
+              "name": "Rogue"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " At the start of each fight, gain 3 indefinite +20% Prowess Passives. Remove 1 at the end of each Special Attack."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Dazzler available at 2, 3, 4, 5, 6, 7 stars",
+                  "Longshot available at 2, 3, 4, 5, 6, 7 stars",
+                  "Psylocke available at 2, 3, 4, 5, 6 stars",
+                  "Rogue available at 2, 3, 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_02"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "05-multiple-recipients",
+      "target": "champion-synergy-absorb_03",
+      "open": false,
+      "url": "http://localhost:3000/champions/absorbing-man?tab=synergies&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "documentWidth": 390,
+      "scrollY": 1444,
+      "cardTop": 196.09375,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "ownGroupHeight": 1278,
+      "ownCount": 6,
+      "fullyVisible": 2,
+      "articles": [
+        {
+          "id": "champion-synergy-absorb_06",
+          "title": "ENEMIES Lv. 2",
+          "partners": [
+            {
+              "href": "/champions/ant-man",
+              "name": "Ant-Man"
+            },
+            {
+              "href": "/champions/black-bolt",
+              "name": "Black Bolt"
+            },
+            {
+              "href": "/champions/hulk",
+              "name": "Hulk"
+            },
+            {
+              "href": "/champions/thor",
+              "name": "Thor"
+            },
+            {
+              "href": "/champions/wasp",
+              "name": "Wasp"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +115 Critical Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Ant-Man available at 2, 3, 4, 5, 6, 7 stars",
+                  "Black Bolt available at 2, 3, 4, 5, 6 stars",
+                  "Hulk available at 2, 3, 4, 5, 6, 7 stars",
+                  "Thor available at 2, 3, 4, 5, 6 stars",
+                  "Wasp available at 2, 3, 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-absorb_06"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_04",
+          "title": "HANDS-ON APPROACH",
+          "partners": [
+            {
+              "href": "/champions/rogue",
+              "name": "Rogue"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Absorbing Man:",
+              "body": " Reduce the duration of Non-Damaging Debuffs other than Stuns by 50%. "
+            },
+            {
+              "label": "Rogue:",
+              "body": " The timer for Rogue's Replicated Buffs is paused during the Opponent's Special Attacks. "
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Rogue available at 2, 3, 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_04"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_01",
+          "title": "ROGUE'S ROMANCE",
+          "partners": [
+            {
+              "href": "/champions/titania",
+              "name": "Titania"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Absorbing Man:",
+              "body": " Medium and Heavy Attacks gain 600 Critical Damage Rating. "
+            },
+            {
+              "label": "Titania:",
+              "body": " Gain Immunity to Bleed effects. "
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Titania available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_01"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_03",
+          "title": "SINS OF THE FATHER",
+          "partners": [
+            {
+              "href": "/champions/daredevil-hell-s-kitchen",
+              "name": "Daredevil (Hell'S Kitchen)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Absorbing Man:",
+              "body": " While at or below 15 Combo Meter, gain 1000 Block Proficiency, and while above, gain 1000 Critical Rating. "
+            },
+            {
+              "label": "Devil of H.K.:",
+              "body": " Personal Buffs last for an additional 7 seconds. "
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Daredevil (Hell'S Kitchen) available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_03"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_05",
+          "title": "THE GREEN DOOR",
+          "partners": [
+            {
+              "href": "/champions/abomination-immortal",
+              "name": "Abomination (Immortal)"
+            },
+            {
+              "href": "/champions/hulk-immortal",
+              "name": "Hulk (Immortal)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Absorbing Man:",
+              "body": " Gain Immunity to all Poison effects, and Omni-Morph Forms last 3 seconds longer. "
+            },
+            {
+              "label": "Abomination (Immortal):",
+              "body": " Gain 250 Energy Resistance for each Poison effect on himself. "
+            },
+            {
+              "label": "Hulk (Immortal):",
+              "body": " Personal Immortality effects gain +20% Ability Accuracy. "
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Abomination (Immortal) available at 2, 3, 4, 5, 6, 7 stars",
+                  "Hulk (Immortal) available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_05"
+          ]
+        },
+        {
+          "id": "champion-synergy-absorb_02",
+          "title": "THE WORTHY",
+          "partners": [
+            {
+              "href": "/champions/thor",
+              "name": "Thor"
+            },
+            {
+              "href": "/champions/thor-jane-foster",
+              "name": "Thor (Jane Foster)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Absorbing Man:",
+              "body": " The second Medium Attack inflicts an Armor Break Debuff, reducing Armor by 500 for 9 seconds. Max stacks: 5 "
+            },
+            {
+              "label": "Thor:",
+              "body": " Thor’s Heavy attack inflicts an Armor Break Debuff, reducing Armor by 1800 for 4.5 seconds. Max stacks: 2 "
+            },
+            {
+              "label": "Thor (Jane Foster):",
+              "body": " When facing Cosmic champions, The Mighty Thor's Special Attack 2 inflicts Degeneration Debuffs instead of Shocks. "
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Thor available at 2, 3, 4, 5, 6 stars",
+                  "Thor (Jane Foster) available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-absorb_02"
+          ]
+        },
+        {
+          "id": "champion-synergy-attuma_02",
+          "title": "FEAR ITSELF",
+          "partners": [
+            {
+              "href": "/champions/attuma",
+              "name": "Attuma"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " Gain +20% Attack Rating when fighting at Class Advantage, and regain the Attack Rating penalty when fighting at Disadvantage."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Attuma available at 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-attuma_02"
+          ]
+        },
+        {
+          "id": "champion-synergy-ylb_02",
+          "title": "MERCENARY COMPETITION",
+          "partners": [
+            {
+              "href": "/champions/yelena-belova",
+              "name": "Yelena Belova"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Yelena Belova:",
+              "body": " Personal Impact and Disarm effects start paused for 6 seconds."
+            },
+            {
+              "label": "#Mercenary & #Villain Champions:",
+              "body": " +5% Attack Rating and +400 Critical Damage Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Yelena Belova available at 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-ylb_02"
+          ]
+        },
+        {
+          "id": "champion-synergy-blktrnt_2",
+          "title": "PUÑO CERRADO",
+          "partners": [
+            {
+              "href": "/champions/black-tarantula",
+              "name": "Black Tarantula"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Black Tarantula:",
+              "body": " Purify Ability Accuracy is increased by 200% while Stunned by non-Mutant Champions."
+            },
+            {
+              "label": "Daredevil:",
+              "body": " Evading during the Opponent's Special Attacks grants a +15% Fury Passive for 20 seconds. Max stacks: 3."
+            },
+            {
+              "label": "Absorbing Man:",
+              "body": " Punishing a Special Attack with a Light Attack pauses Omni-Morph Forms for 3 seconds."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Black Tarantula available at 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-blktrnt_2"
+          ]
+        },
+        {
+          "id": "champion-synergy-serpent_04",
+          "title": "THE MAIN EVENT",
+          "partners": [
+            {
+              "href": "/champions/the-serpent",
+              "name": "The Serpent"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "#Cul's Worthy:",
+              "body": " Instant Damaging effects gain 15% potency. "
+            },
+            {
+              "label": "The Serpent:",
+              "body": " Personal Fury effects are 8% more potent for each #Cul's Worthy Champion on the team. "
+            },
+            {
+              "label": "Unique Synergy:",
+              "body": " Does not stack with duplicate synergies."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "The Serpent available at 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-serpent_04"
+          ]
+        },
+        {
+          "id": "champion-synergy-cheeilth_06",
+          "title": "WHAT YOU DON'T KNOW, YOU'LL FEAR",
+          "partners": [
+            {
+              "href": "/champions/chee-ilth",
+              "name": "Chee'Ilth"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Chee'ilth:",
+              "body": " When Blocking a Heavy Attack, become Passively Unstoppable for 3 seconds. Cooldown: 45 seconds. [Gamma]: Cooldown becomes 5 seconds."
+            },
+            {
+              "label": "Synergy Champions:",
+              "body": " +8% Attack Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Chee'Ilth available at 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-cheeilth_06"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "06-family-desktop",
+      "target": "champion-synergy-family-comp_006",
+      "open": false,
+      "url": "http://localhost:3000/champions/hulk-ragnarok?tab=synergies&rarity=6&rank=5&sig=200&ascension=0",
+      "viewport": [
+        1280,
+        900
+      ],
+      "zoom": 1,
+      "documentWidth": 1280,
+      "scrollY": 3653,
+      "cardTop": 228.75,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "ownGroupHeight": 497,
+      "ownCount": 4,
+      "fullyVisible": 0,
+      "articles": [
+        {
+          "id": "champion-synergy-lullaby_1",
+          "title": "LULLABY",
+          "partners": [
+            {
+              "href": "/champions/black-widow",
+              "name": "Black Widow"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " When Struck Hulk has a 20% chance to ready a SMASH for his next attack."
+            },
+            {
+              "label": "Black Widow:",
+              "body": " Evade chance increases by 100%."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Black Widow available at 2, 3, 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-lullaby_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-offlimits_1",
+          "title": "OFF LIMITS",
+          "partners": [
+            {
+              "href": "/champions/hela",
+              "name": "Hela"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " Hulk's chance to SMASH on Attacks increases by 400% while Face Me is active."
+            },
+            {
+              "label": "Hela:",
+              "body": " Hela begins the fight with 1 Fury Buff, and if she is ever without a Fury Buff for 10 seconds, she gains one."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Hela available at 2, 3, 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-offlimits_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-punygod_1",
+          "title": "PUNY GOD",
+          "partners": [
+            {
+              "href": "/champions/loki",
+              "name": "Loki"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " +1000 Physical Resistance while Unstoppable. "
+            },
+            {
+              "label": "Loki:",
+              "body": " Basic Attacks against Loki have a 10% chance to miss, while his Opponent is under the effect of any Buff. "
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Loki available at 2, 3, 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-punygod_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-teambuilding_1",
+          "title": "TEAM BUILDING EXERCISE",
+          "partners": [
+            {
+              "href": "/champions/thor-ragnarok",
+              "name": "Thor (Ragnarok)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " SMASH attacks have a 20% chance to be Unblockable. "
+            },
+            {
+              "label": "Thor (Ragnarok):",
+              "body": " Special attacks activated while the Boon of the Gods Power Gain is active become Passively Unblockable. "
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Thor (Ragnarok) available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-teambuilding_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-shlk_1",
+          "title": "AGENTS OF S.M.A.S.H.",
+          "partners": [
+            {
+              "href": "/champions/she-hulk",
+              "name": "She-Hulk"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "She-Hulk, Hulk:",
+              "body": " Personal Fury Passives gain +20% potency."
+            },
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " SMASH attacks gain +15% attack."
+            },
+            {
+              "label": "Red Hulk:",
+              "body": " +2% attack for each Heat charge."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "She-Hulk available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-shlk_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-joef_02",
+          "title": "BANNER HORDE",
+          "partners": [
+            {
+              "href": "/champions/joe-fixit",
+              "name": "Joe Fixit"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " For each Synergy Champion on the team, gain up to +6% Attack Rating and up to +500 Armor Rating based on lost Health."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Joe Fixit available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-joef_02"
+          ]
+        },
+        {
+          "id": "champion-synergy-betaraybill_01",
+          "title": "CAGE FIGHTERS",
+          "partners": [
+            {
+              "href": "/champions/beta-ray-bill",
+              "name": "Beta Ray Bill"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " When Rooted, Passively gain up to the nearest Bar of Power over 1.5 seconds. The Power Gain is removed if the Root expires, and does not trigger during the Opponent’s Special Attacks."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Beta Ray Bill available at 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-betaraybill_01"
+          ]
+        },
+        {
+          "id": "champion-synergy-mojo_crowd",
+          "title": "CROWD PLEASERS",
+          "partners": [
+            {
+              "href": "/champions/mojo",
+              "name": "Mojo"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Mojo:",
+              "body": " When a Prompt is completed, Mojo gains an Unstoppable Buff for 5 second(s)."
+            },
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " Passively increase Attack Rating by up to 25% based on Crowd Excitement."
+            },
+            {
+              "label": "Korg:",
+              "body": " Korg’s personal Armor Break has 50% increased Potency and duration."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Mojo available at 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-mojo_crowd"
+          ]
+        },
+        {
+          "id": "champion-synergy-hbuster_new_banner",
+          "title": "DON'T MENTION PUNY BANNER!",
+          "partners": [
+            {
+              "href": "/champions/hulkbuster",
+              "name": "Hulkbuster"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hulkbuster:",
+              "body": " Up to +1000 Armor Rating based on how low Hulkbuster’s current Health is. "
+            },
+            {
+              "label": "Hulk:",
+              "body": " Immunity to Nullify, Fate Seal and Stagger. "
+            },
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " Gains up to +1000 Physical Resistance based on how high the Crowd Meter is. "
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Hulkbuster available at 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate Synergies."
+          ],
+          "targets": [
+            "champion-synergy-hbuster_new_banner"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-enemy_329",
+          "title": "ENEMIES",
+          "partners": [
+            {
+              "href": "/champions/ebony-maw",
+              "name": "Ebony Maw"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +85 Critical Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +115 Critical Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +155 Critical Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Ebony Maw available at 2 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Ebony Maw available at 3 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Ebony Maw available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-enemy_329",
+            "champion-synergy-enemy_329",
+            "champion-synergy-enemy_330",
+            "champion-synergy-enemy_331"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-enemy_359",
+          "title": "ENEMIES",
+          "partners": [
+            {
+              "href": "/champions/abomination-immortal",
+              "name": "Abomination (Immortal)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +85 Critical Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +115 Critical Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +155 Critical Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Abomination (Immortal) available at 2 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Abomination (Immortal) available at 3 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Abomination (Immortal) available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-enemy_359",
+            "champion-synergy-enemy_359",
+            "champion-synergy-enemy_360",
+            "champion-synergy-enemy_361"
+          ]
+        },
+        {
+          "id": "champion-synergy-thru_02",
+          "title": "FRIEND FROM WORK",
+          "partners": [
+            {
+              "href": "/champions/thor-ragnarok",
+              "name": "Thor (Ragnarok)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Thor (Ragnarok):",
+              "body": " Personal Furies gain 10% increased potency. "
+            },
+            {
+              "label": "Other Synergy Champions:",
+              "body": " When brought below 20% Max Health, gain an Indestructible Passive lasting 5 seconds. "
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Thor (Ragnarok) available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-thru_02"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-odin_buddy1",
+          "title": "FRIENDS",
+          "partners": [
+            {
+              "href": "/champions/odin",
+              "name": "Odin"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +70 Armor Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +95 Armor Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +130 Armor Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Odin available at 2, 3 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Odin available at 4 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Odin available at 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-odin_buddy1",
+            "champion-synergy-odin_buddy1",
+            "champion-synergy-odin_buddy2",
+            "champion-synergy-odin_buddy3"
+          ]
+        },
+        {
+          "id": "champion-synergy-sorcsup_sb_5",
+          "title": "GAMMA HORDE",
+          "partners": [
+            {
+              "href": "/champions/sorcerer-supreme",
+              "name": "Sorcerer Supreme"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " Stun Debuffs inflicted on the Opponent last 25% longer."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Sorcerer Supreme available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-sorcsup_sb_5"
+          ]
+        },
+        {
+          "id": "champion-synergy-grandchamps_1",
+          "title": "GRANDMASTER’S CHAMPIONS",
+          "partners": [
+            {
+              "href": "/champions/korg",
+              "name": "Korg"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hulk Ragnarok:",
+              "body": " Crowd Excitement is locked at 100 for an additional 3 seconds."
+            },
+            {
+              "label": "Korg:",
+              "body": " When Korg spends 13 or more Crowd Excitement charges through his Heavy Attack, the Armor Break lasts 20 seconds instead. Max Stack: 1."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Korg available at 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate Synergies."
+          ],
+          "targets": [
+            "champion-synergy-grandchamps_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-cull_hero",
+          "title": "HEROES NEVER LEARN",
+          "partners": [
+            {
+              "href": "/champions/cull-obsidian",
+              "name": "Cull Obsidian"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "Cull Obsidian: Activating a Special Attack grants a non-stacking Fury Buff increasing Attack by +50% for 4 seconds. This Buff gains 150% increased duration while fighting #Hero Champions."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Cull Obsidian available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Solo: Only affects this Champion and does not stack."
+          ],
+          "targets": [
+            "champion-synergy-cull_hero"
+          ]
+        },
+        {
+          "id": "champion-synergy-anni_chall",
+          "title": "CHALLENGER",
+          "partners": [
+            {
+              "href": "/champions/annihilus",
+              "name": "Annihilus"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Annihilus:",
+              "body": " Every time Annihilus’ Opponent activates a Fury effect, Annihilus gains an Armor Up Buff increasing Armor Rating by 8% for 4 seconds."
+            },
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " While Face Me is active, Hulk gains a Passive Fury boosting attack damage by 12%."
+            },
+            {
+              "label": "Contingency Plan:",
+              "body": " Whenever Hulk (Ragnarok) Strikes Annihilus with a SMASH attack, Annihilus gains 1 Fury Buff increasing Attack Rating by 100% for 4 seconds."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Annihilus available at 3, 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique synergy. Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-anni_chall"
+          ]
+        },
+        {
+          "id": "champion-synergy-overseer_sb_1",
+          "title": "IDENTITY DISORDER",
+          "partners": [
+            {
+              "href": "/champions/the-overseer",
+              "name": "The Overseer"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " Their scrambled personality makes them immune to reverse controls."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "The Overseer available at 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique synergy. Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-overseer_sb_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-herc_sb_hulks",
+          "title": "INCREDIBLE SUBSTITUTE",
+          "partners": [
+            {
+              "href": "/champions/hercules",
+              "name": "Hercules"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hercules:",
+              "body": " Start the fight with +3 Strength."
+            },
+            {
+              "label": "Hulk:",
+              "body": " +15% Fury effect Potency."
+            },
+            {
+              "label": "Hulk (Immortal):",
+              "body": " While Immortality is on Cooldown, Well-Timed Blocks gain +100% Perfect Block chance."
+            },
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " When Crowd Excitement reaches 100, gain a Fury Buff increasing Attack Rating by +55% and inflict a Weakness Debuff reducing Attack Rating by 30%. These last 15 seconds."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Hercules available at 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-herc_sb_hulks"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-infinityenemies_1",
+          "title": "INFINITY ENEMIES",
+          "partners": [
+            {
+              "href": "/champions/proxima-midnight",
+              "name": "Proxima Midnight"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +4% Attack Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +5% Attack Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +6% Attack Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +7% Attack Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Proxima Midnight available at 2 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Proxima Midnight available at 3 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Proxima Midnight available at 4 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Proxima Midnight available at 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-infinityenemies_1",
+            "champion-synergy-infinityenemies_1",
+            "champion-synergy-infinityenemies_2",
+            "champion-synergy-infinityenemies_3",
+            "champion-synergy-infinityenemies_4",
+            "champion-synergy-infinityenemies_5"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-comp_006",
+          "title": "IT'S COMPLICATED",
+          "partners": [
+            {
+              "href": "/champions/black-widow-deadly-origin",
+              "name": "Black Widow (Deadly Origin)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +15 Armor Rating & +3% Combat Power Rate."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +35 Armor Rating & +3% Combat Power Rate."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +60 Armor Rating & +3% Combat Power Rate."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Black Widow (Deadly Origin) available at 2 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Black Widow (Deadly Origin) available at 3 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Black Widow (Deadly Origin) available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-comp_006",
+            "champion-synergy-comp_006",
+            "champion-synergy-comp_007",
+            "champion-synergy-comp_008",
+            "champion-synergy-comp_009",
+            "champion-synergy-comp_010"
+          ]
+        },
+        {
+          "id": "champion-synergy-gladiator_03",
+          "title": "PUNK'S PIZZAZZ",
+          "partners": [
+            {
+              "href": "/champions/gladiator",
+              "name": "Gladiator"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " Heavy Attacks are Passively Unblockable if Gladiator is alive, and they gain +10% Attack Rating if Sorcerer Supreme is alive, +750 Critical Rating if Hulk (Ragnarok) is alive, and +400 Critical Damage Rating if Spider-Punk is alive."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Gladiator available at 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-gladiator_03"
+          ]
+        },
+        {
+          "id": "champion-synergy-thing_hulk",
+          "title": "RIVALS Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/thing",
+              "name": "Thing"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +115 Critical Damage Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Thing available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-thing_hulk"
+          ]
+        },
+        {
+          "id": "champion-synergy-capsci_1",
+          "title": "SCIENCE EXPERIMENT",
+          "partners": [
+            {
+              "href": "/champions/captain-america-infinity-war",
+              "name": "Captain America (Infinity War)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "Science Champions place a Passive Weakness on the Opponent reducing their Attack by 50% except while being struck by them."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Captain America (Infinity War) available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-capsci_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-valk_sb_1",
+          "title": "STRAIGHT OUTTA SAKAAR",
+          "partners": [
+            {
+              "href": "/champions/valkyrie",
+              "name": "Valkyrie"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Valkyrie:",
+              "body": " Valkyrie starts the fight with one of her Bulwark Buffs."
+            },
+            {
+              "label": "Thor:",
+              "body": " Striking into the Opponent’s Block inflicts an instant Shock dealing 50% of the damage that would’ve been dealt by the unblocked attack."
+            },
+            {
+              "label": "Korg:",
+              "body": " The maximum amount of Crowd Excitement Korg can generate from Blocking is doubled."
+            },
+            {
+              "label": "Hulk:",
+              "body": " While SMASHing, Hulk gains +70% Block Penetration."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Valkyrie available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-valk_sb_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-falc_new_17",
+          "title": "TEAMMATES Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/falcon",
+              "name": "Falcon"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +5% Perfect Block Chance & +3% Attack Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Falcon available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-falc_new_17"
+          ]
+        },
+        {
+          "id": "champion-synergy-cheeilth_06",
+          "title": "WHAT YOU DON'T KNOW, YOU'LL FEAR",
+          "partners": [
+            {
+              "href": "/champions/chee-ilth",
+              "name": "Chee'Ilth"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Chee'ilth:",
+              "body": " When Blocking a Heavy Attack, become Passively Unstoppable for 3 seconds. Cooldown: 45 seconds. [Gamma]: Cooldown becomes 5 seconds."
+            },
+            {
+              "label": "Synergy Champions:",
+              "body": " +8% Attack Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Chee'Ilth available at 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-cheeilth_06"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "07-family-mobile",
+      "target": "champion-synergy-family-comp_006",
+      "open": false,
+      "url": "http://localhost:3000/champions/hulk-ragnarok?tab=synergies&rarity=6&rank=5&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "documentWidth": 390,
+      "scrollY": 5850,
+      "cardTop": 196.40625,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "ownGroupHeight": 859,
+      "ownCount": 4,
+      "fullyVisible": 0,
+      "articles": [
+        {
+          "id": "champion-synergy-lullaby_1",
+          "title": "LULLABY",
+          "partners": [
+            {
+              "href": "/champions/black-widow",
+              "name": "Black Widow"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " When Struck Hulk has a 20% chance to ready a SMASH for his next attack."
+            },
+            {
+              "label": "Black Widow:",
+              "body": " Evade chance increases by 100%."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Black Widow available at 2, 3, 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-lullaby_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-offlimits_1",
+          "title": "OFF LIMITS",
+          "partners": [
+            {
+              "href": "/champions/hela",
+              "name": "Hela"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " Hulk's chance to SMASH on Attacks increases by 400% while Face Me is active."
+            },
+            {
+              "label": "Hela:",
+              "body": " Hela begins the fight with 1 Fury Buff, and if she is ever without a Fury Buff for 10 seconds, she gains one."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Hela available at 2, 3, 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-offlimits_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-punygod_1",
+          "title": "PUNY GOD",
+          "partners": [
+            {
+              "href": "/champions/loki",
+              "name": "Loki"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " +1000 Physical Resistance while Unstoppable. "
+            },
+            {
+              "label": "Loki:",
+              "body": " Basic Attacks against Loki have a 10% chance to miss, while his Opponent is under the effect of any Buff. "
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Loki available at 2, 3, 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-punygod_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-teambuilding_1",
+          "title": "TEAM BUILDING EXERCISE",
+          "partners": [
+            {
+              "href": "/champions/thor-ragnarok",
+              "name": "Thor (Ragnarok)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " SMASH attacks have a 20% chance to be Unblockable. "
+            },
+            {
+              "label": "Thor (Ragnarok):",
+              "body": " Special attacks activated while the Boon of the Gods Power Gain is active become Passively Unblockable. "
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Thor (Ragnarok) available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-teambuilding_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-shlk_1",
+          "title": "AGENTS OF S.M.A.S.H.",
+          "partners": [
+            {
+              "href": "/champions/she-hulk",
+              "name": "She-Hulk"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "She-Hulk, Hulk:",
+              "body": " Personal Fury Passives gain +20% potency."
+            },
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " SMASH attacks gain +15% attack."
+            },
+            {
+              "label": "Red Hulk:",
+              "body": " +2% attack for each Heat charge."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "She-Hulk available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-shlk_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-joef_02",
+          "title": "BANNER HORDE",
+          "partners": [
+            {
+              "href": "/champions/joe-fixit",
+              "name": "Joe Fixit"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " For each Synergy Champion on the team, gain up to +6% Attack Rating and up to +500 Armor Rating based on lost Health."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Joe Fixit available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-joef_02"
+          ]
+        },
+        {
+          "id": "champion-synergy-betaraybill_01",
+          "title": "CAGE FIGHTERS",
+          "partners": [
+            {
+              "href": "/champions/beta-ray-bill",
+              "name": "Beta Ray Bill"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " When Rooted, Passively gain up to the nearest Bar of Power over 1.5 seconds. The Power Gain is removed if the Root expires, and does not trigger during the Opponent’s Special Attacks."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Beta Ray Bill available at 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-betaraybill_01"
+          ]
+        },
+        {
+          "id": "champion-synergy-mojo_crowd",
+          "title": "CROWD PLEASERS",
+          "partners": [
+            {
+              "href": "/champions/mojo",
+              "name": "Mojo"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Mojo:",
+              "body": " When a Prompt is completed, Mojo gains an Unstoppable Buff for 5 second(s)."
+            },
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " Passively increase Attack Rating by up to 25% based on Crowd Excitement."
+            },
+            {
+              "label": "Korg:",
+              "body": " Korg’s personal Armor Break has 50% increased Potency and duration."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Mojo available at 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-mojo_crowd"
+          ]
+        },
+        {
+          "id": "champion-synergy-hbuster_new_banner",
+          "title": "DON'T MENTION PUNY BANNER!",
+          "partners": [
+            {
+              "href": "/champions/hulkbuster",
+              "name": "Hulkbuster"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hulkbuster:",
+              "body": " Up to +1000 Armor Rating based on how low Hulkbuster’s current Health is. "
+            },
+            {
+              "label": "Hulk:",
+              "body": " Immunity to Nullify, Fate Seal and Stagger. "
+            },
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " Gains up to +1000 Physical Resistance based on how high the Crowd Meter is. "
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Hulkbuster available at 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate Synergies."
+          ],
+          "targets": [
+            "champion-synergy-hbuster_new_banner"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-enemy_329",
+          "title": "ENEMIES",
+          "partners": [
+            {
+              "href": "/champions/ebony-maw",
+              "name": "Ebony Maw"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +85 Critical Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +115 Critical Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +155 Critical Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Ebony Maw available at 2 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Ebony Maw available at 3 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Ebony Maw available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-enemy_329",
+            "champion-synergy-enemy_329",
+            "champion-synergy-enemy_330",
+            "champion-synergy-enemy_331"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-enemy_359",
+          "title": "ENEMIES",
+          "partners": [
+            {
+              "href": "/champions/abomination-immortal",
+              "name": "Abomination (Immortal)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +85 Critical Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +115 Critical Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +155 Critical Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Abomination (Immortal) available at 2 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Abomination (Immortal) available at 3 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Abomination (Immortal) available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-enemy_359",
+            "champion-synergy-enemy_359",
+            "champion-synergy-enemy_360",
+            "champion-synergy-enemy_361"
+          ]
+        },
+        {
+          "id": "champion-synergy-thru_02",
+          "title": "FRIEND FROM WORK",
+          "partners": [
+            {
+              "href": "/champions/thor-ragnarok",
+              "name": "Thor (Ragnarok)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Thor (Ragnarok):",
+              "body": " Personal Furies gain 10% increased potency. "
+            },
+            {
+              "label": "Other Synergy Champions:",
+              "body": " When brought below 20% Max Health, gain an Indestructible Passive lasting 5 seconds. "
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Thor (Ragnarok) available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-thru_02"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-odin_buddy1",
+          "title": "FRIENDS",
+          "partners": [
+            {
+              "href": "/champions/odin",
+              "name": "Odin"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +70 Armor Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +95 Armor Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +130 Armor Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Odin available at 2, 3 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Odin available at 4 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Odin available at 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-odin_buddy1",
+            "champion-synergy-odin_buddy1",
+            "champion-synergy-odin_buddy2",
+            "champion-synergy-odin_buddy3"
+          ]
+        },
+        {
+          "id": "champion-synergy-sorcsup_sb_5",
+          "title": "GAMMA HORDE",
+          "partners": [
+            {
+              "href": "/champions/sorcerer-supreme",
+              "name": "Sorcerer Supreme"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " Stun Debuffs inflicted on the Opponent last 25% longer."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Sorcerer Supreme available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-sorcsup_sb_5"
+          ]
+        },
+        {
+          "id": "champion-synergy-grandchamps_1",
+          "title": "GRANDMASTER’S CHAMPIONS",
+          "partners": [
+            {
+              "href": "/champions/korg",
+              "name": "Korg"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hulk Ragnarok:",
+              "body": " Crowd Excitement is locked at 100 for an additional 3 seconds."
+            },
+            {
+              "label": "Korg:",
+              "body": " When Korg spends 13 or more Crowd Excitement charges through his Heavy Attack, the Armor Break lasts 20 seconds instead. Max Stack: 1."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Korg available at 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate Synergies."
+          ],
+          "targets": [
+            "champion-synergy-grandchamps_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-cull_hero",
+          "title": "HEROES NEVER LEARN",
+          "partners": [
+            {
+              "href": "/champions/cull-obsidian",
+              "name": "Cull Obsidian"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "Cull Obsidian: Activating a Special Attack grants a non-stacking Fury Buff increasing Attack by +50% for 4 seconds. This Buff gains 150% increased duration while fighting #Hero Champions."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Cull Obsidian available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Solo: Only affects this Champion and does not stack."
+          ],
+          "targets": [
+            "champion-synergy-cull_hero"
+          ]
+        },
+        {
+          "id": "champion-synergy-anni_chall",
+          "title": "CHALLENGER",
+          "partners": [
+            {
+              "href": "/champions/annihilus",
+              "name": "Annihilus"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Annihilus:",
+              "body": " Every time Annihilus’ Opponent activates a Fury effect, Annihilus gains an Armor Up Buff increasing Armor Rating by 8% for 4 seconds."
+            },
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " While Face Me is active, Hulk gains a Passive Fury boosting attack damage by 12%."
+            },
+            {
+              "label": "Contingency Plan:",
+              "body": " Whenever Hulk (Ragnarok) Strikes Annihilus with a SMASH attack, Annihilus gains 1 Fury Buff increasing Attack Rating by 100% for 4 seconds."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Annihilus available at 3, 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique synergy. Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-anni_chall"
+          ]
+        },
+        {
+          "id": "champion-synergy-overseer_sb_1",
+          "title": "IDENTITY DISORDER",
+          "partners": [
+            {
+              "href": "/champions/the-overseer",
+              "name": "The Overseer"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " Their scrambled personality makes them immune to reverse controls."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "The Overseer available at 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique synergy. Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-overseer_sb_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-herc_sb_hulks",
+          "title": "INCREDIBLE SUBSTITUTE",
+          "partners": [
+            {
+              "href": "/champions/hercules",
+              "name": "Hercules"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hercules:",
+              "body": " Start the fight with +3 Strength."
+            },
+            {
+              "label": "Hulk:",
+              "body": " +15% Fury effect Potency."
+            },
+            {
+              "label": "Hulk (Immortal):",
+              "body": " While Immortality is on Cooldown, Well-Timed Blocks gain +100% Perfect Block chance."
+            },
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " When Crowd Excitement reaches 100, gain a Fury Buff increasing Attack Rating by +55% and inflict a Weakness Debuff reducing Attack Rating by 30%. These last 15 seconds."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Hercules available at 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-herc_sb_hulks"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-infinityenemies_1",
+          "title": "INFINITY ENEMIES",
+          "partners": [
+            {
+              "href": "/champions/proxima-midnight",
+              "name": "Proxima Midnight"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +4% Attack Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +5% Attack Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +6% Attack Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +7% Attack Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Proxima Midnight available at 2 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Proxima Midnight available at 3 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Proxima Midnight available at 4 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Proxima Midnight available at 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-infinityenemies_1",
+            "champion-synergy-infinityenemies_1",
+            "champion-synergy-infinityenemies_2",
+            "champion-synergy-infinityenemies_3",
+            "champion-synergy-infinityenemies_4",
+            "champion-synergy-infinityenemies_5"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-comp_006",
+          "title": "IT'S COMPLICATED",
+          "partners": [
+            {
+              "href": "/champions/black-widow-deadly-origin",
+              "name": "Black Widow (Deadly Origin)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +15 Armor Rating & +3% Combat Power Rate."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +35 Armor Rating & +3% Combat Power Rate."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +60 Armor Rating & +3% Combat Power Rate."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Black Widow (Deadly Origin) available at 2 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Black Widow (Deadly Origin) available at 3 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Black Widow (Deadly Origin) available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-comp_006",
+            "champion-synergy-comp_006",
+            "champion-synergy-comp_007",
+            "champion-synergy-comp_008",
+            "champion-synergy-comp_009",
+            "champion-synergy-comp_010"
+          ]
+        },
+        {
+          "id": "champion-synergy-gladiator_03",
+          "title": "PUNK'S PIZZAZZ",
+          "partners": [
+            {
+              "href": "/champions/gladiator",
+              "name": "Gladiator"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " Heavy Attacks are Passively Unblockable if Gladiator is alive, and they gain +10% Attack Rating if Sorcerer Supreme is alive, +750 Critical Rating if Hulk (Ragnarok) is alive, and +400 Critical Damage Rating if Spider-Punk is alive."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Gladiator available at 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-gladiator_03"
+          ]
+        },
+        {
+          "id": "champion-synergy-thing_hulk",
+          "title": "RIVALS Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/thing",
+              "name": "Thing"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +115 Critical Damage Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Thing available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-thing_hulk"
+          ]
+        },
+        {
+          "id": "champion-synergy-capsci_1",
+          "title": "SCIENCE EXPERIMENT",
+          "partners": [
+            {
+              "href": "/champions/captain-america-infinity-war",
+              "name": "Captain America (Infinity War)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "Science Champions place a Passive Weakness on the Opponent reducing their Attack by 50% except while being struck by them."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Captain America (Infinity War) available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-capsci_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-valk_sb_1",
+          "title": "STRAIGHT OUTTA SAKAAR",
+          "partners": [
+            {
+              "href": "/champions/valkyrie",
+              "name": "Valkyrie"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Valkyrie:",
+              "body": " Valkyrie starts the fight with one of her Bulwark Buffs."
+            },
+            {
+              "label": "Thor:",
+              "body": " Striking into the Opponent’s Block inflicts an instant Shock dealing 50% of the damage that would’ve been dealt by the unblocked attack."
+            },
+            {
+              "label": "Korg:",
+              "body": " The maximum amount of Crowd Excitement Korg can generate from Blocking is doubled."
+            },
+            {
+              "label": "Hulk:",
+              "body": " While SMASHing, Hulk gains +70% Block Penetration."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Valkyrie available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-valk_sb_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-falc_new_17",
+          "title": "TEAMMATES Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/falcon",
+              "name": "Falcon"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +5% Perfect Block Chance & +3% Attack Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Falcon available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-falc_new_17"
+          ]
+        },
+        {
+          "id": "champion-synergy-cheeilth_06",
+          "title": "WHAT YOU DON'T KNOW, YOU'LL FEAR",
+          "partners": [
+            {
+              "href": "/champions/chee-ilth",
+              "name": "Chee'Ilth"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Chee'ilth:",
+              "body": " When Blocking a Heavy Attack, become Passively Unstoppable for 3 seconds. Cooldown: 45 seconds. [Gamma]: Cooldown becomes 5 seconds."
+            },
+            {
+              "label": "Synergy Champions:",
+              "body": " +8% Attack Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Chee'Ilth available at 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-cheeilth_06"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "08-reference-wide",
+      "target": null,
+      "open": false,
+      "url": "http://localhost:3000/champions/star-lord-kitty-pryde?tab=synergies&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        1600,
+        900
+      ],
+      "zoom": 1,
+      "documentWidth": 1600,
+      "scrollY": 788,
+      "cardTop": 228.359375,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "ownGroupHeight": 521,
+      "ownCount": 6,
+      "fullyVisible": 6,
+      "articles": [
+        {
+          "id": "champion-synergy-starlord_kittypryde_01",
+          "title": "ALL-NEW ALL-DIFFERENT",
+          "partners": [
+            {
+              "href": "/champions/angela",
+              "name": "Angela"
+            },
+            {
+              "href": "/champions/captain-marvel",
+              "name": "Captain Marvel"
+            },
+            {
+              "href": "/champions/iron-man",
+              "name": "Iron Man"
+            },
+            {
+              "href": "/champions/thing",
+              "name": "Thing"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy and #Guardians of the Galaxy Champions:",
+              "body": " At the start of each fight, gain a Power Gain Passive that grants 10% of a Bar of Power for each Synergy or #Guardians of the Galaxy Champion on the team over 10 seconds."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Angela available at 2, 3, 4, 5, 6, 7 stars",
+                  "Captain Marvel available at 2, 3, 4, 5, 6, 7 stars",
+                  "Iron Man available at 2, 3, 4, 5, 6, 7 stars",
+                  "Thing available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_01"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_11",
+          "title": "FRIENDS Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/agent-venom",
+              "name": "Agent Venom"
+            },
+            {
+              "href": "/champions/beta-ray-bill",
+              "name": "Beta Ray Bill"
+            },
+            {
+              "href": "/champions/mantis",
+              "name": "Mantis"
+            },
+            {
+              "href": "/champions/star-lord-stellar-forged",
+              "name": "Star-Lord (Stellar-Forged)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +130 Armor Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Agent Venom available at 2, 3, 4, 5, 6 stars",
+                  "Beta Ray Bill available at 2, 3, 4, 5, 6, 7 stars",
+                  "Mantis available at 2, 3, 4, 5, 6, 7 stars",
+                  "Star-Lord (Stellar-Forged) available at 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_11"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_08",
+          "title": "IT'S COMPLICATED Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/colossus",
+              "name": "Colossus"
+            },
+            {
+              "href": "/champions/star-lord",
+              "name": "Star-Lord"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +60 Armor Rating & +3% Combat Power Rate."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Colossus available at 2, 3, 4, 5, 6, 7 stars",
+                  "Star-Lord available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_08"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_05",
+          "title": "PRIDE Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/karolina-dean",
+              "name": "Karolina Dean"
+            },
+            {
+              "href": "/champions/kitty-pryde",
+              "name": "Kitty Pryde"
+            },
+            {
+              "href": "/champions/moondragon",
+              "name": "Moondragon"
+            },
+            {
+              "href": "/champions/phyla-vell",
+              "name": "Phyla-Vell"
+            },
+            {
+              "href": "/champions/shatterstar",
+              "name": "Shatterstar"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +90 Armor Rating, Block Proficiency, Energy Resistance and Physical Resistance."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Karolina Dean available at 2, 3, 4, 5, 6, 7 stars",
+                  "Kitty Pryde available at 2, 3, 4, 5, 6, 7 stars",
+                  "Moondragon available at 2, 3, 4, 5, 6, 7 stars",
+                  "Phyla-Vell available at 2, 3, 4, 5, 6, 7 stars",
+                  "Shatterstar available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_05"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_14",
+          "title": "TEAMMATES Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/drax",
+              "name": "Drax"
+            },
+            {
+              "href": "/champions/gamora",
+              "name": "Gamora"
+            },
+            {
+              "href": "/champions/groot",
+              "name": "Groot"
+            },
+            {
+              "href": "/champions/rocket-raccoon",
+              "name": "Rocket Raccoon"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +5% Perfect Block Chance."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Drax available at 2, 3, 4, 5, 6 stars",
+                  "Gamora available at 2, 3, 4, 5, 6, 7 stars",
+                  "Groot available at 2, 3, 4, 5, 6 stars",
+                  "Rocket Raccoon available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_14"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_02",
+          "title": "WAY WAY BACK IN THE 1980S",
+          "partners": [
+            {
+              "href": "/champions/dazzler",
+              "name": "Dazzler"
+            },
+            {
+              "href": "/champions/longshot",
+              "name": "Longshot"
+            },
+            {
+              "href": "/champions/psylocke",
+              "name": "Psylocke"
+            },
+            {
+              "href": "/champions/rogue",
+              "name": "Rogue"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " At the start of each fight, gain 3 indefinite +20% Prowess Passives. Remove 1 at the end of each Special Attack."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Dazzler available at 2, 3, 4, 5, 6, 7 stars",
+                  "Longshot available at 2, 3, 4, 5, 6, 7 stars",
+                  "Psylocke available at 2, 3, 4, 5, 6 stars",
+                  "Rogue available at 2, 3, 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_02"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "09-desktop-requirements",
+      "target": null,
+      "open": true,
+      "url": "http://localhost:3000/champions/star-lord-kitty-pryde?tab=synergies&rarity=7&rank=6&sig=200&ascension=0",
+      "viewport": [
+        1280,
+        900
+      ],
+      "zoom": 1,
+      "documentWidth": 1280,
+      "scrollY": 786,
+      "cardTop": 228.75,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "ownGroupHeight": 670,
+      "ownCount": 6,
+      "fullyVisible": 6,
+      "articles": [
+        {
+          "id": "champion-synergy-starlord_kittypryde_01",
+          "title": "ALL-NEW ALL-DIFFERENT",
+          "partners": [
+            {
+              "href": "/champions/angela",
+              "name": "Angela"
+            },
+            {
+              "href": "/champions/captain-marvel",
+              "name": "Captain Marvel"
+            },
+            {
+              "href": "/champions/iron-man",
+              "name": "Iron Man"
+            },
+            {
+              "href": "/champions/thing",
+              "name": "Thing"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy and #Guardians of the Galaxy Champions:",
+              "body": " At the start of each fight, gain a Power Gain Passive that grants 10% of a Bar of Power for each Synergy or #Guardians of the Galaxy Champion on the team over 10 seconds."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Angela available at 2, 3, 4, 5, 6, 7 stars",
+                  "Captain Marvel available at 2, 3, 4, 5, 6, 7 stars",
+                  "Iron Man available at 2, 3, 4, 5, 6, 7 stars",
+                  "Thing available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_01"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_11",
+          "title": "FRIENDS Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/agent-venom",
+              "name": "Agent Venom"
+            },
+            {
+              "href": "/champions/beta-ray-bill",
+              "name": "Beta Ray Bill"
+            },
+            {
+              "href": "/champions/mantis",
+              "name": "Mantis"
+            },
+            {
+              "href": "/champions/star-lord-stellar-forged",
+              "name": "Star-Lord (Stellar-Forged)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +130 Armor Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Agent Venom available at 2, 3, 4, 5, 6 stars",
+                  "Beta Ray Bill available at 2, 3, 4, 5, 6, 7 stars",
+                  "Mantis available at 2, 3, 4, 5, 6, 7 stars",
+                  "Star-Lord (Stellar-Forged) available at 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_11"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_08",
+          "title": "IT'S COMPLICATED Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/colossus",
+              "name": "Colossus"
+            },
+            {
+              "href": "/champions/star-lord",
+              "name": "Star-Lord"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +60 Armor Rating & +3% Combat Power Rate."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Colossus available at 2, 3, 4, 5, 6, 7 stars",
+                  "Star-Lord available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_08"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_05",
+          "title": "PRIDE Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/karolina-dean",
+              "name": "Karolina Dean"
+            },
+            {
+              "href": "/champions/kitty-pryde",
+              "name": "Kitty Pryde"
+            },
+            {
+              "href": "/champions/moondragon",
+              "name": "Moondragon"
+            },
+            {
+              "href": "/champions/phyla-vell",
+              "name": "Phyla-Vell"
+            },
+            {
+              "href": "/champions/shatterstar",
+              "name": "Shatterstar"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +90 Armor Rating, Block Proficiency, Energy Resistance and Physical Resistance."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Karolina Dean available at 2, 3, 4, 5, 6, 7 stars",
+                  "Kitty Pryde available at 2, 3, 4, 5, 6, 7 stars",
+                  "Moondragon available at 2, 3, 4, 5, 6, 7 stars",
+                  "Phyla-Vell available at 2, 3, 4, 5, 6, 7 stars",
+                  "Shatterstar available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_05"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_14",
+          "title": "TEAMMATES Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/drax",
+              "name": "Drax"
+            },
+            {
+              "href": "/champions/gamora",
+              "name": "Gamora"
+            },
+            {
+              "href": "/champions/groot",
+              "name": "Groot"
+            },
+            {
+              "href": "/champions/rocket-raccoon",
+              "name": "Rocket Raccoon"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +5% Perfect Block Chance."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Drax available at 2, 3, 4, 5, 6 stars",
+                  "Gamora available at 2, 3, 4, 5, 6, 7 stars",
+                  "Groot available at 2, 3, 4, 5, 6 stars",
+                  "Rocket Raccoon available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_14"
+          ]
+        },
+        {
+          "id": "champion-synergy-starlord_kittypryde_02",
+          "title": "WAY WAY BACK IN THE 1980S",
+          "partners": [
+            {
+              "href": "/champions/dazzler",
+              "name": "Dazzler"
+            },
+            {
+              "href": "/champions/longshot",
+              "name": "Longshot"
+            },
+            {
+              "href": "/champions/psylocke",
+              "name": "Psylocke"
+            },
+            {
+              "href": "/champions/rogue",
+              "name": "Rogue"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " At the start of each fight, gain 3 indefinite +20% Prowess Passives. Remove 1 at the end of each Special Attack."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Dazzler available at 2, 3, 4, 5, 6, 7 stars",
+                  "Longshot available at 2, 3, 4, 5, 6, 7 stars",
+                  "Psylocke available at 2, 3, 4, 5, 6 stars",
+                  "Rogue available at 2, 3, 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-starlord_kittypryde_02"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "10-family-requirements",
+      "target": "champion-synergy-family-comp_006",
+      "open": true,
+      "url": "http://localhost:3000/champions/hulk-ragnarok?tab=synergies&rarity=6&rank=5&sig=200&ascension=0",
+      "viewport": [
+        390,
+        844
+      ],
+      "zoom": 1,
+      "documentWidth": 390,
+      "scrollY": 5850,
+      "cardTop": 196.40625,
+      "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/141.0.7390.37 Safari/537.36",
+      "ownGroupHeight": 859,
+      "ownCount": 4,
+      "fullyVisible": 0,
+      "articles": [
+        {
+          "id": "champion-synergy-lullaby_1",
+          "title": "LULLABY",
+          "partners": [
+            {
+              "href": "/champions/black-widow",
+              "name": "Black Widow"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " When Struck Hulk has a 20% chance to ready a SMASH for his next attack."
+            },
+            {
+              "label": "Black Widow:",
+              "body": " Evade chance increases by 100%."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Black Widow available at 2, 3, 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-lullaby_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-offlimits_1",
+          "title": "OFF LIMITS",
+          "partners": [
+            {
+              "href": "/champions/hela",
+              "name": "Hela"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " Hulk's chance to SMASH on Attacks increases by 400% while Face Me is active."
+            },
+            {
+              "label": "Hela:",
+              "body": " Hela begins the fight with 1 Fury Buff, and if she is ever without a Fury Buff for 10 seconds, she gains one."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Hela available at 2, 3, 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-offlimits_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-punygod_1",
+          "title": "PUNY GOD",
+          "partners": [
+            {
+              "href": "/champions/loki",
+              "name": "Loki"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " +1000 Physical Resistance while Unstoppable. "
+            },
+            {
+              "label": "Loki:",
+              "body": " Basic Attacks against Loki have a 10% chance to miss, while his Opponent is under the effect of any Buff. "
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Loki available at 2, 3, 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-punygod_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-teambuilding_1",
+          "title": "TEAM BUILDING EXERCISE",
+          "partners": [
+            {
+              "href": "/champions/thor-ragnarok",
+              "name": "Thor (Ragnarok)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " SMASH attacks have a 20% chance to be Unblockable. "
+            },
+            {
+              "label": "Thor (Ragnarok):",
+              "body": " Special attacks activated while the Boon of the Gods Power Gain is active become Passively Unblockable. "
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Thor (Ragnarok) available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-teambuilding_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-shlk_1",
+          "title": "AGENTS OF S.M.A.S.H.",
+          "partners": [
+            {
+              "href": "/champions/she-hulk",
+              "name": "She-Hulk"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "She-Hulk, Hulk:",
+              "body": " Personal Fury Passives gain +20% potency."
+            },
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " SMASH attacks gain +15% attack."
+            },
+            {
+              "label": "Red Hulk:",
+              "body": " +2% attack for each Heat charge."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "She-Hulk available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-shlk_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-joef_02",
+          "title": "BANNER HORDE",
+          "partners": [
+            {
+              "href": "/champions/joe-fixit",
+              "name": "Joe Fixit"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " For each Synergy Champion on the team, gain up to +6% Attack Rating and up to +500 Armor Rating based on lost Health."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Joe Fixit available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-joef_02"
+          ]
+        },
+        {
+          "id": "champion-synergy-betaraybill_01",
+          "title": "CAGE FIGHTERS",
+          "partners": [
+            {
+              "href": "/champions/beta-ray-bill",
+              "name": "Beta Ray Bill"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " When Rooted, Passively gain up to the nearest Bar of Power over 1.5 seconds. The Power Gain is removed if the Root expires, and does not trigger during the Opponent’s Special Attacks."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Beta Ray Bill available at 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-betaraybill_01"
+          ]
+        },
+        {
+          "id": "champion-synergy-mojo_crowd",
+          "title": "CROWD PLEASERS",
+          "partners": [
+            {
+              "href": "/champions/mojo",
+              "name": "Mojo"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Mojo:",
+              "body": " When a Prompt is completed, Mojo gains an Unstoppable Buff for 5 second(s)."
+            },
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " Passively increase Attack Rating by up to 25% based on Crowd Excitement."
+            },
+            {
+              "label": "Korg:",
+              "body": " Korg’s personal Armor Break has 50% increased Potency and duration."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Mojo available at 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-mojo_crowd"
+          ]
+        },
+        {
+          "id": "champion-synergy-hbuster_new_banner",
+          "title": "DON'T MENTION PUNY BANNER!",
+          "partners": [
+            {
+              "href": "/champions/hulkbuster",
+              "name": "Hulkbuster"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hulkbuster:",
+              "body": " Up to +1000 Armor Rating based on how low Hulkbuster’s current Health is. "
+            },
+            {
+              "label": "Hulk:",
+              "body": " Immunity to Nullify, Fate Seal and Stagger. "
+            },
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " Gains up to +1000 Physical Resistance based on how high the Crowd Meter is. "
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Hulkbuster available at 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate Synergies."
+          ],
+          "targets": [
+            "champion-synergy-hbuster_new_banner"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-enemy_329",
+          "title": "ENEMIES",
+          "partners": [
+            {
+              "href": "/champions/ebony-maw",
+              "name": "Ebony Maw"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +85 Critical Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +115 Critical Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +155 Critical Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Ebony Maw available at 2 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Ebony Maw available at 3 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Ebony Maw available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-enemy_329",
+            "champion-synergy-enemy_329",
+            "champion-synergy-enemy_330",
+            "champion-synergy-enemy_331"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-enemy_359",
+          "title": "ENEMIES",
+          "partners": [
+            {
+              "href": "/champions/abomination-immortal",
+              "name": "Abomination (Immortal)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +85 Critical Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +115 Critical Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +155 Critical Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Abomination (Immortal) available at 2 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Abomination (Immortal) available at 3 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Abomination (Immortal) available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-enemy_359",
+            "champion-synergy-enemy_359",
+            "champion-synergy-enemy_360",
+            "champion-synergy-enemy_361"
+          ]
+        },
+        {
+          "id": "champion-synergy-thru_02",
+          "title": "FRIEND FROM WORK",
+          "partners": [
+            {
+              "href": "/champions/thor-ragnarok",
+              "name": "Thor (Ragnarok)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Thor (Ragnarok):",
+              "body": " Personal Furies gain 10% increased potency. "
+            },
+            {
+              "label": "Other Synergy Champions:",
+              "body": " When brought below 20% Max Health, gain an Indestructible Passive lasting 5 seconds. "
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Thor (Ragnarok) available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-thru_02"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-odin_buddy1",
+          "title": "FRIENDS",
+          "partners": [
+            {
+              "href": "/champions/odin",
+              "name": "Odin"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +70 Armor Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +95 Armor Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +130 Armor Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Odin available at 2, 3 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Odin available at 4 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Odin available at 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-odin_buddy1",
+            "champion-synergy-odin_buddy1",
+            "champion-synergy-odin_buddy2",
+            "champion-synergy-odin_buddy3"
+          ]
+        },
+        {
+          "id": "champion-synergy-sorcsup_sb_5",
+          "title": "GAMMA HORDE",
+          "partners": [
+            {
+              "href": "/champions/sorcerer-supreme",
+              "name": "Sorcerer Supreme"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " Stun Debuffs inflicted on the Opponent last 25% longer."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Sorcerer Supreme available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-sorcsup_sb_5"
+          ]
+        },
+        {
+          "id": "champion-synergy-grandchamps_1",
+          "title": "GRANDMASTER’S CHAMPIONS",
+          "partners": [
+            {
+              "href": "/champions/korg",
+              "name": "Korg"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hulk Ragnarok:",
+              "body": " Crowd Excitement is locked at 100 for an additional 3 seconds."
+            },
+            {
+              "label": "Korg:",
+              "body": " When Korg spends 13 or more Crowd Excitement charges through his Heavy Attack, the Armor Break lasts 20 seconds instead. Max Stack: 1."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Korg available at 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate Synergies."
+          ],
+          "targets": [
+            "champion-synergy-grandchamps_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-cull_hero",
+          "title": "HEROES NEVER LEARN",
+          "partners": [
+            {
+              "href": "/champions/cull-obsidian",
+              "name": "Cull Obsidian"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "Cull Obsidian: Activating a Special Attack grants a non-stacking Fury Buff increasing Attack by +50% for 4 seconds. This Buff gains 150% increased duration while fighting #Hero Champions."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Cull Obsidian available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Solo: Only affects this Champion and does not stack."
+          ],
+          "targets": [
+            "champion-synergy-cull_hero"
+          ]
+        },
+        {
+          "id": "champion-synergy-anni_chall",
+          "title": "CHALLENGER",
+          "partners": [
+            {
+              "href": "/champions/annihilus",
+              "name": "Annihilus"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Annihilus:",
+              "body": " Every time Annihilus’ Opponent activates a Fury effect, Annihilus gains an Armor Up Buff increasing Armor Rating by 8% for 4 seconds."
+            },
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " While Face Me is active, Hulk gains a Passive Fury boosting attack damage by 12%."
+            },
+            {
+              "label": "Contingency Plan:",
+              "body": " Whenever Hulk (Ragnarok) Strikes Annihilus with a SMASH attack, Annihilus gains 1 Fury Buff increasing Attack Rating by 100% for 4 seconds."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Annihilus available at 3, 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique synergy. Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-anni_chall"
+          ]
+        },
+        {
+          "id": "champion-synergy-overseer_sb_1",
+          "title": "IDENTITY DISORDER",
+          "partners": [
+            {
+              "href": "/champions/the-overseer",
+              "name": "The Overseer"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " Their scrambled personality makes them immune to reverse controls."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "The Overseer available at 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique synergy. Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-overseer_sb_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-herc_sb_hulks",
+          "title": "INCREDIBLE SUBSTITUTE",
+          "partners": [
+            {
+              "href": "/champions/hercules",
+              "name": "Hercules"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Hercules:",
+              "body": " Start the fight with +3 Strength."
+            },
+            {
+              "label": "Hulk:",
+              "body": " +15% Fury effect Potency."
+            },
+            {
+              "label": "Hulk (Immortal):",
+              "body": " While Immortality is on Cooldown, Well-Timed Blocks gain +100% Perfect Block chance."
+            },
+            {
+              "label": "Hulk (Ragnarok):",
+              "body": " When Crowd Excitement reaches 100, gain a Fury Buff increasing Attack Rating by +55% and inflict a Weakness Debuff reducing Attack Rating by 30%. These last 15 seconds."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Hercules available at 4, 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-herc_sb_hulks"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-infinityenemies_1",
+          "title": "INFINITY ENEMIES",
+          "partners": [
+            {
+              "href": "/champions/proxima-midnight",
+              "name": "Proxima Midnight"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +4% Attack Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +5% Attack Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +6% Attack Rating."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +7% Attack Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Proxima Midnight available at 2 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Proxima Midnight available at 3 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Proxima Midnight available at 4 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Proxima Midnight available at 5, 6 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-infinityenemies_1",
+            "champion-synergy-infinityenemies_1",
+            "champion-synergy-infinityenemies_2",
+            "champion-synergy-infinityenemies_3",
+            "champion-synergy-infinityenemies_4",
+            "champion-synergy-infinityenemies_5"
+          ]
+        },
+        {
+          "id": "champion-synergy-family-comp_006",
+          "title": "IT'S COMPLICATED",
+          "partners": [
+            {
+              "href": "/champions/black-widow-deadly-origin",
+              "name": "Black Widow (Deadly Origin)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +15 Armor Rating & +3% Combat Power Rate."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +35 Armor Rating & +3% Combat Power Rate."
+            },
+            {
+              "label": "",
+              "body": "All Champions gain +60 Armor Rating & +3% Combat Power Rate."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Black Widow (Deadly Origin) available at 2 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Black Widow (Deadly Origin) available at 3 stars"
+                ]
+              }
+            ],
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Black Widow (Deadly Origin) available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-family-comp_006",
+            "champion-synergy-comp_006",
+            "champion-synergy-comp_007",
+            "champion-synergy-comp_008",
+            "champion-synergy-comp_009",
+            "champion-synergy-comp_010"
+          ]
+        },
+        {
+          "id": "champion-synergy-gladiator_03",
+          "title": "PUNK'S PIZZAZZ",
+          "partners": [
+            {
+              "href": "/champions/gladiator",
+              "name": "Gladiator"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Synergy Champions:",
+              "body": " Heavy Attacks are Passively Unblockable if Gladiator is alive, and they gain +10% Attack Rating if Sorcerer Supreme is alive, +750 Critical Rating if Hulk (Ragnarok) is alive, and +400 Critical Damage Rating if Spider-Punk is alive."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Gladiator available at 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-gladiator_03"
+          ]
+        },
+        {
+          "id": "champion-synergy-thing_hulk",
+          "title": "RIVALS Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/thing",
+              "name": "Thing"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +115 Critical Damage Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Thing available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-thing_hulk"
+          ]
+        },
+        {
+          "id": "champion-synergy-capsci_1",
+          "title": "SCIENCE EXPERIMENT",
+          "partners": [
+            {
+              "href": "/champions/captain-america-infinity-war",
+              "name": "Captain America (Infinity War)"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "Science Champions place a Passive Weakness on the Opponent reducing their Attack by 50% except while being struck by them."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Captain America (Infinity War) available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-capsci_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-valk_sb_1",
+          "title": "STRAIGHT OUTTA SAKAAR",
+          "partners": [
+            {
+              "href": "/champions/valkyrie",
+              "name": "Valkyrie"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Valkyrie:",
+              "body": " Valkyrie starts the fight with one of her Bulwark Buffs."
+            },
+            {
+              "label": "Thor:",
+              "body": " Striking into the Opponent’s Block inflicts an instant Shock dealing 50% of the damage that would’ve been dealt by the unblocked attack."
+            },
+            {
+              "label": "Korg:",
+              "body": " The maximum amount of Crowd Excitement Korg can generate from Blocking is doubled."
+            },
+            {
+              "label": "Hulk:",
+              "body": " While SMASHing, Hulk gains +70% Block Penetration."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Valkyrie available at 2, 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-valk_sb_1"
+          ]
+        },
+        {
+          "id": "champion-synergy-falc_new_17",
+          "title": "TEAMMATES Lv. 3",
+          "partners": [
+            {
+              "href": "/champions/falcon",
+              "name": "Falcon"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "",
+              "body": "All Champions gain +5% Perfect Block Chance & +3% Attack Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Falcon available at 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [],
+          "targets": [
+            "champion-synergy-falc_new_17"
+          ]
+        },
+        {
+          "id": "champion-synergy-cheeilth_06",
+          "title": "WHAT YOU DON'T KNOW, YOU'LL FEAR",
+          "partners": [
+            {
+              "href": "/champions/chee-ilth",
+              "name": "Chee'Ilth"
+            }
+          ],
+          "bonuses": [
+            {
+              "label": "Chee'ilth:",
+              "body": " When Blocking a Heavy Attack, become Passively Unstoppable for 3 seconds. Cooldown: 45 seconds. [Gamma]: Cooldown becomes 5 seconds."
+            },
+            {
+              "label": "Synergy Champions:",
+              "body": " +8% Attack Rating."
+            }
+          ],
+          "requirements": [
+            [
+              {
+                "owner": "",
+                "partners": [
+                  "Chee'Ilth available at 3, 4, 5, 6, 7 stars"
+                ]
+              }
+            ]
+          ],
+          "notes": [
+            "Unique Synergy: Does not stack with duplicate synergies."
+          ],
+          "targets": [
+            "champion-synergy-cheeilth_06"
+          ]
+        }
+      ]
+    }
+  ],
+  "diagnostics": []
+}

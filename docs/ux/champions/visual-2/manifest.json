@@ -1,0 +1,118 @@
+﻿{
+    "files":  [
+                  {
+                      "sha256":  "d8f48cc8df4ce4429bb491c69ad05c88973396a4734e41fe4a34dc3e895d4044",
+                      "path":  "web/src/app/champions/[slug]/champion-details-client.tsx"
+                  },
+                  {
+                      "sha256":  "7fff39417bc95ef7d71258afaaa0cbebeb8fe6f0a04d2fefb8fd2a8749125fe0",
+                      "path":  "web/src/app/champions/[slug]/champion-dossier.module.css"
+                  },
+                  {
+                      "sha256":  "aaa97961ee5ab3830671023a530859cc936810ce766152c8331b06a774dca9df",
+                      "path":  "web/src/app/champions/[slug]/champion-ability-reader.tsx"
+                  },
+                  {
+                      "sha256":  "54c2c63a686af70e155a2f4083a63b3f090a373fdd7533f2497bdeb9da4a3556",
+                      "path":  "web/src/app/champions/[slug]/champion-synergies-panel.tsx"
+                  },
+                  {
+                      "sha256":  "339764138a7429772ab56841c39ecfaa228e1f53166b4a7d8b7ef1212844a7c0",
+                      "path":  "docs/ux/champions/visual-2/before/01-desktop-hero.png"
+                  },
+                  {
+                      "sha256":  "105f5783b0e897cbbc0b27eeb49df711c2b31a896b18d66b159501c6af1478b2",
+                      "path":  "docs/ux/champions/visual-2/before/02-desktop-abilities.png"
+                  },
+                  {
+                      "sha256":  "29e88dda24d78a8d827e2cc1f096ec9926182a2396cb080bcb1ff321e096ff5c",
+                      "path":  "docs/ux/champions/visual-2/before/03-mobile-abilities.png"
+                  },
+                  {
+                      "sha256":  "c2c758a8a716d9de6cc1d9d7a72be54ce6685f222265b91e633c2277ac649c1f",
+                      "path":  "docs/ux/champions/visual-2/before/04-desktop-synergies.png"
+                  },
+                  {
+                      "sha256":  "1d807532a0570a2135c97ee11cef62b9f14857d4729c8ff078c6240c77e2578f",
+                      "path":  "docs/ux/champions/visual-2/before/05-mobile-synergies.png"
+                  },
+                  {
+                      "sha256":  "5ccd8f1e215babc303b5eef06738202e5cb62774f13b6059f1098c2be9c810d0",
+                      "path":  "docs/ux/champions/visual-2/before/06-small-abilities.png"
+                  },
+                  {
+                      "sha256":  "c1f92d8ade6e16e360bf7fe3ed247209d6a15b3c202ed0d735f0c72bc1ca4c57",
+                      "path":  "docs/ux/champions/visual-2/before/07-small-synergies.png"
+                  },
+                  {
+                      "sha256":  "654f36d6c88adbb0aed00e1f8743218d3b783f1c481177a785a100ad2d5a4615",
+                      "path":  "docs/ux/champions/visual-2/before/08-sparse-abilities.png"
+                  },
+                  {
+                      "sha256":  "361f7ddbf5dadf681fa84253d50f1b3e391c36e248ebd2b59240dda5f4497a0d",
+                      "path":  "docs/ux/champions/visual-2/before/09-long-name.png"
+                  },
+                  {
+                      "sha256":  "0e34bafc44768b9f9658529b722fd203cf9e08b4be847cfd4c3fc06a646d172d",
+                      "path":  "docs/ux/champions/visual-2/before/10-mobile-hero.png"
+                  },
+                  {
+                      "sha256":  "fc06b3ae2c320a054d3996fca0a85bce7c03fec9e3196eb6cf5e210585475ca5",
+                      "path":  "docs/ux/champions/visual-2/before/evidence.json"
+                  },
+                  {
+                      "sha256":  "c7c28b23a6a5e45a72b1c9883f32a087d43339b77c41d16828cf8d4711dd3a64",
+                      "path":  "docs/ux/champions/visual-2/after/01-desktop-hero.png"
+                  },
+                  {
+                      "sha256":  "bd371f45e720152df24f24e99dd80acf6855fedc376007a83a83eccaf621e814",
+                      "path":  "docs/ux/champions/visual-2/after/02-desktop-abilities.png"
+                  },
+                  {
+                      "sha256":  "cb4f501c156f867702646eacd8697dc996436cbc400fd584efe1539d9eed053b",
+                      "path":  "docs/ux/champions/visual-2/after/03-mobile-abilities.png"
+                  },
+                  {
+                      "sha256":  "53352870383d2d755adaace752f9db14ea257e83a0b3127ab2dd30c6b43d35a8",
+                      "path":  "docs/ux/champions/visual-2/after/04-desktop-synergies.png"
+                  },
+                  {
+                      "sha256":  "33394ffeda4a95860ec889b533d0cf358c23e04c082e455b6bd267e8e75934c6",
+                      "path":  "docs/ux/champions/visual-2/after/05-mobile-synergies.png"
+                  },
+                  {
+                      "sha256":  "8758f3587f46d0faad1ca69b5c5f8efabe7fe3d10d416113b26c42c2126073db",
+                      "path":  "docs/ux/champions/visual-2/after/06-small-abilities.png"
+                  },
+                  {
+                      "sha256":  "43b20f5fd9998029f8c91baf8df5b885e962264b95beb07db1ffb2ebdced2a87",
+                      "path":  "docs/ux/champions/visual-2/after/07-small-synergies.png"
+                  },
+                  {
+                      "sha256":  "bec4da3634dc2635d5cbd768cb56668aeb6e4d7488a9158e43ea3e315d4a0dc4",
+                      "path":  "docs/ux/champions/visual-2/after/08-sparse-abilities.png"
+                  },
+                  {
+                      "sha256":  "92abbc59682130027c2ec1b12070b49ae794e1d84d2fbbace937a277ce5684e6",
+                      "path":  "docs/ux/champions/visual-2/after/09-long-name.png"
+                  },
+                  {
+                      "sha256":  "e2f6b35e4aa5c67c1d723ab2d091193051fb1d39e6b049e994d2111721ba1d89",
+                      "path":  "docs/ux/champions/visual-2/after/10-mobile-hero.png"
+                  },
+                  {
+                      "sha256":  "c1660c41e3fd488bef5b4644b614c61d4571512e9b2c29911cc1adc2b452fc6a",
+                      "path":  "docs/ux/champions/visual-2/after/evidence.json"
+                  },
+                  {
+                      "sha256":  "873df3ccbee1b887316586ad15a1d4788b554d8182bc46305a4bd62546fa7656",
+                      "path":  "docs/ux/champions/visual-2/comparison.html"
+                  },
+                  {
+                      "sha256":  "84555e79067f0aaecd54be7b097e352307daf9e5060bb87a55a75b506e782ffa",
+                      "path":  "docs/ux/champions/visual-2/browser-smoke.json"
+                  }
+              ],
+    "incumbent":  "incumbent-manifest.json",
+    "state":  "local retained second visual candidate"
+}

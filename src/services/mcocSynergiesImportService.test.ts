@@ -36,8 +36,21 @@ describe('game synergy import', () => {
       { synergyId: 'carina_1', championId: 2, tierId: 'aegon_t6', rarity: 6, role: 'REQUIRED' },
     ]);
     expect(result.synergies[0].raw).toMatchObject({ bonus_heroes: synergy.bonus_heroes, required_heroes: synergy.required_heroes });
+    expect(result.synergies[0]).toMatchObject({ id: synergy.id, sourceHash: 'a'.repeat(64), raw: { ...synergy } });
     expect(result.report.filteredTemplateTiers).toEqual(['aegon_t7', 'carina_white_t6']);
     expect(result.report.canWrite).toBe(true);
+  });
+
+  it('retains changed native texture fields on catalog refresh without altering source rules or IDs', () => {
+    const champions = [{ id: 1, gameId: 'carina_white', obtainable: ['7'], isPlayable: true }];
+    for (const texture of ['\ue913', 'B', '\ue566\r', '\u{10ffff}']) {
+      const source = { ...synergy, texture };
+      const data = parseMcocSynergiesJson(file([source]));
+      const plan = prepareMcocSynergiesImport(data, champions);
+      expect(plan.synergies[0].raw).toEqual(source);
+      expect(plan.synergies[0].id).toBe(source.id);
+      expect(plan.synergies[0].sourceHash).toBe(data.metadata.sourceSha256);
+    }
   });
 
   it('retains unrecognized source records but blocks an import with no known owner', () => {

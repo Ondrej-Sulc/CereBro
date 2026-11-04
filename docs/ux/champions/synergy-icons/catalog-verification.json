@@ -1,0 +1,156 @@
+{
+  "records": 3335,
+  "members": 45502,
+  "nativeMappings": 3335,
+  "sourceHash": "9e95551a68cfeeebf395f49b0bff676c5a2406ba7c30795c228cc48bd89ede61",
+  "rowsSha256": "9d8dff1760b831ed2b69451071b700c7c670c07dce67a3b84f825d946dd0a4a5",
+  "sourceRulesAndGameFloatValuesMatch": true,
+  "serializationDeltas": {
+    "count": 1141,
+    "maxAbsoluteDelta": 3.552713678800501e-15,
+    "samples": [
+      {
+        "path": "starlord_kittypryde_01.descriptionValue",
+        "actual": 0.1000000014901161,
+        "expected": 0.10000000149011612
+      },
+      {
+        "path": "starlord_kittypryde_02.descriptionValue",
+        "actual": 0.2000000029802322,
+        "expected": 0.20000000298023224
+      },
+      {
+        "path": "starlord_kittypryde_06.descriptionValue",
+        "actual": 0.1500000059604645,
+        "expected": 0.15000000596046448
+      },
+      {
+        "path": "starlord_kittypryde_11.descriptionValue",
+        "actual": 1.299999952316284,
+        "expected": 1.2999999523162842
+      },
+      {
+        "path": "starlord_kittypryde_12.descriptionValue",
+        "actual": 0.02999999932944775,
+        "expected": 0.029999999329447746
+      }
+    ],
+    "comparison": "All numbers equal at original game float32 precision; all other fields compare exactly. No writes performed."
+  },
+  "referenceMappings": [
+    {
+      "id": "absorb_03",
+      "name": "SINS OF THE FATHER",
+      "texture": "A",
+      "icon": "/icons/synergies/u41-87e906cd834c.svg"
+    },
+    {
+      "id": "comp_006",
+      "name": "IT'S COMPLICATED Lv. 1",
+      "texture": "N",
+      "icon": "/icons/synergies/u4e-ed4240b5706b.svg"
+    },
+    {
+      "id": "comp_007",
+      "name": "IT'S COMPLICATED Lv. 2",
+      "texture": "N",
+      "icon": "/icons/synergies/u4e-ed4240b5706b.svg"
+    },
+    {
+      "id": "comp_008",
+      "name": "IT'S COMPLICATED Lv. 3",
+      "texture": "N",
+      "icon": "/icons/synergies/u4e-ed4240b5706b.svg"
+    },
+    {
+      "id": "comp_009",
+      "name": "IT'S COMPLICATED Lv. 3",
+      "texture": "N",
+      "icon": "/icons/synergies/u4e-ed4240b5706b.svg"
+    },
+    {
+      "id": "starlord_kittypryde_01",
+      "name": "ALL-NEW ALL-DIFFERENT",
+      "texture": "",
+      "icon": "/icons/synergies/ue469-128981ef88d8.svg"
+    },
+    {
+      "id": "starlord_kittypryde_02",
+      "name": "WAY WAY BACK IN THE 1980S",
+      "texture": "",
+      "icon": "/icons/synergies/ue612-952de53336a7.svg"
+    },
+    {
+      "id": "starlord_kittypryde_03",
+      "name": "PRIDE Lv. 1",
+      "texture": "",
+      "icon": "/icons/synergies/ue452-5fc17f6ffba9.svg"
+    },
+    {
+      "id": "starlord_kittypryde_04",
+      "name": "PRIDE Lv. 2",
+      "texture": "",
+      "icon": "/icons/synergies/ue452-5fc17f6ffba9.svg"
+    },
+    {
+      "id": "starlord_kittypryde_05",
+      "name": "PRIDE Lv. 3",
+      "texture": "",
+      "icon": "/icons/synergies/ue452-5fc17f6ffba9.svg"
+    },
+    {
+      "id": "starlord_kittypryde_06",
+      "name": "IT'S COMPLICATED Lv. 1",
+      "texture": "N",
+      "icon": "/icons/synergies/u4e-ed4240b5706b.svg"
+    },
+    {
+      "id": "starlord_kittypryde_07",
+      "name": "IT'S COMPLICATED Lv. 2",
+      "texture": "N",
+      "icon": "/icons/synergies/u4e-ed4240b5706b.svg"
+    },
+    {
+      "id": "starlord_kittypryde_08",
+      "name": "IT'S COMPLICATED Lv. 3",
+      "texture": "N",
+      "icon": "/icons/synergies/u4e-ed4240b5706b.svg"
+    },
+    {
+      "id": "starlord_kittypryde_09",
+      "name": "FRIENDS Lv. 1",
+      "texture": "a",
+      "icon": "/icons/synergies/u61-06df39376e8c.svg"
+    },
+    {
+      "id": "starlord_kittypryde_10",
+      "name": "FRIENDS Lv. 2",
+      "texture": "a",
+      "icon": "/icons/synergies/u61-06df39376e8c.svg"
+    },
+    {
+      "id": "starlord_kittypryde_11",
+      "name": "FRIENDS Lv. 3",
+      "texture": "a",
+      "icon": "/icons/synergies/u61-06df39376e8c.svg"
+    },
+    {
+      "id": "starlord_kittypryde_12",
+      "name": "TEAMMATES Lv. 1",
+      "texture": "B",
+      "icon": "/icons/synergies/u42-091dd1200c74.svg"
+    },
+    {
+      "id": "starlord_kittypryde_13",
+      "name": "TEAMMATES Lv. 2",
+      "texture": "B",
+      "icon": "/icons/synergies/u42-091dd1200c74.svg"
+    },
+    {
+      "id": "starlord_kittypryde_14",
+      "name": "TEAMMATES Lv. 3",
+      "texture": "B",
+      "icon": "/icons/synergies/u42-091dd1200c74.svg"
+    }
+  ]
+}

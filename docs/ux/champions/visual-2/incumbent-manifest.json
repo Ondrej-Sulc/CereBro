@@ -1,0 +1,21 @@
+﻿{
+    "description":  "User-approved first visual pass",
+    "files":  [
+                  {
+                      "sha256":  "d5329d00b40a36b30921321e3a15edbeef7f1bd001de7c3c92ee04dbb8f29670",
+                      "path":  "web/src/app/champions/[slug]/champion-details-client.tsx"
+                  },
+                  {
+                      "sha256":  "54849680b65f43e4c8248c48cce572779a34e7a7075249edf31ece32eee2415c",
+                      "path":  "web/src/app/champions/[slug]/champion-dossier.module.css"
+                  },
+                  {
+                      "sha256":  "063a1c86a94d4ad46e7871a10a277c1eecfb0b214f63741a2350a66134a99309",
+                      "path":  "web/src/app/champions/[slug]/champion-ability-reader.tsx"
+                  },
+                  {
+                      "sha256":  "53532be79c35c674761bad20d36cd1344cbc7492222e4de788c0659ed2edeeee",
+                      "path":  "web/src/app/champions/[slug]/champion-synergies-panel.tsx"
+                  }
+              ]
+}

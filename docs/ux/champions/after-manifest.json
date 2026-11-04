@@ -1,0 +1,80 @@
+{
+  "baseRevision": "eef079255376a0905913442568b5a71ab1804ec1",
+  "state": "uncommitted candidate",
+  "productFiles": [
+    {
+      "path": "web/src/app/champions/[slug]/champion-details-client.tsx",
+      "sha256": "5002603e87f6bf3db454516d202b2514a0c7fb237ba7d176199ee131ec70885c"
+    },
+    {
+      "path": "web/src/app/champions/[slug]/champion-kit-overview.tsx",
+      "sha256": "ce69899b4d538d8812e617bd6189de1e809f52b851d8356da854779a62397e1a"
+    },
+    {
+      "path": "web/src/app/champions/[slug]/champion-ability-reader.tsx",
+      "sha256": "1e84a25783373f97020f6009a6a2acc480f5a947ca14a9d1b0386edd797e11fa"
+    },
+    {
+      "path": "web/src/app/champions/[slug]/champion-synergies-panel.tsx",
+      "sha256": "5c1e2f17191a73180817702a9da58830309751ac1871b478989d36023709d16f"
+    },
+    {
+      "path": "web/src/app/champions/[slug]/champion-dossier.module.css",
+      "sha256": "eb037a9d1e8028b7afacb685a990005d4666f5ac0e6e290d1ba885ebd4c125f3"
+    },
+    {
+      "path": "web/src/lib/champion-page-navigation.ts",
+      "sha256": "24d6c5fa80ae169a15f8262c07051159991a049d7241455dce7e6b5b3f8b4dcb"
+    },
+    {
+      "path": "web/src/app/champions/[slug]/champion-ability-reader.test.tsx",
+      "sha256": "3d82abb8516989ecfdbc15820a904ca33b87d7cf425638078683cf4109346105"
+    }
+  ],
+  "screenshots": [
+    {
+      "path": "after/01-desktop-landing-final.png",
+      "sha256": "33aeb68d2b78a1211133b18a1c0f8ed2b08688c2871783fa2d1321b25081f2e8"
+    },
+    {
+      "path": "after/01-desktop-landing.png",
+      "sha256": "19934eacae1c617c834df579c82b56d492303885418a33e94d8412a3d2b6a04e"
+    },
+    {
+      "path": "after/04-desktop-scoped-search.png",
+      "sha256": "23513dda8012dd5fddddf2248cc15c48ef85af9a77ecd4af4c4ebdcc8799cc3f"
+    },
+    {
+      "path": "after/06-desktop-stats.png",
+      "sha256": "edad12cfd868cdde56e0b5a3157adb5a96df9f714b8c557db9fdd6a5e5c99f5d"
+    },
+    {
+      "path": "after/07-mobile-landing.png",
+      "sha256": "079432eb0deb41db5bb96ef4379271e02743ca8ae238115268fdc859353700ce"
+    },
+    {
+      "path": "after/08-mobile-overview-final.png",
+      "sha256": "1b0fa3dca4c0ef7c111bf1276f8990a06d197533bf43aad0108ee6a52cd9cb84"
+    },
+    {
+      "path": "after/08-mobile-overview.png",
+      "sha256": "ff8d2ed9181fab5c38e22f9cfb852bb7fea31254a82c8dcbe7f3d6e70055d506"
+    },
+    {
+      "path": "after/11-small-mobile-landing.png",
+      "sha256": "c3644d333fddde79924b2210d23f2ce41079a06007e4b7dcee9b870e7ae17c84"
+    },
+    {
+      "path": "after/12-mobile-inflicts-jump.png",
+      "sha256": "c84946037c538c30bb56eecd3c76f99b4dad279224de3f9a73e38ec3a903e334"
+    },
+    {
+      "path": "after/13-long-name-320.png",
+      "sha256": "5f36149e327cea4f268fa02dbf62bad3b2d5d6038faec6c01ad69790fe9d66a5"
+    },
+    {
+      "path": "after/14-sparse-kit-320.png",
+      "sha256": "fc98c66841017b5be3f57f0112b794bf26aa9ac59562942b18294f233771b5e1"
+    }
+  ]
+}

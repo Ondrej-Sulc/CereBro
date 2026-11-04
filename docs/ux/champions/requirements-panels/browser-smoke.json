@@ -1,0 +1,336 @@
+{
+  "escapeFromPartnerLink": true,
+  "fullNameNavigation": true,
+  "expanderTooltip": true,
+  "sharedHint": true,
+  "mobileDensity": {
+    "before": 877,
+    "after": 877,
+    "visibleBefore": 4,
+    "visibleAfter": 4
+  },
+  "semanticCases": 10,
+  "layouts": [
+    {
+      "slug": "star-lord-kitty-pryde",
+      "width": 320,
+      "documentWidth": 320,
+      "badControls": [],
+      "tinyNames": [],
+      "unnamedLinks": 0,
+      "missingIcons": 0,
+      "smallText": 0,
+      "targetsTooSmall": 0,
+      "expanded": {
+        "documentWidth": 320,
+        "rows": 4,
+        "clipped": [],
+        "smallTargets": 0
+      }
+    },
+    {
+      "slug": "absorbing-man",
+      "width": 320,
+      "documentWidth": 320,
+      "badControls": [],
+      "tinyNames": [],
+      "unnamedLinks": 0,
+      "missingIcons": 0,
+      "smallText": 0,
+      "targetsTooSmall": 0,
+      "expanded": {
+        "documentWidth": 320,
+        "rows": 5,
+        "clipped": [],
+        "smallTargets": 0
+      }
+    },
+    {
+      "slug": "hulk-ragnarok",
+      "width": 320,
+      "documentWidth": 320,
+      "badControls": [],
+      "tinyNames": [],
+      "unnamedLinks": 0,
+      "missingIcons": 0,
+      "smallText": 0,
+      "targetsTooSmall": 0,
+      "expanded": {
+        "documentWidth": 320,
+        "rows": 1,
+        "clipped": [],
+        "smallTargets": 0
+      }
+    },
+    {
+      "slug": "star-lord-kitty-pryde",
+      "width": 390,
+      "documentWidth": 390,
+      "badControls": [],
+      "tinyNames": [],
+      "unnamedLinks": 0,
+      "missingIcons": 0,
+      "smallText": 0,
+      "targetsTooSmall": 0,
+      "expanded": {
+        "documentWidth": 390,
+        "rows": 4,
+        "clipped": [],
+        "smallTargets": 0
+      }
+    },
+    {
+      "slug": "absorbing-man",
+      "width": 390,
+      "documentWidth": 390,
+      "badControls": [],
+      "tinyNames": [],
+      "unnamedLinks": 0,
+      "missingIcons": 0,
+      "smallText": 0,
+      "targetsTooSmall": 0,
+      "expanded": {
+        "documentWidth": 390,
+        "rows": 5,
+        "clipped": [],
+        "smallTargets": 0
+      }
+    },
+    {
+      "slug": "hulk-ragnarok",
+      "width": 390,
+      "documentWidth": 390,
+      "badControls": [],
+      "tinyNames": [],
+      "unnamedLinks": 0,
+      "missingIcons": 0,
+      "smallText": 0,
+      "targetsTooSmall": 0,
+      "expanded": {
+        "documentWidth": 390,
+        "rows": 1,
+        "clipped": [],
+        "smallTargets": 0
+      }
+    },
+    {
+      "slug": "star-lord-kitty-pryde",
+      "width": 640,
+      "documentWidth": 640,
+      "badControls": [],
+      "tinyNames": [],
+      "unnamedLinks": 0,
+      "missingIcons": 0,
+      "smallText": 0,
+      "targetsTooSmall": 0,
+      "expanded": {
+        "documentWidth": 640,
+        "rows": 4,
+        "clipped": [],
+        "smallTargets": 0
+      }
+    },
+    {
+      "slug": "absorbing-man",
+      "width": 640,
+      "documentWidth": 640,
+      "badControls": [],
+      "tinyNames": [],
+      "unnamedLinks": 0,
+      "missingIcons": 0,
+      "smallText": 0,
+      "targetsTooSmall": 0,
+      "expanded": {
+        "documentWidth": 640,
+        "rows": 5,
+        "clipped": [],
+        "smallTargets": 0
+      }
+    },
+    {
+      "slug": "hulk-ragnarok",
+      "width": 640,
+      "documentWidth": 640,
+      "badControls": [],
+      "tinyNames": [],
+      "unnamedLinks": 0,
+      "missingIcons": 0,
+      "smallText": 0,
+      "targetsTooSmall": 0,
+      "expanded": {
+        "documentWidth": 640,
+        "rows": 1,
+        "clipped": [],
+        "smallTargets": 0
+      }
+    },
+    {
+      "slug": "star-lord-kitty-pryde",
+      "width": 768,
+      "documentWidth": 768,
+      "badControls": [],
+      "tinyNames": [],
+      "unnamedLinks": 0,
+      "missingIcons": 0,
+      "smallText": 0,
+      "targetsTooSmall": 0,
+      "expanded": {
+        "documentWidth": 768,
+        "rows": 4,
+        "clipped": [],
+        "smallTargets": 0
+      }
+    },
+    {
+      "slug": "absorbing-man",
+      "width": 768,
+      "documentWidth": 768,
+      "badControls": [],
+      "tinyNames": [],
+      "unnamedLinks": 0,
+      "missingIcons": 0,
+      "smallText": 0,
+      "targetsTooSmall": 0,
+      "expanded": {
+        "documentWidth": 768,
+        "rows": 5,
+        "clipped": [],
+        "smallTargets": 0
+      }
+    },
+    {
+      "slug": "hulk-ragnarok",
+      "width": 768,
+      "documentWidth": 768,
+      "badControls": [],
+      "tinyNames": [],
+      "unnamedLinks": 0,
+      "missingIcons": 0,
+      "smallText": 0,
+      "targetsTooSmall": 0,
+      "expanded": {
+        "documentWidth": 768,
+        "rows": 1,
+        "clipped": [],
+        "smallTargets": 0
+      }
+    },
+    {
+      "slug": "star-lord-kitty-pryde",
+      "width": 1024,
+      "documentWidth": 1024,
+      "badControls": [],
+      "tinyNames": [],
+      "unnamedLinks": 0,
+      "missingIcons": 0,
+      "smallText": 0,
+      "targetsTooSmall": 0,
+      "expanded": {
+        "documentWidth": 1024,
+        "rows": 4,
+        "clipped": [],
+        "smallTargets": 0
+      }
+    },
+    {
+      "slug": "absorbing-man",
+      "width": 1024,
+      "documentWidth": 1024,
+      "badControls": [],
+      "tinyNames": [],
+      "unnamedLinks": 0,
+      "missingIcons": 0,
+      "smallText": 0,
+      "targetsTooSmall": 0,
+      "expanded": {
+        "documentWidth": 1024,
+        "rows": 5,
+        "clipped": [],
+        "smallTargets": 0
+      }
+    },
+    {
+      "slug": "hulk-ragnarok",
+      "width": 1024,
+      "documentWidth": 1024,
+      "badControls": [],
+      "tinyNames": [],
+      "unnamedLinks": 0,
+      "missingIcons": 0,
+      "smallText": 0,
+      "targetsTooSmall": 0,
+      "expanded": {
+        "documentWidth": 1024,
+        "rows": 1,
+        "clipped": [],
+        "smallTargets": 0
+      }
+    },
+    {
+      "slug": "star-lord-kitty-pryde",
+      "width": 1536,
+      "documentWidth": 1536,
+      "badControls": [],
+      "tinyNames": [],
+      "unnamedLinks": 0,
+      "missingIcons": 0,
+      "smallText": 0,
+      "targetsTooSmall": 0,
+      "expanded": {
+        "documentWidth": 1536,
+        "rows": 4,
+        "clipped": [],
+        "smallTargets": 0
+      }
+    },
+    {
+      "slug": "absorbing-man",
+      "width": 1536,
+      "documentWidth": 1536,
+      "badControls": [],
+      "tinyNames": [],
+      "unnamedLinks": 0,
+      "missingIcons": 0,
+      "smallText": 0,
+      "targetsTooSmall": 0,
+      "expanded": {
+        "documentWidth": 1536,
+        "rows": 5,
+        "clipped": [],
+        "smallTargets": 0
+      }
+    },
+    {
+      "slug": "hulk-ragnarok",
+      "width": 1536,
+      "documentWidth": 1536,
+      "badControls": [],
+      "tinyNames": [],
+      "unnamedLinks": 0,
+      "missingIcons": 0,
+      "smallText": 0,
+      "targetsTooSmall": 0,
+      "expanded": {
+        "documentWidth": 1536,
+        "rows": 1,
+        "clipped": [],
+        "smallTargets": 0
+      }
+    }
+  ],
+  "desktopDensity": {
+    "before": 521,
+    "after": 521,
+    "allSixVisible": true
+  },
+  "keyboardNamesAndStars": true,
+  "portraitFocusTooltip": "Angela\n\nSynergy available at 2–7★",
+  "touchNamesAndStars": true,
+  "alias": {
+    "id": "champion-synergy-comp_009",
+    "top": 228.75,
+    "barBottom": 204.390625,
+    "selected": "true",
+    "targeted": "true"
+  }
+}

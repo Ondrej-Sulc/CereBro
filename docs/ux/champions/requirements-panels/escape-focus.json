@@ -1,0 +1,56 @@
+[
+  {
+    "slug": "star-lord-kitty-pryde",
+    "width": 320,
+    "top": 195.59375,
+    "bottom": 235.59375,
+    "barBottom": 172,
+    "margin": "196px",
+    "expanded": "false"
+  },
+  {
+    "slug": "hulk-ragnarok",
+    "width": 320,
+    "top": 196.171875,
+    "bottom": 236.171875,
+    "barBottom": 172,
+    "margin": "196px",
+    "expanded": "false"
+  },
+  {
+    "slug": "star-lord-kitty-pryde",
+    "width": 390,
+    "top": 196.34375,
+    "bottom": 236.34375,
+    "barBottom": 172,
+    "margin": "196px",
+    "expanded": "false"
+  },
+  {
+    "slug": "hulk-ragnarok",
+    "width": 390,
+    "top": 196.40625,
+    "bottom": 236.40625,
+    "barBottom": 172,
+    "margin": "196px",
+    "expanded": "false"
+  },
+  {
+    "slug": "star-lord-kitty-pryde",
+    "width": 1280,
+    "top": 228.75,
+    "bottom": 260.75,
+    "barBottom": 204.390625,
+    "margin": "228.391px",
+    "expanded": "false"
+  },
+  {
+    "slug": "hulk-ragnarok",
+    "width": 1280,
+    "top": 228.75,
+    "bottom": 260.75,
+    "barBottom": 204.390625,
+    "margin": "228.391px",
+    "expanded": "false"
+  }
+]

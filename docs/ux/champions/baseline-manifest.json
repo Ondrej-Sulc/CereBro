@@ -1,0 +1,63 @@
+{
+  "date": "2026-11-04",
+  "productRevision": "eef079255376a0905913442568b5a71ab1804ec1",
+  "candidate": null,
+  "evidence": "evidence.md",
+  "screenshots": [
+    {
+      "path": "baseline/01-desktop-landing.png",
+      "bytes": 632931,
+      "sha256": "b831adcd9499d8b72918a0e18730aec1880403e75a18db20b2c2e299d13fdae5"
+    },
+    {
+      "path": "baseline/02-desktop-overview.png",
+      "bytes": 168950,
+      "sha256": "31f72deaa16f833cbc274b5550b0ef3abcad73003f299bffb797ebf6d4fdc40a"
+    },
+    {
+      "path": "baseline/03-desktop-abilities.png",
+      "bytes": 135313,
+      "sha256": "cb8cfb7a93291ddac56e5d59d5752d064c95cd8c672a98e04c3b094b6861ce48"
+    },
+    {
+      "path": "baseline/04-desktop-scoped-search.png",
+      "bytes": 71145,
+      "sha256": "84260432ba82857c02463c4d0716ef7047228b68b5d8659b46d5affd712bccb6"
+    },
+    {
+      "path": "baseline/05-desktop-synergies.png",
+      "bytes": 117986,
+      "sha256": "3efa633af36e860e39b1872f0607d153ed3024ecb141fe57f6ff9d1f4ba28a82"
+    },
+    {
+      "path": "baseline/06-desktop-stats.png",
+      "bytes": 183603,
+      "sha256": "b1d0e3e25b0f79ed90e0404231acd48af1ba66686270793cc2b57ffb954b03d1"
+    },
+    {
+      "path": "baseline/07-mobile-landing.png",
+      "bytes": 240901,
+      "sha256": "c05103169172b6b0dad513b807389db223f548269dc072289bd935be616479f0"
+    },
+    {
+      "path": "baseline/08-mobile-overview.png",
+      "bytes": 64323,
+      "sha256": "5ba524689cd26c76a5709207ea35e10f99dceb69d05c7bec3818270161453fe7"
+    },
+    {
+      "path": "baseline/09-mobile-compact.png",
+      "bytes": 99364,
+      "sha256": "6cf8d685371bdbb7cb71afb886d25a4b246624f7220fe373815b5ad14575e15a"
+    },
+    {
+      "path": "baseline/10-mobile-build.png",
+      "bytes": 101657,
+      "sha256": "01985ffcb01eddb5fd6049509c9eb06762fbe6824cea7213b8854f7ae36028d5"
+    },
+    {
+      "path": "baseline/11-small-mobile-landing.png",
+      "bytes": 166388,
+      "sha256": "96c2a4ad9c74121a47c66950bb5f8d945de0958c198a847cde999270c24e9db6"
+    }
+  ]
+}

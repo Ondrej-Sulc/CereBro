@@ -1,0 +1,17 @@
+﻿{
+    "description":  "Approved round 3 incumbent before visual pilot",
+    "files":  [
+                  {
+                      "sha256":  "1f7318e42157fd95b6b070f9eb1a0af1015b6ee34f06c00331f7fafc50e910eb",
+                      "path":  "web/src/app/champions/[slug]/champion-details-client.tsx"
+                  },
+                  {
+                      "sha256":  "eb037a9d1e8028b7afacb685a990005d4666f5ac0e6e290d1ba885ebd4c125f3",
+                      "path":  "web/src/app/champions/[slug]/champion-dossier.module.css"
+                  },
+                  {
+                      "sha256":  "ce69899b4d538d8812e617bd6189de1e809f52b851d8356da854779a62397e1a",
+                      "path":  "web/src/app/champions/[slug]/champion-kit-overview.tsx"
+                  }
+              ]
+}

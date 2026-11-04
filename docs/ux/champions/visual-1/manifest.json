@@ -1,0 +1,74 @@
+﻿{
+    "files":  [
+                  {
+                      "sha256":  "d5329d00b40a36b30921321e3a15edbeef7f1bd001de7c3c92ee04dbb8f29670",
+                      "path":  "web/src/app/champions/[slug]/champion-details-client.tsx"
+                  },
+                  {
+                      "sha256":  "54849680b65f43e4c8248c48cce572779a34e7a7075249edf31ece32eee2415c",
+                      "path":  "web/src/app/champions/[slug]/champion-dossier.module.css"
+                  },
+                  {
+                      "sha256":  "243be643c7fb3844aa23070fce350fb3e43cee81961a347ab0ec7866c66b2384",
+                      "path":  "web/src/app/champions/[slug]/champion-kit-overview.tsx"
+                  },
+                  {
+                      "sha256":  "662a5f3a017327370074796508171485213885b1f23d2a7587246c7124a1c624",
+                      "path":  "docs/ux/champions/visual-1/before/01-desktop-landing.png"
+                  },
+                  {
+                      "sha256":  "a3d968fc1bf5de965f91dc0fac656a4a07506d23a08dd346e88e51f004a84768",
+                      "path":  "docs/ux/champions/visual-1/before/02-desktop-overview.png"
+                  },
+                  {
+                      "sha256":  "fdd4d63e0ca6058e5fcf26d033663830432be41ff7b38fdf2497e4c1aaf3dde3",
+                      "path":  "docs/ux/champions/visual-1/before/03-mobile-landing.png"
+                  },
+                  {
+                      "sha256":  "c7acb05702b8ee616be987d799bc556aac2027017609409cea4357ec7bc16a0f",
+                      "path":  "docs/ux/champions/visual-1/before/04-mobile-overview.png"
+                  },
+                  {
+                      "sha256":  "63fb36693fc2e56b97606ad1706a6aa732fbe3fcdcf1b4fc408042302756a913",
+                      "path":  "docs/ux/champions/visual-1/before/05-small-mobile.png"
+                  },
+                  {
+                      "sha256":  "4d751d28d070b07bd51656d5fce8e661743ac4ab1b99297be9491852b45fcd96",
+                      "path":  "docs/ux/champions/visual-1/before/06-long-name.png"
+                  },
+                  {
+                      "sha256":  "44323be8276bbd450000d1e563aa6e95aca07a161c45b45068564ff43ca25232",
+                      "path":  "docs/ux/champions/visual-1/before/07-sparse-overview.png"
+                  },
+                  {
+                      "sha256":  "75dd96ca33fdf0e6df7c244a78732decf1aad291da25fa057cadf810f8d7f970",
+                      "path":  "docs/ux/champions/visual-1/after/01-desktop-landing.png"
+                  },
+                  {
+                      "sha256":  "37e6e40803e840acbe800f854cd69ad78b99cc31fd25179d521eeb3aab0973f3",
+                      "path":  "docs/ux/champions/visual-1/after/02-desktop-overview.png"
+                  },
+                  {
+                      "sha256":  "d7496532c67fca6fb347e5553813ef9c7a312fb2df65ed59e7426f0b50c9baa1",
+                      "path":  "docs/ux/champions/visual-1/after/03-mobile-landing.png"
+                  },
+                  {
+                      "sha256":  "19e711706e355574890423e1bfb74ef64d7827ad8e302a78d80ce62f8a9c27e5",
+                      "path":  "docs/ux/champions/visual-1/after/04-mobile-overview.png"
+                  },
+                  {
+                      "sha256":  "f9cbb66d64db7d82422a27273dc393ed11d2a4cc186d0c006127deeffac31a0d",
+                      "path":  "docs/ux/champions/visual-1/after/05-small-mobile.png"
+                  },
+                  {
+                      "sha256":  "361f7ddbf5dadf681fa84253d50f1b3e391c36e248ebd2b59240dda5f4497a0d",
+                      "path":  "docs/ux/champions/visual-1/after/06-long-name.png"
+                  },
+                  {
+                      "sha256":  "53bab820dc07951b36b7db40cd4c870f4b508da7dc6e3c67ee0ec99bdfaedd15",
+                      "path":  "docs/ux/champions/visual-1/after/07-sparse-overview.png"
+                  }
+              ],
+    "incumbent":  "incumbent-manifest.json",
+    "state":  "local retained visual candidate"
+}

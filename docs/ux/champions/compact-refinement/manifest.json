@@ -1,0 +1,114 @@
+﻿{
+    "files":  [
+                  {
+                      "sha256":  "a125ebfce06f66488416c75ac4229825eead554fc41d90da7c1b171703a1991d",
+                      "path":  "web/src/app/champions/[slug]/champion-synergies-panel.tsx"
+                  },
+                  {
+                      "sha256":  "7caff79b8c113d3f173abf640926679b64d7aca580363604d8349e2fa0b5011e",
+                      "path":  "web/src/app/champions/[slug]/champion-dossier.module.css"
+                  },
+                  {
+                      "sha256":  "547012ec19110a10719c048fdcd3c7e324d72db09cdbe850ef64a1366edc7b08",
+                      "path":  "docs/champion-synergy-display.md"
+                  },
+                  {
+                      "sha256":  "7a99bbb095ce92fbfe194f29c482c543128b96008a8169a3e5c8f710b2711d8b",
+                      "path":  "docs/ux/champions/compact-refinement/before/01-reference-desktop.png"
+                  },
+                  {
+                      "sha256":  "03007c4a63db638a164c8f89c67077885b0ee6904e698f5911ab6bb056e81e66",
+                      "path":  "docs/ux/champions/compact-refinement/before/02-reference-mobile.png"
+                  },
+                  {
+                      "sha256":  "c3d23822f8b84114b934a3f68bb8187eeba675682973e82c6a9a79ce1d67239d",
+                      "path":  "docs/ux/champions/compact-refinement/before/03-reference-small.png"
+                  },
+                  {
+                      "sha256":  "9c73a4e7394eb50c5dae0a199c5cc5a797afa0a935889afb077eeffd616e3d51",
+                      "path":  "docs/ux/champions/compact-refinement/before/04-reference-requirements.png"
+                  },
+                  {
+                      "sha256":  "8f854311b214f7eaca5d2bd985f8ebbb4b6538da4f188e882e3f1610f43e0f37",
+                      "path":  "docs/ux/champions/compact-refinement/before/05-multiple-recipients.png"
+                  },
+                  {
+                      "sha256":  "db30e97ee9a27c2ff6040998b4bfe15858c838bd2a5fdc9d8db76e7630ab8e22",
+                      "path":  "docs/ux/champions/compact-refinement/before/06-family-desktop.png"
+                  },
+                  {
+                      "sha256":  "33909416062b442c20b74074fcb4be9dee4af3dfc118a12e67536e866ace43a9",
+                      "path":  "docs/ux/champions/compact-refinement/before/07-family-mobile.png"
+                  },
+                  {
+                      "sha256":  "64742cc620ca4bde38bc9f93ea950b6bc4897350e19cf97d0a6c9c26672196cc",
+                      "path":  "docs/ux/champions/compact-refinement/before/08-reference-wide.png"
+                  },
+                  {
+                      "sha256":  "68f7c9f21dd7896fb68b2f28a58b81d252ac499d93034fbcd4e1d64c2b9e898c",
+                      "path":  "docs/ux/champions/compact-refinement/before/09-mobile-section.png"
+                  },
+                  {
+                      "sha256":  "30682b1441ddc091948eaec61044004308f5790adeb203bcba873d98c626681d",
+                      "path":  "docs/ux/champions/compact-refinement/before/10-desktop-section.png"
+                  },
+                  {
+                      "sha256":  "2907b88ceb064793af0a5d899571728315f7f8e2d4f9f180e485cfe15ef7310c",
+                      "path":  "docs/ux/champions/compact-refinement/before/evidence.json"
+                  },
+                  {
+                      "sha256":  "e9047ace2a9392fbb8c28a9388f815aba17ad20eb23c7d1873873ae037308e19",
+                      "path":  "docs/ux/champions/compact-refinement/after/01-reference-desktop.png"
+                  },
+                  {
+                      "sha256":  "90d0ffa0c4adf10f0d4a8fb312d3c4091c6fa0dc51b65c25203fc4467283abb0",
+                      "path":  "docs/ux/champions/compact-refinement/after/02-reference-mobile.png"
+                  },
+                  {
+                      "sha256":  "39b323e8b7a108167042bd51d86146c5ae29bf48e862165ffe28f9653620cf6c",
+                      "path":  "docs/ux/champions/compact-refinement/after/03-reference-small.png"
+                  },
+                  {
+                      "sha256":  "5904406587942cfe4aa339c749fab2b8d9104205e21db4761b968d19c777ad04",
+                      "path":  "docs/ux/champions/compact-refinement/after/04-reference-requirements.png"
+                  },
+                  {
+                      "sha256":  "7356d859751ca13aa4d11cc46622431375bab0459646ed6c324e830cd27b0005",
+                      "path":  "docs/ux/champions/compact-refinement/after/05-multiple-recipients.png"
+                  },
+                  {
+                      "sha256":  "611804d1be5bfac20b9175ee77cefceeab103d7e12f662ff6ae6842ee42543b1",
+                      "path":  "docs/ux/champions/compact-refinement/after/06-family-desktop.png"
+                  },
+                  {
+                      "sha256":  "9af4f2ac73740e3e80d1f4f6018fdcbb1831be20144f24c51ebd0a4714776571",
+                      "path":  "docs/ux/champions/compact-refinement/after/07-family-mobile.png"
+                  },
+                  {
+                      "sha256":  "c008fe331938daaaa1bb69ca669e482bf283bee1562a008cb873515dd6e71c22",
+                      "path":  "docs/ux/champions/compact-refinement/after/08-reference-wide.png"
+                  },
+                  {
+                      "sha256":  "6e4f3218e62092c9b0a43798cc5202488d7fe85aacdc837d1f3bc00b316d3679",
+                      "path":  "docs/ux/champions/compact-refinement/after/09-mobile-section.png"
+                  },
+                  {
+                      "sha256":  "31beb562d92c393e92dbb4a5a3355be8b4efaf5e3f1672e98d1cda113bb2dd9b",
+                      "path":  "docs/ux/champions/compact-refinement/after/10-desktop-section.png"
+                  },
+                  {
+                      "sha256":  "e404a1ee39513367d7793cdbc3f78983d84abeaf711cedaf230147adc6f62cee",
+                      "path":  "docs/ux/champions/compact-refinement/after/evidence.json"
+                  },
+                  {
+                      "sha256":  "95d9eabbe53c5459e20f0b1724177d70932b81cdf3abce052b74a4a245715d45",
+                      "path":  "docs/ux/champions/compact-refinement/comparison.html"
+                  },
+                  {
+                      "sha256":  "7301d03ce12556fbfafb95a3de397866c8bf40f6c2075cfb882ee66e1abc94e2",
+                      "path":  "docs/ux/champions/compact-refinement/browser-smoke.json"
+                  }
+              ],
+    "incumbent":  "incumbent-manifest.json",
+    "state":  "local retained compact-row refinement"
+}

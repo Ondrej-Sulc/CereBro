@@ -1,0 +1,11 @@
+{
+  "src/domain/champion-synergies.ts": "bc54947636a9a810e010509561d77c0ba7b633eb8d8356910205c898ec7ed633",
+  "src/domain/champion-synergy-display.ts": "10de7909901411e228dca1b393a6d4eebe89785fc0fcad63be4fc9e25e3c9b76",
+  "src/domain/synergy-icons.ts": "be17dbaee56066a9e3219e1fe75a9d11e32a22eccfa20418c1c288d745a5a2f4",
+  "src/data/synergy-icons.json": "e6ffcd13a609847eef33dc5f5d65e039cf1803a80c2cea9972b08ab83f88aa17",
+  "src/scripts/extract-mcoc-synergy-icons.ts": "ba042dc35613f732ccb1f5c1e427419653c4e8c6407d5b607a15f3584314ca35",
+  "scripts/extract-mcoc-synergy-font.py": "e9c3a400339bb9a1addd2f159c836c36ea2880c5f36af970aba69047736b36b0",
+  "web/src/lib/data/champion-synergies.ts": "19c002d89d3bb417c54ac2b019231df2ab61a0f3995f7a19d694547a59e8205e",
+  "web/src/app/champions/[slug]/champion-synergies-panel.tsx": "a0f3a7721d9a7a272d2d983176a94e0d95f8a2097975f6348a6e54c2b3d1fd35",
+  "web/src/app/champions/[slug]/champion-dossier.module.css": "35c4d395bb8d0e0749e8fe63cb70185c3f16631fe1e752157b5ab246c183e30f"
+}

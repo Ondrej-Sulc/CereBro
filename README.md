@@ -50,6 +50,16 @@ Handles high-frequency user interactions, notifications, and quick data lookups.
 
 Champion pages use the Dossier artwork banner with four prominent tabs: Kit overview, Full abilities, Synergies, and Stats & attacks. Effect colors come from the imported game glossary; source conditions and required teammates are visible in the overview, with effect definitions on hover, focus, or tap. The ability reader includes chapter navigation and signature charts. Synergies follow the selected star level and can be searched by bonus, partner, or description, with partner rarity requirements on hover/focus. Build selections carry across all four tabs; the build controls collapse on narrow screens.
 
+For iterative UX/UI improvements, use the [Codex-only champion UX evaluation loop](docs/champion-ux-hill-climb.md) and its [baseline audit](docs/ux/champions/baseline.md).
+The first implementation pass includes a [before/after screenshot gallery](docs/ux/champions/comparison.html) and [review resolutions](docs/ux/champions/candidate-review.md).
+Follow-up navigation and search improvements are recorded in [round two](docs/ux/champions/round2.md).
+Signature editing and unavailable ability-link recovery complete the pilot in [round three](docs/ux/champions/round3.md).
+The next [visual pass and matched comparison previews](docs/ux/champions/visual-1/notes.md) refine hero composition, navigation and effect cards.
+The [second visual pass](docs/ux/champions/visual-2/notes.md) extends that styling to abilities and synergies and removes the extra hero wording.
+The [synergy-card pass](docs/ux/champions/visual-3/notes.md) clarifies partners, recipients, levels and star requirements, completing the visual pilot.
+The user's reference then prompted a [compact synergy-row redesign](docs/ux/champions/compact-synergies/notes.md), fitting the same six desktop synergies into 53% less list height without hiding bonus text. A [quieter follow-up](docs/ux/champions/compact-refinement/notes.md) removes repeated row wording and improves mobile density further.
+The [requirements-panel follow-up](docs/ux/champions/requirements-panels/notes.md) aligns full-name partner links and exact star ranges while preserving compact closed rows and native synergy icons.
+
 Before deploying code that reads synergies, apply the database migrations with `pnpm exec prisma migrate deploy` and generate the client with `pnpm prisma:generate`. Refresh the champion catalog first so its game IDs and obtainable rarities are current.
 
 For an agent-led promotion of the complete reviewed local champion data, use

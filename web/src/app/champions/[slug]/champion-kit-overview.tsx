@@ -1,12 +1,13 @@
 "use client"
 
-import { useEffect, useState, type ReactNode } from "react"
+import { useEffect, useState, type CSSProperties, type ReactNode } from "react"
 import { LayoutGrid, List, Shield, Sparkles, Swords } from "lucide-react"
 import { CompactEffectGrid, CompactEffectTile, ChampionEffectIcon as EffectIcon } from "@/components/champions/compact-effect-grid"
 import { EffectSources, EffectFormBadge } from "@/components/champions/effect-sources"
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip"
 import { buildChampionKitOverviewEffects, groupChampionKitAbilitiesByDirection, groupChampionKitSources, type ChampionKitEffect } from "@/lib/champion-kit"
 import { buildChampionSynergyView, type ChampionSynergyCard } from "@/lib/champion-synergies"
+import { scrollToChampionSection } from "@/lib/champion-page-navigation"
 import type { ChampionDetailsView } from "./champion-details-types"
 import styles from "./champion-dossier.module.css"
 
@@ -25,10 +26,14 @@ export function ChampionKitOverview({ view, sideContent, ...navigation }: {
 } & EffectNavigation) {
   const [display, setDisplay] = useState<KitDisplay>("detailed")
   useEffect(() => {
-    try {
-      const saved = window.localStorage.getItem(KIT_DISPLAY_STORAGE_KEY)
-      if (saved === "compact" || saved === "detailed") setDisplay(saved)
-    } catch { /* The view switch remains usable when browser storage is unavailable. */ }
+    // Restore browser-only preferences after hydration, without a synchronous effect render.
+    const frame = window.requestAnimationFrame(() => {
+      try {
+        const saved = window.localStorage.getItem(KIT_DISPLAY_STORAGE_KEY)
+        if (saved === "compact" || saved === "detailed") setDisplay(saved)
+      } catch { /* The view switch remains usable when browser storage is unavailable. */ }
+    })
+    return () => window.cancelAnimationFrame(frame)
   }, [])
   const changeDisplay = (next: KitDisplay) => {
     setDisplay(next)
@@ -44,29 +49,40 @@ export function ChampionKitOverview({ view, sideContent, ...navigation }: {
   const directionalSections = sections.filter(section => section.direction !== "UNKNOWN")
   const mainSections = directionalSections.length ? directionalSections : sections
   const otherEffects = directionalSections.length ? sections.find(section => section.direction === "UNKNOWN") : undefined
+  const jumps = [
+    { id: "champion-kit-protections", title: "Immunities & resistances", count: immunities.length },
+    ...mainSections.map(section => ({ id: `champion-kit-${section.direction.toLowerCase()}`, title: DIRECTION_SECTIONS[section.direction].title, count: section.effects.length })),
+    ...(otherEffects ? [{ id: "champion-kit-other", title: "Other effects", count: otherEffects.effects.length }] : []),
+    ...(sideContent ? [{ id: "champion-kit-duels", title: "Duel targets", count: view.champion.duels.length }] : []),
+  ]
   const shared = { view, synergyCards, display, ...navigation }
   return <>
-    <div className="mb-8 flex flex-wrap items-end justify-between gap-5">
-      <div><h2 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">Kit overview</h2><p className="mt-3 text-base leading-7 text-slate-400">{display === "compact" ? "Select an effect to explore its conditions and sources." : <>The effects in {view.champion.name}&apos;s kit, and where they come from.</>}</p></div>
+    <div className={styles.kitOverviewHeader}>
+      <h2>Kit overview</h2>
+      <p>{display === "compact" ? "Select an effect to explore its conditions and sources." : <>The effects in {view.champion.name}&apos;s kit, and where they come from.</>}</p>
       <div role="group" aria-label="Kit overview display" className={styles.kitDisplaySwitch}>
         {([{ value: "compact", label: "Compact", icon: LayoutGrid }, { value: "detailed", label: "Detailed", icon: List }] as const).map(option => <button key={option.value} type="button" aria-pressed={display === option.value} onClick={() => changeDisplay(option.value)}><option.icon aria-hidden="true" />{option.label}</button>)}
       </div>
     </div>
+    <nav aria-label="Jump to kit section" className={styles.kitJumpLinks}>
+      {jumps.map(jump => <button key={jump.id} type="button" onClick={() => scrollToChampionSection(document.getElementById(jump.id), true)}>{jump.title}<span>{jump.count}</span></button>)}
+    </nav>
     <div className={styles.kitOverview}>
     <div className={`${styles.kitEffects} ${mainSections.length > 1 ? styles.kitEffectsSplit : ""}`}>
-      {mainSections.map(section => <ChampionEffectList key={section.direction} {...DIRECTION_SECTIONS[section.direction]} effects={section.effects} {...shared} />)}
+      {mainSections.map(section => <ChampionEffectList key={section.direction} id={`champion-kit-${section.direction.toLowerCase()}`} {...DIRECTION_SECTIONS[section.direction]} effects={section.effects} {...shared} />)}
       {!sections.length && <ChampionEffectList title="Abilities" effects={[]} {...shared} />}
     </div>
     <aside className={styles.kitSidebar}>
-      <div className={styles.kitImmunities}><ChampionEffectList title="Immunities & resistances" description={immunities.some(effect => effect.type === "RESISTANCE") ? "Resistance reduces an effect; it can still apply." : undefined} effects={immunities} {...shared} /></div>
-      {otherEffects && <div className={styles.kitOtherEffects}><ChampionEffectList {...DIRECTION_SECTIONS.UNKNOWN} effects={otherEffects.effects} {...shared} /></div>}
-      {sideContent && <div className={styles.kitSideContent}>{sideContent}</div>}
+      <div className={styles.kitImmunities}><ChampionEffectList id="champion-kit-protections" title="Immunities & resistances" description={immunities.some(effect => effect.type === "RESISTANCE") ? "Resistance reduces an effect; it can still apply." : undefined} effects={immunities} {...shared} /></div>
+      {otherEffects && <div className={styles.kitOtherEffects}><ChampionEffectList id="champion-kit-other" {...DIRECTION_SECTIONS.UNKNOWN} effects={otherEffects.effects} {...shared} /></div>}
+      {sideContent && <div id="champion-kit-duels" tabIndex={-1} className={`${styles.kitSideContent} ${styles.kitJumpTarget}`}>{sideContent}</div>}
     </aside>
     </div>
   </>
 }
 
-function ChampionEffectList({ title, description, icon, effects, view, synergyCards, display, ...navigation }: {
+function ChampionEffectList({ id, title, description, icon, effects, view, synergyCards, display, ...navigation }: {
+  id?: string
   title: string
   description?: string
   icon?: typeof Sparkles
@@ -78,7 +94,7 @@ function ChampionEffectList({ title, description, icon, effects, view, synergyCa
   const immunity = title === "Immunities & resistances"
   const Icon = icon ?? (immunity ? Shield : Sparkles)
   return (
-    <section aria-label={title} className={styles.kitEffectList} data-display={display}>
+    <section id={id} tabIndex={-1} aria-label={title} className={styles.kitEffectList} data-display={display}>
       <div className={styles.kitSectionHeader}>
         <span className={styles.kitSectionIcon}><Icon aria-hidden="true" /></span>
         <div className="min-w-0 flex-1"><h3 className="text-lg font-semibold tracking-tight text-slate-100">{title}</h3>{description && <p className="mt-0.5 text-xs leading-5 text-slate-500">{description}</p>}</div>
@@ -108,7 +124,7 @@ function EffectCard({ effect, wide, view, synergyCards, onViewAbility, onViewSyn
 } & EffectNavigation) {
   const groups = groupChampionKitSources(effect, view.descriptionView, synergyCards, sourceValueContext(view))
   return (
-    <article className={`overflow-hidden rounded-xl border border-white/[.08] bg-[#0e131c] ${wide && groups.length ? styles.kitEffectCardWithSources : ""}`}>
+    <article className={`${styles.kitEffectCard} ${wide && groups.length ? styles.kitEffectCardWithSources : ""}`} style={{ "--kit-effect-color": effect.color } as CSSProperties}>
       <EffectDefinition effect={effect} showAllForms={!groups.length} />
       <EffectSources effect={effect} groups={groups} onViewAbility={onViewAbility} onViewSynergies={onViewSynergies} />
     </article>

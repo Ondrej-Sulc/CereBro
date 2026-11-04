@@ -1,2 +1,5 @@
 # Auto detect text files and perform LF normalization
 * text=auto
+
+# Extracted icons have byte hashes in the verified source manifest.
+web/public/icons/synergies/*.svg text eol=lf
