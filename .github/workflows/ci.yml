@@ -66,6 +66,9 @@ jobs:
       - name: Build Bot (src)
         run: pnpm run build-only
 
+      - name: Verify supporter screenshot access and recurring payments
+        run: pnpm exec vitest run src/services/rosterScreenshotQuotaService.test.ts web/src/lib/support-status.test.ts web/src/lib/support-config.test.ts web/src/lib/support-donations.test.ts web/src/lib/stripe-support-invoice.test.ts web/src/app/api/support/webhook/route.test.ts --maxWorkers=1
+
       - name: Verify war map boundaries and defense planning
         run: pnpm exec vitest run src/domain/war-map.test.ts web/src/app/api/war-planning/nodes/route.test.ts web/src/app/api/war-planning/placements/route.test.ts web/src/app/planning/defense-map-actions.test.ts web/src/app/planning/defense-actions.test.ts web/src/components/war-planning/hooks/use-defense-planning.test.ts web/src/components/war-planning/hooks/use-war-planning.test.ts --maxWorkers=1
 

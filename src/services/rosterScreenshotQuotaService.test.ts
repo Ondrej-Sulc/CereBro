@@ -30,6 +30,18 @@ function inRange(date: Date, range: { gte?: Date; lt?: Date }) {
   return (!range.gte || date >= range.gte) && (!range.lt || date < range.lt);
 }
 
+type DonationWindow = {
+  createdAt?: { gte?: Date; lt?: Date };
+  stripeSubscriptionId?: { not: null };
+  stripeSubscriptionStatus?: { in: string[] };
+};
+
+function matchesDonationWindow(donation: Donation, where: DonationWindow) {
+  return (!where.createdAt || inRange(donation.createdAt, where.createdAt)) &&
+    (!where.stripeSubscriptionId || donation.stripeSubscriptionId != null) &&
+    (!where.stripeSubscriptionStatus || where.stripeSubscriptionStatus.in.includes(donation.stripeSubscriptionStatus ?? ""));
+}
+
 function matchesOr<T extends Record<string, unknown>>(row: T, ors: Array<Record<string, unknown>> | undefined) {
   if (!ors || ors.length === 0) return true;
   return ors.some((clause) =>
@@ -58,10 +70,11 @@ function createPrismaFake({
       }),
     },
     supportDonation: {
-      findFirst: async ({ where }: { where: { status: string; createdAt: { gte?: Date; lt?: Date }; OR?: Array<Record<string, unknown>> } }) =>
+      findFirst: async ({ where }: { where: DonationWindow & { status: string; OR?: Array<Record<string, unknown>>; AND?: { OR: DonationWindow[] }[] } }) =>
         donations.find((donation) =>
           donation.status === where.status &&
-          inRange(donation.createdAt, where.createdAt) &&
+          matchesDonationWindow(donation, where) &&
+          (!where.AND || where.AND.every(condition => condition.OR.some(clause => matchesDonationWindow(donation, clause)))) &&
           matchesOr(donation, where.OR)
         ) ?? null,
       findMany: async ({ where }: { where: { status: string; OR?: Array<Record<string, unknown>>; player?: { allianceId?: string | null } } }) =>
@@ -180,6 +193,80 @@ describe("roster screenshot quota", () => {
     expect(quota.allowed).toBe(true);
     expect(quota.unlimitedReason).toBe("personal_lifetime_supporter");
     expect(quota.personalLifetimeMinor).toBe(PERSONAL_LIFETIME_UNLOCK_THRESHOLD_MINOR);
+  });
+
+  it.each(["active", "trialing", "past_due"])("recognizes a personal %s subscription before this month's renewal", async subscriptionStatus => {
+    const quota = await getRosterScreenshotQuota(actor, 14, {
+      now,
+      prisma: createPrismaFake({
+        donations: [{
+          id: "subscription-initial-payment", amountMinor: 500, status: "succeeded",
+          createdAt: previousMonth, discordId: actor.discordId,
+          stripeSubscriptionId: "sub_personal", stripeSubscriptionStatus: subscriptionStatus,
+        }],
+      }),
+    });
+
+    expect(quota.allowed).toBe(true);
+    expect(quota.unlimitedReason).toBe("personal_supporter");
+    expect(quota.personalLifetimeMinor).toBe(500);
+  });
+
+  it.each(["canceled", "unpaid", "incomplete", "incomplete_expired", "paused"])("does not unlock an old subscription with status %s below the lifetime threshold", async subscriptionStatus => {
+    const quota = await getRosterScreenshotQuota(actor, 14, {
+      now,
+      prisma: createPrismaFake({ donations: [{
+        id: "old-subscription", amountMinor: 500, status: "succeeded", createdAt: previousMonth,
+        discordId: actor.discordId, stripeSubscriptionId: "sub_old", stripeSubscriptionStatus: subscriptionStatus,
+      }] }),
+    });
+    expect(quota.allowed).toBe(false);
+  });
+
+  it.each(["pending", "failed"])("does not unlock a subscription whose payment is %s", async status => {
+    const quota = await getRosterScreenshotQuota(actor, 14, {
+      now,
+      prisma: createPrismaFake({ donations: [{
+        id: "unpaid-subscription", amountMinor: 500, status, createdAt: previousMonth,
+        discordId: actor.discordId, stripeSubscriptionId: "sub_unpaid", stripeSubscriptionStatus: "active",
+      }] }),
+    });
+    expect(quota.allowed).toBe(false);
+  });
+
+  it("requires a subscription ID for an active subscription exemption", async () => {
+    const quota = await getRosterScreenshotQuota(actor, 14, {
+      now,
+      prisma: createPrismaFake({ donations: [{
+        id: "one-time-donation", amountMinor: 500, status: "succeeded", createdAt: previousMonth,
+        discordId: actor.discordId, stripeSubscriptionId: null, stripeSubscriptionStatus: "active",
+      }] }),
+    });
+    expect(quota.allowed).toBe(false);
+  });
+
+  it("does not apply another account's active subscription", async () => {
+    const quota = await getRosterScreenshotQuota(actor, 14, {
+      now,
+      prisma: createPrismaFake({ donations: [{
+        id: "other-donation", amountMinor: 500, status: "succeeded", createdAt: previousMonth,
+        discordId: "other-discord", stripeSubscriptionId: "sub_other", stripeSubscriptionStatus: "active",
+      }] }),
+    });
+    expect(quota.allowed).toBe(false);
+  });
+
+  it("recognizes support through the uploader's account after switching profiles", async () => {
+    const quota = await getRosterScreenshotQuota(actor, 14, {
+      now,
+      prisma: createPrismaFake({ donations: [{
+        id: "previous-profile-donation", amountMinor: 500, status: "succeeded", createdAt: previousMonth,
+        playerId: "other-profile", botUserId: actor.botUserId,
+        stripeSubscriptionId: "sub_account", stripeSubscriptionStatus: "active",
+      }] }),
+    });
+    expect(quota.allowed).toBe(true);
+    expect(quota.unlimitedReason).toBe("personal_supporter");
   });
 
   it("does not bypass the limit for less than 10 EUR lifetime personal donations without current-month support", async () => {
