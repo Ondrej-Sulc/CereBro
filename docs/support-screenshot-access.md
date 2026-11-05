@@ -2,7 +2,8 @@
 
 Investigated on 5 November 2026 against production and the latest `main`.
 Database inspection ran inside a read-only transaction. Stripe access used GET
-requests only. No production payment records or webhook settings were changed.
+requests only. No production payment records or webhook settings were changed
+during that initial investigation.
 
 ## Confirmed causes
 
@@ -72,4 +73,17 @@ and [Stripe event recovery](https://docs.stripe.com/events/manage-webhook-endpoi
 - Bot TypeScript build passed.
 - Production Next.js build passed.
 - The before/after read-only evaluation reproduced and corrected the reported
-  batch rejection. Deployment and production billing repair remain pending.
+  batch rejection.
+
+## Authorized billing reconciliation
+
+On 5 November, the deployment follow-up enabled the three missing event types
+while preserving the existing endpoint and checkout events. It refreshed 18
+stored rows across 17 subscriptions and imported 74 verified paid renewals with
+their original payment dates. Existing identity links and suppression decisions
+were preserved. The initial checkout invoice was excluded from renewal imports.
+
+The fresh follow-up audit covered all 31 known subscriptions and found no missing
+renewals, stale statuses or missing webhook event types. The reported supporter
+now has all five payments credited and passes the 14-image allowance check.
+The repair performs no payment creation or subscription cancellation operations.
