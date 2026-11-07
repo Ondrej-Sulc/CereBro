@@ -22,6 +22,10 @@ MCOC Prestige Projection is the domain rule set for turning champion prestige en
 
 It owns max signature levels, 7-star ascension scaling, game-display rounding, and generated prestige points used by roster insights, Champion Details, and roster edit previews.
 
+Seven-star prestige compounds by 8% per ascension level from the base signature value, with one final nearest-ten display rounding. Exact champion/star rules bound new builds separately from historical owned observations and combat stat modifiers. See `docs/champion-prestige.md` for the gameplay regression, normalization contract and evidence limits.
+
+Champion combat projections compose the exact recorded per-step Health and Attack bonuses independently into effective multipliers, then round the base stat times that multiplier once to an integer. `getAscensionEffects` exposes `healthMultiplier`/`attackMultiplier`; raw tier `healthBonus`/`attackBonus` values remain incremental. CR and Might Gain stay additive (current seven-star tiers: +15 CR each, Might only at A1); other imported ratings receive no inferred boost. See `docs/champion-combat-ascension.md` for the publisher correction, base-stat provenance and rounding limits.
+
 ## Roster Prestige Insights
 
 Roster Prestige Insights is the domain rule set for turning a player's roster and MCOC Prestige Projection data into Top 30 account prestige, rank-up opportunities, and signature stone allocation suggestions.
@@ -67,6 +71,28 @@ Champion Details offers only obtainable star levels with imported stats and defa
 The full Synergies tab groups catalog entries independently of effect-source popovers. Equal names/levels, rendered bonus text, stacking flags, partner identities and catalog member identities share one bonus row with visible star availability. Explicit levels of the same named family, members, partners and stacking flag share a card with one partner header and distinct rows in numeric level order. Every row retains its complete bonus text, recipients, glossary semantics and owner/partner rarity pairs; a single partner's stars are combined only for the same current-champion stars and identical bonus. Every original catalog ID remains a navigation target for its level row, and the raw catalog view used for source matching is unchanged. See `docs/champion-synergy-display.md`.
 
 Game Synergies are independent of manually curated Champion Ability Synergy links. Importing a validated full snapshot atomically replaces only the game synergy tables. Grouped activation rules are preserved in the source format but blocked from import until their semantics are supported.
+
+## Game Crystals
+
+Game Crystals are recorded possible reward definitions, independent of live store availability, drop rates and a champion's obtainable rarity list. Crystal names are display labels; exact source IDs and referenced reward categories identify pools. Direct `hero` rewards and verified First Edition `hcos` rewards join exact blueprint IDs to Champion.gameId and an explicit 1–7 star rarity. Cosmetic rewards preserve their original source data and tier identity; the UI shows the cosmetic only at its recorded star level. Unknown reward types/cosmetic formats stop extraction for review. Carousel/featured previews, shards, nested crystals and bonus rewards do not establish direct membership. Missing evidence does not prove unobtainability.
+
+The versioned shared catalog preserves provenance hashes, capture time, crystal/category/blueprint identities, selection metadata and exact primary/banner artwork references. Crystal banners are the champion montages from `_backgroundImage`, distinct from holograms. Artwork is exported without recoloring or redrawing and published through the same immutable Google Cloud Storage pipeline as champion and relic images, under role-specific crystal prefixes. The verified manifest binds the same gacha snapshot; missing art remains a neutral fallback. Champion Details groups explicitly mapped variants only when their complete pools and opening rules agree, retaining individual source definitions and rarity availability. It prioritises main pools, keeps champion-page cards focused on their crystal icon and opening information, and loads the wider recorded catalog for the selected star level. Promotional banners remain on crystal detail pages. Main-pool priority is editorial, not evidence of current sale status. See `docs/champion-crystals.md` for extraction, validation and refresh.
+
+Crystal browsing is public and independent of roster ownership. Browse crystals defaults to main pools; All recorded includes champion families, mixed openings and definitions without direct champions in one filtered grid. Reward-type filters combine with categories/search/sorting; materials clear champion stars. The old full-catalog list redirects into All recorded. Stable `/crystals/[sourceId]` routes preserve the exact opening while grouping shared champion pools for discovery. A single page shows source-matched rates, the complete filtered champion portrait grid, other possible rewards and conditional bonuses/Grace rules. Champion filters never renormalize rates or alter other outcomes. Standard/Nexus/Epoch links retain exact opening identities even when champion membership matches; legacy reward-detail URLs redirect to the same unified route. Source-only names come from BCG Character localization, while portraits and champion links join the website catalog by gameId. Reward artwork uses exact type/data bindings in a separate source-bound manifest, with real game textures in immutable GCS objects and neutral missing-art fallbacks. Missing-champion/owned filters are not implemented yet.
+
+Recorded crystals have shared editorial browsing categories for class pools, featured rotations, champion spotlights, mode rewards, login/daily rewards, year collections, themed events and other definitions. These organize the catalog and champion archives without changing reward identities or inferring sale status. Separately extracted box-promotion champions support spotlight classification; they never establish possible reward membership or odds. Counts respect the selected search/star filters, and source edition labels distinguish recorded versions and calendar entries.
+
+## Champion Acquisition
+
+Crystal Availability is separate from contents, odds and named editions. Exact
+opening reviews distinguish recurring pools, published current/upcoming/past
+event windows and unverified sources. A current event association is not a live
+stock assertion, and a past event does not make owned crystals unusable. Shared
+champion pools do not transfer availability between opening variants. Browse
+filters match and link to exact openings; source reviews and date evaluation
+remain on the server. See docs/crystal-availability.md.
+
+Champion Acquisition records reviewed ways to obtain a champion beyond direct crystal drops: quest rewards, event milestones, matching-star piece exchanges, store purchases and giveaways. Exact Champion.gameId plus explicit star levels identify each route; missing routes do not establish unobtainability or change Champion.obtainable. Announcements and exact in-game item descriptions are retained as separate evidence, with review dates and source links. Dated windows distinguish past, upcoming and within-window records without claiming a live offer is available. Undated piece/store routes retain variable availability. The champion's How to obtain tab combines a small per-champion projection with existing crystal pools; legacy tab=crystals URLs and archive loading remain valid. See docs/champion-acquisition.md.
 
 ## Game Relics
 

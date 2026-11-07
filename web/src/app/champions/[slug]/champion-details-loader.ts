@@ -8,6 +8,9 @@ import { collectSynergyGlossaryIds } from "@/lib/champion-synergies"
 import { getObtainableChampionStats } from "@/lib/champion-obtainable"
 import { getCurrentOverviewSummary } from "@cerebro/core/domain/champion-overview-summary"
 import { getChampionSynergies } from "@/lib/data/champion-synergies"
+import { getChampionCrystalSummary } from "@cerebro/core/data/game-crystals"
+import { getChampionAcquisition } from "@cerebro/core/data/champion-acquisition"
+import { getChampionAscensionRules } from "@cerebro/core/data/game-ascension"
 
 const CHAMPION_DETAILS_TAG = "champion-details"
 const CHAMPION_DETAILS_SHARED_TAG = "champion-details-shared"
@@ -233,6 +236,9 @@ export async function loadChampionDetails(slug: string) {
       ...champion,
       stats: getObtainableChampionStats(champion),
       gameSynergies,
+      crystalAvailability: getChampionCrystalSummary(champion.gameId),
+      acquisition: getChampionAcquisition(champion.gameId),
+      ascensionRules: getChampionAscensionRules(champion.gameId),
       abilities: attachResistances(champion.abilities, resistanceIndex).map(link => ({
         ...link,
         overviewSummary: (() => {

@@ -1,0 +1,102 @@
+.hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 44%);
+  align-items: center;
+  gap: 24px;
+  padding: 24px 30px;
+  background: radial-gradient(ellipse at 86% 40%, #7060bd22, transparent 45%), radial-gradient(ellipse at 100% 95%, #287f8a20, transparent 45%), linear-gradient(112deg, #142037, #10192d 54%, #0b1422);
+}
+.copy { min-width: 0; }
+.selectedCopy { min-width: 0; }
+.finderLabel { margin-bottom: 10px; color: #a2b6d2; font-size: 12px; line-height: 20px; }
+.selectedCopy > h1 { font-size: clamp(28px, 3.2vw, 40px); line-height: 1.15; overflow-wrap: anywhere; text-wrap: balance; }
+.identityContext { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 20px; margin-top: 12px; color: #b5c5de; font-size: 13px; line-height: 22px; }
+.identityContext > span { white-space: nowrap; }
+.identityContext a { display: inline-flex; align-items: center; gap: 5px; min-height: 36px; color: #c2d4f5; }
+.identityContext a:hover { color: #fff; }
+.identityContext a:focus-visible { outline: 2px solid #b8c9f6; outline-offset: 3px; border-radius: 3px; }
+.identityContext svg { width: 14px; height: 14px; }
+.copy > p:last-child { max-width: 60ch; margin-top: 12px; color: #9eb1ce; font-size: 14px; line-height: 23px; }
+.artwork { position: relative; isolation: isolate; width: 100%; max-width: 540px; height: 168px; justify-self: end; pointer-events: none; user-select: none; }
+.artwork::before { position: absolute; inset: -8% 0; z-index: -1; background: radial-gradient(ellipse at 51% 42%, #9276e32c, transparent 62%), radial-gradient(ellipse at 75% 70%, #56b7c917, transparent 55%); content: ""; }
+.orbit { position: absolute; inset: 65% 2% 0; border-bottom: 1px solid #a8b8ee17; border-radius: 50%; background: radial-gradient(ellipse, #03081755, transparent 68%); }
+.portraits { position: absolute; inset: 0; }
+.card { position: absolute; top: var(--top); left: var(--left); z-index: var(--layer); width: var(--size); aspect-ratio: 1; padding: 3px; border: 1px solid color-mix(in srgb, var(--class-accent) 30%, #526383); border-radius: 12px; background: linear-gradient(145deg, #304259, #111d30 65%); box-shadow: 0 10px 18px -7px #030817b3, inset 0 1px 0 #dce7ff1f; transform: rotate(var(--tilt)); }
+.card::after { position: absolute; inset: 0; border-radius: inherit; background: linear-gradient(145deg, #dce7ff0a, transparent 45%); box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--class-accent) 30%, transparent); content: ""; }
+.card img { display: block; width: 100%; height: 100%; border-radius: 8px; object-fit: cover; opacity: var(--portrait-opacity, 1); }
+/* A shallow arc leaves faces readable, with one forward portrait at its centre. */
+.card[data-portrait-slot="0"] { --top: 43%; --left: 1%; --size: 17%; --tilt: -8deg; --layer: 1; --portrait-opacity: .84; }
+.card[data-portrait-slot="1"] { --top: 23%; --left: 17%; --size: 22%; --tilt: -4deg; --layer: 2; --portrait-opacity: .94; }
+.card[data-portrait-slot="2"] { --top: 8%; --left: 37%; --size: 28%; --tilt: 0deg; --layer: 4; box-shadow: 0 14px 24px -8px #030817cc, 0 0 22px -9px color-mix(in srgb, var(--class-accent) 30%, transparent), inset 0 1px 0 #dce7ff2b; }
+.card[data-portrait-slot="3"] { --top: 26%; --left: 63%; --size: 22%; --tilt: 4deg; --layer: 3; --portrait-opacity: .94; }
+.card[data-portrait-slot="4"] { --top: 46%; --left: 82%; --size: 17%; --tilt: 8deg; --layer: 1; --portrait-opacity: .84; }
+.motif { position: absolute; z-index: 0; max-width: 104px; opacity: .8; transform: rotate(var(--tilt, 0deg)); }
+.motif img { display: block; width: 100%; height: auto; object-fit: contain; filter: drop-shadow(0 5px 8px #03081780); }
+.motif[data-finder-motif="crystal"] { --tilt: -8deg; left: 9%; top: 2%; width: 14%; }
+.motif[data-finder-motif="token"] { --tilt: 8deg; left: 85%; top: 8%; width: 11%; }
+.motif[data-finder-motif="piece"] { --tilt: -5deg; left: 20%; top: 55%; width: 14%; opacity: .95; }
+.artwork[data-finder-artwork="selected"] .card { --top: 5%; --left: 36%; --size: 31%; --tilt: -2deg; --portrait-opacity: 1; --layer: 4; box-shadow: 0 14px 24px -8px #030817cc, 0 0 28px -12px var(--class-accent); }
+.artwork[data-finder-artwork="selected"] .motif[data-finder-motif="crystal"] { left: 15%; top: 12%; width: 20%; }
+.artwork[data-finder-artwork="selected"] .motif[data-finder-motif="token"] { left: 71%; top: 41%; width: 16%; }
+.artwork[data-finder-artwork="fallback"] .motif[data-finder-motif="crystal"] { left: 36%; top: 0; width: 30%; max-width: 168px; opacity: 1; }
+.artwork[data-finder-artwork="fallback"] .motif:not([data-finder-motif="crystal"]) { display: none; }
+.placeholder { position: absolute; width: min(80px, 70%); height: auto; aspect-ratio: 1; left: 50%; top: 50%; transform: translate(-50%, -50%); color: #9eb1ce; }
+/* Static is the base state, including SSR; only decorative layers drift. */
+@media (prefers-reduced-motion: no-preference) {
+  .portraits { animation: portraitDrift 8s ease-in-out -3s infinite alternate; }
+  .motif { animation: motifDrift 9s ease-in-out -5s infinite alternate; }
+  .artwork::before { animation: finderLight 9s ease-in-out -4s infinite alternate; }
+}
+@keyframes portraitDrift { to { translate: 0 -3px; } }
+@keyframes motifDrift { to { translate: 0 3px; } }
+@keyframes finderLight { from { opacity: .65; } to { opacity: 1; } }
+@media (min-width: 1400px) { .artwork { height: 180px; } }
+@media (max-width: 999px) and (min-width: 640px) {
+  .hero { grid-template-columns: minmax(0, 1fr) minmax(240px, 40%); gap: 16px; padding: 24px; }
+  .artwork { height: 142px; }
+}
+@media (max-width: 639px) {
+  .hero { grid-template-columns: minmax(0, 1fr); gap: 0; padding: 20px 16px; }
+  .copy { display: contents; }
+  .copy > p:first-child { grid-column: 1; grid-row: 1; }
+  .copy > h1 { grid-column: 1; grid-row: 2; max-width: 7ch; margin-top: 8px; min-height: 72px; display: flex; align-items: center; }
+  .copy > p:last-child { grid-column: 1; grid-row: 3; margin-top: 12px; font-size: 13px; line-height: 21px; }
+  .artwork { grid-column: 1; grid-row: 2; width: 120px; height: 88px; align-self: center; margin-right: 0; }
+  .card { padding: 2px; border-radius: 8px; }
+  .card img { border-radius: 5px; }
+  .card[data-portrait-slot="0"], .card[data-portrait-slot="4"] { display: none; }
+  .card[data-portrait-slot="1"] { --left: 0%; --top: 31%; --size: 34%; }
+  .card[data-portrait-slot="2"] { --left: 27%; --top: 13%; --size: 49%; }
+  .card[data-portrait-slot="3"] { --left: 69%; --top: 36%; --size: 31%; }
+  .motif[data-finder-motif="crystal"] { top: 2%; left: 1%; width: 25%; }
+  .motif[data-finder-motif="token"] { top: 9%; left: 82%; width: 18%; }
+  .motif[data-finder-motif="piece"] { left: 0; top: 48%; width: 29%; }
+  .artwork[data-finder-artwork="selected"] .card { --left: 29%; --top: 7%; --size: 62%; display: block; }
+  .artwork[data-finder-artwork="selected"] .motif[data-finder-motif="crystal"] { left: 0; top: 9%; width: 30%; }
+  .artwork[data-finder-artwork="selected"] .motif[data-finder-motif="token"] { display: none; }
+  .artwork[data-finder-artwork="fallback"] .motif[data-finder-motif="crystal"] { width: 62%; left: 22%; }
+}
+@media (max-width: 359px) { .artwork { width: 100px; height: 82px; } }
+
+/* Selected identity is a compact two-column composition, independent of the
+   default collage/title arrangement. Long names wrap beside the one portrait. */
+.selectedHero { grid-template-columns: minmax(0, 1fr) minmax(180px, 28%); padding-block: 16px; }
+.selectedHero .artwork { width: 280px; max-width: 100%; height: 128px; }
+.selectedHero .selectedCopy > h1 { font-size: clamp(28px, 3.2vw, 40px); line-height: 1.15; }
+.selectedHero .finderLabel { margin-bottom: 6px; }
+.selectedHero .identityContext { margin-top: 6px; }
+.selectedHero .artwork[data-finder-artwork="selected"] .card { --top: 3%; --left: 34%; --size: 120px; }
+.selectedHero .artwork[data-finder-artwork="selected"] .motif[data-finder-motif="crystal"] { left: 6%; top: 8%; width: 24%; }
+.selectedHero .artwork[data-finder-artwork="selected"] .motif[data-finder-motif="token"] { left: 81%; top: 43%; width: 18%; }
+.selectedHero .artwork[data-finder-artwork="fallback"] .motif[data-finder-motif="crystal"] { left: 32%; width: 110px; }
+@media (max-width: 639px) {
+  .selectedHero { grid-template-columns: minmax(0, 1fr) 88px; gap: 12px; }
+  .selectedCopy { grid-column: 1; grid-row: 1; }
+  .selectedHero .selectedCopy > h1 { font-size: 28px; line-height: 1.16; }
+  .finderLabel { margin-bottom: 7px; }
+  .identityContext { gap: 0 12px; margin-top: 9px; font-size: 12px; }
+  .selectedHero .artwork { grid-column: 2; grid-row: 1; width: 88px; height: 88px; }
+  .selectedHero .artwork[data-finder-artwork="selected"] .card { --left: 5%; --top: 5%; --size: 94%; }
+  .selectedHero .motif[data-finder-motif="crystal"], .selectedHero .motif[data-finder-motif="piece"] { display: none; }
+  .selectedHero .artwork[data-finder-artwork="fallback"] .motif[data-finder-motif="crystal"] { display: block; left: 12%; width: 76%; }
+}

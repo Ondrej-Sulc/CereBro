@@ -2,6 +2,7 @@ import { ChampionClass } from "@prisma/client";
 import type { ChampionImages } from "../types/champion";
 import { createMcocPrestigeProjector, maxSigForRarity } from "./mcoc-prestige";
 import { isSagaChampionTag } from "./saga-champion-tag";
+import { normalizeRosterAscensionState } from "@cerebro/core/domain/roster-ascension-state";
 
 export interface RosterPrestigeInsightOptions {
     targetRank: number;
@@ -21,6 +22,7 @@ export type RosterPrestigeInsightRosterEntry = {
     rank: number;
     sigLevel?: number | null;
     ascensionLevel?: number | null;
+    isAscended?: boolean | null;
     isAwakened?: boolean | null;
     champion: {
         name: string;
@@ -104,10 +106,11 @@ export type RosterPrestigeInsights = {
 };
 
 export function calculateRosterPrestigeInsights(
-    roster: RosterPrestigeInsightRosterEntry[],
+    ownedRoster: RosterPrestigeInsightRosterEntry[],
     prestigeRows: RosterPrestigeRow[],
     options: RosterPrestigeInsightOptions
 ): RosterPrestigeInsights {
+    const roster = ownedRoster.map(entry => ({ ...entry, ...normalizeRosterAscensionState(entry) }));
     if (roster.length === 0) {
         return emptyRosterPrestigeInsights();
     }

@@ -63,6 +63,14 @@ export const command: Command = {
             .setDescription("Whether the champions are ascended.")
             .setRequired(false)
         )
+        .addIntegerOption((option) =>
+          option
+            .setName("ascension_level")
+            .setDescription("The ascension level shown in game.")
+            .setMinValue(0)
+            .setMaxValue(2147483647)
+            .setRequired(false)
+        )
         .addAttachmentOption((option) =>
           option
             .setName("image2")

@@ -1,0 +1,4 @@
+# Optional Windows live capture dependencies; pure parser tests need none of these.
+dnfile==0.18.0
+UnityPy==1.25.0
+requests==2.33.1

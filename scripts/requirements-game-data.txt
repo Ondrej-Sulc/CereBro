@@ -1,0 +1,4 @@
+# Used only to read Cpp2IL metadata during local source extraction.
+dnfile==0.18.0
+Pillow==12.2.0
+UnityPy==1.25.0

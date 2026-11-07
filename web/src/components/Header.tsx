@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Swords, Menu, Book, Shield, Trophy, ChevronDown, LayoutGrid, Users, Heart, Map as MapIcon, Info, Search, Gem } from "lucide-react";
+import { Swords, Menu, Book, Shield, Trophy, ChevronDown, LayoutGrid, Users, Heart, Map as MapIcon, Info, Search, Gem, Diamond } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -149,6 +149,12 @@ export default function Header({ userButton, isInAlliance, hasPlayerProfile }: {
                   </CollectionNavLink>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
+                  <Link href="/crystals" className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
+                    <Diamond className="w-4 h-4 text-slate-300" />
+                    <span>Crystals</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
                   <Link href="/search" className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
                     <Search className="w-4 h-4 text-slate-300" />
                     <span>Search</span>
@@ -218,6 +224,10 @@ export default function Header({ userButton, isInAlliance, hasPlayerProfile }: {
                                         <Gem className="w-5 h-5" />
                                         Relics
                                       </CollectionNavLink>
+                                      <Link href="/crystals" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors">
+                                        <Diamond className="w-5 h-5" />
+                                        Crystals
+                                      </Link>
                                       <Link
                                           href="/war-videos"
                                           className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"

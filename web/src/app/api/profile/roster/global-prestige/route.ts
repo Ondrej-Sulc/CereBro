@@ -5,6 +5,8 @@ import logger from "@/lib/logger";
 import { prisma } from "@/lib/prisma";
 import { defaultRosterPrestigeTargetRank } from "@/lib/roster-recommendation-service";
 import { withRouteContext } from "@/lib/with-request-context";
+import { withChampionAscensionLimits } from "@/lib/champion-ascension-payload";
+import { normalizeRosterAscensionState } from "@cerebro/core/domain/roster-ascension-state";
 import type { ChampionImages } from "@/types/champion";
 
 export const GET = withRouteContext(async (req: NextRequest) => {
@@ -38,6 +40,7 @@ export const GET = withRouteContext(async (req: NextRequest) => {
         stars: true,
         rank: true,
         sigLevel: true,
+        isAscended: true,
         ascensionLevel: true,
       },
     });
@@ -49,6 +52,7 @@ export const GET = withRouteContext(async (req: NextRequest) => {
       prisma.champion.findMany({
         select: {
           id: true,
+          gameId: true,
           name: true,
           slug: true,
           class: true,
@@ -66,10 +70,10 @@ export const GET = withRouteContext(async (req: NextRequest) => {
 
     return NextResponse.json(buildGlobalPrestigeList({
       champions: champions.map(champion => ({
-        ...champion,
+        ...withChampionAscensionLimits(champion),
         images: champion.images as unknown as ChampionImages,
       })),
-      roster,
+      roster: roster.map(entry => ({ ...entry, ...normalizeRosterAscensionState(entry) })),
       prestigeRows,
       options,
     }));

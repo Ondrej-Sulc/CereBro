@@ -33,6 +33,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { getChampionClassColors } from "@/lib/championClassHelper"
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
 import { applyAscensionToStatValue, maxSigForRarity, projectMcocPrestige } from "@/lib/mcoc-prestige"
+import { clampRecordedAscensionLevel, getAscensionEffects } from "@cerebro/core/domain/champion-ascension"
 import {
   formatGameText,
   prepareChampionAbilityTextView,
@@ -87,6 +88,7 @@ type PrototypeView = {
   sigLevel: number
   maxSig: number
   ascensionLevel: number
+  ascensionOptions: number[]
   prestige: number | null
   health: number | null
   attack: number | null
@@ -124,16 +126,19 @@ export function ChampionPrototype(props: PrototypeProps) {
   const selectedRank = rememberedRank && rankOptions.includes(Number(rememberedRank))
     ? rememberedRank
     : String(rankOptions[0] ?? "")
-  const selectedStat = stats.find(row => String(row.rarity) === selectedRarity && String(row.rank) === selectedRank) ?? stats[0]
-  const currentMaxSig = maxSigForRarity(selectedStat?.rarity)
+  const baseSelectedStat = stats.find(row => String(row.rarity) === selectedRarity && String(row.rank) === selectedRank) ?? stats[0]
+  const currentMaxSig = maxSigForRarity(baseSelectedStat?.rarity)
   const [sigLevel, setSigLevel] = useState(currentMaxSig)
   const [ascensionLevel, setAscensionLevel] = useState(0)
-  const effectiveAscension = selectedStat?.rarity === 7 ? ascensionLevel : 0
+  const ascensionRules = champion.ascensionRules?.find(rule => rule.rarity === baseSelectedStat?.rarity) ?? null
+  const effectiveAscension = clampRecordedAscensionLevel(ascensionRules, ascensionLevel)
+  const effects = getAscensionEffects(ascensionRules, effectiveAscension)
+  const selectedStat = baseSelectedStat ? { ...baseSelectedStat, challengeRating: baseSelectedStat.challengeRating + effects.challengeRating } : undefined
   const cappedSig = Math.min(sigLevel, currentMaxSig)
   const tierKey = selectedStat?.rarity && selectedStat.rank ? `${selectedStat.rarity}-${selectedStat.rank}` : ""
   const accent = getChampionClassColors(champion.class).color
-  const health = applyAscensionToStatValue(selectedStat?.health, selectedStat?.rarity, effectiveAscension)
-  const attack = applyAscensionToStatValue(selectedStat?.attack, selectedStat?.rarity, effectiveAscension)
+  const health = applyAscensionToStatValue(selectedStat?.health, selectedStat?.rarity, effectiveAscension, ascensionRules, "health")
+  const attack = applyAscensionToStatValue(selectedStat?.attack, selectedStat?.rarity, effectiveAscension, ascensionRules, "attack")
   const descriptionView = prepareChampionAbilityTextView({
     records: champion.abilityTexts,
     curves: champion.abilityCurves,
@@ -155,6 +160,7 @@ export function ChampionPrototype(props: PrototypeProps) {
     sigLevel: cappedSig,
     maxSig: currentMaxSig,
     ascensionLevel: effectiveAscension,
+    ascensionOptions: Array.from({ length: (ascensionRules?.maxLevel ?? 0) + 1 }, (_, level) => level),
     prestige: projectMcocPrestige({
       prestigeData: champion.prestigeData,
       stat: selectedStat,
@@ -1244,10 +1250,10 @@ function DossierBuildBar({ view }: { view: PrototypeView }) {
           <span className="mb-2 flex items-center justify-between font-mono text-[9px] font-bold uppercase tracking-[.2em] text-white/35"><span>Signature</span><span className="text-white/70">{view.sigLevel}</span></span>
           <input aria-label="Signature level" type="range" min={0} max={view.maxSig} value={view.sigLevel} onChange={event => view.setSigLevel(Number(event.target.value))} className="h-1.5 w-full cursor-pointer appearance-none rounded-full bg-white/10 accent-white" />
         </div>
-        {view.selectedStat?.rarity === 7 && (
+        {view.ascensionOptions.length > 1 && (
           <div className="sm:col-span-2 lg:col-span-1 lg:border-l lg:border-white/10 lg:pl-6">
             <span className="mb-2 block font-mono text-[9px] font-bold uppercase tracking-[.2em] text-white/35">Ascension · A{view.ascensionLevel}</span>
-            <div className="flex gap-1.5">{[0, 1, 2, 3, 4, 5].map(level => <button key={level} type="button" onClick={() => view.setAscensionLevel(level)} className={controlButton(level === view.ascensionLevel, "dark")}>{level}</button>)}</div>
+            <div className="flex gap-1.5">{view.ascensionOptions.map(level => <button key={level} type="button" onClick={() => view.setAscensionLevel(level)} className={controlButton(level === view.ascensionLevel, "dark")}>{level}</button>)}</div>
           </div>
         )}
       </div>
@@ -1356,10 +1362,10 @@ function ControlPanel({ view, tone, horizontal = false }: { view: PrototypeView;
           className={cn("h-1.5 w-full cursor-pointer appearance-none rounded-full", isPaper ? "accent-[#252a2a] bg-[#252a2a]/15" : isMatrix ? "accent-emerald-400 bg-emerald-400/15" : "accent-white bg-white/10")}
         />
       </SelectorBlock>
-      {view.selectedStat?.rarity === 7 && (
+      {view.ascensionOptions.length > 1 && (
         <SelectorBlock label={`Ascension · A${view.ascensionLevel}`} tone={tone}>
           <div className="flex flex-wrap gap-1.5">
-            {[0, 1, 2, 3, 4, 5].map(level => <button key={level} type="button" onClick={() => view.setAscensionLevel(level)} className={controlButton(level === view.ascensionLevel, tone)}>{level}</button>)}
+            {view.ascensionOptions.map(level => <button key={level} type="button" onClick={() => view.setAscensionLevel(level)} className={controlButton(level === view.ascensionLevel, tone)}>{level}</button>)}
           </div>
         </SelectorBlock>
       )}

@@ -1,0 +1,22 @@
+.container { min-width: 0; container-type: inline-size; }
+.groups { display: grid; align-items: start; gap: 24px; }
+.category { min-width: 0; }
+
+/* Two groups need room for two compact cards apiece, their gutter and the
+   inter-category gap. Below that, keep a deliberate single reading flow. */
+@container (min-width: 62rem) {
+  .groups { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px 32px; }
+}
+
+/* Content-sized bases let a singleton sit beside pairs and larger categories.
+   Extra width goes to categories with more visible cards, up to four columns.
+   Normal flex wrapping preserves DOM/keyboard order, including expanded groups. */
+/* 280px singleton + three 472px pairs + three 24px gutters fit at 111rem. */
+@container (min-width: 111rem) {
+  .groups { display: flex; flex-wrap: wrap; gap: 28px 24px; }
+  .category { flex: 1 1 472px; max-width: var(--category-preferred-width); }
+  .category[data-category-size="small"] { flex: 0 1 280px; }
+}
+
+/* Keep filtered results and their controls together, including a singleton. */
+.groups > .category:only-child { flex-basis: 100%; grid-column: 1 / -1; width: 100%; max-width: var(--category-preferred-width); }

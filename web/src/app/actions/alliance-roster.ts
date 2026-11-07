@@ -5,12 +5,13 @@ import { ChampionImages } from "@/types/champion";
 import { withActionContext } from "@/lib/with-request-context";
 import type { ProfileRosterEntry } from "@/app/profile/roster/types";
 import { attachResistances, getResistanceIndex } from "@/lib/data/champion-resistances";
+import { withChampionAscensionEligibility } from "@/lib/champion-ascension-payload";
 
 export type AllianceRosterEntry = Pick<ProfileRosterEntry, "id" | "playerId" | "championId" | "stars" | "rank" | "sigLevel" | "isAwakened" | "isAscended" | "ascensionLevel"> & {
     ingameName: string;
     battlegroup: number | null;
     avatar: string | null;
-    champion: Pick<ProfileRosterEntry["champion"], "id" | "name" | "class" | "slug" | "images" | "tags" | "abilities">;
+    champion: Pick<ProfileRosterEntry["champion"], "id" | "name" | "class" | "slug" | "images" | "tags" | "abilities" | "ascendableRarities">;
     tactics: { attack: boolean; defense: boolean };
 };
 
@@ -61,6 +62,7 @@ export const getAllianceRoster = withActionContext('getAllianceRoster', async (
             champion: {
                 select: {
                     id: true,
+                    gameId: true,
                     name: true,
                     class: true,
                     slug: true,
@@ -111,7 +113,7 @@ export const getAllianceRoster = withActionContext('getAllianceRoster', async (
     for (const { champion } of rosterEntries) {
         if (champions.has(champion.id)) continue;
         champions.set(champion.id, {
-            ...champion,
+            ...withChampionAscensionEligibility(champion),
             images: champion.images as unknown as ChampionImages,
             abilities: attachResistances(champion.abilities, resistanceIndex).map(link => ({
                 ...link,

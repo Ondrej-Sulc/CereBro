@@ -13,6 +13,8 @@ import { ChampionAvatar } from "@/components/champion-avatar";
 import { ChampionImages } from "@/types/champion";
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
+import { projectMcocPrestige } from "@/lib/mcoc-prestige";
+import { normalizeRosterAscensionState } from "@cerebro/core/domain/roster-ascension-state";
 import { cn } from "@/lib/utils";
 import { ChampionClass, Prisma } from "@prisma/client";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
@@ -385,9 +387,12 @@ export default async function PlayerProfilePage({ params, searchParams }: Player
                 {roster.length > 0 ? (
                     <div className="grid grid-cols-5 lg:grid-cols-10 gap-2">
                         {roster.map(r => {
-                            const prestige = r.champion.prestigeData
-                                .filter(p => p.rarity === r.stars && p.rank === r.rank && p.sig <= r.sigLevel)
-                                .sort((a, b) => b.sig - a.sig)[0]?.prestige;
+                            const prestige = projectMcocPrestige({
+                                prestigeData: r.champion.prestigeData,
+                                stat: { rarity: r.stars, rank: r.rank, prestige: null },
+                                sigLevel: r.sigLevel,
+                                ascensionLevel: normalizeRosterAscensionState(r).ascensionLevel,
+                            });
                             return (
                                 <div key={r.id} className="flex flex-col items-center gap-1.5">
                                     <ChampionAvatar

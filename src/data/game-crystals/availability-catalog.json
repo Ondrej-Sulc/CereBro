@@ -1,0 +1,166 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-11-06",
+  "sources": [
+    {
+      "id": "recurring-review",
+      "title": "Recurring main-pool review",
+      "kind": "catalog_review"
+    },
+    {
+      "id": "empire-doom-2026",
+      "title": "Saga: Empire of Doom",
+      "kind": "official_announcement",
+      "url": "https://playcontestofchampions.com/news/saga-empire-of-doom/",
+      "publishedAt": "2026-11-02T11:00:00",
+      "contentSha256": "4290b0d4f0e1fc13c0f8888c06ebdde2c988e4a4dd33517aaa05a45504d3eade",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "bounties-november-2026",
+      "title": "Side Quest: Beast's Bounty Missions",
+      "kind": "official_announcement",
+      "url": "https://playcontestofchampions.com/news/side-quest-beasts-bounty-missions/",
+      "publishedAt": "2026-11-02T10:00:00",
+      "contentSha256": "cad20b8157431759bc5f3b822645144bb384042851bef51cd82f8839a101b9ee",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "banquet-2025",
+      "title": "The Banquet Summary",
+      "kind": "official_announcement",
+      "url": "https://playcontestofchampions.com/news/the-banquet-summary/",
+      "publishedAt": "2025-12-17T11:00:00",
+      "contentSha256": "1a13ae7ae8beba4512d0e3a7e2f46afd526f80615e0e10702792ddcf025efcdd",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "banquet-2024",
+      "title": "The Grand Banquet and Accolades",
+      "kind": "official_announcement",
+      "url": "https://playcontestofchampions.com/news/the-grand-banquet-and-accolades/",
+      "publishedAt": "2024-12-18T10:00:00",
+      "contentSha256": "f666338da1f785889a6983d35f0f26f38abad41e5dcc977a157fca7c6dd4d742",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "banquet-2022",
+      "title": "The Banquet 2022 announcement",
+      "kind": "official_announcement",
+      "author": "MCOC Team",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/320919/this-holiday-season-get-ready-for-the-banquet"
+    },
+    {
+      "id": "banquet-2023",
+      "title": "Banquet and Accolades 2023 announcement",
+      "kind": "official_announcement",
+      "author": "MCOC Team",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/354001/its-that-time-of-year-banquet-and-accolade-events-are-here"
+    }
+  ],
+  "records": [
+    {
+      "sourceIds": [
+        "7_star_hero_shard_crystal",
+        "7_star_titan_hero_shard_crystal",
+        "6_star_hero_shard_crystal",
+        "5_star_hero_shard_crystal",
+        "4_star_hero_shard_crystal",
+        "4_star_hero_crystal",
+        "3_star_hero_shard_crystal",
+        "3_star_hero_crystal",
+        "valiant_crystal",
+        "paragon_crystal_v2",
+        "paragon_shards_v2",
+        "cavalier_crystal_v2",
+        "cavalier_shards_v2",
+        "grandmaster_crystals_v2",
+        "grandmaster_shard_v2",
+        "premium_hero_shard",
+        "premium_hero_improvedspin"
+      ],
+      "kind": "recurring",
+      "sourceId": "recurring-review",
+      "description": "A recurring Hero, Titan or progression crystal pool. Access depends on progression and the current in-game sources; this label does not confirm a live shop offer. Nexus and other openings are reviewed separately."
+    },
+    {
+      "sourceIds": [
+        "6star_empire_of_doom_saga_crystal",
+        "6star_nexus_empire_of_doom_saga_crystal",
+        "7star_empire_of_doom_saga_crystal",
+        "cavalier_empire_of_doom_saga_crystal",
+        "collector_empire_of_doom_saga_crystal",
+        "elder_empire_of_doom_saga_crystal",
+        "paragon_empire_of_doom_saga_crystal",
+        "valiant_empire_of_doom_saga_crystal"
+      ],
+      "kind": "event",
+      "sourceId": "empire-doom-2026",
+      "startsOn": "2026-11-02",
+      "endsOn": "2027-02-10",
+      "description": "Recorded for the Empire of Doom Saga. The published Saga window is active during these dates; crystal sources and eligible stars depend on progression and the individual event. This is an event association, not a live-stock check."
+    },
+    {
+      "sourceIds": [
+        "prg_3_gold_bty_bx",
+        "prg_3_silver_bty_bx",
+        "prg_4_gold_bty_bx",
+        "prg_4_silver_bty_bx",
+        "prg_6_gold_bty_bx",
+        "prg_6_silver_bty_bx",
+        "prg_8_gold_bty_bx",
+        "prg_8_silver_bty_bx",
+        "prg_9_gold_bty_bx",
+        "prg_9_silver_bty_bx"
+      ],
+      "kind": "event",
+      "sourceId": "bounties-november-2026",
+      "startsOn": "2026-11-18",
+      "endsOn": "2026-12-09",
+      "description": "Gold and Silver Bounty Boxes are announced for this Alliance event. Progression determines the reward box. Follow the in-game timer for the exact start and end; an existing box in inventory is separate from earning more credits."
+    },
+    {
+      "sourceIds": [
+        "banquet_crystal_dec25",
+        "greater_banquet_crystal_dec25",
+        "superior_banquet_crystal_dec25",
+        "jubilant_crystal_dec25"
+      ],
+      "kind": "event",
+      "sourceId": "banquet-2025",
+      "startsOn": "2025-12-19",
+      "endsOn": "2026-01-02",
+      "description": "Recorded for the 2025 Banquet event. Its published event window is shown here; previously owned crystals may still be openable outside that window and later offers can reintroduce rewards."
+    },
+    {
+      "sourceIds": [
+        "banquet_crystal_dec24",
+        "greater_banquet_crystal_dec24",
+        "superior_banquet_crystal_dec24"
+      ],
+      "kind": "past_event",
+      "sourceId": "banquet-2024",
+      "description": "Recorded for the 2024 Grand Banquet. This label identifies its historical event source; it does not prevent opening crystals already owned or rule out a later return."
+    },
+    {
+      "sourceIds": [
+        "banquet_crystal_dec22",
+        "greater_banquet_crystal_dec22"
+      ],
+      "kind": "past_event",
+      "sourceId": "banquet-2022",
+      "description": "Recorded for the original 2022 Banquet event. This is a past event edition, not a statement about crystals already owned or whether Kabam may reintroduce it."
+    },
+    {
+      "sourceIds": [
+        "banquet_crystal_dec23",
+        "greater_banquet_crystal_dec23"
+      ],
+      "kind": "event",
+      "sourceId": "banquet-2023",
+      "startsOn": "2023-12-20",
+      "endsOn": "2024-01-03",
+      "description": "Recorded for the 2023 Banquet and Accolades event. The original event window is historical; previously owned crystals may still be opened and a later offer may bring this edition back."
+    }
+  ]
+}

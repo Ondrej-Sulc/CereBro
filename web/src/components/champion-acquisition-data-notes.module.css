@@ -1,0 +1,8 @@
+.notes { margin-top: 24px; padding-top: 8px; border-top: 1px solid #28364b; color: #94a8c5; font-size: 12px; line-height: 21px; }
+.notes summary { width: fit-content; min-height: 44px; padding-block: 11px; cursor: pointer; color: #aabbd4; }
+.notes summary:focus-visible { outline: 2px solid #b4bfff; outline-offset: 4px; border-radius: 4px; }
+.notes p { max-width: 85ch; margin-block: 6px 12px; }
+.notes dl { display: grid; gap: 6px; }
+.notes dl > div { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+.notes dt { min-width: 190px; }
+.notes dd { color: #bdcbe0; }

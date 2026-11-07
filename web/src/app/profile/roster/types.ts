@@ -9,6 +9,8 @@ export type ProfileRosterEntry = Omit<RosterWithChampion, 'champion'> & {
     isUnowned?: boolean;
     champion: Omit<PrismaChampion, 'images'> & {
         images: ChampionImages;
+        ascendableRarities?: number[];
+        ascensionMaxLevels?: Record<string, number>;
         tags: { id: string | number, name: string }[];
         abilities: (Partial<EffectSourceMetadata> & {
             id: number;

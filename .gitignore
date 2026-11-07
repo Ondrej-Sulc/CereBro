@@ -145,3 +145,5 @@ backup/
 /src/generated/prisma
 temp_*.ts
 eng.traineddata
+# Python extraction helpers
+__pycache__/

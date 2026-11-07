@@ -1,6 +1,7 @@
 import { clampAscensionLevelForRarity, clampSigForRarity, maxSigForRarity } from "./mcoc-prestige"
+import { clampRecordedAscensionLevel, type ChampionAscensionRules } from "@cerebro/core/domain/champion-ascension"
 
-export const CHAMPION_SECTIONS = ["overview", "abilities", "synergies", "stats"] as const
+export const CHAMPION_SECTIONS = ["overview", "abilities", "synergies", "stats", "crystals"] as const
 export type ChampionSection = typeof CHAMPION_SECTIONS[number]
 export type ChampionPageState = {
   tab: ChampionSection
@@ -27,7 +28,7 @@ export function readChampionSynergyHash(hash: string) {
 
 type StatTier = { rarity: number | null; rank: number }
 
-export function readChampionPageState(params: Pick<URLSearchParams, "get">, stats: StatTier[]): ChampionPageState {
+export function readChampionPageState(params: Pick<URLSearchParams, "get">, stats: StatTier[], ascensionRules?: ReadonlyArray<Pick<ChampionAscensionRules, "rarity" | "maxLevel">>): ChampionPageState {
   const rarities = [...new Set(stats.flatMap(stat => stat.rarity ? [stat.rarity] : []))].sort((a, b) => b - a)
   const rarity = rarities.find(value => String(value) === params.get("rarity")) ?? rarities[0]
   const ranks = [...new Set(stats.filter(stat => stat.rarity === rarity).map(stat => stat.rank))].sort((a, b) => b - a)
@@ -44,7 +45,8 @@ export function readChampionPageState(params: Pick<URLSearchParams, "get">, stat
     rarity: rarity == null ? "" : String(rarity),
     rank: rank == null ? "" : String(rank),
     sig: clampSigForRarity(integer("sig", maxSigForRarity(rarity)), rarity),
-    ascension: clampAscensionLevelForRarity(integer("ascension", 0), rarity),
+    ascension: ascensionRules === undefined ? clampAscensionLevelForRarity(integer("ascension", 0), rarity)
+      : clampRecordedAscensionLevel(ascensionRules.find(rule => rule.rarity === rarity), integer("ascension", 0)),
     ability: tab === "abilities" && ability && /^\d+$/.test(ability) ? ability : null,
     chapter: tab === "abilities" && chapter && chapter !== "all" && /^[a-z][a-z0-9_-]{0,63}$/.test(chapter) ? chapter : null,
     synergy: tab === "synergies" ? validSynergyId(params.get("synergy")) : null,

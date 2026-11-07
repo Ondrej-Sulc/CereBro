@@ -3,14 +3,15 @@
 import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react"
-import { BookOpen, Check, ChevronDown, Copy, Crosshair, Layers3, Link2, SlidersHorizontal, Swords, Target, Users } from "lucide-react"
+import { BookOpen, Check, ChevronDown, Compass, Copy, Crosshair, Layers3, Link2, SlidersHorizontal, Swords, Target, Users } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { ChampionStatIcon, type ChampionStatIconKey } from "@/components/champions/champion-stat-icon"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { getChampionClassColors } from "@/lib/championClassHelper"
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
-import { applyAscensionToStatValue, maxSigForRarity, projectMcocPrestige } from "@/lib/mcoc-prestige"
+import { applyAscensionToStatValue, maxAscensionLevelForRarity, maxSigForRarity, projectMcocPrestige } from "@/lib/mcoc-prestige"
+import { getAscensionEffects } from "@cerebro/core/domain/champion-ascension"
 import { prepareChampionAbilityTextView } from "@/lib/champion-ability-text"
 import { buildChampionSynergyView } from "@/lib/champion-synergies"
 import { cn } from "@/lib/utils"
@@ -24,6 +25,7 @@ import { ChampionSynergiesPanel } from "./champion-synergies-panel"
 import { BuildReadout, ChampionAbilityReader } from "./champion-ability-reader"
 import { ChampionKitOverview } from "./champion-kit-overview"
 import { ChampionStatsPanel } from "./champion-stats-panel"
+import { ChampionAcquisitionPanel } from "./champion-acquisition-panel"
 import styles from "./champion-dossier.module.css"
 
 export type { ChampionDetailsPayload, ChampionStatRow } from "./champion-details-types"
@@ -32,12 +34,12 @@ export function ChampionDetailsClient(props: ChampionDetailsProps) {
   const { champion, maxStatsByTier } = props
   const searchParams = useSearchParams()
   const stats = useMemo(() => champion.stats.filter(row => row.rarity), [champion.stats])
-  const pageState = readChampionPageState(searchParams, stats)
+  const pageState = readChampionPageState(searchParams, stats, champion.ascensionRules)
   const rankByRarity = useRef<Record<string, string>>({})
   const updatePageState = (patch: Partial<ChampionPageState>, push = false) => {
     const url = new URL(window.location.href)
-    const current = readChampionPageState(url.searchParams, stats)
-    const next = readChampionPageState(championPageSearchParams(url.search, { ...current, ...patch }), stats)
+    const current = readChampionPageState(url.searchParams, stats, champion.ascensionRules)
+    const next = readChampionPageState(championPageSearchParams(url.search, { ...current, ...patch }), stats, champion.ascensionRules)
     const changesDestination = patch.tab !== undefined || patch.ability !== undefined || patch.chapter !== undefined || patch.synergy !== undefined
     const href = championPageHref(url.href, next, changesDestination)
     if (push) window.history.pushState(null, "", href)
@@ -52,14 +54,17 @@ export function ChampionDetailsClient(props: ChampionDetailsProps) {
     .filter(row => String(row.rarity) === selectedRarity)
     .map(row => row.rank))).sort((a, b) => b - a)
   const selectedRank = pageState.rank
-  const selectedStat = stats.find(row => String(row.rarity) === selectedRarity && String(row.rank) === selectedRank) ?? stats[0]
+  const baseSelectedStat = stats.find(row => String(row.rarity) === selectedRarity && String(row.rank) === selectedRank) ?? stats[0]
+  const ascensionRules = champion.ascensionRules?.find(rule => rule.rarity === baseSelectedStat?.rarity) ?? null
+  const ascensionEffects = getAscensionEffects(ascensionRules, pageState.ascension)
+  const selectedStat = baseSelectedStat ? { ...baseSelectedStat, challengeRating: baseSelectedStat.challengeRating + ascensionEffects.challengeRating } : undefined
   const currentMaxSig = maxSigForRarity(selectedStat?.rarity)
   const effectiveAscension = pageState.ascension
   const cappedSig = pageState.sig
   const tierKey = selectedStat?.rarity && selectedStat.rank ? `${selectedStat.rarity}-${selectedStat.rank}` : ""
   const accent = getChampionClassColors(champion.class).color
-  const health = applyAscensionToStatValue(selectedStat?.health, selectedStat?.rarity, effectiveAscension)
-  const attack = applyAscensionToStatValue(selectedStat?.attack, selectedStat?.rarity, effectiveAscension)
+  const health = applyAscensionToStatValue(selectedStat?.health, selectedStat?.rarity, effectiveAscension, champion.ascensionRules === undefined ? undefined : ascensionRules, "health")
+  const attack = applyAscensionToStatValue(selectedStat?.attack, selectedStat?.rarity, effectiveAscension, champion.ascensionRules === undefined ? undefined : ascensionRules, "attack")
   const descriptionView = prepareChampionAbilityTextView({
     records: champion.abilityTexts,
     curves: champion.abilityCurves,
@@ -81,6 +86,8 @@ export function ChampionDetailsClient(props: ChampionDetailsProps) {
     sigLevel: cappedSig,
     maxSig: currentMaxSig,
     ascensionLevel: effectiveAscension,
+    ascensionRules,
+    ascensionOptions: Array.from({ length: (champion.ascensionRules === undefined ? maxAscensionLevelForRarity(selectedStat?.rarity) : ascensionRules?.maxLevel ?? 0) + 1 }, (_, level) => level),
     prestige: projectMcocPrestige({
       prestigeData: champion.prestigeData,
       stat: selectedStat,
@@ -113,6 +120,7 @@ const DOSSIER_TABS = [
   { value: "abilities", label: "Full abilities", detail: "Read the complete kit", icon: BookOpen },
   { value: "synergies", label: "Synergies", detail: "Partners & team bonuses", icon: Users },
   { value: "stats", label: "Stats & attacks", detail: "Ratings & hit breakdowns", icon: Swords },
+  { value: "crystals", label: "How to obtain", detail: "Crystals, quests & events", icon: Compass },
 ] as const
 
 function ChampionDossier({ view, pageState, updatePageState }: {
@@ -123,6 +131,21 @@ function ChampionDossier({ view, pageState, updatePageState }: {
   const dossierRef = useRef<HTMLDivElement>(null)
   const tabsRef = useRef<HTMLDivElement>(null)
   const sectionsRef = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const list = tabsRef.current?.querySelector<HTMLElement>('[role="tablist"]')
+    const active = list?.querySelector<HTMLElement>('[data-state="active"]')
+    if (!list || !active) return
+    const revealActive = () => {
+      if (list.scrollWidth > list.clientWidth) {
+        const left = active.getBoundingClientRect().left - list.getBoundingClientRect().left + list.scrollLeft
+        list.scrollLeft = Math.max(0, left - (list.clientWidth - active.offsetWidth) / 2)
+      }
+    }
+    revealActive()
+    const observer = new ResizeObserver(revealActive)
+    observer.observe(list)
+    return () => observer.disconnect()
+  }, [pageState.tab])
   useLayoutEffect(() => {
     const bar = tabsRef.current
     if (!bar) return
@@ -219,6 +242,7 @@ function ChampionDossier({ view, pageState, updatePageState }: {
           <TabsContent value="abilities" className="mt-0 pb-8 pt-10"><ChampionAbilityReader view={view} targetRecordId={pageState.ability} chapter={pageState.chapter} onSelectChapter={openChapter} onClearTarget={() => updatePageState({ ability: null, chapter: null })} /></TabsContent>
           <TabsContent value="synergies" className="mt-0 pb-8 pt-10"><DossierSynergies view={view} targetSynergyId={pageState.synergy} onClearTarget={() => updatePageState({ synergy: null }, true)} /></TabsContent>
           <TabsContent value="stats" className="mt-0 pb-8 pt-10"><ChampionStatsPanel view={view} onViewAbility={openChapter} /></TabsContent>
+          <TabsContent value="crystals" className="mt-0 pb-8 pt-10"><ChampionAcquisitionPanel key={view.selectedRarity} acquisition={view.champion.acquisition} availability={view.champion.crystalAvailability} selectedRarity={view.selectedRarity} championName={view.champion.name} championSlug={view.champion.slug} ascensionRules={view.ascensionRules} /></TabsContent>
         </Tabs>
       </div>
     </div>
@@ -267,10 +291,10 @@ function DossierBuildControls({ view }: { view: ChampionDetailsView }) {
         <PopoverTrigger asChild><button type="button" className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-white/15 bg-white/[.035] px-3 text-sm font-medium text-slate-200 transition-colors hover:border-white/30 hover:bg-white/[.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"><SlidersHorizontal aria-hidden="true" className="h-4 w-4" />Adjust build</button></PopoverTrigger>
         <PopoverContent align="end" sideOffset={12} collisionPadding={16} aria-label="Adjust champion build" aria-describedby="champion-build-description" className="w-[min(420px,calc(100vw-2rem))] max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-xl border-white/15 bg-[#101620] p-5 text-slate-200 shadow-2xl">
           <div className="mb-5"><h2 className="text-lg font-semibold text-white">Adjust build</h2><p id="champion-build-description" className="mt-1 text-sm leading-6 text-slate-400">Stats and abilities update as you adjust.</p></div>
-          <div className={styles.buildFields} data-ascendable={view.selectedStat.rarity === 7}>
+          <div className={styles.buildFields} data-ascendable={(view.ascensionOptions?.length ?? 0) > 1}>
             <BuildSelect label="Rarity" value={view.selectedRarity} onChange={view.setRarity} options={view.rarityOptions.map(rarity => ({ value: String(rarity), label: `${rarity} ★` }))} />
             <BuildSelect label="Rank" value={view.selectedRank} onChange={view.setRank} options={view.rankOptions.map(rank => ({ value: String(rank), label: `Rank ${rank}` }))} />
-            {view.selectedStat.rarity === 7 && <BuildSelect label="Ascension" value={String(view.ascensionLevel)} onChange={value => view.setAscensionLevel(Number(value))} options={[0, 1, 2, 3, 4, 5].map(level => ({ value: String(level), label: `A${level}` }))} />}
+            {(view.ascensionOptions?.length ?? 0) > 1 && <BuildSelect label="Ascension" value={String(view.ascensionLevel)} onChange={value => view.setAscensionLevel(Number(value))} options={view.ascensionOptions!.map(level => ({ value: String(level), label: `A${level}` }))} />}
             <div className={styles.buildSignature}>
               <label htmlFor="champion-signature-value" className="mb-1.5 block text-xs font-medium text-slate-400">Signature</label>
               <div className="flex h-10 items-center gap-4">

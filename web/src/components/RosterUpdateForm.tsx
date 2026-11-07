@@ -12,7 +12,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, Upload, X, Check, ImagePlus, Sparkles, Star, Cpu } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -29,6 +28,8 @@ import Link from "next/link";
 import { UpdatedChampionItem, ChampionData, RosterWithChampion } from "@/components/UpdatedChampionItem";
 import { reportClientError } from "@/lib/observability/client";
 import { getRosterUpdateErrorState, type QuotaLimitError } from "@/lib/roster-update-errors";
+import { normalizeRosterAscensionState } from "@cerebro/core/domain/roster-ascension-state";
+import { RosterAscensionControl } from "@/components/roster-ascension-control";
 
 // Define local types matching what the API returns
 
@@ -97,10 +98,8 @@ export function RosterUpdateForm({ targetPlayerId, compact = false, quota = null
     const previewUrlsRef = useRef<string[]>([]);
 
     useEffect(() => {
-        if (stars !== "7") {
-            setAscensionLevel("0");
-            setIsAscended(false);
-        }
+        setAscensionLevel("0");
+        setIsAscended(false);
     }, [stars]);
 
     // Cleanup object URLs on unmount to avoid memory leaks
@@ -219,20 +218,10 @@ export function RosterUpdateForm({ targetPlayerId, compact = false, quota = null
         formData.append("stars", stars);
         formData.append("rank", rank);
         
-        // Compute implicit boolean based on level if necessary
-        let finalIsAscended = isAscended;
-        let finalAscensionLevel = 0;
+        const ascension = normalizeRosterAscensionState({ isAscended, ascensionLevel: Number(ascensionLevel) });
         
-        if (stars === "7") {
-            finalIsAscended = parseInt(ascensionLevel) > 0 ? true : isAscended;
-            finalAscensionLevel = parseInt(ascensionLevel) === 0 && isAscended ? 1 : parseInt(ascensionLevel);
-        } else {
-            finalIsAscended = isAscended;
-            finalAscensionLevel = 0;
-        }
-        
-        formData.append("isAscended", String(finalIsAscended));
-        formData.append("ascensionLevel", String(finalAscensionLevel));
+        formData.append("isAscended", String(ascension.isAscended));
+        formData.append("ascensionLevel", String(ascension.ascensionLevel));
         if (targetPlayerId) {
             formData.append("targetPlayerId", targetPlayerId);
         }
@@ -410,34 +399,7 @@ export function RosterUpdateForm({ targetPlayerId, compact = false, quota = null
                                             </Select>
                                         </div>
                                         <div className="flex items-center space-x-2 pt-8 sm:pt-0">
-                                            {stars === "7" ? (
-                                                <div className="flex-1 space-y-2">
-                                                    <Label htmlFor="ascensionLevel">Ascension</Label>
-                                                    <Select value={ascensionLevel} onValueChange={(v) => {
-                                                        setAscensionLevel(v);
-                                                        setIsAscended(parseInt(v) > 0);
-                                                    }}>
-                                                        <SelectTrigger id="ascensionLevel" className="bg-slate-900 border-slate-700 w-[120px]">
-                                                            <SelectValue />
-                                                        </SelectTrigger>
-                                                        <SelectContent>
-                                                            {[0, 1, 2, 3, 4, 5].map(level => (
-                                                                <SelectItem key={level} value={String(level)}>{level === 0 ? 'None' : `Level ${level}`}</SelectItem>
-                                                            ))}
-                                                        </SelectContent>
-                                                    </Select>
-                                                </div>
-                                            ) : (
-                                                <div className="flex items-center space-x-2 h-full">
-                                                    <Checkbox
-                                                        id="ascended"
-                                                        checked={isAscended}
-                                                        onCheckedChange={(c) => setIsAscended(!!c)}
-                                                        className="border-slate-600 data-[state=checked]:bg-sky-600"
-                                                    />
-                                                    <Label htmlFor="ascended" className="cursor-pointer font-normal text-slate-300">Is Ascended?</Label>
-                                                </div>
-                                            )}
+                                            <RosterAscensionControl value={{ isAscended, ascensionLevel: Number(ascensionLevel) }} onChange={state => { setIsAscended(state.isAscended); setAscensionLevel(String(state.ascensionLevel)); }} />
                                         </div>
                                     </div>
                                 </TabsContent>

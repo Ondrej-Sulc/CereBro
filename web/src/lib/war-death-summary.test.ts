@@ -10,7 +10,7 @@ describe("war battlegroup recorded deaths", () => {
       fights: [
         null, { name: "Named without metadata" },
         { name: "Null metadata", images: null, class: null },
-        { name: "Malformed", images: { p_64: "/not-a-complete-image-record.png" } },
+        { name: "Malformed", images: { p_64: { url: "/not-an-image-url.png" } } },
         { name: "Empty URL", images: blankImages },
         { name: "Non-string URL", images: { ...blankImages, p_64: 123 } },
         { name: "Unknown class", class: "UNRECOGNIZED" as ChampionClass },
@@ -23,6 +23,15 @@ describe("war battlegroup recorded deaths", () => {
       expect(fight.defender).toEqual({ class: null, imageUrl: null });
     }
     expect(summary.deaths).toBe(7);
+  });
+
+  it("keeps a valid champion portrait when the image record has no hero artwork", () => {
+    const [summary] = summarizeWarDeaths([{
+      id: "war", season: 60, warNumber: 1, enemyAlliance: null,
+      fights: [{ id: "fight", death: 1, battlegroup: 1, node: { nodeNumber: 4 }, player: null,
+        attacker: { name: "Summoned Symbiote", images: { p_64: "/summoned-symbiote.png" } } }],
+    }]);
+    expect(summary.battlegroups[0].players[0].nodes[0].fights[0].attacker.imageUrl).toBe("/summoned-symbiote.png");
   });
 
   it("projects champion portraits and classes from season and planner fight shapes without leaking full records", () => {

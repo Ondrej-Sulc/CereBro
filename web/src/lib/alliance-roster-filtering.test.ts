@@ -15,6 +15,32 @@ const entry = (id: string, extra: Partial<AllianceRosterEntry> = {}): AllianceRo
 });
 
 describe("shared alliance roster filtering", () => {
+  it("shares scoped eligibility, counts and independent status across members before display caps", () => {
+    const champion = { ...entry("1").champion, ascendableRarities: [4, 5, 6, 7] };
+    const rows = [entry("1", { champion, stars: 7, isAscended: true, ascensionLevel: 5 }),
+      entry("2", { champion, stars: 6 }), entry("3", { champion, stars: 7, playerId: "two", battlegroup: 2 })];
+    const filters = { ...createAllianceRosterFilters(), ascensionEligible: true };
+    const index = createAllianceRosterFilterIndex(rows);
+    const result = filterAllianceRosterWithFacets(index, filters, "ALL", 1);
+    expect(result.entries.map(row => row.id)).toEqual(["1", "3"]);
+    expect(result.counts.stars).toEqual({ 7: 2 });
+    expect(filterAllianceRosterWithFacets(index, { ...filters, ascension: [5] }, "ALL", 1).entries.map(row => row.id)).toEqual(["1"]);
+  });
+  it("qualifies owned stars before member caps and counts, keeping already ascended copies", () => {
+    const champion = { ...entry("1").champion, ascendableRarities: [7] };
+    const rows = [entry("1", { champion, stars: 6, ascensionLevel: 2, isAscended: true }),
+      entry("2", { champion, stars: 7, ascensionLevel: 1, isAscended: true }),
+      entry("3", { champion, stars: 7 }), entry("4", { champion, stars: 7, playerId: "two", battlegroup: 2 })];
+    const filters = { ...createAllianceRosterFilters(), ascensionEligible: true };
+    const index = createAllianceRosterFilterIndex(rows);
+    const result = filterAllianceRosterWithFacets(index, filters, "ALL", 1);
+    expect(result.entries.map(row => row.id)).toEqual(["2", "3", "4"]);
+    expect(result.championsByPlayer.get("one")?.map(row => row.id)).toEqual(["2"]);
+    expect(result.matchingByPlayer.get("one")).toBe(2);
+    expect(result.counts.stars).toEqual({ 7: 3 });
+    expect(filterAllianceRosterWithFacets(index, filters, "1", 1).counts.stars).toEqual({ 7: 2 });
+    expect(filterAllianceRosterWithFacets(index, { ...filters, ascension: [1] }, "ALL", null).entries.map(row => row.id)).toEqual(["2"]);
+  });
   it("scopes facets by battlegroup and applies each player limit after matching and counting", () => {
     const rows = [entry("1"), entry("2", { stars: 6 }), entry("3", { playerId: "two" }), entry("4", { playerId: "three", battlegroup: 2 }), entry("5", { playerId: "four", battlegroup: null })];
     const index = createAllianceRosterFilterIndex(rows);

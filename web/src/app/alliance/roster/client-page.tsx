@@ -15,17 +15,19 @@ import { getRosterAscensionLevel } from "@/lib/roster-ascension-filter";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper";
 import { cn } from "@/lib/utils";
+import { useAscensionEligibilityFilter } from "@/hooks/use-ascension-eligibility-filter";
 
 type ClientPageProps = { data: AllianceRosterEntry[]; bgColors: Record<number, string> };
 
 export function AllianceRosterMatrix({ data, bgColors }: ClientPageProps) {
   const [filters, setFilters] = useState(createAllianceRosterFilters);
+  const [ascensionEligible, setAscensionEligible] = useAscensionEligibilityFilter();
   const [battlegroup, setBattlegroup] = useState<AllianceBattlegroupFilter>("ALL");
   const [limit, setLimit] = useState<number | null>(10);
   const [preview, setPreview] = useState<AllianceRosterEntry | null>(null);
   const index = useMemo(() => createAllianceRosterFilterIndex(data), [data]);
   const options = useMemo(() => allianceRosterOptions(data), [data]);
-  const result = useMemo(() => filterAllianceRosterWithFacets(index, filters, battlegroup, limit), [index, filters, battlegroup, limit]);
+  const result = useMemo(() => filterAllianceRosterWithFacets(index, { ...filters, ascensionEligible }, battlegroup, limit), [index, filters, ascensionEligible, battlegroup, limit]);
   const updateFilter = <K extends keyof RosterFiltersState>(key: K, value: RosterFiltersState[K]) => setFilters(current => ({ ...current, [key]: value }));
   const players = useMemo(() => [...new Map(data.map(entry => [entry.playerId, {
     id: entry.playerId, name: entry.ingameName, bg: entry.battlegroup, avatar: entry.avatar,
@@ -54,6 +56,7 @@ export function AllianceRosterMatrix({ data, bgColors }: ClientPageProps) {
       filterStars={filters.stars} onFilterStarsChange={value => updateFilter("stars", value)}
       filterRanks={filters.ranks} onFilterRanksChange={value => updateFilter("ranks", value)}
       filterAscensionLevels={filters.ascension} onFilterAscensionLevelsChange={value => updateFilter("ascension", value)}
+      ascensionEligible={ascensionEligible} onAscensionEligibleChange={setAscensionEligible}
       filterClasses={filters.classes} onFilterClassesChange={value => updateFilter("classes", value)}
       tagFilter={filters.tags} onTagFilterChange={value => updateFilter("tags", value)}
       tagLogic={filters.tagLogic} onTagLogicChange={value => updateFilter("tagLogic", value)}

@@ -66,6 +66,45 @@ jobs:
       - name: Build Bot (src)
         run: pnpm run build-only
 
+      - name: Verify game-backed ascension rules and roster updates
+        run: pnpm exec vitest run src/domain/champion-ascension.test.ts src/domain/champion-ascension-classification.test.ts src/data/game-ascension/index.test.ts web/src/lib/data/carina-ascension-eligibility.test.ts src/domain/roster-ascension-state.test.ts src/services/rosterService.test.ts web/src/lib/data/champions.test.ts web/src/lib/roster-recommendation-service.test.ts web/src/lib/roster-recommendation-service-adapter.test.ts web/src/components/roster-ascension-control.test.tsx web/src/app/profile/roster/components/modals/ascension-controls.test.tsx web/src/lib/mcoc-prestige.test.ts web/src/lib/combat-ascension-regression.test.ts web/src/lib/prestige-ascension-regression.test.ts 'web/src/app/player/[id]/page.prestige.test.tsx' 'web/src/app/profile/roster/components/modals/prestige-chart-modal.test.tsx' web/src/lib/champion-page-state.test.ts web/src/lib/global-prestige-list.test.ts web/src/lib/roster-ascension-filter.test.ts web/src/app/profile/roster/components/roster-eligibility-filter.test.tsx 'web/src/app/champions/[slug]/champion-ascension-interaction.test.tsx' web/src/app/api/profile/roster/add/route.test.ts web/src/app/api/profile/roster/manage/route.test.ts --maxWorkers=1
+
+      - name: Setup Python for game data validation
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Verify crystal extraction and champion pool browsing
+        run: |
+          python3 -m pip install -r scripts/requirements-game-data.txt
+          python3 -m unittest discover -s scripts -p test_extract_mcoc_crystals.py
+          python3 -m unittest discover -s scripts -p test_extract_mcoc_crystal_artwork.py
+          python3 -m unittest discover -s scripts -p test_extract_mcoc_reward_artwork.py
+          python3 -m unittest discover -s scripts -p test_reward_palette.py
+          python3 -m unittest discover -s scripts -p test_extract_mcoc_crystal_rules.py
+          python3 -m unittest discover -s scripts -p test_import_mcoc_crystal_odds.py
+          python3 -m unittest discover -s scripts -p test_collect_mcoc_crystal_odds.py
+          python3 -m unittest discover -s scripts -p test_calibrate_mcoc_crystal_odds.py
+          python3 -m unittest discover -s scripts -p test_extract_mcoc_crystal_openings.py
+          python3 -m unittest discover -s scripts -p test_build_crystal_history.py
+          python3 -m unittest discover -s scripts -p test_extract_mcoc_ascension.py
+          pnpm exec vitest run src/domain/champion-crystals.test.ts src/domain/crystal-families.test.ts src/domain/crystal-browsing.test.ts src/domain/crystal-categories.test.ts src/services/crystalArtworkService.test.ts src/tests/crystal-catalog.test.ts src/tests/crystal-artwork.test.ts 'web/src/app/api/champions/[slug]/crystals/route.test.ts' 'web/src/app/champions/[slug]/champion-crystals-panel.test.tsx' 'web/src/app/champions/[slug]/champion-details-navigation.test.tsx' 'web/src/app/crystals/crystal-pages.test.tsx' web/src/app/crystals/crystal-filters.test.tsx web/src/app/crystals/crystal-champion-grid.test.tsx web/src/app/crystals/crystal-tools.test.tsx web/src/components/compact-crystal-family-grid.test.tsx web/src/app/crystals/crystal-tools-nav.test.tsx web/src/app/api/crystals/search/route.test.ts web/src/lib/data/crystals.test.ts web/src/lib/data/crystal-finder-eligibility.test.ts web/src/app/crystals/champions/page.test.tsx web/src/lib/crystal-browse-groups.test.ts web/src/lib/champion-crystal-groups.test.ts web/src/lib/crystal-browse-return.test.ts web/src/lib/crystal-catalog-state.test.ts web/src/app/crystals/crystal-browse-navigation.test.tsx web/src/app/crystals/crystal-data-notes.test.tsx web/src/lib/champion-page-state.test.ts web/src/lib/crystal-catalog-artwork.test.ts web/src/app/crystals/crystal-catalog-artwork.test.tsx web/src/lib/crystal-finder-artwork.test.ts web/src/app/crystals/crystal-finder-artwork.test.tsx --maxWorkers=1
+
+      - name: Verify champion acquisition sources and presentation
+        run: pnpm exec vitest run src/domain/champion-acquisition.test.ts src/domain/champion-ascension-acquisition.test.ts src/data/champion-ascension-acquisition/index.test.ts web/src/lib/data/champion-ascension-acquisition.test.ts web/src/components/champion-ascension-acquisition.test.tsx src/data/champion-acquisition/index.test.ts src/data/champion-acquisition/coverage.test.ts 'web/src/app/champions/[slug]/champion-acquisition-panel.test.tsx' web/src/lib/data/champion-crystal-ascension.test.ts web/src/lib/data/champion-crystal-ascension-bindings.test.ts 'web/src/app/champions/[slug]/champion-ascension-sources.test.tsx' 'web/src/app/api/champions/[slug]/ascension-sources/route.test.ts' --maxWorkers=1
+
+      - name: Verify reviewed crystal availability
+        run: pnpm exec vitest run src/domain/crystal-availability.test.ts src/data/game-crystals/availability.test.ts web/src/app/crystals/crystal-availability.test.tsx --maxWorkers=1
+
+      - name: Verify crystal rate presentation and artwork matching
+        run: pnpm exec vitest run web/src/lib/crystal-odds-presentation.test.ts web/src/lib/data/crystal-page-rewards.test.ts web/src/lib/crystal-reward-groups.test.ts web/src/lib/crystal-reward-presentation.test.ts web/src/lib/crystal-ascension-bonuses.test.ts web/src/app/crystals/crystal-ascension-bonuses.test.tsx web/src/app/crystals/crystal-rewards-browser.test.tsx web/src/app/crystals/crystal-reward-cards.test.tsx web/src/app/crystals/crystal-odds-disclosure.test.tsx web/src/app/crystals/crystal-odds-interaction.test.tsx --maxWorkers=1
+
+      - name: Verify full crystal rewards, odds and chronology
+        run: pnpm exec vitest run src/domain/crystal-openings.test.ts src/domain/crystal-ascension-rewards.test.ts src/data/game-crystal-openings/index.test.ts src/domain/crystal-odds.test.ts src/domain/crystal-chronology.test.ts src/domain/crystal-history.test.ts src/data/game-crystal-history/index.test.ts src/domain/reward-artwork.test.ts src/services/rewardArtworkService.test.ts src/data/game-reward-artwork/index.test.ts web/src/lib/data/crystal-openings.test.ts web/src/lib/data/crystal-browse-catalog.test.ts web/src/lib/data/crystal-seven-star-browse.test.ts web/src/app/crystals/crystal-opening-pages.test.tsx web/src/app/crystals/crystal-odds-disclosure.test.tsx web/src/app/crystals/crystal-routes.test.tsx --maxWorkers=1
+
+      - name: Verify reusable reward names and server logger reloads
+        run: pnpm exec vitest run src/domain/reward-display.test.ts src/domain/selectable-rewards.test.ts src/data/game-selectable-rewards/index.test.ts web/src/lib/logger.test.ts --maxWorkers=1
+
       - name: Verify war map boundaries and defense planning
         run: pnpm exec vitest run src/domain/war-map.test.ts web/src/app/api/war-planning/nodes/route.test.ts web/src/app/api/war-planning/placements/route.test.ts web/src/app/planning/defense-map-actions.test.ts web/src/app/planning/defense-actions.test.ts web/src/components/war-planning/hooks/use-defense-planning.test.ts web/src/components/war-planning/hooks/use-war-planning.test.ts --maxWorkers=1
 

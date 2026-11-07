@@ -8,6 +8,7 @@ import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
 import { PrestigeCurveChart } from "../../prestige-curve-chart";
 import { SigRecommendation, PrestigePoint } from "../../types";
+import { applyAscensionToPrestige } from "@/lib/mcoc-prestige";
 
 interface PrestigeChartModalProps {
     chartData: { data: PrestigePoint[], rec: SigRecommendation } | null;
@@ -67,7 +68,11 @@ export function PrestigeChartModal({ chartData, loading, onClose }: PrestigeChar
                             </DialogHeader>
                         </div>
                         <div className="p-6 pt-4">
-                            <PrestigeCurveChart data={chartData.data} currentSig={chartData.rec.fromSig} championClass={chartData.rec.championClass} />
+                            <PrestigeCurveChart data={chartData.data.map(point => ({
+                                ...point,
+                                // The API/cache holds A0 points; project only this chart's display data.
+                                prestige: applyAscensionToPrestige(point.prestige, chartData.rec.stars, chartData.rec.ascensionLevel) ?? 0,
+                            }))} currentSig={chartData.rec.fromSig} championClass={chartData.rec.championClass} />
                         </div>
                     </>
                 ) : null}

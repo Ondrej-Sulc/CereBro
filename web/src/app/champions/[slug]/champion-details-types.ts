@@ -3,6 +3,9 @@ import type { ChampionSynergy } from "@/lib/champion-synergies"
 import type { prepareChampionAbilityTextView } from "@/lib/champion-ability-text"
 import type { EffectSourceMetadata } from "@cerebro/core/domain/ability-source"
 import type { KitResistance } from "@/lib/champion-kit"
+import type { ChampionCrystalAvailability } from "@cerebro/core/domain/champion-crystals"
+import type { ChampionAscensionRules } from "@cerebro/core/domain/champion-ascension"
+import type { ChampionAcquisition } from "@cerebro/core/domain/champion-acquisition"
 
 export type ChampionDetailsPayload = {
   id: number
@@ -13,6 +16,9 @@ export type ChampionDetailsPayload = {
   class: ChampionClass
   images: unknown
   gameSynergies: ChampionSynergy[]
+  crystalAvailability?: ChampionCrystalAvailability
+  acquisition?: ChampionAcquisition
+  ascensionRules?: ChampionAscensionRules[]
   tags: Array<{ id: number; name: string; category: string | null }>
   abilities: Array<EffectSourceMetadata & {
     id: number
@@ -121,6 +127,8 @@ export type ChampionDetailsView = {
   sigLevel: number
   maxSig: number
   ascensionLevel: number
+  ascensionOptions?: number[]
+  ascensionRules?: ChampionAscensionRules | null
   prestige: number | null
   health: number | null
   attack: number | null

@@ -5,6 +5,8 @@ import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 import { ChampionDetailsClient } from "./champion-details-client"
 import type { ChampionDetailsProps, ChampionStatRow } from "./champion-details-types"
+import { getChampionAscensionAcquisitionSources } from "@/lib/data/champion-ascension-acquisition"
+import { getChampionAscensionRules } from "@cerebro/core/data/game-ascension"
 
 // Model Next's URL subscription at the framework boundary; use real browser history below.
 vi.mock("next/navigation", async () => {
@@ -116,6 +118,67 @@ it("shows decorative game glyphs beside the visible Health and Attack labels", a
     expect(icon.getAttribute("aria-hidden")).toBe("true")
     expect(icon.parentElement?.textContent).toBe(icon.dataset.statIcon === "health" ? "Health" : "Attack")
   }
+})
+
+it("opens crystal pools with the selected build and restores the previous section", async () => {
+  const crystalProps: ChampionDetailsProps = { ...props, champion: { ...props.champion, crystalAvailability: {
+    observedAt: "2026-11-03T09:10:42+00:00",
+    crystals: [{ name: "TITAN CRYSTAL", sourceIds: ["titan"], rarities: [7], isMainPool: true, selection: null }],
+  } } }
+  await act(async () => root.render(<ChampionDetailsClient {...crystalProps} />))
+  await click("How to obtain")
+  expect(new URLSearchParams(window.location.search).get("tab")).toBe("crystals")
+  expect(document.body.textContent).toContain("TITAN CRYSTAL")
+  expect(new URLSearchParams(window.location.search).get("rank")).toBe("5")
+  expect(new URLSearchParams(window.location.search).get("sig")).toBe("75")
+  await traverse("back")
+  expect(new URLSearchParams(window.location.search).get("tab")).toBe("overview")
+  expect(document.body.textContent).not.toContain("TITAN CRYSTAL")
+})
+
+it("loads ascension sources within How to obtain and follows exact stars and Back navigation", async () => {
+  const fetchSources = vi.fn<typeof fetch>().mockImplementation(async input => new Response(JSON.stringify({ observedAt: "2026-11-05T14:05:24Z", acquisition: getChampionAscensionAcquisitionSources("adamwarlock", String(input).endsWith("rarity=7") ? 7 : 6), crystals: String(input).endsWith("rarity=7") ? [{
+    key: "exact:seven:bonus", id: "exact-seven-bonus", name: "Bound bonus crystal", artworkUrl: null,
+    rarities: [7], kind: "champion-bonus", autoAscend: true, categoryId: "seven", rewardIndex: 0, rewards: [],
+  }] : [] })))
+  vi.stubGlobal("fetch", fetchSources)
+  const acquisitionProps: ChampionDetailsProps = { ...props, champion: { ...props.champion,
+    gameId: "adamwarlock", ascensionRules: getChampionAscensionRules("adamwarlock"),
+    stats: [...props.champion.stats, { ...stat(5), id: 65, rarity: 6, tierId: "tier6-5" }],
+    crystalAvailability: { observedAt: "2026-11-03T09:10:42+00:00", crystals: [{ name: "Ordinary hero crystal", sourceIds: ["ordinary-hero"], rarities: [7, 6], isMainPool: true, selection: null }] },
+  } }
+  window.history.replaceState(null, "", "/champions/current?tab=crystals&rarity=7&rank=5")
+  await act(async () => root.render(<ChampionDetailsClient {...acquisitionProps} />))
+  expect(document.body.textContent).toContain("Ascension sources")
+  const sourceLink = document.querySelector<HTMLAnchorElement>('a[href^="/crystals/exact-seven-bonus?rarity=7"]')!
+  expect(sourceLink).not.toBeNull()
+  expect(new URL(sourceLink.href).searchParams.get("returnTo")).toBe("/champions/current?rarity=7&tab=crystals")
+  const section = document.querySelector('[data-ascension-source]')!.closest("section")!
+  expect(section.textContent).not.toContain("Ordinary hero crystal")
+  await act(async () => window.history.pushState(null, "", "/champions/current?tab=crystals&rarity=6&rank=5"))
+  expect(document.body.textContent).not.toContain("Bound bonus crystal")
+  expect(document.body.textContent).not.toContain("Ascension sources")
+  expect(fetchSources).toHaveBeenCalledTimes(1)
+  expect(document.body.textContent).toContain("Ordinary hero crystal")
+  await traverse("back")
+  expect(document.querySelector('a[href^="/crystals/exact-seven-bonus?rarity=7&returnTo="]')).not.toBeNull()
+  await click("Kit overview")
+  expect(document.body.textContent).not.toContain("Ascension sources")
+  await traverse("back")
+  expect(document.body.textContent).toContain("Bound bonus crystal")
+})
+
+it("does not request ascension sources before How to obtain is opened", async () => {
+  const fetchSources = vi.fn<typeof fetch>().mockResolvedValue(new Response(JSON.stringify({ observedAt: "2026-11-05T14:05:24Z", crystals: [], acquisition: getChampionAscensionAcquisitionSources("adamwarlock", 7) })))
+  vi.stubGlobal("fetch", fetchSources)
+  const lazyProps: ChampionDetailsProps = { ...props, champion: { ...props.champion,
+    gameId: "adamwarlock", ascensionRules: getChampionAscensionRules("adamwarlock"),
+  } }
+  await act(async () => root.render(<ChampionDetailsClient {...lazyProps} />))
+  expect(fetchSources).not.toHaveBeenCalled()
+  await click("How to obtain")
+  expect(fetchSources).toHaveBeenCalledTimes(1)
+  expect(fetchSources.mock.calls[0][0]).toBe("/api/champions/current/ascension-sources?rarity=7")
 })
 
 it("drops a legacy source fragment on a deliberate section change and restores it with Back", async () => {

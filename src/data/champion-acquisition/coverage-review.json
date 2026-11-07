@@ -1,0 +1,1206 @@
+{
+  "observedAt": "2026-11-06T10:07:15.739Z",
+  "scope": "Every playable champion/star pair listed in obtainable metadata. Imported stats separately establish page visibility. Direct crystal membership and reviewed methods are matched at the same star level. Metadata and missing evidence do not establish player availability; nested selectors are separate acquisition routes.",
+  "crystalSource": {
+    "observedAt": "2026-11-03T09:10:42+00:00",
+    "gachaSha256": "087359950217387120337353cbb331eb733d9b49a2329db127634d307ae40dd6",
+    "bcgSha256": "9e95551a68cfeeebf395f49b0bff676c5a2406ba7c30795c228cc48bd89ede61",
+    "metadata": [
+      {
+        "assembly": "Marvel.Runtime.dll",
+        "sha256": "d1b1085922513073b9dcd656aa08ee70e01a7aef1433aa35876fdfba463278b5"
+      },
+      {
+        "assembly": "Fuse.Runtime.dll",
+        "sha256": "c7296f9c50334d3f12ece5ae2e7c9566d6965cc355c9eecad8af8acfe561a24b"
+      }
+    ]
+  },
+  "championMetadataSha256": "9e8a7ed472bea19c1a637de57cbb7ceda865fdab53f70da0627f7cc8a3bc8c27",
+  "acquisitionCatalogSha256": "f1fe083924b938d3bb5a602ad3e7c917d96534a36463d26da7376f7360b43146",
+  "counts": {
+    "champions": 339,
+    "metadataVariants": 1914,
+    "selectableVariants": 1864,
+    "variantsWithoutDirectCrystals": 90,
+    "variantsWithReviewedRoutes": 38,
+    "unreviewedVariants": 52,
+    "variantsWithoutImportedStats": 25
+  },
+  "variants": [
+    {
+      "name": "Absorbing Man",
+      "gameId": "absorbingman",
+      "slug": "absorbing-man",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "methodIds": [
+        "absorbingman-banquet-2025-realm"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Agatha Harkness",
+      "gameId": "agathaharkness",
+      "slug": "agatha-harkness",
+      "rarity": 3,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        2,
+        4,
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Black Tarantula",
+      "gameId": "blacktarantula",
+      "slug": "black-tarantula",
+      "rarity": 3,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        2,
+        4,
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Blade (Stellar-Forged)",
+      "gameId": "blade_stellar",
+      "slug": "blade-stellar-forged",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "blade_stellar-pieces-7"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Blade (Stellar-Forged)",
+      "gameId": "blade_stellar",
+      "slug": "blade-stellar-forged",
+      "rarity": 6,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "blade_stellar-pieces-6"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Blade (Stellar-Forged)",
+      "gameId": "blade_stellar",
+      "slug": "blade-stellar-forged",
+      "rarity": 5,
+      "hasImportedStats": false,
+      "otherCrystalStars": [],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Blade (Stellar-Forged)",
+      "gameId": "blade_stellar",
+      "slug": "blade-stellar-forged",
+      "rarity": 4,
+      "hasImportedStats": false,
+      "otherCrystalStars": [],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Blade (Stellar-Forged)",
+      "gameId": "blade_stellar",
+      "slug": "blade-stellar-forged",
+      "rarity": 3,
+      "hasImportedStats": false,
+      "otherCrystalStars": [],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Blade (Stellar-Forged)",
+      "gameId": "blade_stellar",
+      "slug": "blade-stellar-forged",
+      "rarity": 2,
+      "hasImportedStats": false,
+      "otherCrystalStars": [],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Captain America (Wwii)",
+      "gameId": "captainamerica_ww2",
+      "slug": "captain-america-wwii",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Carina Tivan",
+      "gameId": "carina_white",
+      "slug": "carina-tivan",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "carina-epilogue"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Colossus (Age of Apocalypse)",
+      "gameId": "colossus_aoa",
+      "slug": "colossus-age-of-apocalypse",
+      "rarity": 3,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Colossus (Age of Apocalypse)",
+      "gameId": "colossus_aoa",
+      "slug": "colossus-age-of-apocalypse",
+      "rarity": 2,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Dark Phoenix",
+      "gameId": "phoenix_dark",
+      "slug": "dark-phoenix",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "dark-phoenix-hof-7"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Dark Phoenix",
+      "gameId": "phoenix_dark",
+      "slug": "dark-phoenix",
+      "rarity": 6,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "dark-phoenix-hof-6"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Dark Phoenix",
+      "gameId": "phoenix_dark",
+      "slug": "dark-phoenix",
+      "rarity": 5,
+      "hasImportedStats": false,
+      "otherCrystalStars": [],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Dark Phoenix",
+      "gameId": "phoenix_dark",
+      "slug": "dark-phoenix",
+      "rarity": 4,
+      "hasImportedStats": false,
+      "otherCrystalStars": [],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Dark Phoenix",
+      "gameId": "phoenix_dark",
+      "slug": "dark-phoenix",
+      "rarity": 3,
+      "hasImportedStats": false,
+      "otherCrystalStars": [],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Dark Phoenix",
+      "gameId": "phoenix_dark",
+      "slug": "dark-phoenix",
+      "rarity": 2,
+      "hasImportedStats": false,
+      "otherCrystalStars": [],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Deadpool",
+      "gameId": "deadpool",
+      "slug": "deadpool",
+      "rarity": 2,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        1,
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Ghost Rider (Robbie Reyes)",
+      "gameId": "ghostrider_reyes",
+      "slug": "ghost-rider-robbie-reyes",
+      "rarity": 3,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Ghost Rider (Robbie Reyes)",
+      "gameId": "ghostrider_reyes",
+      "slug": "ghost-rider-robbie-reyes",
+      "rarity": 2,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Green Goblin (Stellar-Forged)",
+      "gameId": "green_goblin_stellar",
+      "slug": "green-goblin-stellar-forged",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "green-goblin-stellar-pieces-7"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Green Goblin (Stellar-Forged)",
+      "gameId": "green_goblin_stellar",
+      "slug": "green-goblin-stellar-forged",
+      "rarity": 6,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "green-goblin-stellar-pieces-6"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Guillotine (Deathless)",
+      "gameId": "guillotine_nameless",
+      "slug": "guillotine-deathless",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "guillotine_nameless-pieces-7"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Guillotine (Deathless)",
+      "gameId": "guillotine_nameless",
+      "slug": "guillotine-deathless",
+      "rarity": 6,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "guillotine_nameless-pieces-6"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Gwenom",
+      "gameId": "gwenom",
+      "slug": "gwenom",
+      "rarity": 3,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        2,
+        4,
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Hobgoblin (Phil Urich)",
+      "gameId": "hobgoblin_philurich",
+      "slug": "hobgoblin-phil-urich",
+      "rarity": 3,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        2,
+        4,
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Human Torch (Victorious)",
+      "gameId": "humantorch_victorious",
+      "slug": "human-torch-victorious",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "humantorch_victorious-voucher"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Human Torch (Victorious)",
+      "gameId": "humantorch_victorious",
+      "slug": "human-torch-victorious",
+      "rarity": 6,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Imperiosa",
+      "gameId": "imperiosa",
+      "slug": "imperiosa",
+      "rarity": 5,
+      "hasImportedStats": false,
+      "otherCrystalStars": [
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Imperiosa",
+      "gameId": "imperiosa",
+      "slug": "imperiosa",
+      "rarity": 4,
+      "hasImportedStats": false,
+      "otherCrystalStars": [
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Imperiosa",
+      "gameId": "imperiosa",
+      "slug": "imperiosa",
+      "rarity": 3,
+      "hasImportedStats": false,
+      "otherCrystalStars": [
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Invisible Woman (Victorious)",
+      "gameId": "invisiblewoman_victorious",
+      "slug": "invisible-woman-victorious",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "invisiblewoman_victorious-voucher"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Invisible Woman (Victorious)",
+      "gameId": "invisiblewoman_victorious",
+      "slug": "invisible-woman-victorious",
+      "rarity": 6,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Isophyne",
+      "gameId": "isophyne",
+      "slug": "isophyne",
+      "rarity": 2,
+      "hasImportedStats": false,
+      "otherCrystalStars": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Jessica Jones",
+      "gameId": "jessicajones_current",
+      "slug": "jessica-jones",
+      "rarity": 4,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Jessica Jones",
+      "gameId": "jessicajones_current",
+      "slug": "jessica-jones",
+      "rarity": 3,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Jessica Jones",
+      "gameId": "jessicajones_current",
+      "slug": "jessica-jones",
+      "rarity": 2,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Kang",
+      "gameId": "kang",
+      "slug": "kang",
+      "rarity": 3,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Kang",
+      "gameId": "kang",
+      "slug": "kang",
+      "rarity": 2,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "King Groot (Deathless)",
+      "gameId": "groot_king_deathless",
+      "slug": "king-groot-deathless",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "groot_king_deathless-pieces-7"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "King Groot (Deathless)",
+      "gameId": "groot_king_deathless",
+      "slug": "king-groot-deathless",
+      "rarity": 6,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "groot_king_deathless-pieces-6"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Kingpin",
+      "gameId": "kingpin",
+      "slug": "kingpin",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "methodIds": [
+        "kingpin-banquet-2025-realm"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Lumatrix",
+      "gameId": "lumatrix",
+      "slug": "lumatrix",
+      "rarity": 5,
+      "hasImportedStats": false,
+      "otherCrystalStars": [
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Lumatrix",
+      "gameId": "lumatrix",
+      "slug": "lumatrix",
+      "rarity": 4,
+      "hasImportedStats": false,
+      "otherCrystalStars": [
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Lumatrix",
+      "gameId": "lumatrix",
+      "slug": "lumatrix",
+      "rarity": 3,
+      "hasImportedStats": false,
+      "otherCrystalStars": [
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Lumatrix",
+      "gameId": "lumatrix",
+      "slug": "lumatrix",
+      "rarity": 2,
+      "hasImportedStats": false,
+      "otherCrystalStars": [
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Maestro",
+      "gameId": "maestro_trophy",
+      "slug": "maestro",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "maestro-necropolis-exploration"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Maestro",
+      "gameId": "maestro_trophy",
+      "slug": "maestro",
+      "rarity": 6,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "maestro-necropolis-completion"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Magik",
+      "gameId": "magik",
+      "slug": "magik",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "methodIds": [
+        "magik-limbo-token-exchange"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Masacre",
+      "gameId": "masacre",
+      "slug": "masacre",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "methodIds": [
+        "masacre-ccp-carina-selector"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Mister Fantastic (Victorious)",
+      "gameId": "mrfantastic_victorious",
+      "slug": "mister-fantastic-victorious",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "mrfantastic_victorious-voucher"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Mister Fantastic (Victorious)",
+      "gameId": "mrfantastic_victorious",
+      "slug": "mister-fantastic-victorious",
+      "rarity": 6,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Morningstar",
+      "gameId": "morningstar",
+      "slug": "morningstar",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Scarlet Witch",
+      "gameId": "scarletwitch_current",
+      "slug": "scarlet-witch",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "sigil-witch-store-7"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Scarlet Witch",
+      "gameId": "scarletwitch_current",
+      "slug": "scarlet-witch",
+      "rarity": 6,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "sigil-witch-store-6"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Scarlet Witch",
+      "gameId": "scarletwitch_current",
+      "slug": "scarlet-witch",
+      "rarity": 5,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "sigil-witch-store-5"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Scarlet Witch",
+      "gameId": "scarletwitch_current",
+      "slug": "scarlet-witch",
+      "rarity": 4,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "sigil-witch-store-4"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Scarlet Witch",
+      "gameId": "scarletwitch_current",
+      "slug": "scarlet-witch",
+      "rarity": 3,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Scarlet Witch",
+      "gameId": "scarletwitch_current",
+      "slug": "scarlet-witch",
+      "rarity": 2,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "She-Hulk (Deathless)",
+      "gameId": "shehulk_deathless",
+      "slug": "she-hulk-deathless",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "shehulk_deathless-pieces-7"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "She-Hulk (Deathless)",
+      "gameId": "shehulk_deathless",
+      "slug": "she-hulk-deathless",
+      "rarity": 6,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "shehulk_deathless-pieces-6"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Solvarch",
+      "gameId": "solvarch",
+      "slug": "solvarch",
+      "rarity": 5,
+      "hasImportedStats": false,
+      "otherCrystalStars": [
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Solvarch",
+      "gameId": "solvarch",
+      "slug": "solvarch",
+      "rarity": 4,
+      "hasImportedStats": false,
+      "otherCrystalStars": [
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Solvarch",
+      "gameId": "solvarch",
+      "slug": "solvarch",
+      "rarity": 3,
+      "hasImportedStats": false,
+      "otherCrystalStars": [
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Solvarch",
+      "gameId": "solvarch",
+      "slug": "solvarch",
+      "rarity": 2,
+      "hasImportedStats": false,
+      "otherCrystalStars": [
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Spider-Man Noir",
+      "gameId": "spiderman_noir",
+      "slug": "spider-man-noir",
+      "rarity": 3,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Spider-Man Noir",
+      "gameId": "spiderman_noir",
+      "slug": "spider-man-noir",
+      "rarity": 2,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Star-Lord (Kitty Pryde)",
+      "gameId": "starlord_kittypryde",
+      "slug": "star-lord-kitty-pryde",
+      "rarity": 3,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Star-Lord (Kitty Pryde)",
+      "gameId": "starlord_kittypryde",
+      "slug": "star-lord-kitty-pryde",
+      "rarity": 2,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        4,
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Star-Lord (Stellar-Forged)",
+      "gameId": "starlord_stellar",
+      "slug": "star-lord-stellar-forged",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "starlord_stellar-pieces-7"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Star-Lord (Stellar-Forged)",
+      "gameId": "starlord_stellar",
+      "slug": "star-lord-stellar-forged",
+      "rarity": 6,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "starlord_stellar-pieces-6"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Star-Lord (Stellar-Forged)",
+      "gameId": "starlord_stellar",
+      "slug": "star-lord-stellar-forged",
+      "rarity": 5,
+      "hasImportedStats": false,
+      "otherCrystalStars": [],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Star-Lord (Stellar-Forged)",
+      "gameId": "starlord_stellar",
+      "slug": "star-lord-stellar-forged",
+      "rarity": 4,
+      "hasImportedStats": false,
+      "otherCrystalStars": [],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Star-Lord (Stellar-Forged)",
+      "gameId": "starlord_stellar",
+      "slug": "star-lord-stellar-forged",
+      "rarity": 3,
+      "hasImportedStats": false,
+      "otherCrystalStars": [],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Star-Lord (Stellar-Forged)",
+      "gameId": "starlord_stellar",
+      "slug": "star-lord-stellar-forged",
+      "rarity": 2,
+      "hasImportedStats": false,
+      "otherCrystalStars": [],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Summoned Symbiote",
+      "gameId": "summoned_symbiote",
+      "slug": "summoned-symbiote",
+      "rarity": 1,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "summoned-symbiote-sugar-crash"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Thanos",
+      "gameId": "thanos",
+      "slug": "thanos",
+      "rarity": 3,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        2,
+        4,
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Thanos (Deathless)",
+      "gameId": "thanos_deathless_trophy",
+      "slug": "thanos-deathless",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "deathless-thanos-mausoleum-hard"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Thanos (Deathless)",
+      "gameId": "thanos_deathless_trophy",
+      "slug": "thanos-deathless",
+      "rarity": 6,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "deathless-thanos-mausoleum-normal"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Thing (Victorious)",
+      "gameId": "thing_victorious",
+      "slug": "thing-victorious",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "thing_victorious-voucher"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Thing (Victorious)",
+      "gameId": "thing_victorious",
+      "slug": "thing-victorious",
+      "rarity": 6,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Unstoppable Colossus",
+      "gameId": "colossus_unstoppable",
+      "slug": "unstoppable-colossus",
+      "rarity": 6,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        2,
+        3,
+        4
+      ],
+      "methodIds": [
+        "unstoppable-colossus-store-6"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Unstoppable Colossus",
+      "gameId": "colossus_unstoppable",
+      "slug": "unstoppable-colossus",
+      "rarity": 5,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        2,
+        3,
+        4
+      ],
+      "methodIds": [
+        "unstoppable-colossus-store-5"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Vision",
+      "gameId": "vision",
+      "slug": "vision",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6
+      ],
+      "methodIds": [
+        "vision-banquet-2025-selector"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Vision (Deathless)",
+      "gameId": "vision_deathless",
+      "slug": "vision-deathless",
+      "rarity": 7,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "vision_deathless-pieces-7"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Vision (Deathless)",
+      "gameId": "vision_deathless",
+      "slug": "vision-deathless",
+      "rarity": 6,
+      "hasImportedStats": true,
+      "otherCrystalStars": [],
+      "methodIds": [
+        "vision_deathless-pieces-6"
+      ],
+      "status": "reviewed_route"
+    },
+    {
+      "name": "Wave",
+      "gameId": "wave",
+      "slug": "wave",
+      "rarity": 2,
+      "hasImportedStats": true,
+      "otherCrystalStars": [
+        3,
+        4,
+        5,
+        6,
+        7
+      ],
+      "methodIds": [],
+      "status": "evidence_missing"
+    },
+    {
+      "name": "Wolverine (Weapon X)",
+      "gameId": "wolverine_weaponx",
+      "slug": "wolverine-weapon-x",
+      "rarity": 7,
+      "hasImportedStats": false,
+      "otherCrystalStars": [
+        5,
+        6
+      ],
+      "methodIds": [
+        "wolverine_weaponx-banquet-2025-selector"
+      ],
+      "status": "reviewed_route"
+    }
+  ]
+}

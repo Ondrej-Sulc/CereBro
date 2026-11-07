@@ -1,0 +1,2662 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-11-06",
+  "sources": [
+    {
+      "id": "heart-of-fire-2025",
+      "title": "Heart of Fire event announcement",
+      "url": "https://playcontestofchampions.com/news/heart-of-fire-event/",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "necropolis-rewards",
+      "title": "November 2023 stream - Deathless pieces and Necropolis",
+      "url": "https://playcontestofchampions.com/news/twitch-stream-summary-november-3rd-2023/",
+      "reviewedAt": "2026-11-06",
+      "category": "official_stream_summary",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "epilogue-finale",
+      "title": "Epilogue Part 4 \u00b7 Last Struggle",
+      "url": "https://playcontestofchampions.com/news/v59-0-release-notes/",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "deathless-mausoleum-recap",
+      "title": "Deathless Mausoleum",
+      "url": "https://playcontestofchampions.com/news/deathless-mausoleum/",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "deathless-guillotine-challenge",
+      "title": "Guillotine challenge announcement",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/354770/fight-for-your-final-piece-of-guillotine-deathless-in-this-december-challenge",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "MCOC Team"
+    },
+    {
+      "id": "stellar-starlord-event",
+      "title": "Stellar-Forged Star-Lord \u00b7 Coliseum piece",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/409292/alliance-coliseum-star-lord-piece",
+      "reviewedAt": "2026-11-06",
+      "category": "community_discussion"
+    },
+    {
+      "id": "stellar-green-goblin-final-piece",
+      "title": "September 16 - final Green Goblin piece",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/419227/this-week-in-the-battlerealm-september-16th",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "Kabam (Osaurus) Rex"
+    },
+    {
+      "id": "guillotine_nameless-6-items",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "event_111523_deathless_guillotine_t6_soul_store",
+            "description": "One of the 5 pieces of Deathless Guillotine's Sword. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless Guillotine in the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "guillotine_nameless-7-items",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "event_101823_7star_deathless_guillotine",
+            "description": "Collect all 5\u00a0pieces of Deathless Guillotine's Sword to prove your worth and add 7-Star Deathless Guillotine to your team. See your in-game mail for details."
+          }
+        ]
+      }
+    },
+    {
+      "id": "groot_king_deathless-6-items",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "deathless_kinggroot_t6_atmosphere_store",
+            "description": "One of the 5 pieces of Deathless King Groot. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless King Groot from the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "groot_king_deathless-7-items",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "deathless_kinggroot_t7_aqua",
+            "description": "One of the 5 pieces of Deathless King Groot. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless King Groot from the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "vision_deathless-6-items",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "6star_deathless_vision_bundle",
+            "description": "Collect all 5\u00a0pieces of Deathless Vision to prove your worth and add 6-Star Deathless Vision to your team. See your in-game mail for details."
+          }
+        ]
+      }
+    },
+    {
+      "id": "vision_deathless-7-items",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "deathless_vision_t7_visage",
+            "description": "One of the 5 pieces of Deathless Vision. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless Vision from the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "shehulk_deathless-6-items",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "deathless_shehulk_t6_closing_store",
+            "description": "One of the 5 pieces of Deathless She-Hulk. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless She-Hulk from the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "shehulk_deathless-7-items",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "7star_deathless_shehulk_bundle",
+            "description": "Collect all 5\u00a0pieces of Deathless She-Hulk to prove your worth and add 7-Star Deathless She-Hulk to your team. See your in-game mail for details."
+          }
+        ]
+      }
+    },
+    {
+      "id": "starlord_stellar-6-items",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "6star_sf_starlord_bundle",
+            "description": "Collect all 5 Stellar-Forged items to activate this power and claim your 6-Star Star-Lord (Stellar-Forged) in the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "starlord_stellar-7-items",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "7star_sf_starlord_bundle",
+            "description": "Collect all 5 Stellar-Forged items to activate this power and claim your 7-Star Star-Lord (Stellar-Forged) in the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "blade_stellar-6-items",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "6star_sf_blade_bundle",
+            "description": "Collect all 5 to activate this power and claim your 6-Star Blade (Stellar-Forged) in the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "blade_stellar-7-items",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "7star_sf_blade_bundle",
+            "description": "Collect all 5 to activate this power and claim your 7-Star Blade (Stellar-Forged) in the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "green-goblin-stellar-6-items",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "selector_stellarforged_green_goblin_shard_t6",
+            "description": "Allows you to select one of the following 6-Star Stellar-Forged items: Goblin Smile, Glider Core, Science Degree, Pumpkin Bomb or Hip Bag. You may only own one of each fragment. Please ensure that you do not select a duplicate item."
+          }
+        ]
+      }
+    },
+    {
+      "id": "green-goblin-stellar-7-items",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "selector_stellarforged_green_goblin_shard_t7",
+            "description": "Allows you to select one of the following 7-Star Stellar-Forged items: Goblin Smile, Glider Core, Science Degree, Pumpkin Bomb or Hip Bag. You may only own one of each fragment. Please ensure that you do not select a duplicate item."
+          }
+        ]
+      }
+    },
+    {
+      "id": "sigil-store-2025",
+      "title": "Summoner\u2019s Sigil - subscription and store announcement",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/386238/summoner-s-sigil-subscription-updated-1-15-to-include-additional-comp-for-arena-express",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "MCOC Team"
+    },
+    {
+      "id": "sugar-crash-2023",
+      "title": "Summoned Symbiote and Sugar Crash announcement",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/348054/its-spooky-season-add-summoned-symbiote-to-your-roster",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "MCOC Team"
+    },
+    {
+      "id": "humantorch_victorious-voucher",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "saga_humantorch_v4_token",
+            "description": "Trade in for a 7-star Human Torch (Victorious)!"
+          }
+        ]
+      }
+    },
+    {
+      "id": "invisiblewoman_victorious-voucher",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "saga_invisiblewoman_v4_token",
+            "description": "Trade in for a 7-star Invisible Woman (Victorious)!"
+          }
+        ]
+      }
+    },
+    {
+      "id": "mrfantastic_victorious-voucher",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "saga_misterfantastic_v4_token",
+            "description": "Trade in for a 7-star Mister Fantastic (Victorious)!"
+          }
+        ]
+      }
+    },
+    {
+      "id": "thing_victorious-voucher",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "saga_thing_v4_token",
+            "description": "Trade in for a 7-star Thing (Victorious)!"
+          }
+        ]
+      }
+    },
+    {
+      "id": "reclamation-war-launch",
+      "title": "Empire of Doom \u00b7 Reclamation War launch",
+      "url": "https://steamcommunity.com/games/3127280/announcements/detail/717920261052041008",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "deathless-stream-slides",
+      "title": "Archived Kabam livestream slides shared by the community",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/388759/where-are-all-of-the-permanent-deathless-pieces",
+      "reviewedAt": "2026-11-06",
+      "category": "community_screenshot",
+      "author": "Asher1_1"
+    },
+    {
+      "id": "king-groot-chase",
+      "title": "King Groot chase announcement",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/357119/say-hello-to-your-next-deathless-chase-king-groot",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "Kabam Jax"
+    },
+    {
+      "id": "showcase-march-2024",
+      "title": "Alliance War Showcase announcement",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/362452/introducing-new-content-showcase",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "MCOC Team"
+    },
+    {
+      "id": "ccp-carina-2024",
+      "title": "Community Carina challenge announcement",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/359998/challenging-new-carina-s-challenges-are-coming-your-way",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "MCOC Team"
+    },
+    {
+      "id": "winter-woe-recap",
+      "title": "Winter of Woe announcement",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/359302/new-end-game-content-winter-of-woe-starts-feb-7th-added-info-deathless-champion-objectives",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "MCOC Team"
+    },
+    {
+      "id": "vision-crucible-objective",
+      "title": "Reunion event - original Crucible and Vision reward",
+      "url": "https://playcontestofchampions.com/news/reunion-event/",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "starlord-chase-pieces",
+      "title": "Star-Lord chase and mail-piece discussion",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/409128/stella-forged-piece-locations",
+      "reviewedAt": "2026-11-06",
+      "category": "community_discussion"
+    },
+    {
+      "id": "starlord-glitch-incursions",
+      "title": "Glitch Incursions",
+      "url": "https://playcontestofchampions.com/news/glitch-incursions/",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "blade-showcase-piece",
+      "title": "February 2026 stream - Founders War Showcase",
+      "url": "https://playcontestofchampions.com/news/february-27th-livestream-summary/",
+      "reviewedAt": "2026-11-06",
+      "category": "official_stream_summary",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "blade-coliseum-garlic",
+      "title": "April 2026 stream - Coliseum rewards",
+      "url": "https://playcontestofchampions.com/news/april-2nd-livestream-summary/",
+      "reviewedAt": "2026-11-06",
+      "category": "official_stream_summary",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "guillotine_nameless-piece-items-6",
+      "title": "In-game piece and store-item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "dg_t6_handle",
+            "description": "One of the 5 pieces of Deathless Guillotine's Sword. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless Guillotine in the Game Store."
+          },
+          {
+            "id": "dg_t6_tipofblade",
+            "description": "One of the 5 pieces of Deathless Guillotine's Sword. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless Guillotine in the Game Store."
+          },
+          {
+            "id": "dg_t6_soul",
+            "description": "One of the 5 pieces of Deathless Guillotine's Sword. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless Guillotine in the Game Store."
+          },
+          {
+            "id": "dg_t6_bodyofblade",
+            "description": "One of the 5 pieces of Deathless Guillotine's Sword. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless Guillotine in the Game Store."
+          },
+          {
+            "id": "dg_t6_cross_guard",
+            "description": "One of the 5 pieces of Deathless Guillotine's Sword. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless Guillotine in the Game Store."
+          },
+          {
+            "id": "event_102023_deathless_guilllotine_t6_tipofblade_store",
+            "description": "One of the 5 pieces of Deathless Guillotine's Sword. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless Guillotine in the Game Store."
+          },
+          {
+            "id": "event_111523_deathless_guillotine_t6_soul_store",
+            "description": "One of the 5 pieces of Deathless Guillotine's Sword. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless Guillotine in the Game Store."
+          },
+          {
+            "id": "event_121123_deathless_guilllotine_t6_bladesegment_store",
+            "description": "One of the 5 pieces of Deathless Guillotine's Sword. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless Guillotine in the Game Store."
+          },
+          {
+            "id": "event_122023_deathless_guilllotine_t6_crossguard_store",
+            "description": "One of the 5 pieces of Deathless Guillotine's Sword. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless Guillotine in the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "guillotine_nameless-piece-items-7",
+      "title": "In-game piece and store-item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "dg_t7_handle",
+            "description": "One of the 5 pieces of Deathless Guillotine's Sword. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless Guillotine in the Game Store."
+          },
+          {
+            "id": "dg_t7_tipofblade",
+            "description": "One of the 5 pieces of Deathless Guillotine's Sword. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless Guillotine in the Game Store."
+          },
+          {
+            "id": "dg_t7_soul",
+            "description": "One of the 5 pieces of Deathless Guillotine's Sword. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless Guillotine in the Game Store."
+          },
+          {
+            "id": "dg_t7_bodyofblade",
+            "description": "One of the 5 pieces of Deathless Guillotine's Sword. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless Guillotine in the Game Store."
+          },
+          {
+            "id": "dg_t7_cross_guard",
+            "description": "One of the 5 pieces of Deathless Guillotine's Sword. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless Guillotine in the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "groot_king_deathless-piece-items-6",
+      "title": "In-game piece and store-item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "deathless_kinggroot_t6_seedling",
+            "description": "One of the 5 pieces of Deathless King Groot. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless King Groot from the Game Store."
+          },
+          {
+            "id": "deathless_kinggroot_t6_topsoil",
+            "description": "One of the 5 pieces of Deathless King Groot. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless King Groot from the Game Store."
+          },
+          {
+            "id": "deathless_kinggroot_t6_aqua",
+            "description": "One of the 5 pieces of Deathless King Groot. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless King Groot from the Game Store."
+          },
+          {
+            "id": "deathless_kinggroot_t6_atmosphere",
+            "description": "One of the 5 pieces of Deathless King Groot. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless King Groot from the Game Store."
+          },
+          {
+            "id": "deathless_kinggroot_t6_music",
+            "description": "One of the 5 pieces of Deathless King Groot. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless King Groot from the Game Store."
+          },
+          {
+            "id": "deathless_kinggroot_t6_topsoil_store",
+            "description": "One of the 5 pieces of Deathless King Groot. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless King Groot from the Game Store."
+          },
+          {
+            "id": "deathless_kinggroot_t6_aqua_store",
+            "description": "One of the 5 pieces of Deathless King Groot. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless King Groot from the Game Store."
+          },
+          {
+            "id": "deathless_kinggroot_t6_atmosphere_store",
+            "description": "One of the 5 pieces of Deathless King Groot. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless King Groot from the Game Store."
+          },
+          {
+            "id": "deathless_kinggroot_t6_music_store",
+            "description": "One of the 5 pieces of Deathless King Groot. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless King Groot from the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "groot_king_deathless-piece-items-7",
+      "title": "In-game piece and store-item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "deathless_kinggroot_t7_seedling",
+            "description": "One of the 5 pieces of Deathless King Groot. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless King Groot from the Game Store."
+          },
+          {
+            "id": "deathless_kinggroot_t7_topsoil",
+            "description": "One of the 5 pieces of Deathless King Groot. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless King Groot from the Game Store."
+          },
+          {
+            "id": "deathless_kinggroot_t7_aqua",
+            "description": "One of the 5 pieces of Deathless King Groot. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless King Groot from the Game Store."
+          },
+          {
+            "id": "deathless_kinggroot_t7_atmosphere",
+            "description": "One of the 5 pieces of Deathless King Groot. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless King Groot from the Game Store."
+          },
+          {
+            "id": "deathless_kinggroot_t7_music",
+            "description": "One of the 5 pieces of Deathless King Groot. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless King Groot from the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "vision_deathless-piece-items-6",
+      "title": "In-game piece and store-item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "deathless_vision_t6_visage",
+            "description": "One of the 5 pieces of Deathless Vision. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless Vision from the Game Store."
+          },
+          {
+            "id": "deathless_vision_t6_chassis",
+            "description": "One of the 5 pieces of Deathless Vision. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless Vision from the Game Store."
+          },
+          {
+            "id": "deathless_vision_t6_ai",
+            "description": "One of the 5 pieces of Deathless Vision. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless Vision from the Game Store."
+          },
+          {
+            "id": "deathless_vision_t6_tears",
+            "description": "One of the 5 pieces of Deathless Vision. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless Vision from the Game Store."
+          },
+          {
+            "id": "deathless_vision_t6_gem",
+            "description": "One of the 5 pieces of Deathless Vision. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless Vision from the Game Store."
+          },
+          {
+            "id": "deathless_vision_t6_chassis_store",
+            "description": "One of the 5 pieces of Deathless Vision. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless Vision from the Game Store."
+          },
+          {
+            "id": "deathless_vision_t6_ai_store",
+            "description": "One of the 5 pieces of Deathless Vision. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless Vision from the Game Store."
+          },
+          {
+            "id": "deathless_vision_t6_tears_store",
+            "description": "One of the 5 pieces of Deathless Vision. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless Vision from the Game Store."
+          },
+          {
+            "id": "deathless_vision_t6_gem_store",
+            "description": "One of the 5 pieces of Deathless Vision. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless Vision from the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "vision_deathless-piece-items-7",
+      "title": "In-game piece and store-item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "deathless_vision_t7_visage",
+            "description": "One of the 5 pieces of Deathless Vision. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless Vision from the Game Store."
+          },
+          {
+            "id": "deathless_vision_t7_chassis",
+            "description": "One of the 5 pieces of Deathless Vision. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless Vision from the Game Store."
+          },
+          {
+            "id": "deathless_vision_t7_ai",
+            "description": "One of the 5 pieces of Deathless Vision. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless Vision from the Game Store."
+          },
+          {
+            "id": "deathless_vision_t7_tears",
+            "description": "One of the 5 pieces of Deathless Vision. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless Vision from the Game Store."
+          },
+          {
+            "id": "deathless_vision_t7_gem",
+            "description": "One of the 5 pieces of Deathless Vision. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless Vision from the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "shehulk_deathless-piece-items-6",
+      "title": "In-game piece and store-item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "deathless_shehulk_t6_arguments",
+            "description": "One of the 5 pieces of Deathless She-Hulk. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless She-Hulk from the Game Store."
+          },
+          {
+            "id": "deathless_shehulk_t6_accusation",
+            "description": "One of the 5 pieces of Deathless She-Hulk. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless She-Hulk from the Game Store."
+          },
+          {
+            "id": "deathless_shehulk_t6_evidence",
+            "description": "One of the 5 pieces of Deathless She-Hulk. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless She-Hulk from the Game Store."
+          },
+          {
+            "id": "deathless_shehulk_t6_closing",
+            "description": "One of the 5 pieces of Deathless She-Hulk. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless She-Hulk from the Game Store."
+          },
+          {
+            "id": "deathless_shehulk_t6_sentencing",
+            "description": "One of the 5 pieces of Deathless She-Hulk. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless She-Hulk from the Game Store."
+          },
+          {
+            "id": "deathless_shehulk_t6_accusation_store",
+            "description": "One of the 5 pieces of Deathless She-Hulk. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless She-Hulk from the Game Store."
+          },
+          {
+            "id": "deathless_shehulk_t6_evidence_store",
+            "description": "One of the 5 pieces of Deathless She-Hulk. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless She-Hulk from the Game Store."
+          },
+          {
+            "id": "deathless_shehulk_t6_closing_store",
+            "description": "One of the 5 pieces of Deathless She-Hulk. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless She-Hulk from the Game Store."
+          },
+          {
+            "id": "deathless_shehulk_t6_sentencing_store",
+            "description": "One of the 5 pieces of Deathless She-Hulk. Collect all 5 to prove yourself worthy and claim your 6-Star Deathless She-Hulk from the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "shehulk_deathless-piece-items-7",
+      "title": "In-game piece and store-item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "deathless_shehulk_t7_arguments",
+            "description": "One of the 5 pieces of Deathless She-Hulk. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless She-Hulk from the Game Store."
+          },
+          {
+            "id": "deathless_shehulk_t7_accusation",
+            "description": "One of the 5 pieces of Deathless She-Hulk. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless She-Hulk from the Game Store."
+          },
+          {
+            "id": "deathless_shehulk_t7_evidence",
+            "description": "One of the 5 pieces of Deathless She-Hulk. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless She-Hulk from the Game Store."
+          },
+          {
+            "id": "deathless_shehulk_t7_closing",
+            "description": "One of the 5 pieces of Deathless She-Hulk. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless She-Hulk from the Game Store."
+          },
+          {
+            "id": "deathless_shehulk_t7_sentencing",
+            "description": "One of the 5 pieces of Deathless She-Hulk. Collect all 5 to prove yourself worthy and claim your 7-Star Deathless She-Hulk from the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "starlord_stellar-piece-items-6",
+      "title": "In-game piece and store-item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "sfsl_t6_cassette_deck",
+            "description": "One of the 5 pieces of Star-Lord (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Star-Lord (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfsl_t6_mixtape",
+            "description": "One of the 5 pieces of Star-Lord (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Star-Lord (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfsl_t6_trenchcoat",
+            "description": "One of the 5 pieces of Star-Lord (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Star-Lord (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfsl_t6_left_quadblaster",
+            "description": "One of the 5 pieces of Star-Lord (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Star-Lord (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfsl_t6_right_quadblaster",
+            "description": "One of the 5 pieces of Star-Lord (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Star-Lord (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfsl_t6_cassette_deck_gamestore",
+            "description": "One of the 5 pieces of Star-Lord (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Star-Lord (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfsl_t6_mixtape_gamestore",
+            "description": "One of the 5 pieces of Star-Lord (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Star-Lord (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfsl_t6_trenchcoat_gamestore",
+            "description": "One of the 5 pieces of Star-Lord (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Star-Lord (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfsl_t6_left_quadblaster_gamestore",
+            "description": "One of the 5 pieces of Star-Lord (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Star-Lord (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfsl_t6_right_quadblaster_gamestore",
+            "description": "One of the 5 pieces of Star-Lord (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Star-Lord (Stellar-Forged) in the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "starlord_stellar-piece-items-7",
+      "title": "In-game piece and store-item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "sfsl_t7_cassette_deck",
+            "description": "One of the 5 pieces of Star-Lord (Stellar-Forged). Collect all 5 to activate this power and claim your 7-Star Star-Lord (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfsl_t7_mixtape",
+            "description": "One of the 5 pieces of Star-Lord (Stellar-Forged). Collect all 5 to activate this power and claim your 7-Star Star-Lord (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfsl_t7_trenchcoat",
+            "description": "One of the 5 pieces of Star-Lord (Stellar-Forged). Collect all 5 to activate this power and claim your 7-Star Star-Lord (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfsl_t7_left_quadblaster",
+            "description": "One of the 5 pieces of Star-Lord (Stellar-Forged). Collect all 5 to activate this power and claim your 7-Star Star-Lord (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfsl_t7_right_quadblaster",
+            "description": "One of the 5 pieces of Star-Lord (Stellar-Forged). Collect all 5 to activate this power and claim your 7-Star Star-Lord (Stellar-Forged) in the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "blade_stellar-piece-items-6",
+      "title": "In-game piece and store-item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "sfbl_t6_stake",
+            "description": "One of the 5 pieces of Blade (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Blade (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfbl_t6_sunlight",
+            "description": "One of the 5 pieces of Blade (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Blade (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfbl_t6_garlic",
+            "description": "One of the 5 pieces of Blade (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Blade (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfbl_t6_silver_arrow",
+            "description": "One of the 5 pieces of Blade (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Blade (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfbl_t6_slayer_sword",
+            "description": "One of the 5 pieces of Blade (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Blade (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfbl_t6_stake_gamestore",
+            "description": "One of the 5 pieces of Blade (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Blade (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfbl_t6_sunlight_gamestore",
+            "description": "One of the 5 pieces of Blade (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Blade (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfbl_t6_garlic_gamestore",
+            "description": "One of the 5 pieces of Blade (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Blade (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfbl_t6_silver_arrow_gamestore",
+            "description": "One of the 5 pieces of Blade (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Blade (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfbl_t6_slayer_sword_gamestore",
+            "description": "One of the 5 pieces of Blade (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Blade (Stellar-Forged) in the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "blade_stellar-piece-items-7",
+      "title": "In-game piece and store-item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "sfbl_t7_stake",
+            "description": "One of the 5 pieces of Blade (Stellar-Forged). Collect all 5 to activate this power and claim your 7-Star Blade (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfbl_t7_sunlight",
+            "description": "One of the 5 pieces of Blade (Stellar-Forged). Collect all 5 to activate this power and claim your 7-Star Blade (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfbl_t7_garlic",
+            "description": "One of the 5 pieces of Blade (Stellar-Forged). Collect all 5 to activate this power and claim your 7-Star Blade (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfbl_t7_silver_arrow",
+            "description": "One of the 5 pieces of Blade (Stellar-Forged). Collect all 5 to activate this power and claim your 7-Star Blade (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfbl_t7_slayer_sword",
+            "description": "One of the 5 pieces of Blade (Stellar-Forged). Collect all 5 to activate this power and claim your 7-Star Blade (Stellar-Forged) in the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "green_goblin_stellar-piece-items-6",
+      "title": "In-game piece and store-item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "sfgg_t6_goblin_smile",
+            "description": "One of the 5 pieces of Green Goblin (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Green Goblin (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfgg_t6_glider_core",
+            "description": "One of the 5 pieces of Green Goblin (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Green Goblin (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfgg_t6_science_degree",
+            "description": "One of the 5 pieces of Green Goblin (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Green Goblin (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfgg_t6_pumpkin_bomb",
+            "description": "One of the 5 pieces of Green Goblin (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Green Goblin (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfgg_t6_hip_bag",
+            "description": "One of the 5 pieces of Green Goblin (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Green Goblin (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfgg_t6_goblin_smile_gamestore",
+            "description": "One of the 5 pieces of Green Goblin (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Green Goblin (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfgg_t6_glider_core_gamestore",
+            "description": "One of the 5 pieces of Green Goblin (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Green Goblin (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfgg_t6_science_degree_gamestore",
+            "description": "One of the 5 pieces of Green Goblin (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Green Goblin (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfgg_t6_pumpkin_bomb_gamestore",
+            "description": "One of the 5 pieces of Green Goblin (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Green Goblin (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfgg_t6_hip_bag_gamestore",
+            "description": "One of the 5 pieces of Green Goblin (Stellar-Forged). Collect all 5 to activate this power and claim your 6-Star Green Goblin (Stellar-Forged) in the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "green_goblin_stellar-piece-items-7",
+      "title": "In-game piece and store-item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "sfgg_t7_goblin_smile",
+            "description": "One of the 5 pieces of Green Goblin (Stellar-Forged). Collect all 5 to activate this power and claim your 7-Star Green Goblin (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfgg_t7_glider_core",
+            "description": "One of the 5 pieces of Green Goblin (Stellar-Forged). Collect all 5 to activate this power and claim your 7-Star Green Goblin (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfgg_t7_science_degree",
+            "description": "One of the 5 pieces of Green Goblin (Stellar-Forged). Collect all 5 to activate this power and claim your 7-Star Green Goblin (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfgg_t7_pumpkin_bomb",
+            "description": "One of the 5 pieces of Green Goblin (Stellar-Forged). Collect all 5 to activate this power and claim your 7-Star Green Goblin (Stellar-Forged) in the Game Store."
+          },
+          {
+            "id": "sfgg_t7_hip_bag",
+            "description": "One of the 5 pieces of Green Goblin (Stellar-Forged). Collect all 5 to activate this power and claim your 7-Star Green Goblin (Stellar-Forged) in the Game Store."
+          }
+        ]
+      }
+    },
+    {
+      "id": "guillotine-mail-stars",
+      "title": "Original mail gift at 6 and 7 stars - discussion",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/351876/6-star-cursed-blade-tip-not-given-for-entering-bg-gladiator-track",
+      "reviewedAt": "2026-11-06",
+      "category": "community_discussion"
+    },
+    {
+      "id": "king-groot-six-star-chase",
+      "title": "6-star King Groot mail gift and store chase - discussion",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/363438/6-deathless-king-groot-pieces-where-can-i-find-them",
+      "reviewedAt": "2026-11-06",
+      "category": "community_discussion"
+    },
+    {
+      "id": "starlord-mixtape-objective",
+      "title": "Star-Lord Mix Tape solo-objective discussion",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/406984/stellar-forge-mix-tape",
+      "reviewedAt": "2026-11-06",
+      "category": "community_discussion"
+    },
+    {
+      "id": "blade-sunlight-gameplay",
+      "title": "April 2026 stream - Alliance Coliseum",
+      "url": "https://playcontestofchampions.com/news/april-2nd-livestream-summary/",
+      "reviewedAt": "2026-11-06",
+      "category": "official_stream_summary",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "blade-silver-arrow-objective",
+      "title": "In-game Silver Arrow objective screenshot",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/414001/elder-stellar-piece-deadline-change",
+      "reviewedAt": "2026-11-06",
+      "category": "community_screenshot",
+      "author": "MrSakuragi"
+    },
+    {
+      "id": "blade-slayer-sword-battlegrounds",
+      "title": "Battlegrounds Season 38",
+      "url": "https://playcontestofchampions.com/news/battlegrounds-season-38/",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "goblin-first-three-guide",
+      "title": "Gameplay guide - first three Green Goblin pieces",
+      "url": "https://www.youtube.com/watch?v=cpZA2TljF1k",
+      "reviewedAt": "2026-11-06",
+      "category": "community_guide"
+    },
+    {
+      "id": "deathless-guillotine-launch",
+      "title": "Guillotine chase - official September 2023 stream summary",
+      "url": "https://playcontestofchampions.com/news/twitch-stream-summary-september-29th/",
+      "reviewedAt": "2026-11-06",
+      "category": "official_stream_summary",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "deathless-shehulk-season22",
+      "title": "Battlegrounds Season 22",
+      "url": "https://playcontestofchampions.com/news/battlegrounds-season-22/",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "deathless-shehulk-banquet2024",
+      "title": "The Grand Banquet and Accolades",
+      "url": "https://playcontestofchampions.com/news/the-grand-banquet-and-accolades/",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "goblin-pumpkin-bomb",
+      "title": "Revenge of Legends",
+      "url": "https://playcontestofchampions.com/news/revenge-of-legends/",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "goblin-hip-bag",
+      "title": "Battlegrounds Season 42",
+      "url": "https://playcontestofchampions.com/news/battlegrounds-season-42/",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "banquet-2025-selectors",
+      "title": "The Banquet 2025 - champion selectors",
+      "url": "https://playcontestofchampions.com/news/the-banquet-summary/",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "magik-limbo-tokens",
+      "title": "February 2026 stream - Magik and Limbo Tokens",
+      "url": "https://playcontestofchampions.com/news/february-27th-livestream-summary/",
+      "reviewedAt": "2026-11-06",
+      "category": "official_stream_summary",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "magik-7-store-items",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "event_052026_7star_magik",
+            "description": "Get 7-Star Magik and more now!"
+          },
+          {
+            "id": "event_031126_7star_magik_fa",
+            "description": "Get a First Appearance 7-Star Magik and more now!"
+          }
+        ]
+      }
+    },
+    {
+      "id": "unstoppable-colossus-store",
+      "title": "Radiance developer diary - Alliance War store",
+      "url": "https://playcontestofchampions.com/news/dev-diary-radiance/",
+      "reviewedAt": "2026-11-06",
+      "category": "official_announcement",
+      "author": "Marvel Contest of Champions"
+    },
+    {
+      "id": "unstoppable-colossus-5-store-item",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "5star_uc",
+            "description": "Acquire a 5-Star Unstoppable Colossus Champion!"
+          }
+        ]
+      }
+    },
+    {
+      "id": "unstoppable-colossus-6-store-item",
+      "title": "In-game item descriptions",
+      "reviewedAt": "2026-11-06",
+      "gameData": {
+        "fileName": "gamestore-5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+        "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+        "items": [
+          {
+            "id": "6star_uc",
+            "description": "Acquire a 6-Star Unstoppable Colossus Champion!"
+          }
+        ]
+      }
+    }
+  ],
+  "methods": [
+    {
+      "id": "dark-phoenix-hof-6",
+      "gameId": "phoenix_dark",
+      "rarities": [
+        6
+      ],
+      "kind": "event",
+      "title": "Heart of Fire \u00b7 Sunstorm",
+      "description": "Earned through Sunstorm solo-event milestones by opening Heart of Fire crystals. Dark Phoenix was a separate milestone reward.",
+      "requirements": [
+        "Uncollected or higher"
+      ],
+      "availability": "event_window",
+      "sourceIds": [
+        "heart-of-fire-2025"
+      ],
+      "startsAt": "2025-05-07T18:00:00Z",
+      "endsAt": "2025-05-14T18:00:00Z"
+    },
+    {
+      "id": "dark-phoenix-hof-7",
+      "gameId": "phoenix_dark",
+      "rarities": [
+        7
+      ],
+      "kind": "event",
+      "title": "Heart of Fire \u00b7 Phoenix Force",
+      "description": "Earned through Phoenix Force solo-event milestones by opening Heart of Fire crystals. Dark Phoenix was a separate milestone reward.",
+      "requirements": [
+        "Thronebreaker or higher"
+      ],
+      "availability": "event_window",
+      "sourceIds": [
+        "heart-of-fire-2025"
+      ],
+      "startsAt": "2025-05-07T18:00:00Z",
+      "endsAt": "2025-05-14T18:00:00Z"
+    },
+    {
+      "id": "maestro-necropolis-completion",
+      "gameId": "maestro_trophy",
+      "rarities": [
+        6
+      ],
+      "kind": "quest",
+      "title": "Necropolis \u00b7 Completion",
+      "description": "Awarded for the first completion of Necropolis.",
+      "requirements": [],
+      "availability": "progression",
+      "sourceIds": [
+        "necropolis-rewards"
+      ]
+    },
+    {
+      "id": "maestro-necropolis-exploration",
+      "gameId": "maestro_trophy",
+      "rarities": [
+        7
+      ],
+      "kind": "quest",
+      "title": "Necropolis \u00b7 Exploration",
+      "description": "Awarded for exploring Necropolis. Completion and exploration reward different star levels.",
+      "requirements": [],
+      "availability": "progression",
+      "sourceIds": [
+        "necropolis-rewards"
+      ]
+    },
+    {
+      "id": "carina-epilogue",
+      "gameId": "carina_white",
+      "rarities": [
+        7
+      ],
+      "kind": "quest",
+      "title": "Epilogue \u00b7 Reconstruct Carina",
+      "description": "Progress through the Epilogue chapters and reconstruct Carina Tivan. The final chapter is Last Struggle.",
+      "requirements": [],
+      "availability": "progression",
+      "sourceIds": [
+        "epilogue-finale"
+      ]
+    },
+    {
+      "id": "deathless-thanos-mausoleum-normal",
+      "gameId": "thanos_deathless_trophy",
+      "rarities": [
+        6
+      ],
+      "kind": "quest",
+      "title": "Deathless Mausoleum \u00b7 Normal exploration",
+      "description": "Fully explore all four paths in Deathless Mausoleum on Normal difficulty to claim 6-star Thanos (Deathless). A single completion does not award the champion.",
+      "requirements": [
+        "Collect Deathless Guillotine, King Groot, Vision and She-Hulk to access their paths",
+        "Normal accepts 6-star and 7-star Deathless champions",
+        "Conqueror or higher",
+        "Summoner level 40 or higher"
+      ],
+      "availability": "progression",
+      "sourceIds": [
+        "deathless-mausoleum-recap"
+      ]
+    },
+    {
+      "id": "deathless-thanos-mausoleum-hard",
+      "gameId": "thanos_deathless_trophy",
+      "rarities": [
+        7
+      ],
+      "kind": "quest",
+      "title": "Deathless Mausoleum \u00b7 Hard exploration",
+      "description": "Fully explore all four paths in Deathless Mausoleum on Hard difficulty to claim 7-star Thanos (Deathless). A single completion does not award the champion.",
+      "requirements": [
+        "Collect the 7-star Deathless Guillotine, King Groot, Vision and She-Hulk to access their paths",
+        "Only 7-star Deathless champions can enter Hard difficulty",
+        "Conqueror or higher",
+        "Summoner level 40 or higher"
+      ],
+      "availability": "progression",
+      "sourceIds": [
+        "deathless-mausoleum-recap"
+      ]
+    },
+    {
+      "id": "guillotine_nameless-pieces-6",
+      "gameId": "guillotine_nameless",
+      "rarities": [
+        6
+      ],
+      "kind": "pieces",
+      "title": "Champions store \u00b7 Piece exchange",
+      "description": "Collect all five 6-star pieces for Guillotine (Deathless), then exchange them for the champion in the in-game store.",
+      "requirements": [
+        "Matching-star pieces required"
+      ],
+      "availability": "source_dependent",
+      "sourceIds": [
+        "guillotine_nameless-6-items",
+        "guillotine_nameless-piece-items-6"
+      ],
+      "pieces": [
+        {
+          "itemId": "dg_t6_handle",
+          "name": "Cursed Handle",
+          "origin": {
+            "label": "In-game mail - 2023",
+            "kind": "past_mail",
+            "description": "The original mail gift included both 6-star and 7-star Cursed Handles.",
+            "sourceId": "guillotine-mail-stars"
+          }
+        },
+        {
+          "itemId": "dg_t6_tipofblade",
+          "name": "Cursed Blade Tip",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "guillotine_nameless-piece-items-6"
+          }
+        },
+        {
+          "itemId": "dg_t6_soul",
+          "name": "Cursed Deathless Soul",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "guillotine_nameless-piece-items-6"
+          }
+        },
+        {
+          "itemId": "dg_t6_bodyofblade",
+          "name": "Cursed Blade Segment",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "guillotine_nameless-piece-items-6"
+          }
+        },
+        {
+          "itemId": "dg_t6_cross_guard",
+          "name": "Cursed Cross-Guard",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "guillotine_nameless-piece-items-6"
+          }
+        }
+      ]
+    },
+    {
+      "id": "guillotine_nameless-pieces-7",
+      "gameId": "guillotine_nameless",
+      "rarities": [
+        7
+      ],
+      "kind": "pieces",
+      "title": "Champions store \u00b7 Piece exchange",
+      "description": "Collect all five 7-star pieces for Guillotine (Deathless), then exchange them for the champion in the in-game store.",
+      "requirements": [
+        "Matching-star pieces required"
+      ],
+      "availability": "source_dependent",
+      "sourceIds": [
+        "guillotine_nameless-7-items",
+        "deathless-guillotine-challenge",
+        "guillotine_nameless-piece-items-7"
+      ],
+      "pieces": [
+        {
+          "itemId": "dg_t7_handle",
+          "name": "Cursed Handle",
+          "origin": {
+            "label": "In-game mail - 2023",
+            "kind": "past_mail",
+            "description": "Distributed through the original Deathless Guillotine mail gift.",
+            "sourceId": "deathless-guillotine-launch"
+          }
+        },
+        {
+          "itemId": "dg_t7_tipofblade",
+          "name": "Cursed Blade Tip",
+          "origin": {
+            "label": "Battlegrounds - Season 12",
+            "kind": "past_event",
+            "description": "Original Victory Track reward during Season 12.",
+            "sourceId": "deathless-guillotine-launch"
+          }
+        },
+        {
+          "itemId": "dg_t7_soul",
+          "name": "Cursed Deathless Soul",
+          "origin": {
+            "label": "Necropolis completion",
+            "kind": "quest",
+            "description": "Reward for completing one Necropolis path.",
+            "sourceId": "necropolis-rewards"
+          }
+        },
+        {
+          "itemId": "dg_t7_bodyofblade",
+          "name": "Cursed Blade Segment",
+          "origin": {
+            "label": "Guillotine challenge - Act 8",
+            "kind": "quest",
+            "description": "Complete the three Act 8 Guillotine's Challenge objectives using only the permitted champions.",
+            "sourceId": "deathless-guillotine-challenge"
+          }
+        },
+        {
+          "itemId": "dg_t7_cross_guard",
+          "name": "Cursed Cross-Guard",
+          "origin": {
+            "label": "Banquet - 2023",
+            "kind": "past_event",
+            "description": "Original Banquet solo-event milestone reward.",
+            "sourceId": "necropolis-rewards"
+          }
+        }
+      ]
+    },
+    {
+      "id": "groot_king_deathless-pieces-6",
+      "gameId": "groot_king_deathless",
+      "rarities": [
+        6
+      ],
+      "kind": "pieces",
+      "title": "Champions store \u00b7 Piece exchange",
+      "description": "Collect all five 6-star pieces for King Groot (Deathless), then exchange them for the champion in the in-game store.",
+      "requirements": [
+        "Matching-star pieces required"
+      ],
+      "availability": "source_dependent",
+      "sourceIds": [
+        "groot_king_deathless-6-items",
+        "groot_king_deathless-piece-items-6"
+      ],
+      "pieces": [
+        {
+          "itemId": "deathless_kinggroot_t6_seedling",
+          "name": "Deathless Groot Seedling",
+          "origin": {
+            "label": "In-game mail - January 2024",
+            "kind": "past_mail",
+            "description": "Original free mail piece for the 6-star King Groot collection.",
+            "sourceId": "king-groot-six-star-chase"
+          }
+        },
+        {
+          "itemId": "deathless_kinggroot_t6_topsoil",
+          "name": "Irradiated Topsoil",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "groot_king_deathless-piece-items-6"
+          }
+        },
+        {
+          "itemId": "deathless_kinggroot_t6_aqua",
+          "name": "Flora Colossi Aqua",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "groot_king_deathless-piece-items-6"
+          }
+        },
+        {
+          "itemId": "deathless_kinggroot_t6_atmosphere",
+          "name": "Planet X Atmosphere",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "groot_king_deathless-piece-items-6"
+          }
+        },
+        {
+          "itemId": "deathless_kinggroot_t6_music",
+          "name": "Death(Less) Metal Music",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "groot_king_deathless-piece-items-6"
+          }
+        }
+      ]
+    },
+    {
+      "id": "groot_king_deathless-pieces-7",
+      "gameId": "groot_king_deathless",
+      "rarities": [
+        7
+      ],
+      "kind": "pieces",
+      "title": "Champions store \u00b7 Piece exchange",
+      "description": "Collect all five 7-star pieces for King Groot (Deathless), then exchange them for the champion in the in-game store.",
+      "requirements": [
+        "Matching-star pieces required"
+      ],
+      "availability": "source_dependent",
+      "sourceIds": [
+        "groot_king_deathless-7-items",
+        "groot_king_deathless-piece-items-7"
+      ],
+      "pieces": [
+        {
+          "itemId": "deathless_kinggroot_t7_seedling",
+          "name": "Deathless Groot Seedling",
+          "origin": {
+            "label": "In-game mail - January 2024",
+            "kind": "past_mail",
+            "description": "Distributed at the beginning of the King Groot chase.",
+            "sourceId": "king-groot-chase"
+          }
+        },
+        {
+          "itemId": "deathless_kinggroot_t7_topsoil",
+          "name": "Irradiated Topsoil",
+          "origin": {
+            "label": "Paragon Gauntlet - January 2024",
+            "kind": "past_event",
+            "description": "Complete the Paragon Gauntlet using only Mercenary champions and without using a choice node.",
+            "sourceId": "king-groot-chase"
+          }
+        },
+        {
+          "itemId": "deathless_kinggroot_t7_aqua",
+          "name": "Flora Colossi Aqua",
+          "origin": {
+            "label": "Community Carina challenges",
+            "kind": "quest",
+            "description": "Complete a challenge in the Content Creator Program set.",
+            "sourceId": "ccp-carina-2024"
+          }
+        },
+        {
+          "itemId": "deathless_kinggroot_t7_atmosphere",
+          "name": "Planet X Atmosphere",
+          "origin": {
+            "label": "Alliance War Showcase - March 2024",
+            "kind": "past_event",
+            "description": "Exploration reward in the original two-path Showcase.",
+            "sourceId": "showcase-march-2024"
+          }
+        },
+        {
+          "itemId": "deathless_kinggroot_t7_music",
+          "name": "Death(Less) Metal Music",
+          "origin": {
+            "label": "Winter of Woe - 2024",
+            "kind": "past_event",
+            "description": "Deathless piece awarded through the original solo-event milestones.",
+            "sourceId": "winter-woe-recap"
+          }
+        }
+      ]
+    },
+    {
+      "id": "vision_deathless-pieces-6",
+      "gameId": "vision_deathless",
+      "rarities": [
+        6
+      ],
+      "kind": "pieces",
+      "title": "Champions store \u00b7 Piece exchange",
+      "description": "Collect all five 6-star pieces for Vision (Deathless), then exchange them for the champion in the in-game store.",
+      "requirements": [
+        "Matching-star pieces required"
+      ],
+      "availability": "source_dependent",
+      "sourceIds": [
+        "vision_deathless-6-items",
+        "vision_deathless-piece-items-6"
+      ],
+      "pieces": [
+        {
+          "itemId": "deathless_vision_t6_visage",
+          "name": "Scarlet Visage",
+          "origin": null
+        },
+        {
+          "itemId": "deathless_vision_t6_chassis",
+          "name": "Nanite Chassis",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "vision_deathless-piece-items-6"
+          }
+        },
+        {
+          "itemId": "deathless_vision_t6_ai",
+          "name": "Malevolent A.I.",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "vision_deathless-piece-items-6"
+          }
+        },
+        {
+          "itemId": "deathless_vision_t6_tears",
+          "name": "Synthezoid Tears",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "vision_deathless-piece-items-6"
+          }
+        },
+        {
+          "itemId": "deathless_vision_t6_gem",
+          "name": "Deathless Gem",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "vision_deathless-piece-items-6"
+          }
+        }
+      ]
+    },
+    {
+      "id": "vision_deathless-pieces-7",
+      "gameId": "vision_deathless",
+      "rarities": [
+        7
+      ],
+      "kind": "pieces",
+      "title": "Champions store \u00b7 Piece exchange",
+      "description": "Collect all five 7-star pieces for Vision (Deathless), then exchange them for the champion in the in-game store.",
+      "requirements": [
+        "Matching-star pieces required"
+      ],
+      "availability": "source_dependent",
+      "sourceIds": [
+        "vision_deathless-7-items",
+        "vision_deathless-piece-items-7"
+      ],
+      "pieces": [
+        {
+          "itemId": "deathless_vision_t7_visage",
+          "name": "Scarlet Visage",
+          "origin": {
+            "label": "In-game mail - May 2024",
+            "kind": "past_mail",
+            "description": "Original Vision chase gift distributed on May 8.",
+            "sourceId": "deathless-stream-slides"
+          }
+        },
+        {
+          "itemId": "deathless_vision_t7_chassis",
+          "name": "Nanite Chassis",
+          "origin": {
+            "label": "Battlegrounds - Season 19",
+            "kind": "past_event",
+            "description": "Original Victory Track completion reward.",
+            "sourceId": "deathless-stream-slides"
+          }
+        },
+        {
+          "itemId": "deathless_vision_t7_ai",
+          "name": "Malevolent A.I.",
+          "origin": {
+            "label": "Alliance War Showcase 2 - 2024",
+            "kind": "past_event",
+            "description": "Original Alliance War Encounter Showcase 2 completion reward.",
+            "sourceId": "deathless-stream-slides"
+          }
+        },
+        {
+          "itemId": "deathless_vision_t7_tears",
+          "name": "Synthezoid Tears",
+          "origin": {
+            "label": "Spring of Sorrow - 2024",
+            "kind": "past_event",
+            "description": "Original Spring of Sorrow solo-event reward.",
+            "sourceId": "deathless-stream-slides"
+          }
+        },
+        {
+          "itemId": "deathless_vision_t7_gem",
+          "name": "Deathless Gem",
+          "origin": {
+            "label": "Crucible exploration objective - 2024",
+            "kind": "past_event",
+            "description": "Originally awarded by the time-limited Crucible exploration objective; the quest and objective are separate.",
+            "sourceId": "vision-crucible-objective"
+          }
+        }
+      ]
+    },
+    {
+      "id": "shehulk_deathless-pieces-6",
+      "gameId": "shehulk_deathless",
+      "rarities": [
+        6
+      ],
+      "kind": "pieces",
+      "title": "Champions store \u00b7 Piece exchange",
+      "description": "Collect all five 6-star pieces for She-Hulk (Deathless), then exchange them for the champion in the in-game store.",
+      "requirements": [
+        "Matching-star pieces required"
+      ],
+      "availability": "source_dependent",
+      "sourceIds": [
+        "shehulk_deathless-6-items",
+        "shehulk_deathless-piece-items-6"
+      ],
+      "pieces": [
+        {
+          "itemId": "deathless_shehulk_t6_arguments",
+          "name": "Opening Arguments",
+          "origin": null
+        },
+        {
+          "itemId": "deathless_shehulk_t6_accusation",
+          "name": "Baseless Accusation",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "shehulk_deathless-piece-items-6"
+          }
+        },
+        {
+          "itemId": "deathless_shehulk_t6_evidence",
+          "name": "Tampered Evidence",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "shehulk_deathless-piece-items-6"
+          }
+        },
+        {
+          "itemId": "deathless_shehulk_t6_closing",
+          "name": "Closing Arguments",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "shehulk_deathless-piece-items-6"
+          }
+        },
+        {
+          "itemId": "deathless_shehulk_t6_sentencing",
+          "name": "Sinister Sentencing",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "shehulk_deathless-piece-items-6"
+          }
+        }
+      ]
+    },
+    {
+      "id": "shehulk_deathless-pieces-7",
+      "gameId": "shehulk_deathless",
+      "rarities": [
+        7
+      ],
+      "kind": "pieces",
+      "title": "Champions store \u00b7 Piece exchange",
+      "description": "Collect all five 7-star pieces for She-Hulk (Deathless), then exchange them for the champion in the in-game store.",
+      "requirements": [
+        "Matching-star pieces required"
+      ],
+      "availability": "source_dependent",
+      "sourceIds": [
+        "shehulk_deathless-7-items",
+        "shehulk_deathless-piece-items-7"
+      ],
+      "pieces": [
+        {
+          "itemId": "deathless_shehulk_t7_arguments",
+          "name": "Opening Arguments",
+          "origin": {
+            "label": "In-game mail - 2024",
+            "kind": "past_mail",
+            "description": "Original She-Hulk chase mail gift.",
+            "sourceId": "deathless-stream-slides"
+          }
+        },
+        {
+          "itemId": "deathless_shehulk_t7_accusation",
+          "name": "Baseless Accusation",
+          "origin": {
+            "label": "Battlegrounds - Season 22",
+            "kind": "past_event",
+            "description": "Original Victory Track completion reward.",
+            "sourceId": "deathless-shehulk-season22"
+          }
+        },
+        {
+          "itemId": "deathless_shehulk_t7_evidence",
+          "name": "Tampered Evidence",
+          "origin": {
+            "label": "Summer of Suffering - 2024",
+            "kind": "past_event",
+            "description": "Original Summer of Suffering solo-event reward.",
+            "sourceId": "deathless-stream-slides"
+          }
+        },
+        {
+          "itemId": "deathless_shehulk_t7_closing",
+          "name": "Closing Arguments",
+          "origin": {
+            "label": "Anniversary Carina challenge",
+            "kind": "quest",
+            "description": "Necropolis anniversary challenge reward.",
+            "sourceId": "deathless-stream-slides"
+          }
+        },
+        {
+          "itemId": "deathless_shehulk_t7_sentencing",
+          "name": "Sinister Sentencing",
+          "origin": {
+            "label": "Banquet - 2024",
+            "kind": "past_event",
+            "description": "Original Banquet solo-event milestone reward.",
+            "sourceId": "deathless-shehulk-banquet2024"
+          }
+        }
+      ]
+    },
+    {
+      "id": "starlord_stellar-pieces-6",
+      "gameId": "starlord_stellar",
+      "rarities": [
+        6
+      ],
+      "kind": "pieces",
+      "title": "Champions store \u00b7 Piece exchange",
+      "description": "Collect all five 6-star pieces for Star-Lord (Stellar-Forged), then exchange them for the champion in the in-game store.",
+      "requirements": [
+        "Matching-star pieces required"
+      ],
+      "availability": "source_dependent",
+      "sourceIds": [
+        "starlord_stellar-6-items",
+        "starlord_stellar-piece-items-6"
+      ],
+      "pieces": [
+        {
+          "itemId": "sfsl_t6_cassette_deck",
+          "name": "Cassette Deck",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "starlord_stellar-piece-items-6"
+          }
+        },
+        {
+          "itemId": "sfsl_t6_mixtape",
+          "name": "Mix Tape",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "starlord_stellar-piece-items-6"
+          }
+        },
+        {
+          "itemId": "sfsl_t6_trenchcoat",
+          "name": "Super Cool Trench Coat",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "starlord_stellar-piece-items-6"
+          }
+        },
+        {
+          "itemId": "sfsl_t6_left_quadblaster",
+          "name": "Left Quad Blaster",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "starlord_stellar-piece-items-6"
+          }
+        },
+        {
+          "itemId": "sfsl_t6_right_quadblaster",
+          "name": "Right Quad Blaster",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "starlord_stellar-piece-items-6"
+          }
+        }
+      ]
+    },
+    {
+      "id": "starlord_stellar-pieces-7",
+      "gameId": "starlord_stellar",
+      "rarities": [
+        7
+      ],
+      "kind": "pieces",
+      "title": "Champions store \u00b7 Piece exchange",
+      "description": "Collect all five 7-star pieces for Star-Lord (Stellar-Forged), then exchange them for the champion in the in-game store.",
+      "requirements": [
+        "Matching-star pieces required"
+      ],
+      "availability": "source_dependent",
+      "sourceIds": [
+        "starlord_stellar-7-items",
+        "stellar-starlord-event",
+        "starlord_stellar-piece-items-7"
+      ],
+      "pieces": [
+        {
+          "itemId": "sfsl_t7_cassette_deck",
+          "name": "Cassette Deck",
+          "origin": {
+            "label": "In-game mail - November 2025",
+            "kind": "past_mail",
+            "description": "Original Star-Lord chase mail gift.",
+            "sourceId": "starlord-chase-pieces"
+          }
+        },
+        {
+          "itemId": "sfsl_t7_mixtape",
+          "name": "Mix Tape",
+          "origin": {
+            "label": "Cosmic Omelet objectives - 2025",
+            "kind": "past_event",
+            "description": "Earned through the original multi-week Cosmic Omelet solo objectives.",
+            "sourceId": "starlord-mixtape-objective"
+          }
+        },
+        {
+          "itemId": "sfsl_t7_trenchcoat",
+          "name": "Super Cool Trench Coat",
+          "origin": {
+            "label": "Battlegrounds - Season 34",
+            "kind": "past_event",
+            "description": "Reach Vibranium I in the original chase season.",
+            "sourceId": "starlord-chase-pieces"
+          }
+        },
+        {
+          "itemId": "sfsl_t7_left_quadblaster",
+          "name": "Left Quad Blaster",
+          "origin": {
+            "label": "Alliance Coliseum - December 2025",
+            "kind": "past_event",
+            "description": "Earned through the original Alliance Coliseum solo event.",
+            "sourceId": "stellar-starlord-event"
+          }
+        },
+        {
+          "itemId": "sfsl_t7_right_quadblaster",
+          "name": "Right Quad Blaster",
+          "origin": {
+            "label": "Glitch Incursions - January 2026",
+            "kind": "past_event",
+            "description": "Complete the required weekly runs; repeating one week did not replace the other.",
+            "sourceId": "starlord-glitch-incursions"
+          }
+        }
+      ]
+    },
+    {
+      "id": "blade_stellar-pieces-6",
+      "gameId": "blade_stellar",
+      "rarities": [
+        6
+      ],
+      "kind": "pieces",
+      "title": "Champions store \u00b7 Piece exchange",
+      "description": "Collect all five 6-star pieces for Blade (Stellar-Forged), then exchange them for the champion in the in-game store.",
+      "requirements": [
+        "Matching-star pieces required"
+      ],
+      "availability": "source_dependent",
+      "sourceIds": [
+        "blade_stellar-6-items",
+        "blade_stellar-piece-items-6"
+      ],
+      "pieces": [
+        {
+          "itemId": "sfbl_t6_stake",
+          "name": "Stake",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "blade_stellar-piece-items-6"
+          }
+        },
+        {
+          "itemId": "sfbl_t6_sunlight",
+          "name": "Sunlight",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "blade_stellar-piece-items-6"
+          }
+        },
+        {
+          "itemId": "sfbl_t6_garlic",
+          "name": "Garlic",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "blade_stellar-piece-items-6"
+          }
+        },
+        {
+          "itemId": "sfbl_t6_silver_arrow",
+          "name": "Silver Arrow",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "blade_stellar-piece-items-6"
+          }
+        },
+        {
+          "itemId": "sfbl_t6_slayer_sword",
+          "name": "Slayer Sword",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "blade_stellar-piece-items-6"
+          }
+        }
+      ]
+    },
+    {
+      "id": "blade_stellar-pieces-7",
+      "gameId": "blade_stellar",
+      "rarities": [
+        7
+      ],
+      "kind": "pieces",
+      "title": "Champions store \u00b7 Piece exchange",
+      "description": "Collect all five 7-star pieces for Blade (Stellar-Forged), then exchange them for the champion in the in-game store.",
+      "requirements": [
+        "Matching-star pieces required"
+      ],
+      "availability": "source_dependent",
+      "sourceIds": [
+        "blade_stellar-7-items",
+        "blade_stellar-piece-items-7"
+      ],
+      "pieces": [
+        {
+          "itemId": "sfbl_t7_stake",
+          "name": "Stake",
+          "origin": {
+            "label": "Alliance War Showcase - March 2026",
+            "kind": "past_event",
+            "description": "First piece in the original Blade chase, confirmed by Kabam.",
+            "sourceId": "blade-showcase-piece"
+          }
+        },
+        {
+          "itemId": "sfbl_t7_sunlight",
+          "name": "Sunlight",
+          "origin": {
+            "label": "Alliance Coliseum - April 2026",
+            "kind": "past_event",
+            "description": "Original solo milestone reward in Alliance Coliseum.",
+            "sourceId": "blade-sunlight-gameplay"
+          }
+        },
+        {
+          "itemId": "sfbl_t7_garlic",
+          "name": "Garlic",
+          "origin": {
+            "label": "Apex Coliseum - April 2026",
+            "kind": "past_event",
+            "description": "Awarded through the original Coliseum reward track.",
+            "sourceId": "blade-coliseum-garlic"
+          }
+        },
+        {
+          "itemId": "sfbl_t7_silver_arrow",
+          "name": "Silver Arrow",
+          "origin": {
+            "label": "Act 9.4 timed objective - 2026",
+            "kind": "past_event",
+            "description": "Complete Act 9.4 within the original objective window. The objective was separate from the permanent chapter rewards.",
+            "sourceId": "blade-silver-arrow-objective"
+          }
+        },
+        {
+          "itemId": "sfbl_t7_slayer_sword",
+          "name": "Slayer Sword",
+          "origin": {
+            "label": "Battlegrounds - Season 38",
+            "kind": "past_event",
+            "description": "Original Blade chase Victory Track reward.",
+            "sourceId": "blade-slayer-sword-battlegrounds"
+          }
+        }
+      ]
+    },
+    {
+      "id": "green-goblin-stellar-pieces-6",
+      "gameId": "green_goblin_stellar",
+      "rarities": [
+        6
+      ],
+      "kind": "pieces",
+      "title": "Champions store \u00b7 Piece exchange",
+      "description": "Collect the five 6-star items: Goblin Smile, Glider Core, Science Degree, Pumpkin Bomb and Hip Bag, then claim the champion in the Champions store.",
+      "requirements": [
+        "Matching-star pieces required"
+      ],
+      "availability": "source_dependent",
+      "sourceIds": [
+        "green-goblin-stellar-6-items",
+        "green_goblin_stellar-piece-items-6"
+      ],
+      "pieces": [
+        {
+          "itemId": "sfgg_t6_goblin_smile",
+          "name": "Goblin Smile",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "green_goblin_stellar-piece-items-6"
+          }
+        },
+        {
+          "itemId": "sfgg_t6_glider_core",
+          "name": "Glider Core",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "green_goblin_stellar-piece-items-6"
+          }
+        },
+        {
+          "itemId": "sfgg_t6_science_degree",
+          "name": "Science Degree",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "green_goblin_stellar-piece-items-6"
+          }
+        },
+        {
+          "itemId": "sfgg_t6_pumpkin_bomb",
+          "name": "Pumpkin Bomb",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "green_goblin_stellar-piece-items-6"
+          }
+        },
+        {
+          "itemId": "sfgg_t6_hip_bag",
+          "name": "Hip Bag",
+          "origin": {
+            "label": "Champions store",
+            "kind": "store",
+            "description": "A matching 6-star piece is recorded in the game store. Current stock and costs may differ.",
+            "sourceId": "green_goblin_stellar-piece-items-6"
+          }
+        }
+      ]
+    },
+    {
+      "id": "green-goblin-stellar-pieces-7",
+      "gameId": "green_goblin_stellar",
+      "rarities": [
+        7
+      ],
+      "kind": "pieces",
+      "title": "Champions store \u00b7 Piece exchange",
+      "description": "Collect the five 7-star items: Goblin Smile, Glider Core, Science Degree, Pumpkin Bomb and Hip Bag, then claim the champion in the Champions store.",
+      "requirements": [
+        "Matching-star pieces required"
+      ],
+      "availability": "source_dependent",
+      "sourceIds": [
+        "green-goblin-stellar-7-items",
+        "stellar-green-goblin-final-piece",
+        "green_goblin_stellar-piece-items-7"
+      ],
+      "pieces": [
+        {
+          "itemId": "sfgg_t7_goblin_smile",
+          "name": "Goblin Smile",
+          "origin": {
+            "label": "Saga Showcase Tower - June 2026",
+            "kind": "past_event",
+            "description": "Earned through the original Saga Towers solo objective.",
+            "sourceId": "goblin-first-three-guide"
+          }
+        },
+        {
+          "itemId": "sfgg_t7_glider_core",
+          "name": "Glider Core",
+          "origin": {
+            "label": "Monthly Event Quest - July 2026",
+            "kind": "past_event",
+            "description": "Original monthly Event Quest milestone reward.",
+            "sourceId": "goblin-first-three-guide"
+          }
+        },
+        {
+          "itemId": "sfgg_t7_science_degree",
+          "name": "Science Degree",
+          "origin": {
+            "label": "Apex Coliseum - July 2026",
+            "kind": "past_event",
+            "description": "Original Round 3 milestone reward.",
+            "sourceId": "goblin-first-three-guide"
+          }
+        },
+        {
+          "itemId": "sfgg_t7_pumpkin_bomb",
+          "name": "Pumpkin Bomb",
+          "origin": {
+            "label": "Revenge of Legends - 2026",
+            "description": "Complete the original weekly quest exploration solo objectives during the Revenge of Legends event.",
+            "kind": "past_event",
+            "sourceId": "goblin-pumpkin-bomb"
+          }
+        },
+        {
+          "itemId": "sfgg_t7_hip_bag",
+          "name": "Hip Bag",
+          "origin": {
+            "label": "Battlegrounds - Season 42",
+            "description": "Original reward for reaching Diamond I in the Season 42 Victory Track.",
+            "kind": "past_event",
+            "sourceId": "goblin-hip-bag"
+          }
+        }
+      ]
+    },
+    {
+      "id": "sigil-witch-store-4",
+      "gameId": "scarletwitch_current",
+      "rarities": [
+        4
+      ],
+      "kind": "store",
+      "title": "Sigil Store",
+      "description": "Spend Sigil Credits in the Sigil Store to purchase Scarlet Witch. Access and costs depend on the store\u2019s current rules.",
+      "requirements": [
+        "Beginner or higher",
+        "Summoner\u2019s Sigil access"
+      ],
+      "availability": "store_access",
+      "sourceIds": [
+        "sigil-store-2025"
+      ]
+    },
+    {
+      "id": "sigil-witch-store-5",
+      "gameId": "scarletwitch_current",
+      "rarities": [
+        5
+      ],
+      "kind": "store",
+      "title": "Sigil Store",
+      "description": "Spend Sigil Credits in the Sigil Store to purchase Scarlet Witch. Access and costs depend on the store\u2019s current rules.",
+      "requirements": [
+        "Contender or higher",
+        "Summoner\u2019s Sigil access"
+      ],
+      "availability": "store_access",
+      "sourceIds": [
+        "sigil-store-2025"
+      ]
+    },
+    {
+      "id": "sigil-witch-store-6",
+      "gameId": "scarletwitch_current",
+      "rarities": [
+        6
+      ],
+      "kind": "store",
+      "title": "Sigil Store",
+      "description": "Spend Sigil Credits in the Sigil Store to purchase Scarlet Witch. Access and costs depend on the store\u2019s current rules.",
+      "requirements": [
+        "Conqueror or higher",
+        "Summoner\u2019s Sigil access"
+      ],
+      "availability": "store_access",
+      "sourceIds": [
+        "sigil-store-2025"
+      ]
+    },
+    {
+      "id": "sigil-witch-store-7",
+      "gameId": "scarletwitch_current",
+      "rarities": [
+        7
+      ],
+      "kind": "store",
+      "title": "Sigil Store",
+      "description": "Spend Sigil Credits in the Sigil Store to purchase Scarlet Witch. Access and costs depend on the store\u2019s current rules.",
+      "requirements": [
+        "Paragon or higher",
+        "Summoner\u2019s Sigil access"
+      ],
+      "availability": "store_access",
+      "sourceIds": [
+        "sigil-store-2025"
+      ]
+    },
+    {
+      "id": "summoned-symbiote-sugar-crash",
+      "gameId": "summoned_symbiote",
+      "rarities": [
+        1
+      ],
+      "kind": "giveaway",
+      "title": "Sugar Crash \u00b7 In-game mail",
+      "description": "Distributed through in-game mail for the Sugar Crash event. The champion could be kept after the event ended.",
+      "requirements": [],
+      "availability": "event_window",
+      "sourceIds": [
+        "sugar-crash-2023"
+      ],
+      "startsAt": "2023-10-04T17:00:00Z",
+      "endsAt": "2023-11-08T18:00:00Z"
+    },
+    {
+      "id": "humantorch_victorious-voucher",
+      "gameId": "humantorch_victorious",
+      "rarities": [
+        7
+      ],
+      "kind": "event",
+      "title": "Reclamation War \u00b7 Victorious Voucher",
+      "description": "Earn the matching Human Torch Victorious Voucher through the saga\u2019s acquisition events and trade it for the 7-star champion. Follow the in-game event details for current voucher sources.",
+      "requirements": [
+        "Matching Victorious Voucher"
+      ],
+      "availability": "source_dependent",
+      "sourceIds": [
+        "humantorch_victorious-voucher",
+        "reclamation-war-launch"
+      ]
+    },
+    {
+      "id": "invisiblewoman_victorious-voucher",
+      "gameId": "invisiblewoman_victorious",
+      "rarities": [
+        7
+      ],
+      "kind": "event",
+      "title": "Reclamation War \u00b7 Victorious Voucher",
+      "description": "Earn the matching Invisible Woman Victorious Voucher through the saga\u2019s acquisition events and trade it for the 7-star champion. Follow the in-game event details for current voucher sources.",
+      "requirements": [
+        "Matching Victorious Voucher"
+      ],
+      "availability": "source_dependent",
+      "sourceIds": [
+        "invisiblewoman_victorious-voucher",
+        "reclamation-war-launch"
+      ]
+    },
+    {
+      "id": "mrfantastic_victorious-voucher",
+      "gameId": "mrfantastic_victorious",
+      "rarities": [
+        7
+      ],
+      "kind": "event",
+      "title": "Reclamation War \u00b7 Victorious Voucher",
+      "description": "Earn the matching Mister Fantastic Victorious Voucher through the saga\u2019s acquisition events and trade it for the 7-star champion. Follow the in-game event details for current voucher sources.",
+      "requirements": [
+        "Matching Victorious Voucher"
+      ],
+      "availability": "source_dependent",
+      "sourceIds": [
+        "mrfantastic_victorious-voucher",
+        "reclamation-war-launch"
+      ]
+    },
+    {
+      "id": "thing_victorious-voucher",
+      "gameId": "thing_victorious",
+      "rarities": [
+        7
+      ],
+      "kind": "event",
+      "title": "Reclamation War \u00b7 Victorious Voucher",
+      "description": "Earn the matching Thing Victorious Voucher through the saga\u2019s acquisition events and trade it for the 7-star champion. Follow the in-game event details for current voucher sources.",
+      "requirements": [
+        "Matching Victorious Voucher"
+      ],
+      "availability": "source_dependent",
+      "sourceIds": [
+        "thing_victorious-voucher",
+        "reclamation-war-launch"
+      ]
+    },
+    {
+      "id": "vision-banquet-2025-selector",
+      "gameId": "vision",
+      "rarities": [
+        7
+      ],
+      "kind": "event",
+      "title": "Banquet 2025 - Trophy Champion selector",
+      "description": "Choose 7-star Vision from the Trophy Champion selector in the original Banquet ranked rewards. The selector was also a possible Jubilant Crystal reward; this is separate from a direct champion drop.",
+      "sourceIds": [
+        "banquet-2025-selectors"
+      ],
+      "requirements": [
+        "Conqueror or higher",
+        "Original ranked-reward eligibility or a Trophy selector crystal drop"
+      ],
+      "availability": "event_window",
+      "startsAt": "2025-12-19T18:00:00Z",
+      "endsAt": "2026-01-02T18:00:00Z"
+    },
+    {
+      "id": "wolverine_weaponx-banquet-2025-selector",
+      "gameId": "wolverine_weaponx",
+      "rarities": [
+        7
+      ],
+      "kind": "event",
+      "title": "Banquet 2025 - Trophy Champion selector",
+      "description": "Choose 7-star Wolverine (Weapon X) from the Trophy Champion selector in the original Banquet ranked rewards. The selector was also a possible Jubilant Crystal reward; this is separate from a direct champion drop.",
+      "sourceIds": [
+        "banquet-2025-selectors"
+      ],
+      "requirements": [
+        "Conqueror or higher",
+        "Original ranked-reward eligibility or a Trophy selector crystal drop"
+      ],
+      "availability": "event_window",
+      "startsAt": "2025-12-19T18:00:00Z",
+      "endsAt": "2026-01-02T18:00:00Z"
+    },
+    {
+      "id": "jessicajones_current-banquet-2025-selector",
+      "gameId": "jessicajones_current",
+      "rarities": [
+        7
+      ],
+      "kind": "event",
+      "title": "Banquet 2025 - Trophy Champion selector",
+      "description": "Choose 7-star Jessica Jones from the Trophy Champion selector in the original Banquet ranked rewards. The selector was also a possible Jubilant Crystal reward; this is separate from a direct champion drop.",
+      "sourceIds": [
+        "banquet-2025-selectors"
+      ],
+      "requirements": [
+        "Conqueror or higher",
+        "Original ranked-reward eligibility or a Trophy selector crystal drop"
+      ],
+      "availability": "event_window",
+      "startsAt": "2025-12-19T18:00:00Z",
+      "endsAt": "2026-01-02T18:00:00Z"
+    },
+    {
+      "id": "thanos-banquet-2025-selector",
+      "gameId": "thanos",
+      "rarities": [
+        7
+      ],
+      "kind": "event",
+      "title": "Banquet 2025 - Trophy Champion selector",
+      "description": "Choose 7-star Thanos from the Trophy Champion selector in the original Banquet ranked rewards. The selector was also a possible Jubilant Crystal reward; this is separate from a direct champion drop.",
+      "sourceIds": [
+        "banquet-2025-selectors"
+      ],
+      "requirements": [
+        "Conqueror or higher",
+        "Original ranked-reward eligibility or a Trophy selector crystal drop"
+      ],
+      "availability": "event_window",
+      "startsAt": "2025-12-19T18:00:00Z",
+      "endsAt": "2026-01-02T18:00:00Z"
+    },
+    {
+      "id": "kang-banquet-2025-selector",
+      "gameId": "kang",
+      "rarities": [
+        7
+      ],
+      "kind": "event",
+      "title": "Banquet 2025 - Trophy Champion selector",
+      "description": "Choose 7-star Kang from the Trophy Champion selector in the original Banquet ranked rewards. The selector was also a possible Jubilant Crystal reward; this is separate from a direct champion drop.",
+      "sourceIds": [
+        "banquet-2025-selectors"
+      ],
+      "requirements": [
+        "Conqueror or higher",
+        "Original ranked-reward eligibility or a Trophy selector crystal drop"
+      ],
+      "availability": "event_window",
+      "startsAt": "2025-12-19T18:00:00Z",
+      "endsAt": "2026-01-02T18:00:00Z"
+    },
+    {
+      "id": "absorbingman-banquet-2025-realm",
+      "gameId": "absorbingman",
+      "rarities": [
+        7
+      ],
+      "kind": "event",
+      "title": "Banquet 2025 - Realm milestone selector",
+      "description": "Choose 7-star Absorbing Man from the Absorbing Man/Kingpin selector in the original Banquet Realm Event milestones. This was an event reward rather than a direct champion-crystal drop.",
+      "sourceIds": [
+        "banquet-2025-selectors"
+      ],
+      "requirements": [
+        "Conqueror or higher",
+        "Original personal-contribution and Realm milestone requirements"
+      ],
+      "availability": "event_window",
+      "startsAt": "2025-12-19T18:00:00Z",
+      "endsAt": "2026-01-02T18:00:00Z"
+    },
+    {
+      "id": "kingpin-banquet-2025-realm",
+      "gameId": "kingpin",
+      "rarities": [
+        7
+      ],
+      "kind": "event",
+      "title": "Banquet 2025 - Realm milestone selector",
+      "description": "Choose 7-star Kingpin from the Absorbing Man/Kingpin selector in the original Banquet Realm Event milestones. This was an event reward rather than a direct champion-crystal drop.",
+      "sourceIds": [
+        "banquet-2025-selectors"
+      ],
+      "requirements": [
+        "Conqueror or higher",
+        "Original personal-contribution and Realm milestone requirements"
+      ],
+      "availability": "event_window",
+      "startsAt": "2025-12-19T18:00:00Z",
+      "endsAt": "2026-01-02T18:00:00Z"
+    },
+    {
+      "id": "masacre-ccp-carina-selector",
+      "gameId": "masacre",
+      "rarities": [
+        7
+      ],
+      "kind": "quest",
+      "title": "Carina's Challenges - CCP selector",
+      "description": "Choose this 7-star champion from the selector awarded for completing all six original Content Creator Program challenges. The separate Deathless King Groot piece only requires one objective.",
+      "sourceIds": [
+        "ccp-carina-2024"
+      ],
+      "requirements": [
+        "Complete all six objectives in the original CCP challenge set"
+      ],
+      "availability": "progression"
+    },
+    {
+      "id": "spiderman_movie-ccp-carina-selector",
+      "gameId": "spiderman_movie",
+      "rarities": [
+        7
+      ],
+      "kind": "quest",
+      "title": "Carina's Challenges - CCP selector",
+      "description": "Choose this 7-star champion from the selector awarded for completing all six original Content Creator Program challenges. The separate Deathless King Groot piece only requires one objective.",
+      "sourceIds": [
+        "ccp-carina-2024"
+      ],
+      "requirements": [
+        "Complete all six objectives in the original CCP challenge set"
+      ],
+      "availability": "progression"
+    },
+    {
+      "id": "spiderman_2099-ccp-carina-selector",
+      "gameId": "spiderman_2099",
+      "rarities": [
+        7
+      ],
+      "kind": "quest",
+      "title": "Carina's Challenges - CCP selector",
+      "description": "Choose this 7-star champion from the selector awarded for completing all six original Content Creator Program challenges. The separate Deathless King Groot piece only requires one objective.",
+      "sourceIds": [
+        "ccp-carina-2024"
+      ],
+      "requirements": [
+        "Complete all six objectives in the original CCP challenge set"
+      ],
+      "availability": "progression"
+    },
+    {
+      "id": "magik-limbo-token-exchange",
+      "gameId": "magik",
+      "rarities": [
+        7
+      ],
+      "kind": "store",
+      "title": "Champions store - Limbo Token exchange",
+      "description": "Exchange Limbo Tokens for 7-star Magik. Kabam lists Radiance-store tokens and additional offers; the launch also had a token objective. The original First Appearance window is separate from the regular champion exchange.",
+      "sourceIds": [
+        "magik-limbo-tokens",
+        "magik-7-store-items"
+      ],
+      "requirements": [
+        "Limbo Tokens required",
+        "Store availability and exchange costs follow the current in-game rules"
+      ],
+      "availability": "store_access"
+    },
+    {
+      "id": "unstoppable-colossus-store-5",
+      "gameId": "colossus_unstoppable",
+      "rarities": [
+        5
+      ],
+      "kind": "store",
+      "title": "Alliance War store - Champion exchange",
+      "description": "The game records a direct 5-star Unstoppable Colossus purchase in the Loyalty section of the Alliance War store. Kabam also confirms this champion remains in that store; check the game for current currency costs and stock.",
+      "sourceIds": [
+        "unstoppable-colossus-store",
+        "unstoppable-colossus-5-store-item"
+      ],
+      "requirements": [
+        "Alliance War store access"
+      ],
+      "availability": "store_access"
+    },
+    {
+      "id": "unstoppable-colossus-store-6",
+      "gameId": "colossus_unstoppable",
+      "rarities": [
+        6
+      ],
+      "kind": "store",
+      "title": "Alliance War store - Champion exchange",
+      "description": "The game records a direct 6-star Unstoppable Colossus purchase in the Loyalty section of the Alliance War store. Kabam also confirms this champion remains in that store; check the game for current currency costs and stock.",
+      "sourceIds": [
+        "unstoppable-colossus-store",
+        "unstoppable-colossus-6-store-item"
+      ],
+      "requirements": [
+        "Alliance War store access"
+      ],
+      "availability": "store_access"
+    }
+  ]
+}

@@ -4,6 +4,7 @@ import {
 } from "discord.js";
 import { getPlayer } from "../../utils/playerHelper";
 import { getRoster } from "../../services/rosterService";
+import { normalizeRosterAscensionState } from "../../domain/roster-ascension-state.js";
 
 export async function handleExport(
   interaction: ChatInputCommandInteraction
@@ -25,9 +26,9 @@ export async function handleExport(
   let csv = "Champion,Stars,Rank,IsAwakened,IsAscended,SigLevel,AscensionLevel\n";
   roster.forEach((entry) => {
     const sigLevel = entry.isAwakened ? entry.sigLevel ?? 0 : 0;
-    const ascensionLevel = entry.ascensionLevel > 0 ? entry.ascensionLevel : entry.isAscended ? 1 : 0;
+    const ascension = normalizeRosterAscensionState(entry);
     const name = entry.champion.name.replace(/"/g, '""');
-    csv += `"${name}",${entry.stars},${entry.rank},${entry.isAwakened},${entry.isAscended},${sigLevel},${ascensionLevel}\n`;
+    csv += `"${name}",${entry.stars},${entry.rank},${entry.isAwakened},${ascension.isAscended},${sigLevel},${ascension.ascensionLevel}\n`;
   });
 
   const attachment = new AttachmentBuilder(Buffer.from(csv), {

@@ -1,0 +1,102 @@
+/* Keep the hero layout local: the shared stylesheet also owns the filter UI. */
+.hero[data-catalog-hero] {
+  position: relative;
+  isolation: isolate;
+  grid-template-columns: minmax(0, 1fr) minmax(340px, 48%);
+  gap: 32px;
+  padding: 24px 30px;
+  background:
+    radial-gradient(ellipse at 94% 14%, #386e8118, transparent 44%),
+    linear-gradient(112deg, #142037, #10192d 54%, #0b1422);
+}
+
+/* Light stays behind the artwork; the copy and native disclosure keep a quiet base. */
+.hero[data-catalog-hero]::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 73% 45%, #7160be24, transparent 38%),
+    radial-gradient(ellipse at 97% 82%, #287f8a1c, transparent 34%);
+  pointer-events: none;
+  content: "";
+}
+
+.heroCopy.heroCopy { display: block; min-width: 0; }
+.heroCopy > p:first-child { margin-bottom: 7px; }
+.heroCopy > p:last-of-type { margin-top: 10px; }
+
+.artwork {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  max-width: 580px;
+  aspect-ratio: 2.6;
+  justify-self: end;
+  pointer-events: none;
+  user-select: none;
+}
+
+.artwork::before {
+  position: absolute;
+  z-index: -1;
+  inset: -22% -6% -16%;
+  background:
+    radial-gradient(ellipse 42% 48% at 48% 50%, #a782f640, transparent),
+    radial-gradient(ellipse 30% 44% at 72% 44%, #53bedb29, transparent),
+    radial-gradient(ellipse 34% 42% at 30% 56%, #586fe535, transparent);
+  opacity: .85;
+  content: "";
+}
+
+.artwork::after {
+  position: absolute;
+  z-index: -1;
+  inset: 65% 8% -10%;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, #090e2280, transparent 68%);
+  transform: rotate(-5deg);
+  content: "";
+}
+
+.facets { position: absolute; z-index: -1; inset: -12% -3%; width: 106%; height: 124%; stroke: #a8b8ee; stroke-width: .65; opacity: .12; }
+.facetSurface { fill: #8e9fe0; fill-opacity: .08; stroke: none; }
+.crystal { position: absolute; transform: rotate(var(--tilt, 0deg)); }
+.crystal img { display: block; width: 100%; height: auto; object-fit: contain; filter: drop-shadow(0 12px 12px #03081799); }
+.crystal[data-crystal-slot="hero"] { --tilt: -5deg; --float-duration: 6s; --float-delay: -3s; z-index: 3; top: 17%; left: 34%; width: 31%; }
+.crystal[data-crystal-slot="empowered"] { --tilt: 7deg; --float-duration: 7s; --float-delay: -8s; z-index: 1; top: 0; left: 61%; width: 27%; }
+.crystal[data-crystal-slot="ascension"] { --tilt: 13deg; --float-duration: 6.5s; --float-delay: -5s; z-index: 1; top: 0; left: 20%; width: 18%; }
+.crystal[data-crystal-slot="event"] { --tilt: -10deg; --float-duration: 8s; --float-delay: -11s; z-index: 2; top: 25%; left: 0; width: 25%; }
+.crystal[data-crystal-slot="catalyst"] { --tilt: 11deg; --float-duration: 7.5s; --float-delay: -2s; z-index: 2; top: 40%; left: 79%; width: 20%; }
+
+/* No entrance state or JS: reserve the whole composition, then move only its layers. */
+@media (prefers-reduced-motion: no-preference) {
+  .artwork[data-catalog-artwork="composition"] .crystal { animation: crystalFloat var(--float-duration) ease-in-out var(--float-delay) infinite alternate; }
+  .artwork::before { animation: crystalLight 9s ease-in-out -4s infinite alternate; }
+}
+
+@keyframes crystalFloat {
+  from { transform: translateY(0) rotate(var(--tilt)); }
+  to { transform: translateY(var(--float-distance, -5px)) rotate(var(--tilt)); }
+}
+
+@keyframes crystalLight {
+  from { opacity: .65; }
+  to { opacity: 1; }
+}
+
+/* Missing assets keep their real identities, but flow together without empty slots. */
+.artwork[data-catalog-artwork="fallback"] { display: flex; align-items: center; justify-content: center; gap: 4%; }
+.artwork[data-catalog-artwork="fallback"] .crystal { position: relative; inset: auto; width: 26%; max-width: 150px; transform: none; }
+.placeholder { width: 72px; height: 84px; color: #9eb1e4; }
+
+@media (max-width: 749px) {
+  .hero[data-catalog-hero] { grid-template-columns: minmax(0, 1fr); gap: 20px; padding: 24px; }
+  .artwork { width: 100%; max-width: 480px; justify-self: center; }
+  .hero[data-catalog-hero]::before { background: radial-gradient(ellipse at 50% 90%, #7160be24, transparent 60%), radial-gradient(ellipse at 100% 100%, #287f8a1c, transparent 50%); }
+}
+
+@media (max-width: 479px) {
+  .hero[data-catalog-hero] { gap: 18px; padding: 20px 16px; }
+  .artwork { --float-distance: -3px; }
+}

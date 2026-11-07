@@ -3,6 +3,8 @@
 import { useState, useMemo, forwardRef, HTMLAttributes, useCallback, useEffect, useTransition, useRef, type ReactNode } from "react";
 import { ChampionClass } from "@prisma/client";
 import { useToast } from "@/hooks/use-toast";
+import { ascensionEligibilityHref } from "@/lib/roster-ascension-filter";
+import { useAscensionEligibilityFilter } from "@/hooks/use-ascension-eligibility-filter";
 import { useRouter } from "next/navigation";
 import { VirtuosoGrid } from "react-virtuoso";
 import { Champion } from "@/types/champion";
@@ -36,6 +38,7 @@ import { loadRosterAddDefaults, normalizeRosterAddDefaults, saveRosterAddDefault
 import { createRosterFilterIndex, filterRosterWithFacets } from "@/lib/roster-filtering";
 import type { RosterEffectOption, ProtectionOption } from "@/lib/roster-kit-options";
 import type { EffectForm, EffectDirection } from "@cerebro/core/domain/ability-source";
+import { normalizeRosterAscensionState } from "@cerebro/core/domain/roster-ascension-state";
 
 function buildRosterQueryParams(params: {
   simulationTargetRank: number;
@@ -194,12 +197,14 @@ export function RosterView({
   const effectiveCanEdit = canEdit && !isChampionsCatalog && !!player;
   const effectiveCanManageAttackReservations = canManageAttackReservations && !isChampionsCatalog;
 
-  const [roster, setRoster] = useState<ProfileRosterEntry[]>(initialRoster);
+  const canonicalInitialRoster = useMemo(() => initialRoster.map(entry => ({ ...entry, ...normalizeRosterAscensionState(entry) })), [initialRoster]);
+  const [roster, setRoster] = useState<ProfileRosterEntry[]>(canonicalInitialRoster);
   const [search, setSearch] = useCollectionState("search", "", true);
   const [filterClasses, setFilterClasses] = useCollectionState<ChampionClass[]>("classes", [], true);
   const [filterStars, setFilterStars] = useCollectionState<number[]>("stars", []);
   const [filterRanks, setFilterRanks] = useCollectionState<number[]>("ranks", []);
   const [filterAscensionLevels, setFilterAscensionLevels] = useCollectionState<number[]>("ascension", []);
+  const [ascensionEligible, setAscensionEligible] = useAscensionEligibilityFilter();
   const [sortBy, setSortBy] = useCollectionState<RosterSortField>("sort", enablePrestigeInsights ? "PRESTIGE" : "NAME");
   const [sortDirection, setSortDirection] = useCollectionState<SortDirection>("direction", enablePrestigeInsights ? "DESC" : "ASC");
   const [showUnowned, setShowUnowned] = useCollectionState("unowned", isChampionsCatalog || !isCollectionScreen);
@@ -238,7 +243,7 @@ export function RosterView({
 
   // Stabilize initial values to avoid unnecessary re-renders/effects
   const memoizedPrestigeMap = useDeepMemo(initialPrestigeMap);
-  const memoizedRoster = useDeepMemo(initialRoster);
+  const memoizedRoster = useDeepMemo(canonicalInitialRoster);
   const memoizedRankClassFilter = useDeepMemo(initialRankClassFilter);
   const memoizedSigClassFilter = useDeepMemo(initialSigClassFilter);
 
@@ -386,7 +391,7 @@ export function RosterView({
     try {
       const response = await fetch("/api/profile/roster/add", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ championId: newChampion.championId, stars: newChampion.stars, rank: newChampion.rank, sigLevel: newChampion.sigLevel, isAwakened: newChampion.isAwakened, isAscended: newChampion.isAscended, ascensionLevel: newChampion.ascensionLevel, ...(targetPlayerId ? { targetPlayerId } : {}) }),
+        body: JSON.stringify({ championId: newChampion.championId, stars: newChampion.stars, rank: newChampion.rank, sigLevel: newChampion.sigLevel, isAwakened: newChampion.isAwakened, ...(newChampion.ascensionLevel > 0 || newChampion.isAscended ? normalizeRosterAscensionState(newChampion) : {}), ...(targetPlayerId ? { targetPlayerId } : {}) }),
       });
       if (!response.ok) throw new Error("Failed to add champion");
       const addedItem = await response.json();
@@ -465,7 +470,8 @@ export function RosterView({
 
   const handleNewChampionChange = (next: typeof newChampion) => {
     const defaults = normalizeRosterAddDefaults(next);
-    setNewChampion({ ...next, ...defaults });
+    const identityChanged = next.championId !== newChampion.championId || defaults.stars !== newChampion.stars;
+    setNewChampion({ ...next, ...defaults, ...normalizeRosterAscensionState(identityChanged ? {} : next) });
     if (defaults.stars !== newChampion.stars || defaults.rank !== newChampion.rank) {
       saveRosterAddDefaults(defaults);
     }
@@ -484,11 +490,11 @@ export function RosterView({
 
   const filterIndex = useMemo(() => createRosterFilterIndex(roster, allChampions), [roster, allChampions]);
   const { entries: matchingRoster, counts: facetCounts } = useMemo(() => filterRosterWithFacets(filterIndex, {
-    search, classes: filterClasses, stars: filterStars, ranks: filterRanks, ascension: filterAscensionLevels,
+    search, classes: filterClasses, stars: filterStars, ranks: filterRanks, ascension: filterAscensionLevels, ascensionEligible, eligibilityIncludesUnowned: isChampionsCatalog,
     tags: tagFilter, tagLogic, abilities: abilityFilter, categories: abilityCategoryFilter,
     immunities: immunityFilter, includeResistances, abilityLogic, categoryLogic: abilityCategoryLogic,
     immunityLogic, effectForms, effectDirections, minResistancePotency, showUnowned,
-  }), [filterIndex, search, filterClasses, filterStars, filterRanks, filterAscensionLevels, tagFilter, tagLogic,
+  }), [filterIndex, isChampionsCatalog, search, filterClasses, filterStars, filterRanks, filterAscensionLevels, ascensionEligible, tagFilter, tagLogic,
     abilityFilter, abilityCategoryFilter, immunityFilter, includeResistances, abilityLogic, abilityCategoryLogic,
     immunityLogic, effectForms, effectDirections, minResistancePotency, showUnowned]);
 
@@ -648,7 +654,7 @@ export function RosterView({
             <Button
               variant="outline"
               onClick={() => {
-                navigator.clipboard.writeText(shareUrl);
+                navigator.clipboard.writeText(ascensionEligibilityHref(shareUrl, ascensionEligible));
                 toast({ title: "Copied!", description: "Roster link copied to clipboard." });
               }}
               className="h-10 px-4 gap-2 border-slate-700 bg-slate-900 text-slate-400 hover:text-slate-200"
@@ -719,6 +725,8 @@ export function RosterView({
             countLabel={countLabel}
             filterRanks={filterRanks} onFilterRanksChange={setFilterRanks} filterClasses={filterClasses} onFilterClassesChange={setFilterClasses}
             filterAscensionLevels={filterAscensionLevels} onFilterAscensionLevelsChange={setFilterAscensionLevels}
+            ascensionEligible={ascensionEligible} onAscensionEligibleChange={setAscensionEligible}
+            catalogEligibility={isChampionsCatalog}
             tagFilter={tagFilter} onTagFilterChange={setTagFilter} tagLogic={tagLogic} onTagLogicChange={setTagLogic}
             abilityCategoryFilter={abilityCategoryFilter} onAbilityCategoryFilterChange={setAbilityCategoryFilter} abilityCategoryLogic={abilityCategoryLogic} onAbilityCategoryLogicChange={setAbilityCategoryLogic}
             abilityFilter={abilityFilter} onAbilityFilterChange={setAbilityFilter} abilityLogic={abilityLogic} onAbilityLogicChange={setAbilityLogic}

@@ -5,7 +5,7 @@ import { ChevronDown, Layers, Shield, Tag, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AbilitySourceFields, ChoiceGroup, ClassChoices, FilterField, ImmunitySourceFields, OwnershipFilter } from "./roster-filter-fields";
+import { AscensionEligibilityFilter, AbilitySourceFields, ChoiceGroup, ClassChoices, FilterField, ImmunitySourceFields, OwnershipFilter } from "./roster-filter-fields";
 import { RosterFilterPicker } from "./roster-filter-picker";
 import type { RosterFiltersProps } from "./roster-filters";
 
@@ -31,7 +31,7 @@ export function RosterFilterSheet({ id, p, open, onOpenChange, onReset, onCloseF
   onCloseFocus: () => void;
   hasFilters: boolean;
 }) {
-  const [tab, setTab] = useState(p.showRankFilter === false && p.showAscensionFilter === false ? "abilities" : "roster");
+  const [tab, setTab] = useState("roster");
   const protectionLabel = p.includeResistances ? "Immunities & resistances" : "Immunities";
   return <Sheet open={open} onOpenChange={onOpenChange}>
     <SheetContent id={id} side="bottom" onEscapeKeyDown={event => {
@@ -57,8 +57,10 @@ export function RosterFilterSheet({ id, p, open, onOpenChange, onReset, onCloseF
           <FilterField label="Rarity"><ChoiceGroup label="Rarity" options={[7, 6, 5].map(value => ({ value, label: `${value}★` }))} values={p.filterStars} onChange={p.onFilterStarsChange} counts={p.facetCounts?.stars} showCounts compact /></FilterField>
           <ClassChoices values={p.filterClasses} onChange={p.onFilterClassesChange} counts={p.facetCounts?.classes} compact />
           {p.showOwnershipFilter !== false && <OwnershipFilter showUnowned={p.showUnowned} onChange={p.onShowUnownedChange} compact />}
+
           {p.showRankFilter !== false && <FilterField label="Rank"><ChoiceGroup label="Rank" options={[1, 2, 3, 4, 5, 6].map(value => ({ value, label: `${value}` }))} values={p.filterRanks} onChange={p.onFilterRanksChange} counts={p.facetCounts?.ranks} showCounts compact /></FilterField>}
-          {p.showAscensionFilter !== false && <FilterField label="Ascension"><ChoiceGroup label="Ascension" options={[0, 1, 2, 3, 4, 5].map(value => ({ value, label: `${value}` }))} values={p.filterAscensionLevels} onChange={p.onFilterAscensionLevelsChange} counts={p.facetCounts?.ascension} showCounts compact /></FilterField>}
+          {p.showAscensionFilter !== false && <FilterField label="Ascension level"><ChoiceGroup label="Ascension" options={[0, 1, 2, 3, 4, 5].map(value => ({ value, label: `${value}` }))} values={p.filterAscensionLevels} onChange={p.onFilterAscensionLevelsChange} counts={p.facetCounts?.ascension} showCounts compact /></FilterField>}
+          {!p.catalogEligibility && <AscensionEligibilityFilter value={p.ascensionEligible} onChange={p.onAscensionEligibleChange} />}
         </TabsContent>
         <TabsContent value="tags" className="mt-0 min-h-0 flex-1 overflow-y-auto px-4 pb-5">
           <RosterFilterPicker modal label="Tags" icon={Tag} options={p.initialTags} counts={p.facetCounts?.tags} values={p.tagFilter} onChange={p.onTagFilterChange} logic={p.tagLogic} onLogicChange={p.onTagLogicChange} />

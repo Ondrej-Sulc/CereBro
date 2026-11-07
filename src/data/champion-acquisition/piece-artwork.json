@@ -1,0 +1,286 @@
+{
+  "version": 1,
+  "gameStoreSha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55",
+  "assets": [
+    {
+      "itemId": "deathless_kinggroot_t6_aqua",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/22ee05ba2448a58f1841ea46b9ef5874ece714743e6162953d663e2d3e4dbe9f.webp"
+    },
+    {
+      "itemId": "deathless_kinggroot_t6_atmosphere",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/7dfb915d2ae951db01cb91d2a7d895df49343340fe0308361f4c36ea0fbe6e57.webp"
+    },
+    {
+      "itemId": "deathless_kinggroot_t6_music",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/79ae88bf8c9d6a6319955b5d32f6303faf787eabc3b0e9e36dad624f151a972a.webp"
+    },
+    {
+      "itemId": "deathless_kinggroot_t6_seedling",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/1317f5f1bcc0a38c72cbdb54ee736541dbd0cdee9fa5d6c74796994a36d7ff9d.webp"
+    },
+    {
+      "itemId": "deathless_kinggroot_t6_topsoil",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/ebfb151adf6e60a40e675e6f64589fab11f6e8afabe2d8de9f8b64421a789103.webp"
+    },
+    {
+      "itemId": "deathless_kinggroot_t7_aqua",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/310ea110f8db442cf413f3da795152c627c8de3d274faf0fd71f0fbfaf89125f.webp"
+    },
+    {
+      "itemId": "deathless_kinggroot_t7_atmosphere",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/4a24f70b8f0b530eb8466bf4d857b6740f5532f4785454049c3554db5b308c22.webp"
+    },
+    {
+      "itemId": "deathless_kinggroot_t7_music",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/470ca25a769f96e76a145854b46cf231a8ec5e5956ee112135e223c174a35983.webp"
+    },
+    {
+      "itemId": "deathless_kinggroot_t7_seedling",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/ab6d31c73b04dc8db9c66e3eb57aa9331eb2c9f52e2621c759060ff9af073250.webp"
+    },
+    {
+      "itemId": "deathless_kinggroot_t7_topsoil",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/4cc248edbd189441ed016cd80debdf26c6461778325e6d91ee7c150b0bd697f9.webp"
+    },
+    {
+      "itemId": "deathless_shehulk_t6_accusation",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/6f3c133f5028d8737cb3fdf34cc26d7e071ba413f0502bfe592106d269ad4245.webp"
+    },
+    {
+      "itemId": "deathless_shehulk_t6_arguments",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/6ffa2c1d55c32d1cd232766cc5cf973da3fbe5485d60e08de58c94c52076c741.webp"
+    },
+    {
+      "itemId": "deathless_shehulk_t6_closing",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/79fcb5a21cbb4c36df9e6b6eb0f2d68467bf3ec873a92ee92aa4de971793f0fb.webp"
+    },
+    {
+      "itemId": "deathless_shehulk_t6_evidence",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/fae54ec74aea9de544b583fe89158e2538239881ecdefaeacffef5b85248d8b0.webp"
+    },
+    {
+      "itemId": "deathless_shehulk_t6_sentencing",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/15b861fa385cc13516bae0f613250c814ce979391191e1ae70b51dd38a8db0a7.webp"
+    },
+    {
+      "itemId": "deathless_shehulk_t7_accusation",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/ef99d4dfd6e49f5ef03552bb81e4c22c87036f4a2d885f232312fd8a78e21d35.webp"
+    },
+    {
+      "itemId": "deathless_shehulk_t7_arguments",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/b0774ea308f27bf1510c1cc92517d3485e9b31b05e503de98be36c82332a5eb8.webp"
+    },
+    {
+      "itemId": "deathless_shehulk_t7_closing",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/c913e0c58026fd437e807d307ab460252acff45e9d4688dd02383606621ec8f9.webp"
+    },
+    {
+      "itemId": "deathless_shehulk_t7_evidence",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/b0774ea308f27bf1510c1cc92517d3485e9b31b05e503de98be36c82332a5eb8.webp"
+    },
+    {
+      "itemId": "deathless_shehulk_t7_sentencing",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/b42da6e6d1eb196b4da37fb66d06096aefa39cd3cc10cb1bcf6b0c929ef4380a.webp"
+    },
+    {
+      "itemId": "deathless_vision_t6_ai",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/f3d21f885501cb96d4b378e1bf0f497d22fcadaf417ef019a5bb69351fe3ee30.webp"
+    },
+    {
+      "itemId": "deathless_vision_t6_chassis",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/442e88d4a39faa4609e6bf6207aeceb8fe61bf2321b9f861776c9e0bb8eec159.webp"
+    },
+    {
+      "itemId": "deathless_vision_t6_gem",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/f23dd378e39d37a05175508c78654ac3ac8ac2d62697fc347ed50e7ddf0ee6e1.webp"
+    },
+    {
+      "itemId": "deathless_vision_t6_tears",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/17cb62a477dc037ee27ef7491f074629002f287ea4861bf91b09b72dcb5b3404.webp"
+    },
+    {
+      "itemId": "deathless_vision_t6_visage",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/d04e5ae51c6c1304c89e678eb401c27fd871c8b9fb1847e28ae945397b286b93.webp"
+    },
+    {
+      "itemId": "deathless_vision_t7_ai",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/94d2f0386396fd7f68cc118d5cfe08c03bc6a31aaf81245755f09e384db0b452.webp"
+    },
+    {
+      "itemId": "deathless_vision_t7_chassis",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/31c98689ed6cb4a97e5546273f7b54d307d36a81233a7909ac4490efae026d6d.webp"
+    },
+    {
+      "itemId": "deathless_vision_t7_gem",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/4fc74ca5e681705f0253c1e8a0d024b615886d4decd67dfc7207b39b30094a38.webp"
+    },
+    {
+      "itemId": "deathless_vision_t7_tears",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/4432b675c88ee4448d503ba5e8d5c3855731431e35d8d92f8d88fc72dad42901.webp"
+    },
+    {
+      "itemId": "deathless_vision_t7_visage",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/f52708be0d6a4c6b211835e1859ad7da0d0293154c2a9e8d4afa1e58b895b5e4.webp"
+    },
+    {
+      "itemId": "dg_t6_bodyofblade",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/0fe6fd86db2dd956a82b0272a143f884405e61d5fd5a53137559894017941626.webp"
+    },
+    {
+      "itemId": "dg_t6_cross_guard",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/0b880bbe85eddde406cc1d4980807f309f3f1bb45d7b3f3922c9f57a72450eef.webp"
+    },
+    {
+      "itemId": "dg_t6_handle",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/a933cf45fa6a4230de0ad9f9a3536ac7c75b0084721eda624279d40771f1c0f2.webp"
+    },
+    {
+      "itemId": "dg_t6_soul",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/6dc7457ee0782c6410d3317cbe6137fe40c8f801b276fc385ea7fff0dae40c69.webp"
+    },
+    {
+      "itemId": "dg_t6_tipofblade",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/6d2b42c222bcd304d6caceb13ddd481ce4fe1bec177fadd8749f4ba31474d3e9.webp"
+    },
+    {
+      "itemId": "dg_t7_bodyofblade",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/65ec2446602136d4dea6be52e043dee043e1ac1c9cca865e22196229e61f2daf.webp"
+    },
+    {
+      "itemId": "dg_t7_cross_guard",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/6e61f609e2e46fc054f76f1cb2e1bf1f2881deb69701859cd02fcfd81f0dab35.webp"
+    },
+    {
+      "itemId": "dg_t7_handle",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/e8e17ddffd03bc5e16394c249d802fd3d84f2703109d26698da7fe4663c004cb.webp"
+    },
+    {
+      "itemId": "dg_t7_soul",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/de9e767e7facbe4111328888cd40dd268dcdf668a13079f1c64da47dbca46456.webp"
+    },
+    {
+      "itemId": "dg_t7_tipofblade",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/b74bbe81dcc932f29c0e1708f37ed644f6ed618a5a6cb8d3c0f95319b222d964.webp"
+    },
+    {
+      "itemId": "sfbl_t6_garlic",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/e181f56471bfe618e67ef90f24476e560ea4ba42dba7cfe7dd4adb6abde489fc.webp"
+    },
+    {
+      "itemId": "sfbl_t6_silver_arrow",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/65a2c84155b5a0a6cd06cd536dd1662a6255a835bea8d30ec6d3f45d953d33d7.webp"
+    },
+    {
+      "itemId": "sfbl_t6_slayer_sword",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/b455c790308a35a85545897bef10a75776793ccf6a1797bbb00028006b647316.webp"
+    },
+    {
+      "itemId": "sfbl_t6_stake",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/6fc37a9d498bbb004671d9d13c5d75702976dcddc467e7d2a61debe8d8065940.webp"
+    },
+    {
+      "itemId": "sfbl_t6_sunlight",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/e3073955d0ac3fd34b78786c69ab06e78c1ed20d90bdfca4d386d9c2c0ff5b23.webp"
+    },
+    {
+      "itemId": "sfbl_t7_garlic",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/cc7ab2edf4cc58e2af79a1d53eb0262544201c8c5ff710747eb01ea4c5dff0dd.webp"
+    },
+    {
+      "itemId": "sfbl_t7_silver_arrow",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/1de8a5d8a74251490b512f1c2eb70967cd5b18dde804d54d0202781eb2f5fb11.webp"
+    },
+    {
+      "itemId": "sfbl_t7_slayer_sword",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/c3211f37c349f19729160ecd0eb726aa8e18362ae51ff6f826e325e73fda980c.webp"
+    },
+    {
+      "itemId": "sfbl_t7_stake",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/2296d1527c9cdfc2ee9ab802ada07e1787bbb8e999dd65ba17329bff9e28b49b.webp"
+    },
+    {
+      "itemId": "sfbl_t7_sunlight",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/5a975bcffaad4a69b50c1ac851386e8e52678125e5b99a5a5224d6c856877874.webp"
+    },
+    {
+      "itemId": "sfgg_t6_glider_core",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/16af2d859ca2b043dc5249e150b42a13d7db3cfd1b0bb173727ff2b742e285ca.webp"
+    },
+    {
+      "itemId": "sfgg_t6_goblin_smile",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/e8c184870ec09d66cf574e9ecae185d048a8d2b520124e5e57e404ca41830b9b.webp"
+    },
+    {
+      "itemId": "sfgg_t6_hip_bag",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/4a0462ea5e99690f1f383388cbdfe37180f2300a161e3accc96bdb6ad11429c6.webp"
+    },
+    {
+      "itemId": "sfgg_t6_pumpkin_bomb",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/62520cf6a8cb707ea57b58a529ec214d3889c2abb4a567bb7d01ee37c53b8ecb.webp"
+    },
+    {
+      "itemId": "sfgg_t6_science_degree",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/3ff68e49a7a6e2a48834c187128817462005675737c39c165b4b3d8da1faafda.webp"
+    },
+    {
+      "itemId": "sfgg_t7_glider_core",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/4b5ebf1fe539aee3b34c683241db4510b2abfee84a544acfd900a88d4ca42fb2.webp"
+    },
+    {
+      "itemId": "sfgg_t7_goblin_smile",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/9ed8859ab484bc6c0806414f3a1ee3b3bd2325d6ce325bd79e4dff9e64587a64.webp"
+    },
+    {
+      "itemId": "sfgg_t7_hip_bag",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/6001d78cf1b0c811793252ad83f8a40fd7dee7c457ceff4e56dea10742b1c945.webp"
+    },
+    {
+      "itemId": "sfgg_t7_pumpkin_bomb",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/0b25a98c7b247dccff15b6dc3c1c9c5fccc8c1be62e0aa8535a4cd3d4802a3a4.webp"
+    },
+    {
+      "itemId": "sfgg_t7_science_degree",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/7f2c8a29f73044b3db4cb77cd30d79dd6b6a9a3b8e3980937bfd816494e78948.webp"
+    },
+    {
+      "itemId": "sfsl_t6_cassette_deck",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/2f7a0bc443d159ba0f64529ec4a35112d750de2aaf6601ca623fb15042dcb502.webp"
+    },
+    {
+      "itemId": "sfsl_t6_left_quadblaster",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/ce2978d954bead02c50ce5ad79a802ab8108a76ecf7ed3a18d39a64a58b45623.webp"
+    },
+    {
+      "itemId": "sfsl_t6_mixtape",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/88c69978a60a8ca8861cd7dd286c212b19378ff5ab066e2624d5bd42de740703.webp"
+    },
+    {
+      "itemId": "sfsl_t6_right_quadblaster",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/4a67275d17a370a60c660f9fd3efcd22cb5aa1ffe2784e1b7f6dcd4f911cca82.webp"
+    },
+    {
+      "itemId": "sfsl_t6_trenchcoat",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/552d0435af5ad245fd04ae214b3ca833386d630f9d3e8fb91d180e2a5db32da0.webp"
+    },
+    {
+      "itemId": "sfsl_t7_cassette_deck",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/28adb5c7948a1b39a7678f7a368db03cb204a104de5b864858e70e696a4649a4.webp"
+    },
+    {
+      "itemId": "sfsl_t7_left_quadblaster",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/bed88390cceeb11aea06b3793fa050de220113f343d992334ae559c63fa8c429.webp"
+    },
+    {
+      "itemId": "sfsl_t7_mixtape",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/645ca66d4ed400b64a6d29df7c7a7cd938021d081e908198f09a07afa29fe870.webp"
+    },
+    {
+      "itemId": "sfsl_t7_right_quadblaster",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/62eeb40183641f77194f394bc7663bd33febe7f985694f2a176269081a270209.webp"
+    },
+    {
+      "itemId": "sfsl_t7_trenchcoat",
+      "artworkUrl": "https://storage.googleapis.com/champion-images/rewards/full/47863c5ed51cfcfe760a0ca9d2d0a548215b351ce1635a3812636ab7928521f1.webp"
+    }
+  ]
+}
