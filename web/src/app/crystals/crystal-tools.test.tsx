@@ -494,12 +494,14 @@ it("retains legacy search and the pagination request across focus changes withou
   expect(document.querySelector('[data-ascension-section]')).toBeNull()
 })
 
-it("puts the focused challenge before separate champion acquisition, with one source heading and closed evidence", async () => {
-  await renderFinder(await loadCrystalFinder({ champion: "blade_stellar", reward: "ascension" }))
-  const source = document.querySelector('[data-ascension-method]')!
+it.each([undefined, "7"])("puts the undated focused challenge before separate champion acquisition at %s stars, with one source heading and closed evidence", async rarity => {
+  await renderFinder(await loadCrystalFinder({ champion: "blade_stellar", rarity, reward: "ascension" }))
+  const source = document.querySelector('[data-ascension-method="blade-stellar-necropolis"]')!
   expect(source.textContent).toContain("with only Blade (Stellar-Forged)")
   expect(source.textContent).toContain("separate from collecting his five pieces")
-  expect(source.textContent).toContain("Past event")
+  expect(source.textContent).toContain("Activity-dependent")
+  expect(source.textContent).not.toContain("Past event")
+  expect(source.querySelector('[data-status="activity_dependent"]')).not.toBeNull()
   const acquisition = document.querySelector<HTMLDetailsElement>('#finder-champion-acquisition')!
   expect(acquisition.open).toBe(false)
   expect(source.compareDocumentPosition(acquisition) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
@@ -527,12 +529,15 @@ it("keeps Blade's pieces and challenge useful with one quiet host disclosure and
   expect(document.querySelector('[role="status"]')?.textContent).not.toContain("0 recorded crystal")
   expect(visible.textContent).toContain("with only Blade (Stellar-Forged)")
   expect(visible.textContent).toContain("separate from collecting his five pieces")
-  expect(visible.textContent).toContain("Past event")
+  const challenge = visible.querySelector('[data-ascension-method="blade-stellar-necropolis"]')!
+  expect(challenge.textContent).toContain("Activity-dependent")
+  expect(challenge.textContent).not.toContain("Past event")
   const collection = document.querySelector('[aria-label="Collection pieces"]')!
   expect(collection.querySelectorAll("img")).toHaveLength(5)
   expect(collection.querySelectorAll('a[target="_blank"]')).toHaveLength(5)
   expect(collection.textContent).toContain("Act 9.4 timed objective")
   expect(collection.textContent).toContain("Complete Act 9.4 within the original objective window")
+  expect(collection.textContent).toContain("Past event")
   expect(document.querySelector('[data-ascension-method] a')?.getAttribute("href")).toContain("playcontestofchampions.com")
   expect(document.querySelector('[aria-label="7-star upgrade cost to A2"]')?.closest("details")).toBeNull()
 })

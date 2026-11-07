@@ -60,7 +60,9 @@ Method cards keep their operative descriptions, source-specific status, date
 window, official link and material payouts visible. Magik's static bundles show
 exact contents and recorded purchase limits without merging them with announcement
 prices. Blade (Stellar-Forged) keeps its only-Blade fight condition, awakening/A1
-versus five-piece acquisition distinction and Past event status. Star-scope and
+versus five-piece acquisition distinction and Activity-dependent status. Its
+undated announcement does not establish a deadline or current access; the separate
+five-piece acquisition retains its evidenced historical status. Star-scope and
 reward/access uncertainties stay in source details; raw capture-gap lists remain
 in data/docs. A canonical A2 recipe never implies that an A1 objective awards A2.
 Definition-only records do not count as methods. Current stock, upcoming, past
