@@ -57,6 +57,9 @@ jobs:
       - name: Generate Prisma client
         run: pnpm run prisma:generate
 
+      - name: Verify champion artwork fallbacks
+        run: pnpm exec vitest run web/src/lib/championHelper.test.ts --maxWorkers=1
+
       - name: Verify champion data, UI and Discord rendering
         run: pnpm exec vitest run src/domain/champion-overview-summary.test.ts web/src/lib/champion-kit.test.ts web/src/lib/champion-kit-source-display.test.ts web/src/lib/champion-kit-synergy-bonus.test.ts web/src/lib/champion-synergy-display.test.ts 'web/src/app/champions/[slug]/champion-synergies-panel.test.ts' web/src/lib/roster-kit.test.ts web/src/lib/roster-kit-details.test.ts web/src/lib/roster-filtering.test.ts web/src/lib/alliance-roster-filtering.test.ts web/src/app/actions/alliance-roster.test.ts web/src/app/profile/roster/components/roster-filter-rules.test.ts web/src/components/champions/compact-effect-grid.test.ts web/src/app/profile/roster/components/quick-champion-dialog.test.ts src/commands/champion src/commands/search src/commands/glossary/effect.test.ts src/utils/errorHandler.test.ts --maxWorkers=1
 
@@ -104,6 +107,9 @@ jobs:
 
       - name: Verify reusable reward names and server logger reloads
         run: pnpm exec vitest run src/domain/reward-display.test.ts src/domain/selectable-rewards.test.ts src/data/game-selectable-rewards/index.test.ts web/src/lib/logger.test.ts --maxWorkers=1
+
+      - name: Verify supporter screenshot access and recurring payments
+        run: pnpm exec vitest run src/services/rosterScreenshotQuotaService.test.ts web/src/lib/support-status.test.ts web/src/lib/support-config.test.ts web/src/lib/support-donations.test.ts web/src/lib/stripe-support-invoice.test.ts web/src/app/api/support/webhook/route.test.ts --maxWorkers=1
 
       - name: Verify war map boundaries and defense planning
         run: pnpm exec vitest run src/domain/war-map.test.ts web/src/app/api/war-planning/nodes/route.test.ts web/src/app/api/war-planning/placements/route.test.ts web/src/app/planning/defense-map-actions.test.ts web/src/app/planning/defense-actions.test.ts web/src/components/war-planning/hooks/use-defense-planning.test.ts web/src/components/war-planning/hooks/use-war-planning.test.ts --maxWorkers=1

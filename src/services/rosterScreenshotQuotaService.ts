@@ -124,7 +124,7 @@ export async function getRosterScreenshotQuota(
   const actorFilter = actorWhere(actor);
   const supportActorFilter = supportActorWhere(actor);
 
-  const [usage, currentMonthPersonalDonation, lifetimePersonalDonations, allianceCurrentMonthMinor] = await Promise.all([
+  const [usage, personalSupportDonation, lifetimePersonalDonations, allianceCurrentMonthMinor] = await Promise.all([
     actorFilter
       ? prisma.rosterUploadEvent.aggregate({
           where: {
@@ -138,8 +138,16 @@ export async function getRosterScreenshotQuota(
       ? prisma.supportDonation.findFirst({
           where: {
             status: "succeeded",
-            createdAt: { gte: start, lt: end },
             ...supportActorFilter,
+            AND: [{
+              OR: [
+                { createdAt: { gte: start, lt: end } },
+                {
+                  stripeSubscriptionId: { not: null },
+                  stripeSubscriptionStatus: { in: [...ACTIVE_SUPPORT_SUBSCRIPTION_STATUSES] },
+                },
+              ],
+            }],
           },
           select: { id: true },
         })
@@ -160,7 +168,7 @@ export async function getRosterScreenshotQuota(
 
   const used = usage._sum.fileCount ?? 0;
   const personalLifetimeMinor = lifetimePersonalDonations._sum.amountMinor ?? 0;
-  const unlimitedReason = currentMonthPersonalDonation
+  const unlimitedReason = personalSupportDonation
     ? "personal_supporter"
     : personalLifetimeMinor >= PERSONAL_LIFETIME_UNLOCK_THRESHOLD_MINOR
       ? "personal_lifetime_supporter"

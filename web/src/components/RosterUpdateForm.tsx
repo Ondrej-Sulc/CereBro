@@ -304,7 +304,7 @@ export function RosterUpdateForm({ targetPlayerId, compact = false, quota = null
                             ? "Your alliance has unlocked roster screenshot uploads from support in the last 30 days."
                             : quota.unlimitedReason === "personal_lifetime_supporter"
                                 ? "Your lifetime support unlocks roster screenshot uploads."
-                                : "Your supporter status unlocks roster screenshot uploads this month."}
+                                : "Your supporter status unlocks roster screenshot uploads."}
                     </p>
                 ) : (
                     <div className="mt-1 space-y-1 text-sm text-sky-200/80">
