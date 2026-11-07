@@ -1,5 +1,42 @@
 # Champion and roster filters
 
+**7★ Ascension** is an optional eligibility filter in the champion catalog,
+personal/player rosters and alliance overview. It matches only a positive
+canonical seven-star path (maxLevel > 0) projected by
+getChampionAscensionEligibility(gameId). Missing metadata and known empty
+seven-star paths do not match. The underlying ascendableRarities projection
+remains complete; lower-star Ascension stats, costs and level controls are valid
+and unchanged. Eligibility never comes from crystal membership, token sources,
+account inventory or current availability.
+
+The catalog uses a compact pressed toggle beside rarity and class, grouped with
+rarity so wrapping keeps those related choices together. On phones it shares the
+sorting row. There is no checkbox, helper paragraph, scope menu, dedicated
+Ascension row or empty progression block; Tags and ability pickers follow the
+normal filters directly. Roster desktop trays use the same toggle beside Rank
+and **Ascension level**; the mobile Roster tab keeps it below level choices.
+There are no Any / Dust / All-star eligibility pickers. One removable active rule
+reads **7★ Ascension eligible**.
+
+Catalog cards must be obtainable at seven stars, have a positive recorded
+seven-star path and include seven among selected stars (or have no rarity
+restriction). Roster copies must actually be seven-star copies with that path;
+already ascended/maxed copies still match. Current Ascension-level/status rules
+remain independent. Rarity, class and all other filters are preserved; a
+six-star-only selection plus this toggle gives zero results. Eligibility runs
+before sorting, contextual counts, virtualization and alliance member caps.
+
+Enabled links and the player-roster Share action normalize to
+ascensionEligible=true&ascensionScope=seven-star. Legacy enabled generic,
+all-star, Dust or unknown scopes deterministically migrate to seven-star-only
+eligibility; they never retain lower-star matching behind a seven-star label.
+Remembered enabled booleans migrate the same way, ignoring obsolete scope
+memory. Explicit false/invalid booleans remain off; orphaned scope parameters
+are removed without enabling the filter. Explicit links override per-view/profile
+memory. Toggle-off, rule removal and Clear all remove both parameters while
+preserving unrelated URL fields and fragments. Back/forward to an unfiltered
+URL turns eligibility off; a delayed Next URL snapshot cannot undo local removal.
+
 The compact tray refinement of the quick-bar layout (prototype A) was selected on 2026-10-23. On desktop, rarity, named classes, and the compact ownership dropdown stay visible. Active rules sit directly below these quick choices, above the expandable tray. The tray contains multi-select rank and ascension dropdowns, four aligned pickers (tags, ability categories, abilities, protection), and source-refinement popovers. There are no repeated section headings or empty columns. Sorting, **Filters**, and a labelled **Edit** dropdown sit beside search. Edit replaces the icon-only actions button and separate Add button on both desktop and mobile. Its menu contains **Add champion**, **Edit roster**, and **Attack reservations** according to their independent permissions; active modes have visible exit controls.
 
 Below 640px, the collapsed toolbar uses three compact rows: search with the **Edit** dropdown; rarity with a multi-select class popover and filter trigger; then ownership and sorting. The class popover keeps full names, multiple selections, a clear action, and a Done button. **Filters** opens a modal bottom sheet with Roster, Tags, Abilities, and Protection tabs. Its body scrolls while Clear all and **Show N champions** remain visible above the safe area. Every filter remains available, including multiple ranks and ascension level 0. The sheet traps focus, locks background scrolling, closes with Escape or the overlay, and returns focus to the filter trigger. Nested pickers close before the sheet on Escape. Filtering remains immediate and selections persist across tabs and closing. Search uses 16px text to avoid focus zoom on mobile browsers.

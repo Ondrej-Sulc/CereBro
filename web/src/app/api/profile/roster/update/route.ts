@@ -10,6 +10,7 @@ import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { withRouteContext } from "@/lib/with-request-context";
 import { revalidatePath } from "next/cache";
 import { clearCache } from "@/lib/cache";
+import { resolveRosterAscensionUpdate } from "@cerebro/core/domain/roster-ascension-state";
 
 export const maxDuration = 60; // Allow 60 seconds for processing
 
@@ -38,8 +39,11 @@ export const POST = withRouteContext(async (req: NextRequest) => {
     const mode = formData.get("mode") as string || "grid-view"; // Default to old 'grid-view'
     const stars = parseInt(formData.get("stars") as string);
     const rank = parseInt(formData.get("rank") as string);
-    const isAscended = formData.get("isAscended") === "true";
-    const ascensionLevel = parseInt(formData.get("ascensionLevel") as string) || 0;
+    const ascendedInput = formData.get("isAscended"), levelInput = formData.get("ascensionLevel");
+    if (ascendedInput !== null && ascendedInput !== "true" && ascendedInput !== "false") return NextResponse.json({ error: "Invalid ascended status" }, { status: 400 });
+    const ascension = resolveRosterAscensionUpdate({ ...(ascendedInput !== null ? { isAscended: ascendedInput === "true" } : {}), ...(levelInput !== null && levelInput !== "" ? { ascensionLevel: Number(levelInput) } : {}) });
+    if (!ascension.ok) return NextResponse.json({ error: ascension.message }, { status: 400 });
+    const { isAscended, ascensionLevel } = ascension.value;
     const files = formData.getAll("images") as File[];
     const targetPlayerIdRaw = formData.get("targetPlayerId") as string | null;
 

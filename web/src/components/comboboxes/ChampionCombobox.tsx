@@ -16,15 +16,24 @@ import {
 
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-import { ChampionClass } from "@prisma/client";
-import { Champion, ChampionImages } from "@/types/champion";
-import { getChampionImageUrl, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
+import type { ChampionClass } from "@prisma/client";
+import type { ChampionImages } from "@/types/champion";
+import { getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { GroupedVirtuoso } from "react-virtuoso";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import Fuse from "fuse.js";
 
+export interface ChampionComboboxOption {
+  id: string | number;
+  name: string;
+  class?: ChampionClass;
+  images?: ChampionImages | null;
+  portraitUrl?: string | null;
+  group?: string;
+}
+
 interface ChampionComboboxProps {
-  champions: (Champion & { group?: string })[];
+  champions: ChampionComboboxOption[];
   value: string;
   onSelect: (value: string) => void;
   placeholder?: string;
@@ -34,6 +43,8 @@ interface ChampionComboboxProps {
   onOpenChange?: (open: boolean) => void;
   activeChampionIds?: Set<string>;
   disabled?: boolean;
+  /** Hide only the closed trigger's portrait; dropdown options retain theirs. */
+  showSelectedPortrait?: boolean;
 }
 
 export const ChampionCombobox = React.memo(function ChampionCombobox({
@@ -47,6 +58,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
   onOpenChange: controlledOnOpenChange,
   activeChampionIds,
   disabled,
+  showSelectedPortrait = true,
 }: ChampionComboboxProps) {
   const [internalOpen, setInternalOpen] = React.useState(false);
   const isControlled = controlledOpen !== undefined;
@@ -154,14 +166,14 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
           <div className="flex items-center gap-2 w-full overflow-hidden">
             {selectedChampion ? (
               <>
-                <div
+                {showSelectedPortrait && <div
                   className={cn(
                     "relative h-9 w-9 rounded-full overflow-hidden flex-shrink-0 bg-slate-800",
                     getChampionClassColors(selectedChampion.class).border
                   )}
                 >
                   <Image
-                    src={getChampionImageUrlOrPlaceholder(
+                    src={selectedChampion.portraitUrl ?? getChampionImageUrlOrPlaceholder(
                       selectedChampion.images,
                       "128"
                     )}
@@ -169,11 +181,12 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                     fill
                     className="object-cover"
                   />
-                </div>
+                </div>}
 
                 <span
                   className={cn(
                     "font-bold text-sm text-left whitespace-normal leading-tight line-clamp-2",
+                    !showSelectedPortrait && "pl-3",
                     getChampionClassColors(selectedChampion.class).text
                   )}
                 >
@@ -191,8 +204,17 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
             {value ? (
               <div
                 role="button"
+                aria-label="Clear champion"
+                tabIndex={0}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    onSelect("");
+                  }
+                }}
                 onClick={handleClear}
-                className="p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-200"
+                className="p-1 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-slate-500 hover:text-slate-200 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-slate-300"
               >
                 <X className="h-4 w-4" />
               </div>
@@ -268,7 +290,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                       const item = flatItems[index];
 
                       const colors = getChampionClassColors(
-                        item.class as ChampionClass
+                        item.class
                       );
 
                       return (
@@ -285,7 +307,7 @@ export const ChampionCombobox = React.memo(function ChampionCombobox({
                             )}
                           >
                             <Image
-                              src={getChampionImageUrlOrPlaceholder(item.images, "64")}
+                              src={item.portraitUrl ?? getChampionImageUrlOrPlaceholder(item.images, "64")}
                               alt={item.name}
                               fill
                               className="object-cover"

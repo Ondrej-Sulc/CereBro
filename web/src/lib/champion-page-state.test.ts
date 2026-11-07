@@ -5,6 +5,13 @@ const stats = [{ rarity: 6, rank: 4 }, { rarity: 7, rank: 6 }, { rarity: 7, rank
 const read = (query: string) => readChampionPageState(new URLSearchParams(query), stats)
 
 describe("shared champion page state", () => {
+  it("uses the selected champion's recorded eligibility and treats an explicit missing path as A0", () => {
+    const query = new URLSearchParams("rarity=7&ascension=5")
+    expect(readChampionPageState(query, stats, [{ rarity: 7, maxLevel: 0 }]).ascension).toBe(0)
+    expect(readChampionPageState(query, stats, [{ rarity: 7, maxLevel: 2 }]).ascension).toBe(2)
+    expect(readChampionPageState(query, stats, []).ascension).toBe(0)
+    expect(readChampionPageState(new URLSearchParams("rarity=6&ascension=1"), stats, [{ rarity: 6, maxLevel: 1 }]).ascension).toBe(1)
+  })
   it("round-trips an exact synergy source ID and clears it outside Synergies", () => {
     const state = read("tab=synergies&synergy=comp_009&rarity=7&rank=5&sig=0")
     expect(state).toMatchObject({ synergy: "comp_009", tab: "synergies", rank: "5", sig: 0 })
@@ -18,13 +25,13 @@ describe("shared champion page state", () => {
 
   it("restores a linked passage and the complete build, including an unawakened signature", () => {
     expect(read("tab=abilities&rarity=7&rank=5&sig=0&ascension=3&ability=42")).toEqual({
-      tab: "abilities", rarity: "7", rank: "5", sig: 0, ascension: 3, ability: "42", chapter: null, synergy: null,
+      tab: "abilities", rarity: "7", rank: "5", sig: 0, ascension: 2, ability: "42", chapter: null, synergy: null,
     })
   })
 
   it("uses available tiers and rarity-specific limits for stale or out-of-range links", () => {
     expect(read("tab=bogus&rarity=6&rank=6&sig=999&ascension=5&ability=42")).toEqual({
-      tab: "overview", rarity: "6", rank: "4", sig: 200, ascension: 0, ability: null, chapter: null, synergy: null,
+      tab: "overview", rarity: "6", rank: "4", sig: 200, ascension: 1, ability: null, chapter: null, synergy: null,
     })
     expect(read("rarity=4&sig=200").sig).toBe(99)
     expect(read("sig=-1&ascension=-2")).toMatchObject({ sig: 0, ascension: 0 })

@@ -15,6 +15,14 @@ import type { FacetCounts } from "@/lib/roster-filtering";
 
 export const filterControlClass = "border-transparent bg-transparent text-slate-400 shadow-none hover:bg-slate-800/60 hover:text-slate-100";
 
+/** Canonical seven-star eligibility, independent of the copy's current Ascension level. */
+export function AscensionEligibilityFilter({ value, onChange }: { value: boolean; onChange: (value: boolean) => void }) {
+  return <Button type="button" variant="ghost" aria-label={"7\u2605 Ascension"} aria-pressed={value} onClick={() => onChange(!value)} className={cn(
+    "h-11 shrink-0 rounded-md border px-3 text-xs font-medium transition-colors focus-visible:ring-2 focus-visible:ring-sky-400 sm:h-9",
+    value ? "border-sky-400/35 bg-sky-400/10 text-sky-100 hover:bg-sky-400/15 hover:text-sky-100" : filterControlClass,
+  )}>{"7\u2605 Ascension"}</Button>;
+}
+
 export function FilterField({ label, children, className }: { label: string; children: ReactNode; className?: string }) {
   return <div className={cn("min-w-0 space-y-2", className)}>
     <p className="text-[11px] font-medium text-slate-400">{label}</p>

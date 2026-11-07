@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { maxSigForRarity } from "@/lib/mcoc-prestige";
 import { normalizeRosterAddDefaults, ROSTER_ADD_STARS } from "@/lib/roster-add-defaults";
+import { RosterAscensionControl } from "@/components/roster-ascension-control";
 
 interface NewChampionFormData {
     championId: number | null;
@@ -48,7 +49,7 @@ export function AddChampionModal({ open, onOpenChange, allChampions, onAdd, newC
         const defaults = normalizeRosterAddDefaults({ stars: newStars, rank: newChampion.rank });
         const newMaxSig = maxSigForRarity(newStars);
         const clampedSig = Math.min(newChampion.sigLevel, newMaxSig);
-        onNewChampionChange({...newChampion, ...defaults, sigLevel: clampedSig});
+        onNewChampionChange({...newChampion, ...defaults, sigLevel: clampedSig, isAscended: false, ascensionLevel: 0});
     };
 
     return (
@@ -67,9 +68,9 @@ export function AddChampionModal({ open, onOpenChange, allChampions, onAdd, newC
                             </div>
 
                             {/* Class colour ambient glow */}
-                            <div 
-                                className="absolute -top-20 -right-20 w-96 h-96 rounded-full blur-[100px] opacity-40 mix-blend-screen" 
-                                style={{ backgroundColor: classColors.color }} 
+                            <div
+                                className="absolute -top-20 -right-20 w-96 h-96 rounded-full blur-[100px] opacity-40 mix-blend-screen"
+                                style={{ backgroundColor: classColors.color }}
                             />
                             <div className="absolute inset-x-0 top-0 h-1 z-10 opacity-80" style={{ backgroundColor: classColors.color }} />
 
@@ -100,11 +101,11 @@ export function AddChampionModal({ open, onOpenChange, allChampions, onAdd, newC
                     <div className={cn("px-4 pb-4 flex flex-col gap-3", selectedChampion ? "pt-16" : "pt-6")}>
                         <div className="space-y-1.5 z-20">
                             <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Select Champion</p>
-                            <ChampionCombobox 
-                                champions={allChampions} 
-                                value={newChampion.championId ? String(newChampion.championId) : ""} 
-                                onSelect={(val) => onNewChampionChange({...newChampion, championId: val ? parseInt(val) : null})} 
-                                className="bg-slate-900/60 border-slate-700/50 text-slate-200 w-full backdrop-blur-md hover:bg-slate-800/80 transition-colors" 
+                            <ChampionCombobox
+                                champions={allChampions}
+                                value={newChampion.championId ? String(newChampion.championId) : ""}
+                                onSelect={(val) => onNewChampionChange({...newChampion, championId: val ? parseInt(val) : null, isAscended: false, ascensionLevel: 0})}
+                                className="bg-slate-900/60 border-slate-700/50 text-slate-200 w-full backdrop-blur-md hover:bg-slate-800/80 transition-colors"
                             />
                         </div>
 
@@ -151,7 +152,7 @@ export function AddChampionModal({ open, onOpenChange, allChampions, onAdd, newC
                                     ))}
                                 </div>
                             </div>
-                            
+
                             <div className="space-y-1.5">
                                 <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Rank</p>
                                 <div className="flex gap-1">
@@ -213,7 +214,7 @@ export function AddChampionModal({ open, onOpenChange, allChampions, onAdd, newC
                                     >
                                         -1
                                     </button>
-                                    
+
                                     <input
                                         type="number"
                                         value={newChampion.sigLevel || 0}
@@ -263,46 +264,7 @@ export function AddChampionModal({ open, onOpenChange, allChampions, onAdd, newC
 
                         <div className="border-t border-slate-800/60" />
 
-                        {/* Ascension */}
-                        <div className="space-y-1.5">
-                            <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-widest">Ascension</p>
-                            {newChampion.stars === 7 ? (
-                                <div className="flex gap-1">
-                                    {[0, 1, 2, 3, 4, 5].map(level => (
-                                        <button
-                                            key={level}
-                                            onClick={() => onNewChampionChange({ ...newChampion, ascensionLevel: level, isAscended: level > 0 })}
-                                            className={cn(
-                                                "flex-1 py-1.5 rounded-lg text-[11px] font-bold border transition-all relative overflow-hidden",
-                                                newChampion.ascensionLevel === level
-                                                    ? "bg-amber-500/20 border-amber-400/30 text-amber-400 ring-1 ring-amber-400/10 shadow-lg shadow-amber-900/20"
-                                                    : "bg-slate-800/40 border-slate-700/50 text-slate-500 hover:bg-slate-700/60 hover:text-slate-300"
-                                            )}
-                                        >
-                                            {newChampion.ascensionLevel === level && (
-                                                <div className="absolute inset-0 bg-white/10 mix-blend-overlay" />
-                                            )}
-                                            <span className="relative z-10">{level === 0 ? "—" : `A${level}`}</span>
-                                        </button>
-                                    ))}
-                                </div>
-                            ) : (
-                                <button
-                                    onClick={() => onNewChampionChange({ ...newChampion, isAscended: !newChampion.isAscended })}
-                                    className={cn(
-                                        "w-full py-2 rounded-lg text-xs font-bold border transition-all relative overflow-hidden",
-                                        newChampion.isAscended
-                                            ? "bg-amber-500/20 border-amber-400/30 text-amber-400 ring-1 ring-amber-400/10 shadow-lg shadow-amber-900/20"
-                                            : "bg-slate-800/40 border-slate-700/50 text-slate-400 hover:bg-slate-700/60 hover:text-slate-200"
-                                    )}
-                                >
-                                    {newChampion.isAscended && (
-                                        <div className="absolute inset-0 bg-white/10 mix-blend-overlay" />
-                                    )}
-                                    <span className="relative z-10">{newChampion.isAscended ? "✦ Ascended" : "Not Ascended"}</span>
-                                </button>
-                            )}
-                        </div>
+                        <RosterAscensionControl value={newChampion} maxLevel={selectedChampion?.ascensionMaxLevels?.[String(newChampion.stars)]} onChange={state => onNewChampionChange({ ...newChampion, ...state })} />
                     </div>
 
                     {/* Footer */}

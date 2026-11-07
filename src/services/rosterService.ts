@@ -1,5 +1,6 @@
 import { Roster, Prisma, Champion } from "@prisma/client";
 import logger from "./loggerService";
+import { normalizeRosterAscensionState } from "../domain/roster-ascension-state.js";
 
 export type RosterWithChampion = Roster & { champion: Champion };
 
@@ -10,7 +11,7 @@ export async function getRoster(
   isAscended: boolean | null
 ): Promise<RosterWithChampion[] | string> {
   const { prisma } = await import("./prismaService.js");
-  const where: any = { playerId };
+  const where: Prisma.RosterWhereInput = { playerId };
   if (stars) {
     where.stars = stars;
   }
@@ -18,7 +19,8 @@ export async function getRoster(
     where.rank = rank;
   }
   if (isAscended !== null) {
-    where.isAscended = isAscended;
+    if (isAscended) where.OR = [{ ascensionLevel: { gt: 0 } }, { isAscended: true }];
+    else where.AND = [{ ascensionLevel: { lte: 0 } }, { isAscended: false }];
   }
 
   const rosterEntries = await prisma.roster.findMany({
@@ -31,7 +33,7 @@ export async function getRoster(
     return "No champions found in the roster that match the criteria.";
   }
 
-  return rosterEntries;
+  return rosterEntries.map(entry => ({ ...entry, ...normalizeRosterAscensionState(entry) }));
 }
 
 

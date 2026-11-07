@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   createMcocPrestigeProjector,
+  applyAscensionToPrestige,
+  applyAscensionToStatValue,
   expandMcocPrestigeCurve,
   maxAscensionLevelForRarity,
   maxSigForRarity,
@@ -26,11 +28,21 @@ describe("MCOC Prestige Projection", () => {
     expect(maxSigForRarity(5)).toBe(200);
     expect(maxSigForRarity(7)).toBe(200);
 
-    expect(maxAscensionLevelForRarity(6)).toBe(0);
-    expect(maxAscensionLevelForRarity(7)).toBe(5);
+    expect(maxAscensionLevelForRarity(4)).toBe(1);
+    expect(maxAscensionLevelForRarity(5)).toBe(1);
+    expect(maxAscensionLevelForRarity(6)).toBe(1);
+    expect(maxAscensionLevelForRarity(7)).toBe(2);
   });
 
-  it("projects game-display prestige with additive 7-star ascension scaling from base", () => {
+  it("projects lower-rarity stat ascension without applying those boosts to prestige", () => {
+    expect(applyAscensionToStatValue(10000, 4, 1)).toBe(13000);
+    expect(applyAscensionToStatValue(10000, 5, 1)).toBe(12000);
+    expect(applyAscensionToStatValue(10000, 6, 1)).toBe(12200);
+    expect(applyAscensionToPrestige(10000, 6, 1)).toBe(10000);
+    expect(applyAscensionToStatValue(10000, 3, 1)).toBe(10000);
+  });
+
+  it("projects game-display prestige with compounded 7-star ascension scaling from base", () => {
     expect(projectMcocPrestige({
       prestigeData: endpoints,
       stat: sevenStarRankThree,
@@ -50,14 +62,14 @@ describe("MCOC Prestige Projection", () => {
       stat: sevenStarRankThree,
       sigLevel: 0,
       ascensionLevel: 2,
-    })).toBe(25520);
+    })).toBe(25660);
 
     expect(projectMcocPrestige({
       prestigeData: endpoints,
       stat: sevenStarRankThree,
       sigLevel: 0,
       ascensionLevel: 5,
-    })).toBe(30800);
+    })).toBe(32330);
   });
 
   it("expands chart curves through the same projection rules", () => {
@@ -75,7 +87,7 @@ describe("MCOC Prestige Projection", () => {
       sigLevel: 200,
       rarity: 7,
       ascensionLevel: 5,
-    })).toBe(36400);
+    })).toBe(38200);
   });
 
   it("projects by champion, rarity, and rank through an indexed lookup", () => {
@@ -100,5 +112,13 @@ describe("MCOC Prestige Projection", () => {
       rank: 3,
       sigLevel: 1,
     })).toBe(30000);
+  });
+
+  it.each([Number.NaN, Number.POSITIVE_INFINITY, -1, 0])("keeps invalid/unascended inputs at base prestige (%s)", ascensionLevel => {
+    expect(projectMcocPrestige({ prestigeData: endpoints, stat: sevenStarRankThree, sigLevel: 0, ascensionLevel })).toBe(22000);
+  });
+
+  it.each([1, 2, 3, 4, 5, 6, null, undefined])("does not apply seven-star growth to another or unknown rarity (%s)", rarity => {
+    expect(projectMcocPrestige({ prestigeData: [], stat: { rarity, rank: 3, prestige: 10000 }, sigLevel: 0, ascensionLevel: 2 })).toBe(10000);
   });
 });

@@ -80,6 +80,15 @@ function sigPrestigeRows(championId: number, rank: number, prestigeBySig: Record
 }
 
 describe("Roster Prestige Insights", () => {
+  it("normalizes legacy owned ascension consistently before calculating insights", () => {
+    const base = rosterEntry({ id: "legacy", championId: 1, name: "Alpha", rank: 4, stars: 7 });
+    const result = calculateRosterPrestigeInsights([
+      { ...base, isAscended: true, ascensionLevel: 0 },
+      { ...base, id: "numeric", isAscended: false, ascensionLevel: 2 },
+    ], prestigeRows(1, 4, 10000, 7), defaultOptions);
+    expect(result.prestigeMap).toEqual({ legacy: 10800, numeric: 11660 });
+  });
+
   it("calculates Top 30 average and rank-up impact through a pure interface", () => {
     const roster = [
       rosterEntry({ id: "r1", championId: 1, name: "Alpha", rank: 1 }),

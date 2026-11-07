@@ -1,0 +1,48 @@
+.section { min-width: 0; margin-top: 24px; padding-top: 24px; border-top: 1px solid #283345; scroll-margin-top: 160px; }
+.heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 18px; }
+.heading :is(h2, h3) { display: flex; align-items: center; gap: 9px; color: #e8edf6; font-size: 22px; font-weight: 600; letter-spacing: -.025em; line-height: 30px; }
+.heading :is(h2, h3) > span { padding: 1px 7px; border: 1px solid #3a475b; border-radius: 5px; color: #aabbd4; font-size: 11px; line-height: 18px; letter-spacing: 0; }
+.heading p { margin-top: 5px; color: #9eafc5; font-size: 13px; line-height: 21px; }
+.heading > a { display: inline-flex; flex-shrink: 0; align-items: center; gap: 5px; padding-block: 5px; color: #b4c1ed; font-size: 12px; line-height: 20px; }
+.heading > a svg { width: 14px; height: 14px; }
+.sources { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; list-style: none; margin: 0; padding: 0; }
+.sources > :only-child { grid-column: 1 / -1; }
+.groupTitle { margin-bottom: 12px; color: #c2cfe3; font-size: 14px; line-height: 22px; font-weight: 550; }
+.row { min-width: 0; border: 1px solid #2c394d; border-radius: 10px; background: linear-gradient(120deg,color-mix(in srgb,var(--champion-accent, #b4c1ed) 4%,#101722),#0d141e 75%); }
+.destination { display: flex; align-items: center; gap: 11px; padding: 14px 14px 5px; border-radius: 10px 10px 0 0; }
+.artwork { display: grid; flex-shrink: 0; width: 56px; height: 56px; place-items: center; }
+.artwork img { width: 56px; height: 56px; object-fit: contain; }
+.artwork > svg { width: 26px; height: 26px; color: #8294ae; }
+.title { min-width: 0; flex: 1; }
+.kind { display: block; margin-bottom: 3px; color: #a4b7d3; font-size: 12px; line-height: 20px; }
+.title h4 { color: #edf2fa; font-size: 16px; font-weight: 600; line-height: 24px; overflow-wrap: anywhere; }
+.arrow { flex-shrink: 0; align-self: flex-start; width: 14px; height: 14px; margin-top: 4px; color: #9fb2d9; }
+.contents { padding: 4px 14px 14px; }
+.condition { color: #a6b5c9; font-size: 13px; line-height: 21px; }
+.rewards { display: flex; flex-wrap: wrap; gap: 6px; list-style: none; margin: 10px 0 0; padding: 0; }
+.rewards > li { display: flex; align-items: center; gap: 7px; max-width: 100%; min-width: 0; padding: 7px 9px; border: 1px solid #304056; border-radius: 6px; background: #0b121d80; color: #bdcadd; font-size: 12px; line-height: 20px; overflow-wrap: anywhere; }
+.rewards img { flex-shrink: 0; object-fit: contain; }
+.rewards strong { color: #e0e9f6; font-weight: 600; white-space: nowrap; }
+.conditions { margin-top: 10px; color: #91a5c2; font-size: 11px; line-height: 18px; overflow-wrap: anywhere; }
+.conditions summary { width: fit-content; cursor: pointer; }
+.conditions p { margin-top: 5px; }
+.note, .snapshot { margin-top: 12px; color: #8c9db5; font-size: 11px; line-height: 19px; }
+.snapshot { margin-top: 8px; }
+.empty { padding: 14px 16px; border: 1px dashed #344054; border-radius: 9px; color: #9eafc5; font-size: 13px; line-height: 22px; }
+.more, .empty button { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 7px 10px; border: 1px solid #35455d; border-radius: 6px; color: #bacbed; font-size: 12px; line-height: 20px; cursor: pointer; }
+.more svg { width: 14px; height: 14px; }
+.more { min-height: 44px; }
+.provenance { margin-top: 20px; padding-top: 12px; border-top: 1px solid #28364b; color: #94a8c5; font-size: 12px; line-height: 21px; }
+.provenance summary { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px 14px; width: fit-content; min-height: 44px; padding-block: 10px; cursor: pointer; color: #b2c4e0; }
+.provenance summary::before { content: "+"; }
+.provenance[open] summary::before { content: "−"; }
+.provenance summary > span { color: #8ea3c2; }
+.provenance p { max-width: 85ch; margin-block: 5px 12px; }
+.provenance dl { display: grid; grid-template-columns: auto 1fr; gap: 5px 20px; }
+.heading > a { min-height: 44px; font-size: 13px; }
+.heading :is(h2, h3) { flex-wrap: wrap; }
+.more[aria-expanded=true] svg { transform: rotate(180deg); }
+.heading > a:hover, .destination:hover h4 { color: #edf1ff; text-decoration: underline; text-underline-offset: 3px; }
+.section a:focus-visible, .section button:focus-visible, .section summary:focus-visible { outline: 2px solid #b4bfff; outline-offset: 4px; border-radius: 4px; }
+@media(max-width:767px) { .sources { grid-template-columns: minmax(0,1fr); } }
+@media(max-width:639px) { .heading { flex-direction: column; gap: 5px; } .section { margin-top: 24px; padding-top: 24px; } }

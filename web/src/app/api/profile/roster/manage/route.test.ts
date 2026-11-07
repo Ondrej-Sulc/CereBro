@@ -4,7 +4,7 @@ import { captureServerException, captureServerOperation } from '@/lib/observabil
 import { revalidatePath } from 'next/cache';
 
 const mocks = vi.hoisted(() => ({
-  player: vi.fn(), findUnique: vi.fn(), update: vi.fn(), remove: vi.fn(),
+  player: vi.fn(), findUnique: vi.fn(), update: vi.fn(), remove: vi.fn(), rule: vi.fn(),
 }));
 vi.mock('@/auth', () => ({ auth: vi.fn().mockResolvedValue({ user: { id: 'qa-user' } }) }));
 vi.mock('@/lib/auth-helpers', () => ({ getUserPlayerWithAlliance: mocks.player }));
@@ -20,16 +20,69 @@ vi.mock('@/lib/observability/server', () => ({
 }));
 vi.mock('@/lib/cache', () => ({ clearCache: vi.fn() }));
 vi.mock('next/cache', () => ({ revalidatePath: vi.fn() }));
+vi.mock('@cerebro/core/data/game-ascension', () => ({ getChampionAscension: mocks.rule, getChampionAscensionRules: () => [] }));
 
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.player.mockResolvedValue({ id: 'qa-player', allianceId: null });
   mocks.findUnique.mockResolvedValue({
-    id: 'qa-roster', playerId: 'qa-player', stars: 7,
+    id: 'qa-roster', playerId: 'qa-player', stars: 7, isAscended: false, ascensionLevel: 0, champion: { gameId: 'gwenom' },
     player: { allianceId: null, ingameName: 'QA' },
   });
   mocks.update.mockResolvedValue({ id: 'qa-roster', rank: 4 });
   mocks.remove.mockResolvedValue({ id: 'qa-roster' });
+  mocks.rule.mockReturnValue({ maxLevel: 2 });
+});
+
+describe('roster ascension writes', () => {
+  it('edits a legacy ascended6-star row without clearing its observed level', async () => {
+    mocks.findUnique.mockResolvedValue({ id: 'qa-roster', playerId: 'qa-player', stars: 6, isAscended: true, ascensionLevel: 1, champion: { gameId: 'hulk' }, player: { allianceId: null } });
+    mocks.rule.mockReturnValue({ maxLevel: 1 });
+    const response = await PUT(request('PUT', { id: 'qa-roster', rank: 5, isAscended: true, ascensionLevel: 1 }));
+    expect(response.status).toBe(200);
+    expect(mocks.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ rank: 5, isAscended: true, ascensionLevel: 1 }) }));
+  });
+
+  it('rejects contradictory explicit writes before persistence', async () => {
+    const response = await PUT(request('PUT', { id: 'qa-roster', isAscended: false, ascensionLevel: 2 }));
+    expect(response.status).toBe(400);
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+
+  it('synchronizes boolean-only clearing and preserves ascension when fields are omitted', async () => {
+    mocks.findUnique.mockResolvedValue({ id: 'qa-roster', playerId: 'qa-player', stars: 7, isAscended: true, ascensionLevel: 2, champion: { gameId: 'gwenom' }, player: { allianceId: null } });
+    expect((await PUT(request('PUT', { id: 'qa-roster', rank: 4 }))).status).toBe(200);
+    expect(mocks.update.mock.calls[0][0].data).not.toHaveProperty('ascensionLevel');
+    expect(mocks.update.mock.calls[0][0].data).not.toHaveProperty('isAscended');
+    expect((await PUT(request('PUT', { id: 'qa-roster', isAscended: false }))).status).toBe(200);
+    expect(mocks.update).toHaveBeenLastCalledWith(expect.objectContaining({ data: expect.objectContaining({ isAscended: false, ascensionLevel: 0 }) }));
+  });
+
+  it('uses champion rules for increases but permits editing a historical owned level above the snapshot cap', async () => {
+    expect((await PUT(request('PUT', { id: 'qa-roster', ascensionLevel: 3 }))).status).toBe(400);
+    expect(mocks.rule).toHaveBeenCalledWith('gwenom', 7);
+    mocks.findUnique.mockResolvedValue({ id: 'qa-roster', playerId: 'qa-player', stars: 7, isAscended: true, ascensionLevel: 5, champion: { gameId: 'gwenom' }, player: { allianceId: null } });
+    expect((await PUT(request('PUT', { id: 'qa-roster', rank: 4, ascensionLevel: 5 }))).status).toBe(200);
+    expect(mocks.update).toHaveBeenLastCalledWith(expect.objectContaining({ data: expect.objectContaining({ ascensionLevel: 5, isAscended: true }) }));
+  });
+
+  it('allows structurally valid user observations when rules are missing', async () => {
+    mocks.rule.mockReturnValue(null);
+    expect((await PUT(request('PUT', { id: 'qa-roster', ascensionLevel: 3 }))).status).toBe(200);
+    expect(mocks.update).toHaveBeenCalledWith(expect.objectContaining({ data: expect.objectContaining({ isAscended: true, ascensionLevel: 3 }) }));
+  });
+
+  it.each(['ascensionLevel', 'rank', 'sigLevel'])('rejects fractional %s values', async field => {
+    expect((await PUT(request('PUT', { id: 'qa-roster', [field]: 1.5 }))).status).toBe(400);
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
+
+  it('keeps owner/officer authorization ahead of state validation or mutation', async () => {
+    mocks.player.mockResolvedValue({ id: 'other', allianceId: null });
+    expect((await PUT(request('PUT', { id: 'qa-roster', ascensionLevel: 1 }))).status).toBe(403);
+    expect(mocks.rule).not.toHaveBeenCalled();
+    expect(mocks.update).not.toHaveBeenCalled();
+  });
 });
 
 const request = (method: string, body: unknown) => new Request('http://localhost/api/profile/roster/manage', {

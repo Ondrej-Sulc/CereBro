@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import type { ChampionClass } from "@prisma/client";
 import type { RosterSortField, SortDirection } from "../types";
 import type { EffectForm, EffectDirection } from "@cerebro/core/domain/ability-source";
-import { ChoiceGroup, ClassChoices, MobileClassFilter, OwnershipFilter, ProgressionFilter, SourceRefinement, ImmunityRefinement } from "./roster-filter-fields";
+import { AscensionEligibilityFilter, ChoiceGroup, ClassChoices, MobileClassFilter, OwnershipFilter, ProgressionFilter, SourceRefinement, ImmunityRefinement } from "./roster-filter-fields";
 import { RosterFilterPicker } from "./roster-filter-picker";
 import { RosterFilterSheet, useMobileRosterFilters } from "./roster-filter-sheet";
 import { buildActiveFilterRules, type RosterFilterRule } from "./roster-filter-rules";
@@ -39,6 +39,9 @@ export interface RosterFiltersProps {
     onFilterRanksChange: (val: number[]) => void;
     filterAscensionLevels: number[];
     onFilterAscensionLevelsChange: (val: number[]) => void;
+    ascensionEligible: boolean;
+    onAscensionEligibleChange: (value: boolean) => void;
+    catalogEligibility?: boolean;
     filterClasses: ChampionClass[];
     onFilterClassesChange: (classes: ChampionClass[]) => void;
     tagFilter: string[];
@@ -95,6 +98,7 @@ function clearSelections(p: RosterFiltersProps) {
   p.onSearchChange("");
   p.onFilterStarsChange([]);
   p.onFilterClassesChange([]);
+  p.onAscensionEligibleChange(false);
   if (p.showRankFilter !== false) p.onFilterRanksChange([]);
   if (p.showAscensionFilter !== false) p.onFilterAscensionLevelsChange([]);
   p.onTagFilterChange([]);
@@ -125,7 +129,7 @@ export function RosterFilters(props: SharedRosterFiltersProps) {
   const reserving = p.canManageAttackReservations && p.onShowAttackReservationControlsChange && p.showAttackReservationControls;
   const hasRosterActions = p.canEdit !== false || Boolean(p.canManageAttackReservations && p.onShowAttackReservationControlsChange);
   const advancedCount = p.tagFilter.length + p.abilityCategoryFilter.length + p.abilityFilter.length + p.immunityFilter.length
-    + p.effectForms.length + p.effectDirections.length
+    + p.effectForms.length + p.effectDirections.length + Number(p.ascensionEligible && !p.catalogEligibility)
     + Number(!p.includeResistances) + Number(p.includeResistances && p.minResistancePotency != null)
     + (p.showRankFilter !== false ? p.filterRanks.length : 0)
     + (p.showAscensionFilter !== false ? p.filterAscensionLevels.length : 0);
@@ -152,7 +156,8 @@ export function RosterFilters(props: SharedRosterFiltersProps) {
         <MobileClassFilter values={p.filterClasses} onChange={p.onFilterClassesChange} counts={p.facetCounts?.classes} />
         <MoreFiltersButton expanded={expanded} panelId={`${panelId}-mobile`} count={advancedCount} onToggle={() => setExpanded(!expanded)} compact buttonRef={mobileFilterButton} />
       </div>
-      {(p.showOwnershipFilter !== false || p.showSort !== false) && <div className={cn("grid items-center gap-1 border-t border-slate-800/60 pt-1 sm:hidden", p.showOwnershipFilter !== false && p.showSort !== false ? "grid-cols-2" : "grid-cols-[minmax(0,180px)]", p.showOwnershipFilter === false && "justify-end")}>
+      {(p.catalogEligibility || p.showOwnershipFilter !== false || p.showSort !== false) && <div className={cn("grid items-center gap-1 border-t border-slate-800/60 pt-1 sm:hidden", (p.catalogEligibility || p.showOwnershipFilter !== false) && p.showSort !== false ? "grid-cols-2" : "grid-cols-[minmax(0,180px)]", !p.catalogEligibility && p.showOwnershipFilter === false && "justify-end")}>
+        {p.catalogEligibility && <div><AscensionEligibilityFilter value={p.ascensionEligible} onChange={p.onAscensionEligibleChange} /></div>}
         {p.showOwnershipFilter !== false && <OwnershipFilter showUnowned={p.showUnowned} onChange={p.onShowUnownedChange} compact />}
         {p.showSort !== false && <RosterSort p={p} compact />}
       </div>}
@@ -163,7 +168,9 @@ export function RosterFilters(props: SharedRosterFiltersProps) {
       </div>}
 
       <div className="hidden flex-wrap items-center gap-x-4 gap-y-2 sm:flex">
-        <div className="flex items-center gap-2"><span className="hidden text-[11px] text-slate-500 xl:inline">Rarity</span><ChoiceGroup label="Rarity" options={[7, 6, 5].map(value => ({ value, label: `${value}★` }))} values={p.filterStars} onChange={p.onFilterStarsChange} counts={p.facetCounts?.stars} dense /></div>
+        <div className="flex items-center gap-2"><span className="hidden text-[11px] text-slate-500 xl:inline">Rarity</span><ChoiceGroup label="Rarity" options={[7, 6, 5].map(value => ({ value, label: `${value}★` }))} values={p.filterStars} onChange={p.onFilterStarsChange} counts={p.facetCounts?.stars} dense />
+          {p.catalogEligibility && <AscensionEligibilityFilter value={p.ascensionEligible} onChange={p.onAscensionEligibleChange} />}
+        </div>
         <ClassChoices values={p.filterClasses} onChange={p.onFilterClassesChange} counts={p.facetCounts?.classes} inline />
         {p.showOwnershipFilter !== false && <div className="ml-auto"><OwnershipFilter showUnowned={p.showUnowned} onChange={p.onShowUnownedChange} inline /></div>}
       </div>
@@ -179,9 +186,11 @@ export function RosterFilters(props: SharedRosterFiltersProps) {
       </div>}
 
       <div id={panelId} hidden={!expanded || isMobile} className="space-y-3 border-t border-slate-800 pt-4">
-        {(p.showRankFilter !== false || p.showAscensionFilter !== false) && <div className="flex flex-wrap gap-x-5 gap-y-2">
+        {!p.catalogEligibility && <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+
           {p.showRankFilter !== false && <ProgressionFilter label="Rank" options={[1, 2, 3, 4, 5, 6]} values={p.filterRanks} onChange={p.onFilterRanksChange} counts={p.facetCounts?.ranks} />}
-          {p.showAscensionFilter !== false && <ProgressionFilter label="Ascension" options={[0, 1, 2, 3, 4, 5]} values={p.filterAscensionLevels} onChange={p.onFilterAscensionLevelsChange} counts={p.facetCounts?.ascension} />}
+          {p.showAscensionFilter !== false && <ProgressionFilter label="Ascension level" options={[0, 1, 2, 3, 4, 5]} values={p.filterAscensionLevels} onChange={p.onFilterAscensionLevelsChange} counts={p.facetCounts?.ascension} />}
+          <AscensionEligibilityFilter value={p.ascensionEligible} onChange={p.onAscensionEligibleChange} />
         </div>}
         <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
           <RosterFilterPicker label="Tags" icon={Tag} options={p.initialTags} counts={p.facetCounts?.tags} values={p.tagFilter} onChange={p.onTagFilterChange} logic={p.tagLogic} onLogicChange={p.onTagLogicChange} />

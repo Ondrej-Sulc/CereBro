@@ -115,6 +115,7 @@ async function loadPlayerRosterPrestigeInsightEntries(playerId: string): Promise
             stars: true,
             rank: true,
             sigLevel: true,
+            isAscended: true,
             ascensionLevel: true,
             isAwakened: true,
             champion: {
@@ -135,6 +136,7 @@ async function loadPlayerRosterPrestigeInsightEntries(playerId: string): Promise
         stars: entry.stars,
         rank: entry.rank,
         sigLevel: entry.sigLevel,
+        isAscended: entry.isAscended,
         ascensionLevel: entry.ascensionLevel,
         isAwakened: entry.isAwakened,
         champion: {

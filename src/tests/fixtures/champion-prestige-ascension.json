@@ -1,0 +1,28 @@
+{
+  "gameId": "ironman_infamous",
+  "rarity": 7,
+  "rank": 4,
+  "maxLevel": 55,
+  "baseEndpoints": [
+    { "rarity": 7, "rank": 4, "sig": 0, "prestige": 25360 },
+    { "rarity": 7, "rank": 4, "sig": 1, "prestige": 25940 },
+    { "rarity": 7, "rank": 4, "sig": 200, "prestige": 34060 }
+  ],
+  "observation": { "sig": 200, "ascensionLevel": 2, "prestige": 39730 },
+  "provenance": {
+    "baseStats": {
+      "path": "scratch/live-scan-2026-07-16/mcoc_game_stats.json",
+      "sha256": "1744f5720e78315ec40a5fdf8d9d0e8ea44b4774b736acecf87f20a50eb3ea11",
+      "sourceRows": [16152]
+    },
+    "signatureEndpoints": {
+      "path": "scratch/live-scan-2026-07-16/mcoc_sig_prestige.json",
+      "sha256": "0bde73c8f15b9a87191a6ac9c62e4691c7c2be966e6f8832d6bc418e0924c308",
+      "generatedAt": "2026-07-16T14:46:12.595550+00:00",
+      "sourceRows": [16153, 16154]
+    },
+    "observation": "User-provided in-game Prestige modal, 2026-11-07: INFAMOUS IRON MAN, seven stars, ascension 2, 39,730. User separately confirmed rank 4 and signature 200. Level is not visible; use the application's standard rank/max-level semantics (captured rank 4 max level 55).",
+    "officialScalingCorrection": "https://forums.playcontestofchampions.com/en/discussion/418740/ascension-stat-scaling-bug-fix-now-live",
+    "roundingLimit": "The observation excludes rounding to tens between tiers. It does not distinguish rounding each tier to integers from one final rounding; retain the established projection's final-only rounding. A0/A1 expectations in tests are projections from captured base endpoints, not additional gameplay observations."
+  }
+}

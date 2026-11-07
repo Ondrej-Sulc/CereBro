@@ -11,6 +11,7 @@ import { solveShortNames, isChampionAwakened } from "./championIdentifier";
 import Fuse from "fuse.js";
 import { getGoogleVisionService } from "../../../services/googleVisionService.js";
 import logger from "../../../services/loggerService.js";
+import { normalizeRosterAscensionState } from "../../../domain/roster-ascension-state.js";
 
 export async function processRosterScreenshot(
   imageInput: string | Buffer,
@@ -239,6 +240,7 @@ async function saveBGViewRoster(
                 const sanitizedSigLevel = (cell.sigLevel !== undefined && !Number.isNaN(cell.sigLevel))
                     ? Math.max(0, Math.min(200, Math.floor(cell.sigLevel))) 
                     : 0;
+                const ascension = normalizeRosterAscensionState(cell);
 
                 const rosterEntry = await prisma.roster.upsert({
                     where: {
@@ -252,8 +254,7 @@ async function saveBGViewRoster(
                         rank: cell.rank,
                         isAwakened: sanitizedSigLevel > 0 || !!cell.isAscended, 
                         sigLevel: sanitizedSigLevel,
-                        isAscended: cell.isAscended || false,
-                        ascensionLevel: cell.ascensionLevel || (cell.isAscended ? 1 : 0),
+                        ...ascension,
                         powerRating: sanitizedPowerRating,
                     },
                     create: {
@@ -263,8 +264,7 @@ async function saveBGViewRoster(
                         rank: cell.rank,
                         isAwakened: sanitizedSigLevel > 0 || !!cell.isAscended,
                         sigLevel: sanitizedSigLevel,
-                        isAscended: cell.isAscended || false,
-                        ascensionLevel: cell.ascensionLevel || (cell.isAscended ? 1 : 0),
+                        ...ascension,
                         powerRating: sanitizedPowerRating,
                     },
                     include: { champion: true },
@@ -335,8 +335,7 @@ async function saveRoster(
               powerRatingInt = undefined;
           }
 
-          const finalIsAscended = cell.isAscended || isAscended;
-          const finalAscensionLevel = cell.ascensionLevel || ascensionLevel || (finalIsAscended ? 1 : 0);
+          const ascension = normalizeRosterAscensionState({ isAscended: cell.isAscended || isAscended, ascensionLevel: cell.ascensionLevel || ascensionLevel });
 
           const rosterEntry = await prisma.roster.upsert({
             where: {
@@ -349,8 +348,7 @@ async function saveRoster(
             update: {
               rank,
               isAwakened: cell.isAwakened || false,
-              isAscended: finalIsAscended,
-              ascensionLevel: finalAscensionLevel,
+              ...ascension,
               powerRating: powerRatingInt,
             },
             create: {
@@ -359,8 +357,7 @@ async function saveRoster(
               stars,
               rank,
               isAwakened: cell.isAwakened || false,
-              isAscended: finalIsAscended,
-              ascensionLevel: finalAscensionLevel,
+              ...ascension,
               powerRating: powerRatingInt,
             },
             include: { champion: true },

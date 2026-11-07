@@ -1,0 +1,554 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-11-06",
+  "policy": "Classify actual authorship, not the forum domain. Prefer original Kabam publications. Community sources remain explicit where no primary publication verifies the exact claim. General activity announcements do not independently prove exact inventory-item names, star levels or objective permanence.",
+  "wordpressEvidence": "Article ID, publication timestamp and SHA-256 of content.rendered were recovered from Kabam public WordPress API. Links use public canonical article URLs. Stream summaries are classified separately from announcements.",
+  "counts": {
+    "linkedSources": 35,
+    "officialSources": 27,
+    "communitySources": 8,
+    "existingDestinationsReplaced": 14,
+    "piecesWithSources": 68,
+    "piecesWithoutVerifiedSources": 2
+  },
+  "sources": [
+    {
+      "id": "heart-of-fire-2025",
+      "category": "official_announcement",
+      "title": "Heart of Fire event announcement",
+      "url": "https://playcontestofchampions.com/news/heart-of-fire-event/",
+      "previousUrl": "https://playcontestofchampions.com/news/heart-of-fire-event/",
+      "author": "Marvel Contest of Champions",
+      "supportingScope": "Original Phoenix Force milestones and May 2025 Heart of Fire window; historical acquisition, not a current offer.",
+      "methodIds": [
+        "dark-phoenix-hof-6",
+        "dark-phoenix-hof-7"
+      ],
+      "pieceItemIds": []
+    },
+    {
+      "id": "necropolis-rewards",
+      "category": "official_stream_summary",
+      "title": "November 2023 stream - Deathless pieces and Necropolis",
+      "url": "https://playcontestofchampions.com/news/twitch-stream-summary-november-3rd-2023/",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/351023/stream-recap-november-3-2023",
+      "author": "Marvel Contest of Champions",
+      "wordpressPostId": 79486,
+      "publishedAt": "2023-11-03T16:26:52",
+      "contentSha256": "7e652f20b5d7e14ce210432c13681f740c50a0444ba1e162d539f42f839205a9",
+      "supportingScope": "Kabam-published November 2023 stream summary confirms Maestro completion/exploration stars, a Necropolis Deathless Guillotine piece and a Banquet piece. Exact inventory-piece names also use the previously reviewed chase table and GameStore identities.",
+      "methodIds": [
+        "maestro-necropolis-completion",
+        "maestro-necropolis-exploration"
+      ],
+      "pieceItemIds": [
+        "dg_t7_soul",
+        "dg_t7_cross_guard"
+      ]
+    },
+    {
+      "id": "epilogue-finale",
+      "category": "official_announcement",
+      "title": "Epilogue Part 4 \u00b7 Last Struggle",
+      "url": "https://playcontestofchampions.com/news/v59-0-release-notes/",
+      "previousUrl": "https://playcontestofchampions.com/news/v59-0-release-notes/",
+      "author": "Marvel Contest of Champions",
+      "wordpressPostId": 100893,
+      "publishedAt": "2026-10-02T11:00:00",
+      "contentSha256": "9ee10ca12099701d185805215e5d9ea60ec55156aaa403a2e78405cc17bd2eb6",
+      "supportingScope": "Epilogue Part 4: Last Struggle and its Carina reward.",
+      "methodIds": [
+        "carina-epilogue"
+      ],
+      "pieceItemIds": []
+    },
+    {
+      "id": "deathless-mausoleum-recap",
+      "category": "official_announcement",
+      "title": "Deathless Mausoleum",
+      "url": "https://playcontestofchampions.com/news/deathless-mausoleum/",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/385903/stream-recap-january-3-2025",
+      "author": "Marvel Contest of Champions",
+      "wordpressPostId": 85658,
+      "publishedAt": "2025-01-03T10:00:00",
+      "contentSha256": "34ef398968a02c351f543ada8b89a4101ba5dd9b6402d061b748db17ec042de8",
+      "supportingScope": "Normal/Hard exploration grants 6/7-star Deathless Thanos. Conqueror and Summoner level 40 entry requirements. Captured quest data independently establishes exact reward IDs and champion gates.",
+      "methodIds": [
+        "deathless-thanos-mausoleum-normal",
+        "deathless-thanos-mausoleum-hard"
+      ],
+      "pieceItemIds": []
+    },
+    {
+      "id": "deathless-guillotine-challenge",
+      "category": "official_announcement",
+      "title": "Guillotine challenge announcement",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/354770/fight-for-your-final-piece-of-guillotine-deathless-in-this-december-challenge",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/comment/2451937",
+      "author": "MCOC Team",
+      "supportingScope": "Original MCOC Team announcement specifies the Act 8.1.6, 8.2.6 and 8.3.6 objectives, allowed champions and the final 7-star Guillotine piece.",
+      "methodIds": [
+        "guillotine_nameless-pieces-7"
+      ],
+      "pieceItemIds": [
+        "dg_t7_bodyofblade"
+      ]
+    },
+    {
+      "id": "stellar-starlord-event",
+      "category": "community_discussion",
+      "title": "Stellar-Forged Star-Lord \u00b7 Coliseum piece",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/409292/alliance-coliseum-star-lord-piece",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/409292/alliance-coliseum-star-lord-piece",
+      "supportingScope": "Community discussion of the original Alliance Coliseum piece. The general official mode announcement does not establish this individual reward.",
+      "methodIds": [
+        "starlord_stellar-pieces-7"
+      ],
+      "pieceItemIds": [
+        "sfsl_t7_left_quadblaster"
+      ]
+    },
+    {
+      "id": "stellar-green-goblin-final-piece",
+      "category": "official_announcement",
+      "title": "September 16 - final Green Goblin piece",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/419227/this-week-in-the-battlerealm-september-16th",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/419227/this-week-in-the-battlerealm-september-16th",
+      "author": "Kabam (Osaurus) Rex",
+      "supportingScope": "Kabam-authored weekly announcement of the final Green Goblin piece; the separate Season 42 announcement establishes Hip Bag and Diamond I precisely.",
+      "methodIds": [
+        "green-goblin-stellar-pieces-7"
+      ],
+      "pieceItemIds": []
+    },
+    {
+      "id": "sigil-store-2025",
+      "category": "official_announcement",
+      "title": "Summoner\u2019s Sigil - subscription and store announcement",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/386238/summoner-s-sigil-subscription-updated-1-15-to-include-additional-comp-for-arena-express",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/comment/2733265",
+      "author": "MCOC Team",
+      "supportingScope": "Original MCOC Team subscription and Sigil Store announcement; embedded table establishes champion star/progression tiers. Prices are not asserted as current.",
+      "methodIds": [
+        "sigil-witch-store-4",
+        "sigil-witch-store-5",
+        "sigil-witch-store-6",
+        "sigil-witch-store-7"
+      ],
+      "pieceItemIds": []
+    },
+    {
+      "id": "sugar-crash-2023",
+      "category": "official_announcement",
+      "title": "Summoned Symbiote and Sugar Crash announcement",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/348054/its-spooky-season-add-summoned-symbiote-to-your-roster",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/348054/its-spooky-season-add-summoned-symbiote-to-your-roster/p3",
+      "author": "MCOC Team",
+      "supportingScope": "Original MCOC Team announcement confirms the in-game-mail Summoned Symbiote giveaway and exact October/November 2023 event window.",
+      "methodIds": [
+        "summoned-symbiote-sugar-crash"
+      ],
+      "pieceItemIds": []
+    },
+    {
+      "id": "reclamation-war-launch",
+      "category": "official_announcement",
+      "title": "Empire of Doom \u00b7 Reclamation War launch",
+      "url": "https://steamcommunity.com/games/3127280/announcements/detail/717920261052041008",
+      "previousUrl": "https://steamcommunity.com/games/3127280/announcements/detail/717920261052041008",
+      "author": "Marvel Contest of Champions",
+      "supportingScope": "Kabam-published Steam announcement establishes the Reclamation War launch; exact Victorious vouchers and star bindings also come from GameStore item descriptions.",
+      "methodIds": [
+        "humantorch_victorious-voucher",
+        "invisiblewoman_victorious-voucher",
+        "mrfantastic_victorious-voucher",
+        "thing_victorious-voucher"
+      ],
+      "pieceItemIds": []
+    },
+    {
+      "id": "deathless-stream-slides",
+      "category": "community_screenshot",
+      "title": "Archived Kabam livestream slides shared by the community",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/388759/where-are-all-of-the-permanent-deathless-pieces",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/388759/where-are-all-of-the-permanent-deathless-pieces",
+      "author": "Asher1_1",
+      "supportingScope": "A community-hosted archive of Kabam stream slides supports remaining historical Deathless piece mappings. The linked forum post is not itself authored by Kabam.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "deathless_vision_t7_visage",
+        "deathless_vision_t7_chassis",
+        "deathless_vision_t7_ai",
+        "deathless_vision_t7_tears",
+        "deathless_shehulk_t7_arguments",
+        "deathless_shehulk_t7_evidence",
+        "deathless_shehulk_t7_closing"
+      ]
+    },
+    {
+      "id": "king-groot-chase",
+      "category": "official_announcement",
+      "title": "King Groot chase announcement",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/357119/say-hello-to-your-next-deathless-chase-king-groot",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/357119/say-hello-to-your-next-deathless-chase-king-groot",
+      "author": "Kabam Jax",
+      "supportingScope": "Kabam Jax chase announcement supports the King Groot launch gift and Mercenary Paragon Gauntlet challenge.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "deathless_kinggroot_t7_seedling",
+        "deathless_kinggroot_t7_topsoil"
+      ]
+    },
+    {
+      "id": "showcase-march-2024",
+      "category": "official_announcement",
+      "title": "Alliance War Showcase announcement",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/362452/introducing-new-content-showcase",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/362452/introducing-new-content-showcase",
+      "author": "MCOC Team",
+      "supportingScope": "Original MCOC Team announcement of the two-path March 2024 Alliance War Showcase and Deathless reward.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "deathless_kinggroot_t7_atmosphere"
+      ]
+    },
+    {
+      "id": "ccp-carina-2024",
+      "category": "official_announcement",
+      "title": "Community Carina challenge announcement",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/359998/challenging-new-carina-s-challenges-are-coming-your-way",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/comment/2485997",
+      "author": "MCOC Team",
+      "supportingScope": "Original MCOC Team announcement states that any one CCP challenge awards a King Groot piece. Completing all six also grants a 7-star selector with Masacre, Spider-Man (Stark Enhanced), or Spider-Man 2099.",
+      "methodIds": [
+        "masacre-ccp-carina-selector",
+        "spiderman_movie-ccp-carina-selector",
+        "spiderman_2099-ccp-carina-selector"
+      ],
+      "pieceItemIds": [
+        "deathless_kinggroot_t7_aqua"
+      ]
+    },
+    {
+      "id": "winter-woe-recap",
+      "category": "official_announcement",
+      "title": "Winter of Woe announcement",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/359302/new-end-game-content-winter-of-woe-starts-feb-7th-added-info-deathless-champion-objectives",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/359114/stream-recap-february-2-2024",
+      "author": "MCOC Team",
+      "supportingScope": "Original MCOC Team Winter of Woe announcement and Deathless-piece milestones.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "deathless_kinggroot_t7_music"
+      ]
+    },
+    {
+      "id": "vision-crucible-objective",
+      "category": "official_announcement",
+      "title": "Reunion event - original Crucible and Vision reward",
+      "url": "https://playcontestofchampions.com/news/reunion-event/",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/373347/normal-rewards-legendary-rewards-crucible",
+      "author": "Marvel Contest of Champions",
+      "wordpressPostId": 81743,
+      "publishedAt": "2024-08-08T10:55:00",
+      "contentSha256": "b7265ae12ddf5289e15e4d21ef5ec4366c60c9d67c26daf74368149956198377",
+      "supportingScope": "Kabam Reunion event article corroborates the original Crucible/Vision chase. This does not make its historical exploration objective a permanent reward.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "deathless_vision_t7_gem"
+      ]
+    },
+    {
+      "id": "starlord-chase-pieces",
+      "category": "community_discussion",
+      "title": "Star-Lord chase and mail-piece discussion",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/409128/stella-forged-piece-locations",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/409128/stella-forged-piece-locations",
+      "supportingScope": "Community chase-location discussion supports the original mail gift and Battlegrounds trench-coat reward; no exact primary replacement verified.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "sfsl_t7_cassette_deck",
+        "sfsl_t7_trenchcoat"
+      ]
+    },
+    {
+      "id": "starlord-glitch-incursions",
+      "category": "official_announcement",
+      "title": "Glitch Incursions",
+      "url": "https://playcontestofchampions.com/news/glitch-incursions/",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/410762/7-stellar-forge-star-lord",
+      "author": "Marvel Contest of Champions",
+      "wordpressPostId": 94167,
+      "publishedAt": "2026-01-19T10:00:00",
+      "contentSha256": "c155f42837923d3cd6c06bce25b4be4eed22209eaa55c3d94128b3c56490f077",
+      "supportingScope": "Kabam states that the last Star-Lord piece requires both weekly 15-zone runs; the article does not name the inventory item. The existing chase mapping identifies Right Quad Blaster.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "sfsl_t7_right_quadblaster"
+      ]
+    },
+    {
+      "id": "blade-showcase-piece",
+      "category": "official_stream_summary",
+      "title": "February 2026 stream - Founders War Showcase",
+      "url": "https://playcontestofchampions.com/news/february-27th-livestream-summary/",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/413304/did-i-miss-a-blade-piece-already",
+      "author": "Marvel Contest of Champions",
+      "wordpressPostId": 94793,
+      "publishedAt": "2026-02-27T12:00:00",
+      "contentSha256": "1394469d9bbcb2353a5da3691aa6aa1b3783ca8a9ee969c8b5cd10bafeeece54",
+      "supportingScope": "Kabam-published February 2026 summary connects the first Blade chase piece to Founders War Showcase; exact Stake naming uses the previously reviewed chase mapping.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "sfbl_t7_stake"
+      ]
+    },
+    {
+      "id": "blade-coliseum-garlic",
+      "category": "official_stream_summary",
+      "title": "April 2026 stream - Coliseum rewards",
+      "url": "https://playcontestofchampions.com/news/april-2nd-livestream-summary/",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/414146/sf-blade-where-is-the-7-garlic-piece",
+      "author": "Marvel Contest of Champions",
+      "wordpressPostId": 95091,
+      "publishedAt": "2026-04-02T15:00:00",
+      "contentSha256": "115773b97ec35da6c062b446e8ef9554ffd20e09db783d158590827628aaee66",
+      "supportingScope": "Kabam-published April 2026 summary corroborates the Apex Coliseum Blade-piece reward; exact Garlic naming uses the previously reviewed chase mapping.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "sfbl_t7_garlic"
+      ]
+    },
+    {
+      "id": "guillotine-mail-stars",
+      "category": "community_discussion",
+      "title": "Original mail gift at 6 and 7 stars - discussion",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/351876/6-star-cursed-blade-tip-not-given-for-entering-bg-gladiator-track",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/351876/6-star-cursed-blade-tip-not-given-for-entering-bg-gladiator-track",
+      "supportingScope": "Player discussion supports the 6-star mail gift. The official September 2023 article does not independently establish both star levels.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "dg_t6_handle"
+      ]
+    },
+    {
+      "id": "king-groot-six-star-chase",
+      "category": "community_discussion",
+      "title": "6-star King Groot mail gift and store chase - discussion",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/363438/6-deathless-king-groot-pieces-where-can-i-find-them",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/363438/6-deathless-king-groot-pieces-where-can-i-find-them",
+      "supportingScope": "Player discussion supports the 6-star mail gift; game-item records independently establish the matching-star store pieces.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "deathless_kinggroot_t6_seedling"
+      ]
+    },
+    {
+      "id": "starlord-mixtape-objective",
+      "category": "community_discussion",
+      "title": "Star-Lord Mix Tape solo-objective discussion",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/406984/stellar-forge-mix-tape",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/406984/stellar-forge-mix-tape",
+      "supportingScope": "Player discussion supports the Cosmic Omelet multi-week Mix Tape objectives; no sufficiently specific primary announcement verified.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "sfsl_t7_mixtape"
+      ]
+    },
+    {
+      "id": "blade-sunlight-gameplay",
+      "category": "official_stream_summary",
+      "title": "April 2026 stream - Alliance Coliseum",
+      "url": "https://playcontestofchampions.com/news/april-2nd-livestream-summary/",
+      "previousUrl": "https://www.youtube.com/watch?v=yCi1J2djRUg",
+      "author": "Marvel Contest of Champions",
+      "wordpressPostId": 95091,
+      "publishedAt": "2026-04-02T15:00:00",
+      "contentSha256": "115773b97ec35da6c062b446e8ef9554ffd20e09db783d158590827628aaee66",
+      "supportingScope": "Kabam-published April 2026 summary corroborates the Alliance Coliseum solo-milestone Blade piece; exact Sunlight naming uses the previously reviewed chase mapping.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "sfbl_t7_sunlight"
+      ]
+    },
+    {
+      "id": "blade-silver-arrow-objective",
+      "category": "community_screenshot",
+      "title": "In-game Silver Arrow objective screenshot",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/414001/elder-stellar-piece-deadline-change",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/comment/2947121",
+      "author": "MrSakuragi",
+      "supportingScope": "Community post contains an in-game objective screenshot. Retained for the exact Act 9.4 objective instead of substituting an official stream summary that also discusses the Elder title and could imply additional requirements.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "sfbl_t7_silver_arrow"
+      ]
+    },
+    {
+      "id": "blade-slayer-sword-battlegrounds",
+      "category": "official_announcement",
+      "title": "Battlegrounds Season 38",
+      "url": "https://playcontestofchampions.com/news/battlegrounds-season-38/",
+      "previousUrl": "https://forums.playcontestofchampions.com/en/discussion/415071/mom-i-frew-up",
+      "author": "Marvel Contest of Champions",
+      "wordpressPostId": 95225,
+      "publishedAt": "2026-04-22T11:00:00",
+      "contentSha256": "ee5b52fcc9b1adddcddc0a3f07576e75a221de39e895b4a1232527debd125cca",
+      "supportingScope": "Kabam Season 38 announcement explicitly names the 7-star Slayer Sword and the Vibranium I/Gladiator Circuit reward.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "sfbl_t7_slayer_sword"
+      ]
+    },
+    {
+      "id": "goblin-first-three-guide",
+      "category": "community_guide",
+      "title": "Gameplay guide - first three Green Goblin pieces",
+      "url": "https://www.youtube.com/watch?v=cpZA2TljF1k",
+      "previousUrl": "https://www.youtube.com/watch?v=cpZA2TljF1k",
+      "supportingScope": "Community gameplay guide supports the first three Green Goblin item mappings. A general official Saga Showcase announcement does not establish all three exact items.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "sfgg_t7_goblin_smile",
+        "sfgg_t7_glider_core",
+        "sfgg_t7_science_degree"
+      ]
+    },
+    {
+      "id": "deathless-guillotine-launch",
+      "category": "official_stream_summary",
+      "title": "Guillotine chase - official September 2023 stream summary",
+      "url": "https://playcontestofchampions.com/news/twitch-stream-summary-september-29th/",
+      "previousUrl": null,
+      "author": "Marvel Contest of Champions",
+      "wordpressPostId": 79336,
+      "publishedAt": "2023-09-29T13:00:00",
+      "contentSha256": "a118075a336178ac345c4c4a4b994c2c25440640e88c887acf0dd10ee19297fc",
+      "supportingScope": "Kabam-published September 2023 summary confirms the first mail piece and original Battlegrounds Season 12 Victory Track reward; exact inventory names also use the reviewed chase mapping.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "dg_t7_handle",
+        "dg_t7_tipofblade"
+      ]
+    },
+    {
+      "id": "deathless-shehulk-season22",
+      "category": "official_announcement",
+      "title": "Battlegrounds Season 22",
+      "url": "https://playcontestofchampions.com/news/battlegrounds-season-22/",
+      "previousUrl": null,
+      "author": "Marvel Contest of Champions",
+      "wordpressPostId": 82924,
+      "publishedAt": "2024-09-23T11:00:00",
+      "contentSha256": "580fcb2da3658338d23442cdfc81695343472552b90255607fc18b40dfca8057",
+      "supportingScope": "Kabam Season 22 announcement explicitly names Baseless Accusation in the Deathless She-Hulk chase.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "deathless_shehulk_t7_accusation"
+      ]
+    },
+    {
+      "id": "deathless-shehulk-banquet2024",
+      "category": "official_announcement",
+      "title": "The Grand Banquet and Accolades",
+      "url": "https://playcontestofchampions.com/news/the-grand-banquet-and-accolades/",
+      "previousUrl": null,
+      "author": "Marvel Contest of Champions",
+      "wordpressPostId": 85703,
+      "publishedAt": "2024-12-18T10:00:00",
+      "contentSha256": "f666338da1f785889a6983d35f0f26f38abad41e5dcc977a157fca7c6dd4d742",
+      "supportingScope": "Kabam Grand Banquet article establishes the 2024 She-Hulk piece at the original 3,360-point solo milestone; exact Sinister Sentencing naming also uses the reviewed chase table.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "deathless_shehulk_t7_sentencing"
+      ]
+    },
+    {
+      "id": "goblin-pumpkin-bomb",
+      "category": "official_announcement",
+      "title": "Revenge of Legends",
+      "url": "https://playcontestofchampions.com/news/revenge-of-legends/",
+      "previousUrl": null,
+      "author": "Marvel Contest of Champions",
+      "wordpressPostId": 96571,
+      "publishedAt": "2026-07-31T11:00:00",
+      "contentSha256": "1d544fd6bdfef951851d6c56649aac76c67037dc2d196b4687c4eb214a011832",
+      "supportingScope": "Kabam Revenge of Legends announcement explicitly names Pumpkin Bomb in weekly quest exploration solo objectives.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "sfgg_t7_pumpkin_bomb"
+      ]
+    },
+    {
+      "id": "goblin-hip-bag",
+      "category": "official_announcement",
+      "title": "Battlegrounds Season 42",
+      "url": "https://playcontestofchampions.com/news/battlegrounds-season-42/",
+      "previousUrl": null,
+      "author": "Marvel Contest of Champions",
+      "wordpressPostId": 97976,
+      "publishedAt": "2026-09-09T10:00:00",
+      "contentSha256": "c5f50838f4245d7718103438acc8f572a6a17207ab6d14edaf2024a04d42873f",
+      "supportingScope": "Kabam Season 42 announcement explicitly names the Stellar-Forged Green Goblin Hip Bag at Diamond I.",
+      "methodIds": [],
+      "pieceItemIds": [
+        "sfgg_t7_hip_bag"
+      ]
+    },
+    {
+      "id": "banquet-2025-selectors",
+      "title": "The Banquet 2025 - champion selectors",
+      "url": "https://playcontestofchampions.com/news/the-banquet-summary/",
+      "category": "official_announcement",
+      "author": "Marvel Contest of Champions",
+      "previousUrl": null,
+      "wordpressPostId": 93659,
+      "publishedAt": "2025-12-17T11:00:00",
+      "contentSha256": "1a13ae7ae8beba4512d0e3a7e2f46afd526f80615e0e10702792ddcf025efcdd",
+      "supportingScope": "Exact event dates and Conqueror entry; 7-star Absorbing Man/Kingpin Realm milestone selector; 7-star Trophy selector includes Vision, Wolverine (Weapon X), Jessica Jones, Thanos and Kang in historical ranked rewards and possible Jubilant Crystal outcomes. Selector outcomes are separate from direct hero-pool membership.",
+      "methodIds": [
+        "vision-banquet-2025-selector",
+        "wolverine_weaponx-banquet-2025-selector",
+        "jessicajones_current-banquet-2025-selector",
+        "thanos-banquet-2025-selector",
+        "kang-banquet-2025-selector",
+        "absorbingman-banquet-2025-realm",
+        "kingpin-banquet-2025-realm"
+      ],
+      "pieceItemIds": []
+    },
+    {
+      "id": "magik-limbo-tokens",
+      "title": "February 2026 stream - Magik and Limbo Tokens",
+      "url": "https://playcontestofchampions.com/news/february-27th-livestream-summary/",
+      "category": "official_stream_summary",
+      "author": "Marvel Contest of Champions",
+      "previousUrl": null,
+      "wordpressPostId": 94793,
+      "publishedAt": "2026-02-27T12:00:00",
+      "contentSha256": "1394469d9bbcb2353a5da3691aa6aa1b3783ca8a9ee969c8b5cd10bafeeece54",
+      "supportingScope": "Kabam-published stream summary explains obtaining Magik with 20 Limbo Tokens, token sources and the historical First Appearance period. Exact 7-star ordinary/First Appearance bundle bindings independently come from GameStore records; no current price or stock assertion.",
+      "methodIds": [
+        "magik-limbo-token-exchange"
+      ],
+      "pieceItemIds": []
+    },
+    {
+      "id": "unstoppable-colossus-store",
+      "title": "Radiance developer diary - Alliance War store",
+      "url": "https://playcontestofchampions.com/news/dev-diary-radiance/",
+      "category": "official_announcement",
+      "author": "Marvel Contest of Champions",
+      "previousUrl": null,
+      "wordpressPostId": 87536,
+      "publishedAt": "2025-04-23T11:00:00",
+      "contentSha256": "514d3f74b6e80a66139e656cb47453af37ed7e6d962758db8d8e84d76c64c1ba",
+      "supportingScope": "Kabam Crashed states that Unstoppable Colossus will remain in the Alliance War store. Exact 5/6-star offers and Loyalty pricing tags are independently preserved in GameStore records; costs are not presented as current.",
+      "methodIds": [
+        "unstoppable-colossus-store-5",
+        "unstoppable-colossus-store-6"
+      ],
+      "pieceItemIds": []
+    }
+  ]
+}

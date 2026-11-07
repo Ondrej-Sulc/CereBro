@@ -1,0 +1,1012 @@
+{
+  "version": 1,
+  "source": {
+    "observedAt": "2026-11-06T12:18:27.987885+00:00",
+    "captureMethod": "read-only-game-definition-registry",
+    "gameAssemblySha256": "01f46bb2e36c2160a8df939bbb080bcf2ee89ca15427692a10334efc90fd4abb",
+    "metadataSha256": "c7296f9c50334d3f12ece5ae2e7c9566d6965cc355c9eecad8af8acfe561a24b",
+    "openingCatalogSha256": "854ccaa52e261475420edf507f5da8f0f12bdeb269778ebc2ce68d362b3b8091"
+  },
+  "selectors": [
+    {
+      "id": "5d30a765b953d26da87c1c6d",
+      "name": "TIER 3 CLASS CATALYST SELECTOR",
+      "description": "Claim this for a Class Catalyst of your choice!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/5bb541d223a0bb164af14b8b/Icon_Selectable_Reward_Catalyst_T3_5bd108c28b47f54fd0b68446.png"
+      }
+    },
+    {
+      "id": "5d30a779b953d26da87c1c6e",
+      "name": "TIER 2 CLASS CATALYST SELECTOR",
+      "description": "Claim this for a Class Catalyst of your choice!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/5bc7b5d2d3651958d8e4ec8f/Icon_Selectable_Reward_Catalyst_T2_5bd108938b47f54fd0b683c5.png"
+      }
+    },
+    {
+      "id": "5d30a782b953d26da87c1c6f",
+      "name": "TIER 1 CLASS CATALYST SELECTOR",
+      "description": "Claim this for a Class Catalyst of your choice!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/5bc7b5f5d3651958d8e4ec90/Icon_Selectable_Reward_Catalyst_T1_5bd1086f8b47f54fd0b68343.png"
+      }
+    },
+    {
+      "id": "5e83a962b2a64c65f7b5b0a2",
+      "name": "TIER 4 CLASS CATALYST SELECTOR",
+      "description": "Earn this reward to choose Catalysts from the class of your choice!",
+      "icon": {
+        "source": "cdn",
+        "reference": "gamestore/1585765941/Icon_Selectable_Reward_Catalyst_T4.png"
+      }
+    },
+    {
+      "id": "5ee9497fff26941a428ef04f",
+      "name": "ABYSS NEXUS CRYSTAL SELECTOR",
+      "description": "Allows you to choose a special 6-Star Class Nexus Crystal, containing a choice of 1 to 10 Champions of that specific Class!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/5e5ecbcdacee3d0b445227be/Icon_Selectable_Reward_Catalyst_T5_5e5ed78633ef02d935d15aca.png"
+      }
+    },
+    {
+      "id": "5f8f411d43a8ce3fa7389b39",
+      "name": "TIER 6 CLASS ISO-8 SELECTOR",
+      "description": "Claim this for Tier 6 ISO-8 of a specific Class!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/5f8f411d43a8ce3fa7389b39/Icon_Selectable_Reward_Catalyst_T6_5f8f425097c2662e333a38d6.png"
+      }
+    },
+    {
+      "id": "5f9c95f7f141180b16f21652",
+      "name": "TIER 5 CLASS CATALYST SELECTOR",
+      "description": "Earn this reward to choose Catalysts from the class of your choice!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/5f9c95f7f141180b16f21652/Icon_Selectable_Reward_Catalyst_T5_5e5ed78633ef02d935d15aca_5f9c979c4bef10100271ac16.png"
+      }
+    },
+    {
+      "id": "60591ab38c7ab4233b056e9a",
+      "name": "5-Star Reworked Champion",
+      "description": "Choose 1 of 3 Reworked 5-Star Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/60591ab38c7ab4233b056e9a/icon_5_Stars_Selectable_Reward_Champion_606b535c59ed867d2109ea54.png"
+      }
+    },
+    {
+      "id": "60591ad48c7ab4233b056e9b",
+      "name": "4-Star Reworked Champion",
+      "description": "Choose 1 of 3 Reworked 4-Star Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/60591ad48c7ab4233b056e9b/icon_4_Stars_Selectable_Reward_Champion_606b534159ed867d2109ea53.png"
+      }
+    },
+    {
+      "id": "60591b178c7ab4233b056e9d",
+      "name": "3-Star Reworked Champion",
+      "description": "Choose 1 of 3 Reworked 3-Star Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/60591b178c7ab4233b056e9d/icon_3_Stars_Selectable_Reward_Champion_606b531b59ed867d2109ea52.png"
+      }
+    },
+    {
+      "id": "60ee011bedb96c17805afda4",
+      "name": "6-Star Reworked Champion",
+      "description": "Choose 1 of 6 Reworked 6-Star Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/60591a788c7ab4233b056e99/icon_6_Stars_Selectable_Reward_Champion_606b537859ed867d2109ea55.png"
+      }
+    },
+    {
+      "id": "60ee0145edb96c17805afda5",
+      "name": "5-Star Reworked Champion",
+      "description": "Choose 1 of 6 Reworked 5-Star Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/60591ab38c7ab4233b056e9a/icon_5_Stars_Selectable_Reward_Champion_606b535c59ed867d2109ea54.png"
+      }
+    },
+    {
+      "id": "60ee0153edb96c17805afda6",
+      "name": "4-Star Reworked Champion",
+      "description": "Choose 1 of 6 Reworked 4-Star Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/60591ad48c7ab4233b056e9b/icon_4_Stars_Selectable_Reward_Champion_606b534159ed867d2109ea53.png"
+      }
+    },
+    {
+      "id": "60ee0160edb96c17805afda7",
+      "name": "3-Star Reworked Champion",
+      "description": "Choose 1 of 6 Reworked 3-Star Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/60591b178c7ab4233b056e9d/icon_3_Stars_Selectable_Reward_Champion_606b531b59ed867d2109ea52.png"
+      }
+    },
+    {
+      "id": "614948d270e0c82d7b9dd4d4",
+      "name": "5-Star Reworked Champion",
+      "description": "Choose 1 of 4 Reworked 5-Star Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/60591ab38c7ab4233b056e9a/icon_5_Stars_Selectable_Reward_Champion_606b535c59ed867d2109ea54.png"
+      }
+    },
+    {
+      "id": "614948f770e0c82d7b9dd4d5",
+      "name": "4-Star Reworked Champion",
+      "description": "Choose 1 of 4 Reworked 4-Star Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/60591ad48c7ab4233b056e9b/icon_4_Stars_Selectable_Reward_Champion_606b534159ed867d2109ea53.png"
+      }
+    },
+    {
+      "id": "6149492170e0c82d7b9dd4d6",
+      "name": "3-Star Reworked Champion",
+      "description": "Choose 1 of 4 Reworked 3-Star Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/60591b178c7ab4233b056e9d/icon_3_Stars_Selectable_Reward_Champion_606b531b59ed867d2109ea52.png"
+      }
+    },
+    {
+      "id": "619c290301122e622cbb4c1b",
+      "name": "5-Star Reworked Champion",
+      "description": "Choose 1 of 4 Reworked 5-Star Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/60591ab38c7ab4233b056e9a/icon_5_Stars_Selectable_Reward_Champion_606b535c59ed867d2109ea54.png"
+      }
+    },
+    {
+      "id": "619c291601122e622cbb4c1c",
+      "name": "4-Star Reworked Champion",
+      "description": "Choose 1 of 4 Reworked 4-Star Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/60591ad48c7ab4233b056e9b/icon_4_Stars_Selectable_Reward_Champion_606b534159ed867d2109ea53.png"
+      }
+    },
+    {
+      "id": "619c292401122e622cbb4c1d",
+      "name": "3-Star Reworked Champion",
+      "description": "Choose 1 of 4 Reworked 3-Star Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/60591b178c7ab4233b056e9d/icon_3_Stars_Selectable_Reward_Champion_606b531b59ed867d2109ea52.png"
+      }
+    },
+    {
+      "id": "623a0fb0840d602690adeaee",
+      "name": "3-Star Reworked Champion",
+      "description": "Choose 1 of 2 Reworked 3-Star Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/60591b178c7ab4233b056e9d/icon_3_Stars_Selectable_Reward_Champion_606b531b59ed867d2109ea52.png"
+      }
+    },
+    {
+      "id": "623a39106f7fd5210d82f2ec",
+      "name": "4-Star Reworked Champion",
+      "description": "Choose 1 of 2 Reworked 4-Star Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/60591ad48c7ab4233b056e9b/icon_4_Stars_Selectable_Reward_Champion_606b534159ed867d2109ea53.png"
+      }
+    },
+    {
+      "id": "623a392b6f7fd5210d82f2f1",
+      "name": "5-Star Reworked Champion",
+      "description": "Choose 1 of 2 Reworked 5-Star Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/60591ab38c7ab4233b056e9a/icon_5_Stars_Selectable_Reward_Champion_606b535c59ed867d2109ea54.png"
+      }
+    },
+    {
+      "id": "62f18d473d4bdd27bb347d3b",
+      "name": "25% TIER 6 CLASS CATALYST FRAGMENT SELECTOR",
+      "description": "Earn this reward to choose Catalyst Fragments from the class of your choice!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/5e5ecbcdacee3d0b445227be/Icon_Selectable_Reward_Catalyst_T5_5e5ed895a9eb0f381b529741.png"
+      }
+    },
+    {
+      "id": "63d9a02e11d92f64cbacad4e",
+      "name": "PRIDE AND ACCOMPLISHMENT",
+      "description": "Could it really be?",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/63d9a02e11d92f64cbacad4e/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_63d9a066f306343d1f68a604.png"
+      }
+    },
+    {
+      "id": "641e3d2598cbfcc75fc53069",
+      "name": "TIER 6 CLASS CATALYST SELECTOR",
+      "description": "Earn this reward to choose Catalysts from the class of your choice!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/5f9c95f7f141180b16f21652/Icon_Selectable_Reward_Catalyst_T5_5e5ed78633ef02d935d15aca_5f9c979c4bef10100271ac16.png"
+      }
+    },
+    {
+      "id": "646d0408ca15a80dec7943e1",
+      "name": "3-Star Reworked Champion",
+      "description": "Choose 1 of 4 Reworked 3-Star Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/60591b178c7ab4233b056e9d/icon_3_Stars_Selectable_Reward_Champion_606b531b59ed867d2109ea52.png"
+      }
+    },
+    {
+      "id": "646d0411ca15a80dec7943e2",
+      "name": "4-Star Reworked Champion",
+      "description": "Choose 1 of 4 Reworked 4-Star Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/60591ad48c7ab4233b056e9b/icon_4_Stars_Selectable_Reward_Champion_606b534159ed867d2109ea53.png"
+      }
+    },
+    {
+      "id": "646d041cca15a80dec7943e3",
+      "name": "5-Star Reworked Champion",
+      "description": "Choose 1 of 4 Reworked 5-Star Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/60591ab38c7ab4233b056e9a/icon_5_Stars_Selectable_Reward_Champion_606b535c59ed867d2109ea54.png"
+      }
+    },
+    {
+      "id": "646d0426ca15a80dec7943e4",
+      "name": "6-Star Reworked Champion",
+      "description": "Choose 1 of 4 Reworked 6-Star Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/60591a788c7ab4233b056e99/icon_6_Stars_Selectable_Reward_Champion_606b537859ed867d2109ea55.png"
+      }
+    },
+    {
+      "id": "6499e257a57b288c9ab1bf56",
+      "name": "LEGENDS CELEBRATION CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your Story Milestones progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "649a288af958b512c51efbc2",
+      "name": "LEGENDS CELEBRATION CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your Story Milestones progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "649b1303f4fe064928327027",
+      "name": "LEGENDS CELEBRATION CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your Story Milestones progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "649b13d5f4fe064928327038",
+      "name": "LEGENDS CELEBRATION CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your Story Milestones progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "649b1919f4fe064928327093",
+      "name": "LEGENDS CELEBRATION CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your Story Milestones progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "649b19cbf4fe06492832709e",
+      "name": "LEGENDS CELEBRATION CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your Story Milestones progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "649b1a7ef4fe0649283270aa",
+      "name": "LEGENDS CELEBRATION CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your preference.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "649b2492f4fe0649283270fe",
+      "name": "LEGENDS CELEBRATION CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your preference.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "649b2539f4fe064928327106",
+      "name": "LEGENDS CELEBRATION CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your preference.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "649b258ff4fe064928327112",
+      "name": "LEGENDS CELEBRATION CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your preference.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "649b2604f4fe064928327116",
+      "name": "LEGENDS CELEBRATION CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your preference.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "649b71879db24477643c3b44",
+      "name": "LEGENDS CELEBRATION 7-STAR SELECTOR",
+      "description": "Choose a 7-Star Champion and Tier 6 Class Catalyst to add to your collection.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/5af4cc9fd6c594162100f8f5/selectablerewards_sra_5b4cf4e13c0d9360f8bb998b.png"
+      }
+    },
+    {
+      "id": "64f7f7da6f51232e05f0695c",
+      "name": "5-STAR RARE CHAMPION SELECTOR",
+      "description": "Choose between a selection of exclusive trophy Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/63f40b02f3e7521b711451d2/Icon_Selectable_Reward_Catalyst_T6_63f40f40b39533d7c805f15b.png"
+      }
+    },
+    {
+      "id": "652738822c511b15b7447618",
+      "name": "PLATINUM POOLOOZA CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your Story Milestones progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/652738822c511b15b7447618/Icon_Treasure_Chests_Platinumpool_632e39109bf8a2759a4f4bb6_8def79b9fd42.png"
+      }
+    },
+    {
+      "id": "65273b322c511b15b7447637",
+      "name": "PLATINUM POOLOOZA CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your Story Milestones progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "65273b462c511b15b7447638",
+      "name": "PLATINUM POOLOOZA CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your Story Milestones progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "65273b5a2c511b15b7447639",
+      "name": "PLATINUM POOLOOZA CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your Story Milestones progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "65273b6f2c511b15b744763a",
+      "name": "PLATINUM POOLOOZA CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your Story Milestones progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "65273b842c511b15b744763b",
+      "name": "PLATINUM POOLOOZA CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your Story Milestones progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "65273b972c511b15b744763c",
+      "name": "PLATINUM POOLOOZA CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your Story Milestones progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6528081ff795e7143fdf1cd9",
+      "name": "7-STAR CLASS HERO CRYSTAL SELECTOR",
+      "description": "Get a 7-Star Champion of your preferred Class!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/63f40b02f3e7521b711451d2/Icon_Selectable_Reward_Catalyst_T6_63f40f40b39533d7c805f15b.png"
+      }
+    },
+    {
+      "id": "6544036861c17d41deb6cbc0",
+      "name": "6-STAR RARE CHAMPION SELECTOR",
+      "description": "Choose between a selection of exclusive trophy Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/63f40b02f3e7521b711451d2/Icon_Selectable_Reward_Catalyst_T6_63f40f40b39533d7c805f15b.png"
+      }
+    },
+    {
+      "id": "65a0960fd5f00e4e0aa05f18",
+      "name": "TIER 5 CLASS ISO-8 SELECTOR",
+      "description": "Claim this for 5x Tier 5 ISO-8 of a specific Class!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/5e289db79115c425a42b2a19/Icon_Selectable_Reward_Catalyst_T4_5e42f2837cbe043ac73b2736.png"
+      }
+    },
+    {
+      "id": "667101f201b3000f93d31aa1",
+      "name": "REUNION CRYSTAL SELECTOR",
+      "description": "Choose a reward based on your current Story Progression!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6671117901b3000f93d31adf",
+      "name": "REUNION CRYSTAL SELECTOR",
+      "description": "Choose a reward based on your current Story Progression!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6671118701b3000f93d31ae0",
+      "name": "REUNION CRYSTAL SELECTOR",
+      "description": "Choose a reward based on your current Story Progression!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "667111a201b3000f93d31ae1",
+      "name": "REUNION CRYSTAL SELECTOR",
+      "description": "Choose a reward based on your current Story Progression!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "667111c101b3000f93d31ae2",
+      "name": "REUNION CRYSTAL SELECTOR",
+      "description": "Choose a reward based on your current Story Progression!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "667111fd01b3000f93d31ae4",
+      "name": "REUNION CRYSTAL SELECTOR",
+      "description": "Choose a reward based on your current Story Progression!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6671123501b3000f93d31ae5",
+      "name": "REUNION CRYSTAL SELECTOR",
+      "description": "Choose a reward based on your current Story Progression!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6671155501b3000f93d31ae7",
+      "name": "REUNION CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your preference.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6671158e01b3000f93d31ae8",
+      "name": "REUNION CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your preference.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6671159a01b3000f93d31ae9",
+      "name": "REUNION CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your preference.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "667115a701b3000f93d31aea",
+      "name": "REUNION CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your preference.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "667115c601b3000f93d31aeb",
+      "name": "REUNION CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your preference.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "667115ea01b3000f93d31aec",
+      "name": "REUNION 7-STAR SELECTOR",
+      "description": "Choose a 7-Star Champion to add to your collection.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/667115ea01b3000f93d31aec/Store_7Star_Selector_Reunion_24%20(2)_abb808a99539.png"
+      }
+    },
+    {
+      "id": "66958f5fd856b710642e5124",
+      "name": "FEATS OF STRENGTH",
+      "description": "You couldn’t open the crystal but you feel stronger!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/66958f5fd856b710642e5124/SRA_2_Icon_8293a5efc244.png"
+      }
+    },
+    {
+      "id": "66959323d856b710642e5237",
+      "name": "FEATS OF GREATER STRENGTH",
+      "description": "You couldn’t open the crystal but you feel way stronger!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/66959323d856b710642e5237/SRA_3_Icon_8293a5f02a34.png"
+      }
+    },
+    {
+      "id": "6695956bd856b710642e5282",
+      "name": "FEATS OF MAXIMUM STRENGTH",
+      "description": "You couldn’t open the crystal but you are almost strong enough!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6695956bd856b710642e5282/SRA_4_Icon_8293a5f03274.png"
+      }
+    },
+    {
+      "id": "669596c3d856b710642e529d",
+      "name": "STRONGEST OF ALL",
+      "description": "You opened the crystal proving that you are the strongest of all!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/669596c3d856b710642e529d/SRA_Rainbow_Icon_8293a5f034cd.png"
+      }
+    },
+    {
+      "id": "66bbedb46fa8d60febae95c5",
+      "name": "LEGENDS CELEBRATION CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your Story Milestones progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6721518b3ffa4811a7a7bd2c",
+      "name": "7-STAR LIMITED EDITION SELECTOR",
+      "description": "Choose a Champion from the 7-Star Loyalty, 7-Star Incursions Artifact, 7-Star Gifted Guardians and 7-Star Reunion Crystal pools.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/64762cc9b4a9b40de6eafc78/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_647681ec560f78eacea9e8d4.png"
+      }
+    },
+    {
+      "id": "6721654e3ffa4811a7a7c0fc",
+      "name": "7-STAR RARE CHAMPION SELECTOR",
+      "description": "Choose between a selection of exclusive trophy Champions!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/64762cc9b4a9b40de6eafc78/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_647681ec560f78eacea9e8d4.png"
+      }
+    },
+    {
+      "id": "6850e5aec07855a83c444a79",
+      "name": "REBIRTH 7-STAR SELECTOR",
+      "description": "Choose a 7-Star Champion to add to your collection.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6850e5aec07855a83c444a79/Icon_Selectable_Reward_Champion_7star_fb0d2ddb389e.png"
+      }
+    },
+    {
+      "id": "6855d7073947f90af0c814cc",
+      "name": "REBIRTH CRYSTAL SELECTOR",
+      "description": "Choose a reward based on your current Story Progression!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6855d71b3947f90af0c814cd",
+      "name": "REBIRTH CRYSTAL SELECTOR",
+      "description": "Choose a reward based on your current Story Progression!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6855d72f3947f90af0c814ce",
+      "name": "REBIRTH CRYSTAL SELECTOR",
+      "description": "Choose a reward based on your current Story Progression!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6855d7433947f90af0c814cf",
+      "name": "REBIRTH CRYSTAL SELECTOR",
+      "description": "Choose a reward based on your current Story Progression!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6855d76f3947f90af0c814d0",
+      "name": "REBIRTH CRYSTAL SELECTOR",
+      "description": "Choose a reward based on your current Story Progression!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6855d7923947f90af0c814d1",
+      "name": "REBIRTH CRYSTAL SELECTOR",
+      "description": "Choose a reward based on your current Story Progression!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6855d7b53947f90af0c814d5",
+      "name": "REBIRTH CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your preference.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6855d8083947f90af0c814e7",
+      "name": "REBIRTH CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your preference.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6855d81c3947f90af0c814e8",
+      "name": "REBIRTH CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your preference.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6855d84f3947f90af0c814ec",
+      "name": "REBIRTH CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your preference.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6855d85f3947f90af0c814ed",
+      "name": "REBIRTH CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your preference.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "68c0af263809d044168a818f",
+      "name": "NOTHING?",
+      "description": "Not even a scratch on it.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/68c0af263809d044168a818f/crystal_iso_forged_egg_737848efa013.png"
+      }
+    },
+    {
+      "id": "68f195cdc99c29894e5e76d2",
+      "name": "6-STAR CONTEMPT DEATHLESS SHE-HULK SELECTOR",
+      "description": "Allows you to select a 6-Star Deathless She-Hulk Piece Selector or 2500x 7-Star Hero Crystal Shards",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/659c8868cf15822e50df3d42/6Star_Container_Selectable_Rewards_Sword_Shard_23_416713add329.png"
+      }
+    },
+    {
+      "id": "68f195e0c99c29894e5e76d3",
+      "name": "7-STAR BREAK STUFF DEATHLESS SHE-HULK SELECTOR",
+      "description": "Allows you to select a 7-Star Deathless She-Hulk Piece Selector or 2500x 7-Star Awakening Gem Crystal Shards.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/659c97cacf15822e50df3d87/7Star_Container_Selectable_Rewards_Sword_Shard_23_416713adda0f.png"
+      }
+    },
+    {
+      "id": "690aa4e61db43a840da0c130",
+      "name": "7-STAR RARE CHAMPION SELECTOR",
+      "description": "Choose between a selection of exclusive trophy Champions or a Titan Nexus Crystal!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/64762cc9b4a9b40de6eafc78/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_647681ec560f78eacea9e8d4.png"
+      }
+    },
+    {
+      "id": "69152ddc4d51d164bc3ea06f",
+      "name": "7-STAR LIMITED POOL SELECTOR 2025",
+      "description": "Choose a 7-Star Champion from the Omega, Glorious Guardians, Heart of Fire and Rebirth Crystal pools.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6850e5aec07855a83c444a79/Icon_Selectable_Reward_Champion_7star_fb0d2ddb389e.png"
+      }
+    },
+    {
+      "id": "6928d65ee59fcbb385ae1b09",
+      "name": "6* DEATHLESS VISION PIECE",
+      "description": "Allows you to select a 6-Star Deathless Vision Piece Selector or 2500x 7-Star Hero Crystal Shards.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/659c8868cf15822e50df3d42/6Star_Container_Selectable_Rewards_Sword_Shard_23_416713add329.png"
+      }
+    },
+    {
+      "id": "6928d669e59fcbb385ae1b0a",
+      "name": "7* DEATHLESS VISION PIECE",
+      "description": "Allows you to select a 7-Star Deathless Vision Piece Selector or 2500x 7-Star Awakening Gem Crystal Shards.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/659c97cacf15822e50df3d87/7Star_Container_Selectable_Rewards_Sword_Shard_23_416713adda0f.png"
+      }
+    },
+    {
+      "id": "69681f79d75e869672bca007",
+      "name": "7-STAR DEATHLESS GUILLOTINE PIECE",
+      "description": "Allows you to select a 7-Star Deathless Guillotine Piece Selector or 2500x 7-Star Awakening Gem Crystal Shards",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/659c97cacf15822e50df3d87/7Star_Container_Selectable_Rewards_Sword_Shard_23_416713adda0f.png"
+      }
+    },
+    {
+      "id": "69681fe0d75e869672bca008",
+      "name": "6-STAR DEATHLESS GUILLOTINE PIECE",
+      "description": "Allows you to select a 6-Star Deathless Guillotine Piece Selector or 2500x 7-Star Hero Crystal Shards",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/659c8868cf15822e50df3d42/6Star_Container_Selectable_Rewards_Sword_Shard_23_416713add329.png"
+      }
+    },
+    {
+      "id": "6a3ae5cf541db1bbed0ebde5",
+      "name": "REVENGE OF LEGENDS CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6a3ae5fe541db1bbed0ebde6",
+      "name": "REVENGE OF LEGENDS CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6a3ae60f541db1bbed0ebde7",
+      "name": "REVENGE OF LEGENDS CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6a3ae62b541db1bbed0ebde8",
+      "name": "REVENGE OF LEGENDS CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6a3ae657541db1bbed0ebde9",
+      "name": "REVENGE OF LEGENDS CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6a3ae66d541db1bbed0ebdea",
+      "name": "REVENGE OF LEGENDS CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6a3ae68d541db1bbed0ebdeb",
+      "name": "REVENGE OF LEGENDS CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6a3ae6bb541db1bbed0ebdec",
+      "name": "REVENGE OF LEGENDS CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6a3ae6db541db1bbed0ebded",
+      "name": "REVENGE OF LEGENDS CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6a3ae6ed541db1bbed0ebdee",
+      "name": "REVENGE OF LEGENDS CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6a3b1efed874bebde86575bf",
+      "name": "REVENGE OF LEGENDS CRYSTAL SELECTOR",
+      "description": "Choose the best option based on your progression.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6499e257a57b288c9ab1bf56/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_6499e41faa6e520af899f15a.png"
+      }
+    },
+    {
+      "id": "6a85dc68d28f38ad8135c393",
+      "name": "HENCHPOOL SELECTOR",
+      "description": "Select a Recruit to best suit your needs!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/5f9c95f7f141180b16f21652/Icon_Selectable_Reward_Catalyst_T5_5e5ed78633ef02d935d15aca_5f9c979c4bef10100271ac16.png"
+      }
+    },
+    {
+      "id": "6a85e02cd28f38ad8135c3c1",
+      "name": "SYMBIOID SELECTOR",
+      "description": "Select a Recruit to best suit your needs!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/5f9c95f7f141180b16f21652/Icon_Selectable_Reward_Catalyst_T5_5e5ed78633ef02d935d15aca_5f9c979c4bef10100271ac16.png"
+      }
+    },
+    {
+      "id": "6a85e126d28f38ad8135c3d2",
+      "name": "ANTI-VENOMOID SELECTOR",
+      "description": "Select a Recruit to best suit your needs!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/5f9c95f7f141180b16f21652/Icon_Selectable_Reward_Catalyst_T5_5e5ed78633ef02d935d15aca_5f9c979c4bef10100271ac16.png"
+      }
+    },
+    {
+      "id": "6a85e35ed28f38ad8135c3ee",
+      "name": "SENTINELBOT SELECTOR",
+      "description": "Select a Recruit to best suit your needs!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/5f9c95f7f141180b16f21652/Icon_Selectable_Reward_Catalyst_T5_5e5ed78633ef02d935d15aca_5f9c979c4bef10100271ac16.png"
+      }
+    },
+    {
+      "id": "6a85e479d28f38ad8135c402",
+      "name": "DOOMBOT SELECTOR",
+      "description": "Select a Recruit to best suit your needs!",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/5f9c95f7f141180b16f21652/Icon_Selectable_Reward_Catalyst_T5_5e5ed78633ef02d935d15aca_5f9c979c4bef10100271ac16.png"
+      }
+    },
+    {
+      "id": "6ad10e17749dcbd883d3d6e1",
+      "name": "7-STAR CRYSTAL OR RANK UP GEM SELECTOR",
+      "description": "Choose between a 7-Star Hero Crystal or a 7-Star Rank Up Gem 1 to 2.",
+      "icon": {
+        "source": "cdn",
+        "reference": "selectable_rewards/6527078d71accb35a5a13caa/STORE_SQ_Launch_Pooll_Selector_8402fbfd7c20.png"
+      }
+    }
+  ],
+  "missingIds": []
+}

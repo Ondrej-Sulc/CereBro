@@ -14,6 +14,7 @@ import { createEmojiResolver } from "../../utils/emojiResolver";
 import { handleError } from "../../utils/errorHandler";
 import { recordRosterUploadEvent } from "../../services/rosterUploadTrackingService";
 import { formatDiscordQuotaExceededMessage, getRosterScreenshotQuota } from "../../services/rosterScreenshotQuotaService";
+import { resolveRosterAscensionUpdate } from "../../domain/roster-ascension-state.js";
 
 export async function handleUpdate(
   interaction: ChatInputCommandInteraction
@@ -21,17 +22,9 @@ export async function handleUpdate(
   await interaction.deferReply();
   const stars = interaction.options.getInteger("stars", true);
   const rank = interaction.options.getInteger("rank", true);
-  let isAscended = interaction.options.getBoolean("is_ascended") ?? false;
-  let ascensionLevel = interaction.options.getInteger("ascension_level") ?? 0;
-  
-  // Implicitly set isAscended if an ascension level is provided
-  if (ascensionLevel > 0) {
-      isAscended = true;
-  }
-  // Implicitly default to level 1 if only isAscended is true (legacy fallback)
-  if (isAscended && ascensionLevel === 0) {
-      ascensionLevel = 1;
-  }
+  const ascension = resolveRosterAscensionUpdate({ isAscended: interaction.options.getBoolean("is_ascended") ?? undefined, ascensionLevel: interaction.options.getInteger("ascension_level") ?? undefined });
+  if (!ascension.ok) { await interaction.editReply(`❌ ${ascension.message}`); return; }
+  const { isAscended, ascensionLevel } = ascension.value;
 
   const callerPlayer = await getActivePlayer(interaction.user.id);
   if (!callerPlayer) {

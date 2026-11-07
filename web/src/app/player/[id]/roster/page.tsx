@@ -18,6 +18,8 @@ import { normalizeGlobalPrestigeListOptions } from "@/lib/global-prestige-list";
 import { cache } from "react";
 import { getRosterScreenshotQuota } from "@cerebro/core/services/rosterScreenshotQuotaService";
 import { canPlanAllianceWar } from "@/lib/alliance-permissions";
+import { withChampionAscensionEligibility, withChampionAscensionLimits } from "@/lib/champion-ascension-payload";
+import { normalizeRosterAscensionState } from "@cerebro/core/domain/roster-ascension-state";
 
 interface PlayerRosterPageProps {
     params: Promise<{ id: string }>;
@@ -125,9 +127,10 @@ export default async function PlayerRosterPage({ params, searchParams }: PlayerR
 
     const typedRosterEntries: ProfileRosterEntry[] = rosterEntries.map(entry => ({
         ...entry,
+        ...normalizeRosterAscensionState(entry),
         reservedForAttack: canManageAttackReservations ? entry.reservedForAttack : false,
         champion: {
-            ...entry.champion,
+            ...withChampionAscensionEligibility(withChampionAscensionLimits(entry.champion)),
             images: entry.champion.images as unknown as ChampionImages,
             abilities: attachResistances(entry.champion.abilities, resistanceIndex).map(link => ({
                 ...link,
@@ -202,7 +205,7 @@ export default async function PlayerRosterPage({ params, searchParams }: PlayerR
             <RosterView
                 key={targetPlayer.id}
                 initialRoster={typedRosterEntries}
-                allChampions={allChampions}
+                allChampions={allChampions.map(withChampionAscensionLimits)}
                 player={targetPlayer}
                 profiles={[]}
                 top30Average={top30Average}

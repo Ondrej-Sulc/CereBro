@@ -119,3 +119,16 @@ The upload-enabled authenticated build and its separate artifact promotion flow
 remain future setup. The local production build used the normal upload-disabled
 configuration. Preparation made no PostHog status changes or production data
 mutations. Deployment follows separately under the user's release instruction.
+
+## Development logger listener warning (6 November 2026)
+
+The crystal-page `MaxListenersExceededWarning` came from repeated server logger
+initialization during Webpack route evaluation and hot reload. Each Pino instance
+registered an exit listener; the existing console-handler guard did not guard
+logger creation. The logger and its request-context storage now share process-wide
+instances. The fix preserves request correlation and the normal listener limit.
+
+A regression check reloads both modules 12 times with real Pino, verifies one
+logger and context store, and checks correlation IDs on every log. After restarting
+the local Next.js server, three actual hot reloads of the Banquet page stayed at
+two exit listeners with HTTP 200 responses and no listener warning.

@@ -7,7 +7,9 @@ import logger from "@/lib/logger";
 import { clearCache } from "@/lib/cache";
 import { Prisma } from "@prisma/client";
 import { withRouteContext } from "@/lib/with-request-context";
-import { maxAscensionLevelForRarity } from "@/lib/mcoc-prestige";
+import { getChampionAscension } from "@cerebro/core/data/game-ascension";
+import { normalizeRosterAscensionState, resolveRosterAscensionUpdate } from "@cerebro/core/domain/roster-ascension-state";
+import { withChampionAscensionLimits } from "@/lib/champion-ascension-payload";
 
 const addSchema = z.object({
   championId: z.number().int().min(1),
@@ -15,21 +17,19 @@ const addSchema = z.object({
   rank: z.number().int().min(1).max(6),
   sigLevel: z.number().int().min(0).max(200).optional().default(0),
   isAwakened: z.boolean().optional().default(false),
-  isAscended: z.boolean().optional().default(false),
-  ascensionLevel: z.number().int().min(0).max(5).optional().default(0),
+  isAscended: z.boolean().optional(),
+  ascensionLevel: z.number().int().min(0).max(2147483647).optional(),
   targetPlayerId: z.string().optional(),
-}).superRefine((data, ctx) => {
-  const maxAscensionLevel = maxAscensionLevelForRarity(data.stars);
-  if (data.ascensionLevel > maxAscensionLevel) {
-    ctx.addIssue({
-      code: z.ZodIssueCode.custom,
-      path: ["ascensionLevel"],
-      message: `Ascension level exceeds the maximum allowed for this rarity (${maxAscensionLevel}).`,
-    });
-  }
 });
 
-async function addChampionUpsert(playerId: string, data: z.infer<typeof addSchema>) {
+async function addChampionUpsert(playerId: string, data: z.infer<typeof addSchema>, maxLevel: number | null) {
+    const current = await prisma.roster.findUnique({
+      where: { playerId_championId_stars: { playerId, championId: data.championId, stars: data.stars } },
+      select: { isAscended: true, ascensionLevel: true },
+    });
+    const ascension = resolveRosterAscensionUpdate({ isAscended: data.isAscended, ascensionLevel: data.ascensionLevel }, { current: current ?? undefined, maxLevel });
+    if (!ascension.ok) throw new z.ZodError([{ code: "custom", path: ["ascensionLevel"], message: ascension.message }]);
+    const updatesAscension = data.isAscended !== undefined || data.ascensionLevel !== undefined;
     return prisma.roster.upsert({
       where: {
         playerId_championId_stars: {
@@ -42,8 +42,7 @@ async function addChampionUpsert(playerId: string, data: z.infer<typeof addSchem
         rank: data.rank,
         sigLevel: data.sigLevel,
         isAwakened: data.isAwakened,
-        isAscended: data.isAscended,
-        ascensionLevel: data.ascensionLevel,
+        ...(updatesAscension ? ascension.value : {}),
       },
       create: {
         playerId,
@@ -52,8 +51,7 @@ async function addChampionUpsert(playerId: string, data: z.infer<typeof addSchem
         rank: data.rank,
         sigLevel: data.sigLevel,
         isAwakened: data.isAwakened,
-        isAscended: data.isAscended,
-        ascensionLevel: data.ascensionLevel,
+        ...ascension.value,
       },
       include: {
         champion: {
@@ -120,14 +118,17 @@ export const POST = withRouteContext(async (req: Request) => {
       effectivePlayerId = data.targetPlayerId;
     }
 
+    const champion = await prisma.champion.findUnique({ where: { id: data.championId }, select: { gameId: true } });
+    if (!champion) return NextResponse.json({ error: "Champion not found" }, { status: 404 });
+    const maxLevel = getChampionAscension(champion.gameId, data.stars)?.maxLevel ?? null;
     let newRoster;
     try {
-        newRoster = await addChampionUpsert(effectivePlayerId, data);
+        newRoster = await addChampionUpsert(effectivePlayerId, data, maxLevel);
     } catch (upsertError) {
         // Handle race condition where record might have been created between existence check and create in upsert
         if (upsertError instanceof Prisma.PrismaClientKnownRequestError && upsertError.code === 'P2002') {
              logger.warn({ playerId: player.id, championId: data.championId }, "Retrying champion add due to P2002 race condition");
-             newRoster = await addChampionUpsert(player.id, data);
+             newRoster = await addChampionUpsert(effectivePlayerId, data, maxLevel);
         } else {
             throw upsertError;
         }
@@ -139,7 +140,7 @@ export const POST = withRouteContext(async (req: Request) => {
       revalidatePath(`/player/${effectivePlayerId}/roster`);
     }
     if (player.allianceId) clearCache(`alliance-members-${player.allianceId}`);
-    return NextResponse.json(newRoster);
+    return NextResponse.json({ ...newRoster, ...normalizeRosterAscensionState(newRoster), champion: newRoster.champion ? withChampionAscensionLimits(newRoster.champion) : newRoster.champion });
   } catch (error) {
     logger.error({ error }, "Error adding champion");
     if (error instanceof z.ZodError) {

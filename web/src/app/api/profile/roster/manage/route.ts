@@ -6,16 +6,18 @@ import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import logger from "@/lib/logger";
 import { clearCache } from "@/lib/cache";
 import { withRouteContext } from "@/lib/with-request-context";
-import { clampAscensionLevelForRarity } from "@/lib/mcoc-prestige";
+import { getChampionAscension } from "@cerebro/core/data/game-ascension";
+import { normalizeRosterAscensionState, resolveRosterAscensionUpdate } from "@cerebro/core/domain/roster-ascension-state";
+import { withChampionAscensionLimits } from "@/lib/champion-ascension-payload";
 import { captureServerException } from "@/lib/observability/server";
 
 const updateSchema = z.object({
   id: z.string(),
-  rank: z.number().min(1).max(10).optional(),
+  rank: z.number().int().min(1).max(10).optional(),
   isAwakened: z.boolean().optional(),
   isAscended: z.boolean().optional(),
-  ascensionLevel: z.number().min(0).max(5).optional(),
-  sigLevel: z.number().min(0).max(200).optional(),
+  ascensionLevel: z.number().int().min(0).max(2147483647).optional(),
+  sigLevel: z.number().int().min(0).max(200).optional(),
 });
 
 const deleteSchema = z.object({
@@ -34,7 +36,7 @@ export const PUT = withRouteContext(async (req: Request) => {
 
     const rosterEntry = await prisma.roster.findUnique({
       where: { id },
-      include: { player: { select: { allianceId: true, ingameName: true } } },
+      include: { player: { select: { allianceId: true, ingameName: true } }, champion: { select: { gameId: true } } },
     });
 
     if (!rosterEntry) {
@@ -64,17 +66,18 @@ export const PUT = withRouteContext(async (req: Request) => {
       );
     }
 
-    if (
-      ascensionLevel !== undefined &&
-      ascensionLevel !== clampAscensionLevelForRarity(ascensionLevel, rosterEntry.stars)
-    ) {
+    const ascension = resolveRosterAscensionUpdate({ isAscended, ascensionLevel }, {
+      current: rosterEntry,
+      maxLevel: getChampionAscension(rosterEntry.champion?.gameId, rosterEntry.stars)?.maxLevel ?? null,
+    });
+    if (!ascension.ok) {
       return NextResponse.json(
         {
           error: "Invalid data",
           details: [
             {
               path: ["ascensionLevel"],
-              message: "Ascension level exceeds the maximum allowed for this rarity.",
+              message: ascension.message,
             },
           ],
         },
@@ -87,8 +90,7 @@ export const PUT = withRouteContext(async (req: Request) => {
       data: {
         rank,
         isAwakened,
-        isAscended,
-        ascensionLevel,
+        ...(isAscended !== undefined || ascensionLevel !== undefined ? ascension.value : {}),
         sigLevel,
       },
       include: {
@@ -120,7 +122,7 @@ export const PUT = withRouteContext(async (req: Request) => {
     if (rosterEntry.player.allianceId && rosterEntry.player.allianceId !== player.allianceId) {
       clearCache(`alliance-members-${rosterEntry.player.allianceId}`);
     }
-    return NextResponse.json(updatedRoster);
+    return NextResponse.json({ ...updatedRoster, ...normalizeRosterAscensionState(updatedRoster), champion: updatedRoster.champion ? withChampionAscensionLimits(updatedRoster.champion) : updatedRoster.champion });
   } catch (error) {
     logger.error({ error }, "Error updating roster");
     if (error instanceof z.ZodError) {

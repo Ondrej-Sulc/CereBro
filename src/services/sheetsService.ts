@@ -1,4 +1,4 @@
-import { google, sheets_v4 } from "googleapis";
+import { auth, sheets, sheets_v4 } from "googleapis/build/src/apis/sheets";
 import { config } from "../config";
 
 /**
@@ -13,12 +13,12 @@ class SheetsService {
    */
   constructor() {
     const scopes = ["https://www.googleapis.com/auth/spreadsheets"];
-    const jwtClient = new google.auth.JWT({
+    const jwtClient = new auth.JWT({
       email: config.GOOGLE_CREDENTIALS.client_email,
       key: config.GOOGLE_CREDENTIALS.private_key,
       scopes,
     });
-    this.sheets = google.sheets({ version: "v4", auth: jwtClient });
+    this.sheets = sheets({ version: "v4", auth: jwtClient });
   }
 
   /**

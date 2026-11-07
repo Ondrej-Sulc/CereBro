@@ -25,6 +25,7 @@ import {
     type GlobalPrestigeListOptions,
 } from "@/lib/global-prestige-list";
 import { reportClientError } from "@/lib/observability/client";
+import { maxAscensionLevelForRarity } from "@/lib/mcoc-prestige";
 
 interface RosterInsightsProps {
     showInsights: boolean;
@@ -481,7 +482,7 @@ function GlobalPrestigeControls({
                 <Select value={String(options.ascensionLevel)} onValueChange={(value) => onChange({ ascensionLevel: parseInt(value, 10) })}>
                     <SelectTrigger className="h-7 w-[64px] bg-slate-950 border-slate-700 text-slate-300 text-xs"><SelectValue /></SelectTrigger>
                     <SelectContent className="bg-slate-900 border-slate-800">
-                        {[0, 1, 2, 3, 4, 5].map(level => <SelectItem key={level} value={String(level)} className="text-xs text-slate-300 focus:bg-slate-800 focus:text-white">A{level}</SelectItem>)}
+                        {Array.from({ length: maxAscensionLevelForRarity(options.rarity) + 1 }, (_, level) => <SelectItem key={level} value={String(level)} className="text-xs text-slate-300 focus:bg-slate-800 focus:text-white">A{level}</SelectItem>)}
                     </SelectContent>
                 </Select>
             )}

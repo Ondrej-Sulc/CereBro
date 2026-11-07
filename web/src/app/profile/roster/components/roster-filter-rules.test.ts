@@ -7,6 +7,7 @@ function props(overrides: Partial<RosterFiltersProps> = {}): RosterFiltersProps 
     search: "", viewMode: "view", showUnowned: true, sortBy: "NAME", sortDirection: "ASC",
     visibleChampionCount: 335, countLabel: "335 champions",
     filterStars: [], filterRanks: [], filterAscensionLevels: [], filterClasses: [],
+    ascensionEligible: false, onAscensionEligibleChange: vi.fn(),
     tagFilter: [], tagLogic: "AND", abilityCategoryFilter: [], abilityCategoryLogic: "OR",
     abilityFilter: [], abilityLogic: "AND", effectForms: [], effectDirections: [],
     immunityFilter: [], immunityLogic: "AND", includeResistances: true, minResistancePotency: null,
@@ -23,6 +24,17 @@ function props(overrides: Partial<RosterFiltersProps> = {}): RosterFiltersProps 
 }
 
 describe("active roster filter rules", () => {
+  it("removes eligibility independently of owned ascension level, rarity and class", () => {
+    const p = props({ ascensionEligible: true, filterAscensionLevels: [2], filterStars: [7], filterClasses: ["COSMIC"] });
+    const rules = buildActiveFilterRules(p);
+    const eligibility = rules.find(rule => rule.id === "ascension-eligible")!;
+    expect(eligibility.label).toBe("7\u2605 Ascension eligible");
+    eligibility.remove();
+    expect(p.onAscensionEligibleChange).toHaveBeenCalledWith(false);
+    expect(p.onFilterAscensionLevelsChange).not.toHaveBeenCalled();
+    expect(p.onFilterStarsChange).not.toHaveBeenCalled();
+    expect(p.onFilterClassesChange).not.toHaveBeenCalled();
+  });
   it("removes a protection and its potency as one rule without clearing independent filters", () => {
     const p = props({ filterClasses: ["SCIENCE"], immunityFilter: ["Bleed"], minResistancePotency: 80 });
     const rules = buildActiveFilterRules(p);

@@ -15,6 +15,10 @@ export interface ChampionImages {
 
 export interface Champion extends Omit<PrismaChampion, 'images'> {
   images: ChampionImages;
+  /** Stars with an explicit collectible, non-event blueprint ascension path. Not owned status or affordability. */
+  ascendableRarities?: number[];
+  /** Missing rarity keys mean no rule is recorded, rather than a known zero cap. */
+  ascensionMaxLevels?: Record<string, number>;
   abilities?: { 
     type: 'ABILITY' | 'IMMUNITY';
     resistances?: KitResistance[];

@@ -1,0 +1,15 @@
+.editionCard { background: radial-gradient(ellipse at top left, #263f6426, transparent 70%), #101b2a; }
+.editionMonth { display: inline-flex; align-items: center; gap: 5px; color: #a9bedf; font-size: 11px; line-height: 18px; }
+.editionMonth svg { width: 13px; height: 13px; }
+.editionStars { margin-top: 6px; color: #93aaca; font-size: 11px; }
+
+.pools { display: grid; gap: 8px; margin-top: auto; padding-top: 12px; border-top: 1px solid #293b514d; }
+.caption { display: flex; align-items: center; gap: 7px; color: #9fb1cc; font-size: 11px; line-height: 18px; }
+.caption > span { padding-inline: 5px; border-radius: 4px; background: #a9bedf0d; color: #b8c8df; font-variant-numeric: tabular-nums; }
+.options { display: flex; flex-wrap: wrap; gap: 2px; padding: 3px; border: 1px solid #293b51; border-radius: 8px; background: #080f1a66; }
+.options a { display: flex; flex: 1 0 calc((100% - 4px) / 3); min-width: 0; min-height: 44px; align-items: center; justify-content: center; padding: 8px; border-radius: 5px; color: #c6d7f4; font-size: 12px; line-height: 18px; font-variant-numeric: tabular-nums; white-space: nowrap; text-decoration: underline; text-decoration-color: #6986b880; text-underline-offset: 4px; }
+/* Four pools form two even rows; five naturally wrap into a balanced 3 + 2. */
+.options:has(> a:nth-child(4):last-child) a { flex-basis: calc((100% - 2px) / 2); }
+.options a:hover { background: #233651; color: #f0f6ff; text-decoration-color: #b8ceff; }
+.options a:focus-visible { outline: 2px solid #b4bfff; outline-offset: -2px; background: #233651; color: #f0f6ff; text-decoration-color: #b8ceff; }
+.options a:active { background: #2d466a; }

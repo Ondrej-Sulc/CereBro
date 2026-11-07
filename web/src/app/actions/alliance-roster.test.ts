@@ -26,7 +26,7 @@ describe("alliance roster filter data", () => {
     const link = { id: 12, type: "ABILITY", source: "Incoming Bleed potency is reduced.", effectForm: "PASSIVE", effectDirection: "GAIN",
       ability: { name: "Resistance", categories: [], iconUrl: null, gameGlossaryTermId: null, description: null, gameGlossaryTerm: null }, synergyChampions: [] };
     const target = { name: "Bleed", iconUrl: "bleed.svg", description: null, gameGlossaryTermId: "bleed", gameGlossaryTerm: null, categories: [] };
-    const champion = { id: 7, slug: "champion", name: "Champion", class: "SKILL", images: {}, tags: [{ id: "hero", name: "Hero" }], abilities: [link] };
+    const champion = { id: 7, gameId: "hulk", slug: "champion", name: "Champion", class: "SKILL", images: {}, tags: [{ id: "hero", name: "Hero" }], abilities: [link] };
     const roster = { id: "roster-1", playerId: "player", championId: 7, stars: 7, rank: 4, sigLevel: 200, isAwakened: true, isAscended: true, ascensionLevel: 2, champion };
     mocks.roster.mockResolvedValue([roster, { ...roster, id: "roster-2", stars: 6 }]);
     mocks.resistances.mockResolvedValue([{ championAbilityLink: link, effect: target, mechanism: "POTENCY", percent: 80 }]);
@@ -37,6 +37,9 @@ describe("alliance roster filter data", () => {
     expect(rows[0]).toMatchObject({ id: "roster-1", playerId: "player", ascensionLevel: 2, tactics: { attack: true, defense: false },
       champion: { slug: "champion", abilities: [{ effectForm: "PASSIVE", effectDirection: "GAIN", resistances: [{ effect: target, mechanism: "POTENCY", percent: 80 }] }] } });
     expect(rows[1].champion).toBe(rows[0].champion);
+    expect(mocks.roster.mock.calls[0][0].include.champion.select.gameId).toBe(true);
+    expect(rows[0].champion.ascendableRarities).toEqual([6, 5, 4]);
+    expect(mocks.roster).toHaveBeenCalledOnce();
     expect(mocks.resistances).toHaveBeenCalledOnce();
   });
 

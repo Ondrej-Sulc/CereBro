@@ -6,7 +6,7 @@ import { rosterKitOptions } from "./roster-kit-options";
 export type AllianceBattlegroupFilter = "ALL" | "1" | "2" | "3" | "UNASSIGNED";
 
 export function createAllianceRosterFilters(): RosterFiltersState {
-  return { search: "", classes: [], stars: [], ranks: [], ascension: [], tags: [], tagLogic: "AND", showUnowned: false,
+  return { search: "", classes: [], stars: [], ranks: [], ascension: [], ascensionEligible: false, tags: [], tagLogic: "AND", showUnowned: false,
     abilities: [], categories: [], immunities: [], abilityLogic: "AND", categoryLogic: "OR", immunityLogic: "AND",
     effectForms: [], effectDirections: [], includeResistances: true, minResistancePotency: null };
 }

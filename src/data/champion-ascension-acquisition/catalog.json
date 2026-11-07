@@ -1,0 +1,1690 @@
+{
+  "version": 1,
+  "reviewedAt": "2026-11-07",
+  "sources": [
+    {
+      "id": "7-star-doom-pieces-and-ascension",
+      "title": "7-Star Doom Pieces and Ascension",
+      "kind": "official_announcement",
+      "publisher": "The MCoC Team",
+      "url": "https://playcontestofchampions.com/news/7-star-doom-pieces-and-ascension/",
+      "publishedAt": "2026-11-02",
+      "reviewedAt": "2026-11-07"
+    },
+    {
+      "id": "the-reclamation-war",
+      "title": "The Reclamation War",
+      "kind": "official_announcement",
+      "publisher": "The MCoC Team",
+      "url": "https://playcontestofchampions.com/news/the-reclamation-war/",
+      "publishedAt": "2026-11-02",
+      "reviewedAt": "2026-11-07"
+    },
+    {
+      "id": "november-2nd-livestream-summary",
+      "title": "November 2nd Livestream Summary",
+      "kind": "official_stream_summary",
+      "publisher": "The MCoC Team",
+      "url": "https://playcontestofchampions.com/news/november-2nd-livestream-summary/",
+      "publishedAt": "2026-11-02",
+      "reviewedAt": "2026-11-07",
+      "creditedTo": "Ackbar67"
+    },
+    {
+      "id": "september-4th-livestream-summary",
+      "title": "September 4th Livestream Summary",
+      "kind": "official_stream_summary",
+      "publisher": "The MCoC Team",
+      "url": "https://playcontestofchampions.com/news/september-4th-livestream-summary/",
+      "publishedAt": "2026-09-04",
+      "reviewedAt": "2026-11-07",
+      "creditedTo": "Ackbar67"
+    },
+    {
+      "id": "february-27th-livestream-summary",
+      "title": "February 27th Livestream Summary",
+      "kind": "official_stream_summary",
+      "publisher": "The MCoC Team",
+      "url": "https://playcontestofchampions.com/news/february-27th-livestream-summary/",
+      "publishedAt": "2026-02-27",
+      "reviewedAt": "2026-11-07",
+      "creditedTo": "Ackbar67"
+    },
+    {
+      "id": "may-29th-livestream-summary",
+      "title": "May 29th Livestream Summary",
+      "kind": "official_stream_summary",
+      "publisher": "The MCoC Team",
+      "url": "https://playcontestofchampions.com/news/may-29th-livestream-summary/",
+      "publishedAt": "2026-06-01",
+      "reviewedAt": "2026-11-07",
+      "creditedTo": "Ackbar67"
+    },
+    {
+      "id": "october-2nd-livestream-summary",
+      "title": "October 2nd Livestream Summary",
+      "kind": "official_stream_summary",
+      "publisher": "The MCoC Team",
+      "url": "https://playcontestofchampions.com/news/october-2nd-livestream-summary/",
+      "publishedAt": "2026-10-02",
+      "reviewedAt": "2026-11-07",
+      "creditedTo": "Ackbar67"
+    },
+    {
+      "id": "v59-0-release-notes",
+      "title": "V59.0 Release Notes",
+      "kind": "official_announcement",
+      "publisher": "The MCoC Team",
+      "url": "https://playcontestofchampions.com/news/v59-0-release-notes/",
+      "publishedAt": "2026-10-02",
+      "reviewedAt": "2026-11-07"
+    },
+    {
+      "id": "april-2nd-livestream-summary",
+      "title": "April 2nd Livestream Summary",
+      "kind": "official_stream_summary",
+      "publisher": "The MCoC Team",
+      "url": "https://playcontestofchampions.com/news/april-2nd-livestream-summary/",
+      "publishedAt": "2026-04-02",
+      "reviewedAt": "2026-11-07",
+      "creditedTo": "Ackbar67"
+    },
+    {
+      "id": "saga-web-of-corruption",
+      "title": "Saga: Web of Corruption",
+      "kind": "official_announcement",
+      "publisher": "The MCoC Team",
+      "url": "https://playcontestofchampions.com/news/saga-web-of-corruption/",
+      "publishedAt": "2026-07-03",
+      "reviewedAt": "2026-11-07"
+    },
+    {
+      "id": "v57-1-release-notes",
+      "title": "V57.1 Release Notes",
+      "kind": "official_announcement",
+      "publisher": "The MCoC Team",
+      "url": "https://playcontestofchampions.com/news/v57-1-release-notes/",
+      "publishedAt": "2026-07-03",
+      "reviewedAt": "2026-11-07"
+    },
+    {
+      "id": "saga-empire-of-doom",
+      "title": "Saga: Empire of Doom",
+      "kind": "official_announcement",
+      "publisher": "The MCoC Team",
+      "url": "https://playcontestofchampions.com/news/saga-empire-of-doom/",
+      "publishedAt": "2026-11-02",
+      "reviewedAt": "2026-11-07"
+    },
+    {
+      "id": "saga-chase-shuri-ascension",
+      "title": "Saga Chase: Shuri Ascension",
+      "kind": "official_announcement",
+      "publisher": "The MCoC Team",
+      "url": "https://playcontestofchampions.com/news/saga-chase-shuri-ascension/",
+      "publishedAt": "2026-11-02",
+      "reviewedAt": "2026-11-07"
+    },
+    {
+      "id": "sieges-gatekeepers-and-overlords",
+      "title": "Sieges â€“ Gatekeepers and Overlords",
+      "kind": "official_announcement",
+      "publisher": "The MCoC Team",
+      "url": "https://playcontestofchampions.com/news/sieges-gatekeepers-and-overlords/",
+      "publishedAt": "2026-11-02",
+      "reviewedAt": "2026-11-07"
+    },
+    {
+      "id": "spider-hams-sizzling-summer-sales",
+      "title": "Spider-Hamâ€™s Sizzling Summer Sales",
+      "kind": "official_announcement",
+      "publisher": "The MCoC Team",
+      "url": "https://playcontestofchampions.com/news/spider-hams-sizzling-summer-sales/",
+      "publishedAt": "2026-06-26",
+      "reviewedAt": "2026-11-07"
+    },
+    {
+      "id": "thor-observance-announcement",
+      "title": "New Twitch Drops, Thor (Ragnarok), Observance, and More",
+      "kind": "official_announcement",
+      "publisher": "Kabam (Osaurus) Rex",
+      "url": "https://forums.playcontestofchampions.com/en/discussion/413318/new-twitch-drops-thor-ragnarok-observance-and-more",
+      "publishedAt": null,
+      "reviewedAt": "2026-11-07"
+    },
+    {
+      "id": "v57-0-release-notes",
+      "title": "V57.0 Release Notes",
+      "kind": "official_announcement",
+      "publisher": "The MCoC Team",
+      "url": "https://playcontestofchampions.com/news/v57-0-release-notes/",
+      "publishedAt": "2026-05-29",
+      "reviewedAt": "2026-11-07"
+    },
+    {
+      "id": "store-nov5",
+      "title": "Recorded GameStore redeemer definitions",
+      "kind": "static_store",
+      "publisher": "Kabam game data",
+      "publishedAt": null,
+      "reviewedAt": "2026-11-07",
+      "fileModifiedAt": "2026-11-05T08:08:36.498916+00:00",
+      "fileName": "5AFEBC8CC99BE2C1546DB91EF7B1F6360DFD7154.bin",
+      "sha256": "1b56c68c34813a40647a559f4e3b130cd26f080d2ffd063c9db417ac97603c55"
+    },
+    {
+      "id": "quest-nov5",
+      "title": "Recorded Epilogue Chapter 4 quest rewards",
+      "kind": "quest_capture",
+      "publisher": "Kabam game data",
+      "publishedAt": null,
+      "reviewedAt": "2026-11-07",
+      "capturedAt": "2026-11-05T06:49:32.001200+00:00",
+      "fileName": "runtime-home-validated.json",
+      "sha256": "ebe5e7f2d5fbc759dbeb08d30ca174c7941c13ae4e2c81f545fb0b97c7694aa3"
+    }
+  ],
+  "routes": [
+    {
+      "id": "magik-limbo",
+      "gameId": "magik",
+      "rarity": 7,
+      "kind": "exchange",
+      "title": "Limbo Token exchanges",
+      "description": "Separate Limbo exchanges were announced for Magik A1 and A2. These material offers are separate from buying Magik for 20 Limbo Tokens.",
+      "confidence": "high",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_magik"
+      ],
+      "availability": "current_stock_unverified",
+      "window": {
+        "start": "2026-09-09",
+        "end": null,
+        "timeZone": null,
+        "label": "Announced September 9; end unverified"
+      },
+      "conditions": [
+        "Thronebreaker required by both recorded bundles."
+      ],
+      "missingEvidence": [
+        "Current stock and remaining purchase limits are unverified.",
+        "Full upgrade resources must still be checked against the recorded recipe."
+      ],
+      "offers": [
+        {
+          "id": "magik-a1-announced",
+          "label": "Announced A1 exchange",
+          "sourceId": "september-4th-livestream-summary",
+          "binding": null,
+          "rewards": [],
+          "price": {
+            "currency": "Limbo Tokens",
+            "quantity": 10
+          },
+          "purchaseLimit": null,
+          "conditions": []
+        },
+        {
+          "id": "magik-a2-announced",
+          "label": "Announced A2 exchange",
+          "sourceId": "september-4th-livestream-summary",
+          "binding": null,
+          "rewards": [],
+          "price": {
+            "currency": "Limbo Tokens",
+            "quantity": 15
+          },
+          "purchaseLimit": null,
+          "conditions": []
+        },
+        {
+          "id": "event_090226_magik_a1",
+          "label": "7-STAR MAGIK ASCENSION 1 BUNDLE",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[21][Name=event_090226_magik_a1].Redeemers",
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_class_mystic",
+              "quantity": 1,
+              "role": "ascension_material"
+            },
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_magik",
+              "quantity": 1,
+              "role": "ascension_material"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 1,
+          "conditions": [
+            "To access this offer: Achieve Story Milestone: Thronebreaker (tap Progression Badge at top of Home Screen for all Progression requirements)"
+          ]
+        },
+        {
+          "id": "event_090226_magik_a2",
+          "label": "7-STAR MAGIK ASCENSION 2 BUNDLE",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[22][Name=event_090226_magik_a2].Redeemers",
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_class_mystic",
+              "quantity": 10,
+              "role": "ascension_material"
+            },
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_magik",
+              "quantity": 2,
+              "role": "ascension_material"
+            },
+            {
+              "type": "inv",
+              "id": "primordial_dust_t2",
+              "quantity": 500,
+              "role": "ascension_material"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 1,
+          "conditions": [
+            "To access this offer: Achieve Story Milestone: Thronebreaker (tap Progression Badge at top of Home Screen for all Progression requirements)"
+          ]
+        }
+      ],
+      "sourceIds": [
+        "september-4th-livestream-summary",
+        "store-nov5"
+      ]
+    },
+    {
+      "id": "thor-observance",
+      "gameId": "thor_ragnarok",
+      "rarity": 7,
+      "kind": "exchange",
+      "title": "Observance / Twitch Drops",
+      "description": "Spend Observance on successive Thor ascension bundles. The announced 50 Observance price buys Thor initially; it is not an established ascension-bundle price.",
+      "confidence": "high",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_thor_ragnarok"
+      ],
+      "availability": "current_stock_unverified",
+      "window": null,
+      "conditions": [
+        "Observance drops were announced from April 2, 2026; the active drop campaign is unverified.",
+        "Buy Thor first, then A1 bundle, then the A2 material bundle.",
+        "A2 materials are per purchase; up to two purchases, with other upgrade materials still required."
+      ],
+      "missingEvidence": [
+        "Ascension-bundle prices, current stock and current Twitch campaign are unverified."
+      ],
+      "offers": [
+        {
+          "id": "observance_7star_thor_ragnarok_ascension_1_bundle",
+          "label": "7-STAR THOR (RAGNAROK) ASCENSION LEVEL 1 BUNDLE",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[1026][Name=observance_7star_thor_ragnarok_ascension_1_bundle].Redeemers",
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_thor_ragnarok",
+              "quantity": 1,
+              "role": "ascension_material"
+            },
+            {
+              "type": "inv",
+              "id": "ascension_token_class_trained",
+              "quantity": 1,
+              "role": "ascension_material"
+            },
+            {
+              "type": "hero",
+              "id": "thor_ragnarok_t7",
+              "quantity": 1,
+              "role": "champion"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 1,
+          "conditions": [
+            "Purchase 7-Star Thor (Ragnarok) to access this Offer."
+          ]
+        },
+        {
+          "id": "observance_7star_thor_ragnarok_ascension_2_bundle",
+          "label": "7-STAR THOR (RAGNAROK) ASCENSION LEVEL 2 BUNDLE",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[1145][Name=observance_7star_thor_ragnarok_ascension_2_bundle].Redeemers",
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_thor_ragnarok",
+              "quantity": 1,
+              "role": "ascension_material"
+            },
+            {
+              "type": "inv",
+              "id": "ascension_token_class_trained",
+              "quantity": 5,
+              "role": "ascension_material"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 2,
+          "conditions": [
+            "Purchase the 7-Star Thor (Ragnarok) Ascension Level 1 Bundle to access this Offer."
+          ]
+        }
+      ],
+      "sourceIds": [
+        "thor-observance-announcement",
+        "v57-0-release-notes",
+        "store-nov5"
+      ]
+    },
+    {
+      "id": "chavez-action-figures",
+      "gameId": "americachavez",
+      "rarity": 7,
+      "kind": "exchange",
+      "title": "Action Figure saga exchanges",
+      "description": "Historical Action Figure exchanges included Chavez ascension. The older published class-token quantity differs from the November static pack; their price and contents are separate evidence versions.",
+      "confidence": "high",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_americachavez"
+      ],
+      "availability": "historical",
+      "window": null,
+      "conditions": [
+        "Published summary: 100 Action Figures for A1 Chavez; 50 for one Chavez token and one Mystic token."
+      ],
+      "missingEvidence": [
+        "No current offer verified.",
+        "The old 50 Action Figure price must not be applied to the newer five-Mystic-token pack."
+      ],
+      "offers": [
+        {
+          "id": "chavez-a1-historical",
+          "label": "Historical A1 Chavez exchange",
+          "sourceId": "april-2nd-livestream-summary",
+          "binding": null,
+          "rewards": [],
+          "price": {
+            "currency": "Action Figures",
+            "quantity": 100
+          },
+          "purchaseLimit": null,
+          "conditions": []
+        },
+        {
+          "id": "chavez-token-historical",
+          "label": "Historical material exchange",
+          "sourceId": "april-2nd-livestream-summary",
+          "binding": null,
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_americachavez",
+              "quantity": 1,
+              "role": "ascension_material"
+            },
+            {
+              "type": "inv",
+              "id": "ascension_token_class_mystic",
+              "quantity": 1,
+              "role": "ascension_material"
+            }
+          ],
+          "price": {
+            "currency": "Action Figures",
+            "quantity": 50
+          },
+          "purchaseLimit": null,
+          "conditions": []
+        },
+        {
+          "id": "saga_america_chavez_7star_tokens_bundle",
+          "label": "AMERICA CHAVEZ 7-STAR AND ASCENSION BUNDLE",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[7735][Name=saga_america_chavez_7star_tokens_bundle].Redeemers",
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_americachavez",
+              "quantity": 1,
+              "role": "ascension_material"
+            },
+            {
+              "type": "hero",
+              "id": "americachavez_t7",
+              "quantity": 1,
+              "role": "champion"
+            },
+            {
+              "type": "inv",
+              "id": "ascension_token_class_mystic",
+              "quantity": 1,
+              "role": "ascension_material"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 1,
+          "conditions": []
+        },
+        {
+          "id": "saga_america_chavez_tokens_bundle",
+          "label": "AMERICA CHAVEZ ASCENSION TOKEN BUNDLE",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[7868][Name=saga_america_chavez_tokens_bundle].Redeemers",
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_americachavez",
+              "quantity": 1,
+              "role": "ascension_material"
+            },
+            {
+              "type": "inv",
+              "id": "ascension_token_class_mystic",
+              "quantity": 5,
+              "role": "ascension_material"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 2,
+          "conditions": []
+        }
+      ],
+      "sourceIds": [
+        "april-2nd-livestream-summary",
+        "store-nov5"
+      ]
+    },
+    {
+      "id": "mysterio-helmets",
+      "gameId": "mysterio",
+      "rarity": 7,
+      "kind": "exchange",
+      "title": "Mysterio's Helmets saga exchange",
+      "description": "Historical saga chase explicitly included seven-star Mysterio and ascension. Recorded rank-up gems remain separate rewards.",
+      "confidence": "high",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_mysterio"
+      ],
+      "availability": "historical",
+      "window": null,
+      "conditions": [],
+      "missingEvidence": [
+        "Exchange prices, remaining purchase limits and current access are unverified."
+      ],
+      "offers": [
+        {
+          "id": "saga_mysterio_7star_rankup_tokens_bundle",
+          "label": "MYSTERIO 7-STAR AND ASCENSION BUNDLE",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[7925][Name=saga_mysterio_7star_rankup_tokens_bundle].Redeemers",
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_mysterio",
+              "quantity": 1,
+              "role": "ascension_material"
+            },
+            {
+              "type": "hero",
+              "id": "mysterio_t7",
+              "quantity": 1,
+              "role": "champion"
+            },
+            {
+              "type": "inv",
+              "id": "ascension_token_class_tech",
+              "quantity": 1,
+              "role": "ascension_material"
+            },
+            {
+              "type": "inv",
+              "id": "saga_web_of_corruption_rankup_t72",
+              "quantity": 1,
+              "role": "other"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 1,
+          "conditions": []
+        },
+        {
+          "id": "saga_mysterio_a1_bundle",
+          "label": "MYSTERIO ASCENSION TOKEN BUNDLE",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[7799][Name=saga_mysterio_a1_bundle].Redeemers",
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_mysterio",
+              "quantity": 1,
+              "role": "ascension_material"
+            },
+            {
+              "type": "inv",
+              "id": "ascension_token_class_tech",
+              "quantity": 5,
+              "role": "ascension_material"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 2,
+          "conditions": []
+        },
+        {
+          "id": "saga_mysterio_a2_bundle",
+          "label": "MYSTERIO GREATER ASCENSION TOKEN BUNDLE",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[7800][Name=saga_mysterio_a2_bundle].Redeemers",
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_mysterio",
+              "quantity": 2,
+              "role": "ascension_material"
+            },
+            {
+              "type": "inv",
+              "id": "ascension_token_class_tech",
+              "quantity": 10,
+              "role": "ascension_material"
+            },
+            {
+              "type": "inv",
+              "id": "saga_web_of_corruption_rankup_t73",
+              "quantity": 1,
+              "role": "other"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 1,
+          "conditions": []
+        }
+      ],
+      "sourceIds": [
+        "saga-web-of-corruption",
+        "v57-1-release-notes",
+        "store-nov5"
+      ]
+    },
+    {
+      "id": "shuri-locator-chips",
+      "gameId": "shuri",
+      "rarity": 7,
+      "kind": "exchange",
+      "title": "Locator Chip saga exchange",
+      "description": "Announced November–January Shuri chase. Recorded champion and rank-up packs contain ascension materials; progression and activity determine chip access.",
+      "confidence": "high",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_shuri"
+      ],
+      "availability": "activity_dependent",
+      "window": null,
+      "conditions": [
+        "Chips announced from EQ/Mysterium Store, Reclamation, battlepass, Sieges and other dated activities, with progression gates.",
+        "Not every chip source or reward is claimable at the same time."
+      ],
+      "missingEvidence": [
+        "Chip prices and exact offer windows are unverified.",
+        "Current account progression, activity access and stock are unverified."
+      ],
+      "offers": [
+        {
+          "id": "saga_shuri_7star_rankup_tokens_bundle",
+          "label": "SHURI 7-STAR AND ASCENSION BUNDLE",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[7905][Name=saga_shuri_7star_rankup_tokens_bundle].Redeemers",
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_shuri",
+              "quantity": 1,
+              "role": "ascension_material"
+            },
+            {
+              "type": "hero",
+              "id": "shuri_t7",
+              "quantity": 1,
+              "role": "champion"
+            },
+            {
+              "type": "inv",
+              "id": "ascension_token_class_tech",
+              "quantity": 1,
+              "role": "ascension_material"
+            },
+            {
+              "type": "inv",
+              "id": "saga_castellan_rankup_t72",
+              "quantity": 1,
+              "role": "other"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 1,
+          "conditions": []
+        },
+        {
+          "id": "saga_shuri_tokens_r3_bundle",
+          "label": "SHURI ASCENSION TOKEN BUNDLE",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[7571][Name=saga_shuri_tokens_r3_bundle].Redeemers",
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_shuri",
+              "quantity": 1,
+              "role": "ascension_material"
+            },
+            {
+              "type": "inv",
+              "id": "ascension_token_class_tech",
+              "quantity": 5,
+              "role": "ascension_material"
+            },
+            {
+              "type": "inv",
+              "id": "saga_castellan_rankup_t72",
+              "quantity": 1,
+              "role": "other"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 2,
+          "conditions": []
+        },
+        {
+          "id": "saga_shuri_tokens_r4_bundle",
+          "label": "SHURI GREATER ASCENSION TOKEN BUNDLE",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[7579][Name=saga_shuri_tokens_r4_bundle].Redeemers",
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_shuri",
+              "quantity": 1,
+              "role": "ascension_material"
+            },
+            {
+              "type": "inv",
+              "id": "ascension_token_class_tech",
+              "quantity": 5,
+              "role": "ascension_material"
+            },
+            {
+              "type": "inv",
+              "id": "saga_castellan_rankup_t73",
+              "quantity": 1,
+              "role": "other"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 2,
+          "conditions": []
+        }
+      ],
+      "sourceIds": [
+        "saga-empire-of-doom",
+        "saga-chase-shuri-ascension",
+        "sieges-gatekeepers-and-overlords",
+        "store-nov5"
+      ]
+    },
+    {
+      "id": "doom-armory",
+      "gameId": "doctordoom",
+      "rarity": 7,
+      "kind": "exchange",
+      "title": "Von Doom Armory",
+      "description": "DoomScrip supports ascension through Ascended Talisman/token offers. Ordinary Latverian Talismans obtain Doom separately; the 100-Talisman champion price is not an ascension price.",
+      "confidence": "high",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_doctordoom"
+      ],
+      "availability": "activity_dependent",
+      "window": null,
+      "conditions": [
+        "Own seven-star Doom and any two Victorious Four at A2.",
+        "Recorded first token offer requires four Victorious token purchases; later offer requires eight.",
+        "Event-earned DoomScrip announced to support A1; extra offer currency supports chasing A2.",
+        "Announced top-100 A3 / top-five A4 rewards do not extend the canonical A2 path."
+      ],
+      "missingEvidence": [
+        "Exact Ascended Talisman prices/recipe, stock and personal access are unverified."
+      ],
+      "offers": [
+        {
+          "id": "event_110226_castellan_store_ascension_bundle_1",
+          "label": "DOCTOR DOOM ASCENSION 1 TOKEN",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[9551][Name=event_110226_castellan_store_ascension_bundle_1].Redeemers",
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_doctordoom",
+              "quantity": 1,
+              "role": "ascension_material"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 1,
+          "conditions": [
+            "Purchase 4x Victorious 4 Ascension Tokens to unlock this bundle."
+          ]
+        },
+        {
+          "id": "event_110226_castellan_store_ascension_bundle_6",
+          "label": "DOCTOR DOOM ASCENSION 2 TOKEN",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[9552][Name=event_110226_castellan_store_ascension_bundle_6].Redeemers",
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_doctordoom",
+              "quantity": 1,
+              "role": "ascension_material"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 2,
+          "conditions": [
+            "Purchase 8x Victorious 4 Ascension Tokens to unlock this bundle."
+          ]
+        }
+      ],
+      "sourceIds": [
+        "7-star-doom-pieces-and-ascension",
+        "november-2nd-livestream-summary",
+        "store-nov5"
+      ]
+    },
+    {
+      "id": "armory-mrfantastic_victorious",
+      "gameId": "mrfantastic_victorious",
+      "rarity": 7,
+      "kind": "exchange",
+      "title": "Mister Fantastic (Victorious) Armory offer",
+      "description": "DoomScrip Armory offer: one champion token per purchase, up to two purchases. The purchase counter is not an ascension reward.",
+      "confidence": "high",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_mrfantastic_victorious"
+      ],
+      "availability": "activity_dependent",
+      "window": null,
+      "conditions": [
+        "Reach Reclamation milestone 12.",
+        "The announcement supports A2 for all four through event-earned DoomScrip."
+      ],
+      "missingEvidence": [
+        "The exact initial champion/A1 reward binding is missing; two offered tokens alone do not establish the full A0-to-A2 material budget.",
+        "Exact prices, activity access, live stock and remaining purchases are unverified."
+      ],
+      "offers": [
+        {
+          "id": "event_110226_castellan_store_ascension_bundle_2",
+          "label": "MISTER FANTASTIC (VICTORIOUS) ASCENSION TOKEN",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[9553][Name=event_110226_castellan_store_ascension_bundle_2].Redeemers",
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_mrfantastic_victorious",
+              "quantity": 1,
+              "role": "ascension_material"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 2,
+          "conditions": [
+            "Reach milestone 12 in the Reclamation War Realm Event to access this offer."
+          ]
+        }
+      ],
+      "sourceIds": [
+        "7-star-doom-pieces-and-ascension",
+        "november-2nd-livestream-summary",
+        "store-nov5"
+      ]
+    },
+    {
+      "id": "armory-invisiblewoman_victorious",
+      "gameId": "invisiblewoman_victorious",
+      "rarity": 7,
+      "kind": "exchange",
+      "title": "Invisible Woman (Victorious) Armory offer",
+      "description": "DoomScrip Armory offer: one champion token per purchase, up to two purchases. The purchase counter is not an ascension reward.",
+      "confidence": "high",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_invisiblewoman_victorious"
+      ],
+      "availability": "activity_dependent",
+      "window": null,
+      "conditions": [
+        "Reach Reclamation milestone 14.",
+        "The announcement supports A2 for all four through event-earned DoomScrip."
+      ],
+      "missingEvidence": [
+        "The exact initial champion/A1 reward binding is missing; two offered tokens alone do not establish the full A0-to-A2 material budget.",
+        "Exact prices, activity access, live stock and remaining purchases are unverified."
+      ],
+      "offers": [
+        {
+          "id": "event_110226_castellan_store_ascension_bundle_3",
+          "label": "INVISIBLE WOMAN (VICTORIOUS) ASCENSION TOKEN",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[9554][Name=event_110226_castellan_store_ascension_bundle_3].Redeemers",
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_invisiblewoman_victorious",
+              "quantity": 1,
+              "role": "ascension_material"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 2,
+          "conditions": [
+            "Reach milestone 14 in the Reclamation War Realm Event to access this offer."
+          ]
+        }
+      ],
+      "sourceIds": [
+        "7-star-doom-pieces-and-ascension",
+        "november-2nd-livestream-summary",
+        "store-nov5"
+      ]
+    },
+    {
+      "id": "armory-humantorch_victorious",
+      "gameId": "humantorch_victorious",
+      "rarity": 7,
+      "kind": "exchange",
+      "title": "Human Torch (Victorious) Armory offer",
+      "description": "DoomScrip Armory offer: one champion token per purchase, up to two purchases. The purchase counter is not an ascension reward.",
+      "confidence": "high",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_humantorch_victorious"
+      ],
+      "availability": "activity_dependent",
+      "window": null,
+      "conditions": [
+        "Reach Reclamation milestone 16.",
+        "The announcement supports A2 for all four through event-earned DoomScrip."
+      ],
+      "missingEvidence": [
+        "The exact initial champion/A1 reward binding is missing; two offered tokens alone do not establish the full A0-to-A2 material budget.",
+        "Exact prices, activity access, live stock and remaining purchases are unverified."
+      ],
+      "offers": [
+        {
+          "id": "event_110226_castellan_store_ascension_bundle_4",
+          "label": "HUMAN TORCH (VICTORIOUS) ASCENSION TOKEN",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[9555][Name=event_110226_castellan_store_ascension_bundle_4].Redeemers",
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_humantorch_victorious",
+              "quantity": 1,
+              "role": "ascension_material"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 2,
+          "conditions": [
+            "Reach milestone 16 in the Reclamation War Realm Event to access this offer."
+          ]
+        }
+      ],
+      "sourceIds": [
+        "7-star-doom-pieces-and-ascension",
+        "november-2nd-livestream-summary",
+        "store-nov5"
+      ]
+    },
+    {
+      "id": "armory-thing_victorious",
+      "gameId": "thing_victorious",
+      "rarity": 7,
+      "kind": "exchange",
+      "title": "Thing (Victorious) Armory offer",
+      "description": "DoomScrip Armory offer: one champion token per purchase, up to two purchases. The purchase counter is not an ascension reward.",
+      "confidence": "high",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_thing_victorious"
+      ],
+      "availability": "activity_dependent",
+      "window": null,
+      "conditions": [
+        "Reach Reclamation milestone 18.",
+        "The announcement supports A2 for all four through event-earned DoomScrip."
+      ],
+      "missingEvidence": [
+        "The exact initial champion/A1 reward binding is missing; two offered tokens alone do not establish the full A0-to-A2 material budget.",
+        "Exact prices, activity access, live stock and remaining purchases are unverified."
+      ],
+      "offers": [
+        {
+          "id": "event_110226_castellan_store_ascension_bundle_5",
+          "label": "THING (VICTORIOUS) ASCENSION TOKEN",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[9556][Name=event_110226_castellan_store_ascension_bundle_5].Redeemers",
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_thing_victorious",
+              "quantity": 1,
+              "role": "ascension_material"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 2,
+          "conditions": [
+            "Reach milestone 18 in the Reclamation War Realm Event to access this offer."
+          ]
+        }
+      ],
+      "sourceIds": [
+        "7-star-doom-pieces-and-ascension",
+        "november-2nd-livestream-summary",
+        "store-nov5"
+      ]
+    },
+    {
+      "id": "maestro-carina-challenges",
+      "gameId": "maestro_trophy",
+      "rarity": 7,
+      "kind": "challenge",
+      "title": "Carina's Challenges",
+      "description": "Weekly challenges in Ordeal, Abyss and Epoch Gauntlet announced Maestro A1/A2 rewards separately from a champion selector.",
+      "confidence": "partial",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_maestro_trophy"
+      ],
+      "availability": "activity_dependent",
+      "window": {
+        "start": "2026-03-11",
+        "end": null,
+        "timeZone": null,
+        "label": "Challenges announced from March 11; ascension end date unverified"
+      },
+      "conditions": [
+        "Hero/Villain restrictions apply.",
+        "The May 13 First Appearance deadline is not established as an ascension-reward deadline."
+      ],
+      "missingEvidence": [
+        "Exact objective IDs, thresholds, token payouts and present claimability are unverified."
+      ],
+      "offers": [],
+      "sourceIds": [
+        "february-27th-livestream-summary"
+      ]
+    },
+    {
+      "id": "starlord-stellar-abyss",
+      "gameId": "starlord_stellar",
+      "rarity": 7,
+      "kind": "challenge",
+      "title": "Abyss Quake challenge",
+      "description": "Defeat Abyss Quake using Star-Lord (Stellar-Forged) for a duplicate and ascension.",
+      "confidence": "partial",
+      "starScope": "recorded_path_match",
+      "requiredTokenIds": [
+        "ascension_token_champion_starlord_stellar"
+      ],
+      "availability": "activity_dependent",
+      "window": null,
+      "conditions": [
+        "Seven-star applicability is matched to the recorded token path; the summary does not independently specify the exact star restriction."
+      ],
+      "missingEvidence": [
+        "Exact objective ID, star restrictions, item payouts and end date are not captured.",
+        "A six-star source is not established."
+      ],
+      "offers": [],
+      "sourceIds": [
+        "february-27th-livestream-summary"
+      ]
+    },
+    {
+      "id": "blade-stellar-necropolis",
+      "gameId": "blade_stellar",
+      "rarity": 7,
+      "kind": "challenge",
+      "title": "Necropolis Red Goblin objective",
+      "description": "Defeat Necropolis Red Goblin with only Blade (Stellar-Forged) for awakening and A1. This is separate from collecting his five pieces.",
+      "confidence": "partial",
+      "starScope": "recorded_path_match",
+      "requiredTokenIds": [
+        "ascension_token_champion_blade_stellar"
+      ],
+      "availability": "activity_dependent",
+      "window": null,
+      "conditions": [
+        "The article published June 1 describes the objective as already live then; June 1 is not an established start date."
+      ],
+      "missingEvidence": [
+        "Exact objective ID, star restriction, item payouts, deadline and current activity status are not captured."
+      ],
+      "offers": [],
+      "sourceIds": [
+        "may-29th-livestream-summary"
+      ]
+    },
+    {
+      "id": "goblin-stellar-tower",
+      "gameId": "green_goblin_stellar",
+      "rarity": 7,
+      "kind": "challenge",
+      "title": "Stellar-Forged Event Tower",
+      "description": "Beat Destroyer in the special Event Tower for awakening/ascension, followed by a Sasquatch test fight. Piece collection does not itself grant the Tower reward.",
+      "confidence": "partial",
+      "starScope": "recorded_path_match",
+      "requiredTokenIds": [
+        "ascension_token_champion_green_goblin_stellar"
+      ],
+      "availability": "historical",
+      "window": {
+        "start": "2026-10-07",
+        "end": null,
+        "timeZone": null,
+        "label": "Historical Tower scheduled October 7; exact end unverified"
+      },
+      "conditions": [],
+      "missingEvidence": [
+        "Exact token quantities, star restriction, objective binding and end timestamp are not established."
+      ],
+      "offers": [],
+      "sourceIds": [
+        "october-2nd-livestream-summary",
+        "v59-0-release-notes"
+      ]
+    },
+    {
+      "id": "spiderham-sizzling-sale",
+      "gameId": "spiderham",
+      "rarity": 7,
+      "kind": "sale",
+      "title": "Sizzling Summer Sale",
+      "description": "Historical progression-tuned offers and Units-spent tracker included seven-star Spider-Ham and ascension materials.",
+      "confidence": "partial",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_spiderham"
+      ],
+      "availability": "historical",
+      "window": {
+        "start": "2026-06-26T11:00:00-07:00",
+        "end": "2026-07-06T11:00:00-07:00",
+        "timeZone": "America/Los_Angeles",
+        "label": "June 26–July 6, 2026, 11:00 AM PT"
+      },
+      "conditions": [
+        "Progression-tuned offers; Units spent on Door Crashers and Sizzling Sale BYOBs earned tracker points."
+      ],
+      "missingEvidence": [
+        "Exact token counts, offer tier, fixed price and probability are not established.",
+        "No replacement current method verified."
+      ],
+      "offers": [],
+      "sourceIds": [
+        "spider-hams-sizzling-summer-sales"
+      ]
+    },
+    {
+      "id": "magneto-super-season",
+      "gameId": "magneto_marvelnow",
+      "rarity": 7,
+      "kind": "event",
+      "title": "Alliance Super Season / Realm Event",
+      "description": "Announced ascension mechanism for Magneto (House of X) through multiplayer objectives and a Realm Event during the November 4–December 9 event period.",
+      "confidence": "partial",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_magneto_marvelnow"
+      ],
+      "availability": "activity_dependent",
+      "window": {
+        "start": "2026-11-04",
+        "end": "2026-12-09",
+        "timeZone": null,
+        "label": "November 4–December 9; times/timezone not stated"
+      },
+      "conditions": [],
+      "missingEvidence": [
+        "Exact token payouts, milestone/rank thresholds, personal requirements and live claimability are not established."
+      ],
+      "offers": [],
+      "sourceIds": [
+        "november-2nd-livestream-summary"
+      ]
+    },
+    {
+      "id": "medusa-quantum-tangle",
+      "gameId": "medusa",
+      "rarity": 7,
+      "kind": "sale",
+      "title": "Quantum Tangle sale / webstore chase",
+      "description": "November 20 announcement identifies five Medusa champion tokens, associated with announced A3. The canonical recorded path still ends at A2.",
+      "confidence": "partial",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_medusa"
+      ],
+      "availability": "activity_dependent",
+      "window": {
+        "start": "2026-11-20",
+        "end": null,
+        "timeZone": null,
+        "label": "Scheduled November 20; end and timezone unverified"
+      },
+      "conditions": [],
+      "missingEvidence": [
+        "Offer price, exact webstore tiers, purchase limits and sale end are not established.",
+        "No current offer verified; announced A3 does not establish an A3 recipe."
+      ],
+      "offers": [
+        {
+          "id": "medusa-five-token-announcement",
+          "label": "Announced champion-token reward",
+          "sourceId": "november-2nd-livestream-summary",
+          "binding": null,
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_medusa",
+              "quantity": 5,
+              "role": "ascension_material"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": null,
+          "conditions": []
+        }
+      ],
+      "sourceIds": [
+        "november-2nd-livestream-summary"
+      ]
+    },
+    {
+      "id": "reclamation-blade",
+      "gameId": "blade",
+      "rarity": 7,
+      "kind": "event",
+      "title": "Reclamation War weekly rewards",
+      "description": "Announced weekly final milestone grants A1; top 10% ranked grants A2 tokens for the assigned weekly champion.",
+      "confidence": "high",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_blade"
+      ],
+      "availability": "activity_dependent",
+      "window": null,
+      "conditions": [
+        "Nine announced champions belong to a multiweek mechanism, not simultaneous rewards.",
+        "Exact champion/week identity and current claimability are unverified.",
+        "The cited announcements describe November/December Reclamation and further January challenges."
+      ],
+      "missingEvidence": [
+        "Per-champion dated week/order, personal-point minimums, exact thresholds and token payouts are not captured."
+      ],
+      "offers": [],
+      "sourceIds": [
+        "the-reclamation-war",
+        "november-2nd-livestream-summary"
+      ]
+    },
+    {
+      "id": "reclamation-captainamerica_movie",
+      "gameId": "captainamerica_movie",
+      "rarity": 7,
+      "kind": "event",
+      "title": "Reclamation War weekly rewards",
+      "description": "Announced weekly final milestone grants A1; top 10% ranked grants A2 tokens for the assigned weekly champion.",
+      "confidence": "high",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_captainamerica_movie"
+      ],
+      "availability": "activity_dependent",
+      "window": null,
+      "conditions": [
+        "Nine announced champions belong to a multiweek mechanism, not simultaneous rewards.",
+        "Exact champion/week identity and current claimability are unverified.",
+        "The cited announcements describe November/December Reclamation and further January challenges."
+      ],
+      "missingEvidence": [
+        "Per-champion dated week/order, personal-point minimums, exact thresholds and token payouts are not captured."
+      ],
+      "offers": [],
+      "sourceIds": [
+        "the-reclamation-war",
+        "november-2nd-livestream-summary"
+      ]
+    },
+    {
+      "id": "reclamation-ironman_movie",
+      "gameId": "ironman_movie",
+      "rarity": 7,
+      "kind": "event",
+      "title": "Reclamation War weekly rewards",
+      "description": "Announced weekly final milestone grants A1; top 10% ranked grants A2 tokens for the assigned weekly champion.",
+      "confidence": "high",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_ironman_movie"
+      ],
+      "availability": "activity_dependent",
+      "window": null,
+      "conditions": [
+        "Nine announced champions belong to a multiweek mechanism, not simultaneous rewards.",
+        "Exact champion/week identity and current claimability are unverified.",
+        "The cited announcements describe November/December Reclamation and further January challenges."
+      ],
+      "missingEvidence": [
+        "Per-champion dated week/order, personal-point minimums, exact thresholds and token payouts are not captured."
+      ],
+      "offers": [],
+      "sourceIds": [
+        "the-reclamation-war",
+        "november-2nd-livestream-summary"
+      ]
+    },
+    {
+      "id": "reclamation-elsabloodstone",
+      "gameId": "elsabloodstone",
+      "rarity": 7,
+      "kind": "event",
+      "title": "Reclamation War weekly rewards",
+      "description": "Announced weekly final milestone grants A1; top 10% ranked grants A2 tokens for the assigned weekly champion.",
+      "confidence": "high",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_elsabloodstone"
+      ],
+      "availability": "activity_dependent",
+      "window": null,
+      "conditions": [
+        "Nine announced champions belong to a multiweek mechanism, not simultaneous rewards.",
+        "Exact champion/week identity and current claimability are unverified.",
+        "The cited announcements describe November/December Reclamation and further January challenges."
+      ],
+      "missingEvidence": [
+        "Per-champion dated week/order, personal-point minimums, exact thresholds and token payouts are not captured."
+      ],
+      "offers": [],
+      "sourceIds": [
+        "the-reclamation-war",
+        "november-2nd-livestream-summary"
+      ]
+    },
+    {
+      "id": "reclamation-wong",
+      "gameId": "wong",
+      "rarity": 7,
+      "kind": "event",
+      "title": "Reclamation War weekly rewards",
+      "description": "Announced weekly final milestone grants A1; top 10% ranked grants A2 tokens for the assigned weekly champion.",
+      "confidence": "high",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_wong"
+      ],
+      "availability": "activity_dependent",
+      "window": null,
+      "conditions": [
+        "Nine announced champions belong to a multiweek mechanism, not simultaneous rewards.",
+        "Exact champion/week identity and current claimability are unverified.",
+        "The cited announcements describe November/December Reclamation and further January challenges."
+      ],
+      "missingEvidence": [
+        "Per-champion dated week/order, personal-point minimums, exact thresholds and token payouts are not captured."
+      ],
+      "offers": [],
+      "sourceIds": [
+        "the-reclamation-war",
+        "november-2nd-livestream-summary"
+      ]
+    },
+    {
+      "id": "reclamation-storm",
+      "gameId": "storm",
+      "rarity": 7,
+      "kind": "event",
+      "title": "Reclamation War weekly rewards",
+      "description": "Announced weekly final milestone grants A1; top 10% ranked grants A2 tokens for the assigned weekly champion.",
+      "confidence": "high",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_storm"
+      ],
+      "availability": "activity_dependent",
+      "window": null,
+      "conditions": [
+        "Nine announced champions belong to a multiweek mechanism, not simultaneous rewards.",
+        "Exact champion/week identity and current claimability are unverified.",
+        "The cited announcements describe November/December Reclamation and further January challenges."
+      ],
+      "missingEvidence": [
+        "Per-champion dated week/order, personal-point minimums, exact thresholds and token payouts are not captured."
+      ],
+      "offers": [],
+      "sourceIds": [
+        "the-reclamation-war",
+        "november-2nd-livestream-summary"
+      ]
+    },
+    {
+      "id": "reclamation-iceman",
+      "gameId": "iceman",
+      "rarity": 7,
+      "kind": "event",
+      "title": "Reclamation War weekly rewards",
+      "description": "Announced weekly final milestone grants A1; top 10% ranked grants A2 tokens for the assigned weekly champion.",
+      "confidence": "high",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_iceman"
+      ],
+      "availability": "activity_dependent",
+      "window": null,
+      "conditions": [
+        "Nine announced champions belong to a multiweek mechanism, not simultaneous rewards.",
+        "Exact champion/week identity and current claimability are unverified.",
+        "The cited announcements describe November/December Reclamation and further January challenges."
+      ],
+      "missingEvidence": [
+        "Per-champion dated week/order, personal-point minimums, exact thresholds and token payouts are not captured."
+      ],
+      "offers": [],
+      "sourceIds": [
+        "the-reclamation-war",
+        "november-2nd-livestream-summary"
+      ]
+    },
+    {
+      "id": "reclamation-leader",
+      "gameId": "leader",
+      "rarity": 7,
+      "kind": "event",
+      "title": "Reclamation War weekly rewards",
+      "description": "Announced weekly final milestone grants A1; top 10% ranked grants A2 tokens for the assigned weekly champion.",
+      "confidence": "high",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_leader"
+      ],
+      "availability": "activity_dependent",
+      "window": null,
+      "conditions": [
+        "Nine announced champions belong to a multiweek mechanism, not simultaneous rewards.",
+        "Exact champion/week identity and current claimability are unverified.",
+        "The cited announcements describe November/December Reclamation and further January challenges."
+      ],
+      "missingEvidence": [
+        "Per-champion dated week/order, personal-point minimums, exact thresholds and token payouts are not captured."
+      ],
+      "offers": [],
+      "sourceIds": [
+        "the-reclamation-war",
+        "november-2nd-livestream-summary"
+      ]
+    },
+    {
+      "id": "reclamation-captainmarvel_movie",
+      "gameId": "captainmarvel_movie",
+      "rarity": 7,
+      "kind": "event",
+      "title": "Reclamation War weekly rewards",
+      "description": "Announced weekly final milestone grants A1; top 10% ranked grants A2 tokens for the assigned weekly champion.",
+      "confidence": "high",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_captainmarvel_movie"
+      ],
+      "availability": "activity_dependent",
+      "window": null,
+      "conditions": [
+        "Nine announced champions belong to a multiweek mechanism, not simultaneous rewards.",
+        "Exact champion/week identity and current claimability are unverified.",
+        "The cited announcements describe November/December Reclamation and further January challenges."
+      ],
+      "missingEvidence": [
+        "Per-champion dated week/order, personal-point minimums, exact thresholds and token payouts are not captured."
+      ],
+      "offers": [],
+      "sourceIds": [
+        "the-reclamation-war",
+        "november-2nd-livestream-summary"
+      ]
+    },
+    {
+      "id": "arnimzola-static",
+      "gameId": "arnimzola",
+      "rarity": 7,
+      "kind": "definition",
+      "title": "Recorded Arnim Zola box dummy definitions",
+      "description": "Exact static dummy rewards contain seven-star Arnim Zola and ascension materials. No playable offer is established.",
+      "confidence": "definition_only",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_arnimzola"
+      ],
+      "availability": "definition_only",
+      "window": null,
+      "conditions": [],
+      "missingEvidence": [
+        "Staff announcement/live box binding, key sources, access, price, prize/exclusion/reset rules and current stock are unverified."
+      ],
+      "offers": [
+        {
+          "id": "arnim_zola_ascension_box_champion_dummy_a",
+          "label": "7-STAR ARNIM ZOLA AND ASCENSION TOKENS",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[43][Name=arnim_zola_ascension_box_champion_dummy_a].Redeemers",
+          "rewards": [
+            {
+              "type": "hero",
+              "id": "arnimzola_t7",
+              "quantity": 1,
+              "role": "champion"
+            },
+            {
+              "type": "inv",
+              "id": "ascension_token_class_tech",
+              "quantity": 1,
+              "role": "ascension_material"
+            },
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_arnimzola",
+              "quantity": 1,
+              "role": "ascension_material"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 1,
+          "conditions": []
+        },
+        {
+          "id": "arnim_zola_ascension_box_champion_dummy_b",
+          "label": "7-STAR ARNIM ZOLA AND ASCENSION TOKENS",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[46][Name=arnim_zola_ascension_box_champion_dummy_b].Redeemers",
+          "rewards": [
+            {
+              "type": "hero",
+              "id": "arnimzola_t7",
+              "quantity": 1,
+              "role": "champion"
+            },
+            {
+              "type": "inv",
+              "id": "ascension_token_class_tech",
+              "quantity": 1,
+              "role": "ascension_material"
+            },
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_arnimzola",
+              "quantity": 1,
+              "role": "ascension_material"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 1,
+          "conditions": []
+        },
+        {
+          "id": "arnim_zola_ascension_box_champion_dummy_c",
+          "label": "7-STAR ARNIM ZOLA AND ASCENSION TOKENS",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[312][Name=arnim_zola_ascension_box_champion_dummy_c].Redeemers",
+          "rewards": [
+            {
+              "type": "hero",
+              "id": "arnimzola_t7",
+              "quantity": 1,
+              "role": "champion"
+            },
+            {
+              "type": "inv",
+              "id": "ascension_token_class_tech",
+              "quantity": 1,
+              "role": "ascension_material"
+            },
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_arnimzola",
+              "quantity": 1,
+              "role": "ascension_material"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 1,
+          "conditions": []
+        }
+      ],
+      "sourceIds": [
+        "store-nov5"
+      ]
+    },
+    {
+      "id": "sigil-witch-static",
+      "gameId": "scarletwitch_current",
+      "rarity": 7,
+      "kind": "definition",
+      "title": "Recorded Sigil token definition",
+      "description": "Static token offer requires the Summoner’s Sigil; old champion-acquisition tables do not verify the later ascension offer.",
+      "confidence": "definition_only",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_scarletwitch_current"
+      ],
+      "availability": "definition_only",
+      "window": null,
+      "conditions": [
+        "Static access metadata: gent/premium_access quantity 1 and gsi/prg quantity 8."
+      ],
+      "missingEvidence": [
+        "Current sale, price, refresh binding and staff announcement for this token offer are unverified."
+      ],
+      "offers": [
+        {
+          "id": "sigil_store_ascension_sw_token",
+          "label": "SCARLET WITCH ASCENSION TOKEN",
+          "sourceId": "store-nov5",
+          "binding": "GameStoreDataBuffer.items -> items.consumable.gameStoreItems[7827][Name=sigil_store_ascension_sw_token].Redeemers",
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_scarletwitch_current",
+              "quantity": 1,
+              "role": "ascension_material"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": 10,
+          "conditions": [
+            "Activate the SUMMONERâ€™S SIGIL to access this offer."
+          ]
+        }
+      ],
+      "sourceIds": [
+        "store-nov5"
+      ]
+    },
+    {
+      "id": "carina-epilogue-mastery",
+      "gameId": "carina_white",
+      "rarity": 7,
+      "kind": "quest",
+      "title": "Epilogue Chapter 4 quest mastery",
+      "description": "Exact mastery reward records one Carina champion token and one Cosmic token. The quest summary repeats the same grant; it is not a second reward.",
+      "confidence": "high",
+      "starScope": "explicit",
+      "requiredTokenIds": [
+        "ascension_token_champion_carina_white"
+      ],
+      "availability": "activity_dependent",
+      "window": null,
+      "conditions": [
+        "Mastery completion of epilogue_ch04_q04.",
+        "Applies only to exact collectible carina_white_t7 with the canonical A1 path."
+      ],
+      "missingEvidence": [
+        "Current quest access, personal completion, inventory and server acceptance are unverified."
+      ],
+      "offers": [
+        {
+          "id": "epilogue_ch04_q04-mastery",
+          "label": "Quest mastery ascension materials",
+          "sourceId": "quest-nov5",
+          "binding": "epilogue_ch04_q04.masteryCompletionRewards",
+          "rewards": [
+            {
+              "type": "inv",
+              "id": "ascension_token_champion_carina_white",
+              "quantity": 1,
+              "role": "ascension_material"
+            },
+            {
+              "type": "inv",
+              "id": "ascension_token_class_cosmic",
+              "quantity": 1,
+              "role": "ascension_material"
+            }
+          ],
+          "price": null,
+          "purchaseLimit": null,
+          "conditions": [
+            "Mastery reward; minimum and maximum quantities are both one."
+          ]
+        }
+      ],
+      "sourceIds": [
+        "quest-nov5",
+        "v59-0-release-notes"
+      ],
+      "canonicalGuard": "exact_a1_quest_reward"
+    }
+  ]
+}

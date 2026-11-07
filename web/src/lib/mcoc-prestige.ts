@@ -1,4 +1,6 @@
 import { MCOC_PRESTIGE_RARITY_CURVES } from "./mcoc-prestige-rarity-curves";
+import { maxRecordedAscensionForRarity, recordedAscensionStatBonus } from "@cerebro/core/data/game-ascension/limits";
+import { getAscensionEffects, type ChampionAscensionRules } from "@cerebro/core/domain/champion-ascension";
 
 export type McocPrestigeEndpoint = {
   rarity: number;
@@ -32,7 +34,7 @@ export function maxSigForRarity(rarity: number | null | undefined) {
 }
 
 export function maxAscensionLevelForRarity(rarity: number | null | undefined) {
-  return rarity === 7 ? 5 : 0;
+  return maxRecordedAscensionForRarity(rarity);
 }
 
 export function clampSigForRarity(sigLevel: number, rarity: number | null | undefined) {
@@ -42,16 +44,20 @@ export function clampSigForRarity(sigLevel: number, rarity: number | null | unde
 
 export function clampAscensionLevelForRarity(ascensionLevel: number, rarity: number | null | undefined) {
   const maxAscension = maxAscensionLevelForRarity(rarity);
-  return Math.max(0, Math.min(maxAscension, Math.round(ascensionLevel)));
+  return Number.isFinite(ascensionLevel) ? Math.max(0, Math.min(maxAscension, Math.round(ascensionLevel))) : 0;
 }
 
 export function roundPrestigeToGameDisplay(value: number) {
   return value > 0 ? Math.round(value / 10) * 10 : 0;
 }
 
-export function ascensionMultiplierForRarity(rarity: number | null | undefined, ascensionLevel: number) {
-  const clampedAscension = clampAscensionLevelForRarity(ascensionLevel, rarity);
-  return rarity === 7 && clampedAscension > 0 ? 1 + clampedAscension * 0.08 : 1;
+export function ascensionPrestigeMultiplierForRarity(rarity: number | null | undefined, ascensionLevel: number) {
+  // Prestige compounds by 8% per level (see docs/champion-prestige.md).
+  // Apply to the base signature value, then round only the final display value.
+  // Combat-stat tuning has a separate, exact-rule boundary below.
+  // Historical owned levels remain readable; eligibility is enforced on new builds/writes.
+  const level = Number.isFinite(ascensionLevel) ? Math.max(0, Math.min(5, Math.round(ascensionLevel))) : 0;
+  return rarity === 7 && level > 0 ? Math.pow(1.08, level) : 1;
 }
 
 export function applyAscensionToPrestige(
@@ -60,16 +66,23 @@ export function applyAscensionToPrestige(
   ascensionLevel: number
 ) {
   if (value == null) return null;
-  return roundPrestigeToGameDisplay(value * ascensionMultiplierForRarity(rarity, ascensionLevel));
+  return roundPrestigeToGameDisplay(value * ascensionPrestigeMultiplierForRarity(rarity, ascensionLevel));
 }
 
 export function applyAscensionToStatValue(
   value: number | null | undefined,
   rarity: number | null | undefined,
-  ascensionLevel: number
+  ascensionLevel: number,
+  rules?: ChampionAscensionRules | null,
+  kind: "attack" | "health" = "attack"
 ) {
   if (value == null) return null;
-  return Math.round(value * ascensionMultiplierForRarity(rarity, ascensionLevel));
+  const multiplier = rules === undefined
+    ? 1 + recordedAscensionStatBonus(rarity, ascensionLevel, kind)
+    : rules?.rarity === rarity ? getAscensionEffects(rules, ascensionLevel)[kind === "attack" ? "attackMultiplier" : "healthMultiplier"] : 1;
+  // Base combat stat × effective multiplier, then one integer rounding. This is
+  // separate from prestige's nearest-ten display contract; see champion-combat-ascension.md.
+  return Math.round(value * multiplier);
 }
 
 export function calculateMcocPrestige(

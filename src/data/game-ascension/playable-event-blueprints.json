@@ -1,0 +1,18 @@
+{
+  "version": 1,
+  "exceptions": [
+    {
+      "id": "carina_white_t7",
+      "gameId": "carina_white",
+      "rarity": 7,
+      "userCollection": true,
+      "isEventCharacter": true,
+      "rationale": "Collectible seven-star Carina is an official player reward despite the event flag. Classify only this exact blueprint; its validated ordered tiers and concrete costs establish the path independently of acquisition rewards.",
+      "evidence": {
+        "auditDocument": "docs/ascension-eligibility-confidence-audit.md#event-character-coverage-issue-carina",
+        "officialReleaseNotes": "https://playcontestofchampions.com/news/v59-0-release-notes/",
+        "bcgSha256": "9e95551a68cfeeebf395f49b0bff676c5a2406ba7c30795c228cc48bd89ede61"
+      }
+    }
+  ]
+}

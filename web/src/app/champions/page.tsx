@@ -24,6 +24,8 @@ import { loadRosterPrestigeInsightSnapshot } from "@/lib/roster-recommendation-s
 import { normalizeGlobalPrestigeListOptions } from "@/lib/global-prestige-list";
 import { createMcocPrestigeProjector } from "@/lib/mcoc-prestige";
 import { isChampionObtainableAs } from "@/lib/champion-obtainable";
+import { withChampionAscensionEligibility, withChampionAscensionLimits } from "@/lib/champion-ascension-payload";
+import { normalizeRosterAscensionState } from "@cerebro/core/domain/roster-ascension-state";
 
 export const metadata: Metadata = {
   title: "Champions | CereBro",
@@ -162,8 +164,9 @@ export default async function RosterPage(props: {
   const typedRosterEntries: ProfileRosterEntry[] = rosterEntries.map(
     (entry) => ({
       ...entry,
+      ...normalizeRosterAscensionState(entry),
       champion: {
-        ...entry.champion,
+        ...withChampionAscensionEligibility(withChampionAscensionLimits(entry.champion)),
         images: entry.champion.images as unknown as ChampionImages,
         abilities: attachResistances(
           entry.champion.abilities,
@@ -255,11 +258,12 @@ function normalizePrestigeInsightTab(
 }
 
 async function loadChampionCatalogData() {
-  const [allChampions, tags, abilityCategories] = await Promise.all([
+  const [championRows, tags, abilityCategories] = await Promise.all([
     getCachedChampions(),
     prisma.tag.findMany({ orderBy: { name: "asc" } }),
     prisma.abilityCategory.findMany({ orderBy: { name: "asc" } }),
   ]);
+  const allChampions = championRows.map(withChampionAscensionLimits);
   const { abilities, immunities } = rosterKitOptions(
     allChampions.flatMap((champion) => champion.abilities ?? []),
   );

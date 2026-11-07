@@ -1,4 +1,4 @@
-import { google } from 'googleapis';
+import { auth, youtube } from 'googleapis/build/src/apis/youtube';
 import fs from 'fs';
 import loggerService from './loggerService';
 import { prisma } from './prismaService';
@@ -27,13 +27,13 @@ class YouTubeService {
   private youtube;
 
   constructor() {
-    this.oauth2Client = new google.auth.OAuth2(
+    this.oauth2Client = new auth.OAuth2(
       CLIENT_ID,
       CLIENT_SECRET,
       REDIRECT_URI
     );
 
-    this.youtube = google.youtube({
+    this.youtube = youtube({
       version: 'v3',
       auth: this.oauth2Client,
     });

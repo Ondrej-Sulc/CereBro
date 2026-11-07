@@ -9,6 +9,7 @@ const joinSelection = (values: string[], logic: "AND" | "OR") => values.join(log
 export function buildActiveFilterRules(p: RosterFiltersProps): RosterFilterRule[] {
   const rules: RosterFilterRule[] = [];
   if (p.search) rules.push({ id: "search", label: `Name: ${p.search}`, remove: () => p.onSearchChange("") });
+  if (p.ascensionEligible) rules.push({ id: "ascension-eligible", label: "7\u2605 Ascension eligible", remove: () => p.onAscensionEligibleChange(false) });
 
   const progression = [
     p.filterStars.map(value => `${value}★`).join(" / "),

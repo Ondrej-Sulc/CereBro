@@ -150,6 +150,7 @@ describe("Roster Prestige Insights adapter", () => {
         stars: true,
         rank: true,
         sigLevel: true,
+        isAscended: true,
         ascensionLevel: true,
         isAwakened: true,
         champion: {
@@ -164,7 +165,7 @@ describe("Roster Prestige Insights adapter", () => {
       orderBy: [{ stars: "desc" }, { rank: "desc" }],
     });
     expect(snapshot.options).toMatchObject({ targetRank: 4, limit: 10 });
-    expect(snapshot.insights.prestigeMap).toEqual({ r1: 23320 });
+    expect(snapshot.insights.prestigeMap).toEqual({ r1: 23440 });
   });
 
   it("can hide sensitive suggestions while preserving roster prestige values", async () => {

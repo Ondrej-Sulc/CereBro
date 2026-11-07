@@ -1,0 +1,42 @@
+{
+  "gameId": "ironman_infamous",
+  "rarity": 7,
+  "tierId": "ironman_infamous_t7",
+  "baseStat": {
+    "rank": 4,
+    "level": 55,
+    "challengeRating": 230,
+    "armorRating": 1031,
+    "armorPenetration": 0,
+    "criticalRating": 1031,
+    "criticalResistance": 468,
+    "criticalDamageRating": 1491,
+    "blockProficiency": 4712,
+    "blockPenetration": 0,
+    "specialDamageMultiplier": 1.2,
+    "energyResistance": 0,
+    "physicalResistance": 0,
+    "baseAbilityIds": [
+      "ironman_infamous_base"
+    ],
+    "sigAbilityIds": [
+      "ironman_infamous_sig_200"
+    ],
+    "health": 88679,
+    "attack": 7903,
+    "healthRating": 11900,
+    "attackRating": 13459,
+    "prestige": 25360
+  },
+  "provenance": {
+    "path": "scratch/live-scan-2026-07-16/mcoc_game_stats.json",
+    "sha256": "1744f5720e78315ec40a5fdf8d9d0e8ea44b4774b736acecf87f20a50eb3ea11",
+    "generatedAt": "2026-07-16T14:46:11.567666+00:00",
+    "sourceRows": [
+      16152
+    ],
+    "semantics": "Archived base-stat export for exact seven-star rank 4 level 55, signature 0. The exporter selects base-rating rows and assigns display ranks by recorded health/attack order. No explicit ascension field is present. Used under the existing application base-stat contract; no new A1/A2 combat observation is claimed.",
+    "scalingPolicySource": "https://forums.playcontestofchampions.com/en/discussion/418740/ascension-stat-scaling-bug-fix-now-live",
+    "projectionLimit": "All ascended combat expectations are policy projections from this base row, not independently captured combat observations; retain final integer rounding."
+  }
+}

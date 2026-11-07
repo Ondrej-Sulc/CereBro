@@ -10,6 +10,8 @@ import { getChampionClassColors } from "@/lib/championClassHelper";
 import { cn } from "@/lib/utils";
 import { ProfileRosterEntry, PrestigePoint } from "../../types";
 import { maxSigForRarity, projectMcocPrestigeFromCurve } from "@/lib/mcoc-prestige";
+import { RosterAscensionControl } from "@/components/roster-ascension-control";
+import { normalizeRosterAscensionState } from "@cerebro/core/domain/roster-ascension-state";
 
 interface EditChampionModalProps {
     item: ProfileRosterEntry | null;
@@ -25,6 +27,7 @@ export function EditChampionModal({ item, prestige: initialPrestige, onClose, on
     const [livePrestige, setLivePrestige] = useState<number | undefined>(undefined);
     const abortRef = useRef<AbortController | null>(null);
     const prevItemId = useRef<string | null>(null);
+    const initialAscension = useRef<ReturnType<typeof normalizeRosterAscensionState> | null>(null);
 
     const fetchCurve = useCallback(async (championId: number, stars: number, rank: number) => {
         if (abortRef.current) abortRef.current.abort();
@@ -44,12 +47,14 @@ export function EditChampionModal({ item, prestige: initialPrestige, onClose, on
     useEffect(() => {
         if (!item) {
             prevItemId.current = null;
+            initialAscension.current = null;
             setPrestigeCurves(new Map());
             setLivePrestige(undefined);
             return;
         }
         if (prevItemId.current !== item.id) {
             prevItemId.current = item.id;
+            initialAscension.current = normalizeRosterAscensionState(item);
             setPrestigeCurves(new Map());
         }
         fetchCurve(item.championId, item.stars, item.rank);
@@ -64,7 +69,7 @@ export function EditChampionModal({ item, prestige: initialPrestige, onClose, on
             curve,
             sigLevel: item.sigLevel || 0,
             rarity: item.stars,
-            ascensionLevel: item.ascensionLevel || 0,
+            ascensionLevel: normalizeRosterAscensionState(item).ascensionLevel,
         });
         setLivePrestige(computed || undefined);
     }, [item, prestigeCurves]);
@@ -84,6 +89,11 @@ export function EditChampionModal({ item, prestige: initialPrestige, onClose, on
     const setSig = (val: number) => {
         const clamped = Math.max(0, Math.min(maxSig, val));
         onItemChange({ ...item, sigLevel: clamped, isAwakened: clamped > 0 ? true : item.isAwakened });
+    };
+    const saveChanges = () => {
+        const ascension = normalizeRosterAscensionState(item);
+        const changed = initialAscension.current?.ascensionLevel !== ascension.ascensionLevel;
+        onUpdate({ id: item.id, rank: item.rank, isAwakened: item.isAwakened, ...(changed ? ascension : {}), sigLevel: item.sigLevel });
     };
 
     return (
@@ -270,46 +280,7 @@ export function EditChampionModal({ item, prestige: initialPrestige, onClose, on
 
                     <div className="border-t border-slate-800/80" />
 
-                    {/* Ascension */}
-                    <div className="space-y-1.5">
-                        <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">Ascension</p>
-                        {item.stars === 7 ? (
-                            <div className="flex gap-1">
-                                {[0, 1, 2, 3, 4, 5].map(level => (
-                                    <button
-                                        key={level}
-                                        onClick={() => onItemChange({ ...item, ascensionLevel: level, isAscended: level > 0 })}
-                                        className={cn(
-                                            "flex-1 py-1.5 rounded-lg text-[11px] font-bold border transition-all relative overflow-hidden",
-                                            (item.ascensionLevel || 0) === level
-                                                ? "bg-amber-500/20 border-amber-400/30 text-amber-400 ring-1 ring-amber-400/10 shadow-lg shadow-amber-900/20"
-                                                : "bg-slate-800/60 border-slate-700/50 text-slate-500 hover:bg-slate-700/80 hover:text-slate-300 hover:border-slate-600"
-                                        )}
-                                    >
-                                        {(item.ascensionLevel || 0) === level && (
-                                            <div className="absolute inset-0 bg-white/10 mix-blend-overlay" />
-                                        )}
-                                        <span className="relative z-10">{level === 0 ? "—" : `A${level}`}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        ) : (
-                            <button
-                                onClick={() => onItemChange({ ...item, isAscended: !item.isAscended })}
-                                className={cn(
-                                    "w-full py-2 rounded-lg text-xs font-bold border transition-all relative overflow-hidden",
-                                    item.isAscended
-                                        ? "bg-amber-500/20 border-amber-400/30 text-amber-400 ring-1 ring-amber-400/10 shadow-lg shadow-amber-900/20"
-                                        : "bg-slate-800/60 border-slate-700/50 text-slate-400 hover:bg-slate-700/80 hover:text-slate-200 hover:border-slate-600"
-                                )}
-                            >
-                                {item.isAscended && (
-                                    <div className="absolute inset-0 bg-white/10 mix-blend-overlay" />
-                                )}
-                                <span className="relative z-10">{item.isAscended ? "✦ Ascended" : "Not Ascended"}</span>
-                            </button>
-                        )}
-                    </div>
+                    <RosterAscensionControl value={item} maxLevel={item.champion.ascensionMaxLevels?.[String(item.stars)]} onChange={state => onItemChange({ ...item, ...state })} />
                 </div>
 
                 {/* Footer */}
@@ -322,7 +293,7 @@ export function EditChampionModal({ item, prestige: initialPrestige, onClose, on
                             Cancel
                         </Button>
                         <Button
-                            onClick={() => onUpdate({ id: item.id, rank: item.rank, isAwakened: item.isAwakened, isAscended: item.isAscended, ascensionLevel: item.ascensionLevel, sigLevel: item.sigLevel })}
+                            onClick={saveChanges}
                             className="bg-gradient-to-r from-sky-600 to-blue-600 hover:from-sky-500 hover:to-blue-500 text-white shadow-lg shadow-sky-900/20 border-t border-sky-400/30"
                         >
                             Save Changes

@@ -1,4 +1,4 @@
-import { google } from 'googleapis';
+import { auth as youtubeAuth } from 'googleapis/build/src/apis/youtube';
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
@@ -43,7 +43,7 @@ export const GET = withRouteContext(async (req: Request) => {
       return NextResponse.json({ error: 'Server misconfiguration' }, { status: 500 });
     }
 
-    const oauth2Client = new google.auth.OAuth2(
+    const oauth2Client = new youtubeAuth.OAuth2(
       process.env.YOUTUBE_CLIENT_ID,
       process.env.YOUTUBE_CLIENT_SECRET,
       `${baseUrl}/api/admin/youtube/callback`

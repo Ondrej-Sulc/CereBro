@@ -4,7 +4,9 @@ import { isExpectedFrameworkInterruption } from './expected-framework-errors';
 
 export { isAbortedResponse } from './expected-framework-errors';
 
-const logger = pino({
+// Webpack can evaluate this module again for route bundles and hot reloads.
+// Reuse the process-wide logger so Pino does not add another exit handler.
+const logger = globalThis.__CEREBRO_WEB_LOGGER__ ??= pino({
   level: process.env.LOG_LEVEL || 'info',
   formatters: {
     level(label) {
@@ -31,6 +33,7 @@ const logger = pino({
 // Extend globalThis for TypeScript
 declare global {
   var __LOGGER_INITIALIZED__: boolean | undefined;
+  var __CEREBRO_WEB_LOGGER__: pino.Logger | undefined;
 }
 
 // Intercept console.error and console.warn on server to ensure they are logged in JSON

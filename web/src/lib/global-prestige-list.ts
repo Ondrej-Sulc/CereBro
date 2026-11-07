@@ -62,6 +62,7 @@ export type GlobalPrestigeChampion = {
   obtainable: string[];
   isPlayable: boolean;
   tags: Array<{ name: string }>;
+  ascensionMaxLevels?: Record<string, number>;
 };
 
 export type GlobalPrestigeRosterEntry = {
@@ -118,12 +119,16 @@ export function buildGlobalPrestigeList({
     .filter(champion => !normalizedOptions.sagaOnly || champion.tags.some(isSagaChampionTag))
     .filter(champion => !search || champion.name.toLowerCase().includes(search))
     .map(champion => {
+      const recordedMax = champion.ascensionMaxLevels?.[String(normalizedOptions.rarity)] ?? 0;
+      const targetAscensionLevel = Number.isFinite(recordedMax)
+        ? Math.min(normalizedOptions.ascensionLevel, Math.max(0, Math.floor(recordedMax)))
+        : 0;
       const targetPrestige = projector.project({
         championId: champion.id,
         rarity: normalizedOptions.rarity,
         rank: normalizedOptions.rank,
         sigLevel: normalizedOptions.sig,
-        ascensionLevel: normalizedOptions.ascensionLevel,
+        ascensionLevel: targetAscensionLevel,
       });
       if (targetPrestige <= 0) return null;
 
@@ -154,7 +159,7 @@ export function buildGlobalPrestigeList({
         targetRarity: normalizedOptions.rarity,
         targetRank: normalizedOptions.rank,
         targetSig: normalizedOptions.sig,
-        targetAscensionLevel: normalizedOptions.ascensionLevel,
+        targetAscensionLevel,
         targetPrestige,
         isOwned: ownership !== null,
         ownership,

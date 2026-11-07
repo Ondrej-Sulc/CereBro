@@ -89,6 +89,21 @@ function prestigeRows(championId: number, rank: number, values: Record<number, n
 }
 
 describe("Global Prestige List", () => {
+  it("limits each simulated target to that champion's recorded path without erasing owned state", () => {
+    const result = buildGlobalPrestigeList({
+      champions: [
+        { ...champion({ id: 1, name: "Eligible" }), ascensionMaxLevels: { "7": 2 } },
+        { ...champion({ id: 2, name: "No path" }), ascensionMaxLevels: { "7": 0 } },
+        champion({ id: 3, name: "Unknown" }),
+      ],
+      roster: [rosterEntry({ id: "owned", championId: 2, ascensionLevel: 2, rank: 4, sigLevel: 200 })],
+      prestigeRows: [1, 2, 3].flatMap(id => prestigeRows(id, 4, { 0: 10000, 200: 10000 })),
+      options: { ...defaultOptions, ascensionLevel: 2 },
+    });
+    expect(result.entries.find(entry => entry.championId === 1)).toMatchObject({ targetAscensionLevel: 2, targetPrestige: 11660 });
+    expect(result.entries.find(entry => entry.championId === 2)).toMatchObject({ targetAscensionLevel: 0, targetPrestige: 10000, ownership: { ascensionLevel: 2 } });
+    expect(result.entries.find(entry => entry.championId === 3)?.targetAscensionLevel).toBe(0);
+  });
   it("defaults non-7-star target rank to max rank", () => {
     expect(normalizeGlobalPrestigeListOptions({ globalRarity: "6" }, { targetRank: 3 })).toMatchObject({
       rarity: 6,
@@ -239,17 +254,18 @@ describe("Global Prestige List", () => {
     expect(result.entries.map(entry => entry.championName)).toEqual(["Alpha Prime"]);
   });
 
-  it("applies 7-star ascension projection", () => {
+  it("applies 7-star prestige calibration within the recorded ascension limit", () => {
     const base = {
-      champions: [champion({ id: 1, name: "Alpha" })],
+      champions: [{ ...champion({ id: 1, name: "Alpha" }), ascensionMaxLevels: { "7": 2 } }],
       roster: [],
       prestigeRows: prestigeRows(1, 4, { 0: 10000, 1: 10100, 200: 30000 }),
     };
 
     const a0 = buildGlobalPrestigeList({ ...base, options: { ...defaultOptions, ascensionLevel: 0 } });
-    const a5 = buildGlobalPrestigeList({ ...base, options: { ...defaultOptions, ascensionLevel: 5 } });
+    const clamped = buildGlobalPrestigeList({ ...base, options: { ...defaultOptions, ascensionLevel: 5 } });
 
     expect(a0.entries[0].targetPrestige).toBe(30000);
-    expect(a5.entries[0].targetPrestige).toBe(42000);
+    expect(clamped.entries[0].targetAscensionLevel).toBe(2);
+    expect(clamped.entries[0].targetPrestige).toBe(34990);
   });
 });

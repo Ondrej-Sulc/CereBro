@@ -2,7 +2,7 @@ import type { ChampionClass } from "@prisma/client";
 import { EFFECT_FORMS, EFFECT_DIRECTIONS } from "@cerebro/core/domain/ability-source";
 import type { Champion } from "@/types/champion";
 import type { ProfileRosterEntry } from "@/app/profile/roster/types";
-import { isChampionObtainableAs } from "./champion-obtainable";
+import { getObtainableStarLevels, isChampionObtainableAs } from "./champion-obtainable";
 import { getRosterAscensionLevel } from "./roster-ascension-filter";
 import { prepareRosterKit, matchesPreparedRosterKitFilters, type RosterKitFilters, type RosterKitLink } from "./roster-kit";
 
@@ -15,6 +15,9 @@ export type RosterFiltersState = RosterKitFilters & {
   stars: number[];
   ranks: number[];
   ascension: number[];
+  ascensionEligible?: boolean;
+  /** Catalog cards represent obtainable variants; scoped roster filters remain owned-only. */
+  eligibilityIncludesUnowned?: boolean;
   tags: string[];
   tagLogic: "AND" | "OR";
   showUnowned: boolean;
@@ -24,15 +27,16 @@ export type FilterableRosterEntry = Pick<ProfileRosterEntry, "id" | "championId"
   champion: {
     name: string;
     class: ChampionClass;
+    ascendableRarities?: number[];
     tags?: { name: string }[];
     abilities?: RosterKitLink[];
   };
 };
 
-function indexEntry<T extends FilterableRosterEntry>(entry: T) {
+function indexEntry<T extends FilterableRosterEntry>(entry: T, unownedRarities: readonly number[] = [], ascendableRarities = entry.champion.ascendableRarities) {
   const kit = prepareRosterKit(entry.champion.abilities ?? [], entry.stars || undefined);
   return {
-    entry, kit,
+    entry, kit, unownedRarities, ascendableRarities: new Set(ascendableRarities ?? []),
     searchName: entry.champion.name.toLowerCase(),
     tags: new Set((entry.champion.tags ?? []).map(tag => tag.name)),
     abilities: new Set(kit.abilities.map(ability => ability.name)),
@@ -43,7 +47,8 @@ function indexEntry<T extends FilterableRosterEntry>(entry: T) {
 
 /** Stable data preparation stays independent of search, sort and selected filters. */
 export function createRosterFilterIndex(roster: ProfileRosterEntry[], champions: Champion[]): RosterFilterIndex<ProfileRosterEntry> {
-  const owned = roster.map(indexEntry);
+  const catalog = new Map(champions.map(champion => [champion.id, champion]));
+  const owned = roster.map(entry => indexEntry(entry, [], entry.champion.ascendableRarities ?? catalog.get(entry.championId)?.ascendableRarities));
   const ownedIds = new Set(roster.map(entry => entry.championId));
   const ownedStars = new Set(roster.map(entry => `${entry.championId}:${entry.stars}`));
   const unowned = champions.map(champion => indexEntry({
@@ -51,7 +56,7 @@ export function createRosterFilterIndex(roster: ProfileRosterEntry[], champions:
     stars: 0, rank: 0, sigLevel: 0, isAwakened: false, isAscended: false, ascensionLevel: 0,
     reservedForAttack: false, powerRating: 0, createdAt: new Date(), updatedAt: new Date(),
     champion: champion as unknown as ProfileRosterEntry["champion"], isUnowned: true,
-  }));
+  }, getObtainableStarLevels(champion).filter(rarity => !ownedStars.has(`${champion.id}:${rarity}`))));
   return {
     base(stars: number[], showUnowned: boolean) {
       if (!showUnowned) return owned;
@@ -82,6 +87,10 @@ type BasicFacet = "classes" | "stars" | "ranks" | "ascension";
 function matchesBasic(item: IndexedEntry, filters: RosterFiltersState, search: string, omit?: BasicFacet) {
   const entry = item.entry;
   return item.searchName.includes(search)
+    && (!filters.ascensionEligible || !entry.isUnowned || filters.eligibilityIncludesUnowned)
+    && (!filters.ascensionEligible || (entry.isUnowned
+      ? item.unownedRarities.some(rarity => rarity === 7 && (!filters.stars.length || filters.stars.includes(rarity)) && item.ascendableRarities.has(rarity))
+      : entry.stars === 7 && item.ascendableRarities.has(entry.stars)))
     && (omit === "classes" || !filters.classes.length || filters.classes.includes(entry.champion.class))
     && (omit === "stars" || !filters.stars.length || entry.isUnowned || filters.stars.includes(entry.stars))
     && (omit === "ranks" || !filters.ranks.length || entry.isUnowned || filters.ranks.includes(entry.rank))
