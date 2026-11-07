@@ -16,6 +16,7 @@ We use separate, optimized `Dockerfile`s for the Bot and Web services.
 *   **PostHog source maps:** Upload is disabled in the Railway Docker build, whose builder rejects secret mounts. The optional Next.js integration requires a separate CI build with a build-only write credential; see [error tracking setup](error-tracking-fixes.md#private-source-maps).
 *   **Server Actions:** Self-hosted deploys must provide a stable `NEXT_SERVER_ACTIONS_ENCRYPTION_KEY` at build time, or provide `AUTH_SECRET`/`NEXTAUTH_SECRET` at build time so the build can derive one. This prevents Server Action id mismatches across instances.
 *   **CI build memory:** The GitHub Actions web-build step uses `NODE_OPTIONS=--max-old-space-size=4096`, matching the Railway Docker build. The default approximately 2GB Node heap can exhaust memory during Next.js TypeScript checking even after compilation succeeds.
+*   **Google API imports:** Import the used clients and auth helpers from `googleapis/build/src/apis/youtube` or `googleapis/build/src/apis/sheets`. The package root pulls every API's declarations into TypeScript, which exhausted the 4GB build heap with the release catalogs. CI checks the resolved application dependency graph to prevent that fan-out; keep the full typecheck enabled.
 
 ### Bot Service (`Dockerfile`)
 *   **Manual Packaging:** `pnpm deploy` is avoided because it ignored the `dist` folder.

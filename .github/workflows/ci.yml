@@ -69,6 +69,9 @@ jobs:
       - name: Build Bot (src)
         run: pnpm run build-only
 
+      - name: Verify bounded Google API imports and YouTube OAuth
+        run: pnpm exec vitest run src/tests/google-api-imports.test.ts web/src/app/api/admin/youtube/oauth.test.ts --maxWorkers=1
+
       - name: Verify game-backed ascension rules and roster updates
         run: pnpm exec vitest run src/domain/champion-ascension.test.ts src/domain/champion-ascension-classification.test.ts src/data/game-ascension/index.test.ts web/src/lib/data/carina-ascension-eligibility.test.ts src/domain/roster-ascension-state.test.ts src/services/rosterService.test.ts web/src/lib/data/champions.test.ts web/src/lib/roster-recommendation-service.test.ts web/src/lib/roster-recommendation-service-adapter.test.ts web/src/components/roster-ascension-control.test.tsx web/src/app/profile/roster/components/modals/ascension-controls.test.tsx web/src/lib/mcoc-prestige.test.ts web/src/lib/combat-ascension-regression.test.ts web/src/lib/prestige-ascension-regression.test.ts 'web/src/app/player/[id]/page.prestige.test.tsx' 'web/src/app/profile/roster/components/modals/prestige-chart-modal.test.tsx' web/src/lib/champion-page-state.test.ts web/src/lib/global-prestige-list.test.ts web/src/lib/roster-ascension-filter.test.ts web/src/app/profile/roster/components/roster-eligibility-filter.test.tsx 'web/src/app/champions/[slug]/champion-ascension-interaction.test.tsx' web/src/app/api/profile/roster/add/route.test.ts web/src/app/api/profile/roster/manage/route.test.ts --maxWorkers=1
 
