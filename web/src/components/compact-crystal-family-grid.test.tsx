@@ -120,3 +120,23 @@ it("retains only supplied counts and exact matching stars for the all-stars Find
   await render(family([standard, nexus]))
   expect(document.querySelector('[data-crystal-champion-count]')).toBeNull()
 })
+
+it("keeps complete long titles, source modes and optional counts in three independent grid items", async () => {
+  const longName = "EMPIRE OF DOOM VALIANT CELEBRATION SELECTION CRYSTAL"
+  const selection = { ...opening("event_selection", "Selection", { pick: 2, draw: 5 }), family: undefined }
+  const values = [
+    { ...family([standard, nexus]), championCountsByRarity: { "7": 8 } },
+    { id: "event_selection", name: longName, artworkUrl: null, variants: [selection] },
+    { id: "odd_crystal", name: "Last recorded pool", artworkUrl: null, variants: [opening("odd_crystal", "Standard")] },
+  ]
+  await act(async () => root.render(<CompactCrystalFamilyGrid families={values} rarity="7" target={{ name: "Hulk" }} heading="h5" />))
+  const grid = document.querySelector('[data-compact-crystal-grid]')!
+  expect([...grid.children].map(item => item.getAttribute("data-crystal-family"))).toEqual(["hero_shard", "event_selection", "odd_crystal"])
+  expect([...grid.querySelectorAll("h5")].map(title => title.textContent)).toEqual(["Hero pool", longName, "Last recorded pool"])
+  expect(links().map(path)).toEqual(["/crystals/hero_basic", "/crystals/hero_nexus", "/crystals/event_selection", "/crystals/odd_crystal"])
+  expect(grid.querySelectorAll('[data-crystal-champion-count]')).toHaveLength(1)
+  expect(grid.querySelector('[data-crystal-champion-count]')?.textContent).toBe("8 champions")
+  expect(links()[2].textContent).toContain("Selection · Choose 2 of 5")
+  expect(links()[2].getAttribute("aria-label")).toBe(`View ${longName} contents · Selection · Choose 2 of 5`)
+  expect(grid.querySelector("a a, a nav, a button")).toBeNull()
+})

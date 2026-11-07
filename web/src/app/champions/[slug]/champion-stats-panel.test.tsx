@@ -65,3 +65,14 @@ it("retains the missing-stats state without invented rating icons or numbers", (
   expect(root.textContent).toContain("Build stats are not available for this champion yet.")
   expect(root.querySelectorAll("[data-stat-icon]")).toHaveLength(0)
 })
+
+it("uses projected summary values once and preserves unknown versus zero", () => {
+  const root = document.createElement("div")
+  root.innerHTML = renderToStaticMarkup(createElement(ChampionStatsPanel, { view: { ...view, prestige: null, health: 123456, attack: 0 } }))
+  const summary = root.querySelector('[aria-label="Selected build stats"]')!
+  expect([...summary.querySelectorAll("dt")].map(node => node.textContent)).toEqual(["Prestige", "Health", "Attack"])
+  expect([...summary.querySelectorAll("dd")].map(node => node.textContent)).toEqual(["—", "123,456", "0"])
+  expect(root.querySelectorAll('[data-stat-icon="health"]')).toHaveLength(1)
+  expect(root.querySelectorAll('[data-stat-icon="attack"]')).toHaveLength(1)
+  expect(root.querySelector('[aria-label="View prestige chart"]')).toBeNull()
+})

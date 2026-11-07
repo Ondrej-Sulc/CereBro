@@ -5,8 +5,8 @@ import { useSearchParams } from "next/navigation"
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { BookOpen, Check, ChevronDown, Compass, Copy, Crosshair, Layers3, Link2, SlidersHorizontal, Swords, Target, Users } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { TooltipProvider } from "@/components/ui/tooltip"
-import { ChampionStatIcon, type ChampionStatIconKey } from "@/components/champions/champion-stat-icon"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { getChampionClassColors } from "@/lib/championClassHelper"
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
@@ -130,22 +130,6 @@ function ChampionDossier({ view, pageState, updatePageState }: {
 }) {
   const dossierRef = useRef<HTMLDivElement>(null)
   const tabsRef = useRef<HTMLDivElement>(null)
-  const sectionsRef = useRef<HTMLDivElement>(null)
-  useLayoutEffect(() => {
-    const list = tabsRef.current?.querySelector<HTMLElement>('[role="tablist"]')
-    const active = list?.querySelector<HTMLElement>('[data-state="active"]')
-    if (!list || !active) return
-    const revealActive = () => {
-      if (list.scrollWidth > list.clientWidth) {
-        const left = active.getBoundingClientRect().left - list.getBoundingClientRect().left + list.scrollLeft
-        list.scrollLeft = Math.max(0, left - (list.clientWidth - active.offsetWidth) / 2)
-      }
-    }
-    revealActive()
-    const observer = new ResizeObserver(revealActive)
-    observer.observe(list)
-    return () => observer.disconnect()
-  }, [pageState.tab])
   useLayoutEffect(() => {
     const bar = tabsRef.current
     if (!bar) return
@@ -159,19 +143,19 @@ function ChampionDossier({ view, pageState, updatePageState }: {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (window.scrollY === 0 && params.has("tab") && !params.has("ability") && !params.has("synergy") && !window.location.hash) {
-      scrollToChampionSection(sectionsRef.current)
+      scrollToChampionSection(tabsRef.current)
     }
     // Preserve user/browser scroll and exact targets if hydration completes after interaction.
     // Later deliberate tab changes scroll in selectSection.
   }, [])
   const selectSection = (value: string) => {
     updatePageState({ tab: value as ChampionPageState["tab"], ability: null, synergy: null }, true)
-    window.requestAnimationFrame(() => scrollToChampionSection(sectionsRef.current))
+    window.requestAnimationFrame(() => scrollToChampionSection(tabsRef.current))
   }
   const openAbility = (recordId: string) => updatePageState({ tab: "abilities", ability: recordId }, true)
   const openSynergy = (synergyId?: string) => {
     updatePageState({ tab: "synergies", ability: null, synergy: synergyId ?? null }, true)
-    if (!synergyId) window.requestAnimationFrame(() => scrollToChampionSection(sectionsRef.current))
+    if (!synergyId) window.requestAnimationFrame(() => scrollToChampionSection(tabsRef.current))
   }
   const openChapter = (chapter: string) => {
     updatePageState({ tab: "abilities", chapter: chapter === "all" ? null : chapter, ability: null }, true)
@@ -182,58 +166,43 @@ function ChampionDossier({ view, pageState, updatePageState }: {
     <div ref={dossierRef} className={cn(styles.dossier, "relative min-h-screen overflow-x-clip bg-[#080b10] pb-16 text-slate-200")} style={{ "--champion-accent": view.accent } as CSSProperties}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[900px] bg-[radial-gradient(circle_at_76%_22%,rgba(255,255,255,.05),transparent_42%)]" />
       <div className="relative w-full px-5 py-7 sm:px-8 lg:px-10 2xl:px-12">
-        <section className={styles.hero}>
-          <div className={styles.heroArt}>
-            <Image src={view.heroUrl} alt="" fill priority sizes="(max-width: 1024px) 100vw, 78vw" className="object-cover object-center" />
-          </div>
-          <div className={styles.heroShade} />
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[#080b10] via-[#080b10]/70 to-transparent" />
-          <div className="pointer-events-none absolute inset-0 opacity-[.045] [background-image:linear-gradient(rgba(255,255,255,.5)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.5)_1px,transparent_1px)] [background-size:88px_88px]" />
-          <div className="pointer-events-none absolute bottom-0 left-0 h-1 w-32" style={{ background: view.accent }} />
+        <Tabs value={pageState.tab} onValueChange={selectSection}>
+          <section className={styles.hero} aria-label={`${view.champion.name} banner`}>
+            <div className={styles.heroArt}>
+              <Image src={view.heroUrl} alt="" fill priority sizes="(max-width: 1024px) 100vw, 78vw" className="object-cover object-center" />
+            </div>
+            <div className={styles.heroShade} />
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[#080b10] via-[#080b10]/70 to-transparent" />
+            <div className="pointer-events-none absolute inset-0 opacity-[.045] [background-image:linear-gradient(rgba(255,255,255,.5)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.5)_1px,transparent_1px)] [background-size:88px_88px]" />
 
-          <div className={styles.heroContent}>
-            <div className="flex items-start justify-between gap-5">
-              <div className="flex items-center gap-4">
-                <div className={styles.heroPortrait}>
-                  <Image src={view.portraitUrl} alt={`${view.champion.name} portrait`} fill sizes="64px" className="object-cover" />
-                  <span className="pointer-events-none absolute inset-1 border border-white/10" />
-                  <span className="pointer-events-none absolute bottom-0 left-0 h-1 w-8" style={{ background: view.accent }} />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[.2em]" style={{ color: view.accent }}><span className="h-1.5 w-1.5 rounded-full" style={{ background: view.accent, boxShadow: `0 0 14px ${view.accent}` }} />{view.champion.class} class</div>
-                  {view.champion.shortName && view.champion.shortName !== view.champion.name && <div className="mt-2 text-xs font-bold text-white/40">{view.champion.shortName}</div>}
+            <div className={styles.heroContent}>
+              <div className="flex items-start justify-between gap-5">
+                <div className="flex items-center gap-4">
+                  <div className={styles.heroPortrait}>
+                    <Image src={view.portraitUrl} alt={`${view.champion.name} portrait`} fill sizes="64px" className="object-cover" />
+                    <span className="pointer-events-none absolute inset-1 border border-white/10" />
+                    <span className="pointer-events-none absolute bottom-0 left-0 h-1 w-8" style={{ background: view.accent }} />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[.2em]" style={{ color: view.accent }}><span className="h-1.5 w-1.5 rounded-full" style={{ background: view.accent, boxShadow: `0 0 14px ${view.accent}` }} />{view.champion.class} class</div>
+                    {view.champion.shortName && view.champion.shortName !== view.champion.name && <div className="mt-2 text-xs font-bold text-white/40">{view.champion.shortName}</div>}
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className={styles.heroTitle}>
-              <ChampionHeroWordmark name={view.champion.name} accent={view.accent} />
-              <div className="mt-5 h-1 w-24" style={{ background: view.accent }} />
-            </div>
-
-            <div className={styles.heroMetricStrip}>
-              <div className={styles.heroMetrics}>
-                <DossierPrestigeMetric view={view} />
-                <DossierMetric label="Health" value={format(view.health)} icon="health" />
-                <DossierMetric label="Attack" value={format(view.attack)} icon="attack" />
+              <div className={styles.heroTitle}>
+                <ChampionHeroWordmark name={view.champion.name} accent={view.accent} />
+                <div className="mt-5 h-1 w-24" style={{ background: view.accent }} />
               </div>
+
             </div>
-          </div>
-        </section>
+          </section>
 
-
-        <Tabs ref={sectionsRef} value={pageState.tab} onValueChange={selectSection} className="mt-5 scroll-mt-[var(--champion-header-height)]">
           <div ref={tabsRef} className={styles.tabsBar}>
             <div className={styles.sectionToolbar}>
-              <span className="hidden min-w-0 flex-1 truncate text-sm font-semibold text-slate-300 sm:block">{view.champion.name}</span>
               <DossierBuildControls view={view} />
             </div>
-            <TabsList aria-label="Champion sections" className={styles.tabsList}>
-              {DOSSIER_TABS.map(tab => <TabsTrigger key={tab.value} value={tab.value} className={styles.tab}>
-                <tab.icon aria-hidden="true" className={styles.tabIcon} />
-                <span><span className={styles.tabLabel}>{tab.label}</span><span className={styles.tabDetail}>{tab.detail}</span></span>
-              </TabsTrigger>)}
-            </TabsList>
+            <DossierSectionNavigation value={pageState.tab} onSelect={selectSection} accent={view.accent} />
           </div>
           <TabsContent value="overview" className="mt-0 pb-8 pt-10">
             <ChampionKitOverview view={view} onViewAbility={openAbility} onViewSynergies={openSynergy} sideContent={view.champion.duels.length > 0 ? <DossierDuelTargets view={view} /> : undefined} />
@@ -247,6 +216,63 @@ function ChampionDossier({ view, pageState, updatePageState }: {
       </div>
     </div>
   )
+}
+
+function DossierSectionNavigation({ value, onSelect, accent }: {
+  value: ChampionPageState["tab"]
+  onSelect: (value: ChampionPageState["tab"]) => void
+  accent: string
+}) {
+  const [open, setOpen] = useState(false)
+  const currentChoiceRef = useRef<HTMLButtonElement>(null)
+  const desktopTabsRef = useRef<HTMLDivElement>(null)
+  const active = DOSSIER_TABS.find(tab => tab.value === value) ?? DOSSIER_TABS[0]
+
+  useEffect(() => {
+    if (!open || !window.matchMedia) return
+    const desktop = window.matchMedia("(min-width: 640px)")
+    const closeOnDesktop = () => { if (desktop.matches) setOpen(false) }
+    closeOnDesktop()
+    desktop.addEventListener("change", closeOnDesktop)
+    return () => desktop.removeEventListener("change", closeOnDesktop)
+  }, [open])
+
+  return <>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>
+        <button type="button" className={styles.sectionPicker} aria-label={`Champion section: ${active.label}`}>
+          <active.icon aria-hidden="true" className={styles.sectionPickerIcon} />
+          <span>{active.label}</span>
+          <ChevronDown aria-hidden="true" className={styles.sectionPickerChevron} />
+        </button>
+      </SheetTrigger>
+      <SheetContent side="bottom" className={styles.sectionSheet} style={{ "--champion-accent": accent } as CSSProperties} aria-describedby={undefined}
+        onOpenAutoFocus={event => { event.preventDefault(); currentChoiceRef.current?.focus() }}
+        onCloseAutoFocus={event => {
+          if (window.matchMedia?.("(min-width: 640px)").matches) {
+            event.preventDefault()
+            desktopTabsRef.current?.querySelector<HTMLElement>('[data-state="active"]')?.focus({ preventScroll: true })
+          }
+        }}>
+        <SheetTitle className={styles.sectionSheetTitle}>Champion sections</SheetTitle>
+        <div className={styles.sectionChoices}>
+          {DOSSIER_TABS.map(tab => <button key={tab.value} type="button" ref={tab.value === value ? currentChoiceRef : undefined}
+            className={styles.sectionChoice} aria-current={tab.value === value ? "page" : false}
+            onClick={() => { if (tab.value !== value) onSelect(tab.value); setOpen(false) }}>
+            <tab.icon aria-hidden="true" className={styles.sectionPickerIcon} />
+            <span>{tab.label}</span>
+            {tab.value === value && <Check aria-hidden="true" className={styles.sectionChoiceCheck} />}
+          </button>)}
+        </div>
+      </SheetContent>
+    </Sheet>
+    <TabsList ref={desktopTabsRef} aria-label="Champion sections" className={styles.tabsList}>
+      {DOSSIER_TABS.map(tab => <TabsTrigger key={tab.value} value={tab.value} className={styles.tab}>
+        <tab.icon aria-hidden="true" className={styles.tabIcon} />
+        <span><span className={styles.tabLabel}>{tab.label}</span><span className={styles.tabDetail}>{tab.detail}</span></span>
+      </TabsTrigger>)}
+    </TabsList>
+  </>
 }
 
 function ChampionHeroWordmark({ name, accent }: { name: string; accent: string }) {
@@ -285,7 +311,7 @@ function DossierBuildControls({ view }: { view: ChampionDetailsView }) {
   }
   if (!view.selectedStat) return null
   return (
-    <div aria-label="Champion build" className="flex w-full items-center justify-between gap-3 sm:w-auto">
+    <div aria-label="Champion build" className="flex w-full min-w-0 flex-wrap items-center justify-between gap-2">
       <BuildReadout view={view} className="text-white/55" />
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild><button type="button" className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-white/15 bg-white/[.035] px-3 text-sm font-medium text-slate-200 transition-colors hover:border-white/30 hover:bg-white/[.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"><SlidersHorizontal aria-hidden="true" className="h-4 w-4" />Adjust build</button></PopoverTrigger>
@@ -347,52 +373,6 @@ function CopyPageLink({ onClick }: { onClick: () => void }) {
 function DossierTraits({ view }: { view: ChampionDetailsView }) {
   if (!view.champion.tags.length) return null
   return <section aria-label="Champion tags" className="mt-10 border-t border-white/10 pt-6"><h3 className="mb-4 text-sm font-medium text-slate-400">Champion tags</h3><div className="flex flex-wrap gap-2">{view.champion.tags.map(tag => <span key={tag.id} className="rounded-md border border-white/[.08] bg-white/[.025] px-3 py-1.5 text-xs text-slate-400">{tag.name}</span>)}</div></section>
-}
-
-function DossierMetric({ label, value, icon }: { label: string; value: string; icon?: ChampionStatIconKey }) {
-  return <div className={styles.heroMetric}><div className={styles.metricValue}>{value}</div><div className={cn(styles.metricLabel, icon && styles.metricLabelWithIcon)}>{icon && <ChampionStatIcon stat={icon} plain />}{label}</div></div>
-}
-
-function DossierPrestigeMetric({ view }: { view: ChampionDetailsView }) {
-  const points = view.champion.prestigeData
-    .filter(point => String(point.rarity) === view.selectedRarity && String(point.rank) === view.selectedRank)
-    .map(point => ({ sig: point.sig, value: point.prestige }))
-    .filter(point => Number.isFinite(point.sig) && Number.isFinite(point.value))
-    .sort((a, b) => a.sig - b.sig)
-
-  if (points.length < 2) {
-    return <DossierMetric label="Prestige" value={format(view.prestige)} />
-  }
-
-  const width = 88
-  const height = 32
-  const padding = 3
-  const sigValues = points.map(point => point.sig)
-  const curveValues = points.map(point => point.value)
-  const minSig = Math.min(...sigValues)
-  const maxSig = Math.max(...sigValues)
-  const minValue = Math.min(...curveValues)
-  const maxValue = Math.max(...curveValues)
-  const x = (sig: number) => padding + ((sig - minSig) / Math.max(1, maxSig - minSig)) * (width - padding * 2)
-  const y = (value: number) => height - padding - ((value - minValue) / Math.max(1, maxValue - minValue)) * (height - padding * 2)
-  const path = points.map((point, index) => `${index ? "L" : "M"}${x(point.sig).toFixed(1)} ${y(point.value).toFixed(1)}`).join(" ")
-  const selectedPoint = points.reduce((nearest, point) => Math.abs(point.sig - view.sigLevel) < Math.abs(nearest.sig - view.sigLevel) ? point : nearest)
-
-  return (
-    <div className={styles.heroMetric}>
-      <div className="flex items-end justify-between gap-2">
-        <div className={styles.metricValue}>{format(view.prestige)}</div>
-        <svg role="img" aria-label="Prestige by signature level" viewBox={`0 0 ${width} ${height}`} className="h-6 w-[88px] shrink-0 overflow-visible">
-          <path d={path} fill="none" stroke={view.accent} strokeWidth="1.6" vectorEffect="non-scaling-stroke" opacity=".55" />
-          <circle cx={x(selectedPoint.sig)} cy={y(selectedPoint.value)} r="3" fill={view.accent} />
-        </svg>
-      </div>
-      <div className={cn(styles.metricLabel, "flex items-center justify-between gap-2")}>
-        <span>Prestige</span>
-        <span className="hidden truncate text-right text-[10px] tracking-[.1em] text-white/20 sm:block">Sig curve</span>
-      </div>
-    </div>
-  )
 }
 
 function DossierDuelTargets({ view }: { view: ChampionDetailsView }) {
@@ -462,10 +442,6 @@ function formatDuelDate(value: Date | string) {
   const date = new Date(value)
   if (Number.isNaN(date.getTime())) return "Date unknown"
   return `Updated ${date.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}`
-}
-
-function format(value: number | null | undefined) {
-  return value == null ? "—" : Math.round(value).toLocaleString("en-US")
 }
 
 function DossierSynergies({ view, targetSynergyId, onClearTarget }: { view: ChampionDetailsView; targetSynergyId: string | null; onClearTarget: () => void }) {

@@ -1,4 +1,4 @@
-/* Extracted from the finder's compact cards. Columns never absorb spare width. */
+/* Extracted from the finder's compact cards. Desktop columns stay bounded. */
 .grid { display: grid; grid-template-columns: repeat(auto-fill, min(100%, 230px)); justify-content: start; align-items: start; gap: 12px; margin: 0; padding: 0; list-style: none; }
 .card { position: relative; display: flex; min-width: 0; flex-direction: column; gap: 10px; padding: 15px; border: 1px solid #27344a; border-radius: 12px; background: linear-gradient(130deg, #171e34, #0e1623 80%); }
 .card:focus-within, .card:hover { border-color: #7180ac; }
@@ -22,7 +22,19 @@
 .openings a:hover { background: #30425f; color: #eef4ff; text-decoration: underline; text-underline-offset: 3px; }
 .card a:focus-visible { outline: 2px solid #b4bfff; outline-offset: 3px; }
 .srOnly { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
-@media (max-width: 540px) {
-  .grid { grid-template-columns: repeat(auto-fill, min(100%, 280px)); }
-  .openings a { min-height: 44px; }
+@media (max-width: 600px) {
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  .card { gap: 8px; padding: 10px; }
+  .destination { display: grid; grid-template-columns: 54px minmax(0, 1fr); align-items: center; gap: 8px 4px; }
+  .artwork, .artwork img, .artwork svg { width: 54px; height: 62px; }
+  /* Reuse the same link and identity content in a compact two-row composition. */
+  .identity { display: contents; }
+  .edition { min-width: 0; flex-direction: column; align-items: flex-end; gap: 4px; text-align: right; overflow-wrap: anywhere; }
+  .stars { max-width: 100%; flex-wrap: wrap; justify-content: center; gap: 3px; padding-inline: 5px; text-align: center; }
+  .identity :is(h3, h4, h5) { grid-column: 1 / -1; margin: 0; font-size: 13px; line-height: 19px; }
+  .primaryOpening { grid-column: 1 / -1; margin: 0; font-size: 12px; line-height: 18px; }
+  .arrow { display: none; }
+  .count { line-height: 18px; }
+  .openings { flex-direction: column; }
+  .openings a { width: 100%; min-height: 44px; font-size: 12px; line-height: 18px; }
 }

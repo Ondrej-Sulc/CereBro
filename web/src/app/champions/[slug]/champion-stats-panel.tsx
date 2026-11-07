@@ -1,5 +1,11 @@
-import { Shield, Swords } from "lucide-react"
+"use client"
+
+import { ChartNoAxesCombined, Shield, Swords } from "lucide-react"
 import { ChampionStatIcon, type ChampionStatIconKey } from "@/components/champions/champion-stat-icon"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { applyAscensionToPrestige, expandMcocPrestigeCurve } from "@/lib/mcoc-prestige"
+import { PrestigeCurveChart } from "@/app/profile/roster/prestige-curve-chart"
+import { BuildReadout } from "./champion-ability-reader"
 import { ChampionAttackProfile } from "./champion-attack-profile"
 import type { ChampionDetailsView } from "./champion-details-types"
 import styles from "./champion-dossier.module.css"
@@ -10,6 +16,13 @@ export function ChampionStatsPanel({ view, onViewAbility }: { view: ChampionDeta
   const stat = view.selectedStat
   return (
     <section aria-labelledby="champion-stats-heading">
+      <dl className={styles.statsSummary} aria-label="Selected build stats">
+        <div>
+          <dt>Prestige</dt><dd><span>{formatStat(view.prestige)}</span><PrestigeChartAction view={view} /></dd>
+        </div>
+        <div><dt>{stat && <ChampionStatIcon stat="health" plain />}Health</dt><dd><span>{formatStat(view.health)}</span></dd></div>
+        <div><dt>{stat && <ChampionStatIcon stat="attack" plain />}Attack</dt><dd><span>{formatStat(view.attack)}</span></dd></div>
+      </dl>
       <div className={styles.statsHeader}>
         <h2 id="champion-stats-heading" className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">Combat ratings</h2>
         {stat && <dl className={styles.statsBuildContext}>
@@ -38,6 +51,30 @@ export function ChampionStatsPanel({ view, onViewAbility }: { view: ChampionDeta
       <ChampionAttackProfile view={view} onViewAbility={onViewAbility} />
     </section>
   )
+}
+
+function PrestigeChartAction({ view }: { view: ChampionDetailsView }) {
+  const stat = view.selectedStat
+  if (!stat || view.prestige == null) return null
+  const endpoints = view.champion.prestigeData.filter(point => point.rarity === stat.rarity && point.rank === stat.rank)
+  if (endpoints.length < 2) return null
+  const points = expandMcocPrestigeCurve({ prestigeData: endpoints, stat }).map(point => ({
+    ...point,
+    prestige: applyAscensionToPrestige(point.prestige, stat.rarity, view.ascensionLevel)!,
+  }))
+
+  return <Popover>
+    <PopoverTrigger asChild>
+      <button type="button" aria-label="View prestige chart" className={styles.prestigeChartAction}>
+        <ChartNoAxesCombined aria-hidden="true" />Sig curve
+      </button>
+    </PopoverTrigger>
+    <PopoverContent align="start" sideOffset={12} collisionPadding={16} aria-labelledby="champion-prestige-chart-heading" className="w-[min(560px,calc(100vw-2rem))] max-h-[calc(100dvh-2rem)] overflow-y-auto border-white/15 bg-[#101620] p-4 text-slate-200">
+      <h3 id="champion-prestige-chart-heading" className="text-base font-semibold text-white">Prestige by signature level</h3>
+      <BuildReadout view={view} className="mb-3 mt-1 text-slate-400" />
+      <PrestigeCurveChart data={points} currentSig={view.sigLevel} championClass={view.champion.class} currentLabelPosition={view.sigLevel > view.maxSig / 2 ? "insideTopRight" : "insideTopLeft"} />
+    </PopoverContent>
+  </Popover>
 }
 
 function RatingPanel({ name, detail, tone, icon: Icon, featured, ratings }: {

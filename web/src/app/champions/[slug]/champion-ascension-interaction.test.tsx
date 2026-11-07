@@ -68,7 +68,8 @@ async function openBuild() {
   await act(async () => button.click())
 }
 function metric(kind: "health" | "attack") {
-  return document.querySelector(`[data-stat-icon="${kind}"]`)?.parentElement?.parentElement?.textContent
+  const label = document.querySelector(`[aria-label="Selected build stats"] [data-stat-icon="${kind}"]`)?.parentElement
+  return `${label?.nextElementSibling?.textContent}${label?.textContent}`
 }
 function challengerRating() {
   return [...document.querySelectorAll("dt")].find(item => item.textContent === "Challenger rating")?.nextElementSibling?.textContent
