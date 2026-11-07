@@ -7,6 +7,8 @@ import { ChampionDetailsClient } from "./champion-details-client"
 import type { ChampionDetailsProps, ChampionStatRow } from "./champion-details-types"
 import { getChampionAscensionAcquisitionSources } from "@/lib/data/champion-ascension-acquisition"
 import { getChampionAscensionRules } from "@cerebro/core/data/game-ascension"
+import prestigeFixture from "../../../../../src/tests/fixtures/champion-prestige-ascension.json"
+import combatFixture from "../../../../../src/tests/fixtures/champion-combat-ascension.json"
 
 // Model Next's URL subscription at the framework boundary; use real browser history below.
 vi.mock("next/navigation", async () => {
@@ -19,7 +21,7 @@ vi.mock("next/navigation", async () => {
 })
 vi.mock("next/image", () => ({ default: () => null }))
 vi.mock("./champion-kit-overview", () => ({ ChampionKitOverview: ({ onViewSynergies }: { onViewSynergies: (id: string) => void }) => <button onClick={() => onViewSynergies("catalog_alias")}>Read synergy source</button> }))
-vi.mock("./champion-stats-panel", () => ({ ChampionStatsPanel: () => <p>Combat ratings probe</p> }))
+vi.mock("@/app/profile/roster/prestige-curve-chart", () => ({ PrestigeCurveChart: ({ data, currentSig }: { data: Array<{ sig: number; prestige: number }>; currentSig: number }) => <output aria-label="Prestige chart data">{data.find(point => point.sig === currentSig)?.prestige}</output> }))
 vi.mock("./champion-synergies-panel", () => ({ ChampionSynergiesPanel: ({ targetSynergyId, onClearTarget }: { targetSynergyId: string | null; onClearTarget: () => void }) => <div data-synergy-probe={targetSynergyId ?? ""}><button onClick={onClearTarget}>Clear linked source</button></div> }))
 
 const stat = (rank: number): ChampionStatRow => ({
@@ -94,7 +96,7 @@ it("retains the exact source and build through section changes and Back/Forward"
   await traverse("back")
   expect(document.querySelector('[data-synergy-probe="catalog_alias"]')).not.toBeNull()
   await traverse("forward")
-  expect(document.body.textContent).toContain("Combat ratings probe")
+  expect(document.body.textContent).toContain("Combat ratings")
 })
 
 it("reopens and copies a linked synergy with its exact source ID and selected build", async () => {
@@ -112,7 +114,10 @@ it("reopens and copies a linked synergy with its exact source ID and selected bu
 
 it("shows decorative game glyphs beside the visible Health and Attack labels", async () => {
   await act(async () => root.render(<ChampionDetailsClient {...props} />))
-  const icons = [...document.querySelectorAll<HTMLElement>("[data-stat-icon]")]
+  expect(document.querySelector('[aria-label="Current banner"]')?.textContent).not.toMatch(/Prestige|Health|Attack/)
+  expect(document.querySelector('[aria-label="Selected build stats"]')).toBeNull()
+  await click("Stats & attacks")
+  const icons = [...document.querySelectorAll<HTMLElement>('[aria-label="Selected build stats"] [data-stat-icon]')]
   expect(icons.map(icon => icon.dataset.statIcon)).toEqual(["health", "attack"])
   for (const icon of icons) {
     expect(icon.getAttribute("aria-hidden")).toBe("true")
@@ -270,4 +275,129 @@ it("applies a pending signature edit before copying the build link", async () =>
   await click("Copy page link")
   expect(new URL(writeClipboard.mock.calls[0][0]).searchParams.get("sig")).toBe("0")
   expect(signatureInput().value).toBe("0")
+})
+
+function sectionPicker() {
+  return document.querySelector<HTMLButtonElement>('button[aria-haspopup="dialog"][aria-label^="Champion section:"]')!
+}
+async function openSectionPicker() {
+  const trigger = sectionPicker()
+  expect(trigger).not.toBeNull()
+  await act(async () => { trigger.focus(); trigger.click() })
+  return document.querySelector<HTMLElement>('[role="dialog"]')!
+}
+
+it("keeps summary stats in their section and opens the projected chart for the actual build", async () => {
+  const input: ChampionDetailsProps = { ...props, champion: { ...props.champion,
+    gameId: prestigeFixture.gameId, ascensionRules: getChampionAscensionRules(prestigeFixture.gameId),
+    stats: [{ ...stat(4), ...combatFixture.baseStat, tierId: combatFixture.tierId }],
+    prestigeData: prestigeFixture.baseEndpoints.map((point, index) => ({ ...point, id: index + 1 })),
+  } }
+  window.history.replaceState(null, "", "/champions/current?tab=overview&rarity=7&rank=4&sig=200&ascension=2")
+  await act(async () => root.render(<ChampionDetailsClient {...input} />))
+  expect(document.querySelector('[aria-label="Current banner"]')?.textContent).not.toMatch(/Prestige|Health|Attack/)
+  expect(document.querySelector('[aria-label="Selected build stats"]')).toBeNull()
+  await click("Stats & attacks")
+  const summary = () => document.querySelector('[aria-label="Selected build stats"]')!
+  expect([...summary().querySelectorAll("dt")].map(node => node.textContent)).toEqual(["Prestige", "Health", "Attack"])
+  expect([...summary().querySelectorAll("dd > span")].map(node => node.textContent)).toEqual(["39,730", "103,435", "9,218"])
+  expect(document.querySelectorAll('[data-stat-icon="health"]')).toHaveLength(1)
+  expect(document.querySelectorAll('[data-stat-icon="attack"]')).toHaveLength(1)
+  await click("View prestige chart")
+  expect(document.querySelector('[role="dialog"][aria-labelledby="champion-prestige-chart-heading"]')).not.toBeNull()
+  expect(document.querySelector('[aria-label="Prestige chart data"]')?.textContent).toBe("39730")
+  const chart = document.querySelector('[role="dialog"]')!
+  await act(async () => chart.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })))
+  await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull())
+  await vi.waitFor(() => expect(document.activeElement?.getAttribute("aria-label")).toBe("View prestige chart"))
+  await click("Kit overview")
+  await click("Adjust build")
+  const ascension = document.querySelector<HTMLSelectElement>('select[aria-label="Ascension"]')!
+  await act(async () => { ascension.value = "0"; ascension.dispatchEvent(new Event("change", { bubbles: true })) })
+  await click("Done")
+  expect(document.querySelector('[aria-label="Selected build stats"]')).toBeNull()
+  await click("Stats & attacks")
+  expect([...summary().querySelectorAll("dd > span")].map(node => node.textContent)).toEqual(["34,060", "88,679", "7,903"])
+  expect(new URLSearchParams(window.location.search).get("ascension")).toBe("0")
+  await click("View prestige chart")
+  expect(document.querySelector('[aria-label="Prestige chart data"]')?.textContent).toBe("34060")
+})
+
+it.each([
+  ["Kit overview", "overview"], ["Full abilities", "abilities"], ["Synergies", "synergies"],
+  ["Stats & attacks", "stats"], ["How to obtain", "crystals"],
+])("selects %s from the mobile sheet without putting stats in the banner", async (label, tab) => {
+  await act(async () => root.render(<ChampionDetailsClient {...props} />))
+  const dialog = await openSectionPicker()
+  await act(async () => [...dialog.querySelectorAll<HTMLButtonElement>("button")].find(button => button.textContent === label)!.click())
+  expect(new URLSearchParams(window.location.search).get("tab")).toBe(tab)
+  expect(sectionPicker().textContent).toBe(label)
+  expect(document.querySelector('[aria-label="Current banner"]')?.textContent).not.toMatch(/Prestige|Health|Attack/)
+  expect(document.querySelector('[aria-label="Selected build stats"]') !== null).toBe(tab === "stats")
+})
+
+it("offers every section from the last section, selects and closes with focus returned", async () => {
+  window.history.replaceState(null, "", "/champions/current?tab=crystals&rarity=7&rank=5&sig=75")
+  await act(async () => root.render(<ChampionDetailsClient {...props} />))
+  expect(sectionPicker()?.textContent).toBe("How to obtain")
+  const dialog = await openSectionPicker()
+  expect(dialog.getAttribute("aria-labelledby")).toBeTruthy()
+  expect(document.getElementById(dialog.getAttribute("aria-labelledby")!)?.textContent).toBe("Champion sections")
+  const choices = [...dialog.querySelectorAll<HTMLButtonElement>('button[aria-current]')]
+  expect(choices.map(button => button.textContent)).toEqual(["Kit overview", "Full abilities", "Synergies", "Stats & attacks", "How to obtain"])
+  expect(choices.map(button => button.getAttribute("aria-current"))).toEqual(["false", "false", "false", "false", "page"])
+  expect(document.activeElement).toBe(choices[4])
+  await act(async () => choices[0].click())
+  expect(document.querySelector('[role="dialog"]')).toBeNull()
+  expect(sectionPicker().textContent).toBe("Kit overview")
+  expect(document.activeElement).toBe(sectionPicker())
+  expect(document.querySelector('[role="tabpanel"][data-state="active"]')?.textContent).toContain("Read synergy source")
+  expect(new URLSearchParams(window.location.search).get("tab")).toBe("overview")
+  expect(new URLSearchParams(window.location.search).get("rank")).toBe("5")
+  expect(new URLSearchParams(window.location.search).get("sig")).toBe("75")
+  await traverse("back")
+  expect(sectionPicker().textContent).toBe("How to obtain")
+  await traverse("forward")
+  expect(sectionPicker().textContent).toBe("Kit overview")
+})
+
+it("dismisses the section dialog with Escape without changing the URL", async () => {
+  window.history.replaceState(null, "", "/champions/current?tab=abilities&chapter=base&ability=123&rarity=7&rank=5&sig=75")
+  await act(async () => root.render(<ChampionDetailsClient {...props} />))
+  const href = window.location.href
+  const dialog = await openSectionPicker()
+  expect(document.activeElement?.textContent).toBe("Full abilities")
+  await act(async () => dialog.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })))
+  expect(document.querySelector('[role="dialog"]')).toBeNull()
+  expect(window.location.href).toBe(href)
+  // Radix restores focus after its dialog unmount cleanup.
+  await vi.waitFor(() => expect(document.activeElement === sectionPicker()).toBe(true))
+})
+
+it("uses the existing destination reset contract from the mobile picker", async () => {
+  window.history.replaceState(null, "", "/champions/current?tab=synergies&synergy=catalog_alias&rarity=7&rank=5&sig=75#champion-synergy-catalog_alias")
+  await act(async () => root.render(<ChampionDetailsClient {...props} />))
+  const original = window.location.href
+  const dialog = await openSectionPicker()
+  await act(async () => [...dialog.querySelectorAll<HTMLButtonElement>('button')].find(button => button.textContent === "Stats & attacks")!.click())
+  const url = new URL(window.location.href)
+  expect(url.searchParams.get("tab")).toBe("stats")
+  expect(url.searchParams.has("synergy")).toBe(false)
+  expect(url.hash).toBe("")
+  expect(sectionPicker().textContent).toBe("Stats & attacks")
+  await traverse("back")
+  expect(window.location.href).toBe(original)
+  expect(document.querySelector('[data-synergy-probe="catalog_alias"]')).not.toBeNull()
+  expect(sectionPicker().textContent).toBe("Synergies")
+})
+
+it("closes the current section without adding a duplicate history entry", async () => {
+  await act(async () => root.render(<ChampionDetailsClient {...props} />))
+  const dialog = await openSectionPicker()
+  const pushes = vi.mocked(window.history.pushState).mock.calls.length
+  const href = window.location.href
+  await act(async () => dialog.querySelector<HTMLButtonElement>('[aria-current="page"]')!.click())
+  expect(document.querySelector('[role="dialog"]')).toBeNull()
+  expect(window.history.pushState).toHaveBeenCalledTimes(pushes)
+  expect(window.location.href).toBe(href)
 })

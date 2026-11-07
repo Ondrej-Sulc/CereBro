@@ -25,6 +25,7 @@ interface PrestigeCurveChartProps {
   data: PrestigePoint[];
   currentSig: number;
   championClass: ChampionClass;
+  currentLabelPosition?: "insideTopLeft" | "insideTopRight";
 }
 
 const chartConfig = {
@@ -34,7 +35,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function PrestigeCurveChart({ data, currentSig, championClass }: PrestigeCurveChartProps) {
+export function PrestigeCurveChart({ data, currentSig, championClass, currentLabelPosition = "insideTopLeft" }: PrestigeCurveChartProps) {
   
   // Find min/max for domain
   const minPrestige = Math.min(...data.map(d => d.prestige));
@@ -106,7 +107,7 @@ export function PrestigeCurveChart({ data, currentSig, championClass }: Prestige
                 stroke="white" 
                 strokeDasharray="3 3"
                 label={{ 
-                    position: 'insideTopLeft', 
+                    position: currentLabelPosition,
                     value: 'Current', 
                     fill: 'white', 
                     fontSize: 10,

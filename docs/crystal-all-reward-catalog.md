@@ -75,6 +75,8 @@ Champion crystal pages show the exact opening's source-matched drop rates above 
 
 Opening pages show dated, source-hash-matched live odds when recorded, independent prize groups, possible-reward categories, conditional additional rewards and recorded Grace/box rules. Unique, verified `gs`/`gf` token bindings link to nested crystals, including Superior Banquet → Jubilant. The source-bound [reward artwork sidecar](reward-artwork.md) supplies exact game art for materials, fragments, inventory items, currencies and crystals through immutable GCS objects; missing artwork has a generic fallback. Neither the website nor the collectors infer individual champion odds by dividing category rates or multiplying nested reward chains, nor join rate rows to reward cards by English label.
 
+The rewards browser defaults to **Rarest first** and offers **Most common first** beside search. Sorting uses each displayed category's exact numeric rate independently within its existing prize group, including collapsed class/amount families; equal rates retain source order and unrated rewards stay last. Prize order, guaranteed extras and conditional ascension bonuses remain separate. Search and prize filters retain the chosen sort, expanded options and exact nested links retain their behavior, and a different crystal resets local controls. Unknown-only and single-category views omit the sort control.
+
 | Recorded definitions | Count |
 | --- | ---: |
 | Exact crystal source IDs | 2,448 |

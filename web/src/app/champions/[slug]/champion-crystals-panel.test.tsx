@@ -41,10 +41,16 @@ it("keeps category headings, bounded previews and expansion controls in one orde
     expect(section.querySelector(`[id="${section.getAttribute("aria-labelledby")}"]`)).toBeTruthy()
   }
   const control = group("events").querySelector<HTMLButtonElement>('button[aria-controls]')!
-  expect(group("events").querySelector(`[id="${control.getAttribute("aria-controls")}"]`)).toBeTruthy()
+  const controlledGrid = group("events").querySelector(`[id="${control.getAttribute("aria-controls")}"]`)!
+  expect(controlledGrid).toBeTruthy()
+  expect(group("events").querySelector("header button")).toBeNull()
+  expect(controlledGrid.compareDocumentPosition(control) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  expect(group("events").querySelectorAll("button")).toHaveLength(1)
   expect(control.getAttribute("aria-expanded")).toBe("false")
   await more("events")
   expect(cards("events")).toHaveLength(4)
+  expect(group("events").querySelectorAll("button")).toHaveLength(1)
+  expect(group("events").querySelector("button")?.textContent).toContain("Show less")
   expect([...layout.querySelectorAll('[data-crystal-category]')].map(section => section.getAttribute("data-crystal-category"))).toEqual(["main", "spotlight", "events", "other"])
   await act(async () => [...group("events").querySelectorAll<HTMLButtonElement>("button")].find(button => button.textContent?.startsWith("Show less"))!.click())
   expect(cards("events")).toHaveLength(3)
@@ -68,6 +74,14 @@ it("shows accurate category totals, bounds every preview, and exposes all remain
   expect(document.querySelectorAll("[data-compact-crystal-grid]")).toHaveLength(4)
   expect(document.querySelectorAll("[data-compact-crystal-card]")).toHaveLength(6)
   expect(document.querySelector('[role="status"]')?.textContent).toContain("36 crystal pools")
+  await more("featured")
+  expect(cards("featured")).toHaveLength(15)
+  const incremental = group("featured").querySelector<HTMLButtonElement>('button[aria-controls]')!
+  expect(group("featured").querySelectorAll('button[aria-controls]')).toHaveLength(1)
+  expect(incremental.textContent).toContain("Show 12 more")
+  expect(incremental.getAttribute("aria-expanded")).toBe("true")
+  expect(group("featured").querySelector('[data-compact-crystal-grid]')!.compareDocumentPosition(incremental) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  expect(incremental.nextElementSibling?.textContent).toContain("Show less")
   await more("modes")
   expect(cards("modes")).toHaveLength(1)
   await act(async () => group("modes").querySelector<HTMLButtonElement>('button:not([aria-controls])')!.click())

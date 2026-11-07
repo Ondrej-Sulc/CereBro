@@ -111,15 +111,20 @@ function CrystalCategories({ availability, selectedRarity, championName, champio
             <header className={styles.categoryHeading}>
               <span className={styles.categoryIcon}><Icon aria-hidden="true" /></span>
               <div className={styles.categoryText}><Subheading id={`${groupId}-title`}>{group.name} <span>{group.count}</span></Subheading><p>{group.description}</p></div>
-              {group.count > visible.length && <button type="button" className={styles.viewMore} aria-label={`View more ${group.name} (${group.count} pools)`} aria-expanded={expanded} aria-controls={groupId} onClick={() => setLimits(value => ({ ...value, [group.id]: limit === 0 ? CHAMPION_CRYSTAL_PREVIEW : limit + CHAMPION_CRYSTAL_PAGE_SIZE }))}>View more <ArrowRight aria-hidden="true" /></button>}
             </header>
             <div id={groupId}>
               {visible.length > 0 && <CompactCrystalFamilyGrid families={visible} rarity={selectedRarity} target={{ name: championName }} heading={embedded ? "h5" : "h4"} returnTo={returnTo} />}
-              {expanded && <div className={styles.groupFooter}><span>{visible.length} of {group.count} pools</span>{group.count > visible.length && <button type="button" className={styles.viewMore} aria-label={`Show more ${group.name}`} onClick={() => setLimits(value => ({ ...value, [group.id]: limit + CHAMPION_CRYSTAL_PAGE_SIZE }))}>Show {Math.min(CHAMPION_CRYSTAL_PAGE_SIZE, group.count - visible.length)} more <ArrowRight aria-hidden="true" /></button>}<button type="button" className={styles.collapse} onClick={() => {
+            </div>
+            {(group.count > visible.length || expanded) && <div className={styles.groupFooter}>
+              {expanded && <span>{visible.length} of {group.count} pools</span>}
+              {group.count > visible.length && <button type="button" className={styles.viewMore} aria-label={expanded ? `Show more ${group.name}` : `View more ${group.name} (${group.count} pools)`} aria-expanded={expanded} aria-controls={groupId} onClick={() => setLimits(value => ({ ...value, [group.id]: limit === 0 ? CHAMPION_CRYSTAL_PREVIEW : limit + CHAMPION_CRYSTAL_PAGE_SIZE }))}>
+                {expanded ? `Show ${Math.min(CHAMPION_CRYSTAL_PAGE_SIZE, group.count - visible.length)} more` : "View more"} <ArrowRight aria-hidden="true" />
+              </button>}
+              {expanded && <button type="button" className={styles.collapse} onClick={() => {
                 setLimits(value => ({ ...value, [group.id]: preview ? CHAMPION_CRYSTAL_PREVIEW : 0 }))
                 document.getElementById(`${groupId}-title`)?.scrollIntoView?.({ block: "nearest" })
-              }}>Show less <ChevronDown aria-hidden="true" /></button></div>}
-            </div>
+              }}>Show less <ChevronDown aria-hidden="true" /></button>}
+            </div>}
           </CrystalCategoryBlock>
         })}
       </CrystalCategoryLayout>
