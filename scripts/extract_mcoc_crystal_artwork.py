@@ -155,5 +155,5 @@ if __name__ == '__main__':
     catalog = json.loads(args.catalog.read_text(encoding='utf-8'))
     result = extract(catalog, args.resources, args.cache, args.output, args.game_metadata, args.download_cache, args.download_missing)
     args.manifest.parent.mkdir(parents=True, exist_ok=True)
-    args.manifest.write_text(json.dumps(result, ensure_ascii=False, separators=(',', ':')) + '\n', encoding='utf-8')
+    args.manifest.write_text(json.dumps(result, ensure_ascii=False, separators=(',', ':')) + '\n', encoding='utf-8', newline='\n')
     print(json.dumps(dict(assets=len(result['assets']), missing=len(result['missing']), files=len({a['file'] for a in result['assets']}))))

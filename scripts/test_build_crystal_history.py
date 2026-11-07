@@ -1,3 +1,9 @@
+import hashlib
+import json
+from pathlib import Path
+import shutil
+import subprocess
+import tempfile
 import unittest
 from build_crystal_history import build_history, snapshot
 
@@ -53,6 +59,54 @@ class CrystalHistoryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "Unknown category"): build_history(previous(), now)
         now = current(); now["source"]["observedAt"] = "2026-11-01T00:00:00+00:00"
         with self.assertRaisesRegex(ValueError, "later"): build_history(previous(), now)
+
+
+class CatalogProvenanceCheckoutTests(unittest.TestCase):
+    def test_byte_hashes_survive_lf_and_windows_checkouts(self):
+        root = Path(__file__).resolve().parent.parent
+        files = [
+            "game-crystals/catalog.json", "game-crystals/artwork.json",
+            "game-crystal-openings/catalog.json", "game-crystal-history/history.json",
+            "game-reward-artwork/palette.json", "game-reward-artwork/manifest.json",
+            "game-selectable-rewards/catalog.json",
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            repository = Path(directory) / "repository"
+            repository.mkdir()
+            shutil.copyfile(root / ".gitattributes", repository / ".gitattributes")
+            for name in files:
+                destination = repository / "src/data" / name
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(root / "src/data" / name, destination)
+
+            def git(*args):
+                subprocess.run(["git", "-c", "core.safecrlf=false", *args], cwd=repository,
+                               check=True, capture_output=True)
+
+            git("init", "--quiet")
+            git("add", ".")
+            for autocrlf in ["false", "true"]:
+                with self.subTest(autocrlf=autocrlf):
+                    checkout = Path(directory) / autocrlf
+                    git("-c", f"core.autocrlf={autocrlf}", "checkout-index", "--all",
+                        f"--prefix={checkout.as_posix()}/")
+                    data = checkout / "src/data"
+                    history = json.loads((data / "game-crystal-history/history.json").read_bytes())
+                    artwork = json.loads((data / "game-reward-artwork/manifest.json").read_bytes())["source"]
+                    selectors = json.loads((data / "game-selectable-rewards/catalog.json").read_bytes())["source"]
+                    bindings = [
+                        ("game-crystals/catalog.json", history["observations"][0]["inputSha256"]),
+                        ("game-crystal-openings/catalog.json", history["observations"][1]["inputSha256"]),
+                        ("game-crystal-openings/catalog.json", artwork["openingCatalogSha256"]),
+                        ("game-crystals/artwork.json", artwork["reusedCrystalManifestSha256"]),
+                        ("game-reward-artwork/palette.json", artwork["colorDictionary"]["paletteSha256"]),
+                        ("game-crystal-openings/catalog.json", selectors["openingCatalogSha256"]),
+                        ("game-selectable-rewards/catalog.json", artwork["selectableRewards"]["catalogSha256"]),
+                    ]
+                    for name, expected in bindings:
+                        payload = (data / name).read_bytes()
+                        self.assertFalse(b"\r\n" in payload, name)
+                        self.assertEqual(hashlib.sha256(payload).hexdigest(), expected, name)
 
 
 if __name__ == "__main__": unittest.main()

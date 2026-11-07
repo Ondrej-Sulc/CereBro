@@ -98,5 +98,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
     result = capture(args.catalog, json.loads(args.layout.read_text(encoding='utf-8')))
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+    args.out.write_text(json.dumps(result, ensure_ascii=False, indent=2) + '\n', encoding='utf-8', newline='\n')
     print(json.dumps({'resolved': len(result['selectors']), 'missing': len(result['missingIds'])}))

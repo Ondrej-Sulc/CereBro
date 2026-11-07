@@ -4,3 +4,11 @@
 # Extracted icons have byte hashes in the verified source manifest.
 web/public/icons/synergies/*.svg text eol=lf
 web/public/icons/stats/*.svg text eol=lf
+
+# These generated JSON inputs are byte-hashed by history and artwork sidecars.
+# Keep their bytes stable in Windows checkouts and hosted builds.
+src/data/game-crystals/catalog.json text eol=lf
+src/data/game-crystals/artwork.json text eol=lf
+src/data/game-crystal-openings/catalog.json text eol=lf
+src/data/game-reward-artwork/palette.json text eol=lf
+src/data/game-selectable-rewards/catalog.json text eol=lf

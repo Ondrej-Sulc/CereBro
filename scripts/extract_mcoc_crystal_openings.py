@@ -229,5 +229,5 @@ if __name__ == '__main__':
     schema = export_schema(args.metadata) if args.metadata else json.loads(args.schema.read_text(encoding='utf8'))
     result = extract(args.gacha, schema, args.observed_at, args.captured_at, args.expected_gacha_sha256, args.bcg, args.gamestore, args.words)
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(result, ensure_ascii=False, separators=(',', ':'))+'\n', encoding='utf8')
+    args.out.write_text(json.dumps(result, ensure_ascii=False, separators=(',', ':'))+'\n', encoding='utf8', newline='\n')
     print(json.dumps(result['coverage'], indent=2))

@@ -184,5 +184,5 @@ if __name__ == '__main__':
     args = parser.parse_args()
     result = extract(args.gacha, args.bcg, args.metadata, args.observed_at)
     args.out.parent.mkdir(parents=True, exist_ok=True)
-    args.out.write_text(json.dumps(result, ensure_ascii=False, separators=(',', ':')) + '\n', encoding='utf-8')
+    args.out.write_text(json.dumps(result, ensure_ascii=False, separators=(',', ':')) + '\n', encoding='utf-8', newline='\n')
     print(json.dumps(result['coverage']))

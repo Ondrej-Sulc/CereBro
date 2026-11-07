@@ -59,6 +59,12 @@ The Nov 5 all-reward export contains 2,448 crystal definitions. Every recorded `
 
 The projection is named `champion-catalog-common-v1`. Quantities, prices, numeric odds, resource rewards, conditional bonuses, pity rules, and artwork are outside this historical comparison because the older export did not retain equivalent fields. Newly exporting those fields is not evidence that the game changed them.
 
+Hash-bound JSON inputs use UTF-8 with LF line endings. Their generators write LF
+explicitly and `.gitattributes` preserves those bytes in Windows checkouts. Hash
+the file bytes after generation; do not normalize bytes only in the verifier.
+Line-ending repairs update the normalized input hashes without changing raw
+game-source hashes, observations or the common projection.
+
 The generated `src/data/game-crystal-history/history.json` pins the normalized input bytes, canonical common projection, raw gacha identity, observation timestamp, and definition count for each observation:
 
 | Observation | Definitions | Raw gacha SHA-256 |

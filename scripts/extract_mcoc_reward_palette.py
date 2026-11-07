@@ -69,5 +69,5 @@ if __name__=='__main__':
     for name in ['resources','metadata','out']:parser.add_argument('--'+name,type=Path,required=True)
     args=parser.parse_args();result=extract(args.resources,args.metadata)
     args.out.parent.mkdir(parents=True,exist_ok=True)
-    args.out.write_text(json.dumps(result,separators=(',',':'))+'\n',encoding='utf-8')
+    args.out.write_text(json.dumps(result,separators=(',',':'))+'\n',encoding='utf-8',newline='\n')
     print(json.dumps({'colors':len(result['colors']),'classColors':sum(key.startswith('class_') for key in result['colors'])}))
