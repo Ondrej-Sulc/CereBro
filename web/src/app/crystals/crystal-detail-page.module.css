@@ -40,7 +40,7 @@
 .heroFooter > details[aria-label="About this data"] > summary > time { display: none; }
 .heroFooter > details[open] { flex: 1 1 100%; width: 100%; margin: 6px 0; }
 .heroFooter > details[open][aria-label="About this data"] { padding: 0 12px; border-color: #334760; background: #101d2e; }
-.sectionNav { position: sticky; top: 64px; z-index: 20; display: flex; align-items: center; gap: 6px; margin: 20px 0 28px; padding: 7px 16px; border-bottom: 1px solid #2b3d57; background: #070d1bec; backdrop-filter: blur(16px); }
+.sectionNav { position: sticky; top: var(--site-header-height, 64px); z-index: 20; display: flex; align-items: center; gap: 6px; margin: 20px 0 28px; padding: 7px 16px; border-bottom: 1px solid #2b3d57; background: #070d1bec; backdrop-filter: blur(16px); }
 .sectionNav > span { margin-right: 12px; color: #7f94b3; font-size: 11px; }
 .sectionNav > a { display: inline-flex; align-items: center; gap: 7px; min-height: 38px; padding: 7px 13px; border: 1px solid transparent; border-radius: 6px; color: #b4c6e3; font-size: 13px; line-height: 20px; white-space: nowrap; }
 .sectionNav svg { width: 15px; height: 15px; color: #8ba7cd; }
@@ -82,18 +82,18 @@
   .openings { width: 100%; gap: 4px 13px; }
   .openings dd { font-size: 10px; }
   .heroFooter > details[aria-label="About this data"] { margin-left: auto; }
-  .sectionNav { top: 0; justify-content: space-between; gap: 3px; margin: 16px 0 22px; padding-inline: 8px; }
+  .sectionNav { top: var(--site-header-height, 64px); justify-content: space-between; gap: 3px; margin: 16px 0 22px; padding-inline: 8px; }
   .sectionNav > span { display: none; }
   .sectionNav > a { flex: 1; justify-content: center; gap: 5px; padding: 6px; font-size: 12px; }
   .sectionNav svg { width: 14px; height: 14px; }
   .layout { margin-top: 24px; }
   .gallery { max-height: 408px; padding-right: 4px; }
-  .rules { scroll-margin-top: 70px; }
+  .rules { scroll-margin-top: calc(var(--site-header-height, 64px) + 76px); }
 }
 @media (max-width: 479px) { .page { padding-inline: 16px; } .topbar a { font-size: 11px; } .hero { border-radius: 12px; } .hero h1 { font-size: 25px; } .heroTop { grid-template-columns: minmax(0, 1fr) 84px; } .crystal, .crystal > div, .crystal img { width: 74px; height: 74px; } .facts > a { font-size: 10px; } .sectionNav a > span { font-size: 10px; }  }
 
 .page h2[id], .page [id="crystal-other-rewards"] { scroll-margin-top: 140px; }
-@media (max-width: 767px) { .page h2[id], .page [id="crystal-other-rewards"] { scroll-margin-top: 76px; } }
+@media (max-width: 767px) { .page h2[id], .page [id="crystal-other-rewards"] { scroll-margin-top: calc(var(--site-header-height, 64px) + 76px); } }
 
 .heroFooter:has(.openings) > details[aria-label="About this data"] { margin-left: 0; }
 .gallery { scroll-padding-top: 56px; scroll-padding-bottom: 12px; }

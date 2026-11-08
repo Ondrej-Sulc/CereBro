@@ -11,6 +11,25 @@ import { getCrystalOpening } from "@cerebro/core/data/game-crystal-openings"
 import { loadCrystalPageRewards } from "./crystal-page-rewards"
 import { getChampionCrystalAscensionSources } from "./champion-crystal-ascension"
 
+it("resolves existing full portrait metadata only for small galleries without changing dense portrait sources", async () => {
+  findMany.mockResolvedValue([
+    { gameId: "domino", name: "Domino", slug: "domino", class: "MUTANT", images: { p_64: "/domino-64.png", p_128: "/domino-128.png", full_primary: "/domino-full.png" }, obtainable: ["7"] },
+    { gameId: "hyperion", name: "Hyperion", slug: "hyperion", class: "COSMIC", images: { p_64: "/hyperion-64.png", p_128: "/hyperion-128.png" }, obtainable: ["7"] },
+    { gameId: "misterknight", name: "Mr. Knight", slug: "mr-knight", class: "SKILL", images: { p_64: "/knight-64.png" }, obtainable: ["7"] },
+    { gameId: "rhino", name: "Rhino", slug: "rhino", class: "SCIENCE", images: { full_primary: "/rhino-full.png" }, obtainable: ["7"] },
+  ])
+  const small = (await loadCrystalDetails("7star_night_and_day_crystal", { rarity: "7" }))!
+  expect(small.champions.find(champion => champion.gameId === "domino")).toMatchObject({ portraitUrl: "/domino-64.png", galleryPortraitUrl: "/domino-full.png" })
+  expect(small.champions.find(champion => champion.gameId === "hyperion")).toMatchObject({ portraitUrl: "/hyperion-64.png", galleryPortraitUrl: "/hyperion-128.png" })
+  expect(small.champions.find(champion => champion.gameId === "misterknight")).toMatchObject({ portraitUrl: "/knight-64.png" })
+  expect(small.champions.find(champion => champion.gameId === "misterknight")).not.toHaveProperty("galleryPortraitUrl")
+  expect(small.champions.find(champion => champion.gameId === "purgatory")).not.toHaveProperty("galleryPortraitUrl")
+  expect(small.champions.find(champion => champion.gameId === "rhino")).toMatchObject({ galleryPortraitUrl: "/rhino-full.png" })
+  const large = (await loadCrystalDetails("7_star_hero_shard_crystal", { rarity: "7", q: "Domino" }))!
+  expect(large.champions.find(champion => champion.gameId === "domino")).toMatchObject({ portraitUrl: "/domino-64.png" })
+  expect(large.poolChampions.every(champion => !("galleryPortraitUrl" in champion))).toBe(true)
+})
+
 it("projects crisp curated finder portraits from the existing metadata read with exact published decorative art", async () => {
   findMany.mockResolvedValue([
     { gameId: "hulk", name: "Hulk", slug: "hulk", class: "SCIENCE", images: { p_64: "/small.png", full_primary: "/full.png" }, obtainable: ["7"] },

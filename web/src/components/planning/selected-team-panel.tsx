@@ -338,7 +338,7 @@ export function SelectedTeamPanel({
     scrollToEncounter,
 }: SelectedTeamPanelProps) {
     return (
-        <div data-sticky-team className="pointer-events-none sticky top-0 z-40 mb-8 -mx-4 flex justify-center px-4 md:top-[68px] md:mx-0 md:px-0">
+        <div data-sticky-team className="pointer-events-none sticky top-[calc(var(--site-header-height,64px)+4px)] z-40 mb-8 -mx-4 flex justify-center px-4 md:mx-0 md:px-0">
             <motion.div
                 layout
                 initial={false}

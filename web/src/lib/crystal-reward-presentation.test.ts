@@ -144,28 +144,27 @@ it("uses explicit type and data identity before translated labels", () => {
   expect(view.groups[0].rows[0].rate.percentValue).toBe("25.00001")
 })
 
-it("sorts exact numeric category rates in both directions, retaining zero and source order for ties", () => {
+it("sorts recorded numeric category rates high to low, retaining zero and source order for ties", () => {
   const rows: CrystalRewardRate[] = ["10", "2", "0", "2.00", "0.000000004", "0.000000003", "1e-10", "1E-9", "100"].map((percentValue, sourceIndex) => ({
     key: `0:${sourceIndex}`, rate: { sourceIndex, percentValue, rateBasis: "server-disclosed-category", ...(sourceIndex === 8 ? { prefix: "<" } : {}) },
     variants: [], visual: { imageUrl: null, href: null, kind: "item" },
   }))
   const original = structuredClone(rows)
   Object.freeze(rows)
-  expect(sortCrystalRewardRows(rows, "rarest").map(row => row.key)).toEqual(["0:2", "0:6", "0:7", "0:5", "0:4", "0:1", "0:3", "0:0", "0:8"])
-  expect(sortCrystalRewardRows(rows, "commonest").map(row => row.key)).toEqual(["0:8", "0:0", "0:1", "0:3", "0:4", "0:5", "0:7", "0:6", "0:2"])
+  expect(sortCrystalRewardRows(rows).map(row => row.key)).toEqual(["0:8", "0:0", "0:1", "0:3", "0:4", "0:5", "0:7", "0:6", "0:2"])
   expect(rows).toEqual(original)
-  expect(sortCrystalRewardRows(rows, "rarest").every(row => rows.includes(row))).toBe(true)
+  expect(sortCrystalRewardRows(rows).every(row => rows.includes(row))).toBe(true)
 })
 
-it.each(["rarest", "commonest"] as const)("sorts collapsed families by their category rate without changing any options (%s)", order => {
+it("sorts collapsed families by their category rate without changing any options or prize boundaries", () => {
   const view = loadCrystalPageRewards("superior_banquet_crystal_dec24")!.rewardPresentation
   const original = structuredClone(view)
-  const sorted = view.groups.map(group => ({ ...group, rows: sortCrystalRewardRows(group.rows, order) }))
+  const sorted = view.groups.map(group => ({ ...group, rows: sortCrystalRewardRows(group.rows) }))
   expect(sorted.map(group => [group.sourceIndex, group.name, group.guaranteed])).toEqual(view.groups.map(group => [group.sourceIndex, group.name, group.guaranteed]))
   for (const [index, group] of sorted.entries()) {
     expect(new Set(group.rows)).toEqual(new Set(view.groups[index].rows))
     const rates = group.rows.map(row => Number(row.rate.percentValue))
-    expect(rates).toEqual([...rates].sort((a, b) => order === "rarest" ? a - b : b - a))
+    expect(rates).toEqual([...rates].sort((a, b) => b - a))
   }
   const fragments = sorted.flatMap(group => group.rows).find(row => row.rate.label === "Tier 6 Class Catalyst Fragments")!
   expect(fragments.rate.percentValue).toBe("31.26")

@@ -181,9 +181,9 @@ function chapterLabel(title: string) {
   return title.replace(/^Special Attack (\d).*$/, "Special $1")
 }
 
-export function BuildReadout({ view, className }: { view: ChampionDetailsView; className?: string }) {
+export function BuildReadout({ view, className, showAscension = false }: { view: ChampionDetailsView; className?: string; showAscension?: boolean }) {
   if (!view.selectedStat) return null
-  return <div className={cn("flex flex-wrap items-center gap-2 text-xs font-medium tracking-wide", className)}><span>{view.selectedRarity}★</span><span>R{view.selectedRank}</span><span>Sig {view.sigLevel}</span>{view.ascensionLevel > 0 && <span>A{view.ascensionLevel}</span>}</div>
+  return <span className={cn("flex flex-wrap items-center gap-2 text-xs font-medium tracking-wide", className)}><span>{view.selectedRarity}★</span><span>R{view.selectedRank}</span><span>Sig {view.sigLevel}</span>{(showAscension || view.ascensionLevel > 0) && <span>A{view.ascensionLevel}</span>}</span>
 }
 
 export function ChampionAbilityText({ prepared, glossaryById }: {

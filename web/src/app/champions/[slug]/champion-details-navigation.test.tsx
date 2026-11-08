@@ -35,12 +35,30 @@ const props: ChampionDetailsProps = {
   champion: { id: 1, name: "Current", shortName: "Current", slug: "current", gameId: null, class: "SCIENCE", images: {}, gameSynergies: [], tags: [], abilities: [], abilityTexts: [], abilityCurves: [], attacks: [], stats: [stat(6), stat(5)], prestigeData: [], duels: [] },
   glossaryTerms: [], maxStatsByTier: {},
 }
+let barResize: () => void
+let heroNotifications: Array<(visible: boolean, bottom: number) => void>
+let desktopMedia: EventTarget & { matches: boolean }
 let root: Root
 let clipboardDescriptor: PropertyDescriptor | undefined
 const writeClipboard = vi.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined)
 beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true)
-  vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} })
+  heroNotifications = []
+  desktopMedia = Object.assign(new EventTarget(), { matches: false })
+  vi.stubGlobal("matchMedia", () => desktopMedia)
+  vi.stubGlobal("ResizeObserver", class {
+    constructor(callback: () => void) { barResize = callback }
+    observe() {} disconnect() {}
+  })
+  vi.stubGlobal("IntersectionObserver", class {
+    constructor(callback: IntersectionObserverCallback) {
+      heroNotifications.push((visible, bottom) => callback([{ isIntersecting: visible, boundingClientRect: { bottom } } as IntersectionObserverEntry], this as unknown as IntersectionObserver))
+    }
+    observe() {} disconnect() {}
+  })
+  vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockImplementation(function(this: HTMLElement) {
+    return new DOMRect(0, 64, 1280, this.hasAttribute("data-champion-context") ? 64 : this.matches("section[aria-label$=\" banner\"]") ? 250 : 0)
+  })
   document.body.innerHTML = '<div id="root"></div>'
   Object.defineProperty(HTMLElement.prototype, "scrollIntoView", { configurable: true, value: vi.fn() })
   clipboardDescriptor = Object.getOwnPropertyDescriptor(navigator, "clipboard")
@@ -277,6 +295,7 @@ it("applies a pending signature edit before copying the build link", async () =>
   expect(signatureInput().value).toBe("0")
 })
 
+function sectionPickerLabel() { return sectionPicker().getAttribute("aria-label")?.replace("Champion section: ", "") }
 function sectionPicker() {
   return document.querySelector<HTMLButtonElement>('button[aria-haspopup="dialog"][aria-label^="Champion section:"]')!
 }
@@ -331,7 +350,7 @@ it.each([
   const dialog = await openSectionPicker()
   await act(async () => [...dialog.querySelectorAll<HTMLButtonElement>("button")].find(button => button.textContent === label)!.click())
   expect(new URLSearchParams(window.location.search).get("tab")).toBe(tab)
-  expect(sectionPicker().textContent).toBe(label)
+  expect(sectionPickerLabel()).toBe(label)
   expect(document.querySelector('[aria-label="Current banner"]')?.textContent).not.toMatch(/Prestige|Health|Attack/)
   expect(document.querySelector('[aria-label="Selected build stats"]') !== null).toBe(tab === "stats")
 })
@@ -339,7 +358,7 @@ it.each([
 it("offers every section from the last section, selects and closes with focus returned", async () => {
   window.history.replaceState(null, "", "/champions/current?tab=crystals&rarity=7&rank=5&sig=75")
   await act(async () => root.render(<ChampionDetailsClient {...props} />))
-  expect(sectionPicker()?.textContent).toBe("How to obtain")
+  expect(sectionPickerLabel()).toBe("How to obtain")
   const dialog = await openSectionPicker()
   expect(dialog.getAttribute("aria-labelledby")).toBeTruthy()
   expect(document.getElementById(dialog.getAttribute("aria-labelledby")!)?.textContent).toBe("Champion sections")
@@ -349,16 +368,17 @@ it("offers every section from the last section, selects and closes with focus re
   expect(document.activeElement).toBe(choices[4])
   await act(async () => choices[0].click())
   expect(document.querySelector('[role="dialog"]')).toBeNull()
-  expect(sectionPicker().textContent).toBe("Kit overview")
+  expect(sectionPickerLabel()).toBe("Kit overview")
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 0)) })
   expect(document.activeElement).toBe(sectionPicker())
   expect(document.querySelector('[role="tabpanel"][data-state="active"]')?.textContent).toContain("Read synergy source")
   expect(new URLSearchParams(window.location.search).get("tab")).toBe("overview")
   expect(new URLSearchParams(window.location.search).get("rank")).toBe("5")
   expect(new URLSearchParams(window.location.search).get("sig")).toBe("75")
   await traverse("back")
-  expect(sectionPicker().textContent).toBe("How to obtain")
+  expect(sectionPickerLabel()).toBe("How to obtain")
   await traverse("forward")
-  expect(sectionPicker().textContent).toBe("Kit overview")
+  expect(sectionPickerLabel()).toBe("Kit overview")
 })
 
 it("dismisses the section dialog with Escape without changing the URL", async () => {
@@ -384,11 +404,11 @@ it("uses the existing destination reset contract from the mobile picker", async 
   expect(url.searchParams.get("tab")).toBe("stats")
   expect(url.searchParams.has("synergy")).toBe(false)
   expect(url.hash).toBe("")
-  expect(sectionPicker().textContent).toBe("Stats & attacks")
+  expect(sectionPickerLabel()).toBe("Stats & attacks")
   await traverse("back")
   expect(window.location.href).toBe(original)
   expect(document.querySelector('[data-synergy-probe="catalog_alias"]')).not.toBeNull()
-  expect(sectionPicker().textContent).toBe("Synergies")
+  expect(sectionPickerLabel()).toBe("Synergies")
 })
 
 it("closes the current section without adding a duplicate history entry", async () => {
@@ -400,4 +420,98 @@ it("closes the current section without adding a duplicate history entry", async 
   expect(document.querySelector('[role="dialog"]')).toBeNull()
   expect(window.history.pushState).toHaveBeenCalledTimes(pushes)
   expect(window.location.href).toBe(href)
+})
+
+it("combines build, five subtitle-free tabs and editing in a strip outside the hero/content wrapper", async () => {
+  await act(async () => root.render(<ChampionDetailsClient {...props} />))
+  const bar = document.querySelector<HTMLElement>('[data-champion-context]')!
+  expect(bar.querySelectorAll('[role="tab"]')).toHaveLength(5)
+  expect([...bar.querySelectorAll('[role="tab"]')].map(tab => tab.textContent)).toEqual(["Kit overview", "Full abilities", "Synergies", "Stats & attacks", "How to obtain"])
+  for (const tab of bar.querySelectorAll('[role="tab"]')) expect(tab.querySelector('svg[aria-hidden="true"]')).not.toBeNull()
+  expect(bar.textContent).not.toMatch(/Effects & immunities|Read the complete kit|Partners & team bonuses|Ratings & hit breakdowns|Crystals, quests & events/)
+  expect(bar.querySelector('[aria-label="Champion build"]')?.textContent).toContain("7★R5Sig 75")
+  expect(bar.querySelector('[aria-label="Adjust build"]')).not.toBeNull()
+  const hero = document.querySelector('[aria-label="Current banner"]')!
+  expect(hero.compareDocumentPosition(bar) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+  expect(bar.parentElement?.contains(document.querySelector('[data-champion-section-content]'))).toBe(true)
+  expect(bar.parentElement).not.toBe(hero.parentElement)
+  expect(bar.querySelector('img')).toBeNull()
+})
+
+it("reveals the current champion only after its hero leaves the visible stack and clears identity on champion change", async () => {
+  await act(async () => root.render(<ChampionDetailsClient {...props} />))
+  const name = () => document.querySelector('[aria-label="Champion build"] [title]')!
+  const bar = document.querySelector('[data-champion-context]')!
+  expect(bar.getAttribute('data-docked')).toBe('false')
+  expect(name().getAttribute('aria-hidden')).toBe('true')
+  await act(async () => heroNotifications.at(-1)!(true, 200))
+  expect(name().getAttribute('data-visible')).toBe('false')
+  await act(async () => heroNotifications.at(-1)!(false, 64))
+  expect(bar.getAttribute('data-docked')).toBe('true')
+  expect(name().getAttribute('data-visible')).toBe('true')
+  expect(name().textContent).toBe('Current')
+  await act(async () => heroNotifications.at(-1)!(true, 160))
+  expect(bar.getAttribute('data-docked')).toBe('false')
+  expect(name().getAttribute('aria-hidden')).toBe('true')
+  await act(async () => root.render(<ChampionDetailsClient {...props} champion={{ ...props.champion, id: 2, name: 'Next champion', slug: 'next' }} />))
+  expect(name().textContent).toBe('Next champion')
+  expect(document.querySelector('[data-champion-context]')?.getAttribute('data-docked')).toBe('false')
+  expect(name().getAttribute('aria-hidden')).toBe('true')
+})
+
+it("measures the strip for content/ability offsets and scrolls section changes to content below the hero", async () => {
+  await act(async () => root.render(<ChampionDetailsClient {...props} />))
+  const bar = document.querySelector<HTMLElement>('[data-champion-context]')!
+  const dossier = bar.closest<HTMLElement>('[style*="--champion-accent"]')!
+  expect(dossier.style.getPropertyValue('--champion-tabs-height')).toBe('64px')
+  vi.spyOn(bar, 'getBoundingClientRect').mockReturnValue(new DOMRect(0, 64, 1280, 65))
+  await act(async () => barResize())
+  expect(dossier.style.getPropertyValue('--champion-tabs-height')).toBe('65px')
+  const scroll = vi.mocked(HTMLElement.prototype.scrollIntoView)
+  scroll.mockClear()
+  await click('Stats & attacks')
+  await act(async () => { await new Promise(resolve => requestAnimationFrame(resolve)) })
+  expect(scroll.mock.instances).toContain(document.querySelector('[data-champion-section-content]'))
+})
+
+it("closes the section sheet on history changes and transfers focus between picker and desktop tabs on resize", async () => {
+  await act(async () => root.render(<ChampionDetailsClient {...props} />))
+  await openSectionPicker()
+  await act(async () => window.history.pushState(null, '', '/champions/current?tab=stats&rarity=7&rank=5&sig=75'))
+  expect(document.querySelector('[role="dialog"]')).toBeNull()
+  await openSectionPicker()
+  await act(async () => { desktopMedia.matches = true; desktopMedia.dispatchEvent(new Event('change')) })
+  expect(document.querySelector('[role="dialog"]')).toBeNull()
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 0)) })
+  expect(document.activeElement?.getAttribute('role')).toBe('tab')
+  expect(document.activeElement?.textContent).toBe('Stats & attacks')
+  await act(async () => { desktopMedia.matches = false; desktopMedia.dispatchEvent(new Event('change')) })
+  await act(async () => { await new Promise(resolve => setTimeout(resolve, 0)) })
+  expect(document.activeElement).toBe(sectionPicker())
+  expect(new URLSearchParams(window.location.search).get('sig')).toBe('75')
+})
+
+
+it("keeps all four build values as the mobile edit chip content, including A0", async () => {
+  await act(async () => root.render(<ChampionDetailsClient {...props} />))
+  const chip = document.querySelector('[data-champion-context] button[aria-label="Adjust build"]')!
+  const values = [...chip.querySelectorAll('[aria-hidden="true"] > span')].filter(el => el.children.length === 2)
+  expect(values.map(el => el.textContent)).toEqual(["7\u2605Rank 5", "Sig 75A0"])
+  expect(chip.getAttribute('title')).toBe('Adjust build: 7-star, Rank 5, Signature 75, Ascension 0')
+})
+
+it("uses the header edge for docking identity and initializes restored scroll before paint", async () => {
+  const nativeBounds = HTMLElement.prototype.getBoundingClientRect
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function(this: HTMLElement) {
+    if (this.matches('section[aria-label$=" banner"]')) return new DOMRect(0, -200, 1280, 250)
+    return nativeBounds.call(this)
+  })
+  await act(async () => root.render(<ChampionDetailsClient {...props} />))
+  const name = document.querySelector('[aria-label="Champion build"] [title]')!
+  expect(document.querySelector('[data-champion-context]')?.getAttribute('data-docked')).toBe('true')
+  expect(name.getAttribute('data-visible')).toBe('true')
+  await act(async () => heroNotifications.at(-1)!(true, 100))
+  expect(name.getAttribute('data-visible')).toBe('false')
+  await act(async () => heroNotifications.at(-1)!(false, 63))
+  expect(name.getAttribute('data-visible')).toBe('true')
 })

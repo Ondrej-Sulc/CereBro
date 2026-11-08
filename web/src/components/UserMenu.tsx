@@ -1,71 +1,105 @@
-"use client"
+﻿"use client";
 
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { LogOut, User, LayoutDashboard } from "lucide-react"
-import Link from "next/link"
-import { signOutAction } from "@/app/actions/auth"
-import { Session } from "next-auth"
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { LogIn, LogOut, User, LayoutDashboard, UserRound } from "lucide-react";
+import Link from "next/link";
+import { signInAction, signOutAction } from "@/app/actions/auth";
+import type { Session } from "next-auth";
+import { useHeaderOverlay } from "./header-overlay";
+import styles from "./header.module.css";
 
-interface UserMenuProps {
-  user: Session["user"]
-}
-
-export function UserMenu({ user }: UserMenuProps) {
-  const hasAdminAccess = user.isBotAdmin || (user.permissions && user.permissions.length > 0)
-
+export function UserMenu({ user }: { user?: Session["user"] }) {
+  const { overlay, setOverlay } = useHeaderOverlay();
+  const hasAdminAccess =
+    user &&
+    (user.isBotAdmin || (user.permissions && user.permissions.length > 0));
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger className="focus:outline-none">
-        <Avatar className="h-9 w-9 border border-slate-700 hover:border-slate-500 transition-colors cursor-pointer">
-          <AvatarImage src={user.image || undefined} alt={user.name || "User"} />
-          <AvatarFallback className="bg-slate-800 text-slate-300">
-            {user.name?.substring(0, 2).toUpperCase() || "U"}
-          </AvatarFallback>
-        </Avatar>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56 bg-slate-950 border-slate-800 text-slate-300">
-        <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none text-white">{user.name}</p>
-          </div>
-        </DropdownMenuLabel>
-        <DropdownMenuSeparator className="bg-slate-800" />
-        
-        {hasAdminAccess && (
-            <>
-                <DropdownMenuItem asChild>
-                  <Link href="/admin" className="cursor-pointer flex items-center gap-2 focus:bg-slate-800 focus:text-white">
-                    <LayoutDashboard className="w-4 h-4 text-amber-500" />
-                    <span>Admin Portal</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-slate-800" />
-            </>
+    <DropdownMenu
+      open={overlay === "account"}
+      onOpenChange={(open) =>
+        setOverlay((current) =>
+          open ? "account" : current === "account" ? null : current,
+        )
+      }
+      modal={false}
+    >
+      <DropdownMenuTrigger
+        className={styles.accountButton}
+        aria-label="Account"
+      >
+        {user ? (
+          <Avatar className={styles.accountAvatar}>
+            <AvatarImage src={user.image || undefined} alt="" />
+            <AvatarFallback>
+              {user.name?.substring(0, 2).toUpperCase() || "U"}
+            </AvatarFallback>
+          </Avatar>
+        ) : (
+          <UserRound aria-hidden="true" />
         )}
-
-        <DropdownMenuItem asChild>
-          <Link href="/profile" className="cursor-pointer flex items-center gap-2 focus:bg-slate-800 focus:text-white">
-            <User className="w-4 h-4" />
-            <span>Profile</span>
-          </Link>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator className="bg-slate-800" />
-        <DropdownMenuItem 
-            className="cursor-pointer flex items-center gap-2 text-red-400 focus:bg-slate-800 focus:text-red-300"
-            onClick={() => signOutAction()}
-        >
-          <LogOut className="w-4 h-4" />
-          <span>Sign Out</span>
-        </DropdownMenuItem>
+        <span>Account</span>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        align="end"
+        sideOffset={10}
+        className={styles.accountDropdown}
+        onCloseAutoFocus={(event) => {
+          if (overlay && overlay !== "account") event.preventDefault();
+        }}
+      >
+        {user ? (
+          <>
+            <div className={styles.accountName}>
+              {user.name || "Your account"}
+            </div>
+            <DropdownMenuSeparator className={styles.separator} />
+            {hasAdminAccess && (
+              <DropdownMenuItem asChild>
+                <Link href="/admin" className={styles.link}>
+                  <LayoutDashboard aria-hidden="true" />
+                  Admin Portal
+                </Link>
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem asChild>
+              <Link href="/profile" className={styles.link}>
+                <User aria-hidden="true" />
+                Profile
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator className={styles.separator} />
+            <DropdownMenuItem
+              className={`${styles.link} ${styles.signOut}`}
+              onSelect={() => signOutAction()}
+            >
+              <LogOut aria-hidden="true" />
+              Sign Out
+            </DropdownMenuItem>
+          </>
+        ) : (
+          <>
+            <div className={styles.accountName}>Your CereBro account</div>
+            <form action={signInAction}>
+              <DropdownMenuItem
+                asChild
+                onSelect={(event) => event.preventDefault()}
+              >
+                <button type="submit" className={styles.link}>
+                  <LogIn aria-hidden="true" />
+                  Sign in with Discord
+                </button>
+              </DropdownMenuItem>
+            </form>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
-  )
+  );
 }

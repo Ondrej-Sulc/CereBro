@@ -3,15 +3,28 @@ import { act, type AnchorHTMLAttributes, type ImgHTMLAttributes } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 import { ChampionClass } from "@prisma/client"
-vi.mock("next/link", () => ({ default: (props: AnchorHTMLAttributes<HTMLAnchorElement>) => <a {...props} /> }))
+vi.mock("next/link", () => ({ default: ({ prefetch, scroll, onNavigate, ...props }: AnchorHTMLAttributes<HTMLAnchorElement> & { prefetch?: boolean; scroll?: boolean; onNavigate?: unknown }) => {
+  void prefetch; void scroll; void onNavigate
+  return <a {...props} />
+} }))
 vi.mock("next/image", () => ({ default: (props: ImgHTMLAttributes<HTMLImageElement>) => <img {...props} /> }))
 import type { CrystalChampion } from "@/lib/data/crystals"
 import { CrystalChampionGrid } from "./crystal-champion-grid"
+import { CrystalPoolBrowser } from "./crystal-pool-browser"
 
 const champions: CrystalChampion[] = [
   { gameId: "hulk", name: "Hulk", slug: "hulk", portraitUrl: "/hulk.png", championClass: ChampionClass.SCIENCE, rarities: [6, 7], obtainable: ["6", "7"], firstEditionRarities: [7] },
   { gameId: "source-only", name: "Unmapped Champion", slug: null, portraitUrl: null, championClass: null, rarities: [6], obtainable: [] },
 ]
+const smallPool: CrystalChampion[] = [
+  ["domino", "Domino", ChampionClass.MUTANT],
+  ["hyperion", "Hyperion", ChampionClass.COSMIC],
+  ["misterknight", "Mr. Knight", ChampionClass.SKILL],
+  ["omegasentinel", "Omega Sentinel", ChampionClass.TECH],
+  ["purgatory", "Purgatory", ChampionClass.MYSTIC],
+  ["rhino", "Rhino", ChampionClass.SCIENCE],
+].map(([gameId, name, championClass]) => ({ gameId, name, championClass: championClass as ChampionClass, slug: gameId, portraitUrl: `/${gameId}.png`, rarities: [7], obtainable: ["7"] }))
+const poolData = (count: number) => ({ id: "7star_night_and_day_nexus_crystal", champions: Array.from({ length: count }, (_, i) => ({ ...smallPool[i % 6], gameId: `${smallPool[i % 6].gameId}-${i}` })), q: "", rarity: "7", championClass: "all", rarities: [7], classes: smallPool.map(c => c.championClass!), championCount: count })
 let root: Root
 beforeEach(() => {
   vi.stubGlobal("IS_REACT_ACT_ENVIRONMENT", true)
@@ -120,4 +133,83 @@ it("lets users focus search outside the dialog and closes details removed by fil
   expect(document.querySelector('[role="dialog"]')).toBeNull()
   await act(async () => root.render(<><input aria-label="Outside search" /><CrystalChampionGrid champions={champions} rarity="7" /></>))
   expect(document.querySelector('[role="dialog"]')).toBeNull()
+})
+
+it("shows every small-pool name and exact star/class without requiring the names preference", async () => {
+  await act(async () => root.render(<CrystalPoolBrowser data={{ ...poolData(6), champions: smallPool }} />))
+  const list = document.querySelector('ul[aria-label="Champions in this crystal"]')!
+  expect(document.querySelector('input[type="search"]')).toBeNull()
+  expect(document.querySelector('[data-champion-toolbar]')).toBeNull()
+  const buttons = [...list.querySelectorAll<HTMLButtonElement>('button')]
+  expect(buttons).toHaveLength(6)
+  buttons.forEach((button, index) => {
+    const champion = smallPool[index]
+    const championClass = champion.championClass!.charAt(0) + champion.championClass!.slice(1).toLowerCase()
+    expect(button.textContent).toBe(`${champion.name}7★ · ${championClass}`)
+    expect(button.getAttribute("aria-label")).toBe(`${champion.name}, 7★, ${championClass}. Show details`)
+    expect(button.getAttribute("aria-haspopup")).toBe("dialog")
+    expect(button.querySelector('img')?.getAttribute("loading")).toBe("lazy")
+  })
+  expect(buttons.filter(b => b.tabIndex === 0)).toEqual([buttons[0]])
+  expect(localStorage.getItem("cerebro:crystal-portrait-names")).toBeNull()
+})
+
+it("keeps small cards in measured keyboard order and opens the exact champion/star with focus recovery", async () => {
+  await act(async () => root.render(<CrystalChampionGrid champions={smallPool} rarity="7" layout="cards" controls={false} />))
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-champion-portrait]')]
+  buttons.forEach((button, index) => Object.defineProperty(button, "offsetTop", { value: Math.floor(index / 2) * 220 }))
+  await act(async () => buttons[1].focus())
+  await act(async () => buttons[1].dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true })))
+  expect(document.activeElement).toBe(buttons[3])
+  await act(async () => buttons[3].click())
+  const dialog = document.querySelector('[role="dialog"]')!
+  expect(dialog.querySelector("h3")?.textContent).toBe("Omega Sentinel")
+  expect(dialog.textContent).toContain("7★ · Tech")
+  expect(dialog.querySelector("a")?.getAttribute("href")).toBe("/champions/omegasentinel?rarity=7")
+  await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })))
+  await vi.waitFor(() => expect(document.activeElement).toBe(buttons[3]))
+  expect(buttons.filter(b => b.tabIndex === 0)).toEqual([buttons[3]])
+})
+
+it.each([1, 2, 6, 8])("uses the named gallery for an unfiltered single-star pool of %i", async count => {
+  await act(async () => root.render(<CrystalPoolBrowser data={poolData(count)} />))
+  expect(document.querySelectorAll('[data-champion-portrait]')).toHaveLength(count)
+  expect(document.querySelector('[data-champion-portrait]')?.textContent).toContain("Domino")
+  expect(document.querySelector('input[type="search"]')).toBeNull()
+  expect(document.querySelector('[data-champion-toolbar]')).toBeNull()
+})
+
+it.each([
+  { count: 9, rarities: [7], q: "", championClass: "all" },
+  { count: 6, rarities: [6, 7], q: "", championClass: "all" },
+  { count: 6, rarities: [7], q: "Domino", championClass: "all" },
+  { count: 6, rarities: [7], q: "", championClass: "TECH" },
+  { count: 180, rarities: [7], q: "Domino", championClass: "all" },
+])("retains the dense browser and its filters for $count champions, stars $rarities, query $q, class $championClass", async ({ count, ...filters }) => {
+  await act(async () => root.render(<CrystalPoolBrowser data={{ ...poolData(count), ...filters }} />))
+  expect(document.querySelector('input[type="search"]')).not.toBeNull()
+  expect(document.querySelector('[data-champion-toolbar]')).not.toBeNull()
+  expect(document.querySelector('[data-champion-portrait]')?.textContent).toBe("")
+})
+
+it("retains source-only small rewards and unknown-class metadata without inventing navigation", async () => {
+  await act(async () => root.render(<CrystalChampionGrid champions={[champions[1]]} rarity="6" layout="cards" controls={false} />))
+  const trigger = document.querySelector<HTMLButtonElement>('[data-champion-portrait]')!
+  expect(trigger.textContent).toBe("UCUnmapped Champion6★")
+  expect(trigger.getAttribute("aria-label")).toBe("Unmapped Champion, 6★. Show details")
+  await act(async () => trigger.click())
+  expect(document.querySelector('[role="dialog"] a')).toBeNull()
+  expect(document.querySelector('[role="dialog"]')?.textContent).toContain("No champion page yet")
+})
+
+it("uses the published larger portrait only in gallery tiles and keeps compact-only sources near native size", async () => {
+  const pool = [{ ...smallPool[0], galleryPortraitUrl: "/published-full.png" }, smallPool[1]]
+  await act(async () => root.render(<CrystalChampionGrid champions={pool} rarity="7" layout="cards" controls={false} />))
+  const images = [...document.querySelectorAll<HTMLImageElement>('[data-champion-portrait] > span > img')]
+  expect(images.map(image => [image.getAttribute("src"), image.width, image.height, image.sizes])).toEqual([
+    ["/published-full.png", 80, 80, "80px"], ["/hyperion.png", 64, 64, "64px"],
+  ])
+  await act(async () => root.render(<CrystalChampionGrid champions={pool} rarity="7" controls={false} />))
+  const compact = document.querySelector<HTMLImageElement>('[data-champion-portrait] > span > img')!
+  expect([compact.getAttribute("src"), compact.width, compact.height, compact.sizes, compact.getAttribute("loading")]).toEqual(["/domino.png", 64, 64, "64px", "lazy"])
 })

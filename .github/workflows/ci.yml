@@ -124,7 +124,10 @@ jobs:
         run: pnpm run test:relics
 
       - name: Verify catalog and personal-view navigation
-        run: pnpm exec vitest run web/src/lib/collection-view.test.ts --maxWorkers=1
+        run: pnpm exec vitest run web/src/lib/collection-view.test.ts web/src/components/Header.test.tsx --maxWorkers=1
+
+      - name: Verify homepage discovery and champion lookup
+        run: pnpm exec vitest run web/src/app/page.test.tsx web/src/components/home/HomeChampionSearch.test.tsx web/src/components/home/ScreenshotPreview.test.tsx web/src/lib/data/home-featured-champions.test.ts web/src/lib/data/home-featured-relics.test.ts web/src/app/api/champions/lookup/route.test.ts --maxWorkers=1
 
       - name: Verify exact relic source preservation in PostgreSQL
         env:

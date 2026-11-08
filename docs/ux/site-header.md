@@ -1,0 +1,19 @@
+# Site-wide navigation
+
+Selected direction: A's direct desktop navigation with C's right-side mobile panel. Phones show one compact row: CereBro, Account, Menu. Champions, Relics and Crystals lead the panel; there is no second catalog strip.
+
+The 64px sticky header uses `--site-header-height`. Champion dossier tabs, quest team controls and crystal section bands account for that height on every screen. Desktop navigation starts at 1024px to keep the brand, catalogs and real account control clear at tablet widths. The content aligns within 1280px.
+
+Desktop destinations: Champions, Relics, Crystals; Plan contains Quest Planner and alliance tools; More contains War Archive, Community Discord, Support CereBro and About. Directory search is a separate utility. The panel presents catalogs, planning/alliance, community/help and directory search in that order.
+
+Collection links retain the existing cookie-based catalog/personal preference and profile gate. Alliance members see Overview, Roster Overview, Attack Planning, Defense Strategy and Season Stats. Other visitors see Join / Create Alliance. Account uses the actual session: Discord sign-in for guests, Profile and Sign Out for signed-in users, and Admin Portal only under the existing permission rule.
+
+Navigation and Account share one open surface. Radix supplies modal panel focus trapping, Escape/outside dismissal, scroll locking and focus return. Route selections, pathname/history changes and crossing the desktop breakpoint close navigation.
+
+Visual refinement uses the existing logo, a compact wordmark, navy surfaces, quiet utility controls, cyan current destinations and restrained purple accents. Desktop current links use a text underline; panel catalogs receive stronger type and a subtle current-route surface. Group headings replace repeated explanatory subtitles. All navigation controls retain 44px targets.
+
+The throwaway comparison remains in its reference worktree. Production has no header variants, preview accounts or prototype controls. Real signed-in/member/admin browser sessions are required to extend the public-session visual review; component tests cover their conditional rendering.
+
+Champion pages place the identity/artwork hero before the contextual section bar. The hero keeps its original full page width and responsive 20/32/40/48px gutters; the global header's content limit must not narrow the banner. The footer matches the hero edges, side borders and 16px lower corners at entry. Only its paint becomes full-width when docked; controls do not move or reparent. The original grouped section tabs retain their icons, 14px semibold labels and champion-class selected surface, without subtitles. The footer uses the hero's dark surface, distinct from global navigation. A 13px build readout and quiet Adjust build button complete the desktop row. Controls have a centered content limit independently of the hero, with room inside its frame at smaller widths.
+
+The bar follows the hero in normal flow, then docks at the global header's 64px lower edge using CSS sticky within the full dossier. Its 64px height stays constant. Full tabs start at 1200px; smaller screens use a 14px picker and a two-line 12px build-value chip with the accessible Adjust build label. All four build fields, including A0, remain visible. The picker may omit its leading icon to keep readable text at narrow widths. While the hero is visible the build is vertically centered; once it leaves the header edge, its name appears in the same reserved-height context area. No blank name line is reserved. ResizeObserver publishes the actual bar height for jumps and the ability sidebar; hero observation uses the header edge and initializes restored-scroll identity before paint. Existing URL, history, reset, lazy-panel and build projection rules remain unchanged.

@@ -414,11 +414,18 @@
 .poolChampionPreview strong { color: #cbdcf5; font-size: 12px; font-weight: 550; line-height: 18px; overflow-wrap: anywhere; }
 
 .classFilters a > span.classFilterLabel { display: inline; height: auto; min-width: 0; padding: 0; margin: 0; background: none; color: inherit; font: inherit; }
-.championGrid.championCards { grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 8px; }
-.championCards .champion { display: grid; grid-template-columns: 52px minmax(0, 1fr); grid-template-rows: auto auto; gap: 4px 12px; align-items: center; padding: 12px; border: 1px solid #354b66; border-radius: 9px; background: #112036; text-align: left; }
-.championCards .portrait { grid-row: 1 / 3; width: 52px; margin: 0; }
-.championCards .portraitName { align-self: end; color: #d2e1f7; font-size: 13px; line-height: 19px; }
-.championCards .portraitStars { grid-column: 2; align-self: start; font-size: 11px; line-height: 17px; }
+.championGrid.championCards { width: 100%; max-width: calc(var(--pool-card-count) * 196px + (var(--pool-card-count) - 1) * 12px); grid-template-columns: repeat(auto-fit, minmax(min(100%, 176px), 1fr)); gap: 12px; align-items: stretch; }
+.championCards .champion { height: 100%; grid-template-rows: auto 1fr auto; justify-items: center; gap: 4px; padding: 8px 8px 6px; border-radius: 9px; background: transparent; transition: background-color .15s; }
+.championCards .champion:hover, .championCards .champion:focus-visible, .championCards .champion[data-state="open"] { background: #c9dbff08; }
+.championCards .portrait { align-self: end; width: min(100%, var(--gallery-portrait-size)); margin: 0 0 3px; border-color: color-mix(in srgb, var(--class-accent) 60%, #344158); border-radius: 8px; background: #101827; box-shadow: none; }
+.championCards .portrait > img { border-radius: 7px; }
+.championCards .champion:hover .portrait, .championCards .champion[data-state="open"] .portrait { transform: none; border-color: color-mix(in srgb, var(--class-accent) 70%, #ced7e7); box-shadow: none; }
+.championCards .portraitName { display: block; align-self: start; max-width: 100%; overflow: visible; -webkit-line-clamp: unset; color: #e0e7f2; font-size: 14px; font-weight: 600; line-height: 20px; text-wrap: balance; }
+.championCards .portraitStars { color: #8f9fb7; font-size: 11px; line-height: 16px; }
+@media (max-width: 639px) {
+  .championGrid.championCards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 12px; }
+  .championGrid.championCards:has(> li:only-child) { grid-template-columns: minmax(0, 1fr); }
+}
 @media (max-width: 639px) {
   .classFilters, .classFilters.fewClasses { display: grid; grid-template-columns: repeat(auto-fit, minmax(30px, 1fr)); gap: 4px; }
   .classFilters a, .fewClasses a { min-width: 0; min-height: 38px; padding: 5px; }
@@ -443,8 +450,5 @@
 .expandPool:hover { color: #edf3ff; background: #233955; }
 .expandPool:focus-visible { outline: 2px solid #b4c8ef; outline-offset: 2px; }
 
-.smallChampionPool { max-width: 560px; overflow: hidden; border: 1px solid #334b68; border-radius: 10px; background: #112036; }
-.smallChampionPool .championCards { grid-template-columns: minmax(0, 1fr); gap: 0; }
-.smallChampionPool .championCards .champion { border: 0; border-radius: 0; background: transparent; }
-.smallChampionPool .championCards > li + li { border-top: 1px solid #30465f; }
-.smallChampionPool [data-crystal-odds] { width: 100%; min-width: 0; margin: 0; border: 0; border-top: 1px solid #30465f; border-radius: 0; }
+.smallChampionPool { min-width: 0; }
+.smallChampionPool [data-crystal-odds] { margin-top: 16px; }

@@ -24,12 +24,14 @@ const ChampionPortrait = memo(function ChampionPortrait({ champion, rarity, show
   const compactStars = champion.rarities.length === 1 ? starLabel : `${Math.min(...champion.rarities)}–${Math.max(...champion.rarities)}★`
   const championClass = champion.championClass ? className(champion.championClass) : null
   const firstEdition = champion.firstEditionRarities?.length ? stars(champion.firstEditionRarities) : null
+  const portraitUrl = cards ? champion.galleryPortraitUrl ?? champion.portraitUrl : champion.portraitUrl
+  const portraitSize = cards && champion.galleryPortraitUrl ? 80 : 64
   return <li style={accent(champion)}>
     <button type="button" data-champion-portrait={champion.gameId} className={styles.champion} tabIndex={tabIndex} onFocus={onFocus} onClick={onClick}
       aria-label={`${champion.name}, ${starLabel}${championClass ? `, ${championClass}` : ""}. Show details`} title={champion.name}
       aria-haspopup="dialog" aria-expanded={open} aria-controls={open ? dialogId : undefined} data-state={open ? "open" : "closed"}>
-      <span className={styles.portrait}>
-        {champion.portraitUrl ? <Image src={champion.portraitUrl} alt="" width={64} height={64} sizes="64px" loading="lazy" /> : <span className={styles.portraitFallback}>{champion.name.split(/\s+/).slice(0, 2).map(word => word.charAt(0)).join("")}</span>}
+      <span className={styles.portrait} style={cards ? { "--gallery-portrait-size": `${portraitSize}px` } as CSSProperties : undefined}>
+        {portraitUrl ? <Image src={portraitUrl} alt="" width={portraitSize} height={portraitSize} sizes={`${portraitSize}px`} loading="lazy" /> : <span className={styles.portraitFallback}>{champion.name.split(/\s+/).slice(0, 2).map(word => word.charAt(0)).join("")}</span>}
         {championClass && <span className={styles.classBadge}><Image src={`/assets/icons/${championClass}.png`} alt="" width={14} height={14} sizes="14px" /></span>}
         {firstEdition && <span className={styles.editionMarker} aria-label={`First Edition available at ${firstEdition}`}>✦</span>}
       </span>
@@ -67,7 +69,7 @@ export const CrystalChampionGrid = memo(function CrystalChampionGrid({ champions
   return <Popover open={!!selected} onOpenChange={open => { if (!open) setSelectedId(null) }}>
     <PopoverAnchor virtualRef={position} />
     {controls && <div className={styles.gridToolbar} data-champion-toolbar><p className={styles.gridHint}>Select a portrait<span> for details · Use arrow keys to explore</span></p><div className={styles.gridViewControls}><CrystalGridNamesToggle />{toolbarActions}</div></div>}
-    <ul className={`${styles.championGrid}${showNames ? ` ${styles.namedGrid}` : ""}${layout === "cards" ? ` ${styles.championCards}` : ""}`} aria-label={label} onKeyDown={event => {
+    <ul className={`${styles.championGrid}${showNames ? ` ${styles.namedGrid}` : ""}${layout === "cards" ? ` ${styles.championCards}` : ""}`} style={layout === "cards" ? { "--pool-card-count": Math.min(champions.length, 6) } as CSSProperties : undefined} aria-label={label} onKeyDown={event => {
       const trigger = (event.target as HTMLElement).closest<HTMLButtonElement>("[data-champion-portrait]")
       if (!trigger || !["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(event.key)) return
       const buttons = [...event.currentTarget.querySelectorAll<HTMLButtonElement>("[data-champion-portrait]")]

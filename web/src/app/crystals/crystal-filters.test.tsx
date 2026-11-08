@@ -94,7 +94,7 @@ it("keeps the complete Elder rate group unchanged while filtering champions and 
   await act(async () => root.render(<CrystalDetailView data={data} />))
   const readRates = () => [...document.querySelectorAll('#crystal-other-rewards [data-odds-row]')].map(row => [row.getAttribute("data-odds-row"), row.textContent])
   const before = readRates()
-  expect(before.map(([key]) => key)).toEqual(["0:0", "0:1", "0:2", "0:3"])
+  expect(before.map(([key]) => key)).toEqual(["0:3", "0:2", "0:1", "0:0"])
   expect(document.querySelector('[aria-label="Filter by stars"]')?.textContent).not.toContain("%")
   await click('[aria-label="Filter by stars"] a', "7★")
   await act(async () => document.querySelector<HTMLAnchorElement>('[aria-label="Filter by class"] [aria-label^="Science,"]')!.click())
@@ -107,21 +107,17 @@ it("keeps the complete Elder rate group unchanged while filtering champions and 
   expect(data.opening?.odds?.responseSha256).toBe("9991879962a422a267543426d03efaf722d9d52171f78e319bd6c97704d0679a")
 })
 
-it("resets both local filters and cancels the old search when navigating to another crystal", async () => {
+it("resets the local champion filter and cancels its old search when navigating to another crystal", async () => {
   const first = (await loadCrystalDetails("jubilant_crystal_dec25", { q: "punisher" }))!
   const next = (await loadCrystalDetails("paragon_crystal_v2", {}))!
   expect(next.opening?.odds?.status).toBe("captured")
   window.history.replaceState(null, "", `/crystals/${first.id}`)
   await act(async () => root.render(<CrystalDetailView data={first} />))
-  const oddsInput = document.querySelector<HTMLInputElement>('[aria-label="Search rewards"]')!
   const poolInput = document.querySelector<HTMLInputElement>('[aria-labelledby="champion-pool-title"] input[type="search"]')!
   await act(async () => {
-    for (const [element, value] of [[oddsInput, "gold"], [poolInput, "hulk"]] as const) {
-      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(element, value)
-      element.dispatchEvent(new Event("input", { bubbles: true }))
-    }
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(poolInput, "hulk")
+    poolInput.dispatchEvent(new Event("input", { bubbles: true }))
   })
-  expect(oddsInput.value).toBe("gold")
   expect(poolInput.value).toBe("hulk")
 
   window.history.replaceState(null, "", `/crystals/${next.id}`)

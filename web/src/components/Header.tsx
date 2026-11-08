@@ -1,321 +1,332 @@
-"use client";
+﻿"use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Swords, Menu, Book, Shield, Trophy, ChevronDown, LayoutGrid, Users, Heart, Map as MapIcon, Info, Search, Gem, Diamond } from "lucide-react";
+import * as Dialog from "@radix-ui/react-dialog";
 import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
+  ArrowUpRight,
+  BookOpen,
+  ChevronDown,
+  Diamond,
+  Gem,
+  Heart,
+  Info,
+  LayoutGrid,
+  Map,
+  Menu,
+  Search,
+  Shield,
+  Swords,
+  Trophy,
+  Users,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
   DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
 import { CollectionNavLink } from "@/components/collections/collection-navigation";
+import { HeaderOverlayContext, type HeaderOverlay } from "./header-overlay";
+import { DISCORD_INVITE } from "@/lib/links";
+import styles from "./header.module.css";
 
-export default function Header({ userButton, isInAlliance, hasPlayerProfile }: { userButton: React.ReactNode; isInAlliance: boolean; hasPlayerProfile: boolean }) {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+type Destination = {
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  section?: "champions" | "relics";
+};
+const catalogs: Destination[] = [
+  {
+    label: "Champions",
+    href: "/champions",
+    section: "champions",
+    icon: LayoutGrid,
+  },
+  { label: "Relics", href: "/relics", section: "relics", icon: Gem },
+  { label: "Crystals", href: "/crystals", icon: Diamond },
+];
+const quest: Destination = {
+  label: "Quest Planner",
+  href: "/planning/quests",
+  icon: Map,
+};
+const alliance: Destination[] = [
+  { label: "Overview", href: "/alliance", icon: Users },
+  { label: "Roster Overview", href: "/alliance/roster", icon: LayoutGrid },
+  { label: "Attack Planning", href: "/planning", icon: Swords },
+  { label: "Defense Strategy", href: "/planning/defense", icon: Shield },
+  { label: "Season Stats", href: "/analysis/season-overview", icon: Trophy },
+];
+const onboarding: Destination = {
+  label: "Join / Create Alliance",
+  href: "/alliance/onboarding",
+  icon: Users,
+};
+const community: Destination[] = [
+  { label: "War Archive", href: "/war-videos", icon: BookOpen },
+  { label: "Community Discord", href: DISCORD_INVITE, icon: Users },
+  { label: "Support CereBro", href: "/support", icon: Heart },
+  { label: "About", href: "/about", icon: Info },
+];
+const search: Destination = {
+  label: "Search players & alliances",
+  href: "/search",
+  icon: Search,
+};
+
+function isCurrent(pathname: string, item: Destination) {
+  // These roots must not also highlight their sibling destinations.
+  if (item.href === "/alliance") return pathname === item.href;
+  if (item.href === "/planning")
+    return (
+      pathname === "/planning" ||
+      (pathname.startsWith("/planning/") &&
+        !["quests", "defense"].some(
+          (segment) =>
+            pathname === `/planning/${segment}` ||
+            pathname.startsWith(`/planning/${segment}/`),
+        ))
+    );
+  const matches = (path: string) =>
+    pathname === path || pathname.startsWith(`${path}/`);
+  return (
+    matches(item.href) ||
+    (item.section === "champions" && matches("/profile/roster")) ||
+    (item.section === "relics" && matches("/profile/relics"))
+  );
+}
+
+export default function Header({
+  userButton,
+  isInAlliance,
+  hasPlayerProfile,
+}: {
+  userButton: ReactNode;
+  isInAlliance: boolean;
+  hasPlayerProfile: boolean;
+}) {
   const pathname = usePathname();
-  const rosterLabel = "Champions";
-
-  // Automatically close mobile menu on route change using the render-sync pattern
-  const [prevPathname, setPrevPathname] = useState(pathname);
-  if (pathname !== prevPathname) {
-    setPrevPathname(pathname);
-    if (isMobileMenuOpen) {
-      setIsMobileMenuOpen(false);
-    }
+  const [overlay, setOverlay] = useState<HeaderOverlay>(null);
+  const [previousPath, setPreviousPath] = useState(pathname);
+  if (pathname !== previousPath) {
+    setPreviousPath(pathname);
+    setOverlay(null);
   }
-
   useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 10);
+    const media = window.matchMedia("(min-width: 1024px)");
+    const close = () => setOverlay(null);
+    media.addEventListener("change", close);
+    window.addEventListener("popstate", close);
+    return () => {
+      media.removeEventListener("change", close);
+      window.removeEventListener("popstate", close);
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const close = () => setOverlay(null);
+  const destination = (item: Destination, inDropdown = false) => {
+    const Icon = item.icon;
+    const external = item.href.startsWith("https://");
+    const props = {
+      className: styles.link,
+      "aria-current": isCurrent(pathname, item) ? ("page" as const) : undefined,
+      onClick: close,
+    };
+    const content = (
+      <>
+        <Icon aria-hidden="true" />
+        <span>{item.label}</span>
+        {external && (
+          <ArrowUpRight className={styles.external} aria-hidden="true" />
+        )}
+      </>
+    );
+    const link = item.section ? (
+      <CollectionNavLink
+        section={item.section}
+        canUsePersonal={hasPlayerProfile}
+        {...props}
+      >
+        {content}
+      </CollectionNavLink>
+    ) : (
+      <Link
+        href={item.href}
+        {...props}
+        {...(external ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+      >
+        {content}
+      </Link>
+    );
+    return inDropdown ? (
+      <DropdownMenuItem key={item.href} asChild>
+        {link}
+      </DropdownMenuItem>
+    ) : (
+      <div key={item.href}>
+        {link}
+      </div>
+    );
+  };
+  const planningActive = [quest, ...alliance, onboarding].some((item) =>
+    isCurrent(pathname, item),
+  );
+  const dropdown = (
+    name: "plan" | "more",
+    label: string,
+    active: boolean,
+    children: ReactNode,
+  ) => (
+    <DropdownMenu
+      open={overlay === name}
+      onOpenChange={(open) =>
+        setOverlay((current) =>
+          open ? name : current === name ? null : current,
+        )
+      }
+      modal={false}
+    >
+      <DropdownMenuTrigger
+        id={`site-header-${name}-trigger`}
+        className={styles.groupButton}
+        data-active={active || undefined}
+      >
+        {label}
+        <ChevronDown aria-hidden="true" />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent
+        aria-labelledby={`site-header-${name}-trigger`}
+        align="start"
+        sideOffset={10}
+        className={styles.dropdown}
+        onCloseAutoFocus={(event) => {
+          if (overlay && overlay !== name) event.preventDefault();
+        }}
+      >
+        {children}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+
   return (
-    <header className={`md:sticky top-0 inset-x-0 z-[100] nav-blur transition-colors duration-300 ${isScrolled ? 'bg-slate-950/80 border-b border-slate-800/70' : 'bg-slate-950/80 border-b border-slate-800/70 md:bg-transparent md:border-transparent'}`}>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-3">
-            <Image src="/CereBro_logo_256.png" alt="CereBro Logo" width={36} height={36} className="rounded-2xl" />
-            <div className="hidden sm:block">
-              <p className="font-semibold tracking-tight text-sm">CereBro</p>
-              <p className="hidden lg:block text-[11px] text-slate-400 leading-none">The tactical advantage for MCOC</p>
-            </div>
+    <HeaderOverlayContext.Provider value={{ overlay, setOverlay }}>
+      <header className={styles.header}>
+        <div className={styles.row}>
+          <Link
+            href="/"
+            className={styles.brand}
+            aria-label="CereBro home"
+            onClick={close}
+          >
+            <Image src="/CereBro_logo_256.png" alt="" width={36} height={36} />
+            <span>CereBro</span>
           </Link>
-
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-3 text-sm font-medium">
-            <CollectionNavLink section="champions" canUsePersonal={hasPlayerProfile} className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors px-2 py-2">
-              <LayoutGrid className="w-4 h-4" />
-              {rosterLabel}
-            </CollectionNavLink>
-
-            <Link href="/planning/quests" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors px-2 py-2">
-              <MapIcon className="w-4 h-4" />
-              Quest Planner
-            </Link>
-
-            {isInAlliance ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button 
-                    variant="ghost" 
-                    className="flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/50 h-auto py-2 px-3 data-[state=open]:text-white data-[state=open]:bg-slate-800/50"
-                  >
-                    <Users className="w-4 h-4" />
-                    Alliance
-                    <ChevronDown className="w-3 h-3 opacity-50" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-slate-950 border-slate-800 text-slate-300">
-                  <DropdownMenuLabel className="text-xs font-normal text-slate-500 uppercase tracking-wider">Management</DropdownMenuLabel>
-                  <DropdownMenuItem asChild>
-                    <Link href="/alliance" className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
-                        <Users className="w-4 h-4 text-slate-300" />
-                        <span>Overview</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/alliance/roster" className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
-                        <LayoutGrid className="w-4 h-4 text-slate-300" />
-                        <span>Roster Overview</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  
-                  <DropdownMenuSeparator className="bg-slate-800" />
-                  <DropdownMenuLabel className="text-xs font-normal text-slate-500 uppercase tracking-wider">War Room</DropdownMenuLabel>
-                  
-                  <DropdownMenuItem asChild>
-                    <Link href="/planning" className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
-                        <Swords className="w-4 h-4 text-red-400" />
-                        <span>Attack Planning</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/planning/defense" className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
-                        <Shield className="w-4 h-4 text-sky-400" />
-                        <span>Defense Strategy</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/analysis/season-overview" className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
-                        <Trophy className="w-4 h-4 text-yellow-500" />
-                        <span>Season Stats</span>
-                    </Link>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            ) : (
-                <Link href="/alliance/onboarding" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors px-2 py-2">
-                    <Users className="w-4 h-4" />
-                    Join Alliance
-                </Link>
+          <nav className={styles.desktopNav} aria-label="Primary">
+            {catalogs.map((item) => destination(item))}
+            {dropdown(
+              "plan",
+              "Plan",
+              planningActive,
+              <>
+                {destination(quest, true)}
+                <DropdownMenuSeparator className={styles.separator} />
+                <DropdownMenuLabel className={styles.groupLabel}>
+                  Alliance
+                </DropdownMenuLabel>
+                {(isInAlliance ? alliance : [onboarding]).map((item) =>
+                  destination(item, true),
+                )}
+              </>,
             )}
-
-            <Link href="/support" className="flex items-center gap-2 text-slate-300 hover:text-white transition-colors px-2 py-2">
-              <Heart className="w-4 h-4" />
-              Support
-            </Link>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button
-                  variant="ghost"
-                  className="flex items-center gap-2 text-slate-300 hover:text-white hover:bg-slate-800/50 h-auto py-2 px-3 data-[state=open]:text-white data-[state=open]:bg-slate-800/50"
-                >
-                  More
-                  <ChevronDown className="w-3 h-3 opacity-50" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-slate-950 border-slate-800 text-slate-300">
-                <DropdownMenuItem asChild>
-                  <CollectionNavLink section="relics" canUsePersonal={hasPlayerProfile} className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
-                    <Gem className="w-4 h-4 text-slate-300" />
-                    <span>Relics</span>
-                  </CollectionNavLink>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/crystals" className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
-                    <Diamond className="w-4 h-4 text-slate-300" />
-                    <span>Crystals</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/search" className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
-                    <Search className="w-4 h-4 text-slate-300" />
-                    <span>Search</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/war-videos" className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
-                    <Book className="w-4 h-4 text-slate-300" />
-                    <span>War Archive</span>
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link href="/about" className="cursor-pointer flex items-center gap-2 w-full focus:bg-slate-800 focus:text-white">
-                    <Info className="w-4 h-4 text-slate-300" />
-                    <span>About</span>
-                  </Link>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {dropdown(
+              "more",
+              "More",
+              community.some((item) => isCurrent(pathname, item)),
+              community.map((item) => destination(item, true)),
+            )}
           </nav>
-
-          <div className="flex items-center gap-3">
-            <div className="hidden md:block">
-              {userButton}
-            </div>
-
-            {/* Mobile menu button */}
-            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="md:hidden text-slate-300 hover:text-white hover:bg-slate-800/50">
-                  <Menu className="h-6 w-6" />
-                  <span className="sr-only">Open menu</span>
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="right" className="flex h-dvh w-[300px] flex-col overflow-hidden border-l border-slate-800 bg-slate-950 p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))]">
-                <SheetHeader className="mb-8 shrink-0">
-                  <SheetTitle className="flex items-center gap-3">
-                    <Image src="/CereBro_logo_256.png" alt="CereBro Logo" width={32} height={32} className="rounded-xl" />
-                    <span className="font-bold text-white">CereBro</span>
-                  </SheetTitle>
-                </SheetHeader>
-                <nav className="flex min-h-0 flex-1 flex-col gap-6 overflow-y-auto overscroll-contain">
-                  <div className="flex flex-col gap-4">
-                                      <Link
-                                          href="/search"
-                                          className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
-                                      >
-                                        <Search className="w-5 h-5" />
-                                        Search
-                                      </Link>
-                                      <CollectionNavLink
-                                          section="champions" canUsePersonal={hasPlayerProfile}
-                                          onClick={() => setIsMobileMenuOpen(false)}
-                                          className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
-                                      >
-                                        <LayoutGrid className="w-5 h-5" />
-                                        {rosterLabel}
-                                      </CollectionNavLink>
-                                      <Link
-                                          href="/planning/quests"
-                                          className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
-                                      >
-                                        <MapIcon className="w-5 h-5" />
-                                        Quest Planner
-                                      </Link>
-                                      <CollectionNavLink section="relics" canUsePersonal={hasPlayerProfile} onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors">
-                                        <Gem className="w-5 h-5" />
-                                        Relics
-                                      </CollectionNavLink>
-                                      <Link href="/crystals" onClick={() => setIsMobileMenuOpen(false)} className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors">
-                                        <Diamond className="w-5 h-5" />
-                                        Crystals
-                                      </Link>
-                                      <Link
-                                          href="/war-videos"
-                                          className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
-                                      >
-                                        <Book className="w-5 h-5" />
-                                        War Archive
-                                      </Link>
-                    <Link 
-                        href="/support" 
-                        className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
+          <div className={styles.tools}>
+            <Link
+              href="/search"
+              className={styles.search}
+              aria-label="Search players and alliances"
+              aria-current={isCurrent(pathname, search) ? "page" : undefined}
+              onClick={close}
+            >
+              <Search aria-hidden="true" />
+            </Link>
+            {userButton}
+            <Dialog.Root
+              open={overlay === "navigation"}
+              onOpenChange={(open) =>
+                setOverlay((current) =>
+                  open
+                    ? "navigation"
+                    : current === "navigation"
+                      ? null
+                      : current,
+                )
+              }
+            >
+              <Dialog.Trigger className={styles.menuButton}>
+                <Menu aria-hidden="true" />
+                <span>Menu</span>
+              </Dialog.Trigger>
+              <Dialog.Portal>
+                <Dialog.Overlay className={styles.backdrop} />
+                <Dialog.Content
+                  className={styles.panel}
+                  aria-describedby={undefined}
+                >
+                  <div className={styles.panelHeading}>
+                    <Dialog.Title>Menu</Dialog.Title>
+                    <Dialog.Close
+                      className={styles.closeButton}
+                      aria-label="Close menu"
                     >
-                      <Heart className="w-5 h-5" />
-                      Support
-                    </Link>
-                    
-                    {isInAlliance ? (
-                      <>
-                        <div className="h-px bg-slate-800/50 my-1" />
-                        <span className="text-xs uppercase tracking-wider text-slate-500 font-semibold pl-1">Alliance</span>
-                        
-                        <Link 
-                            href="/alliance" 
-                            className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2"
-                        >
-                            <Users className="w-5 h-5 text-slate-300" />
-                            Overview
-                        </Link>
-                        <Link 
-                            href="/alliance/roster" 
-                            className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2"
-                        >
-                            <LayoutGrid className="w-5 h-5 text-slate-300" />
-                            Roster Overview
-                        </Link>
-                        <Link 
-                            href="/planning" 
-                            className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2"
-                        >
-                            <Swords className="w-5 h-5 text-red-400" />
-                            Attack Planning
-                        </Link>
-                        <Link 
-                            href="/planning/defense" 
-                            className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2"
-                        >
-                            <Shield className="w-5 h-5 text-sky-400" />
-                            Defense Strategy
-                        </Link>
-                        <Link 
-                            href="/analysis/season-overview" 
-                            className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors pl-2"
-                        >
-                            <Trophy className="w-5 h-5 text-yellow-500" />
-                            Season Stats
-                        </Link>
-                        
-                        <div className="h-px bg-slate-800/50 my-1" />
-                      </>
-                    ) : (
-                        <Link 
-                            href="/alliance/onboarding" 
-                            className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
-                        >
-                            <Users className="w-5 h-5 text-slate-300" />
-                            Join/Create Alliance
-                        </Link>
-                    )}
-
-                    <Link 
-                        href="/about" 
-                        className="flex items-center gap-2 text-lg font-medium text-slate-300 hover:text-white transition-colors"
+                      <X aria-hidden="true" />
+                    </Dialog.Close>
+                  </div>
+                  <nav className={styles.panelNav} aria-label="Site navigation">
+                    <div className={styles.catalogs}>
+                      {catalogs.map((item) => destination(item))}
+                    </div>
+                    <section
+                      className={styles.panelGroup}
+                      aria-label="Planning"
                     >
-                      <Info className="w-5 h-5" />
-                      About
-                    </Link>
-                  </div>
-                  
-                  <div className="h-px bg-slate-800 my-2" />
-                  
-                  <div>
-                    {userButton}
-                  </div>
-                </nav>
-              </SheetContent>
-            </Sheet>
+                      <h2>Plan</h2>
+                      {destination(quest)}
+                      <h3>Alliance</h3>
+                      {(isInAlliance ? alliance : [onboarding]).map((item) =>
+                        destination(item),
+                      )}
+                    </section>
+                    <section
+                      className={styles.panelGroup}
+                      aria-label="Community and help"
+                    >
+                      <h2>Community & help</h2>
+                      {community.map((item) => destination(item))}
+                    </section>
+                    <div className={styles.panelGroup}>
+                      {destination(search)}
+                    </div>
+                  </nav>
+                </Dialog.Content>
+              </Dialog.Portal>
+            </Dialog.Root>
           </div>
         </div>
-      </div>
-    </header>
+      </header>
+    </HeaderOverlayContext.Provider>
   );
 }

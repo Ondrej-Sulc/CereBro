@@ -7,13 +7,12 @@ export type CrystalRewardVariant = { reward: CrystalRewardCard; label: string; c
 export type CrystalRewardRate = { key: string; rate: CrystalOddsRow; variants: CrystalRewardVariant[]; visual: CrystalOddsRowVisual }
 export type CrystalRewardPrize = Pick<CrystalOddsGroup, "sourceIndex" | "name" | "isFeatured"> & { rows: CrystalRewardRate[]; guaranteed: boolean }
 export type CrystalRewardPresentation = { groups: CrystalRewardPrize[]; unrated: CrystalRewardVariant[]; championOdds: CrystalOddsOpening | null; hasRates: boolean }
-export type CrystalRewardSort = "rarest" | "commonest"
 
-/** Sort one prize group's displayed category rates, never its individual options.
+/** Sort one prize group's displayed category rates from most common to rarest,
+ * retaining source order for ties and never sorting its individual options.
  * Unrated rewards stay in the separate, source-ordered presentation.unrated list. */
-export function sortCrystalRewardRows(rows: readonly CrystalRewardRate[], order: CrystalRewardSort): CrystalRewardRate[] {
-  const direction = order === "rarest" ? 1 : -1
-  return [...rows].sort((a, b) => direction * (Number(a.rate.percentValue) - Number(b.rate.percentValue)))
+export function sortCrystalRewardRows(rows: readonly CrystalRewardRate[]): CrystalRewardRate[] {
+  return [...rows].sort((a, b) => Number(b.rate.percentValue) - Number(a.rate.percentValue))
 }
 
 type Category = { id: string; rewards: readonly CrystalRewardCard[] }
