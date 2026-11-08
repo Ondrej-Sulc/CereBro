@@ -64,7 +64,7 @@ afterEach(async () => {
   vi.unstubAllGlobals()
 })
 async function openBuild() {
-  const button = [...document.querySelectorAll("button")].find(item => item.textContent === "Adjust build")!
+  const button = [...document.querySelectorAll("button")].find(item => item.getAttribute("aria-label") === "Adjust build")!
   await act(async () => button.click())
 }
 function metric(kind: "health" | "attack") {

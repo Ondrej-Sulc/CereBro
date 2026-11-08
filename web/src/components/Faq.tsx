@@ -1,75 +1,19 @@
-"use client";
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown } from "lucide-react";
+import Link from "next/link";
+import styles from "./home/home-discovery.module.css";
 
 const faqs = [
-  {
-    question: "Is CereBro free to use?",
-    answer: "Yes, CereBro is completely free. All features are available at no cost. If you find the bot useful, you can support its development and hosting costs via the links in the Support section, but it is never required."
-  },
-  {
-    question: "How does the Roster processing work?",
-    answer: "You can upload a screenshot of your champion roster from the game. CereBro uses advanced image processing algorithm to read the image, identify your champions, and automatically update your personal roster associated with your Discord profile. This saves you from manually entering every champion."
-  },
-  {
-    question: "What data does the bot store?",
-    answer: "CereBro stores your Discord user ID, MCOC in-game name, and any roster/prestige data you provide. All data is stored securely and is never shared with third parties. You can request to have your data deleted at any time by contacting us on the support server."
-  },
-  {
-    question: "How do I set up AQ scheduling?",
-    answer: "Once you've registered your alliance, officers can use the /aq schedule command to configure the map, modifiers, and start times. The bot will then automatically create channels and ping relevant members when it's time to move."
-  },
-  {
-    question: "Where does the champion and game data come from?",
-    answer: "Champion ability and stat data is meticulously collected and maintained. It is typically updated within 24 hours of a new champion release or balance patch from Kabam."
-  }
+  { question: "Do I need to sign in to explore CereBro?", answer: "No. Champion pages, crystal and relic catalogs, and champion acquisition sources are public. Sign in with Discord to manage your own roster and use your alliance's planning tools." },
+  { question: "How do roster screenshots work?", answer: "Upload your in-game champion roster screenshots to CereBro in Discord. Image processing identifies your champions and updates the roster attached to your game profile." },
+  { question: "Does everyone need to set up an alliance?", answer: "No. Officers configure the alliance, roles and channels. Members can join through Discord role sync or submit a website join request for an officer to approve." },
+  { question: "Are the catalogs a live view of the game store?", answer: "No. They describe recorded definitions and reviewed sources, including historical ones. Category rates are shown where captured; a catalog listing does not establish current availability or an individual champion's drop chance." },
 ];
 
 export function Faq() {
-  const [activeIndex, setActiveIndex] = useState<number | null>(null);
-
-  const toggleFaq = (index: number) => {
-    setActiveIndex(activeIndex === index ? null : index);
-  };
-
   return (
-    <div className="space-y-3">
-      {faqs.map((faq, index) => {
-        const isOpen = activeIndex === index;
-
-        return (
-          <div key={index} className="glass rounded-xl border border-slate-800/50 overflow-hidden">
-            <button
-              className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-slate-800/30 transition-colors"
-              onClick={() => toggleFaq(index)}
-            >
-              <span className="text-sm font-medium text-slate-100">{faq.question}</span>
-              <motion.div
-                animate={{ rotate: isOpen ? 180 : 0 }}
-                transition={{ duration: 0.2 }}
-              >
-                <ChevronDown className="w-5 h-5 text-slate-400" />
-              </motion.div>
-            </button>
-            <AnimatePresence initial={false}>
-              {isOpen && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: "auto", opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.2, ease: "easeInOut" }}
-                  style={{ overflow: "hidden" }}
-                >
-                  <p className="text-sm text-slate-300/90 p-5 pt-1">
-                    {faq.answer}
-                  </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        );
-      })}
+    <div className={styles.faqList}>
+      {faqs.map(faq => <details key={faq.question} className={styles.faqItem}><summary>{faq.question}<ChevronDown aria-hidden="true" /></summary><p>{faq.answer}</p></details>)}
+      <details className={styles.faqItem}><summary>Is CereBro free to use?<ChevronDown aria-hidden="true" /></summary><p>Yes. CereBro is free to use. Contributions through the <Link href="/support">Support page</Link> help with development and hosting and are optional.</p></details>
     </div>
   );
 }

@@ -52,6 +52,23 @@ it("gives a small mixed crystal a rewards-first layout without redundant champio
   expect(html).toContain("31.26%")
 })
 
+it.each(["7star_night_and_day_crystal", "7star_night_and_day_nexus_crystal"])("keeps the exact six-champion pool, opening and host return for %s", async id => {
+  const returnTo = "/crystals/champions?champion=domino&rarity=7&category=other&page=2"
+  const data = (await loadCrystalDetails(id, { rarity: "7", returnTo }))!
+  expect(data.poolChampions.map(champion => champion.gameId)).toEqual(["domino", "hyperion", "misterknight", "omegasentinel", "purgatory", "rhino"])
+  expect(data.poolChampions.every(champion => champion.rarities.join() === "7")).toBe(true)
+  const html = renderToStaticMarkup(<CrystalDetailView data={data} />)
+  expect(html).toContain('aria-label="Champions in this crystal"')
+  expect(html).toContain("Back to champion search")
+  expect(data.returnTo).toBe(parseCrystalReturnTo(returnTo))
+  expect(html).toContain(`href="${data.returnTo!.replaceAll("&", "&amp;")}"`)
+  expect(html).not.toContain('data-champion-toolbar')
+  expect(html).not.toContain('placeholder="Search champions…"')
+  expect(html.match(/data-champion-portrait=/g)).toHaveLength(6)
+  expect(html).toContain('data-crystal-layout="champions"')
+  expect(data.opening?.id).toBe(id)
+})
+
 it("keeps event context and its evidence inside the crystal header", async () => {
   const html = renderToStaticMarkup(<CrystalDetailView data={(await loadCrystalDetails("superior_banquet_crystal_dec24", {}))!} />)
   expect(html.indexOf('aria-label="Crystal availability"')).toBeLessThan(html.indexOf('data-crystal-content'))

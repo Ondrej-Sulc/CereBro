@@ -44,7 +44,7 @@ export type CrystalSearchParams = {
   section?: string | string[]
   champion?: string | string[]
 }
-export type CrystalChampion = { gameId: string; name: string; slug: string | null; championClass: ChampionClass | null; portraitUrl: string | null; rarities: number[]; obtainable: string[]; firstEditionRarities?: number[]; firstEditionSources?: string[] }
+export type CrystalChampion = { gameId: string; name: string; slug: string | null; championClass: ChampionClass | null; portraitUrl: string | null; galleryPortraitUrl?: string; rarities: number[]; obtainable: string[]; firstEditionRarities?: number[]; firstEditionSources?: string[] }
 const PAGE_SIZE = 48
 const first = (value?: string | string[]) => Array.isArray(value) ? value[0] : value
 const normalize = (value: string) => value.normalize("NFKD").toLocaleLowerCase("en").replace(/[^a-z0-9]/g, "")
@@ -147,12 +147,19 @@ export async function loadCrystalDetails(id: string, params: CrystalSearchParams
   const q = queryText(first(params.q))
   const championClass = Object.values(ChampionClass).find(value => value === first(params.class)) ?? "all"
   const records = new Map((await championIndex()).flatMap(champion => champion.gameId ? [[champion.gameId, champion] as const] : []))
+  const smallGallery = contents.length <= 8 && rarities.length === 1
   const all: CrystalChampion[] = contents.map(reward => {
     const champion = records.get(reward.championId)
     const firstEditionRarities = [...new Set(reward.firstEditionRarities)].sort((a, b) => b - a)
+    const portraitUrl = champion && isChampionImages(champion.images) ? getChampionImageUrlOrPlaceholder(champion.images, "64") : null
+    // Resolve published image variants from metadata, never by rewriting asset URLs.
+    // Only small galleries carry the larger source; the dense browser keeps its 64px contract.
+    const images = champion?.images
+    const galleryPortraitUrl = smallGallery && isChampionImages(images) && [images.full_primary, images.p_128].some(value => typeof value === "string" && value.trim())
+      ? getChampionImageUrlOrPlaceholder(images, "full") : null
     return { gameId: reward.championId, name: champion?.name ?? reward.sourceName ?? reward.championId,
       slug: champion?.slug ?? null, championClass: champion?.class ?? null,
-      portraitUrl: champion && isChampionImages(champion.images) ? getChampionImageUrlOrPlaceholder(champion.images, "64") : null,
+      portraitUrl, ...(galleryPortraitUrl ? { galleryPortraitUrl } : {}),
       rarities: reward.rarities, obtainable: champion?.obtainable ?? [], ...(firstEditionRarities.length ? { firstEditionRarities } : {}) }
   }).sort((a, b) => a.name.localeCompare(b.name, "en") || a.gameId.localeCompare(b.gameId, "en"))
   const projection = filterCrystalPool(all, { rarity, q, championClass })

@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation"
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react"
 import { BookOpen, Check, ChevronDown, Compass, Copy, Crosshair, Layers3, Link2, SlidersHorizontal, Swords, Target, Users } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
+import * as Dialog from "@radix-ui/react-dialog"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { getChampionClassColors } from "@/lib/championClassHelper"
@@ -112,15 +112,15 @@ export function ChampionDetailsClient(props: ChampionDetailsProps) {
     setAscensionLevel: value => updatePageState({ ascension: value }),
   }
 
-  return <TooltipProvider><ChampionDossier view={view} pageState={pageState} updatePageState={updatePageState} /></TooltipProvider>
+  return <TooltipProvider><ChampionDossier key={champion.id} view={view} pageState={pageState} updatePageState={updatePageState} /></TooltipProvider>
 }
 
 const DOSSIER_TABS = [
-  { value: "overview", label: "Kit overview", detail: "Effects & immunities", icon: Layers3 },
-  { value: "abilities", label: "Full abilities", detail: "Read the complete kit", icon: BookOpen },
-  { value: "synergies", label: "Synergies", detail: "Partners & team bonuses", icon: Users },
-  { value: "stats", label: "Stats & attacks", detail: "Ratings & hit breakdowns", icon: Swords },
-  { value: "crystals", label: "How to obtain", detail: "Crystals, quests & events", icon: Compass },
+  { value: "overview", label: "Kit overview", icon: Layers3 },
+  { value: "abilities", label: "Full abilities", icon: BookOpen },
+  { value: "synergies", label: "Synergies", icon: Users },
+  { value: "stats", label: "Stats & attacks", icon: Swords },
+  { value: "crystals", label: "How to obtain", icon: Compass },
 ] as const
 
 function ChampionDossier({ view, pageState, updatePageState }: {
@@ -130,32 +130,52 @@ function ChampionDossier({ view, pageState, updatePageState }: {
 }) {
   const dossierRef = useRef<HTMLDivElement>(null)
   const tabsRef = useRef<HTMLDivElement>(null)
+  const heroRef = useRef<HTMLElement>(null)
+  const sectionRef = useRef<HTMLDivElement>(null)
+  const [heroAbsent, setHeroAbsent] = useState(false)
   useLayoutEffect(() => {
     const bar = tabsRef.current
-    if (!bar) return
-    const measureBar = () => dossierRef.current?.style.setProperty("--champion-tabs-height", `${bar.getBoundingClientRect().height}px`)
+    const dossier = dossierRef.current
+    const hero = heroRef.current
+    if (!bar || !dossier || !hero) return
+    let identityObserver: IntersectionObserver | undefined
+    const measureBar = () => {
+      const height = bar.getBoundingClientRect().height
+      dossier.style.setProperty("--champion-tabs-height", `${height}px`)
+      const headerHeight = parseFloat(getComputedStyle(dossier).getPropertyValue("--champion-header-height")) || 64
+      // The bar follows the hero: identity changes at the header edge, where it docks.
+      // Read synchronously as well as observing so restored scroll has no identity flash.
+      setHeroAbsent(hero.getBoundingClientRect().bottom <= headerHeight)
+      identityObserver?.disconnect()
+      if (typeof IntersectionObserver !== "undefined") {
+        identityObserver = new IntersectionObserver(([entry]) => {
+          setHeroAbsent(!entry.isIntersecting && entry.boundingClientRect.bottom <= headerHeight)
+        }, { rootMargin: `-${headerHeight}px 0px 0px 0px`, threshold: 0 })
+        identityObserver.observe(hero)
+      }
+    }
     // Deep-link effects must read the actual toolbar height on their first scroll.
     measureBar()
     const observer = new ResizeObserver(measureBar)
     observer.observe(bar)
-    return () => observer.disconnect()
+    return () => { observer.disconnect(); identityObserver?.disconnect() }
   }, [])
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (window.scrollY === 0 && params.has("tab") && !params.has("ability") && !params.has("synergy") && !window.location.hash) {
-      scrollToChampionSection(tabsRef.current)
+      scrollToChampionSection(sectionRef.current)
     }
     // Preserve user/browser scroll and exact targets if hydration completes after interaction.
     // Later deliberate tab changes scroll in selectSection.
   }, [])
   const selectSection = (value: string) => {
     updatePageState({ tab: value as ChampionPageState["tab"], ability: null, synergy: null }, true)
-    window.requestAnimationFrame(() => scrollToChampionSection(tabsRef.current))
+    window.requestAnimationFrame(() => scrollToChampionSection(sectionRef.current))
   }
   const openAbility = (recordId: string) => updatePageState({ tab: "abilities", ability: recordId }, true)
   const openSynergy = (synergyId?: string) => {
     updatePageState({ tab: "synergies", ability: null, synergy: synergyId ?? null }, true)
-    if (!synergyId) window.requestAnimationFrame(() => scrollToChampionSection(tabsRef.current))
+    if (!synergyId) window.requestAnimationFrame(() => scrollToChampionSection(sectionRef.current))
   }
   const openChapter = (chapter: string) => {
     updatePageState({ tab: "abilities", chapter: chapter === "all" ? null : chapter, ability: null }, true)
@@ -165,9 +185,9 @@ function ChampionDossier({ view, pageState, updatePageState }: {
   return (
     <div ref={dossierRef} className={cn(styles.dossier, "relative min-h-screen overflow-x-clip bg-[#080b10] pb-16 text-slate-200")} style={{ "--champion-accent": view.accent } as CSSProperties}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[900px] bg-[radial-gradient(circle_at_76%_22%,rgba(255,255,255,.05),transparent_42%)]" />
-      <div className="relative w-full px-5 py-7 sm:px-8 lg:px-10 2xl:px-12">
-        <Tabs value={pageState.tab} onValueChange={selectSection}>
-          <section className={styles.hero} aria-label={`${view.champion.name} banner`}>
+      <Tabs value={pageState.tab} onValueChange={selectSection} className={styles.dossierSections}>
+        <div className={styles.heroFrame}>
+          <section ref={heroRef} className={styles.hero} aria-label={`${view.champion.name} banner`}>
             <div className={styles.heroArt}>
               <Image src={view.heroUrl} alt="" fill priority sizes="(max-width: 1024px) 100vw, 78vw" className="object-cover object-center" />
             </div>
@@ -197,13 +217,19 @@ function ChampionDossier({ view, pageState, updatePageState }: {
 
             </div>
           </section>
-
-          <div ref={tabsRef} className={styles.tabsBar}>
-            <div className={styles.sectionToolbar}>
-              <DossierBuildControls view={view} />
+        </div>
+        <div ref={tabsRef} className={styles.tabsBar} data-champion-context data-docked={heroAbsent}>
+          <div className={styles.contextInner}>
+            <div className={styles.contextBuild} aria-label="Champion build">
+              <span className={styles.contextName} data-visible={heroAbsent} aria-hidden={!heroAbsent} title={view.champion.name}>{view.champion.name}</span>
+              <BuildReadout view={view} className={styles.contextReadout} showAscension />
             </div>
-            <DossierSectionNavigation value={pageState.tab} onSelect={selectSection} accent={view.accent} />
+            <DossierSectionNavigation value={pageState.tab} onSelect={selectSection} accent={view.accent} championName={view.champion.name} showName={heroAbsent} />
+            <DossierBuildControls view={view} />
           </div>
+        </div>
+        <div className="relative w-full px-5 sm:px-8 lg:px-10 2xl:px-12">
+          <div ref={sectionRef} className={styles.sections} data-champion-section-content>
           <TabsContent value="overview" className="mt-0 pb-8 pt-10">
             <ChampionKitOverview view={view} onViewAbility={openAbility} onViewSynergies={openSynergy} sideContent={view.champion.duels.length > 0 ? <DossierDuelTargets view={view} /> : undefined} />
             <DossierTraits view={view} />
@@ -212,49 +238,61 @@ function ChampionDossier({ view, pageState, updatePageState }: {
           <TabsContent value="synergies" className="mt-0 pb-8 pt-10"><DossierSynergies view={view} targetSynergyId={pageState.synergy} onClearTarget={() => updatePageState({ synergy: null }, true)} /></TabsContent>
           <TabsContent value="stats" className="mt-0 pb-8 pt-10"><ChampionStatsPanel view={view} onViewAbility={openChapter} /></TabsContent>
           <TabsContent value="crystals" className="mt-0 pb-8 pt-10"><ChampionAcquisitionPanel key={view.selectedRarity} acquisition={view.champion.acquisition} availability={view.champion.crystalAvailability} selectedRarity={view.selectedRarity} championName={view.champion.name} championSlug={view.champion.slug} ascensionRules={view.ascensionRules} /></TabsContent>
-        </Tabs>
-      </div>
+          </div>
+        </div>
+      </Tabs>
     </div>
   )
 }
 
-function DossierSectionNavigation({ value, onSelect, accent }: {
+function DossierSectionNavigation({ value, onSelect, accent, championName, showName }: {
   value: ChampionPageState["tab"]
   onSelect: (value: ChampionPageState["tab"]) => void
   accent: string
+  championName: string
+  showName: boolean
 }) {
   const [open, setOpen] = useState(false)
+  const [previousValue, setPreviousValue] = useState(value)
+  if (previousValue !== value) { setPreviousValue(value); setOpen(false) }
   const currentChoiceRef = useRef<HTMLButtonElement>(null)
   const desktopTabsRef = useRef<HTMLDivElement>(null)
+  const pickerRef = useRef<HTMLButtonElement>(null)
   const active = DOSSIER_TABS.find(tab => tab.value === value) ?? DOSSIER_TABS[0]
 
   useEffect(() => {
-    if (!open || !window.matchMedia) return
-    const desktop = window.matchMedia("(min-width: 640px)")
-    const closeOnDesktop = () => { if (desktop.matches) setOpen(false) }
+    if (!window.matchMedia) return
+    const desktop = window.matchMedia("(min-width: 1200px)")
+    const closeOnDesktop = () => {
+      if (desktop.matches) {
+        if (open) setOpen(false)
+        else if (document.activeElement === pickerRef.current) desktopTabsRef.current?.querySelector<HTMLElement>('[data-state="active"]')?.focus({ preventScroll: true })
+      } else if (desktopTabsRef.current?.contains(document.activeElement)) pickerRef.current?.focus({ preventScroll: true })
+    }
     closeOnDesktop()
     desktop.addEventListener("change", closeOnDesktop)
     return () => desktop.removeEventListener("change", closeOnDesktop)
   }, [open])
 
   return <>
-    <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger asChild>
-        <button type="button" className={styles.sectionPicker} aria-label={`Champion section: ${active.label}`}>
+    <Dialog.Root open={open} onOpenChange={setOpen}>
+      <Dialog.Trigger asChild>
+        <button ref={pickerRef} type="button" className={styles.sectionPicker} aria-label={`Champion section: ${active.label}`} aria-describedby={showName ? "champion-context-picker-name" : undefined}>
           <active.icon aria-hidden="true" className={styles.sectionPickerIcon} />
-          <span>{active.label}</span>
+          <span className={styles.pickerText}><span>{active.label}</span><span id="champion-context-picker-name" className={styles.contextName} data-visible={showName} aria-hidden={!showName} title={championName}>{championName}</span></span>
           <ChevronDown aria-hidden="true" className={styles.sectionPickerChevron} />
         </button>
-      </SheetTrigger>
-      <SheetContent side="bottom" className={styles.sectionSheet} style={{ "--champion-accent": accent } as CSSProperties} aria-describedby={undefined}
+      </Dialog.Trigger>
+      <Dialog.Portal><Dialog.Overlay className={styles.sectionOverlay} />
+      <Dialog.Content className={styles.sectionSheet} style={{ "--champion-accent": accent } as CSSProperties} aria-describedby={undefined}
         onOpenAutoFocus={event => { event.preventDefault(); currentChoiceRef.current?.focus() }}
         onCloseAutoFocus={event => {
-          if (window.matchMedia?.("(min-width: 640px)").matches) {
+          if (window.matchMedia?.("(min-width: 1200px)").matches) {
             event.preventDefault()
             desktopTabsRef.current?.querySelector<HTMLElement>('[data-state="active"]')?.focus({ preventScroll: true })
           }
         }}>
-        <SheetTitle className={styles.sectionSheetTitle}>Champion sections</SheetTitle>
+        <Dialog.Title className={styles.sectionSheetTitle}>Champion sections</Dialog.Title>
         <div className={styles.sectionChoices}>
           {DOSSIER_TABS.map(tab => <button key={tab.value} type="button" ref={tab.value === value ? currentChoiceRef : undefined}
             className={styles.sectionChoice} aria-current={tab.value === value ? "page" : false}
@@ -264,12 +302,13 @@ function DossierSectionNavigation({ value, onSelect, accent }: {
             {tab.value === value && <Check aria-hidden="true" className={styles.sectionChoiceCheck} />}
           </button>)}
         </div>
-      </SheetContent>
-    </Sheet>
+        <Dialog.Close className={styles.sectionClose} aria-label="Close champion sections">×</Dialog.Close>
+      </Dialog.Content></Dialog.Portal>
+    </Dialog.Root>
     <TabsList ref={desktopTabsRef} aria-label="Champion sections" className={styles.tabsList}>
       {DOSSIER_TABS.map(tab => <TabsTrigger key={tab.value} value={tab.value} className={styles.tab}>
         <tab.icon aria-hidden="true" className={styles.tabIcon} />
-        <span><span className={styles.tabLabel}>{tab.label}</span><span className={styles.tabDetail}>{tab.detail}</span></span>
+        <span className={styles.tabLabel}>{tab.label}</span>
       </TabsTrigger>)}
     </TabsList>
   </>
@@ -311,11 +350,18 @@ function DossierBuildControls({ view }: { view: ChampionDetailsView }) {
   }
   if (!view.selectedStat) return null
   return (
-    <div aria-label="Champion build" className="flex w-full min-w-0 flex-wrap items-center justify-between gap-2">
-      <BuildReadout view={view} className="text-white/55" />
       <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild><button type="button" className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-white/15 bg-white/[.035] px-3 text-sm font-medium text-slate-200 transition-colors hover:border-white/30 hover:bg-white/[.08] hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300"><SlidersHorizontal aria-hidden="true" className="h-4 w-4" />Adjust build</button></PopoverTrigger>
-        <PopoverContent align="end" sideOffset={12} collisionPadding={16} aria-label="Adjust champion build" aria-describedby="champion-build-description" className="w-[min(420px,calc(100vw-2rem))] max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-xl border-white/15 bg-[#101620] p-5 text-slate-200 shadow-2xl">
+        <PopoverTrigger asChild>
+          <button type="button" className={styles.buildTrigger} aria-label="Adjust build" title={`Adjust build: ${view.selectedRarity}-star, Rank ${view.selectedRank}, Signature ${view.sigLevel}, Ascension ${view.ascensionLevel}`}>
+            <SlidersHorizontal aria-hidden="true" />
+            <span className={styles.buildEditLabel}>Adjust build</span>
+            <span className={styles.mobileBuild} aria-hidden="true">
+              <span><span>{view.selectedRarity}{"\u2605"}</span><span>Rank {view.selectedRank}</span></span>
+              <span><span>Sig {view.sigLevel}</span><span>A{view.ascensionLevel}</span></span>
+            </span>
+          </button>
+        </PopoverTrigger>
+        <PopoverContent align="end" sideOffset={8} collisionPadding={16} aria-label="Adjust champion build" aria-describedby="champion-build-description" className="z-[150] w-[min(420px,calc(100vw-2rem))] max-h-[var(--radix-popover-content-available-height)] overflow-y-auto rounded-xl border-white/15 bg-[#101620] p-5 text-slate-200 shadow-2xl">
           <div className="mb-5"><h2 className="text-lg font-semibold text-white">Adjust build</h2><p id="champion-build-description" className="mt-1 text-sm leading-6 text-slate-400">Stats and abilities update as you adjust.</p></div>
           <div className={styles.buildFields} data-ascendable={(view.ascensionOptions?.length ?? 0) > 1}>
             <BuildSelect label="Rarity" value={view.selectedRarity} onChange={view.setRarity} options={view.rarityOptions.map(rarity => ({ value: String(rarity), label: `${rarity} ★` }))} />
@@ -333,7 +379,6 @@ function DossierBuildControls({ view }: { view: ChampionDetailsView }) {
           <div className="mt-5 flex items-center justify-between gap-3 border-t border-white/10 pt-4"><CopyPageLink onClick={copyLink} /><button type="button" onClick={() => setOpen(false)} className="min-h-10 rounded-lg bg-slate-200 px-4 text-sm font-semibold text-slate-950 transition-colors hover:bg-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 focus-visible:ring-offset-2 focus-visible:ring-offset-[#101620]">Done</button></div>
         </PopoverContent>
       </Popover>
-    </div>
   )
 }
 

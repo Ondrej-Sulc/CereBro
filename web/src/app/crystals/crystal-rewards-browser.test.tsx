@@ -33,34 +33,27 @@ async function render(id = "superior_banquet_crystal_dec24") {
   await act(async () => root.render(<CrystalRewardsBrowser key={`rewards:${id}`} presentation={opening.rewardPresentation} />))
   return opening
 }
-async function search(value: string) {
-  const input = container.querySelector<HTMLInputElement>('[aria-label="Search rewards"]')!
-  await act(async () => {
-    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, value)
-    input.dispatchEvent(new Event("input", { bubbles: true }))
-  })
-}
-
-async function sortRewards(label: "Rarest first" | "Most common first") {
-  const trigger = container.querySelector<HTMLButtonElement>('[aria-label="Sort rewards"]')!
-  await act(async () => trigger.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true })))
-  const option = [...document.querySelectorAll<HTMLElement>('[role="option"]')].find(option => option.textContent === label)!
-  expect(option).toBeDefined()
-  await act(async () => option.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })))
-  expect(trigger.textContent).toBe(label)
-  expect(trigger.getAttribute("aria-expanded")).toBe("false")
+function expectNoRewardToolbar() {
+  expect(container.querySelector('[aria-label="Search rewards"], [aria-label="Sort rewards"], [aria-label="Clear reward search"]')).toBeNull()
+  expect(container.querySelector('input, select, [role="combobox"], [role="toolbar"]')).toBeNull()
+  expect(container.textContent).not.toMatch(/Clear filters|Show all rewards|No rewards match/)
 }
 
 const rowKeys = (host: ParentNode = container) => [...host.querySelectorAll('[data-odds-row]')].map(row => row.getAttribute("data-odds-row"))
 
-it("shows all four Elder Web of Corruption rates together, rarest first", async () => {
+it("shows all four Elder Web of Corruption rates together, most common first without a toolbar", async () => {
   const opening = await render("elder_web_of_corruption_saga_crystal")
   const rows = [...container.querySelectorAll('[data-odds-row]')]
-  expect(rows.map(row => row.getAttribute("data-odds-row"))).toEqual(["0:0", "0:1", "0:2", "0:3"])
+  expect(rows.map(row => row.getAttribute("data-odds-row"))).toEqual(["0:3", "0:2", "0:1", "0:0"])
   expect(rows.map(row => row.querySelector('[title^="Server-disclosed"]')?.getAttribute("title"))).toEqual([
-    "Server-disclosed value: 4.05%", "Server-disclosed value: 9.01%", "Server-disclosed value: 18.02%", "Server-disclosed value: 68.92%",
+    "Server-disclosed value: 68.92%", "Server-disclosed value: 18.02%", "Server-disclosed value: 9.01%", "Server-disclosed value: 4.05%",
   ])
-  for (const [index, row] of rows.entries()) expect(row.textContent).toContain(opening.odds!.groups![0].rows[index].label)
+  for (const row of rows) {
+    const sourceIndex = Number(row.getAttribute("data-odds-row")!.split(":")[1])
+    expect(row.textContent).toContain(opening.odds!.groups![0].rows[sourceIndex].label)
+  }
+  expectNoRewardToolbar()
+  expect(container.querySelector('[aria-label="Reward prize groups"]')).toBeNull()
   expect(container.querySelectorAll('[data-certain]')).toHaveLength(0)
   expect(container.textContent).not.toContain("Guaranteed")
 })
@@ -101,23 +94,6 @@ it("keeps guaranteed extras in their original groups with expandable exact denom
   expect(iso.textContent).not.toContain("Gold")
 })
 
-it("searches classes and formatted amounts locally without changing category rates", async () => {
-  await render()
-  await search("28,500")
-  const rows = [...container.querySelectorAll('[data-odds-row]')]
-  expect(rows.length).toBeGreaterThan(0)
-  expect(rows.every(row => row.textContent?.includes("28,500"))).toBe(true)
-  expect(container.querySelector('[title="Server-disclosed value: 31.26%"]')?.textContent).toBe("31.26%")
-  await search("science")
-  expect([...container.querySelectorAll('[data-odds-row]')].every(row => /science/i.test(row.textContent ?? ""))).toBe(true)
-  await search("no such reward")
-  expect(container.querySelectorAll('[data-odds-row]')).toHaveLength(0)
-  expect(container.textContent).toContain("No rewards match these filters")
-  await act(async () => [...container.querySelectorAll("button")].find(button => button.textContent === "Show all rewards")!.click())
-  expect(container.querySelector<HTMLInputElement>('input')?.value).toBe("")
-  expect(container.querySelectorAll('[data-odds-row]')).toHaveLength(22)
-})
-
 it("filters repeated shard prizes without sharing their percentages or quantities", async () => {
   await render("superior_banquet_crystal_dec25")
   await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Show Prize 2"]')!.click())
@@ -131,109 +107,114 @@ it("filters repeated shard prizes without sharing their percentages or quantitie
 
 it("keeps exact nested crystal links alongside the complete mixed disclosure", async () => {
   await render("paragon_crystal_v2")
-  expect([...container.querySelectorAll("a")].map(anchor => anchor.getAttribute("href"))).toEqual(["/crystals/sg_6star_nexus_crystal", "/crystals/sg_5star_nexus_crystal"])
+  expect([...container.querySelectorAll("a")].map(anchor => anchor.getAttribute("href"))).toEqual(["/crystals/sg_5star_nexus_crystal", "/crystals/sg_6star_nexus_crystal"])
   expect(container.querySelectorAll('[data-odds-row]')).toHaveLength(6)
   expect(container.querySelectorAll('[data-reward-artwork]')).toHaveLength(2)
   expect(container.textContent).toContain("Choose 1 of 3")
   expect(container.textContent).toContain("7-Star Hero")
 })
 
-it("defaults to rarest first and switches direction only within each prize group", async () => {
+it("always sorts high to low inside each existing prize group without changing group order or boundaries", async () => {
   const opening = await render("superior_banquet_crystal_dec25")
   const original = structuredClone(opening.rewardPresentation)
-  expect(container.querySelector('[aria-label="Sort rewards"]')?.textContent).toBe("Rarest first")
-  for (const direction of ["rarest", "commonest"] as const) {
-    if (direction === "commonest") await sortRewards("Most common first")
+  expectNoRewardToolbar()
+  const navigation = container.querySelector('[aria-label="Reward prize groups"]')!
+  expect(navigation.parentElement).toBe(container.querySelector("#crystal-other-rewards"))
+  for (const selected of ["all", "PRIZE 2", "all"]) {
+    const control = selected === "all" ? "Show all prize groups" : `Show ${selected.replace("PRIZE", "Prize")}`
+    await act(async () => container.querySelector<HTMLButtonElement>(`[aria-label="${control}"]`)!.click())
     const rendered = [...container.querySelectorAll('article[aria-label^="Prize "]')]
-    expect(rendered.map(group => group.getAttribute("aria-label"))).toEqual(opening.rewardPresentation.groups.map(group => group.name!.replace("PRIZE", "Prize")))
+    const sources = opening.rewardPresentation.groups.filter(group => selected === "all" || group.name === selected)
+    expect(rendered.map(group => group.getAttribute("aria-label"))).toEqual(sources.map(group => group.name!.replace("PRIZE", "Prize")))
     for (const [index, group] of rendered.entries()) {
-      const source = opening.rewardPresentation.groups[index]
-      const expected = [...source.rows].sort((a, b) => (direction === "rarest" ? 1 : -1) * (Number(a.rate.percentValue) - Number(b.rate.percentValue)))
+      const source = sources[index]
+      const expected = [...source.rows].sort((a, b) => Number(b.rate.percentValue) - Number(a.rate.percentValue))
       expect(rowKeys(group)).toEqual(expected.map(row => row.key))
     }
   }
   expect(opening.rewardPresentation).toEqual(original)
 })
 
-it("keeps expanded class/amount families open when sorting moves them between columns", async () => {
+it("keeps expanded class and amount families open across prize group changes and remembers manual closing", async () => {
   const opening = await render()
   const fragments = opening.rewardPresentation.groups.flatMap(group => group.rows).find(row => row.rate.label === "Tier 6 Class Catalyst Fragments")!
   const row = container.querySelector<HTMLDetailsElement>(`[data-odds-row="${fragments.key}"]`)!
-  const column = row.parentElement
   await act(async () => { row.open = true; row.dispatchEvent(new Event("toggle")) })
-  await sortRewards("Most common first")
+  const gold = container.querySelector<HTMLDetailsElement>('[aria-label="Prize 2"] details')!
+  await act(async () => { gold.open = true; gold.dispatchEvent(new Event("toggle")) })
+  await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Show Prize 3"]')!.click())
+  expect(container.querySelector(`[data-odds-row="${fragments.key}"]`)).toBeNull()
+  expect(container.querySelector('[aria-label="Prize 2"]')).toBeNull()
+  await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Show all prize groups"]')!.click())
   const moved = container.querySelector<HTMLDetailsElement>(`[data-odds-row="${fragments.key}"]`)!
-  expect(moved.parentElement).not.toBe(column)
   expect(moved.open).toBe(true)
+  const restoredGold = container.querySelector<HTMLDetailsElement>('[aria-label="Prize 2"] details')!
+  expect(restoredGold.open).toBe(true)
+  expect([...restoredGold.querySelectorAll("li")].map(option => option.textContent)).toEqual(["×250,000", "×500,000", "×1,000,000", "×2,500,000"])
   expect(moved.querySelectorAll('[aria-label="Reward variants"] > li')).toHaveLength(6)
   expect(moved.querySelectorAll('[title="Server-disclosed value: 31.26%"]')).toHaveLength(1)
   expect([...moved.querySelectorAll("li li")].every(option => !option.textContent?.includes("%"))).toBe(true)
   await act(async () => { moved.open = false; moved.dispatchEvent(new Event("toggle")) })
-  await sortRewards("Rarest first")
+  await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Show Prize 2"]')!.click())
+  await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Show all prize groups"]')!.click())
   expect(container.querySelector<HTMLDetailsElement>(`[data-odds-row="${fragments.key}"]`)!.open).toBe(false)
   expect(container.querySelector('[aria-label="Prize 2"] [data-certain]')?.textContent).toBe("100.00%")
   expect(container.querySelector('[aria-label="Prize 3"] [data-certain]')?.textContent).toBe("100.00%")
 })
 
-it("retains sort through search, prize filtering, empty results and clear filters", async () => {
-  await render()
-  await sortRewards("Most common first")
-  await search("science")
-  const descending = rowKeys()
-  expect(descending.length).toBeGreaterThan(1)
-  await sortRewards("Rarest first")
-  expect(container.querySelector<HTMLInputElement>('[aria-label="Search rewards"]')?.value).toBe("science")
-  await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Show Prize 1"]')!.click())
-  await sortRewards("Most common first")
-  expect(container.querySelector('[aria-label="Show Prize 1"]')?.getAttribute("aria-pressed")).toBe("true")
-  await search("no such reward")
-  expect(rowKeys()).toEqual([])
-  expect(container.querySelector('[aria-label="Sort rewards"]')?.textContent).toBe("Most common first")
-  await act(async () => [...container.querySelectorAll("button")].find(button => button.textContent === "Clear filters")!.click())
-  expect(container.querySelector('[aria-label="Sort rewards"]')?.textContent).toBe("Most common first")
-  expect(container.querySelector('[aria-label="Show all prize groups"]')?.getAttribute("aria-pressed")).toBe("true")
-  await search("science")
-  expect(rowKeys()).toEqual(descending)
-  await render()
-  expect(container.querySelector('[aria-label="Sort rewards"]')?.textContent).toBe("Most common first")
-  expect(container.querySelector<HTMLInputElement>('[aria-label="Search rewards"]')?.value).toBe("science")
-  await render("elder_web_of_corruption_saga_crystal")
-  expect(container.querySelector('[aria-label="Sort rewards"]')?.textContent).toBe("Rarest first")
-})
-
-it("leaves unrated rewards last in original order in either direction, with stable numeric ties and zero", async () => {
+it("leaves unrated rewards last in original order, with stable numeric ties and zero", async () => {
   const base = loadCrystalPageRewards("superior_banquet_crystal_dec24")!.rewardPresentation
   const template = base.groups[0].rows[0]
   const presentation: CrystalRewardPresentation = { ...base, groups: [{ ...base.groups[0], rows: ["10", "2", "0", "2.00"].map((percentValue, sourceIndex) => ({
     ...template, key: `0:${sourceIndex}`, rate: { ...template.rate, sourceIndex, percentValue }, variants: [],
   })) }], unrated: base.groups.filter(group => group.guaranteed).flatMap(group => group.rows.flatMap(row => row.variants)) }
   await act(async () => root.render(<CrystalRewardsBrowser presentation={presentation} />))
-  const unratedKeys = () => [...container.querySelectorAll('[data-unrated]')].map(row => row.getAttribute("data-reward-category"))
-  const originalUnrated = unratedKeys()
-  expect(originalUnrated.length).toBeGreaterThan(0)
-  expect(rowKeys()).toEqual(["0:2", "0:1", "0:3", "0:0"])
+  expect([...container.querySelectorAll('[data-unrated]')].map(row => row.getAttribute("data-reward-category"))).toEqual(presentation.unrated.map(variant => variant.reward.categoryId))
+  expect([...container.querySelectorAll('[data-unrated] strong')].map(label => label.textContent?.toLocaleLowerCase("en"))).toEqual(presentation.unrated.map(variant => variant.label.toLocaleLowerCase("en")))
   expect(container.querySelector('[title="Server-disclosed value: 0%"]')?.textContent).toBe("0.00%")
-  await sortRewards("Most common first")
   expect(rowKeys()).toEqual(["0:0", "0:1", "0:3", "0:2"])
-  expect(unratedKeys()).toEqual(originalUnrated)
   const lastRated = container.querySelector('[data-odds-row="0:2"]')!
   const firstUnrated = container.querySelector('[data-unrated]')!
   expect(lastRated.compareDocumentPosition(firstUnrated) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
   expect(firstUnrated.querySelector('[title^="Server-disclosed"]')).toBeNull()
 })
 
-it("preserves exact nested destinations, selection and browse return state in both directions", async () => {
-  const presentation = loadCrystalPageRewards("paragon_crystal_v2")!.rewardPresentation
+it("preserves exact nested destinations, selection and browse return state in fixed rate order", async () => {
+  const mixed = loadCrystalPageRewards("paragon_crystal_v2")!.rewardPresentation
+  const extra = loadCrystalPageRewards("superior_banquet_crystal_dec24")!.rewardPresentation.groups.find(group => group.name === "PRIZE 2")!
+  const presentation = { ...mixed, groups: [...mixed.groups, extra] }
   const returnTo = "/crystals?q=paragon&reward=mixed&sort=name"
   await act(async () => root.render(<CrystalBrowseBoundary returnTo={returnTo}><CrystalRewardsBrowser presentation={presentation} /></CrystalBrowseBoundary>))
   const hrefs = () => [...container.querySelectorAll("a")].map(anchor => anchor.getAttribute("href"))
-  const original = hrefs()
-  expect(original).toHaveLength(2)
-  for (const href of original) expect(new URL(href!, "https://cerebro.test").searchParams.get("returnTo")).toBe(returnTo)
-  await sortRewards("Most common first")
-  expect(hrefs()).toEqual([...original].reverse())
+  const destinations = hrefs().map(href => new URL(href!, "https://cerebro.test"))
+  expect(destinations.map(url => url.pathname)).toEqual(["/crystals/sg_5star_nexus_crystal", "/crystals/sg_6star_nexus_crystal"])
+  for (const destination of destinations) expect(destination.searchParams.get("returnTo")).toBe(returnTo)
   expect(container.textContent).toContain("Choose 1 of 3")
-  expect(rowKeys()).toHaveLength(6)
+  expect(rowKeys(container.querySelector('article[aria-label="Reward group 1"]')!)).toHaveLength(6)
+  await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Show Prize 2"]')!.click())
+  expect(hrefs()).toEqual([])
+  await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Show all prize groups"]')!.click())
+  expect(hrefs()).toEqual(destinations.map(url => `${url.pathname}${url.search}`))
+  expect(container.textContent).toContain("Choose 1 of 3")
+})
+
+it("preserves unrated amount disclosures and original source order through group selection", async () => {
+  const base = loadCrystalPageRewards("superior_banquet_crystal_dec24")!.rewardPresentation
+  const unrated = base.groups.filter(group => group.guaranteed).flatMap(group => group.rows.flatMap(row => row.variants))
+  await act(async () => root.render(<CrystalRewardsBrowser presentation={{ ...base, unrated }} />))
+  const originalOrder = [...container.querySelectorAll('[data-unrated]')].map(row => row.textContent)
+  const gold = container.querySelector<HTMLDetailsElement>('details[data-unrated]')!
+  await act(async () => { gold.open = true; gold.dispatchEvent(new Event("toggle")) })
+  await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Show Prize 1"]')!.click())
+  expect(container.querySelector('[data-unrated]')).toBeNull()
+  await act(async () => [...container.querySelectorAll("button")].find(button => button.textContent === "Other recorded")!.click())
+  expect(rowKeys()).toEqual([])
+  expect(container.querySelector<HTMLDetailsElement>('details[data-unrated]')!.open).toBe(true)
+  expect([...container.querySelectorAll('[data-unrated]')].map(row => row.textContent)).toEqual(originalOrder)
+  expect(container.querySelector('[data-unrated] [title^="Server-disclosed"]')).toBeNull()
+  await act(async () => container.querySelector<HTMLButtonElement>('[aria-label="Show all prize groups"]')!.click())
+  expect(container.querySelector<HTMLDetailsElement>('details[data-unrated]')!.open).toBe(true)
+  expect([...container.querySelectorAll('[data-unrated]')].map(row => row.textContent)).toEqual(originalOrder)
 })
 
 it("keeps conditional ascension bonuses independent of sorted mixed champion rates", async () => {
@@ -241,21 +222,20 @@ it("keeps conditional ascension bonuses independent of sorted mixed champion rat
   const originalBonuses = structuredClone(opening.conditionalBonuses)
   await act(async () => root.render(<><CrystalRewardsBrowser presentation={opening.rewardPresentation} /><CrystalOpeningRules opening={opening} /></>))
   const bonusSection = container.querySelector('[data-bonus-outcome]')!.closest("section")!
-  const originalMarkup = bonusSection.innerHTML
   expect(bonusSection.querySelectorAll('[data-bonus-outcome]')).toHaveLength(8)
+  expect([...bonusSection.querySelectorAll('[data-bonus-outcome]')].map(outcome => outcome.getAttribute("data-bonus-outcome")).sort()).toEqual(originalBonuses.map(bonus => bonus.key).sort())
   expect(container.querySelector('#crystal-other-rewards [data-bonus-outcome]')).toBeNull()
-  await sortRewards("Most common first")
   expect(rowKeys()).toEqual(["0:3", "0:2", "0:1", "0:0"])
-  expect(bonusSection.innerHTML).toBe(originalMarkup)
   expect(opening.conditionalBonuses).toEqual(originalBonuses)
 })
 
-it("preserves unknown-only rewards and renders no empty drop section or meaningless sort", async () => {
+it("preserves unknown-only and simple rewards without any empty toolbar or drop section", async () => {
   const base = loadCrystalPageRewards("superior_banquet_crystal_dec24")!.rewardPresentation
   const unrated = base.groups.flatMap(group => group.rows.flatMap(row => row.variants))
   await act(async () => root.render(<CrystalRewardsBrowser presentation={{ groups: [], unrated, championOdds: null, hasRates: false }} />))
-  expect(container.querySelector('[aria-label="Sort rewards"]')).toBeNull()
-  expect(container.querySelector('[aria-label="Search rewards"]')).not.toBeNull()
+  expectNoRewardToolbar()
+  expect(container.querySelector('nav')).toBeNull()
+  expect([...container.querySelectorAll('[data-unrated]')].map(row => row.getAttribute("data-reward-category"))).toEqual(unrated.map(variant => variant.reward.categoryId))
   expect(container.querySelector('[data-crystal-odds]')).toBeNull()
   expect(container.textContent).toContain("Other rewards")
   expect(container.textContent).not.toContain("Rewards & drop rates")
@@ -263,5 +243,7 @@ it("preserves unknown-only rewards and renders no empty drop section or meaningl
   await act(async () => root.render(<CrystalRewardsBrowser presentation={{ ...base, groups: [], unrated: [] }} />))
   expect(container.innerHTML).toBe("")
   await act(async () => root.render(<CrystalRewardsBrowser presentation={{ ...base, groups: [{ ...base.groups[0], rows: base.groups[0].rows.slice(0, 1) }], unrated: [] }} />))
-  expect(container.querySelector('[aria-label="Sort rewards"]')).toBeNull()
+  expectNoRewardToolbar()
+  expect(container.querySelector('nav')).toBeNull()
+  expect(rowKeys()).toHaveLength(1)
 })

@@ -27,7 +27,7 @@
 .footnote { margin-top: 14px; font-size: 11px; }
 @media (max-width: 1099px) { .groups { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 767px) {
-  .section { margin-top: 26px; scroll-margin-top: 76px; }
+  .section { margin-top: 26px; scroll-margin-top: calc(var(--site-header-height, 64px) + 76px); }
   .heading h2 { font-size: 19px; }
   .heading > p { display: none; }
   .groupHeader { padding: 12px; gap: 8px; }
