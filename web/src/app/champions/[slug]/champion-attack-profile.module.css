@@ -62,7 +62,6 @@
   .moveColumn { width: 25%; }
   .hitColumn { width: 13%; }
   .properties > span { gap: 5px; }
-  .properties svg, .physicalMark { display: none; }
   .specialHeader { padding: 14px; }
   .sequence thead th, .sequence td, .sequence tbody th { padding-inline: 14px; }
   .sequenceHitColumn { width: 22%; }
@@ -70,7 +69,9 @@
   .abilityLink { padding-inline: 14px; }
 }
 @container attack-breakdown (max-width: 310px) {
-  .basics thead th, .basics td, .basics tbody th { padding-inline: 6px; }
-  .moveColumn { width: 30%; }
-  .hitColumn { width: 15%; }
+  .basics thead th, .basics td, .basics tbody th { padding-inline: 4px; }
+  .moveColumn { width: 28%; }
+  .hitColumn { width: 11%; }
+  .basics .properties > span { gap: 3px; }
+  .basics .properties svg { width: 12px; height: 12px; }
 }
