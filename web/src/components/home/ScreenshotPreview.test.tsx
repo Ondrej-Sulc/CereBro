@@ -53,10 +53,10 @@ it("opens an accessible screenshot dialog and keeps keyboard focus inside until 
 
   await act(async () => {
     document.activeElement?.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
-    await new Promise((resolve) => setTimeout(resolve, 0));
   });
   expect(document.querySelector('[role="dialog"]')).toBeNull();
-  expect(document.activeElement).toBe(trigger);
+  // Radix restores focus on a timer after React commits the dialog unmount.
+  await vi.waitFor(() => expect(document.activeElement).toBe(trigger));
   expect(document.querySelectorAll("img")).toHaveLength(1);
 });
 
