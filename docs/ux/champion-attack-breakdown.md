@@ -8,6 +8,8 @@ The Stats & attacks panel now uses a compact move ledger and visible Special hit
 
 Every Light and Medium variant remains a separate move. Heavy hits stay within Heavy. Adjacent hits with identical complete property sets share an explicit numbered range; a property change always starts a new row, including a return to an earlier property set. Extra recorded tags appear once beside their exact hit range. No total implies a universal combo, attack frequency or damage contribution.
 
+Damage and delivery icons remain visible beside their text labels at every width, including phones. They are decorative (`aria-hidden`) so assistive technology reads each property once. A mobile follow-up removes the narrow-container rule that hid those icons; the labels and recorded properties are unchanged.
+
 The existing Stats panel already hosts `ChampionAttackProfile`; its API and placement are retained without editing the Stats panel, client, global navigation, banner or shared dossier stylesheet. Styles are isolated in a new CSS module. No runtime dependency is added.
 
 ## Evidence and limits
