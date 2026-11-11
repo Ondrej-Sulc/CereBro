@@ -12,6 +12,10 @@ src/data/game-crystals/artwork.json text eol=lf
 src/data/game-crystal-openings/catalog.json text eol=lf
 src/data/game-reward-artwork/palette.json text eol=lf
 src/data/game-selectable-rewards/catalog.json text eol=lf
+src/data/game-reward-artwork/manifest.json text eol=lf
+src/data/game-ascension/catalog.json text eol=lf
+src/domain/reward-display.ts text eol=lf
+web/src/lib/game-artwork/tools/build_discovery.py text eol=lf
 
 # Reviewed capture projections and their source indexes hash exact bytes, including
 # native CRLF endings. Git must not rewrite them between Windows and Linux.
