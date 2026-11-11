@@ -2,7 +2,7 @@
 import { questEncounterPortrait } from "./quest-portrait";
 
 import { useEffect,useLayoutEffect, useId, useMemo, useRef, useState, type RefObject } from "react";
-import { Expand, Focus, Hand, Map as MapIcon, Minus, Plus, Scan, Signpost } from "lucide-react";
+import { Expand, Focus, Hand, Map as MapIcon, Minus, Plus, Scan, Shrink, Signpost } from "lucide-react";
 import { coordinateKey, type Coordinate, type QuestMap } from "@cerebro/core/domain/game-quests";
 import { questBoardLabels } from "@cerebro/core/domain/game-quests/board";
 import { questPositionLabel, questZoom } from "@cerebro/core/domain/game-quests/navigation";
@@ -10,44 +10,56 @@ import type { QuestSpawnRegionLayer } from "@cerebro/core/domain/game-quests/spa
 import { QuestSpawnRegionAreas, QuestSpawnRegionMarkers } from "./quest-spawn-region-layer";
 import { regionBoardGeometry, regionBoardLabels } from "./quest-spawn-region-presentation";
 import type { QuestPortrait } from "@/lib/game-quests/presentation";
+import { useQuestMapFullscreen } from "./use-quest-map-fullscreen";
 import styles from "./quest-board.module.css";
 
-export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, viewportRef, artwork, spawnRegions, selectedRegion, onChooseRegion }: {
+export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, viewportRef, artwork, spawnRegions, selectedRegion, onChooseRegion, onChooseRoute }: {
   map: QuestMap; portraits: Record<string, QuestPortrait>; selected: string; pathIndex: number;
   onChoose: (c: Coordinate, center?: boolean) => void; viewportRef: RefObject<HTMLDivElement | null>;
   artwork?: { url: string; theme: string } | null;
   spawnRegions?: QuestSpawnRegionLayer; selectedRegion?: string; onChooseRegion?: (id:string) => void;
+  onChooseRoute?: (index: number) => void;
 }) {
   const board = useMemo(() => regionBoardGeometry(map,spawnRegions), [map,spawnRegions]);
   const uid = useId().replace(/:/g, "");
   const [scale, setScale] = useState(1);
   const [fitScale, setFitScale] = useState(.7);
+  const [fitting, setFitting] = useState(true);
+  const fittingRef = useRef(true);
   const [names, setNames] = useState(false);
   const [hover, setHover] = useState<string | null>(null);
   const [hoveredRegion,setHoveredRegion]=useState<string|null>(null);
-  const [expanded, setExpanded] = useState(false);
+  const boardRef = useRef<HTMLDivElement>(null);
+  const fullscreen = useQuestMapFullscreen(boardRef);
   const [overviewOpen, setOverviewOpen] = useState(false);
   const [ready, setReady] = useState(false);
   const [viewport, setViewport] = useState({ x: 0, y: 0, width: 1, height: 1 });
   const drag = useRef<{ x: number; y: number; left: number; top: number; moved: boolean } | null>(null);
-  const initialFit = useRef(false);
-  const initialCentered = useRef(false);
   const scaleRef=useRef(scale);scaleRef.current=scale;
   const fitRef=useRef(fitScale);fitRef.current=fitScale;
   const pointers=useRef(new Map<number,{x:number;y:number}>());
   const pinch=useRef<{distance:number;x:number;y:number}|null>(null);
   const suppressClick=useRef(false);
   const pendingPan=useRef<{left:number;top:number}|null>(null);
+  const pendingCenter=useRef<Coordinate|null>(null);
   function applyZoom(next:number,anchor?:{x:number;y:number;nextX?:number;nextY?:number}) {
     const e=viewportRef.current;if(!e)return;
+    pendingCenter.current=null;
     const current=pendingPan.current??{left:e.scrollLeft,top:e.scrollTop};
     const result=questZoom({scale:scaleRef.current,next,min:fitRef.current,max:Math.max(2.5,fitRef.current*2.5),left:current.left,top:current.top,anchorX:anchor?.x??e.clientWidth/2,anchorY:anchor?.y??e.clientHeight/2,width:e.clientWidth,boardWidth:board.width});
+    fittingRef.current = Math.abs(result.scale - fitRef.current) < .0001;
+    setFitting(fittingRef.current);
     const pan={left:Math.max(0,Math.min(board.width*result.scale-e.clientWidth,result.left+(anchor?.x??0)-(anchor?.nextX??anchor?.x??0))),top:Math.max(0,Math.min(board.height*result.scale-e.clientHeight,result.top+(anchor?.y??0)-(anchor?.nextY??anchor?.y??0)))};pendingPan.current=pan;
     scaleRef.current=result.scale;setScale(result.scale);
     if(Number(e.querySelector('[data-zoom]')?.getAttribute('data-zoom'))===result.scale){e.scrollTo(pan);pendingPan.current=null;}
   }
   // Scroll bounds must belong to the newly committed SVG, especially on small phone maps.
-  useLayoutEffect(()=>{const e=viewportRef.current,pan=pendingPan.current;if(e&&pan){e.scrollTo(pan);pendingPan.current=null;}},[scale,viewportRef]);
+  useLayoutEffect(()=>{
+    const e=viewportRef.current;if(!e)return;
+    const center=pendingCenter.current;
+    if(center){const [x,y]=board.point(center);pendingPan.current={left:Math.max(0,Math.min(board.width*scale-e.clientWidth,x*scale-e.clientWidth/2)),top:Math.max(0,Math.min(board.height*scale-e.clientHeight,y*scale-e.clientHeight/2))};pendingCenter.current=null;}
+    if(pendingPan.current){e.scrollTo(pendingPan.current);pendingPan.current=null;}
+  },[scale,viewportRef,board]);
   useEffect(()=>{
     const e=viewportRef.current;if(!e)return;
     const wheel=(event:WheelEvent)=>{event.preventDefault();const r=e.getBoundingClientRect();const delta=event.deltaY*(event.deltaMode===1?16:event.deltaMode===2?e.clientHeight:1);applyZoom(scaleRef.current*Math.exp(-delta*.002),{x:event.clientX-r.left,y:event.clientY-r.top});};
@@ -60,25 +72,22 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
     if (!element) return;
     const update = () => {
       const fit = Math.min(element.clientWidth / board.width, element.clientHeight / board.height);
+      if (!Number.isFinite(fit) || fit <= 0) return;
       setFitScale(fit);fitRef.current=fit;
       setViewport({ x: element.scrollLeft, y: element.scrollTop, width: element.clientWidth, height: element.clientHeight });
-      if (!initialFit.current) {
-        initialFit.current = true;const next=element.clientWidth < 600 ? Math.max(.85, fit) : fit;scaleRef.current=next;setScale(next);
-        setReady(true);
+      if (fittingRef.current || scaleRef.current < fit) {
+        fittingRef.current = true; setFitting(true);
+        pendingCenter.current = null;
+        pendingPan.current = { left: 0, top: 0 };
+        scaleRef.current = fit; setScale(fit);
+        element.scrollTo(0, 0);
       }
+      setReady(true);
     };
     const resize = new ResizeObserver(update); resize.observe(element); update();
     return () => resize.disconnect();
-  // Source identity remounts this board; subsequent selection changes must not reset pan/zoom.
+  // Fit follows viewport/fullscreen changes until the user chooses a closer view.
   }, [board.width, board.height, viewportRef]);
-  useEffect(() => {
-    const element=viewportRef.current;
-    if(!ready||!element||initialCentered.current)return;
-    initialCentered.current=true;
-    if(element.clientWidth<600){const tile=map.tiles.find(t=>coordinateKey(t.coordinate)===selected);if(tile){const [x,y]=board.point(tile.coordinate);element.scrollTo(x*scale-element.clientWidth/2,y*scale-element.clientHeight/2);}}
-    // Only the first mobile viewport is centered automatically; user pan is preserved afterwards.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  },[ready]);
   const path = map.paths.find(p => p.index === pathIndex)!;
   const routeKeys = new Set(path.coordinates.map(coordinateKey));
   const routeEdges = new Set(path.coordinates.slice(1).map((c, i) => `${coordinateKey(path.coordinates[i])}>${coordinateKey(c)}`));
@@ -88,16 +97,42 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
   const zoom = (next: number) => {
     applyZoom(next);
   };
-  const focusSelected = () => { const tile=map.tiles.find(t=>coordinateKey(t.coordinate)===selected),e=viewportRef.current;if(!tile||!e)return;const [x,y]=board.point(tile.coordinate),offset=Math.max(0,(e.clientWidth-board.width*scaleRef.current)/2);e.scrollTo({left:x*scaleRef.current+offset-e.clientWidth/2,top:y*scaleRef.current-e.clientHeight/2,behavior:"smooth"}); };
+  const fitMap = () => {
+    fittingRef.current = true; setFitting(true);
+    pendingCenter.current = null;
+    pendingPan.current = { left: 0, top: 0 };
+    scaleRef.current = fitRef.current; setScale(fitRef.current);
+    viewportRef.current?.scrollTo(0, 0);
+  };
+  const focusSelected = () => {
+    const tile = map.tiles.find(t => coordinateKey(t.coordinate) === selected), e = viewportRef.current;
+    if (!tile || !e) return;
+    applyZoom(Math.max(1, scaleRef.current, fitRef.current * 1.5));
+    const [x, y] = board.point(tile.coordinate), next = scaleRef.current;
+    const pan = {
+      left: Math.max(0, Math.min(board.width * next - e.clientWidth, x * next - e.clientWidth / 2)),
+      top: Math.max(0, Math.min(board.height * next - e.clientHeight, y * next - e.clientHeight / 2)),
+    };
+    pendingPan.current = pan;
+    pendingCenter.current = tile.coordinate;
+    if (Number(e.querySelector('[data-zoom]')?.getAttribute('data-zoom')) === next) {
+      e.scrollTo(pan); pendingPan.current = null; pendingCenter.current = null;
+    }
+  };
   const endPointer=(id:number,cancel=false)=>{if(!pointers.current.has(id))return;pointers.current.delete(id);pinch.current=null;if(cancel){pointers.current.clear();suppressClick.current=true;}const remaining=[...pointers.current.values()][0],e=viewportRef.current;drag.current=remaining&&e?{x:remaining.x,y:remaining.y,left:e.scrollLeft,top:e.scrollTop,moved:false}:null;};
   const miniScale = Math.min(136/board.width,150/board.height), miniWidth=board.width*miniScale, miniHeight=board.height*miniScale;
-  return <div className={styles.board} data-expanded={expanded}>
+  return <div ref={boardRef} className={styles.board} data-quest-board data-fullscreen={fullscreen.fullscreen}
+    data-window-fullscreen={fullscreen.windowMode || undefined} role={fullscreen.windowMode ? "dialog" : undefined}
+    aria-modal={fullscreen.windowMode || undefined} aria-label={fullscreen.windowMode ? "Quest map full screen" : undefined}
+    tabIndex={fullscreen.windowMode ? -1 : undefined}>
     <div className={styles.controls}>
-      <div className={styles.zoom}><button aria-label="Zoom out" disabled={scale <= fitScale + .001} onClick={() => zoom(scaleRef.current / 1.35)}><Minus size={15} /></button><output aria-label="Map zoom">{Math.round(scale * 100)}%</output><button aria-label="Zoom in" disabled={scale >= Math.max(2.5,fitScale*2.5)} onClick={() => zoom(scaleRef.current * 1.35)}><Plus size={15} /></button><button onClick={() => { pendingPan.current=null;scaleRef.current=fitScale;setScale(fitScale);viewportRef.current?.scrollTo(0, 0); }}><Scan size={15} />Fit map</button></div>
-      <div className={styles.controlActions}><button aria-pressed={names} onClick={() => setNames(v => !v)}><Signpost size={15} />Names</button><button aria-label="Toggle map overview" aria-expanded={overviewOpen} onClick={() => { const e=viewportRef.current;if(e)setViewport({x:e.scrollLeft,y:e.scrollTop,width:e.clientWidth,height:e.clientHeight});setOverviewOpen(v => !v); }}><MapIcon size={16} /></button><button aria-label="Center selected defender" onClick={focusSelected}><Focus size={16} /></button><button aria-label={expanded ? "Reduce map height" : "Expand map"} onClick={() => setExpanded(v => !v)}><Expand size={16} /></button></div>
+      <div className={styles.zoom}><button aria-label="Zoom out" title="Zoom out" disabled={scale <= fitScale + .001} onClick={() => zoom(scaleRef.current / 1.35)}><Minus size={15} /></button><output aria-label="Map zoom">{Math.round(scale * 100)}%</output><button aria-label="Zoom in" title="Zoom in" disabled={scale >= Math.max(2.5,fitScale*2.5)} onClick={() => zoom(scaleRef.current * 1.35)}><Plus size={15} /></button><button aria-pressed={fitting} disabled={!ready} title="Show the whole map" onClick={fitMap}><Scan size={15} />Fit map</button></div>
+      <button className={styles.namesToggle} aria-pressed={names} title={names ? "Hide defender names" : "Show defender names"} onClick={() => setNames(v => !v)}><Signpost size={15} />Names</button>
+      <div className={styles.controlActions}><button aria-label="Toggle map overview" title={overviewOpen ? "Hide map overview" : "Show map overview"} aria-expanded={overviewOpen} aria-controls={`${uid}-overview`} onClick={() => { const e=viewportRef.current;if(e)setViewport({x:e.scrollLeft,y:e.scrollTop,width:e.clientWidth,height:e.clientHeight});setOverviewOpen(v => !v); }}><MapIcon size={16} />Overview</button><button aria-label="Focus selected location" title="Zoom to and center the selected defender or map location" onClick={focusSelected}><Focus size={16} />Focus</button><button data-map-fullscreen-toggle aria-label={fullscreen.fullscreen ? "Exit full screen" : "Enter full screen"} title={fullscreen.fullscreen ? "Exit full screen (Esc)" : "View map in full screen"} aria-pressed={fullscreen.fullscreen} disabled={fullscreen.busy} onClick={() => void fullscreen.toggle()}>{fullscreen.fullscreen ? <Shrink size={16} /> : <Expand size={16} />}<span>{fullscreen.fullscreen ? "Exit full screen" : "Full screen"}</span></button></div>
     </div>
+    {fullscreen.fullscreen && <div className={styles.fullscreenContext}>{onChooseRoute && <label>Route<select aria-label="Full screen recorded route" value={pathIndex} onChange={e => onChooseRoute(Number(e.target.value))}>{map.paths.map(route => <option key={route.index} value={route.index}>Route {route.index + 1}</option>)}</select></label>}<span aria-live="polite">{spawnRegions?.regions.find(region => region.id === selectedRegion)?.defender.name ?? positionNames.get(selected)}</span></div>}
     <div className={styles.canvasWrap} style={artwork ? { backgroundImage: `linear-gradient(180deg,rgba(5,12,24,.40),rgba(4,10,20,.60)),url("${artwork.url}")` } : undefined}>
-      <div ref={viewportRef} className={styles.viewport} role="region" aria-label="Scrollable quest map" tabIndex={0}
+      <div ref={viewportRef} className={styles.viewport} role="region" aria-label="Scrollable quest map" aria-busy={!ready} tabIndex={0}
         onScroll={e=>{if(overviewOpen)setViewport({x:e.currentTarget.scrollLeft,y:e.currentTarget.scrollTop,width:e.currentTarget.clientWidth,height:e.currentTarget.clientHeight});}}
         onPointerDown={e => { if(e.button!==0)return;suppressClick.current=false;pointers.current.set(e.pointerId,{x:e.clientX,y:e.clientY});const el=e.currentTarget;if(pointers.current.size===1)drag.current={x:e.clientX,y:e.clientY,left:el.scrollLeft,top:el.scrollTop,moved:false};if(pointers.current.size===2){const [a,b]=[...pointers.current.values()];pinch.current={distance:Math.hypot(a.x-b.x,a.y-b.y),x:(a.x+b.x)/2,y:(a.y+b.y)/2};el.setPointerCapture(e.pointerId);} }}
         onPointerMove={e => { if(!pointers.current.has(e.pointerId))return;pointers.current.set(e.pointerId,{x:e.clientX,y:e.clientY});const el=e.currentTarget;
@@ -144,7 +179,7 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
         </svg>
       </div>
       <div className={styles.panHint}><Hand size={13} /><span>Drag to pan · Scroll to zoom</span></div>
-      {overviewOpen && <div className={styles.navigator}><span>Overview</span><svg role="img" aria-label="Map overview" width={miniWidth} height={miniHeight} viewBox={`0 0 ${board.width} ${board.height}`} onClick={e => { const rect=e.currentTarget.getBoundingClientRect(); const x=(e.clientX-rect.left)/rect.width*board.width,y=(e.clientY-rect.top)/rect.height*board.height; viewportRef.current?.scrollTo({left:x*scale-viewport.width/2,top:y*scale-viewport.height/2,behavior:"smooth"}); }}>
+      {overviewOpen && <div id={`${uid}-overview`} className={styles.navigator}><span>Overview</span><svg role="img" aria-label="Map overview" width={miniWidth} height={miniHeight} viewBox={`0 0 ${board.width} ${board.height}`} onClick={e => { const rect=e.currentTarget.getBoundingClientRect(); const x=(e.clientX-rect.left)/rect.width*board.width,y=(e.clientY-rect.top)/rect.height*board.height; viewportRef.current?.scrollTo({left:x*scale-viewport.width/2,top:y*scale-viewport.height/2,behavior:"smooth"}); }}>
         {board.edges.map((e,i)=>{const a=board.point(e.from),b=board.point(e.to);return <line key={i} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={e.portal?"#ad85d0":"#6c91a7"} strokeWidth="4"/>;})}{map.encounters.map(e=>{const [x,y]=board.point(e.coordinate);return <circle key={e.id} cx={x} cy={y} r="12" fill={e.final?"#efc772":routeKeys.has(coordinateKey(e.coordinate))?"#c5f4ff":"#677d8e"}/>;})}<rect x={viewport.x/scale} y={viewport.y/scale} width={Math.min(board.width,viewport.width/scale)} height={Math.min(board.height,viewport.height/scale)} fill="#77d8ff" fillOpacity=".12" stroke="#a6e5ff" strokeWidth="5" />
       </svg></div>}
     </div>

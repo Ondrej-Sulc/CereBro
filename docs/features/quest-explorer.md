@@ -137,3 +137,11 @@ The occurrence projection stays independent from the node track. The approved sh
 # Native icon follow-up
 
 The additive [native icon v3 contract](quest-native-icons-v3.md) extends the frozen ledgers to212,710/212,720 exact applications with204 additional native shapes. Graphs/rewards/artwork stay unchanged; ten source gaps remain unbound.
+
+## Map viewport controls — November 11
+
+The map starts in Fit map mode on every screen size after its viewport has measurable dimensions. Fit mode follows viewport changes, including entering or leaving full screen. Manual zoom is preserved until Fit map is selected again or the viewport's minimum fit grows beyond that zoom. Initial selection no longer forces a cropped phone zoom or automatic pan.
+
+Full screen requests the browser's native Fullscreen API and follows `fullscreenchange`, including browser-managed exits. Escape also exits when delivered to the page. Unsupported or rejected requests use a full-window dialog with trapped keyboard focus, Escape exit and restoration of page scrolling/focus. The route picker and current selection remain available inside either full-screen view.
+
+The crosshair is labelled Focus: it zooms to a readable view and centers the selected defender, encounter-region marker or map location within map bounds, after the resized SVG commits. Overview is a labelled toggle for the working minimap. Toolbar targets are at least 44px high, including the visible phone Fit map and Full screen actions. The controls change presentation only; source coordinates, graphs, definitions and encounter identities remain unchanged.
