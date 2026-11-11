@@ -1,7 +1,7 @@
 import { coordinateKey, gameText, type Coordinate, type QuestMap } from "./index";
 
 /** Human labels never create an identity for an unplaced opponent. */
-export function questPositionLabel(map: QuestMap, coordinate: Coordinate, routeIndex?: number): string {
+export function questPositionLabel(map: QuestMap, coordinate: Coordinate): string {
   const key=coordinateKey(coordinate);
   const fights=map.encounters.filter(e=>coordinateKey(e.coordinate)===key);
   if(fights.length)return fights.map(e=>e.champion?.name??gameText(e.name)).join(" / ");
@@ -9,8 +9,7 @@ export function questPositionLabel(map: QuestMap, coordinate: Coordinate, routeI
   if(tile?.start)return "Start";
   if(tile?.portals.length)return "Portal";
   if(tile?.final)return "Finish";
-  const index=map.paths.find(p=>p.index===routeIndex)?.coordinates.findIndex(c=>coordinateKey(c)===key)??-1;
-  return index>=0?`Route position ${index+1}`:tile&&tile.links.length>1?"Junction":"Map position";
+  return tile&&tile.links.length>1?"Junction":"Map location";
 }
 
 export function questZoom(input:{scale:number;next:number;min:number;max?:number;left:number;top:number;anchorX:number;anchorY:number;width:number;boardWidth:number}) {

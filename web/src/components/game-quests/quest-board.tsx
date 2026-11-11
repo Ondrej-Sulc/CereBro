@@ -93,7 +93,7 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
   const routeEdges = new Set(path.coordinates.slice(1).map((c, i) => `${coordinateKey(path.coordinates[i])}>${coordinateKey(c)}`));
   const labels = useMemo(() => {const prioritized=[selectedRegion,hoveredRegion,...map.encounters.filter(e=>coordinateKey(e.coordinate)===selected||e.id===hover).map(e=>e.id)].filter((id):id is string=>typeof id==='string');return spawnRegions?regionBoardLabels(map,spawnRegions,board,prioritized):questBoardLabels(map,prioritized);}, [map,spawnRegions,board,selected,hover,selectedRegion,hoveredRegion]);
   const portalTargets = new Set(board.edges.filter(e=>e.portal).map(e=>coordinateKey(e.to)));
-  const positionNames=useMemo(()=>new Map(map.tiles.map(t=>[coordinateKey(t.coordinate),questPositionLabel(map,t.coordinate,pathIndex)])),[map,pathIndex]);
+  const positionNames=useMemo(()=>new Map(map.tiles.map(t=>[coordinateKey(t.coordinate),questPositionLabel(map,t.coordinate)])),[map]);
   const zoom = (next: number) => {
     applyZoom(next);
   };

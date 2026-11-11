@@ -49,16 +49,6 @@ describe("quest map controls", () => {
     expect(host.textContent).toContain("gf/exact-token 5–10");
     expect(host.textContent).not.toContain("hero/exact-token");
   });
-  it("advances every rapid next/previous input from the latest selection",async()=>{
-    const map=(await loadQuestMap("p01_ch01_q01"))!;
-    const host=await render(<QuestMapExplorer map={map} initialNode={map.paths[0].coordinates[1].join(",")}/>);
-    const next=host.querySelector<HTMLButtonElement>('[aria-label="Next route position"]')!;
-    await act(async()=>{next.click();next.click();});
-    expect(host.querySelector<HTMLSelectElement>('[aria-label="Route position"]')!.value).toBe("3");
-    const previous=host.querySelector<HTMLButtonElement>('[aria-label="Previous route position"]')!;
-    await act(async()=>{previous.click();previous.click();});
-    expect(host.querySelector<HTMLSelectElement>('[aria-label="Route position"]')!.value).toBe("1");
-  });
   it("accumulates rapid wheel input and keeps source coordinates out of public text and labels",async()=>{
     const map=(await loadQuestMap("a05_ch01_q01"))!;
     const host=await render(<QuestMapExplorer map={map} initialNode="10,21"/>);
@@ -67,6 +57,8 @@ describe("quest map controls", () => {
     await act(async()=>{viewport.dispatchEvent(new WheelEvent("wheel",{deltaY:-100,bubbles:true,cancelable:true}));viewport.dispatchEvent(new WheelEvent("wheel",{deltaY:-100,bubbles:true,cancelable:true}));});
     expect(Number(host.querySelector('[data-zoom]')?.getAttribute('data-zoom'))).toBeCloseTo(initialScale*Math.exp(.4));
     expect(host.textContent).not.toMatch(/\b10,\s*21\b/);
+    expect(host.textContent).not.toContain("Route position");
+    expect(host.querySelector('[aria-label="Route position"]')).toBeNull();
     expect([...host.querySelectorAll('title,[aria-label]')].every(e=>!(/\b\d+,\s*\d+\b/.test(e.getAttribute('aria-label')??e.textContent??'')))).toBe(true);
     expect(host.querySelector('a[href*="node=10%2C21"]')).not.toBeNull();
   });
