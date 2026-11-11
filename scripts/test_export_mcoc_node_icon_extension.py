@@ -63,7 +63,7 @@ class AdditionalNativeGlyphTests(unittest.TestCase):
         self.assertEqual({(r['key'],'web/public'+r['src']) for r in registry}, {(r['iconKey'],r['path']) for r in index['assets']})
 
     def test_font_source_drift_fails_before_any_asset_output_and_old_namespaces_reject_writes(self):
-        with tempfile.TemporaryDirectory(dir=ROOT/'temp') as folder:
+        with tempfile.TemporaryDirectory() as folder:
             base=Path(folder);font=base/'wrong.ttf';font.write_bytes(b'wrong source')
             chars=base/'chars.json';chars.write_text('[]')
             command=['node',str(ROOT/'scripts/export_mcoc_node_game_glyphs.cjs'),str(font),'0'*64,str(chars),str(base/'assets'),str(base/'out.json')]
