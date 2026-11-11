@@ -19,11 +19,12 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Force Sync Dev to Main
+      - name: Fast-forward Dev when it has no beta-only changes
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # We use force, because squash-merging makes histories diverge.
-          # This ensures 'dev' is a perfect mirror of 'main' for Railway Beta.
-          git push origin main:dev --force
+          git fetch origin main dev
+          if git merge-base --is-ancestor origin/dev origin/main; then
+            git push origin refs/remotes/origin/main:refs/heads/dev
+          else
+            echo "Dev contains beta-only changes; automatic synchronization skipped." >> "$GITHUB_STEP_SUMMARY"
+            echo "Merge main into dev explicitly after reviewing the combined beta changes." >> "$GITHUB_STEP_SUMMARY"
+          fi
