@@ -161,6 +161,10 @@ it("retains every public destination with catalogs first in the real side panel"
     "/champions",
     "/relics",
     "/crystals",
+    "/glossary",
+    "/quests",
+    "/nodes",
+    "/assets",
     "/planning/quests",
     "/alliance/onboarding",
     "/war-videos",
@@ -199,6 +203,10 @@ it.each([false, true])(
     await open("More");
     expect(document.querySelector('[role="menu"]')?.getAttribute("aria-labelledby")).toBe(button("More").id);
     expect(hrefs(document.querySelector('[role="menu"]')!)).toEqual([
+      "/glossary",
+      "/quests",
+      "/nodes",
+      "/assets",
       "/war-videos",
       "https://discord.gg/eRv7fkMHmU",
       "/support",
@@ -270,6 +278,13 @@ it.each([
   ["/profile/roster", "/champions"],
   ["/profile/relics", "/relics"],
   ["/crystals/exact-opening", "/crystals"],
+  ["/glossary", "/glossary"],
+  ["/glossary/706", "/glossary"],
+  ["/quests", "/quests"],
+  ["/quests/towers/class_skill", "/quests"],
+  ["/nodes", "/nodes"],
+  ["/nodes/pve_disarray", "/nodes"],
+  ["/assets", "/assets"],
   ["/planning/quests/shared/plan-id", "/planning/quests"],
   ["/planning/defense/plan-id", "/planning/defense"],
   ["/planning/cuid-war-id", "/planning"],
@@ -286,6 +301,45 @@ it.each([
         el.getAttribute("href"),
       ),
     ).toEqual([current]);
+  },
+);
+
+it.each([
+  ["/glossary", "/glossary", "Effect glossary", true],
+  ["/glossary/706", "/glossary", "Effect glossary", true],
+  ["/glossary-other", "/glossary", "Effect glossary", false],
+  ["/quests", "/quests", "Quest explorer", true],
+  ["/quests/towers/class_skill", "/quests", "Quest explorer", true],
+  ["/quests-other", "/quests", "Quest explorer", false],
+  ["/nodes", "/nodes", "Node modifiers", true],
+  ["/nodes/pve_disarray", "/nodes", "Node modifiers", true],
+  ["/nodes-other", "/nodes", "Node modifiers", false],
+  ["/assets", "/assets", "Game assets", true],
+  ["/assets/exact-asset", "/assets", "Game assets", true],
+  ["/assets-other", "/assets", "Game assets", false],
+] as const)(
+  "keeps public catalog discovery secondary and marks its exact route family at %s",
+  async (path, href, label, current) => {
+    await route(path);
+    await render();
+    const primary = document.querySelector('nav[aria-label="Primary"]')!;
+    expect(hrefs(primary)).toEqual(["/champions", "/relics", "/crystals"]);
+    expect(button("More").hasAttribute("data-active")).toBe(current);
+    await open("More");
+    const link = document.querySelector<HTMLAnchorElement>(`[role="menu"] a[href="${href}"]`)!;
+    expect(link?.textContent).toBe(label);
+    expect(link.getAttribute("aria-current")).toBe(current ? "page" : null);
+    expect(link.hasAttribute("target")).toBe(false);
+    await act(async () => link.click());
+    expect(document.querySelector('[role="menu"]')).toBeNull();
+    expect(push).not.toHaveBeenCalled(); // ordinary public links never redirect to a personal view
+    await open("Menu");
+    const panel = dialog();
+    expect(hrefs(panel.querySelector('[aria-label="More catalogs"]')!)).toEqual(["/glossary", "/quests", "/nodes", "/assets"]);
+    expect(hrefs(panel.querySelector('[class*="catalogs"]')!)).toEqual(["/champions", "/relics", "/crystals"]);
+    await act(async () => panel.querySelector<HTMLAnchorElement>(`a[href="${href}"]`)!.click());
+    expect(dialog()).toBeNull();
+    expect(signInAction).not.toHaveBeenCalled();
   },
 );
 

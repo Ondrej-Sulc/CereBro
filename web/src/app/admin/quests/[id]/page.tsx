@@ -1,3 +1,4 @@
+import { curatedNodeModifierSelect } from "@cerebro/core/domain/node-modifiers/native-icons";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import { getQuestPlanById } from "@/app/actions/quest-catalog";
@@ -72,7 +73,7 @@ export default async function AdminQuestBuilderPage({ params }: { params: Promis
         orderBy: { name: 'asc' },
         include: { tags: true },
     });
-    const nodeModifiers = await prisma.nodeModifier.findMany({ orderBy: { name: 'asc' } });
+    const nodeModifiers = await prisma.nodeModifier.findMany({ orderBy: { name: 'asc' }, select: curatedNodeModifierSelect });
 
     return (
         <div className="space-y-6">

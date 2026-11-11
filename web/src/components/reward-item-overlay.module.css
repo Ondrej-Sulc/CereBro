@@ -1,0 +1,8 @@
+.overlay { position: absolute; inset: 0; container-type: inline-size; pointer-events: none; color: #fff; }
+.overlay .rank { position: absolute; top: 50%; left: 50%; display: flex; align-items: center; justify-content: center; gap: 0; transform: translate(-50%, -50%); white-space: nowrap; font-size: 32cqw; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; text-shadow: 0 1px 2px #000, 0 0 4px #000b; }
+.overlay .rank[data-wide-rank] { font-size: 25cqw; }
+.overlay .arrow { width: 20cqw; height: 20cqw; flex: none; color: #fff; filter: drop-shadow(0 1px 1px #0009); }
+.overlay .signature { position: absolute; right: 6%; bottom: 24%; font-size: 28cqw; font-weight: 500; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; text-shadow: 0 1px 2px #000, 0 0 3px #000b; }
+.overlay .signature[data-wide-signature] { font-size: 23cqw; }
+.overlay .stars { position: absolute; bottom: 0; left: 0; display: flex; align-items: center; justify-content: center; width: 100%; height: 21%; border-radius: 2px; background: linear-gradient(#30302de8, #15191ceb); box-shadow: 0 1px 2px #0009; }
+.overlay .stars > .star { height: 88%; flex: none; color: #e9a43e; fill: #e9a43e; stroke: #8f531d; filter: drop-shadow(0 1px 0 #0008); }

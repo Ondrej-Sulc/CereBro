@@ -52,6 +52,9 @@ const nextConfig: NextConfig = {
     proxyClientMaxBodySize: '50mb',
   },
   outputFileTracingRoot: path.join(__dirname, '../../'),
+  outputFileTracingIncludes: {
+    '/nodes/*': ['../src/data/game-node-modifiers/v2/details/*.json'],
+  },
   images: {
     qualities: [10, 75, 90],
     remotePatterns: [

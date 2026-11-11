@@ -44,3 +44,9 @@ it('builds normally with upload disabled and no private credential', async () =>
   expect(result.env?.APP_VERSION).toBeTruthy();
   expect(integration.configure).not.toHaveBeenCalled();
 });
+
+it('ships reviewed node-detail shards without bundling all of them into JavaScript', async () => {
+  vi.stubEnv('POSTHOG_UPLOAD_SOURCEMAPS', 'false');
+  const result = await config(PHASE_PRODUCTION_BUILD, { defaultConfig: {} });
+  expect(result.outputFileTracingIncludes?.['/nodes/*']).toEqual(['../src/data/game-node-modifiers/v2/details/*.json']);
+});

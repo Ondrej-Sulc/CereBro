@@ -1,7 +1,9 @@
 "use client";
 
+import { NodeModifierIcon } from "@/components/nodes/NodeModifierIcon";
 import { ChevronDown, ChevronUp, Info, Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { resolveNativeModifierIcon } from "@cerebro/core/domain/node-modifiers/native-icons";
 import { cn } from "@/lib/utils";
 import type { EncounterNodeWithRelations } from "../types";
 
@@ -45,7 +47,7 @@ export function EncounterNodeList({
                             )}
                         >
                             {node.isHighlighted && <Star className="h-3 w-3 shrink-0 fill-current" />}
-                            {node.nodeModifier.name}
+                            <NodeModifierIcon iconKey={node.nodeModifier.iconKey} size={14} />{node.nodeModifier.name}
                         </Badge>
                     ))}
                 </div>
@@ -66,8 +68,9 @@ export function EncounterNodeList({
                                     "shrink-0 rounded p-1",
                                     node.isHighlighted ? "bg-amber-500/15 text-amber-300" : "bg-sky-500/10 text-sky-500"
                                 )}>
-                                    {node.isHighlighted ? <Star className="h-3.5 w-3.5 fill-current" /> : <Info className="h-3.5 w-3.5" />}
+                                    {resolveNativeModifierIcon(node.nodeModifier.iconKey) ? <NodeModifierIcon iconKey={node.nodeModifier.iconKey} size={14} /> : <Info className="h-3.5 w-3.5" aria-hidden="true" />}
                                 </div>
+                                {node.isHighlighted && <Star className="h-3.5 w-3.5 shrink-0 fill-current text-amber-300" aria-hidden="true" />}
                                 <span className="text-sm font-bold text-slate-100">{node.nodeModifier.name}</span>
                             </div>
                             <span className="block pl-8 pr-2 text-xs leading-normal text-slate-400">{node.nodeModifier.description}</span>

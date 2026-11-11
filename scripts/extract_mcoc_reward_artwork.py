@@ -21,11 +21,13 @@ from mcoc_protobuf import Decoder, fields
 # Exact default GetTexture branches in CustomRedeemerMappings.ResourceRedeemerMapping.
 RESOURCE_ART = {'sc': 'resources/resource_currency_soft', 'hc': 'resources/resource_currency_hard',
     'ap': 'resources/resource_ap', 'ave': 'resources/resource_ave', 'der': 'resources/resource_der',
-    'xp': 'resources/resource_xp', 'pvp-cur': 'resources/resource_energy_cur'}
+    'xp': 'resources/resource_xp', 'pvp-cur': 'resources/resource_energy_cur',
+    'pve-energy': 'resources/resource_energy_pve'}
 REVIEWED_METADATA = {'Marvel.Runtime.dll': 'd1b1085922513073b9dcd656aa08ee70e01a7aef1433aa35876fdfba463278b5',
     'Fuse.Runtime.dll': 'c7296f9c50334d3f12ece5ae2e7c9566d6965cc355c9eecad8af8acfe561a24b'}
 INVENTORY_SHADER = 'EBG/UI/OverlayColored'
 REVIEWED_OVERLAY_SHADER = '60d753e9a57e49ea3c53f436c9061571fc1ac90ffc8e69c83af1f4afd3e22d5e'
+REVIEWED_MATERIAL_BINDINGS = '7d6c8c80868340a3c215545b7e1ac8f675ed3bde4f94e9b91a49889d363e93a3'
 
 
 def inventory_shader_provenance(resources, palette_source):
@@ -79,10 +81,30 @@ def resolve_material_tint(evo, colors):
         if len(explicit) not in (6,8):raise ValueError('Unreviewed explicit material tint')
         rgba=[int(explicit[i:i+2],16)/255 for i in range(0,len(explicit),2)]
         if len(rgba)==3:rgba.append(1)
-        return {'source':'blueprint','rgba':rgba}
+        return {'source':'blueprint','rgba':rgba,'blendMode':'overlay'}
     key='class_'+evo.get('_class','none') if kind in class_tinted else 'class_iso_generic'
     if key not in colors:raise ValueError('Missing exact material color: '+key)
-    return {'source':'color-dictionary','key':key,'rgba':colors[key]}
+    return {'source':'color-dictionary','key':key,'rgba':colors[key],'blendMode':'overlay'}
+
+
+def material_shader_provenance(resources, palette_source, shader=None, native_root=None):
+    """Validate the reviewed catalyst portrait and reward-type shader bindings."""
+    proof_path = Path(__file__).resolve().parents[1]/'src/data/game-reward-artwork/material-shader-proof.json'
+    proof_bytes = proof_path.read_bytes()
+    if hashlib.sha256(proof_bytes).hexdigest() != REVIEWED_MATERIAL_BINDINGS:
+        raise ValueError('Material shader binding proof requires review')
+    proof = json.loads(proof_bytes)
+    native_root = native_root or Path('D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime')
+    for name, expected in proof['nativeMethods'].items():
+        if hashlib.sha256((native_root/name).read_bytes()).hexdigest() != expected:
+            raise ValueError('Native material shader method drift')
+    for relative, expected in proof['assetBindings'].items():
+        if hashlib.sha256((resources.parent/relative).read_bytes()).hexdigest() != expected:
+            raise ValueError('Native material portrait binding drift')
+    shader = shader or inventory_shader_provenance(resources, palette_source)
+    if shader['objectSha256'] != proof['shaderObjectSha256'] or shader['sha256'] != proof['resourceSha256']:
+        raise ValueError('Material shader object mismatch')
+    return {**shader, 'bindingProofSha256': REVIEWED_MATERIAL_BINDINGS}
 
 
 def tint_image(payload, rgba, blend_mode='multiply'):
@@ -182,6 +204,7 @@ def extract(args):
     additional_inventory = [piece['itemId'] for method in json.loads(acquisition_path.read_text(encoding='utf8'))['methods'] for piece in method.get('pieces', [])] if acquisition_path else []
     plan = build_bindings(openings, gacha, evos, [item for group in store.get('items', {}).values() for item in group.get('gameStoreItems', [])],palette['colors'],additional_inventory,hero_classes)
     shader = inventory_shader_provenance(args.resources.parent.parent/'resources.assets', palette['source'])
+    material_shader = material_shader_provenance(args.resources.parent.parent/'resources.assets', palette['source'], shader)
     game_metadata = args.game_metadata.read_bytes()
     if CDN_BASE.encode() not in game_metadata: raise ValueError('Unverified game artwork CDN')
     existing_bytes = args.crystal_artwork.read_bytes(); existing = json.loads(existing_bytes)
@@ -228,7 +251,7 @@ def extract(args):
         'openingCatalogSha256': hashlib.sha256(opening_bytes).hexdigest(), 'registries': source_files,
         'metadata': openings['source']['metadata'], 'gameMetadataSha256': hashlib.sha256(game_metadata).hexdigest(),
         'colorDictionary':{key:value for key,value in palette['source'].items() if key!='metadataSha256'}|{'paletteSha256':hashlib.sha256(palette_bytes).hexdigest()},
-        'inventoryShader': shader,
+        'inventoryShader': shader, 'materialShader': material_shader,
         'cdnBaseUrl': CDN_BASE, 'reusedCrystalManifestSha256': hashlib.sha256(existing_bytes).hexdigest()},
         'assets': sorted(assets, key=order), 'missing': sorted(missing, key=order),
         'coverage': {'bindings': len(assets) + len(missing), 'resolved': len(assets), 'missing': len(missing),

@@ -12,6 +12,7 @@ import {
   Diamond,
   Gem,
   Heart,
+  Image as ImageIcon,
   Info,
   LayoutGrid,
   Map,
@@ -19,6 +20,7 @@ import {
   Search,
   Shield,
   Swords,
+  Tags,
   Trophy,
   Users,
   X,
@@ -52,6 +54,12 @@ const catalogs: Destination[] = [
   },
   { label: "Relics", href: "/relics", section: "relics", icon: Gem },
   { label: "Crystals", href: "/crystals", icon: Diamond },
+];
+const moreCatalogs: Destination[] = [
+  { label: "Effect glossary", href: "/glossary", icon: BookOpen },
+  { label: "Quest explorer", href: "/quests", icon: Map },
+  { label: "Node modifiers", href: "/nodes", icon: Tags },
+  { label: "Game assets", href: "/assets", icon: ImageIcon },
 ];
 const quest: Destination = {
   label: "Quest Planner",
@@ -249,8 +257,14 @@ export default function Header({
             {dropdown(
               "more",
               "More",
-              community.some((item) => isCurrent(pathname, item)),
-              community.map((item) => destination(item, true)),
+              [...moreCatalogs, ...community].some((item) => isCurrent(pathname, item)),
+              <>
+                <DropdownMenuLabel className={styles.groupLabel}>More catalogs</DropdownMenuLabel>
+                {moreCatalogs.map((item) => destination(item, true))}
+                <DropdownMenuSeparator className={styles.separator} />
+                <DropdownMenuLabel className={styles.groupLabel}>Community &amp; help</DropdownMenuLabel>
+                {community.map((item) => destination(item, true))}
+              </>,
             )}
           </nav>
           <div className={styles.tools}>
@@ -299,6 +313,10 @@ export default function Header({
                     <div className={styles.catalogs}>
                       {catalogs.map((item) => destination(item))}
                     </div>
+                    <section className={styles.panelGroup} aria-label="More catalogs">
+                      <h2>More catalogs</h2>
+                      {moreCatalogs.map((item) => destination(item))}
+                    </section>
                     <section
                       className={styles.panelGroup}
                       aria-label="Planning"

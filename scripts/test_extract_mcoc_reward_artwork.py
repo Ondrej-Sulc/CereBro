@@ -1,10 +1,34 @@
 import unittest
+import io
+import tempfile
 import json
 from pathlib import Path
-from extract_mcoc_reward_artwork import build_bindings
+from PIL import Image
+from extract_mcoc_reward_artwork import build_bindings, resolve_material_tint, tint_image
+from extract_mcoc_crystal_artwork import export_image
 
 
+class MaterialShaderRegressionTests(unittest.TestCase):
+    def test_material_binding_exports_native_overlay_highlights_and_straight_alpha(self):
+        colors = {'class_none': [0.43921568989753723, 0.43529412150382996, 0.5137255191802979, 1]}
+        cases = [({'_evoType': 'evolve', '_class': 'none'}, (200, 200, 200, 128), (193, 193, 202, 128)),
+                 ({'_evoType': 'events', '_tintColor': '23c5ff'}, (172, 172, 172, 128), (112, 217, 255, 128))]
+        for blueprint, pixel, expected in cases:
+            tint = resolve_material_tint(blueprint, colors)
+            self.assertEqual(tint.get('blendMode'), 'overlay')
+            image = Image.new('RGBA', (1, 1), pixel)
+            encoded = io.BytesIO(); image.save(encoded, format='PNG')
+            rendered = tint_image(encoded.getvalue(), tint['rgba'], tint.get('blendMode', 'multiply'))
+            with tempfile.TemporaryDirectory() as directory:
+                result = export_image(rendered, Path(directory) / 'full')
+                with Image.open(Path(directory) / result['file']) as exported:
+                    self.assertEqual(exported.convert('RGBA').getpixel((0, 0)), expected)
 class RewardArtworkBindingsTests(unittest.TestCase):
+    def test_native_pve_energy_branch_does_not_alias_unrelated_tower_resources(self):
+        opening = {'categories': [{'rewards': [{'type': 'res', 'data': value} for value in ['pve-energy', 'tower_energy', 'tower_challenge_energy']]}]}
+        result = build_bindings(opening, {}, [], [])
+        self.assertEqual([(r['data'],r['reference']) for r in result['bindings']], [('pve-energy','resources/resource_energy_pve')])
+        self.assertEqual({r['data'] for r in result['missing']}, {'tower_energy','tower_challenge_energy'})
     def test_neutral_inventory_uses_exact_class_tags_not_item_names_or_quantity(self):
         classes = ['mutant', 'trained', 'chemical', 'mystic', 'cosmic', 'tech']
         colors = json.loads((Path(__file__).resolve().parents[1]/'src/data/game-reward-artwork/palette.json').read_text())['colors']

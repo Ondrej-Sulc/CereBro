@@ -7,6 +7,7 @@ import { rewardTypeLabel } from "./crystal-reward-labels"
 import { groupCrystalRewardCards, type CrystalRewardGroup } from "@/lib/crystal-reward-groups"
 import { groupCrystalAscensionBonuses } from "@/lib/crystal-ascension-bonuses"
 import { CrystalAscensionBonuses } from "./crystal-ascension-bonuses"
+import { RewardItemOverlay } from "@/components/reward-item-overlay"
 import styles from "./crystal-reward-cards.module.css"
 
 const label = rewardDisplayName
@@ -19,7 +20,7 @@ function amount(reward: CrystalRewardCard) {
 
 function RewardCard({ reward }: { reward: CrystalRewardCard }) {
   const content = <>
-    <span className={styles.artwork}>{reward.imageUrl ? <Image data-reward-artwork src={reward.imageUrl} alt="" width={80} height={80} sizes="(max-width: 639px) 64px, 80px" /> : <Package aria-hidden="true" />}</span>
+    <span className={`${styles.artwork} relative`}>{reward.imageUrl ? <Image data-reward-artwork src={reward.imageUrl} alt="" width={80} height={80} sizes="(max-width: 639px) 64px, 80px" /> : <Package aria-hidden="true" />}<RewardItemOverlay rank={reward.rankChange} signaturePoints={reward.signaturePoints} rarity={reward.itemRarity}/></span>
     <span className={styles.cardCopy}><strong>{label(reward)}</strong><span>{reward.selection ? `Choose ${reward.selection.pick} of ${reward.selection.draw}` : `${reward.rarity ? `${reward.rarity}★ · ` : ""}${rewardTypeLabel(reward.type)}`}</span><span className={styles.quantity}>{amount(reward)}</span></span>
     {reward.href && <ArrowUpRight className={styles.arrow} aria-hidden="true" />}
   </>
@@ -30,7 +31,7 @@ function AmountOptionsCard({ group }: { group: CrystalRewardGroup }) {
   const { reward, options } = group
   return <details className={styles.amountGroup} data-reward-amounts data-reward-category={reward.categoryId}>
     <summary className={styles.card}>
-      <span className={styles.artwork}>{reward.imageUrl ? <Image data-reward-artwork src={reward.imageUrl} alt="" width={80} height={80} sizes="(max-width: 639px) 64px, 80px" /> : <Package aria-hidden="true" />}</span>
+      <span className={`${styles.artwork} relative`}>{reward.imageUrl ? <Image data-reward-artwork src={reward.imageUrl} alt="" width={80} height={80} sizes="(max-width: 639px) 64px, 80px" /> : <Package aria-hidden="true" />}<RewardItemOverlay rank={reward.rankChange} signaturePoints={reward.signaturePoints} rarity={reward.itemRarity}/></span>
       <span className={styles.cardCopy}><strong>{label(reward)}</strong><span>{rewardTypeLabel(reward.type)}</span><span className={styles.quantity}>{options.length} amount options</span></span>
       <ChevronDown className={styles.amountChevron} aria-hidden="true" />
     </summary>

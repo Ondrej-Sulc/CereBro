@@ -1,0 +1,692 @@
+{
+  "captureSha256": "04b720d1cabb8303d9889bd8c9b9144e0b561864084a5f19761876d813b3cbfd",
+  "format": "cerebro.public-reward-artwork-proof.v1",
+  "inputs": {
+    "https://kabam-marvel.shared.mcoc-cdn.net/emotes/sets/618c4e5f7bb6c543fdab6c71/GhostRider_Arrogant_Emote_BG_Mar_26_21dee73339f9.png": {
+      "byteLength": 53129,
+      "height": 256,
+      "inputSha256": "7f67becd252c342377f1f13337a5239b494edcd06ab7b85efa43d18c9ce35544",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "9fca9fb3d3b7db5e1ffa7b52dbe0cdf39bb50a63b2c967c3635544d7a93c9bba",
+      "width": 256
+    },
+    "https://kabam-marvel.shared.mcoc-cdn.net/emotes/sets/618c4e5f7bb6c543fdab6c71/Glykhan_Angry_Emote_Rebirth_Event_f254067df659.png": {
+      "byteLength": 70986,
+      "height": 256,
+      "inputSha256": "566616ddbf414d94b8fe2d46da1e5ba811321463bf62389dfa5d299b0bce9e82",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "0b2eeaf57585851dbd3d185924946ca8622952805d498c9d29789f089d041010",
+      "width": 256
+    },
+    "https://kabam-marvel.shared.mcoc-cdn.net/emotes/sets/618c4e5f7bb6c543fdab6c71/Punching_Bag_Winter_Soldier_Emote_Revenge_Of_Legends_Event_Aug_26%20(2)_3d2778c873ac.png": {
+      "byteLength": 52686,
+      "height": 256,
+      "inputSha256": "b2daf53b2b8ab77b999c9e2679a0be786338429119ae04600c610de0f57e85fc",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "ec2140f2144d9e93742f8c7af37533ec1831d8790baec5c579ff05101ae3ff3f",
+      "width": 256
+    },
+    "https://kabam-marvel.shared.mcoc-cdn.net/gamestore/1568136890/tier_3_Collector_unnamed.png": {
+      "byteLength": 103160,
+      "height": 288,
+      "inputSha256": "f553a262cc402f2a416e39ed2d35145b1cd0f6329cf0e3e9145b1cee74b261c9",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "d0abe0235c89345790c9acf4da321205f400d73cb07c92e5ba71a923f8584a06",
+      "width": 288
+    },
+    "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/1669154908/tierSpecial_Eternity_of_Pain_Acceptance_Dec_22.png": {
+      "byteLength": 108926,
+      "height": 288,
+      "inputSha256": "fb42eb25a739a9d94255d36069a5188db4148866223b1acf1d9dccba3075584c",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "61aa8bd7e174c80ee984ae6639120f5f707286865aae2019b154d96a5c37aaa1",
+      "width": 288
+    },
+    "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/1679677447/tier_Special_Shooting_Star_Quest_reward.png": {
+      "byteLength": 68900,
+      "height": 288,
+      "inputSha256": "7b376b5fb78f53b31a60966f1210630c0e80d80ef327413ef230ec4dd9c074e2",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "ff0816671e00e678ed5d040595599786fb9b861938a73df72440922fce115296",
+      "width": 288
+    },
+    "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/Ares_Everest%20Quest_Profile_Pic_daace8a0d6ed.png": {
+      "byteLength": 333737,
+      "height": 288,
+      "inputSha256": "c3777b8da71e0fc4470e1b8dbdb3eeb6bd59fa8615e77dee8bf8c50a0b8dc431",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "e90192f9c28c5e6d7e7d614d774d8d53d4abb04917bbf96c3c471bb77bbc4b63",
+      "width": 288
+    },
+    "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/Deathless_Thanos_Profile%20Pics%20-%20Deathless%20Thanos_3d9917b7a6a6.png": {
+      "byteLength": 333737,
+      "height": 288,
+      "inputSha256": "9a774fe50fbcb09d7da4016c797600123a6ad0fa57683427a864823fd80a0c7c",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "e6913e86861945d5d9d950705d23a582508f02279a01b82af9e7368f2dbe8339",
+      "width": 288
+    },
+    "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/PROFILEPIC_GrandMaster_Nameless_0117149911d6.png": {
+      "byteLength": 126351,
+      "height": 288,
+      "inputSha256": "5d35febabe9beddad3aa35dd8d1402630229babe92a33709058963cce24aefe2",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "6d4e47ac7fbca00e68aa606980b23d031eb533dda6750e392aef18e3653fab34",
+      "width": 288
+    },
+    "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/ProfilePic_Everest_Quest_May_25_b68ca81f4cf2.png": {
+      "byteLength": 133980,
+      "height": 288,
+      "inputSha256": "f3e6fd7b16834ae430f94c194b3380d52acbf93f685e802352a61642fb26c8e8",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "fb1b24e85d27bfe7e8b9262b66215c2dd15e1eea95aa00e503856e6db4b6f6af",
+      "width": 288
+    },
+    "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/Profile_Epilogue_Completion_26_450e5eec388e.png": {
+      "byteLength": 121649,
+      "height": 288,
+      "inputSha256": "7c01dbadcffd78128d71ac412b09d1b94057179193f6fa6b5673c682ba797bd9",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "b8fbd71a8f066c2902dbb50d4b2a9e59080c9a133dd5b0d51b4abc8b9c421754",
+      "width": 288
+    },
+    "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/polish_Epoch_Profile_Pic_7a3fcfbf8cf1.png": {
+      "byteLength": 157676,
+      "height": 288,
+      "inputSha256": "6880d4a8933240798dd876cd653ce3b117a5fd72463ae973de72ca59eb528926",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "597aa9cfcdb005c128c1180c060c3be7364f03186204be1afc18f7e724003ace",
+      "width": 288
+    },
+    "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/5df86d33135c7763586b1c15/Icon_Selectable_Reward_Catalyst_T4_6070fba4cb3212f5e8495adb.png": {
+      "byteLength": 59923,
+      "height": 256,
+      "inputSha256": "08850994670674b116e14f175dca05da992d253b13baea6fb310c7729514432a",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "77bbec865fa692a76b47160569c124c97ac2eb5ba9dc58e6af5be688d0e44d78",
+      "width": 256
+    },
+    "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/5e5ecbcdacee3d0b445227be/Icon_Selectable_Reward_Catalyst_T5_5e5ed78633ef02d935d15aca.png": {
+      "byteLength": 66576,
+      "height": 256,
+      "inputSha256": "b0beb2d6305a3ef58bfb18a73834bdeecf39138d72e30a7ce265257ab7d66be1",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "34374d31f6d47734f9295c87b3de92b70413c9c2fca2bd1fc63753a6c02e3531",
+      "width": 256
+    },
+    "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/5e5ecbcdacee3d0b445227be/Icon_Selectable_Reward_Catalyst_T5_5e5ed895a9eb0f381b529741.png": {
+      "byteLength": 66576,
+      "height": 256,
+      "inputSha256": "b0beb2d6305a3ef58bfb18a73834bdeecf39138d72e30a7ce265257ab7d66be1",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "34374d31f6d47734f9295c87b3de92b70413c9c2fca2bd1fc63753a6c02e3531",
+      "width": 256
+    },
+    "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/61aa5282da6ca37ce046afbf/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_61aa563a384a8f85f566a973.png": {
+      "byteLength": 74518,
+      "height": 256,
+      "inputSha256": "386052b3a3495264c3a7e38f7648f0ba2ebd1b0661e66f1fee7d3f57dfcdb57c",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "544297771297307075bd218931ef3110d1362b46ea56b50dc37a751819bf858e",
+      "width": 256
+    },
+    "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/636ab2b2150e651b3ba06b1c/Tier1_Selector_Icon_636ab3df5e5586089a75bcb0.png": {
+      "byteLength": 171769,
+      "height": 500,
+      "inputSha256": "2e6f9faf17f65b4e2b250cbcc9d2c58912330a73c9b7cd6ef4c657b39269c24d",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "9946df8d542b526c9cc4364e12d8f92bb66aff5244ab61ba4f8ba41c7ed2382a",
+      "width": 500
+    },
+    "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/636ab5a2150e651b3ba06b4f/Tier2_Selector_Icon_636abbd25e5586089a75bf33.png": {
+      "byteLength": 186279,
+      "height": 500,
+      "inputSha256": "b83c7dd53b228162cdf281358edc4bf3ce6a4f763f0b9faa5e99709609d20531",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "b8ddb46e0f3871a27fb01b74de8fe250f95c50b81caee6eaf4309b5c4ec95d6c",
+      "width": 500
+    },
+    "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/6527078d71accb35a5a13caa/STORE_SQ_Launch_Pooll_Selector_8402fbfd7c20.png": {
+      "byteLength": 241600,
+      "height": 512,
+      "inputSha256": "1730c55ac70045fa92c6af5b6b29b741f3e411b950d43e4f88a7af8fc268bc92",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "435f2871cddab059314cb5ff408b6f7100215a4f70e97f18a5c4e95171876592",
+      "width": 512
+    },
+    "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/669596c3d856b710642e529d/SRA_Rainbow_Icon_8293a5f034cd.png": {
+      "byteLength": 1050954,
+      "height": 512,
+      "inputSha256": "1adb9403b399d1741f4258b56aec853d9ab7e461c7b35121030ee3427de6355d",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "65f6826f4507c78e21c251075a085de3abb585e1436cbf5c99d019915fa42dc7",
+      "width": 512
+    },
+    "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/66e9f9f2eac5351135101bba/SRA_Thronebreaker_Icon_ef0c3dd8b523.png": {
+      "byteLength": 1050954,
+      "height": 512,
+      "inputSha256": "e832b63c51bca5591e451e18f7489abfb126c6549fc27dada390e2d945b001c8",
+      "origin": "exact-public-native-url",
+      "rgbaSha256": "582a432a0baf2fa20f4a8de29013e9e22fa4ebb0c6db8b489a6b5c954a7946ea",
+      "width": 512
+    },
+    "misc/title_icon": {
+      "byteLength": 13195,
+      "height": 256,
+      "inputSha256": "fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce",
+      "origin": "exact-retained-toc-library-binding",
+      "rgbaSha256": "9928cd1b8815db399a501c385a79b441bc86394b6309485bcdaa613e0f4f5be7",
+      "width": 256
+    }
+  },
+  "nativeFields": [
+    {
+      "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+      "id": "common_ghostrider_arrogant",
+      "imageOnS3": true,
+      "imagePath": "emotes/sets/618c4e5f7bb6c543fdab6c71/GhostRider_Arrogant_Emote_BG_Mar_26_21dee73339f9.png",
+      "name": "Icon",
+      "nativeImageInputs": {
+        "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+        "cdnKind": "unapproved-absolute-reference",
+        "directIcon": {
+          "reference": "emotes/sets/618c4e5f7bb6c543fdab6c71/GhostRider_Arrogant_Emote_BG_Mar_26_21dee73339f9.png",
+          "source": "cdn"
+        },
+        "fetchablePublicUrl": true,
+        "nativeImage": "https://kabam-marvel.shared.mcoc-cdn.net/emotes/sets/618c4e5f7bb6c543fdab6c71/GhostRider_Arrogant_Emote_BG_Mar_26_21dee73339f9.png",
+        "nativeImageKind": "public-cdn-url",
+        "nativeRule": "EB.Uri.Combine",
+        "onS3": true,
+        "path": "emotes/sets/618c4e5f7bb6c543fdab6c71/GhostRider_Arrogant_Emote_BG_Mar_26_21dee73339f9.png",
+        "proofSha256": "a3a50022375fc00adf8a8bdee19f7aada488152e1870d5a63b3d3909edbaa012"
+      },
+      "type": "emote"
+    },
+    {
+      "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+      "id": "common_glykhan_angry",
+      "imageOnS3": true,
+      "imagePath": "emotes/sets/618c4e5f7bb6c543fdab6c71/Glykhan_Angry_Emote_Rebirth_Event_f254067df659.png",
+      "name": "Icon",
+      "nativeImageInputs": {
+        "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+        "cdnKind": "unapproved-absolute-reference",
+        "directIcon": {
+          "reference": "emotes/sets/618c4e5f7bb6c543fdab6c71/Glykhan_Angry_Emote_Rebirth_Event_f254067df659.png",
+          "source": "cdn"
+        },
+        "fetchablePublicUrl": true,
+        "nativeImage": "https://kabam-marvel.shared.mcoc-cdn.net/emotes/sets/618c4e5f7bb6c543fdab6c71/Glykhan_Angry_Emote_Rebirth_Event_f254067df659.png",
+        "nativeImageKind": "public-cdn-url",
+        "nativeRule": "EB.Uri.Combine",
+        "onS3": true,
+        "path": "emotes/sets/618c4e5f7bb6c543fdab6c71/Glykhan_Angry_Emote_Rebirth_Event_f254067df659.png",
+        "proofSha256": "a3a50022375fc00adf8a8bdee19f7aada488152e1870d5a63b3d3909edbaa012"
+      },
+      "type": "emote"
+    },
+    {
+      "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+      "id": "common_winter_soldier_punching_bag",
+      "imageOnS3": true,
+      "imagePath": "emotes/sets/618c4e5f7bb6c543fdab6c71/Punching_Bag_Winter_Soldier_Emote_Revenge_Of_Legends_Event_Aug_26%20(2)_3d2778c873ac.png",
+      "name": "Emote",
+      "nativeImageInputs": {
+        "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+        "cdnKind": "unapproved-absolute-reference",
+        "directIcon": {
+          "reference": "emotes/sets/618c4e5f7bb6c543fdab6c71/Punching_Bag_Winter_Soldier_Emote_Revenge_Of_Legends_Event_Aug_26%20(2)_3d2778c873ac.png",
+          "source": "cdn"
+        },
+        "fetchablePublicUrl": true,
+        "nativeImage": "https://kabam-marvel.shared.mcoc-cdn.net/emotes/sets/618c4e5f7bb6c543fdab6c71/Punching_Bag_Winter_Soldier_Emote_Revenge_Of_Legends_Event_Aug_26%20(2)_3d2778c873ac.png",
+        "nativeImageKind": "public-cdn-url",
+        "nativeRule": "EB.Uri.Combine",
+        "onS3": true,
+        "path": "emotes/sets/618c4e5f7bb6c543fdab6c71/Punching_Bag_Winter_Soldier_Emote_Revenge_Of_Legends_Event_Aug_26%20(2)_3d2778c873ac.png",
+        "proofSha256": "a3a50022375fc00adf8a8bdee19f7aada488152e1870d5a63b3d3909edbaa012"
+      },
+      "type": "emote"
+    },
+    {
+      "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+      "description": "",
+      "id": "abyss_mastery_profile_pic_leg",
+      "imageOnS3": true,
+      "imagePath": "gamestore/1568136890/tier_3_Collector_unnamed.png",
+      "name": "",
+      "nativeImageInputs": {
+        "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+        "cdnKind": "unapproved-absolute-reference",
+        "directIcon": {
+          "reference": "gamestore/1568136890/tier_3_Collector_unnamed.png",
+          "source": "cdn"
+        },
+        "fetchablePublicUrl": true,
+        "nativeImage": "https://kabam-marvel.shared.mcoc-cdn.net/gamestore/1568136890/tier_3_Collector_unnamed.png",
+        "nativeImageKind": "public-cdn-url",
+        "nativeRule": "EB.Uri.Combine",
+        "onS3": true,
+        "path": "gamestore/1568136890/tier_3_Collector_unnamed.png",
+        "proofSha256": "a3a50022375fc00adf8a8bdee19f7aada488152e1870d5a63b3d3909edbaa012"
+      },
+      "type": "profilebadge"
+    },
+    {
+      "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+      "description": "",
+      "id": "deathless_thanos_profile_pic_rar",
+      "imageOnS3": true,
+      "imagePath": "profilebadges/Deathless_Thanos_Profile%20Pics%20-%20Deathless%20Thanos_3d9917b7a6a6.png",
+      "name": "",
+      "nativeImageInputs": {
+        "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+        "cdnKind": "unapproved-absolute-reference",
+        "directIcon": {
+          "reference": "profilebadges/Deathless_Thanos_Profile%20Pics%20-%20Deathless%20Thanos_3d9917b7a6a6.png",
+          "source": "cdn"
+        },
+        "fetchablePublicUrl": true,
+        "nativeImage": "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/Deathless_Thanos_Profile%20Pics%20-%20Deathless%20Thanos_3d9917b7a6a6.png",
+        "nativeImageKind": "public-cdn-url",
+        "nativeRule": "EB.Uri.Combine",
+        "onS3": true,
+        "path": "profilebadges/Deathless_Thanos_Profile%20Pics%20-%20Deathless%20Thanos_3d9917b7a6a6.png",
+        "proofSha256": "a3a50022375fc00adf8a8bdee19f7aada488152e1870d5a63b3d3909edbaa012"
+      },
+      "type": "profilebadge"
+    },
+    {
+      "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+      "description": "",
+      "id": "eop_acceptance_profile_pic_rar",
+      "imageOnS3": true,
+      "imagePath": "profilebadges/1669154908/tierSpecial_Eternity_of_Pain_Acceptance_Dec_22.png",
+      "name": "",
+      "nativeImageInputs": {
+        "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+        "cdnKind": "unapproved-absolute-reference",
+        "directIcon": {
+          "reference": "profilebadges/1669154908/tierSpecial_Eternity_of_Pain_Acceptance_Dec_22.png",
+          "source": "cdn"
+        },
+        "fetchablePublicUrl": true,
+        "nativeImage": "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/1669154908/tierSpecial_Eternity_of_Pain_Acceptance_Dec_22.png",
+        "nativeImageKind": "public-cdn-url",
+        "nativeRule": "EB.Uri.Combine",
+        "onS3": true,
+        "path": "profilebadges/1669154908/tierSpecial_Eternity_of_Pain_Acceptance_Dec_22.png",
+        "proofSha256": "a3a50022375fc00adf8a8bdee19f7aada488152e1870d5a63b3d3909edbaa012"
+      },
+      "type": "profilebadge"
+    },
+    {
+      "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+      "description": "",
+      "id": "eop_ares_profile_pic_rar",
+      "imageOnS3": true,
+      "imagePath": "profilebadges/Ares_Everest%20Quest_Profile_Pic_daace8a0d6ed.png",
+      "name": "",
+      "nativeImageInputs": {
+        "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+        "cdnKind": "unapproved-absolute-reference",
+        "directIcon": {
+          "reference": "profilebadges/Ares_Everest%20Quest_Profile_Pic_daace8a0d6ed.png",
+          "source": "cdn"
+        },
+        "fetchablePublicUrl": true,
+        "nativeImage": "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/Ares_Everest%20Quest_Profile_Pic_daace8a0d6ed.png",
+        "nativeImageKind": "public-cdn-url",
+        "nativeRule": "EB.Uri.Combine",
+        "onS3": true,
+        "path": "profilebadges/Ares_Everest%20Quest_Profile_Pic_daace8a0d6ed.png",
+        "proofSha256": "a3a50022375fc00adf8a8bdee19f7aada488152e1870d5a63b3d3909edbaa012"
+      },
+      "type": "profilebadge"
+    },
+    {
+      "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+      "description": "",
+      "id": "epilogue_completion_pic_rar",
+      "imageOnS3": true,
+      "imagePath": "profilebadges/Profile_Epilogue_Completion_26_450e5eec388e.png",
+      "name": "",
+      "nativeImageInputs": {
+        "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+        "cdnKind": "unapproved-absolute-reference",
+        "directIcon": {
+          "reference": "profilebadges/Profile_Epilogue_Completion_26_450e5eec388e.png",
+          "source": "cdn"
+        },
+        "fetchablePublicUrl": true,
+        "nativeImage": "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/Profile_Epilogue_Completion_26_450e5eec388e.png",
+        "nativeImageKind": "public-cdn-url",
+        "nativeRule": "EB.Uri.Combine",
+        "onS3": true,
+        "path": "profilebadges/Profile_Epilogue_Completion_26_450e5eec388e.png",
+        "proofSha256": "a3a50022375fc00adf8a8bdee19f7aada488152e1870d5a63b3d3909edbaa012"
+      },
+      "type": "profilebadge"
+    },
+    {
+      "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+      "description": "",
+      "id": "epoch_true_olympian_ares_pic_rar",
+      "imageOnS3": true,
+      "imagePath": "profilebadges/polish_Epoch_Profile_Pic_7a3fcfbf8cf1.png",
+      "name": "",
+      "nativeImageInputs": {
+        "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+        "cdnKind": "unapproved-absolute-reference",
+        "directIcon": {
+          "reference": "profilebadges/polish_Epoch_Profile_Pic_7a3fcfbf8cf1.png",
+          "source": "cdn"
+        },
+        "fetchablePublicUrl": true,
+        "nativeImage": "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/polish_Epoch_Profile_Pic_7a3fcfbf8cf1.png",
+        "nativeImageKind": "public-cdn-url",
+        "nativeRule": "EB.Uri.Combine",
+        "onS3": true,
+        "path": "profilebadges/polish_Epoch_Profile_Pic_7a3fcfbf8cf1.png",
+        "proofSha256": "a3a50022375fc00adf8a8bdee19f7aada488152e1870d5a63b3d3909edbaa012"
+      },
+      "type": "profilebadge"
+    },
+    {
+      "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+      "description": "",
+      "id": "nameless_grandmaster_profile_pic_rar",
+      "imageOnS3": true,
+      "imagePath": "profilebadges/PROFILEPIC_GrandMaster_Nameless_0117149911d6.png",
+      "name": "",
+      "nativeImageInputs": {
+        "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+        "cdnKind": "unapproved-absolute-reference",
+        "directIcon": {
+          "reference": "profilebadges/PROFILEPIC_GrandMaster_Nameless_0117149911d6.png",
+          "source": "cdn"
+        },
+        "fetchablePublicUrl": true,
+        "nativeImage": "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/PROFILEPIC_GrandMaster_Nameless_0117149911d6.png",
+        "nativeImageKind": "public-cdn-url",
+        "nativeRule": "EB.Uri.Combine",
+        "onS3": true,
+        "path": "profilebadges/PROFILEPIC_GrandMaster_Nameless_0117149911d6.png",
+        "proofSha256": "a3a50022375fc00adf8a8bdee19f7aada488152e1870d5a63b3d3909edbaa012"
+      },
+      "type": "profilebadge"
+    },
+    {
+      "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+      "description": "",
+      "id": "shooting_star_storm_starry_eyes_pic_rar",
+      "imageOnS3": true,
+      "imagePath": "profilebadges/1679677447/tier_Special_Shooting_Star_Quest_reward.png",
+      "name": "",
+      "nativeImageInputs": {
+        "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+        "cdnKind": "unapproved-absolute-reference",
+        "directIcon": {
+          "reference": "profilebadges/1679677447/tier_Special_Shooting_Star_Quest_reward.png",
+          "source": "cdn"
+        },
+        "fetchablePublicUrl": true,
+        "nativeImage": "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/1679677447/tier_Special_Shooting_Star_Quest_reward.png",
+        "nativeImageKind": "public-cdn-url",
+        "nativeRule": "EB.Uri.Combine",
+        "onS3": true,
+        "path": "profilebadges/1679677447/tier_Special_Shooting_Star_Quest_reward.png",
+        "proofSha256": "a3a50022375fc00adf8a8bdee19f7aada488152e1870d5a63b3d3909edbaa012"
+      },
+      "type": "profilebadge"
+    },
+    {
+      "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+      "description": "",
+      "id": "wheel_of_fate_profile_pic_rar",
+      "imageOnS3": true,
+      "imagePath": "profilebadges/ProfilePic_Everest_Quest_May_25_b68ca81f4cf2.png",
+      "name": "",
+      "nativeImageInputs": {
+        "cdn": "https://kabam-marvel.shared.mcoc-cdn.net",
+        "cdnKind": "unapproved-absolute-reference",
+        "directIcon": {
+          "reference": "profilebadges/ProfilePic_Everest_Quest_May_25_b68ca81f4cf2.png",
+          "source": "cdn"
+        },
+        "fetchablePublicUrl": true,
+        "nativeImage": "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/ProfilePic_Everest_Quest_May_25_b68ca81f4cf2.png",
+        "nativeImageKind": "public-cdn-url",
+        "nativeRule": "EB.Uri.Combine",
+        "onS3": true,
+        "path": "profilebadges/ProfilePic_Everest_Quest_May_25_b68ca81f4cf2.png",
+        "proofSha256": "a3a50022375fc00adf8a8bdee19f7aada488152e1870d5a63b3d3909edbaa012"
+      },
+      "type": "profilebadge"
+    },
+    {
+      "description": "Claim this for a Tier 4 Catalyst of a specific Class!",
+      "id": "5df86d33135c7763586b1c15",
+      "name": "TIER 4 CLASS CATALYST SELECTOR",
+      "sraIconPath": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/5df86d33135c7763586b1c15/Icon_Selectable_Reward_Catalyst_T4_6070fba4cb3212f5e8495adb.png",
+      "type": "sra"
+    },
+    {
+      "description": "Earn this reward to choose Catalyst Fragments from the class of your choice!",
+      "id": "5e5ecbcdacee3d0b445227be",
+      "name": "25% TIER 5 CLASS CATALYST FRAGMENT SELECTOR",
+      "sraIconPath": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/5e5ecbcdacee3d0b445227be/Icon_Selectable_Reward_Catalyst_T5_5e5ed895a9eb0f381b529741.png",
+      "type": "sra"
+    },
+    {
+      "description": "Choose a Class of 6-Star Nexus Crystal!",
+      "id": "5fb437e8174f303bd33b0692",
+      "name": "6-STAR NEXUS CRYSTAL SELECTOR",
+      "sraIconPath": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/5e5ecbcdacee3d0b445227be/Icon_Selectable_Reward_Catalyst_T5_5e5ed78633ef02d935d15aca.png",
+      "type": "sra"
+    },
+    {
+      "description": "Claim this for an Alloy of a specific Class!",
+      "id": "636ab2b2150e651b3ba06b1c",
+      "name": "TIER 1 CLASS ALLOY SELECTOR",
+      "sraIconPath": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/636ab2b2150e651b3ba06b1c/Tier1_Selector_Icon_636ab3df5e5586089a75bcb0.png",
+      "type": "sra"
+    },
+    {
+      "description": "Claim this for Alloy Fragments of a specific Class!",
+      "id": "636abde9150e651b3ba06b8e",
+      "name": "10% TIER 2 CLASS ALLOY FRAGMENT SELECTOR",
+      "sraIconPath": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/636ab5a2150e651b3ba06b4f/Tier2_Selector_Icon_636abbd25e5586089a75bf33.png",
+      "type": "sra"
+    },
+    {
+      "description": "Earn this reward to choose Catalyst Fragments from the class of your choice!",
+      "id": "641e3cdc98cbfcc75fc53066",
+      "name": "10% TIER 6 CLASS CATALYST FRAGMENT SELECTOR",
+      "sraIconPath": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/5e5ecbcdacee3d0b445227be/Icon_Selectable_Reward_Catalyst_T5_5e5ed895a9eb0f381b529741.png",
+      "type": "sra"
+    },
+    {
+      "description": "Claim this for Alloy Fragments of a specific Class!",
+      "id": "647fa14e7912c837691e720b",
+      "name": "25% TIER 1 CLASS ALLOY FRAGMENT SELECTOR",
+      "sraIconPath": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/636ab2b2150e651b3ba06b1c/Tier1_Selector_Icon_636ab3df5e5586089a75bcb0.png",
+      "type": "sra"
+    },
+    {
+      "description": "Allows you to select a 7-Star version of one of the following Champions: Mantis, Killmonger, Elsa Bloodstone, Hawkeye, Falcon, Korg, Titania, Hulk, Spider-Gwen, The Overseer, Joe Fixit, Spider-Man (Classic), Dragon Man, Wiccan, Wong, Sasquatch, America Chavez, Mangog, Venom, Gorr the God Butcher, Venom The Duck, Terrax, Gamora, Silver Surfer, Iron Man (Infinity War), Guillotine 2099, Rocket Raccoon, Mysterio, Shuri, War Machine, Gambit, Sunspot, Sauron, Storm (Pyramid X), Domino or Bishop.",
+      "id": "6527078d71accb35a5a13caa",
+      "name": "7-STAR LAUNCH POOL SELECTOR",
+      "sraIconPath": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/6527078d71accb35a5a13caa/STORE_SQ_Launch_Pooll_Selector_8402fbfd7c20.png",
+      "type": "sra"
+    },
+    {
+      "description": "Select the Catalyst which best suits your needs!",
+      "id": "65ab23c67f3b983f48497174",
+      "name": "BASIC ALPHA SELECTOR",
+      "sraIconPath": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/61aa5282da6ca37ce046afbf/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_61aa563a384a8f85f566a973.png",
+      "type": "sra"
+    },
+    {
+      "description": "Claim this for Tier 6 ISO-8 of a specific Class!",
+      "id": "66e9f9f2eac5351135101bba",
+      "name": "SUPERIOR TIER 6 CLASS ISO-8 SELECTOR",
+      "sraIconPath": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/66e9f9f2eac5351135101bba/SRA_Thronebreaker_Icon_ef0c3dd8b523.png",
+      "type": "sra"
+    },
+    {
+      "description": "Allows you to select a 7-Star Champion, 7-Star Deathless Piece Selector, or a Titan Nexus Crystal.",
+      "id": "67eadc803e871268cc9ee887",
+      "name": "WHEEL OF FATE SELECTOR",
+      "sraIconPath": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/669596c3d856b710642e529d/SRA_Rainbow_Icon_8293a5f034cd.png",
+      "type": "sra"
+    },
+    {
+      "description": "Allows you to choose a special 7-Star Class Nexus Crystal, containing a choice of 1 to 10 Champions of that specific Class!",
+      "id": "6a1634a25c05d7cb80f87fdd",
+      "name": "7-STAR ABYSS NEXUS CRYSTAL SELECTOR",
+      "sraIconPath": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/5e5ecbcdacee3d0b445227be/Icon_Selectable_Reward_Catalyst_T5_5e5ed78633ef02d935d15aca.png",
+      "type": "sra"
+    },
+    {
+      "description": "But this Summoner did not blink.",
+      "id": "abyss_mastery",
+      "name": "The Abyss Stared Back",
+      "nativeRedeemerIcon": {
+        "reference": "misc/title_icon",
+        "source": "resource"
+      },
+      "type": "utitle"
+    },
+    {
+      "description": "Earned for completion of the Revenge of Legends Gauntlet Quest",
+      "id": "spec_armedrobbery",
+      "name": "Armed Robbery",
+      "nativeRedeemerIcon": {
+        "reference": "misc/title_icon",
+        "source": "resource"
+      },
+      "type": "utitle"
+    },
+    {
+      "description": "Awarded for completing the Deathless Mausoleum. Welcome to the undying fold, Deathless Summoner!",
+      "id": "spec_deathlesssummoner",
+      "name": "Deathless Summoner",
+      "nativeRedeemerIcon": {
+        "reference": "misc/title_icon",
+        "source": "resource"
+      },
+      "type": "utitle"
+    },
+    {
+      "description": "Earned during EPOCH OF PAIN event.",
+      "id": "spec_destroyeroftitans",
+      "name": "Destroyer of Titans",
+      "nativeRedeemerIcon": {
+        "reference": "misc/title_icon",
+        "source": "resource"
+      },
+      "type": "utitle"
+    },
+    {
+      "description": "Earned during Grandmasters Gauntlet event.",
+      "id": "spec_grandmastersgreatest",
+      "name": "Grandmaster's Greatest",
+      "nativeRedeemerIcon": {
+        "reference": "misc/title_icon",
+        "source": "resource"
+      },
+      "type": "utitle"
+    },
+    {
+      "description": "Fully Explored the Epilogue Quest.",
+      "id": "spec_happilyeverafter",
+      "name": "Happily Ever After?",
+      "nativeRedeemerIcon": {
+        "reference": "misc/title_icon",
+        "source": "resource"
+      },
+      "type": "utitle"
+    },
+    {
+      "description": "Survived the City of the Dead.",
+      "id": "spec_rulerofnecropolis",
+      "name": "Ruler of Necropolis",
+      "nativeRedeemerIcon": {
+        "reference": "misc/title_icon",
+        "source": "resource"
+      },
+      "type": "utitle"
+    },
+    {
+      "description": "Completed the Shooting Star Quest.",
+      "id": "spec_starryeyed",
+      "name": "Starry-Eyed",
+      "nativeRedeemerIcon": {
+        "reference": "misc/title_icon",
+        "source": "resource"
+      },
+      "type": "utitle"
+    },
+    {
+      "description": "Earned by fully exploring Act 5: Elder's War",
+      "id": "story_a5mast",
+      "name": "Elder's Bane",
+      "nativeRedeemerIcon": {
+        "reference": "misc/title_icon",
+        "source": "resource"
+      },
+      "type": "utitle"
+    },
+    {
+      "description": "The Summoner has beaten The Grandmaster at his own game, and fully explored Act 6.",
+      "id": "story_a6c4_breaker",
+      "name": "Breaker of Thrones",
+      "nativeRedeemerIcon": {
+        "reference": "misc/title_icon",
+        "source": "resource"
+      },
+      "type": "utitle"
+    }
+  ],
+  "nativeUrlProofSha256": "a3a50022375fc00adf8a8bdee19f7aada488152e1870d5a63b3d3909edbaa012",
+  "policy": "Native PNG bytes unchanged; exact SRAIconPath, native badge/emote getter output, shared title reward icon. No filename guesses, title-definition-icon substitution or resource/account traversal.",
+  "titleBinding": {
+    "binding": {
+      "assetId": "bd355b62ffc7f959d0a1b4414431325f26edad47f9bf14f200107728af5b2542",
+      "blobPath": "originals/fd/fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce.png",
+      "blobSha256": "fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce",
+      "evidence": "public-toc-loose-file",
+      "height": 256,
+      "inputSha256": "fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce",
+      "logicalPath": "ui_home_misc_store_calendar_levelup/misc/title_icon.png",
+      "nativePath": "misc/title_icon.png",
+      "objectId": "2456f90419f7f9d6e76dc9452bd196a0b6fe34d1c5c7667646587496ac329a1c",
+      "pixelSha256": "e7bcccef563eb6d0e2dc08bd700fcf3a3ad772f2bff877664ca4737e3aebd29e",
+      "provenance": "{\"format\":\"PNG\",\"frames\":1,\"originalBlobSha256\":\"fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce\"}",
+      "referenceId": "46d72c51388047c3685279e69127ee946943681868aa843ffba9ebb2606293ba",
+      "sourcePath": "Resources/Data/ui_home_misc_store_calendar_levelup/misc/title_icon.png",
+      "tocSourceId": "6ebdc6225d2eb2497c680d867b9e30ac7aeee06ed6e6748046aaf71a6d4a6176",
+      "width": 256
+    },
+    "extractionContractSha256": "aa35840e66dff4f5bdb44f27a9c73eb7b8ef966e13d26c28e03e3f2fba73f21a",
+    "format": "cerebro.public-title-icon-binding.v1",
+    "libraryDatabaseSha256": "205db640ce69f268f7bfd93dcb574b0fe018980727d163e5ae09fbf38dd68f02",
+    "libraryVerificationSha256": "b3252ef651229bf99106bfbc30346fc62ab0099eb6b0cfbc2520d3f113353027",
+    "loader": {
+      "excerpt": "Method: \n\t001 Move stack:0x18, r8\n\t002 Move stack:0x8, rcx\n\t003 ShiftStack -8\n\t004 Move stack:0x0, rbx\n\t005 ShiftStack -8\n\t006 Move stack:0x0, rbp\n\t007 ShiftStack -8\n\t008 Move stack:0x0, rsi\n\t009 ShiftStack -8\n\t010 Move stack:0x0, rdi\n\t011 ShiftStack -8\n\t012 Move stack:0x0, r13\n\t013 ShiftStack -96\n\t014 Compare [0x18654EDD0], 0\n\t015 Move r13, r9\n\t016 Move rsi, r8\n\t017 Move rbx, rdx\n\t018 Move rdi, rcx\n\t019 JumpIfNotEqual {35}\n\t020 LoadAddress rcx, [0x1860D7568]\n\t021 Call \"il2cpp_codegen_initialize_runtime_metadata\", rcx, rdx, r8, r9\n\t022 LoadAddress rcx, [0x186178090]\n\t023 Call \"il2cpp_codegen_initialize_runtime_metadata\", rcx, rdx, r8, r9\n\t024 LoadAddress rcx, [0x18617CBD0]\n\t025 Call \"il2cpp_codegen_initialize_runtime_metadata\", rcx, rdx, r8, r9\n\t026 LoadAddress rcx, [0x1860FF868]\n\t027 Call \"il2cpp_codegen_initialize_runtime_metadata\", rcx, rdx, r8, r9\n\t028 LoadAddress rcx, [0x1860FFA18]\n\t029 Call \"il2cpp_codegen_initialize_runtime_metadata\", rcx, rdx, r8, r9\n\t030 LoadAddress rcx, [0x18610D368]\n\t031 Call \"il2cpp_codegen_initialize_runtime_metadata\", rcx, rdx, r8, r9\n\t032 LoadAddress rcx, [0x186191CF0]\n\t033 Call \"il2cpp_codegen_initialize_runtime_metadata\", rcx, rdx, r8, r9\n\t034 Move [0x18654EDD0], 1\n\t035 Move rax, [0x186566160]\n\t036 Move rcx, [rax+184]\n\t037 Move rdx, [rcx]\n\t038 Move rcx, rsi\n\t039 Move [rsi], rdx\n\t040 Call 0x1804CF720, rcx, rdx, r8, r9\n\t041 Move rcx, typeof(EB.FileSystem.Manager)\n\t042 Compare [rcx+228], 0\n\t043 JumpIfNotEqual {45}\n\t044 Call \"il2cpp_runtime_class_init_export\", rcx, rdx, r8, r9\n\t045 Move rdx, 0\n\t046 Move rcx, rbx\n\t047 Call Manager.StripScheme, rcx, rdx\n\t048 Move rbp, rax\n\t049 Move rax, r13\n\t050 And rax, rax, 1\n\t051 Move stack:0xA8, rax\n\t052 And r13, r13, 2\n\t053 JumpIfLessOrEqual {63}\n\t054 Move rcx, typeof(System.IO.Path)\n\t055 Compare [rcx+228], 0\n\t056 JumpIfNotEqual {58}\n\t057 Call \"il2cpp_runtime_class_init_export\", rcx, rdx, r8, r9\n\t058 Move r8, 0\n\t059 Move rdx, 0\n\t060 Move rcx, rbp\n\t061 Call Path.ChangeExtension, rcx, rdx, r8\n\t062 Move rbp, rax\n\t063 Move rax, [rdi+16]\n\t064 Move stack:0x58, r12\n\t065 Move stack:0x50, r14\n\t066 Move stack:0x48, r15\n\t067 Compare rax, 0\n\t068 JumpIfEqual {177}\n\t069 Move rax, [rax+24]\n\t070 Move r12, 0\n\t071 Move stack:0x98, rax\n\t072 Compare rax, 0\n\t073 JumpIfLessOrEqual {175}\n\t074 Nop \n\t075 Move rcx, [rdi+16]\n\t076 Compare rcx, 0\n\t077 JumpIfEqual {177}\n\t078 Move r8, [0x1860FFA18]\n\t079 Move rdx, r12\n\t080 Call 0x1815AD900, rcx, rdx\n\t081 Move r14, rax\n\t082 Compare rax, 0\n\t083 JumpIfEqual {177}\n\t084 Move r8, [rax+40]\n\t085 Compare r8, 0\n\t086 JumpIfEqual {177}\n\t087 Move rdx, typeof(System.Collections.Generic.IReadOnlyCollection`1<String>)\n\t088 Move rcx, 0\n\t089 Call 0x180002420, rcx, rdx, r8, r9\n\t090 Move rdi, 0\n\t091 Move r15, rax\n\t092 Compare rax, 0\n\t093 JumpIfLessOrEqual {134}\n\t094 Move r8, [r14+40]\n\t095 Compare r8, 0\n\t096 JumpIfEqual {177}\n\t097 Move rdx, typeof(System.Collections.Generic.IReadOnlyList`1<String>)\n\t098 Move rcx, 0\n\t099 Move r9, rdi\n\t100 Call 0x180002270, rcx, rdx, r8, r9\n\t101 Move rsi, rax\n\t102 Compare rax, 0\n\t103 JumpIfEqual {177}\n\t104 Move rbx, [rax+16]\n\t105 Compare r13, 0\n\t106 JumpIfEqual {115}\n\t107 Move rdx, 46\n\t108 Move r8, 0\n\t109 Move rcx, rax\n\t110 Call String.LastIndexOf, rcx, rdx\n\t111 Compare rax, 0\n\t112 JumpIfSign {114}\n\t113 Move rbx, rax\n\t114 Nop \n\t115 Compare rbp, 0\n\t116 JumpIfEqual {177}\n\t117 Compare rbx, [rbp+16]\n\t118 JumpIfNotEqual {131}\n\t119 Move rax, stack:0xA8\n\t120 Move r9, 0\n\t121 Add rax, rax, 4\n\t122 Move stack:0x30, 0\n\t123 Move stack:0x28, rax\n\t124 Move r8, rsi\n\t125 Move rdx, 0\n\t126 Move stack:0x20, rbx\n\t127 Move rcx, rbp\n\t128 Call String.Compare, rcx, rdx, r8, r9, stack:0x0, stack:0x8, stack:0x10\n\t129 Compare rax, 0\n\t130 JumpIfEqual {139}\n\t131 Add rdi, rdi, 1\n\t132 Compare rdi, r15\n\t133 JumpIfLess {94}\n\t134 Add r12, r12, 1\n\t135 Compare r12, stack:0x98\n\t136 JumpIfGreaterOrEqual {175}\n\t137 Move rdi, stack:0x90\n\t138 Goto {75}\n\t139 Move rcx, typeof(System.IO.Path)\n\t140 Move rbx, [r14+24]\n\t141 Compare [rcx+228], 0\n\t142 JumpIfNotEqual {144}\n\t143 Call \"il2cpp_runtime_class_init_export\", rcx, rdx, r8, r9\n\t144 Move r8, 0\n\t145 Move rdx, rsi\n\t146 Move rcx, rbx\n\t147 Call Path.Combine, rcx, rdx, r8\n\t148 Move r8, [r14+32]\n\t149 Compare r8, 0\n\t150 JumpIfEqual {177}\n\t151 Move rdx, stack:0xA0\n\t152 Move rcx, 2\n\t153 Move stack:0x28, 0\n\t154 Move r9, rax\n\t155 Move stack:0x20, rdx\n\t156 Move rdx, typeof(EB.FileSystem.Driver)\n\t157 Call 0x180004890, rcx, rdx, r8, r9\n\t158 Compare rax, 0\n\t159 NotImplemented \"setne al\"\n\t160 Move r15, stack:0x48\n\t161 Move r14, stack:0x50\n\t162 Move r12, stack:0x58\n\t163 ShiftStack 96\n\t164 Move r13, stack:0x0\n\t165 ShiftStack 8\n\t166 Move rdi, stack:0x0\n\t167 ShiftStack 8\n\t168 Move rsi, stack:0x0\n\t169 ShiftStack 8\n\t170 Move rbp, stack:0x0\n\t171 ShiftStack 8\n\t172 Move rbx, stack:0x0\n\t173 ShiftStack 8\n\t174 Return rax\n\t175 Move rax, 0\n\t176 Goto {160}\n\t177 Call 0x1804D07C0, rcx, rdx, r8, r9\n\n",
+      "method": "Exists(string,out string,FindOptions)",
+      "rule": "FindOptions3 compares exact case-insensitive full paths with extension ignored; then Path.Combine(pack.basePath,matchedNativePath).",
+      "sha256": "8348d69de6df2ee6ff59c809181b03a1ec7b2731ce8286493a2c585a82c7b8cf",
+      "source": "Kabam.OldAssetRuntime/EB/FileSystem/PackDriver.txt"
+    },
+    "reference": "misc/title_icon",
+    "source": "Exact public-toc-loose-file reference/object/source/blob join; no basename or filename similarity match. Original retained PNG bytes exported unchanged.",
+    "toc": {
+      "path": "Resources/Data/ui_home_misc_store_calendar_levelup/toc.txt",
+      "sha256": "f63c5e54fb4a361a9ce75ea17f6ae08f5f51d3bee633b092c5a05aeda8bcff33"
+    }
+  },
+  "titleBindingProofSha256": "1c3117e46bfb8270ac0cbcb603a528156f7fd4c68f52c54fde96a945021028c9"
+}

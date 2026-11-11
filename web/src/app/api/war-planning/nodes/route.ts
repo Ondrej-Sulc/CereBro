@@ -1,3 +1,4 @@
+import { curatedNodeModifierSelect } from "@cerebro/core/domain/node-modifiers/native-icons";
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import logger from "@/lib/logger";
@@ -69,7 +70,7 @@ export const GET = withRouteContext(async (request) => {
             include: {
                 allocations: {
                     include: {
-                        nodeModifier: true
+                        nodeModifier: { select: curatedNodeModifierSelect }
                     }
                 }
             }

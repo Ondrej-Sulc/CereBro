@@ -12,3 +12,21 @@ src/data/game-crystals/artwork.json text eol=lf
 src/data/game-crystal-openings/catalog.json text eol=lf
 src/data/game-reward-artwork/palette.json text eol=lf
 src/data/game-selectable-rewards/catalog.json text eol=lf
+
+# Reviewed capture projections and their source indexes hash exact bytes, including
+# native CRLF endings. Git must not rewrite them between Windows and Linux.
+src/data/game-quests/** -text whitespace=cr-at-eol
+src/data/game-node-modifiers/** -text whitespace=cr-at-eol
+src/domain/node-modifiers/native-icon-registry.ts -text whitespace=cr-at-eol
+src/domain/node-modifiers/native-game-icon-registry.ts -text whitespace=cr-at-eol
+src/data/game-reward-definitions/** -text whitespace=cr-at-eol
+src/data/game-resource-definitions/** -text whitespace=cr-at-eol
+src/data/game-resource-artwork/** -text whitespace=cr-at-eol
+src/data/game-reward-presentation/** -text whitespace=cr-at-eol
+src/data/game-reward-artwork/corrections.json -text whitespace=cr-at-eol
+src/data/game-reward-artwork/material-shader-proof.json -text whitespace=cr-at-eol
+web/public/node-modifiers/** -text whitespace=cr-at-eol
+web/src/lib/game-artwork/generated/*.json -text whitespace=cr-at-eol
+
+# Preserve the already-hashed exporter source without reformatting.
+scripts/game-quests/build_challenge_towers.py whitespace=-blank-at-eof

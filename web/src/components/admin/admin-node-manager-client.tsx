@@ -1,5 +1,7 @@
 "use client";
 
+import { NodeModifierIcon } from "@/components/nodes/NodeModifierIcon";
+import { NodeModifierIconEditor } from "@/components/nodes/NodeModifierIconEditor";
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { WarNode, WarNodeAllocation, NodeModifier, WarMapType } from "@prisma/client";
@@ -15,7 +17,7 @@ import { Loader2, Plus, Trash2, Search, X, Pencil, Copy, ArrowRight, Layers } fr
 import { useDebounce } from "@/hooks/use-debounce";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useMemo } from "react";
 
 const MCOC_TIER_PRESETS = [
@@ -40,6 +42,7 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
     const [selectedNodeId, setSelectedNodeId] = useState<number | null>(null);
     const [modifierSearch, setModifierSearch] = useState("");
     const [searchResults, setSearchResults] = useState<NodeModifier[]>([]);
+    const [iconEditingModifier, setIconEditingModifier] = useState<NodeModifier | null>(null);
     const [isSearching, setIsSearching] = useState(false);
     const [mapType, setMapType] = useState<WarMapType>(WarMapType.STANDARD);
     
@@ -328,9 +331,9 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
     };
 
     return (
-        <div className="container mx-auto py-8 h-[calc(100vh-64px)] flex flex-col gap-4">
+        <div className="container mx-auto py-8 lg:h-[calc(100vh-64px)] flex flex-col gap-4">
             {/* Header / Map Type Selector */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap gap-3 items-center justify-between">
                 <div className="w-64">
                     <Tabs value={mapType} onValueChange={(v) => setMapType(v as WarMapType)} className="w-full">
                         <TabsList className="grid w-full grid-cols-2 bg-slate-900 border border-slate-800">
@@ -345,9 +348,9 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
                 </Button>
             </div>
 
-            <div className="flex-1 flex gap-6 min-h-0">
+            <div className="flex-1 flex flex-col lg:flex-row gap-6 min-h-0 min-w-0">
                 {/* Left Sidebar: Node List */}
-                <Card className="w-64 flex flex-col h-full bg-slate-950 border-slate-800">
+                <Card className="w-full lg:w-64 shrink-0 max-h-52 lg:max-h-none flex flex-col lg:h-full bg-slate-950 border-slate-800">
                     <CardHeader className="py-4">
                         <CardTitle className="text-sm uppercase tracking-wider text-slate-500">
                             {mapType === WarMapType.STANDARD ? "Standard Nodes (1-50)" : "Big Thing Nodes (1-10)"}
@@ -372,7 +375,7 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
                 </Card>
 
                 {/* Main Content: Allocation Editor */}
-                <Card className="flex-1 flex flex-col bg-slate-950 border-slate-800">
+                <Card className="flex-1 min-w-0 flex flex-col bg-slate-950 border-slate-800">
                     <CardHeader>
                         <CardTitle>
                             {selectedNode ? `Editing Node ${selectedNode.nodeNumber} (${mapType})` : "Select a Node"}
@@ -425,12 +428,13 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
                                                     
                                                     <div className="grid gap-2">
                                                         {group.allocations.map(alloc => (
-                                                            <div key={alloc.id} className="flex items-center justify-between p-3 rounded-lg border border-slate-800 bg-slate-900/50 group">
-                                                                <div>
-                                                                    <div className="font-bold text-sky-300 group-hover:text-sky-200">{alloc.nodeModifier.name}</div>
+                                                            <div key={alloc.id} className="flex flex-col items-start gap-3 sm:flex-row sm:items-center justify-between p-3 rounded-lg border border-slate-800 bg-slate-900/50 group">
+                                                                <div className="min-w-0 flex-1 break-words">
+                                                                    <div className="flex items-center gap-2 font-bold text-sky-300 group-hover:text-sky-200"><NodeModifierIcon iconKey={alloc.nodeModifier.iconKey} />{alloc.nodeModifier.name}</div>
                                                                     <div className="text-sm text-slate-400">{alloc.nodeModifier.description}</div>
                                                                 </div>
                                                                 <div className="flex gap-1">
+                                                                    <Button variant="ghost" size="sm" aria-label={`Choose icon for ${alloc.nodeModifier.name}`} onClick={() => setIconEditingModifier(alloc.nodeModifier)}>Icon</Button>
                                                                     <Button 
                                                                         variant="ghost" 
                                                                         size="icon" 
@@ -460,6 +464,7 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
                                 {/* Add/Edit Form */}
                                 <div className="border-t border-slate-800 pt-6">
                                     <h3 className="text-lg font-semibold mb-4">
+                                        {editingAllocation && <NodeModifierIcon iconKey={editingAllocation.nodeModifier.iconKey} className="mr-2" />}
                                         {editingAllocation ? `Edit Modifier: ${editingAllocation.nodeModifier.name}` : "Add Modifier"}
                                     </h3>
                                     
@@ -517,7 +522,7 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
                                         {editingAllocation && (
                                             <div className="p-3 rounded-lg border border-sky-900 bg-sky-950/20 text-sky-400 text-sm flex items-center justify-between">
                                                 <div>
-                                                    <span className="font-semibold">Current Modifier:</span> {editingAllocation.nodeModifier.name}
+                                                    <span className="font-semibold">Current Modifier:</span> <NodeModifierIcon iconKey={editingAllocation.nodeModifier.iconKey} /> {editingAllocation.nodeModifier.name}
                                                 </div>
                                                 <Button size="sm" onClick={() => handleUpdateAllocation()}>Save Tiers Only</Button>
                                             </div>
@@ -560,10 +565,12 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
                                                 >
                                                     <div className="flex-1">
                                                         <div className="font-semibold text-sm text-sky-300 group-hover:text-sky-200">
+                                                            <NodeModifierIcon iconKey={mod.iconKey} />{" "}
                                                             {editingAllocation ? `Replace with: ${mod.name}` : mod.name}
                                                         </div>
                                                         <div className="text-xs text-slate-500 line-clamp-1">{mod.description}</div>
                                                     </div>
+                                                    <Button type="button" variant="ghost" size="sm" aria-label={`Choose icon for ${mod.name}`} onClick={event => { event.stopPropagation(); setIconEditingModifier(mod); }}>Icon</Button>
                                                     {editingAllocation ? <Pencil className="h-4 w-4 text-sky-400" /> : <Plus className="h-4 w-4 text-slate-600 group-hover:text-sky-400" />}
                                                 </div>
                                             ))
@@ -583,6 +590,19 @@ export default function AdminNodeManagerClient({ initialNodes }: AdminNodeManage
                     </CardContent>
                 </Card>
             </div>
+
+            <Dialog open={!!iconEditingModifier} onOpenChange={open => !open && setIconEditingModifier(null)}>
+                <DialogContent className="max-h-[85dvh] overflow-y-auto border-slate-800 bg-slate-950 text-slate-200">
+                    <DialogHeader><DialogTitle>Icon for {iconEditingModifier?.name}</DialogTitle><DialogDescription className="sr-only">Choose a native icon or No icon. Applies wherever this modifier is shown.</DialogDescription></DialogHeader>
+                    {iconEditingModifier && <NodeModifierIconEditor key={iconEditingModifier.id} modifier={iconEditingModifier} onSaved={updated => {
+                        const record = { ...updated, iconKey: updated.iconKey ?? null };
+                        setIconEditingModifier(record);
+                        setSearchResults(previous => previous.map(modifier => modifier.id === record.id ? record : modifier));
+                        setEditingAllocation(previous => previous?.nodeModifier.id === record.id ? { ...previous, nodeModifier: record } : previous);
+                        router.refresh();
+                    }} />}
+                </DialogContent>
+            </Dialog>
 
             {/* Copy Tier Dialog */}
             <Dialog open={!!copySource} onOpenChange={(open) => !open && setCopySource(null)}>

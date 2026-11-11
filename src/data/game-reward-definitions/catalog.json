@@ -1,0 +1,513 @@
+{
+  "assets": {
+    "08850994670674b116e14f175dca05da992d253b13baea6fb310c7729514432a": {
+      "byteLength": 59923,
+      "height": 256,
+      "imageUrl": "/game-rewards/definitions/08850994670674b116e14f175dca05da992d253b13baea6fb310c7729514432a.png",
+      "width": 256
+    },
+    "1730c55ac70045fa92c6af5b6b29b741f3e411b950d43e4f88a7af8fc268bc92": {
+      "byteLength": 241600,
+      "height": 512,
+      "imageUrl": "/game-rewards/definitions/1730c55ac70045fa92c6af5b6b29b741f3e411b950d43e4f88a7af8fc268bc92.png",
+      "width": 512
+    },
+    "1adb9403b399d1741f4258b56aec853d9ab7e461c7b35121030ee3427de6355d": {
+      "byteLength": 1050954,
+      "height": 512,
+      "imageUrl": "/game-rewards/definitions/1adb9403b399d1741f4258b56aec853d9ab7e461c7b35121030ee3427de6355d.png",
+      "width": 512
+    },
+    "2e6f9faf17f65b4e2b250cbcc9d2c58912330a73c9b7cd6ef4c657b39269c24d": {
+      "byteLength": 171769,
+      "height": 500,
+      "imageUrl": "/game-rewards/definitions/2e6f9faf17f65b4e2b250cbcc9d2c58912330a73c9b7cd6ef4c657b39269c24d.png",
+      "width": 500
+    },
+    "386052b3a3495264c3a7e38f7648f0ba2ebd1b0661e66f1fee7d3f57dfcdb57c": {
+      "byteLength": 74518,
+      "height": 256,
+      "imageUrl": "/game-rewards/definitions/386052b3a3495264c3a7e38f7648f0ba2ebd1b0661e66f1fee7d3f57dfcdb57c.png",
+      "width": 256
+    },
+    "566616ddbf414d94b8fe2d46da1e5ba811321463bf62389dfa5d299b0bce9e82": {
+      "byteLength": 70986,
+      "height": 256,
+      "imageUrl": "/game-rewards/definitions/566616ddbf414d94b8fe2d46da1e5ba811321463bf62389dfa5d299b0bce9e82.png",
+      "width": 256
+    },
+    "5d35febabe9beddad3aa35dd8d1402630229babe92a33709058963cce24aefe2": {
+      "byteLength": 126351,
+      "height": 288,
+      "imageUrl": "/game-rewards/definitions/5d35febabe9beddad3aa35dd8d1402630229babe92a33709058963cce24aefe2.png",
+      "width": 288
+    },
+    "6880d4a8933240798dd876cd653ce3b117a5fd72463ae973de72ca59eb528926": {
+      "byteLength": 157676,
+      "height": 288,
+      "imageUrl": "/game-rewards/definitions/6880d4a8933240798dd876cd653ce3b117a5fd72463ae973de72ca59eb528926.png",
+      "width": 288
+    },
+    "7b376b5fb78f53b31a60966f1210630c0e80d80ef327413ef230ec4dd9c074e2": {
+      "byteLength": 68900,
+      "height": 288,
+      "imageUrl": "/game-rewards/definitions/7b376b5fb78f53b31a60966f1210630c0e80d80ef327413ef230ec4dd9c074e2.png",
+      "width": 288
+    },
+    "7c01dbadcffd78128d71ac412b09d1b94057179193f6fa6b5673c682ba797bd9": {
+      "byteLength": 121649,
+      "height": 288,
+      "imageUrl": "/game-rewards/definitions/7c01dbadcffd78128d71ac412b09d1b94057179193f6fa6b5673c682ba797bd9.png",
+      "width": 288
+    },
+    "7f67becd252c342377f1f13337a5239b494edcd06ab7b85efa43d18c9ce35544": {
+      "byteLength": 53129,
+      "height": 256,
+      "imageUrl": "/game-rewards/definitions/7f67becd252c342377f1f13337a5239b494edcd06ab7b85efa43d18c9ce35544.png",
+      "width": 256
+    },
+    "9a774fe50fbcb09d7da4016c797600123a6ad0fa57683427a864823fd80a0c7c": {
+      "byteLength": 333737,
+      "height": 288,
+      "imageUrl": "/game-rewards/definitions/9a774fe50fbcb09d7da4016c797600123a6ad0fa57683427a864823fd80a0c7c.png",
+      "width": 288
+    },
+    "b0beb2d6305a3ef58bfb18a73834bdeecf39138d72e30a7ce265257ab7d66be1": {
+      "byteLength": 66576,
+      "height": 256,
+      "imageUrl": "/game-rewards/definitions/b0beb2d6305a3ef58bfb18a73834bdeecf39138d72e30a7ce265257ab7d66be1.png",
+      "width": 256
+    },
+    "b2daf53b2b8ab77b999c9e2679a0be786338429119ae04600c610de0f57e85fc": {
+      "byteLength": 52686,
+      "height": 256,
+      "imageUrl": "/game-rewards/definitions/b2daf53b2b8ab77b999c9e2679a0be786338429119ae04600c610de0f57e85fc.png",
+      "width": 256
+    },
+    "b83c7dd53b228162cdf281358edc4bf3ce6a4f763f0b9faa5e99709609d20531": {
+      "byteLength": 186279,
+      "height": 500,
+      "imageUrl": "/game-rewards/definitions/b83c7dd53b228162cdf281358edc4bf3ce6a4f763f0b9faa5e99709609d20531.png",
+      "width": 500
+    },
+    "c3777b8da71e0fc4470e1b8dbdb3eeb6bd59fa8615e77dee8bf8c50a0b8dc431": {
+      "byteLength": 333737,
+      "height": 288,
+      "imageUrl": "/game-rewards/definitions/c3777b8da71e0fc4470e1b8dbdb3eeb6bd59fa8615e77dee8bf8c50a0b8dc431.png",
+      "width": 288
+    },
+    "e832b63c51bca5591e451e18f7489abfb126c6549fc27dada390e2d945b001c8": {
+      "byteLength": 1050954,
+      "height": 512,
+      "imageUrl": "/game-rewards/definitions/e832b63c51bca5591e451e18f7489abfb126c6549fc27dada390e2d945b001c8.png",
+      "width": 512
+    },
+    "f3e6fd7b16834ae430f94c194b3380d52acbf93f685e802352a61642fb26c8e8": {
+      "byteLength": 133980,
+      "height": 288,
+      "imageUrl": "/game-rewards/definitions/f3e6fd7b16834ae430f94c194b3380d52acbf93f685e802352a61642fb26c8e8.png",
+      "width": 288
+    },
+    "f553a262cc402f2a416e39ed2d35145b1cd0f6329cf0e3e9145b1cee74b261c9": {
+      "byteLength": 103160,
+      "height": 288,
+      "imageUrl": "/game-rewards/definitions/f553a262cc402f2a416e39ed2d35145b1cd0f6329cf0e3e9145b1cee74b261c9.png",
+      "width": 288
+    },
+    "fb42eb25a739a9d94255d36069a5188db4148866223b1acf1d9dccba3075584c": {
+      "byteLength": 108926,
+      "height": 288,
+      "imageUrl": "/game-rewards/definitions/fb42eb25a739a9d94255d36069a5188db4148866223b1acf1d9dccba3075584c.png",
+      "width": 288
+    },
+    "fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce": {
+      "byteLength": 13195,
+      "height": 256,
+      "imageUrl": "/game-rewards/definitions/fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce.png",
+      "width": 256
+    }
+  },
+  "excludedResourceIds": [
+    "eod2026_doomscrip",
+    "essentia_currency",
+    "mysterium",
+    "sp",
+    "sp-max",
+    "tower_challenge_energy",
+    "tower_energy"
+  ],
+  "rewards": [
+    {
+      "data": "common_ghostrider_arrogant",
+      "imageField": "nativeImageInputs/nativeImage",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/emotes/sets/618c4e5f7bb6c543fdab6c71/GhostRider_Arrogant_Emote_BG_Mar_26_21dee73339f9.png",
+      "imageUrl": "/game-rewards/definitions/7f67becd252c342377f1f13337a5239b494edcd06ab7b85efa43d18c9ce35544.png",
+      "inputSha256": "7f67becd252c342377f1f13337a5239b494edcd06ab7b85efa43d18c9ce35544",
+      "name": "Icon",
+      "sourcePointer": "/definitions/emote/0",
+      "type": "emote"
+    },
+    {
+      "data": "common_glykhan_angry",
+      "imageField": "nativeImageInputs/nativeImage",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/emotes/sets/618c4e5f7bb6c543fdab6c71/Glykhan_Angry_Emote_Rebirth_Event_f254067df659.png",
+      "imageUrl": "/game-rewards/definitions/566616ddbf414d94b8fe2d46da1e5ba811321463bf62389dfa5d299b0bce9e82.png",
+      "inputSha256": "566616ddbf414d94b8fe2d46da1e5ba811321463bf62389dfa5d299b0bce9e82",
+      "name": "Icon",
+      "sourcePointer": "/definitions/emote/1",
+      "type": "emote"
+    },
+    {
+      "data": "common_winter_soldier_punching_bag",
+      "imageField": "nativeImageInputs/nativeImage",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/emotes/sets/618c4e5f7bb6c543fdab6c71/Punching_Bag_Winter_Soldier_Emote_Revenge_Of_Legends_Event_Aug_26%20(2)_3d2778c873ac.png",
+      "imageUrl": "/game-rewards/definitions/b2daf53b2b8ab77b999c9e2679a0be786338429119ae04600c610de0f57e85fc.png",
+      "inputSha256": "b2daf53b2b8ab77b999c9e2679a0be786338429119ae04600c610de0f57e85fc",
+      "name": "Emote",
+      "sourcePointer": "/definitions/emote/2",
+      "type": "emote"
+    },
+    {
+      "data": "abyss_mastery_profile_pic_leg",
+      "imageField": "nativeImageInputs/nativeImage",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/gamestore/1568136890/tier_3_Collector_unnamed.png",
+      "imageUrl": "/game-rewards/definitions/f553a262cc402f2a416e39ed2d35145b1cd0f6329cf0e3e9145b1cee74b261c9.png",
+      "inputSha256": "f553a262cc402f2a416e39ed2d35145b1cd0f6329cf0e3e9145b1cee74b261c9",
+      "name": "",
+      "sourcePointer": "/definitions/profilebadge/0",
+      "type": "profilebadge"
+    },
+    {
+      "data": "deathless_thanos_profile_pic_rar",
+      "imageField": "nativeImageInputs/nativeImage",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/Deathless_Thanos_Profile%20Pics%20-%20Deathless%20Thanos_3d9917b7a6a6.png",
+      "imageUrl": "/game-rewards/definitions/9a774fe50fbcb09d7da4016c797600123a6ad0fa57683427a864823fd80a0c7c.png",
+      "inputSha256": "9a774fe50fbcb09d7da4016c797600123a6ad0fa57683427a864823fd80a0c7c",
+      "name": "",
+      "sourcePointer": "/definitions/profilebadge/1",
+      "type": "profilebadge"
+    },
+    {
+      "data": "eop_acceptance_profile_pic_rar",
+      "imageField": "nativeImageInputs/nativeImage",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/1669154908/tierSpecial_Eternity_of_Pain_Acceptance_Dec_22.png",
+      "imageUrl": "/game-rewards/definitions/fb42eb25a739a9d94255d36069a5188db4148866223b1acf1d9dccba3075584c.png",
+      "inputSha256": "fb42eb25a739a9d94255d36069a5188db4148866223b1acf1d9dccba3075584c",
+      "name": "",
+      "sourcePointer": "/definitions/profilebadge/2",
+      "type": "profilebadge"
+    },
+    {
+      "data": "eop_ares_profile_pic_rar",
+      "imageField": "nativeImageInputs/nativeImage",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/Ares_Everest%20Quest_Profile_Pic_daace8a0d6ed.png",
+      "imageUrl": "/game-rewards/definitions/c3777b8da71e0fc4470e1b8dbdb3eeb6bd59fa8615e77dee8bf8c50a0b8dc431.png",
+      "inputSha256": "c3777b8da71e0fc4470e1b8dbdb3eeb6bd59fa8615e77dee8bf8c50a0b8dc431",
+      "name": "",
+      "sourcePointer": "/definitions/profilebadge/3",
+      "type": "profilebadge"
+    },
+    {
+      "data": "epilogue_completion_pic_rar",
+      "imageField": "nativeImageInputs/nativeImage",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/Profile_Epilogue_Completion_26_450e5eec388e.png",
+      "imageUrl": "/game-rewards/definitions/7c01dbadcffd78128d71ac412b09d1b94057179193f6fa6b5673c682ba797bd9.png",
+      "inputSha256": "7c01dbadcffd78128d71ac412b09d1b94057179193f6fa6b5673c682ba797bd9",
+      "name": "",
+      "sourcePointer": "/definitions/profilebadge/4",
+      "type": "profilebadge"
+    },
+    {
+      "data": "epoch_true_olympian_ares_pic_rar",
+      "imageField": "nativeImageInputs/nativeImage",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/polish_Epoch_Profile_Pic_7a3fcfbf8cf1.png",
+      "imageUrl": "/game-rewards/definitions/6880d4a8933240798dd876cd653ce3b117a5fd72463ae973de72ca59eb528926.png",
+      "inputSha256": "6880d4a8933240798dd876cd653ce3b117a5fd72463ae973de72ca59eb528926",
+      "name": "",
+      "sourcePointer": "/definitions/profilebadge/5",
+      "type": "profilebadge"
+    },
+    {
+      "data": "nameless_grandmaster_profile_pic_rar",
+      "imageField": "nativeImageInputs/nativeImage",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/PROFILEPIC_GrandMaster_Nameless_0117149911d6.png",
+      "imageUrl": "/game-rewards/definitions/5d35febabe9beddad3aa35dd8d1402630229babe92a33709058963cce24aefe2.png",
+      "inputSha256": "5d35febabe9beddad3aa35dd8d1402630229babe92a33709058963cce24aefe2",
+      "name": "",
+      "sourcePointer": "/definitions/profilebadge/6",
+      "type": "profilebadge"
+    },
+    {
+      "data": "shooting_star_storm_starry_eyes_pic_rar",
+      "imageField": "nativeImageInputs/nativeImage",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/1679677447/tier_Special_Shooting_Star_Quest_reward.png",
+      "imageUrl": "/game-rewards/definitions/7b376b5fb78f53b31a60966f1210630c0e80d80ef327413ef230ec4dd9c074e2.png",
+      "inputSha256": "7b376b5fb78f53b31a60966f1210630c0e80d80ef327413ef230ec4dd9c074e2",
+      "name": "",
+      "sourcePointer": "/definitions/profilebadge/7",
+      "type": "profilebadge"
+    },
+    {
+      "data": "wheel_of_fate_profile_pic_rar",
+      "imageField": "nativeImageInputs/nativeImage",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/profilebadges/ProfilePic_Everest_Quest_May_25_b68ca81f4cf2.png",
+      "imageUrl": "/game-rewards/definitions/f3e6fd7b16834ae430f94c194b3380d52acbf93f685e802352a61642fb26c8e8.png",
+      "inputSha256": "f3e6fd7b16834ae430f94c194b3380d52acbf93f685e802352a61642fb26c8e8",
+      "name": "",
+      "sourcePointer": "/definitions/profilebadge/8",
+      "type": "profilebadge"
+    },
+    {
+      "data": "5df86d33135c7763586b1c15",
+      "description": "Claim this for a Tier 4 Catalyst of a specific Class!",
+      "imageField": "sraIconPath",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/5df86d33135c7763586b1c15/Icon_Selectable_Reward_Catalyst_T4_6070fba4cb3212f5e8495adb.png",
+      "imageUrl": "/game-rewards/definitions/08850994670674b116e14f175dca05da992d253b13baea6fb310c7729514432a.png",
+      "inputSha256": "08850994670674b116e14f175dca05da992d253b13baea6fb310c7729514432a",
+      "name": "TIER 4 CLASS CATALYST SELECTOR",
+      "sourcePointer": "/definitions/sra/0",
+      "type": "sra"
+    },
+    {
+      "data": "5e5ecbcdacee3d0b445227be",
+      "description": "Earn this reward to choose Catalyst Fragments from the class of your choice!",
+      "imageField": "sraIconPath",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/5e5ecbcdacee3d0b445227be/Icon_Selectable_Reward_Catalyst_T5_5e5ed895a9eb0f381b529741.png",
+      "imageUrl": "/game-rewards/definitions/b0beb2d6305a3ef58bfb18a73834bdeecf39138d72e30a7ce265257ab7d66be1.png",
+      "inputSha256": "b0beb2d6305a3ef58bfb18a73834bdeecf39138d72e30a7ce265257ab7d66be1",
+      "name": "25% TIER 5 CLASS CATALYST FRAGMENT SELECTOR",
+      "sourcePointer": "/definitions/sra/1",
+      "type": "sra"
+    },
+    {
+      "data": "5fb437e8174f303bd33b0692",
+      "description": "Choose a Class of 6-Star Nexus Crystal!",
+      "imageField": "sraIconPath",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/5e5ecbcdacee3d0b445227be/Icon_Selectable_Reward_Catalyst_T5_5e5ed78633ef02d935d15aca.png",
+      "imageUrl": "/game-rewards/definitions/b0beb2d6305a3ef58bfb18a73834bdeecf39138d72e30a7ce265257ab7d66be1.png",
+      "inputSha256": "b0beb2d6305a3ef58bfb18a73834bdeecf39138d72e30a7ce265257ab7d66be1",
+      "name": "6-STAR NEXUS CRYSTAL SELECTOR",
+      "sourcePointer": "/definitions/sra/2",
+      "type": "sra"
+    },
+    {
+      "data": "636ab2b2150e651b3ba06b1c",
+      "description": "Claim this for an Alloy of a specific Class!",
+      "imageField": "sraIconPath",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/636ab2b2150e651b3ba06b1c/Tier1_Selector_Icon_636ab3df5e5586089a75bcb0.png",
+      "imageUrl": "/game-rewards/definitions/2e6f9faf17f65b4e2b250cbcc9d2c58912330a73c9b7cd6ef4c657b39269c24d.png",
+      "inputSha256": "2e6f9faf17f65b4e2b250cbcc9d2c58912330a73c9b7cd6ef4c657b39269c24d",
+      "name": "TIER 1 CLASS ALLOY SELECTOR",
+      "sourcePointer": "/definitions/sra/3",
+      "type": "sra"
+    },
+    {
+      "data": "636abde9150e651b3ba06b8e",
+      "description": "Claim this for Alloy Fragments of a specific Class!",
+      "imageField": "sraIconPath",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/636ab5a2150e651b3ba06b4f/Tier2_Selector_Icon_636abbd25e5586089a75bf33.png",
+      "imageUrl": "/game-rewards/definitions/b83c7dd53b228162cdf281358edc4bf3ce6a4f763f0b9faa5e99709609d20531.png",
+      "inputSha256": "b83c7dd53b228162cdf281358edc4bf3ce6a4f763f0b9faa5e99709609d20531",
+      "name": "10% TIER 2 CLASS ALLOY FRAGMENT SELECTOR",
+      "sourcePointer": "/definitions/sra/4",
+      "type": "sra"
+    },
+    {
+      "data": "641e3cdc98cbfcc75fc53066",
+      "description": "Earn this reward to choose Catalyst Fragments from the class of your choice!",
+      "imageField": "sraIconPath",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/5e5ecbcdacee3d0b445227be/Icon_Selectable_Reward_Catalyst_T5_5e5ed895a9eb0f381b529741.png",
+      "imageUrl": "/game-rewards/definitions/b0beb2d6305a3ef58bfb18a73834bdeecf39138d72e30a7ce265257ab7d66be1.png",
+      "inputSha256": "b0beb2d6305a3ef58bfb18a73834bdeecf39138d72e30a7ce265257ab7d66be1",
+      "name": "10% TIER 6 CLASS CATALYST FRAGMENT SELECTOR",
+      "sourcePointer": "/definitions/sra/5",
+      "type": "sra"
+    },
+    {
+      "data": "647fa14e7912c837691e720b",
+      "description": "Claim this for Alloy Fragments of a specific Class!",
+      "imageField": "sraIconPath",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/636ab2b2150e651b3ba06b1c/Tier1_Selector_Icon_636ab3df5e5586089a75bcb0.png",
+      "imageUrl": "/game-rewards/definitions/2e6f9faf17f65b4e2b250cbcc9d2c58912330a73c9b7cd6ef4c657b39269c24d.png",
+      "inputSha256": "2e6f9faf17f65b4e2b250cbcc9d2c58912330a73c9b7cd6ef4c657b39269c24d",
+      "name": "25% TIER 1 CLASS ALLOY FRAGMENT SELECTOR",
+      "sourcePointer": "/definitions/sra/6",
+      "type": "sra"
+    },
+    {
+      "data": "6527078d71accb35a5a13caa",
+      "description": "Allows you to select a 7-Star version of one of the following Champions: Mantis, Killmonger, Elsa Bloodstone, Hawkeye, Falcon, Korg, Titania, Hulk, Spider-Gwen, The Overseer, Joe Fixit, Spider-Man (Classic), Dragon Man, Wiccan, Wong, Sasquatch, America Chavez, Mangog, Venom, Gorr the God Butcher, Venom The Duck, Terrax, Gamora, Silver Surfer, Iron Man (Infinity War), Guillotine 2099, Rocket Raccoon, Mysterio, Shuri, War Machine, Gambit, Sunspot, Sauron, Storm (Pyramid X), Domino or Bishop.",
+      "imageField": "sraIconPath",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/6527078d71accb35a5a13caa/STORE_SQ_Launch_Pooll_Selector_8402fbfd7c20.png",
+      "imageUrl": "/game-rewards/definitions/1730c55ac70045fa92c6af5b6b29b741f3e411b950d43e4f88a7af8fc268bc92.png",
+      "inputSha256": "1730c55ac70045fa92c6af5b6b29b741f3e411b950d43e4f88a7af8fc268bc92",
+      "name": "7-STAR LAUNCH POOL SELECTOR",
+      "sourcePointer": "/definitions/sra/7",
+      "type": "sra"
+    },
+    {
+      "data": "65ab23c67f3b983f48497174",
+      "description": "Select the Catalyst which best suits your needs!",
+      "imageField": "sraIconPath",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/61aa5282da6ca37ce046afbf/Icon_Selectable_Reward_Catalyst_T7_Thronebreaker_61aa563a384a8f85f566a973.png",
+      "imageUrl": "/game-rewards/definitions/386052b3a3495264c3a7e38f7648f0ba2ebd1b0661e66f1fee7d3f57dfcdb57c.png",
+      "inputSha256": "386052b3a3495264c3a7e38f7648f0ba2ebd1b0661e66f1fee7d3f57dfcdb57c",
+      "name": "BASIC ALPHA SELECTOR",
+      "sourcePointer": "/definitions/sra/8",
+      "type": "sra"
+    },
+    {
+      "data": "66e9f9f2eac5351135101bba",
+      "description": "Claim this for Tier 6 ISO-8 of a specific Class!",
+      "imageField": "sraIconPath",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/66e9f9f2eac5351135101bba/SRA_Thronebreaker_Icon_ef0c3dd8b523.png",
+      "imageUrl": "/game-rewards/definitions/e832b63c51bca5591e451e18f7489abfb126c6549fc27dada390e2d945b001c8.png",
+      "inputSha256": "e832b63c51bca5591e451e18f7489abfb126c6549fc27dada390e2d945b001c8",
+      "name": "SUPERIOR TIER 6 CLASS ISO-8 SELECTOR",
+      "sourcePointer": "/definitions/sra/9",
+      "type": "sra"
+    },
+    {
+      "data": "67eadc803e871268cc9ee887",
+      "description": "Allows you to select a 7-Star Champion, 7-Star Deathless Piece Selector, or a Titan Nexus Crystal.",
+      "imageField": "sraIconPath",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/669596c3d856b710642e529d/SRA_Rainbow_Icon_8293a5f034cd.png",
+      "imageUrl": "/game-rewards/definitions/1adb9403b399d1741f4258b56aec853d9ab7e461c7b35121030ee3427de6355d.png",
+      "inputSha256": "1adb9403b399d1741f4258b56aec853d9ab7e461c7b35121030ee3427de6355d",
+      "name": "WHEEL OF FATE SELECTOR",
+      "sourcePointer": "/definitions/sra/10",
+      "type": "sra"
+    },
+    {
+      "data": "6a1634a25c05d7cb80f87fdd",
+      "description": "Allows you to choose a special 7-Star Class Nexus Crystal, containing a choice of 1 to 10 Champions of that specific Class!",
+      "imageField": "sraIconPath",
+      "imageReference": "https://kabam-marvel.shared.mcoc-cdn.net/selectable_rewards/5e5ecbcdacee3d0b445227be/Icon_Selectable_Reward_Catalyst_T5_5e5ed78633ef02d935d15aca.png",
+      "imageUrl": "/game-rewards/definitions/b0beb2d6305a3ef58bfb18a73834bdeecf39138d72e30a7ce265257ab7d66be1.png",
+      "inputSha256": "b0beb2d6305a3ef58bfb18a73834bdeecf39138d72e30a7ce265257ab7d66be1",
+      "name": "7-STAR ABYSS NEXUS CRYSTAL SELECTOR",
+      "sourcePointer": "/definitions/sra/11",
+      "type": "sra"
+    },
+    {
+      "data": "abyss_mastery",
+      "description": "But this Summoner did not blink.",
+      "imageField": "nativeRedeemerIcon",
+      "imageReference": "misc/title_icon",
+      "imageUrl": "/game-rewards/definitions/fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce.png",
+      "inputSha256": "fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce",
+      "name": "The Abyss Stared Back",
+      "sourcePointer": "/definitions/utitle/0",
+      "type": "utitle"
+    },
+    {
+      "data": "spec_armedrobbery",
+      "description": "Earned for completion of the Revenge of Legends Gauntlet Quest",
+      "imageField": "nativeRedeemerIcon",
+      "imageReference": "misc/title_icon",
+      "imageUrl": "/game-rewards/definitions/fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce.png",
+      "inputSha256": "fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce",
+      "name": "Armed Robbery",
+      "sourcePointer": "/definitions/utitle/1",
+      "type": "utitle"
+    },
+    {
+      "data": "spec_deathlesssummoner",
+      "description": "Awarded for completing the Deathless Mausoleum. Welcome to the undying fold, Deathless Summoner!",
+      "imageField": "nativeRedeemerIcon",
+      "imageReference": "misc/title_icon",
+      "imageUrl": "/game-rewards/definitions/fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce.png",
+      "inputSha256": "fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce",
+      "name": "Deathless Summoner",
+      "sourcePointer": "/definitions/utitle/2",
+      "type": "utitle"
+    },
+    {
+      "data": "spec_destroyeroftitans",
+      "description": "Earned during EPOCH OF PAIN event.",
+      "imageField": "nativeRedeemerIcon",
+      "imageReference": "misc/title_icon",
+      "imageUrl": "/game-rewards/definitions/fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce.png",
+      "inputSha256": "fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce",
+      "name": "Destroyer of Titans",
+      "sourcePointer": "/definitions/utitle/3",
+      "type": "utitle"
+    },
+    {
+      "data": "spec_grandmastersgreatest",
+      "description": "Earned during Grandmasters Gauntlet event.",
+      "imageField": "nativeRedeemerIcon",
+      "imageReference": "misc/title_icon",
+      "imageUrl": "/game-rewards/definitions/fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce.png",
+      "inputSha256": "fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce",
+      "name": "Grandmaster's Greatest",
+      "sourcePointer": "/definitions/utitle/4",
+      "type": "utitle"
+    },
+    {
+      "data": "spec_happilyeverafter",
+      "description": "Fully Explored the Epilogue Quest.",
+      "imageField": "nativeRedeemerIcon",
+      "imageReference": "misc/title_icon",
+      "imageUrl": "/game-rewards/definitions/fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce.png",
+      "inputSha256": "fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce",
+      "name": "Happily Ever After?",
+      "sourcePointer": "/definitions/utitle/5",
+      "type": "utitle"
+    },
+    {
+      "data": "spec_rulerofnecropolis",
+      "description": "Survived the City of the Dead.",
+      "imageField": "nativeRedeemerIcon",
+      "imageReference": "misc/title_icon",
+      "imageUrl": "/game-rewards/definitions/fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce.png",
+      "inputSha256": "fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce",
+      "name": "Ruler of Necropolis",
+      "sourcePointer": "/definitions/utitle/6",
+      "type": "utitle"
+    },
+    {
+      "data": "spec_starryeyed",
+      "description": "Completed the Shooting Star Quest.",
+      "imageField": "nativeRedeemerIcon",
+      "imageReference": "misc/title_icon",
+      "imageUrl": "/game-rewards/definitions/fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce.png",
+      "inputSha256": "fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce",
+      "name": "Starry-Eyed",
+      "sourcePointer": "/definitions/utitle/7",
+      "type": "utitle"
+    },
+    {
+      "data": "story_a5mast",
+      "description": "Earned by fully exploring Act 5: Elder's War",
+      "imageField": "nativeRedeemerIcon",
+      "imageReference": "misc/title_icon",
+      "imageUrl": "/game-rewards/definitions/fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce.png",
+      "inputSha256": "fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce",
+      "name": "Elder's Bane",
+      "sourcePointer": "/definitions/utitle/8",
+      "type": "utitle"
+    },
+    {
+      "data": "story_a6c4_breaker",
+      "description": "The Summoner has beaten The Grandmaster at his own game, and fully explored Act 6.",
+      "imageField": "nativeRedeemerIcon",
+      "imageReference": "misc/title_icon",
+      "imageUrl": "/game-rewards/definitions/fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce.png",
+      "inputSha256": "fdd6473305eb7a98517d04e836ab7a1abcc3c4d16861f3f7b352bb72bc2879ce",
+      "name": "Breaker of Thrones",
+      "sourcePointer": "/definitions/utitle/9",
+      "type": "utitle"
+    }
+  ],
+  "source": {
+    "allowlistSha256": "2cfac5db2ba5788fc0411b3b12634a16eeeb43feeaeff38fdb5f4ee79f558b39",
+    "artworkProofSha256": "712bab7165d750aee5a7485356747117cb743f634a4b0a4906b29ebf267a89ff",
+    "captureSha256": "04b720d1cabb8303d9889bd8c9b9144e0b561864084a5f19761876d813b3cbfd",
+    "gameAssemblySha256": "01f46bb2e36c2160a8df939bbb080bcf2ee89ca15427692a10334efc90fd4abb",
+    "nativeUrlProofSha256": "a3a50022375fc00adf8a8bdee19f7aada488152e1870d5a63b3d3909edbaa012",
+    "readerSha256": "92b907c78a5aa63090b46e543b79e829318c4c0d9a870ce036e4cbac65742e5f",
+    "scopeSha256": "05b9a0ffc1626a04999ba785595be140f7c9b4538fddee54ebc260f2925cf68c"
+  },
+  "version": 1
+}

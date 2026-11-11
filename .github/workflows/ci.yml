@@ -30,7 +30,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20.19.x"
+          node-version: "24.x"
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
@@ -61,7 +61,7 @@ jobs:
         run: pnpm exec vitest run web/src/lib/championHelper.test.ts --maxWorkers=1
 
       - name: Verify champion data, UI and Discord rendering
-        run: pnpm exec vitest run src/domain/champion-overview-summary.test.ts web/src/lib/champion-kit.test.ts web/src/lib/champion-kit-source-display.test.ts web/src/lib/champion-kit-synergy-bonus.test.ts web/src/lib/champion-synergy-display.test.ts 'web/src/app/champions/[slug]/champion-synergies-panel.test.ts' web/src/lib/roster-kit.test.ts web/src/lib/roster-kit-details.test.ts web/src/lib/roster-filtering.test.ts web/src/lib/alliance-roster-filtering.test.ts web/src/app/actions/alliance-roster.test.ts web/src/app/profile/roster/components/roster-filter-rules.test.ts web/src/components/champions/compact-effect-grid.test.ts web/src/app/profile/roster/components/quick-champion-dialog.test.ts src/commands/champion src/commands/search src/commands/glossary/effect.test.ts src/utils/errorHandler.test.ts --maxWorkers=1
+        run: pnpm exec vitest run src/domain/champion-overview-summary.test.ts web/src/lib/champion-kit.test.ts web/src/lib/champion-kit-source-display.test.ts web/src/lib/champion-kit-synergy-bonus.test.ts web/src/lib/champion-synergy-display.test.ts 'web/src/app/champions/[slug]/champion-synergies-panel.test.ts' web/src/lib/roster-kit.test.ts web/src/lib/roster-kit-details.test.ts web/src/lib/roster-filtering.test.ts web/src/lib/alliance-roster-filtering.test.ts web/src/app/actions/alliance-roster.test.ts web/src/app/profile/roster/components/roster-filter-rules.test.ts web/src/components/champions/compact-effect-grid.test.ts web/src/app/profile/roster/components/quick-champion-dialog.test.ts src/commands/champion src/commands/search src/commands/glossary/effect.test.ts web/src/lib/effect-glossary.test.ts web/src/lib/data/effect-glossary.test.ts web/src/app/glossary/glossary-views.test.tsx src/utils/errorHandler.test.ts --maxWorkers=1
 
       - name: Verify champion page interactions and native stat icons
         run: pnpm exec vitest run src/tests/stat-icons.test.ts 'web/src/app/champions/[slug]/champion-stats-panel.test.tsx' 'web/src/app/champions/[slug]/champion-attack-profile.test.tsx' 'web/src/app/champions/[slug]/champion-details-navigation.test.tsx' 'web/src/app/champions/[slug]/champion-ability-reader.test.tsx' 'web/src/app/champions/[slug]/champion-synergies-interaction.test.tsx' web/src/lib/champion-synergies.test.ts web/src/lib/champion-ability-search.test.ts web/src/lib/champion-attack-profile.test.ts web/src/lib/champion-attack-sequence.test.ts --maxWorkers=1
@@ -149,6 +149,55 @@ jobs:
 
       - name: Verify source-bound resistance classifications and discovery
         run: pnpm exec vitest run src/domain/champion-resistance.test.ts src/domain/champion-resistance-classification.test.ts src/domain/champion-resistance-plan.test.ts web/src/lib/champion-resistance.test.ts web/src/lib/roster-kit-options.test.ts web/src/lib/data/champion-resistances.test.ts web/src/lib/champion-ability-text.test.ts web/src/components/champions/effect-sources.test.ts 'web/src/app/api/champions/[slug]/kit/route.test.ts' --maxWorkers=1
+
+      - name: Typecheck portable feature tests
+        env:
+          NODE_OPTIONS: --max-old-space-size=4096
+        run: pnpm exec tsc --noEmit --project scripts/validation/feature-tests.tsconfig.json
+
+      - name: Verify permanent quest maps, rewards and encounter regions
+        run: pnpm exec vitest run --config scripts/game-quests/vitest.config.mts
+
+      - name: Verify Class, Challenge and Event Tower presentation
+        run: pnpm exec vitest run --config web/src/lib/game-towers/vitest.config.mts
+
+      - name: Verify public node catalogs and shared modifier icons
+        run: pnpm exec vitest run src/domain/node-modifiers web/src/app/nodes web/src/components/nodes web/src/lib/public-node-modifiers.test.ts web/src/lib/expanded-node-modifiers.icons.test.ts web/src/lib/expanded-node-detail-storage.test.ts web/src/app/admin/nodes/actions.icons.test.ts --maxWorkers=1
+
+      - name: Verify artwork library storage and search
+        run: pnpm exec vitest run web/src/lib/game-artwork/storage.test.ts web/src/lib/game-artwork/discovery.test.ts web/src/components/game-artwork/artwork-browser.test.tsx --maxWorkers=1
+
+      - name: Verify resumable duel evidence tooling
+        run: pnpm exec vitest run src/domain/duel-target-verification.test.ts src/domain/duel-target-job.test.ts src/domain/duel-search-observation.test.ts src/domain/duel-pilot-report.test.ts --maxWorkers=1
+
+      - name: Verify exact public reward and resource definitions
+        run: |
+          pnpm exec tsx --test src/data/game-reward-definitions/index.test.ts
+          pnpm exec tsx --test src/data/game-resource-definitions/index.test.ts
+
+      - name: Verify portable quest and node extraction contracts
+        run: |
+          # Named test modules only: never discover live readers or require local captures.
+          python3 -m unittest discover -s scripts -p test_extract_mcoc_node_modifiers.py
+          python3 -m unittest discover -s scripts -p test_extract_mcoc_node_artwork.py
+          python3 -m unittest discover -s scripts -p test_project_mcoc_node_uses.py
+          python3 -m unittest discover -s scripts -p test_project_mcoc_node_icon_registry.py
+          python3 -m unittest discover -s scripts -p test_build_mcoc_node_expansion.py
+          python3 -m unittest discover -s scripts -p test_project_mcoc_node_expansion_icons.py
+          python3 -m unittest discover -s scripts -p test_export_mcoc_node_icon_extension.py
+          python3 -m unittest discover -s scripts/game-quests -p test_act10_normalizer.py
+          python3 -m unittest discover -s scripts/game-quests -p test_build_public_resource_artwork.py
+          python3 -m unittest discover -s scripts/game-quests -p test_build_reward_definition_artwork.py
+          python3 -m unittest discover -s scripts/game-quests -p test_build_tower_blocks.py
+          python3 -m unittest discover -s scripts/game-quests -p test_challenge_towers.py
+          python3 -m unittest discover -s scripts/game-quests -p test_event_towers.py
+          python3 -m unittest discover -s scripts/game-quests -p test_tower_backend_contract.py
+          python3 -m unittest discover -s scripts/game-quests -p test_tower_backend_export.py
+          python3 -m unittest discover -s scripts/game-quests -p test_tower_presentation.py
+          python3 -m unittest discover -s scripts/game-quests -p test_unplaced_defenders.py
+          python3 -m unittest discover -s scripts/game-quests -p test_reward_presentation.py
+          python3 scripts/game-quests/test_spawn_region_displays.py SpawnRegionAnchorTests
+          python3 -m unittest discover -s scripts/game-artwork -p test_artwork.py
 
       - name: Build Web (web)
         env:

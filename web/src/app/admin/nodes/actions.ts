@@ -6,6 +6,8 @@ import { revalidatePath } from "next/cache";
 import { WarMapType } from "@prisma/client";
 import { requireBotAdmin } from "@/lib/auth-helpers";
 import { withActionContext } from "@/lib/with-request-context";
+import { curatedNodeModifierSelect, validateModifierIconEdit } from "@cerebro/core/domain/node-modifiers/native-icons";
+import { clearCache } from "@/lib/cache";
 
 export const searchModifiers = withActionContext('searchModifiers', async (query: string) => {
     const session = await auth();
@@ -20,8 +22,25 @@ export const searchModifiers = withActionContext('searchModifiers', async (query
                 { description: { contains: query, mode: 'insensitive' } }
             ]
         },
-        take: 20
+        take: 20,
+        select: curatedNodeModifierSelect
     });
+});
+
+/** Changes presentation only. No definition association or allocation is changed. */
+export const updateModifierIcon = withActionContext('updateModifierIcon', async (input: unknown) => {
+    await requireBotAdmin("MANAGE_WAR_CONFIG");
+    const edit = validateModifierIconEdit(input);
+    const result = await prisma.nodeModifier.updateMany({
+        where: { id: edit.id, name: edit.expected.name, description: edit.expected.description, iconKey: edit.expected.iconKey },
+        data: { iconKey: edit.iconKey }
+    });
+    if (result.count !== 1) throw new Error("This modifier changed. Refresh before choosing its icon.");
+    clearCache('war-nodes-', true);
+    revalidatePath('/admin/nodes');
+    revalidatePath('/admin/quests', 'layout');
+    revalidatePath('/planning', 'layout');
+    return { id: edit.id, name: edit.expected.name, description: edit.expected.description, iconKey: edit.iconKey };
 });
 
 export const addAllocation = withActionContext('addAllocation', async (

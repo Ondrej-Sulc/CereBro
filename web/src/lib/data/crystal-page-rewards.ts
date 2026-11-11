@@ -6,6 +6,10 @@ import { getSelectableReward } from "@cerebro/core/data/game-selectable-rewards"
 import type { CrystalCatalogDetails } from "@cerebro/core/domain/champion-crystals"
 import type { CrystalOpeningReward } from "@cerebro/core/domain/crystal-openings"
 import { rewardDisplayName } from "@cerebro/core/domain/reward-display"
+import { getNativeRewardPresentation, nativeRewardName, type RewardRankChange } from "@cerebro/core/data/game-reward-presentation"
+import { getPublicRewardDefinition } from "@cerebro/core/data/game-reward-definitions"
+import { getStaticResourceRewardArtwork } from "@cerebro/core/data/game-resource-artwork"
+import { getPublicResourceDefinition } from "@cerebro/core/data/game-resource-definitions"
 import { crystalHref } from "../crystal-navigation"
 import { buildCrystalOddsVisuals } from "../crystal-odds-presentation"
 import { buildCrystalRewardPresentation } from "../crystal-reward-presentation"
@@ -16,6 +20,9 @@ export type CrystalRewardCard = CrystalOpeningReward & {
   href: string | null
   imageUrl: string | null
   selection: { draw: number; pick: number } | null
+  rankChange?: RewardRankChange
+  itemRarity?: number
+  signaturePoints?: number
 }
 
 export function resolveCrystalPageOpening(family: CrystalCatalogDetails, incomingId: string, legacyVariant?: string) {
@@ -31,9 +38,12 @@ export function loadCrystalPageRewards(id: string) {
     const nested = reward.nestedCrystalId ? getCrystalOpening(reward.nestedCrystalId) : null
     const selector = reward.type === "sra" ? getSelectableReward(reward.data) : null
     const artwork = getRewardArtwork(reward.type, reward.data)
-    return { ...reward, displayName: selector?.name ?? rewardDisplayName(reward), key: `${categoryId}:${reward.sourceIndex}`, categoryId,
+    const native = getNativeRewardPresentation(reward.type, reward.data)
+    const publicDefinition = getPublicRewardDefinition(reward.type, reward.data)
+    const publicResource = getPublicResourceDefinition(reward.type, reward.data)
+    return { ...reward, displayName: selector?.name ?? (publicDefinition?.name || null) ?? publicResource?.name ?? (native ? nativeRewardName(native, reward.type) : rewardDisplayName(reward)), itemRarity: native?.rarity, signaturePoints: native?.signaturePoints, rankChange: native?.rankChange, key: `${categoryId}:${reward.sourceIndex}`, categoryId,
       href: nested ? crystalHref(nested.id) : null,
-      imageUrl: artwork?.url ?? (reward.type === "gs" && nested ? getCrystalPresentation(nested.id)?.artworkUrl ?? null : null),
+      imageUrl: artwork?.url ?? getStaticResourceRewardArtwork(reward.type, reward.data)?.url ?? publicResource?.imageUrl ?? publicDefinition?.imageUrl ?? (reward.type === "gs" && nested ? getCrystalPresentation(nested.id)?.artworkUrl ?? null : null),
       selection: nested?.selection ?? null }
   }
   const categoryCards = opening.categories.map(category => ({ id: category.id, rewards: category.rewards.map(reward => card(reward, category.id)) }))

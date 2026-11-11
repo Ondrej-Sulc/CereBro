@@ -7,6 +7,7 @@ import type { CrystalRewardPresentation, CrystalRewardPrize, CrystalRewardRate, 
 import { crystalRewardAmount, sortCrystalRewardRows } from "@/lib/crystal-reward-presentation"
 import { crystalOddsIconKind, crystalRatePercentage as percent } from "@/lib/crystal-odds-presentation"
 import { CrystalIntentLink } from "./crystal-intent-link"
+import { RewardItemOverlay } from "@/components/reward-item-overlay"
 import styles from "./crystal-rewards-browser.module.css"
 
 const icons = { champion: UserRound, crystal: Gem, material: Layers, resource: Coins, selector: Gift, item: Package }
@@ -30,16 +31,20 @@ function Artwork({ row, variants, label }: { row?: CrystalRewardRate; variants: 
   const images = [...new Set(variants.map(variant => variant.reward.imageUrl).filter((url): url is string => !!url))]
   const single = row?.visual.imageUrl ?? (images.length === 1 ? images[0] : null)
   const Icon = icons[row?.visual.kind ?? crystalOddsIconKind(label)]
-  return <span className={styles.artwork}>{single ? <Image data-reward-artwork src={single} alt="" width={48} height={48} sizes="48px" loading="lazy" />
+  const details = variants.length && new Set(variants.map(({ reward }) => JSON.stringify([reward.rankChange, reward.signaturePoints, reward.itemRarity]))).size === 1 ? variants[0].reward : undefined
+  const pointNote = details?.signaturePoints && !label.includes(`+${details.signaturePoints}`) ? `Adds ${details.signaturePoints} signature levels per stone` : undefined
+  const rankNote = details?.rankChange && !label.includes(`Rank ${details.rankChange.from}`) ? `Rank ${details.rankChange.from} to ${details.rankChange.to}` : undefined
+  const detailLabel = pointNote ?? rankNote
+  return <span className={`${styles.artwork} relative`} role={detailLabel ? "img" : undefined} aria-label={detailLabel}>{single ? <Image data-reward-artwork src={single} alt="" width={48} height={48} sizes="48px" loading="lazy" />
     : images.length > 1 ? <span className={styles.artStack}>{images.slice(0, 3).map(src => <Image data-reward-artwork key={src} src={src} alt="" width={36} height={36} sizes="36px" loading="lazy" />)}</span>
-    : <Icon aria-hidden="true" />}</span>
+    : <Icon aria-hidden="true" />}{single && details && <RewardItemOverlay rank={details.rankChange} signaturePoints={details.signaturePoints} rarity={details.itemRarity}/>}</span>
 }
 
 function VariantDetails({ variants }: { variants: CrystalRewardVariant[] }) {
   if (variants.length === 1) return <ul className={styles.amounts} aria-label={`Recorded amounts for ${variants[0].label}`}>{amounts(variants[0]).map(amount => <li key={amount}>{amount}</li>)}</ul>
   const classOptions = variants.every(variant => !!variant.className) && new Set(variants.map(variant => variant.className)).size === variants.length
   return <ul className={styles.variantGrid} data-class-options={classOptions || undefined} aria-label="Reward variants">{variants.map(variant => <li key={variant.reward.key} data-reward-category={variant.reward.categoryId}>
-    {variant.reward.imageUrl ? <Image data-reward-artwork src={variant.reward.imageUrl} alt="" width={40} height={40} sizes="40px" loading="lazy" /> : <Package aria-hidden="true" />}
+    <span className={styles.variantImage}>{variant.reward.imageUrl ? <Image data-reward-artwork src={variant.reward.imageUrl} alt="" width={40} height={40} sizes="40px" loading="lazy" /> : <Package aria-hidden="true" />}<RewardItemOverlay rank={variant.reward.rankChange} signaturePoints={variant.reward.signaturePoints} rarity={variant.reward.itemRarity}/></span>
     <div>{variant.reward.href ? <CrystalIntentLink href={variant.reward.href}>{displayLabel(variant.label)}<ArrowUpRight aria-hidden="true" /></CrystalIntentLink> : <strong title={variant.label}>{classOptions ? variant.className : displayLabel(variant.label)}</strong>}
       <ul className={styles.amounts}>{amounts(variant).map(amount => <li key={amount}>{amount}</li>)}</ul></div>
   </li>)}</ul>

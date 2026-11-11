@@ -1,0 +1,558 @@
+{
+  "sourceSha256": "f39d2cb82cd1eb190e7e4528b9cf27164c09e8f81e66f02328d8d8075e460c71",
+  "quests": [
+    {
+      "questId": "p01_ch01_q01",
+      "routeSections": [],
+      "encounters": [
+        {
+          "id": "p01_ch01_q01:tile:4,15:boss:subBoss03ID",
+          "sequence": 1,
+          "routePathId": null,
+          "coordinate": [
+            4,
+            15
+          ],
+          "bossKey": "subBoss03ID"
+        },
+        {
+          "id": "p01_ch01_q01:tile:6,13:boss:subBoss02ID",
+          "sequence": 2,
+          "routePathId": null,
+          "coordinate": [
+            6,
+            13
+          ],
+          "bossKey": "subBoss02ID"
+        },
+        {
+          "id": "p01_ch01_q01:tile:8,11:boss:finalBossID",
+          "sequence": 3,
+          "routePathId": null,
+          "coordinate": [
+            8,
+            11
+          ],
+          "bossKey": "finalBossID"
+        }
+      ],
+      "routes": [
+        {
+          "sourcePathIndex": 0,
+          "choices": {},
+          "encounterIds": [
+            "p01_ch01_q01:tile:4,15:boss:subBoss03ID",
+            "p01_ch01_q01:tile:6,13:boss:subBoss02ID",
+            "p01_ch01_q01:tile:8,11:boss:finalBossID"
+          ]
+        }
+      ]
+    },
+    {
+      "questId": "a05_ch01_q01",
+      "routeSections": [
+        {
+          "id": "a05_ch01_q01:section:1",
+          "title": "Route choice 1",
+          "order": 0,
+          "parentPathId": null,
+          "paths": [
+            {
+              "id": "a05_ch01_q01:section:1:path:1",
+              "title": "Option 1",
+              "order": 0,
+              "sectionId": "a05_ch01_q01:section:1",
+              "sourceRouteIndices": [
+                0,
+                3
+              ]
+            },
+            {
+              "id": "a05_ch01_q01:section:1:path:2",
+              "title": "Option 2",
+              "order": 1,
+              "sectionId": "a05_ch01_q01:section:1",
+              "sourceRouteIndices": [
+                1,
+                2
+              ]
+            }
+          ]
+        },
+        {
+          "id": "a05_ch01_q01:section:2",
+          "title": "Route choice 2",
+          "order": 1,
+          "parentPathId": "a05_ch01_q01:section:1:path:1",
+          "paths": [
+            {
+              "id": "a05_ch01_q01:section:2:path:1",
+              "title": "Option 1",
+              "order": 0,
+              "sectionId": "a05_ch01_q01:section:2",
+              "sourceRouteIndices": [
+                0
+              ]
+            },
+            {
+              "id": "a05_ch01_q01:section:2:path:2",
+              "title": "Option 2",
+              "order": 1,
+              "sectionId": "a05_ch01_q01:section:2",
+              "sourceRouteIndices": [
+                3
+              ]
+            }
+          ]
+        },
+        {
+          "id": "a05_ch01_q01:section:3",
+          "title": "Route choice 3",
+          "order": 2,
+          "parentPathId": "a05_ch01_q01:section:1:path:2",
+          "paths": [
+            {
+              "id": "a05_ch01_q01:section:3:path:1",
+              "title": "Option 1",
+              "order": 0,
+              "sectionId": "a05_ch01_q01:section:3",
+              "sourceRouteIndices": [
+                1
+              ]
+            },
+            {
+              "id": "a05_ch01_q01:section:3:path:2",
+              "title": "Option 2",
+              "order": 1,
+              "sectionId": "a05_ch01_q01:section:3",
+              "sourceRouteIndices": [
+                2
+              ]
+            }
+          ]
+        }
+      ],
+      "encounters": [
+        {
+          "id": "a05_ch01_q01:tile:20,28:boss:subBoss29ID",
+          "sequence": 1,
+          "routePathId": "a05_ch01_q01:section:1:path:1",
+          "coordinate": [
+            20,
+            28
+          ],
+          "bossKey": "subBoss29ID"
+        },
+        {
+          "id": "a05_ch01_q01:tile:10,21:boss:subBoss21ID",
+          "sequence": 2,
+          "routePathId": "a05_ch01_q01:section:1:path:1",
+          "coordinate": [
+            10,
+            21
+          ],
+          "bossKey": "subBoss21ID"
+        },
+        {
+          "id": "a05_ch01_q01:tile:13,15:boss:subBoss26ID",
+          "sequence": 3,
+          "routePathId": "a05_ch01_q01:section:2:path:1",
+          "coordinate": [
+            13,
+            15
+          ],
+          "bossKey": "subBoss26ID"
+        },
+        {
+          "id": "a05_ch01_q01:tile:17,11:boss:subBoss27ID",
+          "sequence": 4,
+          "routePathId": "a05_ch01_q01:section:2:path:1",
+          "coordinate": [
+            17,
+            11
+          ],
+          "bossKey": "subBoss27ID"
+        },
+        {
+          "id": "a05_ch01_q01:tile:21,7:boss:subBoss34ID",
+          "sequence": 5,
+          "routePathId": "a05_ch01_q01:section:2:path:1",
+          "coordinate": [
+            21,
+            7
+          ],
+          "bossKey": "subBoss34ID"
+        },
+        {
+          "id": "a05_ch01_q01:tile:13,9:boss:subBoss22ID",
+          "sequence": 6,
+          "routePathId": "a05_ch01_q01:section:2:path:2",
+          "coordinate": [
+            13,
+            9
+          ],
+          "bossKey": "subBoss22ID"
+        },
+        {
+          "id": "a05_ch01_q01:tile:4,38:boss:subBoss25ID",
+          "sequence": 7,
+          "routePathId": "a05_ch01_q01:section:2:path:2",
+          "coordinate": [
+            4,
+            38
+          ],
+          "bossKey": "subBoss25ID"
+        },
+        {
+          "id": "a05_ch01_q01:tile:15,40:boss:subBoss18ID",
+          "sequence": 8,
+          "routePathId": "a05_ch01_q01:section:2:path:2",
+          "coordinate": [
+            15,
+            40
+          ],
+          "bossKey": "subBoss18ID"
+        },
+        {
+          "id": "a05_ch01_q01:tile:17,36:boss:subBoss03ID",
+          "sequence": 9,
+          "routePathId": "a05_ch01_q01:section:2:path:2",
+          "coordinate": [
+            17,
+            36
+          ],
+          "bossKey": "subBoss03ID"
+        },
+        {
+          "id": "a05_ch01_q01:tile:28,28:boss:subBoss13ID",
+          "sequence": 10,
+          "routePathId": "a05_ch01_q01:section:1:path:2",
+          "coordinate": [
+            28,
+            28
+          ],
+          "bossKey": "subBoss13ID"
+        },
+        {
+          "id": "a05_ch01_q01:tile:38,21:boss:subBoss14ID",
+          "sequence": 11,
+          "routePathId": "a05_ch01_q01:section:1:path:2",
+          "coordinate": [
+            38,
+            21
+          ],
+          "bossKey": "subBoss14ID"
+        },
+        {
+          "id": "a05_ch01_q01:tile:35,15:boss:subBoss30ID",
+          "sequence": 12,
+          "routePathId": "a05_ch01_q01:section:3:path:1",
+          "coordinate": [
+            35,
+            15
+          ],
+          "bossKey": "subBoss30ID"
+        },
+        {
+          "id": "a05_ch01_q01:tile:31,11:boss:subBoss31ID",
+          "sequence": 13,
+          "routePathId": "a05_ch01_q01:section:3:path:1",
+          "coordinate": [
+            31,
+            11
+          ],
+          "bossKey": "subBoss31ID"
+        },
+        {
+          "id": "a05_ch01_q01:tile:29,9:boss:subBoss35ID",
+          "sequence": 14,
+          "routePathId": "a05_ch01_q01:section:3:path:1",
+          "coordinate": [
+            29,
+            9
+          ],
+          "bossKey": "subBoss35ID"
+        },
+        {
+          "id": "a05_ch01_q01:tile:35,9:boss:subBoss10ID",
+          "sequence": 15,
+          "routePathId": "a05_ch01_q01:section:3:path:2",
+          "coordinate": [
+            35,
+            9
+          ],
+          "bossKey": "subBoss10ID"
+        },
+        {
+          "id": "a05_ch01_q01:tile:44,38:boss:subBoss06ID",
+          "sequence": 16,
+          "routePathId": "a05_ch01_q01:section:3:path:2",
+          "coordinate": [
+            44,
+            38
+          ],
+          "bossKey": "subBoss06ID"
+        },
+        {
+          "id": "a05_ch01_q01:tile:35,40:boss:subBoss09ID",
+          "sequence": 17,
+          "routePathId": "a05_ch01_q01:section:3:path:2",
+          "coordinate": [
+            35,
+            40
+          ],
+          "bossKey": "subBoss09ID"
+        },
+        {
+          "id": "a05_ch01_q01:tile:29,38:boss:subBoss04ID",
+          "sequence": 18,
+          "routePathId": "a05_ch01_q01:section:3:path:2",
+          "coordinate": [
+            29,
+            38
+          ],
+          "bossKey": "subBoss04ID"
+        },
+        {
+          "id": "a05_ch01_q01:tile:24,19:boss:subBoss20ID",
+          "sequence": 19,
+          "routePathId": null,
+          "coordinate": [
+            24,
+            19
+          ],
+          "bossKey": "subBoss20ID"
+        },
+        {
+          "id": "a05_ch01_q01:tile:24,23:boss:finalBossID",
+          "sequence": 20,
+          "routePathId": null,
+          "coordinate": [
+            24,
+            23
+          ],
+          "bossKey": "finalBossID"
+        }
+      ],
+      "routes": [
+        {
+          "sourcePathIndex": 0,
+          "choices": {
+            "a05_ch01_q01:section:1": "a05_ch01_q01:section:1:path:1",
+            "a05_ch01_q01:section:2": "a05_ch01_q01:section:2:path:1"
+          },
+          "encounterIds": [
+            "a05_ch01_q01:tile:20,28:boss:subBoss29ID",
+            "a05_ch01_q01:tile:10,21:boss:subBoss21ID",
+            "a05_ch01_q01:tile:13,15:boss:subBoss26ID",
+            "a05_ch01_q01:tile:17,11:boss:subBoss27ID",
+            "a05_ch01_q01:tile:21,7:boss:subBoss34ID",
+            "a05_ch01_q01:tile:24,19:boss:subBoss20ID",
+            "a05_ch01_q01:tile:24,23:boss:finalBossID"
+          ]
+        },
+        {
+          "sourcePathIndex": 1,
+          "choices": {
+            "a05_ch01_q01:section:1": "a05_ch01_q01:section:1:path:2",
+            "a05_ch01_q01:section:3": "a05_ch01_q01:section:3:path:1"
+          },
+          "encounterIds": [
+            "a05_ch01_q01:tile:28,28:boss:subBoss13ID",
+            "a05_ch01_q01:tile:38,21:boss:subBoss14ID",
+            "a05_ch01_q01:tile:35,15:boss:subBoss30ID",
+            "a05_ch01_q01:tile:31,11:boss:subBoss31ID",
+            "a05_ch01_q01:tile:29,9:boss:subBoss35ID",
+            "a05_ch01_q01:tile:24,19:boss:subBoss20ID",
+            "a05_ch01_q01:tile:24,23:boss:finalBossID"
+          ]
+        },
+        {
+          "sourcePathIndex": 2,
+          "choices": {
+            "a05_ch01_q01:section:1": "a05_ch01_q01:section:1:path:2",
+            "a05_ch01_q01:section:3": "a05_ch01_q01:section:3:path:2"
+          },
+          "encounterIds": [
+            "a05_ch01_q01:tile:28,28:boss:subBoss13ID",
+            "a05_ch01_q01:tile:38,21:boss:subBoss14ID",
+            "a05_ch01_q01:tile:35,9:boss:subBoss10ID",
+            "a05_ch01_q01:tile:44,38:boss:subBoss06ID",
+            "a05_ch01_q01:tile:35,40:boss:subBoss09ID",
+            "a05_ch01_q01:tile:29,38:boss:subBoss04ID",
+            "a05_ch01_q01:tile:24,19:boss:subBoss20ID",
+            "a05_ch01_q01:tile:24,23:boss:finalBossID"
+          ]
+        },
+        {
+          "sourcePathIndex": 3,
+          "choices": {
+            "a05_ch01_q01:section:1": "a05_ch01_q01:section:1:path:1",
+            "a05_ch01_q01:section:2": "a05_ch01_q01:section:2:path:2"
+          },
+          "encounterIds": [
+            "a05_ch01_q01:tile:20,28:boss:subBoss29ID",
+            "a05_ch01_q01:tile:10,21:boss:subBoss21ID",
+            "a05_ch01_q01:tile:13,9:boss:subBoss22ID",
+            "a05_ch01_q01:tile:4,38:boss:subBoss25ID",
+            "a05_ch01_q01:tile:15,40:boss:subBoss18ID",
+            "a05_ch01_q01:tile:17,36:boss:subBoss03ID",
+            "a05_ch01_q01:tile:24,19:boss:subBoss20ID",
+            "a05_ch01_q01:tile:24,23:boss:finalBossID"
+          ]
+        }
+      ]
+    },
+    {
+      "questId": "daily_supply_run3_1_1",
+      "routeSections": [
+        {
+          "id": "daily_supply_run3_1_1:section:1",
+          "title": "Route choice 1",
+          "order": 0,
+          "parentPathId": null,
+          "paths": [
+            {
+              "id": "daily_supply_run3_1_1:section:1:path:1",
+              "title": "Option 1",
+              "order": 0,
+              "sectionId": "daily_supply_run3_1_1:section:1",
+              "sourceRouteIndices": [
+                0
+              ]
+            },
+            {
+              "id": "daily_supply_run3_1_1:section:1:path:2",
+              "title": "Option 2",
+              "order": 1,
+              "sectionId": "daily_supply_run3_1_1:section:1",
+              "sourceRouteIndices": [
+                1
+              ]
+            }
+          ]
+        }
+      ],
+      "encounters": [
+        {
+          "id": "daily_supply_run3_1_1:tile:1,15:boss:subBoss01ID",
+          "sequence": 1,
+          "routePathId": "daily_supply_run3_1_1:section:1:path:1",
+          "coordinate": [
+            1,
+            15
+          ],
+          "bossKey": "subBoss01ID"
+        },
+        {
+          "id": "daily_supply_run3_1_1:tile:4,12:boss:subBoss02ID",
+          "sequence": 2,
+          "routePathId": "daily_supply_run3_1_1:section:1:path:1",
+          "coordinate": [
+            4,
+            12
+          ],
+          "bossKey": "subBoss02ID"
+        },
+        {
+          "id": "daily_supply_run3_1_1:tile:7,6:boss:subBoss03ID",
+          "sequence": 3,
+          "routePathId": "daily_supply_run3_1_1:section:1:path:1",
+          "coordinate": [
+            7,
+            6
+          ],
+          "bossKey": "subBoss03ID"
+        },
+        {
+          "id": "daily_supply_run3_1_1:tile:11,2:boss:subBoss04ID",
+          "sequence": 4,
+          "routePathId": "daily_supply_run3_1_1:section:1:path:1",
+          "coordinate": [
+            11,
+            2
+          ],
+          "bossKey": "subBoss04ID"
+        },
+        {
+          "id": "daily_supply_run3_1_1:tile:4,18:boss:subBoss05ID",
+          "sequence": 5,
+          "routePathId": "daily_supply_run3_1_1:section:1:path:2",
+          "coordinate": [
+            4,
+            18
+          ],
+          "bossKey": "subBoss05ID"
+        },
+        {
+          "id": "daily_supply_run3_1_1:tile:7,15:boss:subBoss06ID",
+          "sequence": 6,
+          "routePathId": "daily_supply_run3_1_1:section:1:path:2",
+          "coordinate": [
+            7,
+            15
+          ],
+          "bossKey": "subBoss06ID"
+        },
+        {
+          "id": "daily_supply_run3_1_1:tile:13,12:boss:subBoss07ID",
+          "sequence": 7,
+          "routePathId": "daily_supply_run3_1_1:section:1:path:2",
+          "coordinate": [
+            13,
+            12
+          ],
+          "bossKey": "subBoss07ID"
+        },
+        {
+          "id": "daily_supply_run3_1_1:tile:17,8:boss:subBoss08ID",
+          "sequence": 8,
+          "routePathId": "daily_supply_run3_1_1:section:1:path:2",
+          "coordinate": [
+            17,
+            8
+          ],
+          "bossKey": "subBoss08ID"
+        },
+        {
+          "id": "daily_supply_run3_1_1:tile:17,2:boss:finalBossID",
+          "sequence": 9,
+          "routePathId": null,
+          "coordinate": [
+            17,
+            2
+          ],
+          "bossKey": "finalBossID"
+        }
+      ],
+      "routes": [
+        {
+          "sourcePathIndex": 0,
+          "choices": {
+            "daily_supply_run3_1_1:section:1": "daily_supply_run3_1_1:section:1:path:1"
+          },
+          "encounterIds": [
+            "daily_supply_run3_1_1:tile:1,15:boss:subBoss01ID",
+            "daily_supply_run3_1_1:tile:4,12:boss:subBoss02ID",
+            "daily_supply_run3_1_1:tile:7,6:boss:subBoss03ID",
+            "daily_supply_run3_1_1:tile:11,2:boss:subBoss04ID",
+            "daily_supply_run3_1_1:tile:17,2:boss:finalBossID"
+          ]
+        },
+        {
+          "sourcePathIndex": 1,
+          "choices": {
+            "daily_supply_run3_1_1:section:1": "daily_supply_run3_1_1:section:1:path:2"
+          },
+          "encounterIds": [
+            "daily_supply_run3_1_1:tile:4,18:boss:subBoss05ID",
+            "daily_supply_run3_1_1:tile:7,15:boss:subBoss06ID",
+            "daily_supply_run3_1_1:tile:13,12:boss:subBoss07ID",
+            "daily_supply_run3_1_1:tile:17,8:boss:subBoss08ID",
+            "daily_supply_run3_1_1:tile:17,2:boss:finalBossID"
+          ]
+        }
+      ]
+    }
+  ]
+}

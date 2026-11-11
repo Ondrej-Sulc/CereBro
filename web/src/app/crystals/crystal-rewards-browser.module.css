@@ -23,6 +23,9 @@
 .entry > summary:hover { background: #1a2e485c; }
 .artwork { display: grid; width: 54px; height: 54px; place-items: center; border: 1px solid #31486555; border-radius: 10px; background: radial-gradient(ellipse at center, #48668a30, #0c152555 75%); }
 .artwork > img { width: 48px; height: 48px; object-fit: contain; }
+.variantImage { position: relative; display: inline-flex; width: 40px; height: 40px; align-items: center; justify-content: center; }
+.variantImage img { width: 100%; height: 100%; object-fit: contain; }
+@media (max-width: 479px) { .variantImage { width: 30px; height: 30px; } }
 .artwork > svg { width: 29px; height: 29px; color: #96b1d1; stroke-width: 1.5; }
 .artStack { position: relative; display: block; width: 52px; height: 46px; }
 .artStack img { position: absolute; width: 35px; height: 35px; object-fit: contain; filter: drop-shadow(0 1px 3px #000a); }

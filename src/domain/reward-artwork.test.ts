@@ -76,3 +76,19 @@ it("requires the reviewed inventory overlay shader, exact registry identity and 
   expect(() => createRewardArtworkCatalog({ ...input, source: { ...source, inventoryShader: undefined } })).toThrow()
   expect(() => createRewardArtworkCatalog({ ...input, source: { ...source, inventoryShader: { ...source.inventoryShader, sha256: "b".repeat(64) } } })).toThrow()
 })
+
+it("requires the separate native material binding proof before accepting catalyst overlay", () => {
+  const fixture = artworkFixture()
+  const colorDictionary = { fileName: "resources.assets", sha256: hash, objectSha256: hash, pathId: 5241, paletteSha256: hash }
+  const materialShader = { name: "EBG/UI/OverlayColored", fileName: "resources.assets", sha256: hash, pathId: 506,
+    objectSha256: "60d753e9a57e49ea3c53f436c9061571fc1ac90ffc8e69c83af1f4afd3e22d5e",
+    bindingProofSha256: "7d6c8c80868340a3c215545b7e1ac8f675ed3bde4f94e9b91a49889d363e93a3" }
+  const asset = { ...fixture.assets[0], tintApplied: true,
+    renderTint: { source: "blueprint", rgba: [0.1, 0.8, 1, 1], blendMode: "overlay" } }
+  const input = { ...fixture, source: { ...fixture.source, colorDictionary, materialShader }, assets: [asset] }
+  expect(createRewardArtworkCatalog(input).getRewardArtwork("ebpf", "rare_event")?.renderTint?.blendMode).toBe("overlay")
+  expect(() => createRewardArtworkCatalog({ ...input, source: { ...input.source, materialShader: undefined } })).toThrow()
+  expect(() => createRewardArtworkCatalog({ ...input, source: { ...input.source, materialShader: { ...materialShader, bindingProofSha256: hash } } })).toThrow()
+  expect(() => createRewardArtworkCatalog({ ...input, assets: [{ ...asset, type: "res" }] })).toThrow()
+  expect(() => createRewardArtworkCatalog({ ...input, assets: [{ ...asset, renderTint: { ...asset.renderTint, blendMode: undefined } }] })).toThrow()
+})

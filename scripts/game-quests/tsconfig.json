@@ -1,0 +1,17 @@
+{
+  "extends": "../../web/tsconfig.json",
+  "compilerOptions": {
+    "incremental": false,
+    "plugins": [],
+    "paths": { "@/*": ["../../web/src/*"], "@cerebro/core/*": ["../../src/*"] }
+  },
+  "include": [
+    "../../src/domain/game-quests/**/*.ts",
+    "../../src/data/game-quests/**/*.ts",
+    "../../src/tests/game-quests/**/*.ts",
+    "../../web/src/components/game-quests/**/*.tsx",
+    "../../web/src/app/quests/**/*.tsx",
+    "../../web/next-env.d.ts"
+  ],
+  "exclude": ["../../node_modules", "../../web/node_modules"]
+}

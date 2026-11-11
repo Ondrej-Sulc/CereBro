@@ -1,0 +1,1654 @@
+{
+  "version": 1,
+  "id": "public-class-tower-blocks-20261110",
+  "gameAssemblySha256": "01f46bb2e36c2160a8df939bbb080bcf2ee89ca15427692a10334efc90fd4abb",
+  "layoutSha256": "9c948d4c0f965cdac354d7cffff112c1f1797c076648dc182d6a30eb63f0bdaf",
+  "sources": [
+    {
+      "sha256": "e3cc9786421e25326ebfa537944dde675d7394ac46c72b061c77ecddeba952b8",
+      "capturedAt": "2026-11-10T07:19:54.750354+00:00",
+      "readerSha256": "e243f3af1bad5e9243f0bf080fef5f0b1b64023909f433e402a3592d62c03b22",
+      "blocks": 1,
+      "floors": 8
+    },
+    {
+      "sha256": "8e2bb659c688ecf17aab00dd65680e11b206d735fb35a1a93547e514d3a1eac1",
+      "capturedAt": "2026-11-10T07:21:00.742606+00:00",
+      "readerSha256": "e243f3af1bad5e9243f0bf080fef5f0b1b64023909f433e402a3592d62c03b22",
+      "blocks": 1,
+      "floors": 8
+    },
+    {
+      "sha256": "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992",
+      "capturedAt": "2026-11-10T07:22:58.779911+00:00",
+      "readerSha256": "e243f3af1bad5e9243f0bf080fef5f0b1b64023909f433e402a3592d62c03b22",
+      "blocks": 2,
+      "floors": 20
+    }
+  ],
+  "blocks": [
+    {
+      "towerId": "class_skill",
+      "blockNumber": 63,
+      "nativeHash": "5eaffea8264990fa24deb68115db2348",
+      "declaredFloorCount": 12,
+      "timeLimit": 0,
+      "topBuffs": [
+        {
+          "displayValue": 0.0,
+          "glyphIcon": "",
+          "id": "towers_rule_timer_1m",
+          "localizedDesc": "At the start of the fight, a {2} second timer starts. If this timer expires, the fight results in a time out. The timer is paused during the Attacker’s first 3 Special Attacks 1 or 2, and it is always paused during Special Attack 3.",
+          "localizedName": "Race to the Finish - 1 Minute",
+          "localizedShortFormat": "",
+          "quantity": 1,
+          "scope": {
+            "value": 2,
+            "name": "User"
+          },
+          "value": 0.0,
+          "valueStr": [
+            "towers_rule_timer_hud_1m",
+            "towers_rule_timer_1m",
+            "towers_rule_timer_atksp_var",
+            "towers_rule_timer_atksp_hud",
+            "towers_rule_timer_atksp_hud_active",
+            "towers_rule_timer_atksp_actseq",
+            "towers_rule_timer_atksp_finseq",
+            "towers_rule_timer_atksp_var_add",
+            "towers_rule_timer_atksp_pause",
+            "towers_rule_timer_atksp_hud_rmv",
+            "towers_rule_timer_atksp_app_active",
+            "towers_rule_timer_atksp_pause_rmv",
+            "towers_rule_timer_atksp_app_active_rmv"
+          ],
+          "valueType": {
+            "value": 3,
+            "name": "String"
+          }
+        },
+        {
+          "displayValue": 0.0,
+          "glyphIcon": "",
+          "id": "towers_rule_dmg",
+          "localizedDesc": "The following [k=glossary/game_rule]Rules of The Contest[/k] are active:\\n • The Defender's damage taken is adjusted based on the difference between the Attacker and Defender's [k=glossary/challenge_rating]Challenge Ratings[/k].\\n • The Defender cannot activate their Special Attack 3.\\n • Both Champion's Attack Rating does not decrease with Class Disadvantage. ",
+          "localizedName": "The Tower Demands Power",
+          "localizedShortFormat": "",
+          "quantity": 1,
+          "scope": {
+            "value": 2,
+            "name": "User"
+          },
+          "value": 0.0,
+          "valueStr": [
+            "towers_rule_dmg_hud",
+            "towers_rule_dmg_inc",
+            "towers_rule_sp3lock_def"
+          ],
+          "valueType": {
+            "value": 3,
+            "name": "String"
+          }
+        }
+      ],
+      "buffs": [
+        {
+          "displayValue": 0.0,
+          "glyphIcon": "",
+          "id": "avx_atk_pct200",
+          "localizedDesc": "[16982bff]+{0}%[-] Attack",
+          "localizedName": "Attack",
+          "localizedShortFormat": "",
+          "quantity": 1,
+          "scope": {
+            "value": 2,
+            "name": "User"
+          },
+          "value": 200.0,
+          "valueStr": [],
+          "valueType": {
+            "value": 1,
+            "name": "Percent"
+          }
+        },
+        {
+          "displayValue": 0.0,
+          "glyphIcon": "",
+          "id": "avx_hp_pct2000",
+          "localizedDesc": "[16982bff]+{0}%[-] Health",
+          "localizedName": "Health",
+          "localizedShortFormat": "",
+          "quantity": 1,
+          "scope": {
+            "value": 2,
+            "name": "User"
+          },
+          "value": 2000.0,
+          "valueStr": [],
+          "valueType": {
+            "value": 1,
+            "name": "Percent"
+          }
+        },
+        {
+          "displayValue": 0.0,
+          "glyphIcon": "",
+          "id": "avx_hp_pct400",
+          "localizedDesc": "[16982bff]+{0}%[-] Health",
+          "localizedName": "Health",
+          "localizedShortFormat": "",
+          "quantity": 1,
+          "scope": {
+            "value": 2,
+            "name": "User"
+          },
+          "value": 400.0,
+          "valueStr": [],
+          "valueType": {
+            "value": 1,
+            "name": "Percent"
+          }
+        }
+      ],
+      "entryCost": [
+        {
+          "Action": "",
+          "Data": "tower_energy",
+          "Footer": "",
+          "Header": "",
+          "MaxQuantity": 1,
+          "MinQuantity": 1,
+          "Quantity": 1,
+          "Type": "res"
+        }
+      ],
+      "rewards": [
+        {
+          "Action": "",
+          "Data": "7_star_hero_shard_crystal",
+          "Footer": "",
+          "Header": "",
+          "MaxQuantity": 2000,
+          "MinQuantity": 2000,
+          "Quantity": 2000,
+          "Type": "gf"
+        },
+        {
+          "Action": "",
+          "Data": "epic_chemical",
+          "Footer": "",
+          "Header": "",
+          "MaxQuantity": 1,
+          "MinQuantity": 1,
+          "Quantity": 1,
+          "Type": "ebp"
+        }
+      ],
+      "ratingRewards": [
+        {
+          "Action": "",
+          "Data": "twr",
+          "Footer": "",
+          "Header": "",
+          "MaxQuantity": 1,
+          "MinQuantity": 1,
+          "Quantity": 1,
+          "Type": "gsi"
+        },
+        {
+          "Action": "",
+          "Data": "tsk",
+          "Footer": "",
+          "Header": "",
+          "MaxQuantity": 1,
+          "MinQuantity": 1,
+          "Quantity": 1,
+          "Type": "gsi"
+        }
+      ],
+      "heroRestrictions": [
+        "trained"
+      ],
+      "contentSha256": "9fbc51f58371c3a032b41fae375db7f014f0a4fe8328c8460ef1d14de5f8c490",
+      "sourceObservationSha256s": [
+        "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+      ],
+      "towerName": "SKILL TOWER",
+      "floors": [
+        {
+          "towerId": "class_skill",
+          "blockNumber": 63,
+          "floorNumber": 1,
+          "nativeHash": "5eaffea8264990fa24deb68115db2348",
+          "defender": {
+            "blueprint": "ghostrider_t7",
+            "gameId": "ghostrider",
+            "stars": 7,
+            "classId": "mystic",
+            "nativeImageId": "",
+            "build": {
+              "AscensionTier": 0,
+              "Blueprint": "ghostrider_t7",
+              "Level": 35,
+              "Rank": 2,
+              "SigLvl": 200
+            }
+          },
+          "aiDifficultyId": "AI_Hardest",
+          "totalLocalBuffCount": 0,
+          "topBuffs": [],
+          "buffs": [],
+          "rewards": [
+            {
+              "Action": "",
+              "Data": "sc",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 30000,
+              "MinQuantity": 30000,
+              "Quantity": 30000,
+              "Type": "res"
+            },
+            {
+              "Action": "",
+              "Data": "blueprint_six_chemical",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 2,
+              "MinQuantity": 2,
+              "Quantity": 2,
+              "Type": "ebp"
+            },
+            {
+              "Action": "",
+              "Data": "xp",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 667,
+              "MinQuantity": 667,
+              "Quantity": 667,
+              "Type": "res"
+            }
+          ],
+          "contentSha256": "529c563a0ab1e008d0499e7b6d2f527b3f03019c64a96adb616b2c3d95ed8c22",
+          "sourceObservationSha256s": [
+            "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+          ]
+        },
+        {
+          "towerId": "class_skill",
+          "blockNumber": 63,
+          "floorNumber": 2,
+          "nativeHash": "5eaffea8264990fa24deb68115db2348",
+          "defender": {
+            "blueprint": "maker_t7",
+            "gameId": "maker",
+            "stars": 7,
+            "classId": "tech",
+            "nativeImageId": "",
+            "build": {
+              "AscensionTier": 0,
+              "Blueprint": "maker_t7",
+              "Level": 35,
+              "Rank": 2,
+              "SigLvl": 200
+            }
+          },
+          "aiDifficultyId": "AI_Hardest",
+          "totalLocalBuffCount": 0,
+          "topBuffs": [],
+          "buffs": [],
+          "rewards": [
+            {
+              "Action": "",
+              "Data": "sc",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 30000,
+              "MinQuantity": 30000,
+              "Quantity": 30000,
+              "Type": "res"
+            },
+            {
+              "Action": "",
+              "Data": "blueprint_six_chemical",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 2,
+              "MinQuantity": 2,
+              "Quantity": 2,
+              "Type": "ebp"
+            },
+            {
+              "Action": "",
+              "Data": "xp",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 667,
+              "MinQuantity": 667,
+              "Quantity": 667,
+              "Type": "res"
+            }
+          ],
+          "contentSha256": "757459640a36f2284b4fb916a9ac2a541ff92ace4925c815a48c56c1d3b6e9c6",
+          "sourceObservationSha256s": [
+            "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+          ]
+        },
+        {
+          "towerId": "class_skill",
+          "blockNumber": 63,
+          "floorNumber": 3,
+          "nativeHash": "5eaffea8264990fa24deb68115db2348",
+          "defender": {
+            "blueprint": "red_goblin_t7",
+            "gameId": "red_goblin",
+            "stars": 7,
+            "classId": "cosmic",
+            "nativeImageId": "",
+            "build": {
+              "AscensionTier": 0,
+              "Blueprint": "red_goblin_t7",
+              "Level": 35,
+              "Rank": 2,
+              "SigLvl": 200
+            }
+          },
+          "aiDifficultyId": "AI_Hardest",
+          "totalLocalBuffCount": 0,
+          "topBuffs": [],
+          "buffs": [],
+          "rewards": [
+            {
+              "Action": "",
+              "Data": "sc",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 30000,
+              "MinQuantity": 30000,
+              "Quantity": 30000,
+              "Type": "res"
+            },
+            {
+              "Action": "",
+              "Data": "blueprint_six_chemical",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 2,
+              "MinQuantity": 2,
+              "Quantity": 2,
+              "Type": "ebp"
+            },
+            {
+              "Action": "",
+              "Data": "xp",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 667,
+              "MinQuantity": 667,
+              "Quantity": 667,
+              "Type": "res"
+            }
+          ],
+          "contentSha256": "c07091e8c2fe6add6ae5e16eb9f5ad565d4ef3484e4b6f418926668db1b6e721",
+          "sourceObservationSha256s": [
+            "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+          ]
+        },
+        {
+          "towerId": "class_skill",
+          "blockNumber": 63,
+          "floorNumber": 4,
+          "nativeHash": "5eaffea8264990fa24deb68115db2348",
+          "defender": {
+            "blueprint": "loki_t7",
+            "gameId": "loki",
+            "stars": 7,
+            "classId": "mystic",
+            "nativeImageId": "",
+            "build": {
+              "AscensionTier": 0,
+              "Blueprint": "loki_t7",
+              "Level": 35,
+              "Rank": 2,
+              "SigLvl": 200
+            }
+          },
+          "aiDifficultyId": "AI_Hardest",
+          "totalLocalBuffCount": 0,
+          "topBuffs": [],
+          "buffs": [],
+          "rewards": [
+            {
+              "Action": "",
+              "Data": "sc",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 30000,
+              "MinQuantity": 30000,
+              "Quantity": 30000,
+              "Type": "res"
+            },
+            {
+              "Action": "",
+              "Data": "blueprint_six_chemical",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 2,
+              "MinQuantity": 2,
+              "Quantity": 2,
+              "Type": "ebp"
+            },
+            {
+              "Action": "",
+              "Data": "xp",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 667,
+              "MinQuantity": 667,
+              "Quantity": 667,
+              "Type": "res"
+            }
+          ],
+          "contentSha256": "df3c6e4be00a792512a69f2dec3403f013e5ac67cba2c2504bae3d4f290eb821",
+          "sourceObservationSha256s": [
+            "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+          ]
+        },
+        {
+          "towerId": "class_skill",
+          "blockNumber": 63,
+          "floorNumber": 5,
+          "nativeHash": "5eaffea8264990fa24deb68115db2348",
+          "defender": {
+            "blueprint": "thor_janefoster_t7",
+            "gameId": "thor_janefoster",
+            "stars": 7,
+            "classId": "mystic",
+            "nativeImageId": "",
+            "build": {
+              "AscensionTier": 0,
+              "Blueprint": "thor_janefoster_t7",
+              "Level": 35,
+              "Rank": 2,
+              "SigLvl": 200
+            }
+          },
+          "aiDifficultyId": "AI_Hardest",
+          "totalLocalBuffCount": 0,
+          "topBuffs": [],
+          "buffs": [],
+          "rewards": [
+            {
+              "Action": "",
+              "Data": "sc",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 30000,
+              "MinQuantity": 30000,
+              "Quantity": 30000,
+              "Type": "res"
+            },
+            {
+              "Action": "",
+              "Data": "blueprint_six_chemical",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 2,
+              "MinQuantity": 2,
+              "Quantity": 2,
+              "Type": "ebp"
+            },
+            {
+              "Action": "",
+              "Data": "xp",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 667,
+              "MinQuantity": 667,
+              "Quantity": 667,
+              "Type": "res"
+            }
+          ],
+          "contentSha256": "e82806aa718a9f901c08747e51d7181732b7b001ad4271730a1848934afdd0c9",
+          "sourceObservationSha256s": [
+            "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+          ]
+        },
+        {
+          "towerId": "class_skill",
+          "blockNumber": 63,
+          "floorNumber": 6,
+          "nativeHash": "5eaffea8264990fa24deb68115db2348",
+          "defender": {
+            "blueprint": "nebula_t7",
+            "gameId": "nebula",
+            "stars": 7,
+            "classId": "tech",
+            "nativeImageId": "",
+            "build": {
+              "AscensionTier": 0,
+              "Blueprint": "nebula_t7",
+              "Level": 35,
+              "Rank": 2,
+              "SigLvl": 200
+            }
+          },
+          "aiDifficultyId": "AI_Hardest",
+          "totalLocalBuffCount": 0,
+          "topBuffs": [],
+          "buffs": [],
+          "rewards": [
+            {
+              "Action": "",
+              "Data": "sc",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 30000,
+              "MinQuantity": 30000,
+              "Quantity": 30000,
+              "Type": "res"
+            },
+            {
+              "Action": "",
+              "Data": "blueprint_six_chemical",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 2,
+              "MinQuantity": 2,
+              "Quantity": 2,
+              "Type": "ebp"
+            },
+            {
+              "Action": "",
+              "Data": "xp",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 667,
+              "MinQuantity": 667,
+              "Quantity": 667,
+              "Type": "res"
+            }
+          ],
+          "contentSha256": "968054daa464b81641469f5c05c4953fddb0bfd8725b967dc5f86117648bd3e3",
+          "sourceObservationSha256s": [
+            "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+          ]
+        },
+        {
+          "towerId": "class_skill",
+          "blockNumber": 63,
+          "floorNumber": 7,
+          "nativeHash": "5eaffea8264990fa24deb68115db2348",
+          "defender": {
+            "blueprint": "blackpanther_t7",
+            "gameId": "blackpanther",
+            "stars": 7,
+            "classId": "trained",
+            "nativeImageId": "",
+            "build": {
+              "AscensionTier": 0,
+              "Blueprint": "blackpanther_t7",
+              "Level": 35,
+              "Rank": 2,
+              "SigLvl": 200
+            }
+          },
+          "aiDifficultyId": "AI_Hardest",
+          "totalLocalBuffCount": 0,
+          "topBuffs": [],
+          "buffs": [],
+          "rewards": [
+            {
+              "Action": "",
+              "Data": "sc",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 30000,
+              "MinQuantity": 30000,
+              "Quantity": 30000,
+              "Type": "res"
+            },
+            {
+              "Action": "",
+              "Data": "blueprint_six_chemical",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 2,
+              "MinQuantity": 2,
+              "Quantity": 2,
+              "Type": "ebp"
+            },
+            {
+              "Action": "",
+              "Data": "xp",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 667,
+              "MinQuantity": 667,
+              "Quantity": 667,
+              "Type": "res"
+            }
+          ],
+          "contentSha256": "4271cd9e9aa8d96cdee7a1ccd93485188c99aae0035d1e80d6298294ee2a8bcc",
+          "sourceObservationSha256s": [
+            "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+          ]
+        },
+        {
+          "towerId": "class_skill",
+          "blockNumber": 63,
+          "floorNumber": 8,
+          "nativeHash": "5eaffea8264990fa24deb68115db2348",
+          "defender": {
+            "blueprint": "captainamerica_movie_t7",
+            "gameId": "captainamerica_movie",
+            "stars": 7,
+            "classId": "chemical",
+            "nativeImageId": "",
+            "build": {
+              "AscensionTier": 0,
+              "Blueprint": "captainamerica_movie_t7",
+              "Level": 35,
+              "Rank": 2,
+              "SigLvl": 200
+            }
+          },
+          "aiDifficultyId": "AI_Hardest",
+          "totalLocalBuffCount": 0,
+          "topBuffs": [],
+          "buffs": [],
+          "rewards": [
+            {
+              "Action": "",
+              "Data": "sc",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 30000,
+              "MinQuantity": 30000,
+              "Quantity": 30000,
+              "Type": "res"
+            },
+            {
+              "Action": "",
+              "Data": "blueprint_six_chemical",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 2,
+              "MinQuantity": 2,
+              "Quantity": 2,
+              "Type": "ebp"
+            },
+            {
+              "Action": "",
+              "Data": "xp",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 667,
+              "MinQuantity": 667,
+              "Quantity": 667,
+              "Type": "res"
+            }
+          ],
+          "contentSha256": "a040d3a4bcb6d75c16353bc6973aff5f5deb5a67194e5135be2d594c06d7510e",
+          "sourceObservationSha256s": [
+            "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+          ]
+        },
+        {
+          "towerId": "class_skill",
+          "blockNumber": 63,
+          "floorNumber": 9,
+          "nativeHash": "5eaffea8264990fa24deb68115db2348",
+          "defender": {
+            "blueprint": "gamora_t7",
+            "gameId": "gamora",
+            "stars": 7,
+            "classId": "cosmic",
+            "nativeImageId": "",
+            "build": {
+              "AscensionTier": 0,
+              "Blueprint": "gamora_t7",
+              "Level": 35,
+              "Rank": 2,
+              "SigLvl": 200
+            }
+          },
+          "aiDifficultyId": "AI_Hardest",
+          "totalLocalBuffCount": 0,
+          "topBuffs": [],
+          "buffs": [],
+          "rewards": [
+            {
+              "Action": "",
+              "Data": "sc",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 30000,
+              "MinQuantity": 30000,
+              "Quantity": 30000,
+              "Type": "res"
+            },
+            {
+              "Action": "",
+              "Data": "blueprint_six_chemical",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 2,
+              "MinQuantity": 2,
+              "Quantity": 2,
+              "Type": "ebp"
+            },
+            {
+              "Action": "",
+              "Data": "xp",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 667,
+              "MinQuantity": 667,
+              "Quantity": 667,
+              "Type": "res"
+            }
+          ],
+          "contentSha256": "536fd046fb66fb6a93cc7d22b6fe223f57c1387681430f54bdce57383e0881a6",
+          "sourceObservationSha256s": [
+            "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+          ]
+        },
+        {
+          "towerId": "class_skill",
+          "blockNumber": 63,
+          "floorNumber": 10,
+          "nativeHash": "5eaffea8264990fa24deb68115db2348",
+          "defender": {
+            "blueprint": "jackolantern_t7",
+            "gameId": "jackolantern",
+            "stars": 7,
+            "classId": "tech",
+            "nativeImageId": "",
+            "build": {
+              "AscensionTier": 0,
+              "Blueprint": "jackolantern_t7",
+              "Level": 35,
+              "Rank": 2,
+              "SigLvl": 200
+            }
+          },
+          "aiDifficultyId": "AI_Hardest",
+          "totalLocalBuffCount": 0,
+          "topBuffs": [],
+          "buffs": [],
+          "rewards": [
+            {
+              "Action": "",
+              "Data": "sc",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 30000,
+              "MinQuantity": 30000,
+              "Quantity": 30000,
+              "Type": "res"
+            },
+            {
+              "Action": "",
+              "Data": "blueprint_six_chemical",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 2,
+              "MinQuantity": 2,
+              "Quantity": 2,
+              "Type": "ebp"
+            },
+            {
+              "Action": "",
+              "Data": "xp",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 667,
+              "MinQuantity": 667,
+              "Quantity": 667,
+              "Type": "res"
+            }
+          ],
+          "contentSha256": "23ea15fe5d50f66078e5cfbf09b6d101ba81e8759d423cada5236dafa1dab817",
+          "sourceObservationSha256s": [
+            "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+          ]
+        },
+        {
+          "towerId": "class_skill",
+          "blockNumber": 63,
+          "floorNumber": 11,
+          "nativeHash": "5eaffea8264990fa24deb68115db2348",
+          "defender": {
+            "blueprint": "dracula_t7",
+            "gameId": "dracula",
+            "stars": 7,
+            "classId": "mystic",
+            "nativeImageId": "",
+            "build": {
+              "AscensionTier": 0,
+              "Blueprint": "dracula_t7",
+              "Level": 35,
+              "Rank": 2,
+              "SigLvl": 200
+            }
+          },
+          "aiDifficultyId": "AI_Hardest",
+          "totalLocalBuffCount": 0,
+          "topBuffs": [],
+          "buffs": [],
+          "rewards": [
+            {
+              "Action": "",
+              "Data": "sc",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 30000,
+              "MinQuantity": 30000,
+              "Quantity": 30000,
+              "Type": "res"
+            },
+            {
+              "Action": "",
+              "Data": "blueprint_six_chemical",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 2,
+              "MinQuantity": 2,
+              "Quantity": 2,
+              "Type": "ebp"
+            },
+            {
+              "Action": "",
+              "Data": "xp",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 667,
+              "MinQuantity": 667,
+              "Quantity": 667,
+              "Type": "res"
+            }
+          ],
+          "contentSha256": "78833080b757e6aaa18c6d56af7e4de58a2a78320098dc39055838438cef3de8",
+          "sourceObservationSha256s": [
+            "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+          ]
+        },
+        {
+          "towerId": "class_skill",
+          "blockNumber": 63,
+          "floorNumber": 12,
+          "nativeHash": "5eaffea8264990fa24deb68115db2348",
+          "defender": {
+            "blueprint": "antivenom_t7",
+            "gameId": "antivenom",
+            "stars": 7,
+            "classId": "chemical",
+            "nativeImageId": "",
+            "build": {
+              "AscensionTier": 0,
+              "Blueprint": "antivenom_t7",
+              "Level": 35,
+              "Rank": 2,
+              "SigLvl": 200
+            }
+          },
+          "aiDifficultyId": "AI_Hardest",
+          "totalLocalBuffCount": 0,
+          "topBuffs": [],
+          "buffs": [],
+          "rewards": [
+            {
+              "Action": "",
+              "Data": "sc",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 30000,
+              "MinQuantity": 30000,
+              "Quantity": 30000,
+              "Type": "res"
+            },
+            {
+              "Action": "",
+              "Data": "blueprint_six_chemical",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 2,
+              "MinQuantity": 2,
+              "Quantity": 2,
+              "Type": "ebp"
+            },
+            {
+              "Action": "",
+              "Data": "xp",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 667,
+              "MinQuantity": 667,
+              "Quantity": 667,
+              "Type": "res"
+            }
+          ],
+          "contentSha256": "9ac169abbe86818dc8ae05f78cc073f9e2c5506199f172a93073b25f9633059f",
+          "sourceObservationSha256s": [
+            "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+          ]
+        }
+      ],
+      "coverage": {
+        "capturedFloors": 12,
+        "allDeclaredFloorsCaptured": true
+      }
+    },
+    {
+      "towerId": "class_skill",
+      "blockNumber": 64,
+      "nativeHash": "5eaffea8264990fa24deb68115db2348",
+      "declaredFloorCount": 8,
+      "timeLimit": 0,
+      "topBuffs": [
+        {
+          "displayValue": 0.0,
+          "glyphIcon": "",
+          "id": "towers_rule_timer_1m",
+          "localizedDesc": "At the start of the fight, a {2} second timer starts. If this timer expires, the fight results in a time out. The timer is paused during the Attacker’s first 3 Special Attacks 1 or 2, and it is always paused during Special Attack 3.",
+          "localizedName": "Race to the Finish - 1 Minute",
+          "localizedShortFormat": "",
+          "quantity": 1,
+          "scope": {
+            "value": 2,
+            "name": "User"
+          },
+          "value": 0.0,
+          "valueStr": [
+            "towers_rule_timer_hud_1m",
+            "towers_rule_timer_1m",
+            "towers_rule_timer_atksp_var",
+            "towers_rule_timer_atksp_hud",
+            "towers_rule_timer_atksp_hud_active",
+            "towers_rule_timer_atksp_actseq",
+            "towers_rule_timer_atksp_finseq",
+            "towers_rule_timer_atksp_var_add",
+            "towers_rule_timer_atksp_pause",
+            "towers_rule_timer_atksp_hud_rmv",
+            "towers_rule_timer_atksp_app_active",
+            "towers_rule_timer_atksp_pause_rmv",
+            "towers_rule_timer_atksp_app_active_rmv"
+          ],
+          "valueType": {
+            "value": 3,
+            "name": "String"
+          }
+        },
+        {
+          "displayValue": 0.0,
+          "glyphIcon": "",
+          "id": "towers_rule_dmg",
+          "localizedDesc": "The following [k=glossary/game_rule]Rules of The Contest[/k] are active:\\n • The Defender's damage taken is adjusted based on the difference between the Attacker and Defender's [k=glossary/challenge_rating]Challenge Ratings[/k].\\n • The Defender cannot activate their Special Attack 3.\\n • Both Champion's Attack Rating does not decrease with Class Disadvantage. ",
+          "localizedName": "The Tower Demands Power",
+          "localizedShortFormat": "",
+          "quantity": 1,
+          "scope": {
+            "value": 2,
+            "name": "User"
+          },
+          "value": 0.0,
+          "valueStr": [
+            "towers_rule_dmg_hud",
+            "towers_rule_dmg_inc",
+            "towers_rule_sp3lock_def"
+          ],
+          "valueType": {
+            "value": 3,
+            "name": "String"
+          }
+        }
+      ],
+      "buffs": [
+        {
+          "displayValue": 0.0,
+          "glyphIcon": "",
+          "id": "avx_atk_pct200",
+          "localizedDesc": "[16982bff]+{0}%[-] Attack",
+          "localizedName": "Attack",
+          "localizedShortFormat": "",
+          "quantity": 1,
+          "scope": {
+            "value": 2,
+            "name": "User"
+          },
+          "value": 200.0,
+          "valueStr": [],
+          "valueType": {
+            "value": 1,
+            "name": "Percent"
+          }
+        },
+        {
+          "displayValue": 0.0,
+          "glyphIcon": "",
+          "id": "avx_hp_pct2000",
+          "localizedDesc": "[16982bff]+{0}%[-] Health",
+          "localizedName": "Health",
+          "localizedShortFormat": "",
+          "quantity": 1,
+          "scope": {
+            "value": 2,
+            "name": "User"
+          },
+          "value": 2000.0,
+          "valueStr": [],
+          "valueType": {
+            "value": 1,
+            "name": "Percent"
+          }
+        },
+        {
+          "displayValue": 0.0,
+          "glyphIcon": "",
+          "id": "avx_hp_pct400",
+          "localizedDesc": "[16982bff]+{0}%[-] Health",
+          "localizedName": "Health",
+          "localizedShortFormat": "",
+          "quantity": 1,
+          "scope": {
+            "value": 2,
+            "name": "User"
+          },
+          "value": 400.0,
+          "valueStr": [],
+          "valueType": {
+            "value": 1,
+            "name": "Percent"
+          }
+        }
+      ],
+      "entryCost": [
+        {
+          "Action": "",
+          "Data": "tower_energy",
+          "Footer": "",
+          "Header": "",
+          "MaxQuantity": 1,
+          "MinQuantity": 1,
+          "Quantity": 1,
+          "Type": "res"
+        }
+      ],
+      "rewards": [
+        {
+          "Action": "",
+          "Data": "7_star_hero_shard_crystal",
+          "Footer": "",
+          "Header": "",
+          "MaxQuantity": 1500,
+          "MinQuantity": 1500,
+          "Quantity": 1500,
+          "Type": "gf"
+        },
+        {
+          "Action": "",
+          "Data": "uncommon_event",
+          "Footer": "",
+          "Header": "",
+          "MaxQuantity": 1,
+          "MinQuantity": 1,
+          "Quantity": 1,
+          "Type": "ebp"
+        },
+        {
+          "Action": "",
+          "Data": "epic_chemical",
+          "Footer": "",
+          "Header": "",
+          "MaxQuantity": 1,
+          "MinQuantity": 1,
+          "Quantity": 1,
+          "Type": "ebp"
+        }
+      ],
+      "ratingRewards": [
+        {
+          "Action": "",
+          "Data": "twr",
+          "Footer": "",
+          "Header": "",
+          "MaxQuantity": 1,
+          "MinQuantity": 1,
+          "Quantity": 1,
+          "Type": "gsi"
+        },
+        {
+          "Action": "",
+          "Data": "tsk",
+          "Footer": "",
+          "Header": "",
+          "MaxQuantity": 1,
+          "MinQuantity": 1,
+          "Quantity": 1,
+          "Type": "gsi"
+        }
+      ],
+      "heroRestrictions": [
+        "trained"
+      ],
+      "contentSha256": "85cb97afd103000a00c2e5554e29cba6efb2fd15f2a414bb4ae024343287ca6b",
+      "sourceObservationSha256s": [
+        "e3cc9786421e25326ebfa537944dde675d7394ac46c72b061c77ecddeba952b8",
+        "8e2bb659c688ecf17aab00dd65680e11b206d735fb35a1a93547e514d3a1eac1",
+        "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+      ],
+      "towerName": "SKILL TOWER",
+      "floors": [
+        {
+          "towerId": "class_skill",
+          "blockNumber": 64,
+          "floorNumber": 1,
+          "nativeHash": "5eaffea8264990fa24deb68115db2348",
+          "defender": {
+            "blueprint": "ironman_silvercenturion_t7",
+            "gameId": "ironman_silvercenturion",
+            "stars": 7,
+            "classId": "tech",
+            "nativeImageId": "",
+            "build": {
+              "AscensionTier": 0,
+              "Blueprint": "ironman_silvercenturion_t7",
+              "Level": 45,
+              "Rank": 3,
+              "SigLvl": 200
+            }
+          },
+          "aiDifficultyId": "AI_Hardest",
+          "totalLocalBuffCount": 0,
+          "topBuffs": [],
+          "buffs": [],
+          "rewards": [
+            {
+              "Action": "",
+              "Data": "sc",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 30000,
+              "MinQuantity": 30000,
+              "Quantity": 30000,
+              "Type": "res"
+            },
+            {
+              "Action": "",
+              "Data": "blueprint_six_chemical",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 2,
+              "MinQuantity": 2,
+              "Quantity": 2,
+              "Type": "ebp"
+            },
+            {
+              "Action": "",
+              "Data": "xp",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 667,
+              "MinQuantity": 667,
+              "Quantity": 667,
+              "Type": "res"
+            }
+          ],
+          "contentSha256": "d35a1c04cc67a611618fe7007a752f16ca39e3b752f69c4b5789dc2607c58ed0",
+          "sourceObservationSha256s": [
+            "e3cc9786421e25326ebfa537944dde675d7394ac46c72b061c77ecddeba952b8",
+            "8e2bb659c688ecf17aab00dd65680e11b206d735fb35a1a93547e514d3a1eac1",
+            "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+          ]
+        },
+        {
+          "towerId": "class_skill",
+          "blockNumber": 64,
+          "floorNumber": 2,
+          "nativeHash": "5eaffea8264990fa24deb68115db2348",
+          "defender": {
+            "blueprint": "hawkeye_t7",
+            "gameId": "hawkeye",
+            "stars": 7,
+            "classId": "trained",
+            "nativeImageId": "",
+            "build": {
+              "AscensionTier": 0,
+              "Blueprint": "hawkeye_t7",
+              "Level": 45,
+              "Rank": 3,
+              "SigLvl": 200
+            }
+          },
+          "aiDifficultyId": "AI_Hardest",
+          "totalLocalBuffCount": 0,
+          "topBuffs": [],
+          "buffs": [],
+          "rewards": [
+            {
+              "Action": "",
+              "Data": "sc",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 30000,
+              "MinQuantity": 30000,
+              "Quantity": 30000,
+              "Type": "res"
+            },
+            {
+              "Action": "",
+              "Data": "blueprint_six_chemical",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 2,
+              "MinQuantity": 2,
+              "Quantity": 2,
+              "Type": "ebp"
+            },
+            {
+              "Action": "",
+              "Data": "xp",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 667,
+              "MinQuantity": 667,
+              "Quantity": 667,
+              "Type": "res"
+            }
+          ],
+          "contentSha256": "a00d7c09ebb384003244e590e0631cea1773cc31610d228e98b89579774bc691",
+          "sourceObservationSha256s": [
+            "e3cc9786421e25326ebfa537944dde675d7394ac46c72b061c77ecddeba952b8",
+            "8e2bb659c688ecf17aab00dd65680e11b206d735fb35a1a93547e514d3a1eac1",
+            "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+          ]
+        },
+        {
+          "towerId": "class_skill",
+          "blockNumber": 64,
+          "floorNumber": 3,
+          "nativeHash": "5eaffea8264990fa24deb68115db2348",
+          "defender": {
+            "blueprint": "vision_t7",
+            "gameId": "vision",
+            "stars": 7,
+            "classId": "tech",
+            "nativeImageId": "",
+            "build": {
+              "AscensionTier": 0,
+              "Blueprint": "vision_t7",
+              "Level": 45,
+              "Rank": 3,
+              "SigLvl": 200
+            }
+          },
+          "aiDifficultyId": "AI_Hardest",
+          "totalLocalBuffCount": 0,
+          "topBuffs": [],
+          "buffs": [],
+          "rewards": [
+            {
+              "Action": "",
+              "Data": "sc",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 30000,
+              "MinQuantity": 30000,
+              "Quantity": 30000,
+              "Type": "res"
+            },
+            {
+              "Action": "",
+              "Data": "blueprint_six_chemical",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 2,
+              "MinQuantity": 2,
+              "Quantity": 2,
+              "Type": "ebp"
+            },
+            {
+              "Action": "",
+              "Data": "xp",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 667,
+              "MinQuantity": 667,
+              "Quantity": 667,
+              "Type": "res"
+            }
+          ],
+          "contentSha256": "050cd8e96f56da8b8d7519c147b8c68977b98a96f5495447fd2358b4be4f8747",
+          "sourceObservationSha256s": [
+            "e3cc9786421e25326ebfa537944dde675d7394ac46c72b061c77ecddeba952b8",
+            "8e2bb659c688ecf17aab00dd65680e11b206d735fb35a1a93547e514d3a1eac1",
+            "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+          ]
+        },
+        {
+          "towerId": "class_skill",
+          "blockNumber": 64,
+          "floorNumber": 4,
+          "nativeHash": "5eaffea8264990fa24deb68115db2348",
+          "defender": {
+            "blueprint": "diablo_t7",
+            "gameId": "diablo",
+            "stars": 7,
+            "classId": "mystic",
+            "nativeImageId": "",
+            "build": {
+              "AscensionTier": 0,
+              "Blueprint": "diablo_t7",
+              "Level": 45,
+              "Rank": 3,
+              "SigLvl": 200
+            }
+          },
+          "aiDifficultyId": "AI_Hardest",
+          "totalLocalBuffCount": 0,
+          "topBuffs": [],
+          "buffs": [],
+          "rewards": [
+            {
+              "Action": "",
+              "Data": "sc",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 30000,
+              "MinQuantity": 30000,
+              "Quantity": 30000,
+              "Type": "res"
+            },
+            {
+              "Action": "",
+              "Data": "blueprint_six_chemical",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 2,
+              "MinQuantity": 2,
+              "Quantity": 2,
+              "Type": "ebp"
+            },
+            {
+              "Action": "",
+              "Data": "xp",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 667,
+              "MinQuantity": 667,
+              "Quantity": 667,
+              "Type": "res"
+            }
+          ],
+          "contentSha256": "05a6b9b2a588a505352ac20823e1853de75cbe6694805f8102e19091ed8f2598",
+          "sourceObservationSha256s": [
+            "e3cc9786421e25326ebfa537944dde675d7394ac46c72b061c77ecddeba952b8",
+            "8e2bb659c688ecf17aab00dd65680e11b206d735fb35a1a93547e514d3a1eac1",
+            "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+          ]
+        },
+        {
+          "towerId": "class_skill",
+          "blockNumber": 64,
+          "floorNumber": 5,
+          "nativeHash": "5eaffea8264990fa24deb68115db2348",
+          "defender": {
+            "blueprint": "loki_t7",
+            "gameId": "loki",
+            "stars": 7,
+            "classId": "mystic",
+            "nativeImageId": "",
+            "build": {
+              "AscensionTier": 0,
+              "Blueprint": "loki_t7",
+              "Level": 45,
+              "Rank": 3,
+              "SigLvl": 200
+            }
+          },
+          "aiDifficultyId": "AI_Hardest",
+          "totalLocalBuffCount": 0,
+          "topBuffs": [],
+          "buffs": [],
+          "rewards": [
+            {
+              "Action": "",
+              "Data": "sc",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 30000,
+              "MinQuantity": 30000,
+              "Quantity": 30000,
+              "Type": "res"
+            },
+            {
+              "Action": "",
+              "Data": "blueprint_six_chemical",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 2,
+              "MinQuantity": 2,
+              "Quantity": 2,
+              "Type": "ebp"
+            },
+            {
+              "Action": "",
+              "Data": "xp",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 667,
+              "MinQuantity": 667,
+              "Quantity": 667,
+              "Type": "res"
+            }
+          ],
+          "contentSha256": "f8e1350535fc2d5f1a214ac1dd3a62ce5dc80b61b2bb90e7318974a5a281b617",
+          "sourceObservationSha256s": [
+            "e3cc9786421e25326ebfa537944dde675d7394ac46c72b061c77ecddeba952b8",
+            "8e2bb659c688ecf17aab00dd65680e11b206d735fb35a1a93547e514d3a1eac1",
+            "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+          ]
+        },
+        {
+          "towerId": "class_skill",
+          "blockNumber": 64,
+          "floorNumber": 6,
+          "nativeHash": "5eaffea8264990fa24deb68115db2348",
+          "defender": {
+            "blueprint": "hulk_red_t7",
+            "gameId": "hulk_red",
+            "stars": 7,
+            "classId": "chemical",
+            "nativeImageId": "",
+            "build": {
+              "AscensionTier": 0,
+              "Blueprint": "hulk_red_t7",
+              "Level": 45,
+              "Rank": 3,
+              "SigLvl": 200
+            }
+          },
+          "aiDifficultyId": "AI_Hardest",
+          "totalLocalBuffCount": 0,
+          "topBuffs": [],
+          "buffs": [],
+          "rewards": [
+            {
+              "Action": "",
+              "Data": "sc",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 30000,
+              "MinQuantity": 30000,
+              "Quantity": 30000,
+              "Type": "res"
+            },
+            {
+              "Action": "",
+              "Data": "blueprint_six_chemical",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 2,
+              "MinQuantity": 2,
+              "Quantity": 2,
+              "Type": "ebp"
+            },
+            {
+              "Action": "",
+              "Data": "xp",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 667,
+              "MinQuantity": 667,
+              "Quantity": 667,
+              "Type": "res"
+            }
+          ],
+          "contentSha256": "435fa68d38746f6802cfdb0dc2aaacba118b573e7c5ae916f2cf1d5e1e821f1e",
+          "sourceObservationSha256s": [
+            "e3cc9786421e25326ebfa537944dde675d7394ac46c72b061c77ecddeba952b8",
+            "8e2bb659c688ecf17aab00dd65680e11b206d735fb35a1a93547e514d3a1eac1",
+            "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+          ]
+        },
+        {
+          "towerId": "class_skill",
+          "blockNumber": 64,
+          "floorNumber": 7,
+          "nativeHash": "5eaffea8264990fa24deb68115db2348",
+          "defender": {
+            "blueprint": "taskmaster_t7",
+            "gameId": "taskmaster",
+            "stars": 7,
+            "classId": "trained",
+            "nativeImageId": "",
+            "build": {
+              "AscensionTier": 0,
+              "Blueprint": "taskmaster_t7",
+              "Level": 45,
+              "Rank": 3,
+              "SigLvl": 200
+            }
+          },
+          "aiDifficultyId": "AI_Hardest",
+          "totalLocalBuffCount": 0,
+          "topBuffs": [],
+          "buffs": [],
+          "rewards": [
+            {
+              "Action": "",
+              "Data": "sc",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 30000,
+              "MinQuantity": 30000,
+              "Quantity": 30000,
+              "Type": "res"
+            },
+            {
+              "Action": "",
+              "Data": "blueprint_six_chemical",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 2,
+              "MinQuantity": 2,
+              "Quantity": 2,
+              "Type": "ebp"
+            },
+            {
+              "Action": "",
+              "Data": "xp",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 667,
+              "MinQuantity": 667,
+              "Quantity": 667,
+              "Type": "res"
+            }
+          ],
+          "contentSha256": "cf5d13e4365ddd249483449597c59a9192f3cde8b398e38722b80847e7a40189",
+          "sourceObservationSha256s": [
+            "e3cc9786421e25326ebfa537944dde675d7394ac46c72b061c77ecddeba952b8",
+            "8e2bb659c688ecf17aab00dd65680e11b206d735fb35a1a93547e514d3a1eac1",
+            "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+          ]
+        },
+        {
+          "towerId": "class_skill",
+          "blockNumber": 64,
+          "floorNumber": 8,
+          "nativeHash": "5eaffea8264990fa24deb68115db2348",
+          "defender": {
+            "blueprint": "red_goblin_t7",
+            "gameId": "red_goblin",
+            "stars": 7,
+            "classId": "cosmic",
+            "nativeImageId": "",
+            "build": {
+              "AscensionTier": 0,
+              "Blueprint": "red_goblin_t7",
+              "Level": 45,
+              "Rank": 3,
+              "SigLvl": 200
+            }
+          },
+          "aiDifficultyId": "AI_Hardest",
+          "totalLocalBuffCount": 0,
+          "topBuffs": [],
+          "buffs": [],
+          "rewards": [
+            {
+              "Action": "",
+              "Data": "sc",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 30000,
+              "MinQuantity": 30000,
+              "Quantity": 30000,
+              "Type": "res"
+            },
+            {
+              "Action": "",
+              "Data": "blueprint_six_chemical",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 2,
+              "MinQuantity": 2,
+              "Quantity": 2,
+              "Type": "ebp"
+            },
+            {
+              "Action": "",
+              "Data": "xp",
+              "Footer": "",
+              "Header": "",
+              "MaxQuantity": 667,
+              "MinQuantity": 667,
+              "Quantity": 667,
+              "Type": "res"
+            }
+          ],
+          "contentSha256": "f2a22e9cff88df732671470f0bf8b9e36fedd467b2aad5398dba91a57aa20d9f",
+          "sourceObservationSha256s": [
+            "e3cc9786421e25326ebfa537944dde675d7394ac46c72b061c77ecddeba952b8",
+            "8e2bb659c688ecf17aab00dd65680e11b206d735fb35a1a93547e514d3a1eac1",
+            "88753f58de5d781fd178f78b70046b817bc2f47e242faba5e582e34c6cf44992"
+          ]
+        }
+      ],
+      "coverage": {
+        "capturedFloors": 8,
+        "allDeclaredFloorsCaptured": true
+      }
+    }
+  ],
+  "coverage": {
+    "capturedTowers": 1,
+    "capturedBlocks": 2,
+    "capturedFloors": 20,
+    "completeTowerCoverage": false,
+    "currentAccessOrRewardEligibilityEstablished": false
+  }
+}

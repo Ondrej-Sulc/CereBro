@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "../../src/domain/game-quests/unplaced-defenders.ts",
+    "../../src/data/game-quests/unplaced-defenders.ts",
+    "../../src/tests/game-quests/unplaced-defenders.test.ts",
+    "../../web/src/components/game-quests/quest-unplaced-defenders.tsx",
+    "../../web/src/components/game-quests/quest-unplaced-defenders.test.tsx",
+    "../../web/next-env.d.ts"
+  ]
+}

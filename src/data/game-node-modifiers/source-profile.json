@@ -1,0 +1,63 @@
+{
+  "id": "59.1.0-five-map-sample-v1",
+  "gameVersion": "59.1.0 / CL 1456141",
+  "gameAssemblySha256": "01f46bb2e36c2160a8df939bbb080bcf2ee89ca15427692a10334efc90fd4abb",
+  "bcgSha256": "b821489b5451d1d6ee0927f39a80d964f6c1d3aaf13bd76531e5f77d93deba8e",
+  "schemaSha256": "9cc5236aef043cf7e5655458e790ed1f0897f67398e37af3020bca74511e97c4",
+  "inputs": [
+    {
+      "id": "preview-sample",
+      "path": "continuation/runtime-supply.json",
+      "sha256": "f6182a313124da16011faf9123b94dc6066418f4b7484606858d5601583ae04d",
+      "capturedAt": "2026-11-05T09:05:33.921140+00:00",
+      "pointers": [
+        "/pveSets/1/QuestMaps/pve_nov2026_1_prg4",
+        "/pveSets/8/QuestMaps/daily_supply_run3_1_1",
+        "/pveSets/9/QuestMaps/a05_ch01_q01",
+        "/pveSets/9/QuestMaps/p01_ch01_q01"
+      ]
+    },
+    {
+      "id": "culmination-sample",
+      "path": "expansion/maps/a04_ch04_q06.json",
+      "sha256": "f763b0599012425c08c8a0897d535e580c4376118eb9bea1a09df08b01506dab",
+      "capturedAt": "2026-11-05T11:06:49.078698+00:00",
+      "pointers": [
+        "/map"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "path": "Fuse.Runtime/EB/Sparx/Buff.txt",
+      "sha256": "cb2ae5ff6b6094f4f451dc98f401e9422dd45bff53a93abe5f6ee5cfc3069876",
+      "contract": "EB.Sparx.Buff definition fields"
+    },
+    {
+      "path": "Marvel.Runtime/QuestBuffData.txt",
+      "sha256": "b932f0319cc590a48e25dcc4170c3a585ef0b96828ab2143ed8cbb63affbec58",
+      "contract": "QuestBuffData constructor -> BCG stat modifier lookup -> GameUtils.GetFormattedLocalizedBuff"
+    },
+    {
+      "path": "Marvel.Runtime/QuestTypedBuffData.txt",
+      "sha256": "7e5c6a1638e677bee38911e541d5d20cebaddcbb1a5fddce3b7324385fd79593",
+      "contract": "type / buffs / bt / attk / remainActive"
+    },
+    {
+      "path": "Marvel.Runtime/GameUtils.txt",
+      "sha256": "ffe57f22130dc1bf441b300a99b9a1fe4c11bc087c82511b7aa40075a6192f8d",
+      "contract": "GetFormattedLocalizedBuff positional formatter"
+    }
+  ],
+  "coverage": "Reusable Buff definitions observed in five saved PvE map samples. Not all quest nodes, current availability, active combat state or a quest occurrence index.",
+  "metadata": [
+    {
+      "path": "D:\\CodexArtifacts\\Cpp2IL-2026-11-03-addresses\\Marvel.Runtime.dll",
+      "sha256": "d1b1085922513073b9dcd656aa08ee70e01a7aef1433aa35876fdfba463278b5"
+    },
+    {
+      "path": "D:\\CodexArtifacts\\Cpp2IL-2026-11-03-addresses\\Fuse.Runtime.dll",
+      "sha256": "c7296f9c50334d3f12ece5ae2e7c9566d6965cc355c9eecad8af8acfe561a24b"
+    }
+  ]
+}

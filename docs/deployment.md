@@ -3,6 +3,15 @@
 ## Hosting
 *   **Platform:** [Railway](https://railway.app/)
 *   **Pipeline:** Continuous deployment from `main` branch.
+*   **Beta:** `dev` deploys to https://dev.cerebro-bot.com/. Main-to-dev synchronization is fast-forward only; beta-only commits are preserved. When histories diverge, review and merge main into dev explicitly.
+
+## Beta catalog release prerequisites
+
+* The web image uses Node 24, including the built-in SQLite reader required by `/assets`.
+* Apply pending Prisma migrations to the beta database with `prisma migrate deploy` before deploying matching web/bot clients. The node-icon change adds nullable `NodeModifier.iconKey`; it does not assign icons to existing curated records.
+* The artwork library is provisioned separately from Git and the Docker build. Mount its persistent volume at `/game-artwork` and set server-only `GAME_ARTWORK_LIBRARY_ROOT` to a verified immutable snapshot containing `catalog.sqlite`, `originals/` and `previews/`. Keep the checked-in search projection matched to the catalog hash. Verify SQLite read-only access as the runtime user, including required WAL sidecars, before switching the configured snapshot.
+* Audit beta public data before testing glossary/champion pages. A refresh must preserve beta accounts, rosters, plans, configuration and duel review state. Back up the affected public tables, check source identities and incoming references, rehearse the complete transaction with rollback, then verify imported semantic hashes and protected records. Retain legacy tag memberships required by existing plans/tactics.
+* Portable feature tests run explicitly in CI. Source-reproduction tests needing ignored local captures are kept separate; never use broad Python discovery patterns that can import live acquisition readers.
 
 ## Docker Strategy
 We use separate, optimized `Dockerfile`s for the Bot and Web services.

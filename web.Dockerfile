@@ -2,7 +2,7 @@
 
 # ---- Base ----
 # Sets up Node.js and pnpm.
-FROM node:20 AS base
+FROM node:24 AS base
 RUN npm install -g pnpm
 WORKDIR /usr/src/app
 

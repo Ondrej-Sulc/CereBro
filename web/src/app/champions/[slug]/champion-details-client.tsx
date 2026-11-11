@@ -1,5 +1,7 @@
 "use client"
 
+import { ChampionQuestEncounterLink } from "@/components/game-quests/champion-quest-encounter-link"
+
 import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react"
@@ -233,6 +235,7 @@ function ChampionDossier({ view, pageState, updatePageState }: {
           <TabsContent value="overview" className="mt-0 pb-8 pt-10">
             <ChampionKitOverview view={view} onViewAbility={openAbility} onViewSynergies={openSynergy} sideContent={view.champion.duels.length > 0 ? <DossierDuelTargets view={view} /> : undefined} />
             <DossierTraits view={view} />
+            <ChampionQuestEncounterLink gameId={view.champion.gameId} />
           </TabsContent>
           <TabsContent value="abilities" className="mt-0 pb-8 pt-10"><ChampionAbilityReader view={view} targetRecordId={pageState.ability} chapter={pageState.chapter} onSelectChapter={openChapter} onClearTarget={() => updatePageState({ ability: null, chapter: null })} /></TabsContent>
           <TabsContent value="synergies" className="mt-0 pb-8 pt-10"><DossierSynergies view={view} targetSynergyId={pageState.synergy} onClearTarget={() => updatePageState({ synergy: null }, true)} /></TabsContent>

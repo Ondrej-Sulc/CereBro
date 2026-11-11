@@ -1,0 +1,202 @@
+{
+  "contract": "cerebro.node-modifier-icon-bindings/v1",
+  "artworkHash": "8535579eb5632af602d08fda20a9b1ad6d9d397b170826bfdad34a97ac8a39e7",
+  "modifierCatalogHash": "44a46a495706db85a4ae0b4372fa666aca0dde5ff81133e591e1d1288bb0be56",
+  "bindings": [
+    {
+      "effectId": "ava_aup40",
+      "versionHash": "4e83cad19bbab063276f3f0c957719ad5c1ac7c9b280c6150efc1a64a725511c",
+      "iconKey": "node-glyph-3f46e2ebb3c0fad7"
+    },
+    {
+      "effectId": "ava_bld40",
+      "versionHash": "8fc8ac383d8bfb22d52fb4f34aa449e808b359cbe9981ad807a36952577d1261",
+      "iconKey": "node-glyph-2349c9afa7eec0e2"
+    },
+    {
+      "effectId": "ava_ea20",
+      "versionHash": "828ee14b7dbd77eb4dfed50afa06fb97aa1b6256b4d7ce8169999cda5e363799",
+      "iconKey": "node-glyph-477f2bd631f24ebc"
+    },
+    {
+      "effectId": "ava_fry40",
+      "versionHash": "6bd3632c590c3b4716098532810d230c5829b2bc46cf054d33f9db1686de9ea7",
+      "iconKey": "node-glyph-bfd147f2739b13be"
+    },
+    {
+      "effectId": "ava_nrg40",
+      "versionHash": "7be03f41ec686bbc6e45fe85c475e9a60ddc4d7930d19f79b93334dc83e6d916",
+      "iconKey": "node-glyph-32b114fe8f5bdc56"
+    },
+    {
+      "effectId": "ava_phys40",
+      "versionHash": "c729f58e556119008d85aed993de08759bbade87ed1dfbda03a34ea5388853f6",
+      "iconKey": "node-glyph-f8cbcbee6445a8f2"
+    },
+    {
+      "effectId": "ava_plaguedmind",
+      "versionHash": "9c690a89971bf673600c8aa565ffb3a54e5b9b424c4c3caf70786e198c954ca8",
+      "iconKey": "node-glyph-4998954789e54d5d"
+    },
+    {
+      "effectId": "ava_sp1",
+      "versionHash": "d70240de1b5316ca9b7283bdcb3538dccff8e25427e359972728379044196fd5",
+      "iconKey": "node-glyph-0ab3897949db529c"
+    },
+    {
+      "effectId": "ava_sp2",
+      "versionHash": "f62413075f492c8907d73095087082d8a0977043cd89d0a638edc82055f74c53",
+      "iconKey": "node-glyph-0ab3897949db529c"
+    },
+    {
+      "effectId": "ava_use_sp2",
+      "versionHash": "d487dac42bb73b286a6afa1eea3504be5e4462f2250ec0b50b695151379a5efd",
+      "iconKey": "node-glyph-0ab3897949db529c"
+    },
+    {
+      "effectId": "avx_al45",
+      "versionHash": "1a7349652018dc3f084ab25100b14b20e2512ded401e0693bed16a55e690af2a",
+      "iconKey": "node-glyph-3f46e2ebb3c0fad7"
+    },
+    {
+      "effectId": "avx_atk_pct400",
+      "versionHash": "40bf15c5af954c05a2abc80bbb8fca0f897367ddd16add8d777c7bbf7236210f",
+      "iconKey": "node-glyph-bfd147f2739b13be"
+    },
+    {
+      "effectId": "avx_hblk2",
+      "versionHash": "9c88bcc84edc4174d43a9574da7dba1e667655919aefc9ba01fc7bcb6e60c3e5",
+      "iconKey": "node-glyph-c39a12cc9e994fa4"
+    },
+    {
+      "effectId": "avx_hp_pct200",
+      "versionHash": "f7dbf7d60137415c106b4ca4b780a5b9b9b6b4fae6c35f38e42f8b5a18c7be30",
+      "iconKey": "node-glyph-e101e5101ef5c624"
+    },
+    {
+      "effectId": "avx_hp_pct600",
+      "versionHash": "e0da26ddbff4391c2511aa4bba572549891d9dfcbaa57710ec91ef680e3d2d31",
+      "iconKey": "node-glyph-e101e5101ef5c624"
+    },
+    {
+      "effectId": "avx_hp_pct_150",
+      "versionHash": "3a3e59107304449639cbb9e8f5a18ab6f09585bec04db181496464c29212a594",
+      "iconKey": "node-glyph-e101e5101ef5c624"
+    },
+    {
+      "effectId": "avx_hpatk_pct100",
+      "versionHash": "a6385219dfc1525bfc04b5fc210cde8881c86044297817f1a3bf19bdebb730ed",
+      "iconKey": "node-glyph-cd5aeddd95119f26"
+    },
+    {
+      "effectId": "avx_hpatk_pct400",
+      "versionHash": "1bf7a7b4a9273cef4be66c1c0a7f6a264294716e1041c254fae32d52b0d0c830",
+      "iconKey": "node-glyph-cd5aeddd95119f26"
+    },
+    {
+      "effectId": "avx_imn_stn",
+      "versionHash": "da30d2855ee5d36cf3562620c9d2b1ab3c053917348c9287e8c6315349bc584e",
+      "iconKey": "node-glyph-1f0973aa57159892"
+    },
+    {
+      "effectId": "avx_optimist",
+      "versionHash": "27539f0cc839761651b1de62c03350d1f94ecfb3889676cd3405aa24dfbd997e",
+      "iconKey": "node-glyph-3f46e2ebb3c0fad7"
+    },
+    {
+      "effectId": "avx_pdrn",
+      "versionHash": "041e4a69039ced53a966089f41124ad03d043d8e6487527551344647edac7665",
+      "iconKey": "node-glyph-4998954789e54d5d"
+    },
+    {
+      "effectId": "avx_pwr50per_opp",
+      "versionHash": "b5c0f99c4135fc6c8d189f94bcfeb6c10998dc544bb7d02c9b12adc4950bccd6",
+      "iconKey": "node-glyph-32b114fe8f5bdc56"
+    },
+    {
+      "effectId": "avx_recovery_50",
+      "versionHash": "45489992393012d1f6ca66550e4efb4adbcfd41d5ce813d98bb92433f0a83daf",
+      "iconKey": "node-glyph-a33887703bfe3a85"
+    },
+    {
+      "effectId": "avx_tru",
+      "versionHash": "fac51b061da0de42bfeaf042d62ff6421ef2d8f58ab0b9399a7cf9a1bfa8a3d1",
+      "iconKey": "node-glyph-d0f5774256ee6c5b"
+    },
+    {
+      "effectId": "m_en_critstats",
+      "versionHash": "af9c124bf5823709ceaaff9aaa31ffcd5c49db8a57575217099728745ef624df",
+      "iconKey": "node-glyph-5e5a00fef863656f"
+    },
+    {
+      "effectId": "pve_ai_sp3",
+      "versionHash": "a864c50c8272f459f115c37e421654f3e7167f6523c886fd417f12c678a0e382",
+      "iconKey": "node-glyph-0ab3897949db529c"
+    },
+    {
+      "effectId": "pve_ai_sp3_0pi",
+      "versionHash": "4909196572a9e53709181afd24ff555bb53e1de5fb75e3165923ebdd44244d42",
+      "iconKey": "node-glyph-0ab3897949db529c"
+    },
+    {
+      "effectId": "pve_arctimer",
+      "versionHash": "e549e342db4b30d5e9014d75adcf7bd216e7a894ada50f7d4614c88431be49d8",
+      "iconKey": "node-glyph-261d334a32765a6b"
+    },
+    {
+      "effectId": "pve_disarray",
+      "versionHash": "e08cb8632c9b94144a7e224fcb66bc0b349613a5fae24e09506b16d7bc2010be",
+      "iconKey": "node-glyph-c48bf6012518c634"
+    },
+    {
+      "effectId": "pve_flare",
+      "versionHash": "e823cba8b8cfe8ce9203602f5fc2db94449158a6ec7c54eca48f959417c03ce7",
+      "iconKey": "node-glyph-bfd147f2739b13be"
+    },
+    {
+      "effectId": "pve_godslayer",
+      "versionHash": "14fc73af1195d7aabb33c4ef22cb138522197eac7e15bf4c4b722f0df94b4cae",
+      "iconKey": "node-glyph-4042ae448280318f"
+    },
+    {
+      "effectId": "pve_lunatic",
+      "versionHash": "1ad30f7366c51cd5e536babba88ede19b2d3de2df4dc614dd9d82a346f9e7839",
+      "iconKey": "node-glyph-9ed248cb1fb8312a"
+    },
+    {
+      "effectId": "pve_maestro8",
+      "versionHash": "00bf3bdb49dca348647270005345a825e22e8a025dcc27906aa00568b019ecc4",
+      "iconKey": "node-glyph-bfd147f2739b13be"
+    },
+    {
+      "effectId": "pve_parry_v2",
+      "versionHash": "04ee198ca77da9e648049045d0ba73841a082ddcf06c01fe86d90a7666ca545c",
+      "iconKey": "node-glyph-1f0973aa57159892"
+    },
+    {
+      "effectId": "pve_pwrlock_dur",
+      "versionHash": "7a45680ed88c29312308cdc77c3da3d2b9086eaf842dd3bb3111086286065603",
+      "iconKey": "node-glyph-fb51b214c4b62596"
+    },
+    {
+      "effectId": "pve_skill_ascend_1",
+      "versionHash": "ad4757d845b06bd361dd8b94e33754fa7c4ea263c8d00c3127fbdc457b1dc9b9",
+      "iconKey": "node-glyph-171a95cdb61d3802"
+    },
+    {
+      "effectId": "pve_stupefy",
+      "versionHash": "6552d7ed750afb2f9912e7b2c87e616bb3af2d2ca7274617da031f4e914606a2",
+      "iconKey": "node-glyph-ebd297b98de2ada4"
+    },
+    {
+      "effectId": "pve_transduce",
+      "versionHash": "4df75d329f384afc1b7d10921580c236800c081f6034ff1652c3cd1aa6e2c8b6",
+      "iconKey": "node-glyph-d481ed80c676261b"
+    },
+    {
+      "effectId": "saga_boost_aspect_of_strength",
+      "versionHash": "f17a2dd9401f18b0554e490d26e641e50d12239fa090a816d3099ed4fd1975d6",
+      "iconKey": "node-glyph-2d9bfaedd4e3ab28"
+    }
+  ]
+}

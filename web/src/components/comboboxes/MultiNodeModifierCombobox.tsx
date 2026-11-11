@@ -1,5 +1,6 @@
 "use client"
 
+import { NodeModifierIcon } from "@/components/nodes/NodeModifierIcon";
 import * as React from "react"
 import { ChevronsUpDown, X } from "lucide-react"
 import Fuse from "fuse.js"
@@ -85,7 +86,7 @@ export const MultiNodeModifierCombobox = React.memo(function MultiNodeModifierCo
                         {selectedModifiers.length > 0 ? (
                             selectedModifiers.map(modifier => (
                                 <Badge key={modifier.id} variant="secondary" className="pl-2 pr-1 py-0.5 h-7 flex items-center gap-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700">
-                                    <span className="text-xs font-bold max-w-[120px] truncate">{modifier.name}</span>
+                                    <NodeModifierIcon iconKey={modifier.iconKey} size={14} /><span className="text-xs font-bold max-w-[120px] truncate">{modifier.name}</span>
                                     <span
                                         role="button"
                                         tabIndex={0}
@@ -144,7 +145,7 @@ export const MultiNodeModifierCombobox = React.memo(function MultiNodeModifierCo
                                         className={cn("flex flex-col items-start gap-1 cursor-pointer py-2", isSelected && "bg-slate-800 text-slate-100")}
                                     >
                                         <div className="flex items-center w-full justify-between">
-                                            <span className={cn("font-bold", isSelected && "text-sky-400")}>{modifier.name}</span>
+                                            <span className={cn("flex items-center gap-2 font-bold", isSelected && "text-sky-400")}><NodeModifierIcon iconKey={modifier.iconKey} />{modifier.name}</span>
                                             {isSelected && <span className="text-xs text-sky-400 font-bold">✓</span>}
                                         </div>
                                         <span className="text-xs text-slate-400 line-clamp-2">{modifier.description}</span>

@@ -893,6 +893,8 @@ model NodeModifier {
   id                  String               @id @default(cuid())
   name                String
   description         String
+  // Explicit admin presentation choice; not a game effect/definition identity.
+  iconKey             String?
   questEncounterNodes QuestEncounterNode[]
   allocations         WarNodeAllocation[]
 

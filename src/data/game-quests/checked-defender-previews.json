@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "source": {
+    "comparison.json": "0cd47a9648a1a5ab32089bf01c0d7fc25dfe234ca2f4b0a89c6a6bfb6d9f14f5",
+    "native-source-proof.json": "073b207b771f872327baa5d7862bc8a576a2b42b70cd705f057a46c07a16b6ba",
+    "input-hashes.json": "4ce63b9f45c5cd8faf8f3dfdfca80bbd486c8e56f10b0462cfa9a52e69f8e8f8"
+  },
+  "records": [
+    {
+      "binding": {
+        "questId": "realm3",
+        "mapId": "realm3",
+        "containerSetId": "5c671733b473cf3cd097f5c0",
+        "summarySetId": "5c671733b473cf3cd097f5c0",
+        "mapSourceHash": "9b8505bc3d8121a71b37eb9de1170547d998af633d4d4c1312f3eb731b0f90b0"
+      },
+      "definitionRowCount": 63,
+      "observedAt": "2026-11-10T20:26:28.343411+00:00",
+      "notice": "The checked preview lists 63 potential defenders without map locations or personal node modifiers. These entries do not guarantee fights.",
+      "source": {
+        "selectedShardSha256": "c9cb7d19e06ace1596c1b6a1265179e45112bb436c6ba4962b70e3f5fe8a191b",
+        "responseSha256": "da8c7dc055d7d877b557041c2bc04f49040268df7997e5d89a722c70297ec48c",
+        "receiptSha256": "5fe24b43702d97980d3ced8540d5244220c38435951b841386d3c25d29b1c7c9"
+      }
+    },
+    {
+      "binding": {
+        "questId": "eq_labyrinth",
+        "mapId": "eq_labyrinth",
+        "containerSetId": "57a90ad550ec3ffc44c4a6c3",
+        "summarySetId": "57a90ad550ec3ffc44c4a6c3",
+        "mapSourceHash": "5c16c4c8825ab52c312ad7a8175f2db4d2a001bcf235680d45fb21423b405785"
+      },
+      "definitionRowCount": 31,
+      "observedAt": "2026-11-10T20:26:33.952217+00:00",
+      "notice": "The checked preview lists 31 potential defenders without map locations or personal node modifiers. These entries do not guarantee fights.",
+      "source": {
+        "selectedShardSha256": "51c134bd57875c25956fbee7be76fa6a7517dbce9518ed4b7fd13788fa8d172d",
+        "responseSha256": "3c360112c0174c04b923f40969d238ec3d8f2bf0e83cd4ba653cfbb538c7e5eb",
+        "receiptSha256": "06e78e378659923420af8fd2dee0f8af27e1643be221cb290b52c573ce154f50"
+      }
+    }
+  ]
+}

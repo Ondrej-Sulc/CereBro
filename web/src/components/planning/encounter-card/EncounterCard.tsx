@@ -1,5 +1,6 @@
 "use client";
 
+import { NodeModifierIcon } from "@/components/nodes/NodeModifierIcon";
 import Image from "next/image";
 import type React from "react";
 import { useState } from "react";
@@ -278,7 +279,7 @@ function EncounterHeader({
                                     )}
                                 >
                                     {n.isHighlighted && <Star className="h-2.5 w-2.5 shrink-0 fill-current" />}
-                                    {n.nodeModifier.name}
+                                    <NodeModifierIcon iconKey={n.nodeModifier.iconKey} size={12} /><span className="truncate">{n.nodeModifier.name}</span>
                                 </Badge>
                             ))}
                             {sortedNodes.length > 3 && (

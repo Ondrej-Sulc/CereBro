@@ -1,0 +1,1600 @@
+{
+  "contentHash": "8535579eb5632af602d08fda20a9b1ad6d9d397b170826bfdad34a97ac8a39e7",
+  "contract": "cerebro.node-modifier-artwork/v1",
+  "icons": [
+    {
+      "appearanceHash": "273752f7bef88235807895c6faf98cb74172a6e086320f4d40dcb3aab04ad85a",
+      "appearanceId": "armor_icon",
+      "applicationHashes": [
+        "0c8cd4486f7821d17512c00570090bdcef117c9940b2e60f4ce9194b5574417f",
+        "3f12aaf510c0e44c5d95f2d16cd8bde4d3bca59e771d6ce4c22b93e650c4deda"
+      ],
+      "componentId": "ava_aup40_ui",
+      "effectId": "ava_aup40",
+      "glyph": "a",
+      "glyphIndex": 68,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "3f46e2ebb3c0fad791d7e1948f4ba43bbded61853fd664e692a072886a6795ff",
+      "src": "/node-modifiers/icons/3f46e2ebb3c0fad791d7e1948f4ba43bbded61853fd664e692a072886a6795ff.svg",
+      "status": "verified",
+      "versionHash": "4e83cad19bbab063276f3f0c957719ad5c1ac7c9b280c6150efc1a64a725511c"
+    },
+    {
+      "appearanceHash": "1d15086bf709a0cd9a2867a14b6faa8fb54741783ffc60bb74dd4d3c8b675366",
+      "appearanceId": "bleed_icon",
+      "applicationHashes": [
+        "f57d32ae94dfb5cc8f96ec3200f66e7d0070f5099745675e27bbe0200943a013"
+      ],
+      "componentId": "ava_bld40_ui",
+      "effectId": "ava_bld40",
+      "glyph": "b",
+      "glyphIndex": 69,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "2349c9afa7eec0e2e077391afacca5bc3214db87d428eba30a69feae85f7a439",
+      "src": "/node-modifiers/icons/2349c9afa7eec0e2e077391afacca5bc3214db87d428eba30a69feae85f7a439.svg",
+      "status": "verified",
+      "versionHash": "8fc8ac383d8bfb22d52fb4f34aa449e808b359cbe9981ad807a36952577d1261"
+    },
+    {
+      "appearanceHash": "05f340012801898f0a20bf1f6d08e7c19e57929d4fba1d95ce6876217f871a4a",
+      "appearanceId": "dice_icon",
+      "applicationHashes": [
+        "b5e345839bbe29e4eb0bac6653f5fb0140c87fc02ec31c37e6b2a407fa482c66",
+        "d70925cf8b4dd9aa3f6bb2ef407ddc5fad9d0e6ee02fc7d528894d67cbf06d4d"
+      ],
+      "componentId": "ava_ea20_ui",
+      "effectId": "ava_ea20",
+      "glyph": "-",
+      "glyphIndex": 16,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "477f2bd631f24ebcd0e3eb9012cc2f99c2da9afc84517c4e4e9e05aadb087261",
+      "src": "/node-modifiers/icons/477f2bd631f24ebcd0e3eb9012cc2f99c2da9afc84517c4e4e9e05aadb087261.svg",
+      "status": "verified",
+      "versionHash": "828ee14b7dbd77eb4dfed50afa06fb97aa1b6256b4d7ce8169999cda5e363799"
+    },
+    {
+      "appearanceHash": "980f6e1ff2da7e8a270f0d19f610e8713f9dee8cf0e4424d87a09d4ebf00a310",
+      "appearanceId": "fury_icon",
+      "applicationHashes": [
+        "3f668bba9bfe5f0e1bc40cbe95d5428c5a61cb6929d4deb00a7cd87ca3269fca"
+      ],
+      "componentId": "ava_fry40_ui",
+      "effectId": "ava_fry40",
+      "glyph": "k",
+      "glyphIndex": 78,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "bfd147f2739b13be1eca8a08b95979b4e28a717d6e683e69c8c4f1b9d8de81a8",
+      "src": "/node-modifiers/icons/bfd147f2739b13be1eca8a08b95979b4e28a717d6e683e69c8c4f1b9d8de81a8.svg",
+      "status": "verified",
+      "versionHash": "6bd3632c590c3b4716098532810d230c5829b2bc46cf054d33f9db1686de9ea7"
+    },
+    {
+      "appearanceHash": "ad5933f584af4e15d27ca8e2127cd8682d1f1042a0924edf702ec0de1aaf5d4f",
+      "appearanceId": "resist_nrg_icon",
+      "applicationHashes": [
+        "b8a5bd326bfe616feee14393b0ac80842df2a6e8ef53ebd52a757169a24f2877"
+      ],
+      "componentId": "ava_nrg40",
+      "effectId": "ava_nrg40",
+      "glyph": "v",
+      "glyphIndex": 89,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "32b114fe8f5bdc56ff596592946ca467ff811ea502305fe9af41614bca4c62e3",
+      "src": "/node-modifiers/icons/32b114fe8f5bdc56ff596592946ca467ff811ea502305fe9af41614bca4c62e3.svg",
+      "status": "verified",
+      "versionHash": "7be03f41ec686bbc6e45fe85c475e9a60ddc4d7930d19f79b93334dc83e6d916"
+    },
+    {
+      "appearanceHash": "d66a2ef3b3dfae6b20d12af1afe1a8087d63e03ecc5fb9cc94c0e781c179186c",
+      "appearanceId": "resist_physical_icon",
+      "applicationHashes": [
+        "09926a55de2d9d3474e3921b153f82714f49c1c284e6a38f677cb945be9f9d2b",
+        "72f9396ac0f7bf727f55c5d1188d0a3ad11ea3e61366e0d208fdc48b88bb4a05",
+        "bd3e93cc1eecfa15a73f9e2ed9d13e2b199b9ebf8e6c37253ab3f04815e63961",
+        "c51b10a63f11ec6dba7a275c676f3d2e87b92b840436072c9c129f1413fe461c",
+        "f8f0a0a8ea9cb731c95ba1426af59599f23370067954faae8839b033078143f0"
+      ],
+      "componentId": "ava_phys40",
+      "effectId": "ava_phys40",
+      "glyph": "u",
+      "glyphIndex": 88,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "f8cbcbee6445a8f21eab0f79d5bd18ec3e3fcc505aa9956f80522f6b5a497d04",
+      "src": "/node-modifiers/icons/f8cbcbee6445a8f21eab0f79d5bd18ec3e3fcc505aa9956f80522f6b5a497d04.svg",
+      "status": "verified",
+      "versionHash": "c729f58e556119008d85aed993de08759bbade87ed1dfbda03a34ea5388853f6"
+    },
+    {
+      "appearanceHash": "588b173d9f50330eb4928ab1d0a0e3cac936c158e8846b2f6e0a33ea52484182",
+      "appearanceId": "plock_icon",
+      "applicationHashes": [
+        "bf7dea53545fa6840d49d95bc738cbfdf631bdf88e4270b8e043ea840c28cd24"
+      ],
+      "componentId": "avx_pdrn2a",
+      "effectId": "ava_plaguedmind",
+      "glyph": "m",
+      "glyphIndex": 80,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "4998954789e54d5d8f5ae1fcbe2f633750654846c58a56454ff6fbb7e91bfbc5",
+      "src": "/node-modifiers/icons/4998954789e54d5d8f5ae1fcbe2f633750654846c58a56454ff6fbb7e91bfbc5.svg",
+      "status": "verified",
+      "versionHash": "9c690a89971bf673600c8aa565ffb3a54e5b9b424c4c3caf70786e198c954ca8"
+    },
+    {
+      "appearanceHash": "0e59ec36d9709956e01e58c0ee7b03a376868af41e9302d6acc30db61d9e07d9",
+      "appearanceId": "unblockable_hud",
+      "applicationHashes": [
+        "45342f3cf2eb4ae4f02b9bc64d81cdfb6aebfe0f1d40762bcac52bbfec59fd18",
+        "57b7be31e2cdd74099dfa829e42a601c302a392cc5cc49da0b1868da02f61087",
+        "6134460995e18c46369f3b8eb75e22c7868dbb447aeec8e318b5357489ac6d35"
+      ],
+      "componentId": "ava_sp1u_ui",
+      "effectId": "ava_sp1",
+      "glyph": "S",
+      "glyphIndex": 54,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "0ab3897949db529c3e8f0475ee701e75cf789b5bc3b0ea9258188a92f9da3535",
+      "src": "/node-modifiers/icons/0ab3897949db529c3e8f0475ee701e75cf789b5bc3b0ea9258188a92f9da3535.svg",
+      "status": "verified",
+      "versionHash": "d70240de1b5316ca9b7283bdcb3538dccff8e25427e359972728379044196fd5"
+    },
+    {
+      "appearanceHash": "0e59ec36d9709956e01e58c0ee7b03a376868af41e9302d6acc30db61d9e07d9",
+      "appearanceId": "unblockable_hud",
+      "applicationHashes": [
+        "8780b96c0f5881d889ae69794b4609cdd8310fba048cc9fa5ab80060228eecdc"
+      ],
+      "componentId": "ava_sp2u_ui",
+      "effectId": "ava_sp2",
+      "glyph": "S",
+      "glyphIndex": 54,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "0ab3897949db529c3e8f0475ee701e75cf789b5bc3b0ea9258188a92f9da3535",
+      "src": "/node-modifiers/icons/0ab3897949db529c3e8f0475ee701e75cf789b5bc3b0ea9258188a92f9da3535.svg",
+      "status": "verified",
+      "versionHash": "f62413075f492c8907d73095087082d8a0977043cd89d0a638edc82055f74c53"
+    },
+    {
+      "appearanceHash": "9eac7c1ec155d8dd72ccc18a8964f0d3eabcc92ed2e764cd881202d138d4a470",
+      "appearanceId": "special_icon",
+      "applicationHashes": [
+        "d14138e3ee9c9cb0f5af1de513c4ed9e19a733adc24356d29a00020f60820487"
+      ],
+      "componentId": "avx_allornot_ui",
+      "effectId": "ava_use_sp2",
+      "glyph": "S",
+      "glyphIndex": 54,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "0ab3897949db529c3e8f0475ee701e75cf789b5bc3b0ea9258188a92f9da3535",
+      "src": "/node-modifiers/icons/0ab3897949db529c3e8f0475ee701e75cf789b5bc3b0ea9258188a92f9da3535.svg",
+      "status": "verified",
+      "versionHash": "d487dac42bb73b286a6afa1eea3504be5e4462f2250ec0b50b695151379a5efd"
+    },
+    {
+      "appearanceHash": "273752f7bef88235807895c6faf98cb74172a6e086320f4d40dcb3aab04ad85a",
+      "appearanceId": "armor_icon",
+      "applicationHashes": [
+        "10e36f64a0fdc824e2aabb0b8dbc85d1ef7ff5ac30ad8b5fb95ca94d595c6057",
+        "49540f86b72f2bf9c23a9c1a13a603410a8954142ae23058414e073837985965",
+        "5c68928690289395b4b129d25b9d46806d6b1022480f6fa8c8673ec1a34f1053",
+        "730c9db989a6c092caf6cdc4005cb77dd34730d8abaf926edef2cc37e12b3e3d",
+        "7c5b6f645bb85db05aa956010f7ba0073ee704ae086929f905e3f7d4301209d8",
+        "96b42e0e2f574e4e97bc547f513f1cbdb03cafed10a30b57d989baea2d6f126e"
+      ],
+      "componentId": "avx_ala_ii",
+      "effectId": "avx_al45",
+      "glyph": "a",
+      "glyphIndex": 68,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "3f46e2ebb3c0fad791d7e1948f4ba43bbded61853fd664e692a072886a6795ff",
+      "src": "/node-modifiers/icons/3f46e2ebb3c0fad791d7e1948f4ba43bbded61853fd664e692a072886a6795ff.svg",
+      "status": "verified",
+      "versionHash": "1a7349652018dc3f084ab25100b14b20e2512ded401e0693bed16a55e690af2a"
+    },
+    {
+      "appearanceId": null,
+      "applicationHashes": [
+        "8fcce9728810ac7ab4fb8aef4660cb19ca83ba481a6d6686adb7c615a7007d9a"
+      ],
+      "componentId": null,
+      "effectId": "avx_atk_pct400",
+      "glyph": "k",
+      "glyphIndex": 78,
+      "kind": "captured-bcg-glyph",
+      "sha256": "bfd147f2739b13be1eca8a08b95979b4e28a717d6e683e69c8c4f1b9d8de81a8",
+      "src": "/node-modifiers/icons/bfd147f2739b13be1eca8a08b95979b4e28a717d6e683e69c8c4f1b9d8de81a8.svg",
+      "status": "verified",
+      "versionHash": "40bf15c5af954c05a2abc80bbb8fca0f897367ddd16add8d777c7bbf7236210f"
+    },
+    {
+      "appearanceHash": "93f3276e2127fa4ef7c10495cb26fb4cbe4f37e0faba2882568e6466b66c4b0f",
+      "appearanceId": "healblock_icon",
+      "applicationHashes": [
+        "79f06b5f068f323c6d669fd05e640c69f6c60b596bdfdd888af39541726e173f"
+      ],
+      "componentId": "avx_hblk_all_a",
+      "effectId": "avx_hblk2",
+      "glyph": "Z",
+      "glyphIndex": 61,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "c39a12cc9e994fa48712a5d71f9a9581f77877444a5c75eb26566f0e99cbb475",
+      "src": "/node-modifiers/icons/c39a12cc9e994fa48712a5d71f9a9581f77877444a5c75eb26566f0e99cbb475.svg",
+      "status": "verified",
+      "versionHash": "9c88bcc84edc4174d43a9574da7dba1e667655919aefc9ba01fc7bcb6e60c3e5"
+    },
+    {
+      "appearanceId": null,
+      "applicationHashes": [
+        "6377986d7445b3d31607de8dd1f542ad82bd9feb43815c4de6ed26394fa19154"
+      ],
+      "componentId": null,
+      "effectId": "avx_hp_pct200",
+      "glyph": "H",
+      "glyphIndex": 43,
+      "kind": "captured-bcg-glyph",
+      "sha256": "e101e5101ef5c624f6b1a23287ff21580d16f744ec292b07c498a49f28f41b39",
+      "src": "/node-modifiers/icons/e101e5101ef5c624f6b1a23287ff21580d16f744ec292b07c498a49f28f41b39.svg",
+      "status": "verified",
+      "versionHash": "f7dbf7d60137415c106b4ca4b780a5b9b9b6b4fae6c35f38e42f8b5a18c7be30"
+    },
+    {
+      "appearanceId": null,
+      "applicationHashes": [
+        "06e288773e7aa4c5d26920db4501241f09fe3cbcef3cf99a4d461021eb324b3b"
+      ],
+      "componentId": null,
+      "effectId": "avx_hp_pct600",
+      "glyph": "H",
+      "glyphIndex": 43,
+      "kind": "captured-bcg-glyph",
+      "sha256": "e101e5101ef5c624f6b1a23287ff21580d16f744ec292b07c498a49f28f41b39",
+      "src": "/node-modifiers/icons/e101e5101ef5c624f6b1a23287ff21580d16f744ec292b07c498a49f28f41b39.svg",
+      "status": "verified",
+      "versionHash": "e0da26ddbff4391c2511aa4bba572549891d9dfcbaa57710ec91ef680e3d2d31"
+    },
+    {
+      "appearanceId": null,
+      "applicationHashes": [
+        "920fc0f0474ef12d33aef57ac9ba7f295cb8b54c017af99366f5b7f816c01f4c"
+      ],
+      "componentId": null,
+      "effectId": "avx_hp_pct_150",
+      "glyph": "H",
+      "glyphIndex": 43,
+      "kind": "captured-bcg-glyph",
+      "sha256": "e101e5101ef5c624f6b1a23287ff21580d16f744ec292b07c498a49f28f41b39",
+      "src": "/node-modifiers/icons/e101e5101ef5c624f6b1a23287ff21580d16f744ec292b07c498a49f28f41b39.svg",
+      "status": "verified",
+      "versionHash": "3a3e59107304449639cbb9e8f5a18ab6f09585bec04db181496464c29212a594"
+    },
+    {
+      "appearanceId": null,
+      "applicationHashes": [
+        "c67c7386a3cf555a26e02176c77448168a0c03e2ebf616da744ebccc0bf4dd6f"
+      ],
+      "componentId": null,
+      "effectId": "avx_hpatk_pct100",
+      "glyph": "¢",
+      "glyphIndex": 100,
+      "kind": "captured-bcg-glyph",
+      "sha256": "cd5aeddd95119f2641851a6a0a2cb885e8ea31f5f57e92af21fed32c11d51072",
+      "src": "/node-modifiers/icons/cd5aeddd95119f2641851a6a0a2cb885e8ea31f5f57e92af21fed32c11d51072.svg",
+      "status": "verified",
+      "versionHash": "a6385219dfc1525bfc04b5fc210cde8881c86044297817f1a3bf19bdebb730ed"
+    },
+    {
+      "appearanceId": null,
+      "applicationHashes": [
+        "540b57787808fee69465bfa5f28317b1f77e385b53f92670e0657faec4269a45"
+      ],
+      "componentId": null,
+      "effectId": "avx_hpatk_pct400",
+      "glyph": "¢",
+      "glyphIndex": 100,
+      "kind": "captured-bcg-glyph",
+      "sha256": "cd5aeddd95119f2641851a6a0a2cb885e8ea31f5f57e92af21fed32c11d51072",
+      "src": "/node-modifiers/icons/cd5aeddd95119f2641851a6a0a2cb885e8ea31f5f57e92af21fed32c11d51072.svg",
+      "status": "verified",
+      "versionHash": "1bf7a7b4a9273cef4be66c1c0a7f6a264294716e1041c254fae32d52b0d0c830"
+    },
+    {
+      "appearanceHash": "a539fc4d9986cbc4f963c3eab24cda72c5bcaf9777a1d620e636d6fdd9705949",
+      "appearanceId": "stun_immune",
+      "applicationHashes": [
+        "1e0b68e90f5340e7b33769e8b03a7a9e6b63f822a6047149be2ee3cbff1e1ca3",
+        "88dab6c2889e1c26e7d3eedc0e87f767675f16c606fbcf32cb88128a781496a1"
+      ],
+      "componentId": "avx_imn_stn_ui",
+      "effectId": "avx_imn_stn",
+      "glyph": ">",
+      "glyphIndex": 33,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "1f0973aa5715989243e65838e6cad46be4c93a401cd5883061b73c1aa4d6d09b",
+      "src": "/node-modifiers/icons/1f0973aa5715989243e65838e6cad46be4c93a401cd5883061b73c1aa4d6d09b.svg",
+      "status": "verified",
+      "versionHash": "da30d2855ee5d36cf3562620c9d2b1ab3c053917348c9287e8c6315349bc584e"
+    },
+    {
+      "appearanceHash": "273752f7bef88235807895c6faf98cb74172a6e086320f4d40dcb3aab04ad85a",
+      "appearanceId": "armor_icon",
+      "applicationHashes": [
+        "805ee1155aac06b068c5279b36446aa4e11b0c14a5768a7cd34d64281119b521"
+      ],
+      "componentId": "avx_opt_ui",
+      "effectId": "avx_optimist",
+      "glyph": "a",
+      "glyphIndex": 68,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "3f46e2ebb3c0fad791d7e1948f4ba43bbded61853fd664e692a072886a6795ff",
+      "src": "/node-modifiers/icons/3f46e2ebb3c0fad791d7e1948f4ba43bbded61853fd664e692a072886a6795ff.svg",
+      "status": "verified",
+      "versionHash": "27539f0cc839761651b1de62c03350d1f94ecfb3889676cd3405aa24dfbd997e"
+    },
+    {
+      "appearanceHash": "bf746273d062b54d482f0eff0dff939df5623b70f0b4046624ab3cbe4baf24f6",
+      "appearanceId": "power_drain_hud",
+      "applicationHashes": [
+        "ae44c80b13a8db991931c796a64c07b7e0d24e86eea04f77dc24ec1c1c7c2e6e"
+      ],
+      "componentId": "avx_pdrn",
+      "effectId": "avx_pdrn",
+      "glyph": "m",
+      "glyphIndex": 80,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "4998954789e54d5d8f5ae1fcbe2f633750654846c58a56454ff6fbb7e91bfbc5",
+      "src": "/node-modifiers/icons/4998954789e54d5d8f5ae1fcbe2f633750654846c58a56454ff6fbb7e91bfbc5.svg",
+      "status": "verified",
+      "versionHash": "041e4a69039ced53a966089f41124ad03d043d8e6487527551344647edac7665"
+    },
+    {
+      "appearanceHash": "789c016e798c299679d088176a4c58310d720a4a52d4c8c80da81ad4787a5721",
+      "appearanceId": "mana_rate_icon",
+      "applicationHashes": [
+        "3db99fcf3913b534f5d4a2d4638548affaeae6475c32c21be96a497bcb6bd197"
+      ],
+      "componentId": "avx_pwr50per_self",
+      "effectId": "avx_pwr50per_opp",
+      "glyph": "v",
+      "glyphIndex": 89,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "32b114fe8f5bdc56ff596592946ca467ff811ea502305fe9af41614bca4c62e3",
+      "src": "/node-modifiers/icons/32b114fe8f5bdc56ff596592946ca467ff811ea502305fe9af41614bca4c62e3.svg",
+      "status": "verified",
+      "versionHash": "b5c0f99c4135fc6c8d189f94bcfeb6c10998dc544bb7d02c9b12adc4950bccd6"
+    },
+    {
+      "appearanceHash": "1befa9c319cb22f024faa1cac62ad44731063635556fc9fdbb1ef9249d7091a1",
+      "appearanceId": "recovery_icon",
+      "applicationHashes": [
+        "376174dfed7461e7b448de98b7becb584f3a941e3f0d953062a256b6edbdeacb"
+      ],
+      "componentId": "avx_recovery_ui_50",
+      "effectId": "avx_recovery_50",
+      "glyph": "x",
+      "glyphIndex": 91,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "a33887703bfe3a85ec8dd7f057e70489393f1ccad0fed58bf2abee5a131a39b5",
+      "src": "/node-modifiers/icons/a33887703bfe3a85ec8dd7f057e70489393f1ccad0fed58bf2abee5a131a39b5.svg",
+      "status": "verified",
+      "versionHash": "45489992393012d1f6ca66550e4efb4adbcfd41d5ce813d98bb92433f0a83daf"
+    },
+    {
+      "appearanceHash": "989820e5db55d5c2e33db478cb6ed09735362be40c8347d63b92b556d99e41a5",
+      "appearanceId": "stymied_def",
+      "applicationHashes": [
+        "1a840efb000fdac763b810a0d955117a649206ca34f7420dbf258226456a2da6",
+        "510517b3b95e1b07a3c91eedb99656a7e219001d7d84562c90c934c728ad5eb5",
+        "ab27a43c0d55c2af716c4432413f744c057052b25c55d65c83e555e4e9d85332",
+        "ad5ea0753cc2b4feea64efae2678409c08c782cb6458767d4d2388d87b82ef08",
+        "d56c4f90610e9ff9ca5b34c4354cb612d0b7bbfe0858b4a54b4954ea8f0c8097",
+        "df6eff7a471146689bb94391ed1c9dcd0740e4b3da0e65b6f613ac3c396a3504"
+      ],
+      "componentId": "avx_truestrike_purify",
+      "effectId": "avx_tru",
+      "glyph": "",
+      "glyphIndex": 244,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "d0f5774256ee6c5ba2834b5727bf4b04be61e6cb8f5bcdd4374e606debf1affd",
+      "src": "/node-modifiers/icons/d0f5774256ee6c5ba2834b5727bf4b04be61e6cb8f5bcdd4374e606debf1affd.svg",
+      "status": "verified",
+      "versionHash": "fac51b061da0de42bfeaf042d62ff6421ef2d8f58ab0b9399a7cf9a1bfa8a3d1"
+    },
+    {
+      "appearanceHash": "abd30bee98330f29c0fca7d093f57b8f6cb84f158ca055f50a8f94f6634bc930",
+      "appearanceId": "enhanced_critstats",
+      "applicationHashes": [
+        "562e3fb76dd5f655b727ba0b60add1a99a1aa7114adc3f59347e85bd6018f8aa",
+        "aba0385b1ea71b2ba5e1e9d8c510b232598c58bebdb12d40e90b4a525dde12d2"
+      ],
+      "componentId": "pve_enhancedcrit1_basestat",
+      "effectId": "m_en_critstats",
+      "glyph": "Ô",
+      "glyphIndex": 147,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "5e5a00fef863656f3b8490986d1e6355b0779ed3c0420dbde25d4af9c39b5a4e",
+      "src": "/node-modifiers/icons/5e5a00fef863656f3b8490986d1e6355b0779ed3c0420dbde25d4af9c39b5a4e.svg",
+      "status": "verified",
+      "versionHash": "af9c124bf5823709ceaaff9aaa31ffcd5c49db8a57575217099728745ef624df"
+    },
+    {
+      "appearanceHash": "9eac7c1ec155d8dd72ccc18a8964f0d3eabcc92ed2e764cd881202d138d4a470",
+      "appearanceId": "special_icon",
+      "applicationHashes": [
+        "803623871dc22a59613fcfe67a8a320870100522c75e5e340f08ce7f7725e563",
+        "841fc7b688683491a0b554fbff52d7cea68c98e49c4aaeaa0f6d594b852fd852",
+        "92c0c94e7e00e498e5ac9a04652d423694af8c3fcf1dd7cf31f3b728eefb63f4"
+      ],
+      "componentId": "pve_sp3_ui",
+      "effectId": "pve_ai_sp3",
+      "glyph": "S",
+      "glyphIndex": 54,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "0ab3897949db529c3e8f0475ee701e75cf789b5bc3b0ea9258188a92f9da3535",
+      "src": "/node-modifiers/icons/0ab3897949db529c3e8f0475ee701e75cf789b5bc3b0ea9258188a92f9da3535.svg",
+      "status": "verified",
+      "versionHash": "a864c50c8272f459f115c37e421654f3e7167f6523c886fd417f12c678a0e382"
+    },
+    {
+      "appearanceHash": "9eac7c1ec155d8dd72ccc18a8964f0d3eabcc92ed2e764cd881202d138d4a470",
+      "appearanceId": "special_icon",
+      "applicationHashes": [
+        "40abf7aacd9d16a9b81d9dcf97110fa810dcff92da558a3ad593b40885b1a87c"
+      ],
+      "componentId": "pve_sp3_ui_0pi",
+      "effectId": "pve_ai_sp3_0pi",
+      "glyph": "S",
+      "glyphIndex": 54,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "0ab3897949db529c3e8f0475ee701e75cf789b5bc3b0ea9258188a92f9da3535",
+      "src": "/node-modifiers/icons/0ab3897949db529c3e8f0475ee701e75cf789b5bc3b0ea9258188a92f9da3535.svg",
+      "status": "verified",
+      "versionHash": "4909196572a9e53709181afd24ff555bb53e1de5fb75e3165923ebdd44244d42"
+    },
+    {
+      "appearanceHash": "248cf46e9f444084a6116cf080c61519d7fe90a5787cd58c89ac0b4a5bcecbd8",
+      "appearanceId": "pve_arctimer_tmr",
+      "applicationHashes": [
+        "3e46023288afc475838010059bb6fd7373031ca76b141955eb77ab0b3eb2cc4d",
+        "48ac97c62a341d1f86ab6aa495be11ccad061b70bfca8d2dcb97e594442a1869",
+        "5f4e477dc8a46de317eb6503fb7c14a73085ba0dde0e9fd600425f760d37d57c",
+        "9cf67acf73cf277ade24bd47ab897343067c50c15903f16a1d80b0fc1b3fd21e",
+        "fd7c77af5ac77a599d0402cccd67a1a3934140bf3afcf5e61a26a6316d9f7878"
+      ],
+      "componentId": "pve_arctimer",
+      "effectId": "pve_arctimer",
+      "glyph": "K",
+      "glyphIndex": 46,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "261d334a32765a6b8efe24b051ea30e68f62a24800b322ca184c0d442191fa65",
+      "src": "/node-modifiers/icons/261d334a32765a6b8efe24b051ea30e68f62a24800b322ca184c0d442191fa65.svg",
+      "status": "verified",
+      "versionHash": "e549e342db4b30d5e9014d75adcf7bd216e7a894ada50f7d4614c88431be49d8"
+    },
+    {
+      "appearanceHash": "b6b6ef0bb965a4ee285c0f95fc980edaaeee60dc013afe12834f367b333eafc8",
+      "appearanceId": "gambler_spades_icon",
+      "applicationHashes": [
+        "07a292c7e35c938ad9ffa3840982ae3154c792c2819da6441bc15fa47cbbe54f",
+        "46b83a12010e3d97b9f58a3d7ac289fe7730c5d39880f4d45615163025b80b64",
+        "4919f83b3732f4f6d82e79dba30fb5fb10f64ecb47734dc227dca65a96c6208a",
+        "aa098946178e4c5213fb798392f8864550b1643fbceaa60b705e9831e656ed76",
+        "ac8db626038cec1e280e701409a8539e117d62ac09f1573cbf60d7be6273ca22",
+        "defab9e4f6aa823399f10ba10fc8b5e2f8b66f0027f16e0f29209b6155c7dac7"
+      ],
+      "componentId": "pve_chaos_b1",
+      "effectId": "pve_disarray",
+      "glyph": "™",
+      "glyphIndex": 222,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "c48bf6012518c634334ff44a59c0ef1bc04831e4ade3abe07e19dd3c5578b35c",
+      "src": "/node-modifiers/icons/c48bf6012518c634334ff44a59c0ef1bc04831e4ade3abe07e19dd3c5578b35c.svg",
+      "status": "verified",
+      "versionHash": "e08cb8632c9b94144a7e224fcb66bc0b349613a5fae24e09506b16d7bc2010be"
+    },
+    {
+      "appearanceHash": "980f6e1ff2da7e8a270f0d19f610e8713f9dee8cf0e4424d87a09d4ebf00a310",
+      "appearanceId": "fury_icon",
+      "applicationHashes": [
+        "3eca3b90400127f1ef3597ee2d198ee2d879ba2564211c4c5fb728192fadb343"
+      ],
+      "componentId": "pve_flare_info",
+      "effectId": "pve_flare",
+      "glyph": "k",
+      "glyphIndex": 78,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "bfd147f2739b13be1eca8a08b95979b4e28a717d6e683e69c8c4f1b9d8de81a8",
+      "src": "/node-modifiers/icons/bfd147f2739b13be1eca8a08b95979b4e28a717d6e683e69c8c4f1b9d8de81a8.svg",
+      "status": "verified",
+      "versionHash": "e823cba8b8cfe8ce9203602f5fc2db94449158a6ec7c54eca48f959417c03ce7"
+    },
+    {
+      "appearanceHash": "44086ebdd5fce5fd909a5ff59bce5c591ae9ea803d59678789ccab7073a011af",
+      "appearanceId": "crit_dmg_icon",
+      "applicationHashes": [
+        "326acd57ba816fbe2ece4dc6260468c503647a2b1f7bf9921d9fdfdbfc881069",
+        "640b33695e21181803f26f60316261db1124f5625d01a4a13ad97adf9cf19637",
+        "cbdd0e128c0be6cbbfb371e819b01ba6a5f2666194e56d8b16a21a34d5280920",
+        "ef00fc359a1d3fc24ae377db3ffb49c487022d187b2c4f38585adc91b0a436ec",
+        "f2ed39fab9636959ac88d6cf237c2dc4f763396fd8729057ba67a937265f8023"
+      ],
+      "componentId": "pve_godslayer",
+      "effectId": "pve_godslayer",
+      "glyph": "D",
+      "glyphIndex": 39,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "4042ae448280318f49342d76591015e4f8bd4eed18515de8984974d906597b29",
+      "src": "/node-modifiers/icons/4042ae448280318f49342d76591015e4f8bd4eed18515de8984974d906597b29.svg",
+      "status": "verified",
+      "versionHash": "14fc73af1195d7aabb33c4ef22cb138522197eac7e15bf4c4b722f0df94b4cae"
+    },
+    {
+      "appearanceHash": "a42f49d7f1b51305be368a8b1a781d10f6e194768fa960289e59499487a3875f",
+      "appearanceId": "mk_lunatic",
+      "applicationHashes": [
+        "27f632ba17167876fd9333bbf5c8bf96c35cf24e2f5f3b910331f376d610e2dc"
+      ],
+      "componentId": "pve_lunatic0",
+      "effectId": "pve_lunatic",
+      "glyph": "¥",
+      "glyphIndex": 103,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "9ed248cb1fb8312a05bf9c60867c467ba2fcefabb0a25b8d5b0d4e713240a894",
+      "src": "/node-modifiers/icons/9ed248cb1fb8312a05bf9c60867c467ba2fcefabb0a25b8d5b0d4e713240a894.svg",
+      "status": "verified",
+      "versionHash": "1ad30f7366c51cd5e536babba88ede19b2d3de2df4dc614dd9d82a346f9e7839"
+    },
+    {
+      "appearanceHash": "a1f3849949b318f5fa6f64b6c0555103c26e29eea6ccb30e1df717cd0a605301",
+      "appearanceId": "fury_icon_passive",
+      "applicationHashes": [
+        "54e4e5af2b697ec8da6d7181038569e01d5c9d9b1958135bc56cc6d3778805b2"
+      ],
+      "componentId": "pve_maestro8",
+      "effectId": "pve_maestro8",
+      "glyph": "k",
+      "glyphIndex": 78,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "bfd147f2739b13be1eca8a08b95979b4e28a717d6e683e69c8c4f1b9d8de81a8",
+      "src": "/node-modifiers/icons/bfd147f2739b13be1eca8a08b95979b4e28a717d6e683e69c8c4f1b9d8de81a8.svg",
+      "status": "verified",
+      "versionHash": "00bf3bdb49dca348647270005345a825e22e8a025dcc27906aa00568b019ecc4"
+    },
+    {
+      "appearanceHash": "a24d3e7c798e658bf97aa9556bcd676154835ece68c76ba7f7f9b5d435f4d812",
+      "appearanceId": "parry_icon",
+      "applicationHashes": [
+        "28252a64bfd524f881f25a686f6d81fd326fc6988ac2c8c459a31cbbf6d0d0dc",
+        "3cd2ec035053fd553d4583c1071e1212103870ffd9662183dbe59cff455aa765",
+        "60d75889fe332372361c688fe97cb58229d4aab075ee96732cb42fbc412bb9b1",
+        "77ed9389feed0a3bba9c4e679346c68ed8d02065b271b089cb4f94865d260bb4",
+        "794cb66a9ad51eaec3413391257d6c2905bab9e494dafa36b4c5e4203665072e",
+        "ae5f42e6c5e394c553b597f9bb160414b127460b7ec1d766886c00844f684d31"
+      ],
+      "componentId": "pve_parry_ui_iii_v2",
+      "effectId": "pve_parry_v2",
+      "glyph": ">",
+      "glyphIndex": 33,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "1f0973aa5715989243e65838e6cad46be4c93a401cd5883061b73c1aa4d6d09b",
+      "src": "/node-modifiers/icons/1f0973aa5715989243e65838e6cad46be4c93a401cd5883061b73c1aa4d6d09b.svg",
+      "status": "verified",
+      "versionHash": "04ee198ca77da9e648049045d0ba73841a082ddcf06c01fe86d90a7666ca545c"
+    },
+    {
+      "appearanceHash": "5a8157a6448d2f54af4ce878da08e1f55e5084a90c1ca621d8fc8dd296a7c448",
+      "appearanceId": "power_lock_icon",
+      "applicationHashes": [
+        "1eef6aea6ddfdf32951b6585a52a4df5d5981275a0f1d08e4e64f5761b1452a0",
+        "70435a71e96ebc907dd6cc05f6aa9e78d650a04726d8ef506d3acef588d04f61",
+        "75bc7cec19b4d171072b6f366ada90ab8a4d02286252e0f067dece24c731f156",
+        "f035bbfeaf39ee9ae39bc605f0c6f5cc2d73d5cd25ea8f0185a9658adaad9b3f",
+        "fa080dc7014fe1249f5eb2e23b3f3492f5ecc79d1911ce9e7e03d004c0500afb"
+      ],
+      "componentId": "pve_pwrlock_dur_icon",
+      "effectId": "pve_pwrlock_dur",
+      "glyph": "",
+      "glyphIndex": 657,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "fb51b214c4b625963416c4a0eacf5060736746977d151f86915ffc6ab3f6b3be",
+      "src": "/node-modifiers/icons/fb51b214c4b625963416c4a0eacf5060736746977d151f86915ffc6ab3f6b3be.svg",
+      "status": "verified",
+      "versionHash": "7a45680ed88c29312308cdc77c3da3d2b9086eaf842dd3bb3111086286065603"
+    },
+    {
+      "appearanceHash": "d9c924983153176fa500dcbd6e0280c48b316d03e11589094f9f68507f87ebdd",
+      "appearanceId": "class_skill_icon",
+      "applicationHashes": [
+        "1952df00513dcf37c294ff17bfeec15f05ad6e38805ed4b5f58ffe52bd456cc8",
+        "c6224ec6c03d429adc4f9e7b15323a374c2fcf0150a5eb6c95dcb144cb70ea86",
+        "f0ad319beb9d98bb01fd421c99ccf9b6cee17f20f57b2ba10f6eb2891e9ef88c"
+      ],
+      "componentId": "pve_skill_sup_i_ui",
+      "effectId": "pve_skill_ascend_1",
+      "glyph": "ˆ",
+      "glyphIndex": 204,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "171a95cdb61d38025afe941eb11e99b89083ff4ab3ff8843b264c4437523abec",
+      "src": "/node-modifiers/icons/171a95cdb61d38025afe941eb11e99b89083ff4ab3ff8843b264c4437523abec.svg",
+      "status": "verified",
+      "versionHash": "ad4757d845b06bd361dd8b94e33754fa7c4ea263c8d00c3127fbdc457b1dc9b9"
+    },
+    {
+      "appearanceHash": "d0a4459872809fc3fd661a3fcf37e56efeb3bbe40eae0098e821ded2b2a9e864",
+      "appearanceId": "stupefy_icon",
+      "applicationHashes": [
+        "0543868d214c40b8d4992c7be52bbd451664bfbc26f29e88275252043bf9a9ee",
+        "510475f7f6bbb8f8a71efe9b530dd137cc6eacf4c838a621e0a471c5643d8f75",
+        "6ee22a7f87cc00e94dd5e64417c633411cc91108d049b06f7085215f26933f02",
+        "8b8aa1c5ba949b85d175eed107897bd67fb3d6ccae64f0f063a629a026bc1885",
+        "d27d0919d7c09cb2ce29676c84bb489d167612ce2122b11290a129e589c2dd93"
+      ],
+      "componentId": "pve_stun_dur2",
+      "effectId": "pve_stupefy",
+      "glyph": "<",
+      "glyphIndex": 31,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "ebd297b98de2ada4206e2e41a0a6508d1d174dc89ce4a687910b99e317c8179b",
+      "src": "/node-modifiers/icons/ebd297b98de2ada4206e2e41a0a6508d1d174dc89ce4a687910b99e317c8179b.svg",
+      "status": "verified",
+      "versionHash": "6552d7ed750afb2f9912e7b2c87e616bb3af2d2ca7274617da031f4e914606a2"
+    },
+    {
+      "appearanceHash": "fc3622d164e78d358dd8c6220ea5e50cd5c7fb4e835f6d2439b5b8880d0ba549",
+      "appearanceId": "power_gain_icon",
+      "applicationHashes": [
+        "0325f8a2a28d2892adb8635838dc261088c6e72e1bad76dfd52e542d808bcfb0",
+        "35b4b44cf5fdb61d9dc276ae86d59cd34f1469ff11066bab4ed71ad5bdd69a31",
+        "9f0d400c0db364c92e70eb8a00e7225bb69741dd93daed20021ead0d5df3bd8a",
+        "bf0496c78677d7bb164a131444d6e69b9a73f00c37819a02dd8d8f8b2c712a3d",
+        "dc0fc410bfc52d68431ea79cb02db519be9d3d851bb3c55e7b72af1f3efc7f98",
+        "e159956fe9766359ce70473c516a364de85bb6a921f1142f39d6b784ff00cac1"
+      ],
+      "componentId": "pve_transduce_ui",
+      "effectId": "pve_transduce",
+      "glyph": "N",
+      "glyphIndex": 49,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "d481ed80c676261b7e4036811d88e4d00ec7baa5aa1c8e6372996c56c04e562a",
+      "src": "/node-modifiers/icons/d481ed80c676261b7e4036811d88e4d00ec7baa5aa1c8e6372996c56c04e562a.svg",
+      "status": "verified",
+      "versionHash": "4df75d329f384afc1b7d10921580c236800c081f6034ff1652c3cd1aa6e2c8b6"
+    },
+    {
+      "appearanceHash": "b0f29cfa154e2243f051cf8e78646dc1055624288d8080089e099d89180932d9",
+      "appearanceId": "aspect_of_strength_hud",
+      "applicationHashes": [
+        "57d3335df1fea4d7061c394f122b18b0384f4379a279da734f8bc7f0c9fe0197",
+        "926804e2db26304766811e68b8fc462e6a25bb6dd03df3ec2385b2c479c7e660",
+        "ec34cdd461461ed8a616cfc9d46f282e08ce7de98c3df9069f11d6a0293817bf"
+      ],
+      "componentId": "saga_aspctstr_info",
+      "effectId": "saga_boost_aspect_of_strength",
+      "glyph": "",
+      "glyphIndex": 775,
+      "kind": "first-component-appearance-glyph",
+      "sha256": "2d9bfaedd4e3ab2833ab90435497346f55513718152bd64048006131f38161d0",
+      "src": "/node-modifiers/icons/2d9bfaedd4e3ab2833ab90435497346f55513718152bd64048006131f38161d0.svg",
+      "status": "verified",
+      "versionHash": "f17a2dd9401f18b0554e490d26e641e50d12239fa090a816d3099ed4fd1975d6"
+    }
+  ],
+  "modifierCatalogHash": "44a46a495706db85a4ae0b4372fa666aca0dde5ff81133e591e1d1288bb0be56",
+  "modifierUsesHash": "7aa7ba07bcfb587f21db1c63a4b934b3734fd24f83276a6506212b5ca80bf983",
+  "portraits": [
+    {
+      "characterHash": "d47b7c685070c0b02c6cab26f5e6851f4d3f5a8537f3eabf626deadab32f19ba",
+      "gameId": "captainamerica",
+      "height": 256,
+      "imageId": "captain_america",
+      "public": {
+        "href": "/champions/captain-america",
+        "id": 509,
+        "name": "Captain America",
+        "slug": "captain-america"
+      },
+      "remote": false,
+      "sha256": "caee066fbb7f1d3accf3024731e9594fbe86e0fd94b00af65864cfa62b2efd34",
+      "sourcePath": "ui_portraits/portraits/portrait_captain_america.png",
+      "sourceSha256": "c7a368fb93ab0d1cc278409a2da7f517cbc135a542e75ca6977d72b68e098346",
+      "src": "/node-modifiers/portraits/caee066fbb7f1d3accf3024731e9594fbe86e0fd94b00af65864cfa62b2efd34.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_captain_america",
+      "width": 256
+    },
+    {
+      "characterHash": "1c20bb7f310e217703505d01a4646ee34c9942bd9c42956d5604bce98d5f977c",
+      "gameId": "captainamerica_ww2",
+      "height": 256,
+      "imageId": "capamerica_wwii",
+      "public": {
+        "href": "/champions/captain-america-wwii",
+        "id": 512,
+        "name": "Captain America (Wwii)",
+        "slug": "captain-america-wwii"
+      },
+      "remote": false,
+      "sha256": "34f481296908969c27abfb960ba622b1bd9b8f5ad7d7905ebbd6613836805d34",
+      "sourcePath": "ui_portraits/portraits/portrait_capamerica_wwii.png",
+      "sourceSha256": "b208e4826e6b41b249edc4502c1b66e207694497d54feb53800b668bacbbadec",
+      "src": "/node-modifiers/portraits/34f481296908969c27abfb960ba622b1bd9b8f5ad7d7905ebbd6613836805d34.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_capamerica_wwii",
+      "width": 256
+    },
+    {
+      "characterHash": "bc0fe95febfdfe26579389f75aac5c781c865843190bea447f785ed3b598754f",
+      "gameId": "civilwarrior",
+      "height": 256,
+      "imageId": "civilwarrior",
+      "public": {
+        "href": "/champions/civil-warrior",
+        "id": 520,
+        "name": "Civil Warrior",
+        "slug": "civil-warrior"
+      },
+      "remote": false,
+      "sha256": "4782b8952586d8e32c8c101fbb16062abc2aaeec0c61b8b19582065ecdfd7b60",
+      "sourcePath": "ui_portraits/portraits/portrait_civilwarrior.png",
+      "sourceSha256": "0b13a27cd46189e70e377968dbfcad32cdea4a984d1622ca7480b2d932e013aa",
+      "src": "/node-modifiers/portraits/4782b8952586d8e32c8c101fbb16062abc2aaeec0c61b8b19582065ecdfd7b60.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_civilwarrior",
+      "width": 256
+    },
+    {
+      "characterHash": "1f2c49b1ff3f77d4b725757bf06c8a1c97df9141bd83f3d4f118c7c579b3066c",
+      "gameId": "cyclops",
+      "height": 256,
+      "imageId": "cyclops",
+      "public": {
+        "href": "/champions/cyclops-new-xavier-school",
+        "id": 528,
+        "name": "Cyclops (New Xavier School)",
+        "slug": "cyclops-new-xavier-school"
+      },
+      "remote": false,
+      "sha256": "4c84425d6e8e5b8a4bd80cb0f4dd64cdd02a350012d8db148f1181feca6aece4",
+      "sourcePath": "ui_portraits/portraits/portrait_cyclops.png",
+      "sourceSha256": "fa90fa871bf027c21728d045c8c4540c95f824a7ba57ed2c762d2b5ccd660319",
+      "src": "/node-modifiers/portraits/4c84425d6e8e5b8a4bd80cb0f4dd64cdd02a350012d8db148f1181feca6aece4.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_cyclops",
+      "width": 256
+    },
+    {
+      "characterHash": "9da6ca5b16787733d49df76b69dd3d48ac0d210dffe7b08e4f5a2ee4ef5b51b6",
+      "gameId": "elektra",
+      "height": 256,
+      "imageId": "elektra",
+      "public": {
+        "href": "/champions/elektra",
+        "id": 549,
+        "name": "Elektra",
+        "slug": "elektra"
+      },
+      "remote": false,
+      "sha256": "395a63792e4cffd38da40ff576f9be4853b3bfc57ffa1ceadbeecf28be6bc100",
+      "sourcePath": "ui_portraits/portraits/portrait_elektra.png",
+      "sourceSha256": "b1d0bcaaefa42b821d22fe2a216799ca05119e916a56d937fbe747fda6dfd71e",
+      "src": "/node-modifiers/portraits/395a63792e4cffd38da40ff576f9be4853b3bfc57ffa1ceadbeecf28be6bc100.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_elektra",
+      "width": 256
+    },
+    {
+      "characterHash": "a9ff333827898d810145c837b40f9d5f00885c52fec59b9850caafc2918a08a6",
+      "gameId": "falcon",
+      "height": 256,
+      "imageId": "falcon",
+      "public": {
+        "href": "/champions/falcon",
+        "id": 553,
+        "name": "Falcon",
+        "slug": "falcon"
+      },
+      "remote": false,
+      "sha256": "94397641bc892af6380cf338e35a4663a513de341998240ae7b3a5af06edf5ef",
+      "sourcePath": "ui_portraits/portraits/portrait_falcon.png",
+      "sourceSha256": "ed1d1f1415804014bc6451fc46f6eb75db386d85cc4b2c9fea6112165c347535",
+      "src": "/node-modifiers/portraits/94397641bc892af6380cf338e35a4663a513de341998240ae7b3a5af06edf5ef.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_falcon",
+      "width": 256
+    },
+    {
+      "characterHash": "a16fd103796af706b45ad2a55dd0983a468e0d36fec0a0c83810149196526ab9",
+      "gameId": "gambit",
+      "height": 256,
+      "imageId": "gambit",
+      "public": {
+        "href": "/champions/gambit",
+        "id": 556,
+        "name": "Gambit",
+        "slug": "gambit"
+      },
+      "remote": false,
+      "sha256": "c82209f024da10b9fbbe8412b439c0d2b1180ff429d5d7a2de54ae48214b5ce4",
+      "sourcePath": "ui_portraits/portraits/portrait_gambit.png",
+      "sourceSha256": "1924a7dd81d142893d64638ce657b38716be76755c43ca25a1c405af557576f3",
+      "src": "/node-modifiers/portraits/c82209f024da10b9fbbe8412b439c0d2b1180ff429d5d7a2de54ae48214b5ce4.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_gambit",
+      "width": 256
+    },
+    {
+      "characterHash": "6612f47df93db8f21cac531a67eba16612d5618350f00b9e2705c3a8c030713f",
+      "gameId": "gamora",
+      "height": 256,
+      "imageId": "gamora",
+      "public": {
+        "href": "/champions/gamora",
+        "id": 557,
+        "name": "Gamora",
+        "slug": "gamora"
+      },
+      "remote": false,
+      "sha256": "2d6781c768034acd065c5a777a6df52777f23fc7e04d1fd5a614cf0850d3a904",
+      "sourcePath": "ui_portraits/portraits/portrait_gamora.png",
+      "sourceSha256": "4fa1ca095307bf8c3de8afdc0752718c815b70925667fd8d10718705a5b40242",
+      "src": "/node-modifiers/portraits/2d6781c768034acd065c5a777a6df52777f23fc7e04d1fd5a614cf0850d3a904.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_gamora",
+      "width": 256
+    },
+    {
+      "characterHash": "1ad70cd95c83ed4a64f2a51c9e848b698d754e6bfb82c37f7e74d1ca4ef1c175",
+      "gameId": "gladiator",
+      "height": 256,
+      "imageId": "gladiator",
+      "public": {
+        "href": "/champions/gladiator",
+        "id": 561,
+        "name": "Gladiator",
+        "slug": "gladiator"
+      },
+      "remote": false,
+      "sha256": "c6e3c02f5b8ced294a6ea6b60f6fb7a114237820caddcf7f2d40a3dc10528097",
+      "sourcePath": "ui_portraits_41.1/portraits/portrait_gladiator.png",
+      "sourceSha256": "7dc68ce01c708726d29f8fb25987c9aa2b04c9277b51913d2464060962ae6b6f",
+      "src": "/node-modifiers/portraits/c6e3c02f5b8ced294a6ea6b60f6fb7a114237820caddcf7f2d40a3dc10528097.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_gladiator",
+      "width": 256
+    },
+    {
+      "characterHash": "b64463f6428405b76e668ab47091bdd40ebe5c9b38f128480688fa1a358a063b",
+      "gameId": "guillotine",
+      "height": 256,
+      "imageId": "guillotine",
+      "public": {
+        "href": "/champions/guillotine",
+        "id": 567,
+        "name": "Guillotine",
+        "slug": "guillotine"
+      },
+      "remote": false,
+      "sha256": "81dcdd58d7eaec2ad07d7b75b9a22e2ce8e0c8b5fb3a9bf8fcfd7d01c601cad4",
+      "sourcePath": "ui_portraits/portraits/portrait_guillotine.png",
+      "sourceSha256": "8808f7b5ba3b7348cc1e28dea95a2329ddfa612e4db96b77943c5f32c205d415",
+      "src": "/node-modifiers/portraits/81dcdd58d7eaec2ad07d7b75b9a22e2ce8e0c8b5fb3a9bf8fcfd7d01c601cad4.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_guillotine",
+      "width": 256
+    },
+    {
+      "characterHash": "8d51083118b9e7dceb944dee3672aea325375829fa521968c876794f3cf58e67",
+      "gameId": "hulk",
+      "height": 256,
+      "imageId": "hulk",
+      "public": {
+        "href": "/champions/hulk",
+        "id": 579,
+        "name": "Hulk",
+        "slug": "hulk"
+      },
+      "remote": false,
+      "sha256": "e5b70820c7095ca7473bb68ab587b0449140423bd06faebe57768feee3f6bf69",
+      "sourcePath": "ui_portraits/portraits/portrait_hulk.png",
+      "sourceSha256": "618ab0b747a9448ffa8702a9ecb37ad0dd72b83d35af5576d6799676d43f7003",
+      "src": "/node-modifiers/portraits/e5b70820c7095ca7473bb68ab587b0449140423bd06faebe57768feee3f6bf69.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_hulk",
+      "width": 256
+    },
+    {
+      "characterHash": "f58c87dbc370b0c75d02c12647817c0aa9ede44713624b5022d029387a0061ca",
+      "gameId": "hyperion",
+      "height": 256,
+      "imageId": "hyperion",
+      "public": {
+        "href": "/champions/hyperion",
+        "id": 585,
+        "name": "Hyperion",
+        "slug": "hyperion"
+      },
+      "remote": false,
+      "sha256": "6e722886bbc04f107a3bbf389c10c11c9823926a6b64087af0ec26421362bfba",
+      "sourcePath": "ui_portraits/portraits/portrait_hyperion.png",
+      "sourceSha256": "c8f58beb4df447a66097b9b48f6dad0a6f901e5ad7f9460ca639f93128b79b4e",
+      "src": "/node-modifiers/portraits/6e722886bbc04f107a3bbf389c10c11c9823926a6b64087af0ec26421362bfba.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_hyperion",
+      "width": 256
+    },
+    {
+      "characterHash": "a9c773f42ba4d8c86ea6aa37eca5942f3b5bedfac3f93446ee825e31e0adf6be",
+      "gameId": "ironman",
+      "height": 256,
+      "imageId": "iron_man",
+      "public": {
+        "href": "/champions/iron-man",
+        "id": 591,
+        "name": "Iron Man",
+        "slug": "iron-man"
+      },
+      "remote": false,
+      "sha256": "158d045493f18f60f0ebe85bcd066f18c690fa2a9ddfb07d704dc38bcfa34c8e",
+      "sourcePath": "ui_portraits/portraits/portrait_iron_man.png",
+      "sourceSha256": "54f0621bbbf2048c24721cb4f8c1a9a9e51b59002c020a0dbb80f7b1a766f518",
+      "src": "/node-modifiers/portraits/158d045493f18f60f0ebe85bcd066f18c690fa2a9ddfb07d704dc38bcfa34c8e.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_iron_man",
+      "width": 256
+    },
+    {
+      "characterHash": "3860b139ac9ac774641b159f8f47a47822f980e688d7adba80030a959949f0ca",
+      "gameId": "kang",
+      "height": 256,
+      "imageId": "kang",
+      "public": {
+        "href": "/champions/kang",
+        "id": 604,
+        "name": "Kang",
+        "slug": "kang"
+      },
+      "remote": false,
+      "sha256": "ed1292df125aaa556a472f7abbf5759f453c42e5f1758d99dc7672c24b4c933c",
+      "sourcePath": "ui_portraits/portraits/portrait_kang.png",
+      "sourceSha256": "d8ec99b052d2840b77bc1c473a8cd86d811e48577e6b797add3bb533c442c220",
+      "src": "/node-modifiers/portraits/ed1292df125aaa556a472f7abbf5759f453c42e5f1758d99dc7672c24b4c933c.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_kang",
+      "width": 256
+    },
+    {
+      "characterHash": "18ce074a6290357cf2cb900fbceba2e01d88f0f255c06a7d316ea4c4c5a7b934",
+      "gameId": "karlmordo",
+      "height": 256,
+      "imageId": "karl_mordo",
+      "public": {
+        "href": "/champions/mordo",
+        "id": 643,
+        "name": "Mordo",
+        "slug": "mordo"
+      },
+      "remote": false,
+      "sha256": "caeda63d0c085c2f97916e4436000b12fd84095ac0d27c270b614dc15497b4e3",
+      "sourcePath": "ui_portraits/portraits/portrait_karl_mordo.png",
+      "sourceSha256": "730be6256687259cf71cb6f051a9107786bd33803bac33a59e4a662ce0da0098",
+      "src": "/node-modifiers/portraits/caeda63d0c085c2f97916e4436000b12fd84095ac0d27c270b614dc15497b4e3.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_karl_mordo",
+      "width": 256
+    },
+    {
+      "characterHash": "97a010d618eda37c01581554570ae69bdb90fcd687c4f8499a848aed1831a3a6",
+      "gameId": "maestro",
+      "height": 256,
+      "imageId": "maestro",
+      "public": null,
+      "remote": false,
+      "sha256": "a01a955bb255edace10fbb4f962eb1fa164c563654091f16b65e70f7b6d322cb",
+      "sourcePath": "ui_portraits/portraits/portrait_maestro.png",
+      "sourceSha256": "a35eea91b7e3b52f1098dc5175fe66cfed9debfe51407085f308be3835f4df29",
+      "src": "/node-modifiers/portraits/a01a955bb255edace10fbb4f962eb1fa164c563654091f16b65e70f7b6d322cb.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_maestro",
+      "width": 256
+    },
+    {
+      "characterHash": "cf02bf6b4540440e3bc5ddd94961cbce6b374cd3e8b0b57cd544009097ee76ac",
+      "gameId": "magik",
+      "height": 256,
+      "imageId": "magik",
+      "public": {
+        "href": "/champions/magik",
+        "id": 625,
+        "name": "Magik",
+        "slug": "magik"
+      },
+      "remote": false,
+      "sha256": "dd9bd977de385a5ae963357a2942af6d8218c11182f0e10c8414da3256a845c5",
+      "sourcePath": "ui_portraits/portraits/portrait_magik.png",
+      "sourceSha256": "0ee243b0474ca6c6e25d29fc415f4c2b3d107389fb27773b3a659a7a0bfcefd2",
+      "src": "/node-modifiers/portraits/dd9bd977de385a5ae963357a2942af6d8218c11182f0e10c8414da3256a845c5.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_magik",
+      "width": 256
+    },
+    {
+      "characterHash": "d798900643cbf427fcb01325bd793536ad274d0001109b0be828d04b930797f6",
+      "gameId": "medusa",
+      "height": 256,
+      "imageId": "medusa",
+      "public": {
+        "href": "/champions/medusa",
+        "id": 632,
+        "name": "Medusa",
+        "slug": "medusa"
+      },
+      "remote": false,
+      "sha256": "6eeee7cc0ad7046f4d3de10f7f0dea966bd66aa290d08173ed676462f99afbb3",
+      "sourcePath": "ui_portraits/portraits/portrait_medusa.png",
+      "sourceSha256": "b0fbb4d368a8341af59f9dffadaf09795a0b2932bcb0cb605e69e68d9339dc81",
+      "src": "/node-modifiers/portraits/6eeee7cc0ad7046f4d3de10f7f0dea966bd66aa290d08173ed676462f99afbb3.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_medusa",
+      "width": 256
+    },
+    {
+      "characterHash": "f33325cee3e85c71d65232178d33a460ee778ae3259144b14dbb43383376f9c1",
+      "gameId": "moonknight",
+      "height": 256,
+      "imageId": "moonknight",
+      "public": {
+        "href": "/champions/moon-knight",
+        "id": 640,
+        "name": "Moon Knight",
+        "slug": "moon-knight"
+      },
+      "remote": false,
+      "sha256": "72e33de617478c393192c626db404c411fc948464f4e45be6373d744a32655a0",
+      "sourcePath": "ui_portraits/portraits/portrait_moonknight.png",
+      "sourceSha256": "07c79b1c9f0b9029c03c9a4613ca4147c78be4cb74f2dc7d604abcde0091f0c6",
+      "src": "/node-modifiers/portraits/72e33de617478c393192c626db404c411fc948464f4e45be6373d744a32655a0.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_moonknight",
+      "width": 256
+    },
+    {
+      "characterHash": "8d19ee7ff2855a3edd6f721101bdfe292fd04bfae5d1628d551ef72918bba139",
+      "gameId": "nightcrawler",
+      "height": 256,
+      "imageId": "nightcrawler",
+      "public": {
+        "href": "/champions/nightcrawler",
+        "id": 655,
+        "name": "Nightcrawler",
+        "slug": "nightcrawler"
+      },
+      "remote": false,
+      "sha256": "1255fef99d5d9bd739b3d5280ce09657342f236012f596579ea1a3f2354bb9fe",
+      "sourcePath": "ui_portraits/portraits/portrait_nightcrawler.png",
+      "sourceSha256": "3a665b1e4b187243512fb6bb002bb29a153438cc4ea6ea4ee59daf1d1315b606",
+      "src": "/node-modifiers/portraits/1255fef99d5d9bd739b3d5280ce09657342f236012f596579ea1a3f2354bb9fe.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_nightcrawler",
+      "width": 256
+    },
+    {
+      "characterHash": "01175c276b0ac868d6e50f534fff5b75c1ce99a6fc14614ed7dec7fa6800e4e5",
+      "gameId": "patriot",
+      "height": 256,
+      "imageId": "patriot",
+      "public": {
+        "href": "/champions/patriot",
+        "id": 665,
+        "name": "Patriot",
+        "slug": "patriot"
+      },
+      "remote": false,
+      "sha256": "3c509a703d4bb0f18ac65fd5b3c8b918df1d44fd658a01440903c9e0a4ace911",
+      "sourcePath": "ui_portraits_45.1/portraits/portrait_patriot.png",
+      "sourceSha256": "080d726eaf3793964e54c0f3efecc3a3af19e8b4a3a48fa0ff41729bc5097c55",
+      "src": "/node-modifiers/portraits/3c509a703d4bb0f18ac65fd5b3c8b918df1d44fd658a01440903c9e0a4ace911.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_patriot",
+      "width": 256
+    },
+    {
+      "characterHash": "a84a5b48b6de750ea23d6dddb314250ff129e0526d5dcf66cb3a9653da10147d",
+      "gameId": "quake",
+      "height": 256,
+      "imageId": "quake",
+      "public": {
+        "href": "/champions/quake",
+        "id": 678,
+        "name": "Quake",
+        "slug": "quake"
+      },
+      "remote": false,
+      "sha256": "f070b9c42a7cf94b62a141daa4ce603a9d740265ab63d806ce40ef7f8281c147",
+      "sourcePath": "ui_portraits/portraits/portrait_quake.png",
+      "sourceSha256": "333754f91c0109257603a67b8d7192dfc5f04d1e5121bbe4b2e7d6c1716db988",
+      "src": "/node-modifiers/portraits/f070b9c42a7cf94b62a141daa4ce603a9d740265ab63d806ce40ef7f8281c147.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_quake",
+      "width": 256
+    },
+    {
+      "characterHash": "8a3a377c5e462abe9fb85a8c4271c95e16b6853bba7964e6bb5e882a4881aa6e",
+      "gameId": "rocket",
+      "height": 256,
+      "imageId": "rocket",
+      "public": {
+        "href": "/champions/rocket-raccoon",
+        "id": 686,
+        "name": "Rocket Raccoon",
+        "slug": "rocket-raccoon"
+      },
+      "remote": false,
+      "sha256": "fdef5f9b2b9a29d5853fe4b90134d0f4eede569f26e0f2df56841c28ebc54d63",
+      "sourcePath": "ui_portraits/portraits/portrait_rocket.png",
+      "sourceSha256": "4c75d65ef0b51a2542b6fb34416e4dfb0012de27e3f1fe2fea4857ac0739b87d",
+      "src": "/node-modifiers/portraits/fdef5f9b2b9a29d5853fe4b90134d0f4eede569f26e0f2df56841c28ebc54d63.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_rocket",
+      "width": 256
+    },
+    {
+      "characterHash": "a65faa997916ab657972b1293782b2c1e7b4578557d9d0c986ce2e8ad61a86ef",
+      "gameId": "rogue",
+      "height": 256,
+      "imageId": "rogue",
+      "public": {
+        "href": "/champions/rogue",
+        "id": 687,
+        "name": "Rogue",
+        "slug": "rogue"
+      },
+      "remote": false,
+      "sha256": "b3e2eb36cec12b90165544ce833ef490ff8f9add7771452ce89252bede4c433c",
+      "sourcePath": "ui_portraits/portraits/portrait_rogue.png",
+      "sourceSha256": "0decb58c17127bf61f7da27547b6b2063d0ac237a405756b643c1d505427c9cb",
+      "src": "/node-modifiers/portraits/b3e2eb36cec12b90165544ce833ef490ff8f9add7771452ce89252bede4c433c.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_rogue",
+      "width": 256
+    },
+    {
+      "characterHash": "3d51493fb0b7b2de12cb2df743ac1e0a5fc1e2a8e7cc23a70a61e187a978c795",
+      "gameId": "ronan",
+      "height": 256,
+      "imageId": "ronan",
+      "public": {
+        "href": "/champions/ronan",
+        "id": 688,
+        "name": "Ronan",
+        "slug": "ronan"
+      },
+      "remote": false,
+      "sha256": "a168c6ebce175e5ad9a36429d9ce95714fef302e1adcc0d84efc07449f94de09",
+      "sourcePath": "ui_portraits/portraits/portrait_ronan.png",
+      "sourceSha256": "057b2c4b32ffc4254fbc39209d1a248af768e7d5c3e50d75410d24ef89e39605",
+      "src": "/node-modifiers/portraits/a168c6ebce175e5ad9a36429d9ce95714fef302e1adcc0d84efc07449f94de09.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_ronan",
+      "width": 256
+    },
+    {
+      "characterHash": "45cda87c137d477fd37b5b80d9d297969c4164437e26b68ef393b12ce3fd2d8c",
+      "gameId": "scarletwitch",
+      "height": 256,
+      "imageId": "scarlet_witch",
+      "public": {
+        "href": "/champions/scarlet-witch-classic",
+        "id": 695,
+        "name": "Scarlet Witch (Classic)",
+        "slug": "scarlet-witch-classic"
+      },
+      "remote": false,
+      "sha256": "28dfd83146e36be3175034b998513a763b31554551749f793512d2a6c6a95fda",
+      "sourcePath": "ui_portraits/portraits/portrait_scarlet_witch.png",
+      "sourceSha256": "be800a9d742669bbbd20986a906b78299763db321fc5a0f390a83131c98bac74",
+      "src": "/node-modifiers/portraits/28dfd83146e36be3175034b998513a763b31554551749f793512d2a6c6a95fda.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_scarlet_witch",
+      "width": 256
+    },
+    {
+      "characterHash": "ca33049849402345757da5b6cb6395e4ef98203f06d495c94ff004d1a9c3d374",
+      "gameId": "sentinel",
+      "height": 256,
+      "imageId": "sentinel",
+      "public": {
+        "href": "/champions/sentinel",
+        "id": 698,
+        "name": "Sentinel",
+        "slug": "sentinel"
+      },
+      "remote": false,
+      "sha256": "c5936811004d57e799386b891511541f08c376a49557ce89f1749347b331500a",
+      "sourcePath": "ui_portraits_17.1/portraits/portrait_sentinel.png",
+      "sourceSha256": "1a1e80398fb33d6c2b86be96dc5cc47a4fe21550e23a6fe1c9848905e0739d7c",
+      "src": "/node-modifiers/portraits/c5936811004d57e799386b891511541f08c376a49557ce89f1749347b331500a.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_sentinel",
+      "width": 256
+    },
+    {
+      "characterHash": "41ac32dd313603dfa5a19d0123ba8aa84d5df96c7cceb786bfb7cdd082e91393",
+      "gameId": "shathra",
+      "height": 256,
+      "imageId": "shathra",
+      "public": {
+        "href": "/champions/shathra",
+        "id": 702,
+        "name": "Shathra",
+        "slug": "shathra"
+      },
+      "remote": false,
+      "sha256": "723ea528918a5bcc96564972f1ba01ab0f8bd99919fee974e3edbd5ab2b546a7",
+      "sourcePath": "ui_portraits_46.1/portraits/portrait_shathra.png",
+      "sourceSha256": "ef5b8fec92923fa498fd0f7aa1b4d54082f2aae9bbf4ab2986d3e8254d3e2fbd",
+      "src": "/node-modifiers/portraits/723ea528918a5bcc96564972f1ba01ab0f8bd99919fee974e3edbd5ab2b546a7.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_shathra",
+      "width": 256
+    },
+    {
+      "characterHash": "0a579c4acf2daf188a916c5b29c9291f03aa34dd310808752c70bf59d0d0af3c",
+      "gameId": "shocker",
+      "height": 256,
+      "imageId": "shocker",
+      "public": {
+        "href": "/champions/shocker",
+        "id": 705,
+        "name": "Shocker",
+        "slug": "shocker"
+      },
+      "remote": false,
+      "sha256": "56306d682741a2ed76a9d48ae2ea6ee4434c8473f4ca17af4b641d9fefefe76f",
+      "sourcePath": "ui_portraits_38.2/portraits/portrait_shocker.png",
+      "sourceSha256": "df63bcf51d9a78c51f8b52bc4b6af7f621b1dec95f6240c5df4763a9aba5cc0f",
+      "src": "/node-modifiers/portraits/56306d682741a2ed76a9d48ae2ea6ee4434c8473f4ca17af4b641d9fefefe76f.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_shocker",
+      "width": 256
+    },
+    {
+      "characterHash": "4b30c0831f1e8137f25175b438c6858d7ac8cb2f9c3d70b6870ea20519cf8d64",
+      "gameId": "silversurfer",
+      "height": 256,
+      "imageId": "silversurfer",
+      "public": {
+        "href": "/champions/silver-surfer",
+        "id": 711,
+        "name": "Silver Surfer",
+        "slug": "silver-surfer"
+      },
+      "remote": false,
+      "sha256": "ec6b1be3b363afab706a3479c0a53fa8ae0177434863324fcbddec3d43765fe9",
+      "sourcePath": "ui_portraits_25.1/portraits/portrait_silversurfer.png",
+      "sourceSha256": "56a08fef98dc7d5e33a486134a41bdb572cd47180f600917221dd247c7e115dd",
+      "src": "/node-modifiers/portraits/ec6b1be3b363afab706a3479c0a53fa8ae0177434863324fcbddec3d43765fe9.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_silversurfer",
+      "width": 256
+    },
+    {
+      "characterHash": "69b9e85612635e79bebd781bb39fa08eddb37611e6165e9268745fb30dcbd078",
+      "gameId": "skrull_super",
+      "height": 256,
+      "imageId": "skrull_super",
+      "public": {
+        "href": "/champions/super-skrull",
+        "id": 734,
+        "name": "Super-Skrull",
+        "slug": "super-skrull"
+      },
+      "remote": false,
+      "sha256": "b671a8846599ae05f216f9abbca75db9cfc3fd04f9735ecead357583d4ba1653",
+      "sourcePath": "ui_portraits_30.0/portraits/portrait_skrull_super.png",
+      "sourceSha256": "1cf27cb85febce488ceaa73d1f443c1b090911f4746eb2ee2731497ec08797ac",
+      "src": "/node-modifiers/portraits/b671a8846599ae05f216f9abbca75db9cfc3fd04f9735ecead357583d4ba1653.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_skrull_super",
+      "width": 256
+    },
+    {
+      "characterHash": "61c18a67cd653da2e88b4811243426004f8342a96c5cb8cc3b4f19e485f80c3d",
+      "gameId": "spidergwen",
+      "height": 256,
+      "imageId": "spidergwen",
+      "public": {
+        "href": "/champions/spider-gwen",
+        "id": 714,
+        "name": "Spider-Gwen",
+        "slug": "spider-gwen"
+      },
+      "remote": false,
+      "sha256": "9dbcb25b7f0eda683ef29af40c10e336d2d57d898fa6388bf5b22dea06ebfbd5",
+      "sourcePath": "ui_portraits/portraits/portrait_spidergwen.png",
+      "sourceSha256": "4f55574a328b0cfd0cd331864b9d42f90d5f99433570a940047b10e146c520cb",
+      "src": "/node-modifiers/portraits/9dbcb25b7f0eda683ef29af40c10e336d2d57d898fa6388bf5b22dea06ebfbd5.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_spidergwen",
+      "width": 256
+    },
+    {
+      "characterHash": "41b690d7e371c0f007f1c7dd5c5361d2ea395f657da8d7956cc01f4c715408a6",
+      "gameId": "spiderman",
+      "height": 256,
+      "imageId": "spider_man",
+      "public": {
+        "href": "/champions/spider-man-classic",
+        "id": 716,
+        "name": "Spider-Man (Classic)",
+        "slug": "spider-man-classic"
+      },
+      "remote": false,
+      "sha256": "3c6e39542cbdd5a5fcdce19c13073a7e8a7078890138d148304b5d19e28e8457",
+      "sourcePath": "ui_portraits/portraits/portrait_spider_man.png",
+      "sourceSha256": "c44875248db94e9947335c864aae97218725d33bfa49c85a8be31a2e9493bb1f",
+      "src": "/node-modifiers/portraits/3c6e39542cbdd5a5fcdce19c13073a7e8a7078890138d148304b5d19e28e8457.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_spider_man",
+      "width": 256
+    },
+    {
+      "characterHash": "76579b5126a61723740f47d34d200025c457bf0e4046a7e58e76ec3adb34921e",
+      "gameId": "spiderman_2099",
+      "height": 256,
+      "imageId": "spiderman_2099",
+      "public": {
+        "href": "/champions/spider-man-2099",
+        "id": 722,
+        "name": "Spider-Man 2099",
+        "slug": "spider-man-2099"
+      },
+      "remote": false,
+      "sha256": "33bf3f276c9d4075236fe73b54efe61165ec988181ab433af8c87708320d14e1",
+      "sourcePath": "ui_portraits_32.1/portraits/portrait_spiderman_2099.png",
+      "sourceSha256": "9d871d23bb01d93f55b7eb7843b8bc70475a51d6b891d88d414d9ab4fe25e9b2",
+      "src": "/node-modifiers/portraits/33bf3f276c9d4075236fe73b54efe61165ec988181ab433af8c87708320d14e1.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_spiderman_2099",
+      "width": 256
+    },
+    {
+      "characterHash": "8519c1a30b447934226ae66cd43c1f627b54ec4e09a2f539d5170645f531d3b9",
+      "gameId": "spiderman_black",
+      "height": 256,
+      "imageId": "spiderman_black",
+      "public": {
+        "href": "/champions/spider-man-symbiote",
+        "id": 721,
+        "name": "Spider-Man (Symbiote)",
+        "slug": "spider-man-symbiote"
+      },
+      "remote": false,
+      "sha256": "17d779e9e74100bbc4aca9cff92d7b3647ef12aa2274ddecf0db707d41d8913d",
+      "sourcePath": "ui_portraits/portraits/portrait_spiderman_black.png",
+      "sourceSha256": "b2690aaa9bfc7688d45bd54dd89ae9094aa4bd19f0208f0467e8fd820d29a663",
+      "src": "/node-modifiers/portraits/17d779e9e74100bbc4aca9cff92d7b3647ef12aa2274ddecf0db707d41d8913d.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_spiderman_black",
+      "width": 256
+    },
+    {
+      "characterHash": "a535b4ae1e772f3db2390c32cfe699d228d7ef218a29bfad89d77db8df12857e",
+      "gameId": "spiderman_morales",
+      "height": 256,
+      "imageId": "spiderman_morales",
+      "public": {
+        "href": "/champions/spider-man-miles-morales",
+        "id": 717,
+        "name": "Spider-Man (Miles Morales)",
+        "slug": "spider-man-miles-morales"
+      },
+      "remote": false,
+      "sha256": "c918d4744d0931f393acd8ca8c855435f861df1f131884d74478ffbe3908b8e9",
+      "sourcePath": "ui_portraits/portraits/portrait_spiderman_morales.png",
+      "sourceSha256": "25eea644d8a6c4352bb0879b0ac50dbcc9f581bb228a9fbba983c43c6de24a9a",
+      "src": "/node-modifiers/portraits/c918d4744d0931f393acd8ca8c855435f861df1f131884d74478ffbe3908b8e9.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_spiderman_morales",
+      "width": 256
+    },
+    {
+      "characterHash": "0b1c02563a197a970b87e554a3622e1f1eeee2d6ff9e48462db4f4627fa6a140",
+      "gameId": "spiderman_movie",
+      "height": 256,
+      "imageId": "spiderman_movie",
+      "public": {
+        "href": "/champions/spider-man-stark-enhanced",
+        "id": 718,
+        "name": "Spider-Man (Stark Enhanced)",
+        "slug": "spider-man-stark-enhanced"
+      },
+      "remote": false,
+      "sha256": "bf7e9aa41d70d03de77ac7637052632dabdadece2cd211ecc83d820da28a8c12",
+      "sourcePath": "ui_portraits/portraits/portrait_spiderman_movie.png",
+      "sourceSha256": "344133a07bf4cf8c59f4ec08f51e5c468fafc0307f6586be5531b279d063a264",
+      "src": "/node-modifiers/portraits/bf7e9aa41d70d03de77ac7637052632dabdadece2cd211ecc83d820da28a8c12.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_spiderman_movie",
+      "width": 256
+    },
+    {
+      "characterHash": "9523b3abd902b95e26b9c08b806077a5d5912a95c3f683b56c46cb0d740e40c2",
+      "gameId": "spiderman_stealth",
+      "height": 256,
+      "imageId": "spiderman_stealth",
+      "public": {
+        "href": "/champions/spider-man-stealth-suit",
+        "id": 719,
+        "name": "Spider-Man (Stealth Suit)",
+        "slug": "spider-man-stealth-suit"
+      },
+      "remote": false,
+      "sha256": "60559e9f360f4ce8e2e62fe3f7d398a1a21b4ea01982126d01e9f16716c871ff",
+      "sourcePath": "ui_portraits_24.0/portraits/portrait_spiderman_stealth.png",
+      "sourceSha256": "236ab7f03a4820b49ddc35545fa57cf214532f04dfdbd5a270c346abc2409d9e",
+      "src": "/node-modifiers/portraits/60559e9f360f4ce8e2e62fe3f7d398a1a21b4ea01982126d01e9f16716c871ff.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_spiderman_stealth",
+      "width": 256
+    },
+    {
+      "characterHash": "33a9e65074ea54b4cc4dce989be33f5618e0bafb2be7131636d3dbc146aae901",
+      "gameId": "venompool",
+      "height": 256,
+      "imageId": "venompool",
+      "public": {
+        "href": "/champions/venompool",
+        "id": 761,
+        "name": "Venompool",
+        "slug": "venompool"
+      },
+      "remote": false,
+      "sha256": "70aea540f713350deae12412308fa7b94bbd22c0cf09e8e6a69de198ed28e32c",
+      "sourcePath": "ui_portraits/portraits/portrait_venompool.png",
+      "sourceSha256": "d9d287c03f653ff3c9e1efb029edf625f85f5ee077fec14ea4382789ac3bef31",
+      "src": "/node-modifiers/portraits/70aea540f713350deae12412308fa7b94bbd22c0cf09e8e6a69de198ed28e32c.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_venompool",
+      "width": 256
+    },
+    {
+      "characterHash": "6df28dd80e8c3ab39e00b94f261a28120277c8e681f4a6d73323a2a90ff1d6c1",
+      "gameId": "warmachine",
+      "height": 256,
+      "imageId": "warmachine",
+      "public": {
+        "href": "/champions/war-machine",
+        "id": 770,
+        "name": "War Machine",
+        "slug": "war-machine"
+      },
+      "remote": false,
+      "sha256": "ad70afc9eb2c46e8fc4af8c3df720fefd2c2418c4cc2524acf40e237eec1f890",
+      "sourcePath": "ui_portraits/portraits/portrait_warmachine.png",
+      "sourceSha256": "71f7c25d308847ec21560384ce27095e4b15c9fbea8d045154c53ad4319d3994",
+      "src": "/node-modifiers/portraits/ad70afc9eb2c46e8fc4af8c3df720fefd2c2418c4cc2524acf40e237eec1f890.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_warmachine",
+      "width": 256
+    },
+    {
+      "characterHash": "5a7efbc2553bc7adc8e752fdfbc908763d280fc560fabbfeaa073456ed86376d",
+      "gameId": "yellowjacket",
+      "height": 256,
+      "imageId": "yellowjacket",
+      "public": {
+        "href": "/champions/yellowjacket",
+        "id": 782,
+        "name": "Yellowjacket",
+        "slug": "yellowjacket"
+      },
+      "remote": false,
+      "sha256": "cf170f78341f3210114bec31e966d267abc7a50c6dedfcc9762eb37a66628d1a",
+      "sourcePath": "ui_portraits/portraits/portrait_yellowjacket.png",
+      "sourceSha256": "9b5c1b91501100d65e13eb9b3c5d15297fbe0a678e8cd6ecc9f095468643e222",
+      "src": "/node-modifiers/portraits/cf170f78341f3210114bec31e966d267abc7a50c6dedfcc9762eb37a66628d1a.webp",
+      "status": "verified",
+      "textureRef": "portraits/portrait_yellowjacket",
+      "width": 256
+    }
+  ],
+  "profile": {
+    "bundleSha256": "91679c15633f0336087415828a089a9ba0d28e7c71a73442216b4ac379aca28e",
+    "catalogFileSha256": "c18f0f5944785d93f2a92b27e850a723e67fd446127847e3e232580786f2e741",
+    "championsSha256": "29882a32447201f3d6f64bfe3f81c424340b0489c7bef752dff391b7ba8cffc9",
+    "evidence": [
+      {
+        "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime/QuestBuffData.txt",
+        "sha256": "b932f0319cc590a48e25dcc4170c3a585ef0b96828ab2143ed8cbb63affbec58"
+      },
+      {
+        "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime/GameBCGUtils_NestedType_BuffItemContext.txt",
+        "sha256": "d0a0df389ab2927e789a371d04a141977da89eddcf3586bd013445aa5f133408"
+      },
+      {
+        "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime/PreFightBuffInfoItem.txt",
+        "sha256": "81f8f695c98f2788dfd7877da40e970816f86c5c1eb8bfc8ffc4f89ccf8ae334"
+      },
+      {
+        "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime/NodeBuffInfoItem.txt",
+        "sha256": "fda39de1dd416dec0097c2b7cca1516a26970f2e94bd703d9e9d3bf8e5ebb940"
+      },
+      {
+        "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime/UIBuffNodeData.txt",
+        "sha256": "c65cd071a9a998c7010ab8d78e45a4f46b77743758b3148154711fbd771dcb9a"
+      },
+      {
+        "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime/BCGStatModifierAppearance.txt",
+        "sha256": "7824e5352f683f8c9c74c8592a5e6df06193eb74433ae67e2e6e7be992873589"
+      },
+      {
+        "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime/BCGCharacterData.txt",
+        "sha256": "0f1c9f89276b0b09afec3c31e009ad818f353bcbbd5c7c49fd19f11709761c56"
+      },
+      {
+        "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime/BCGBlueprintBase.txt",
+        "sha256": "adcf2145d1adf310739e70d3aa5ec5ef3c388553f82b5a936a5384ced6cfc771"
+      },
+      {
+        "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime/GameBuffUtils.txt",
+        "sha256": "006ebe5a6d3b8a1e066a572ab808296f3ef5a7102a5040a726085a902fe243e1"
+      },
+      {
+        "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime/GameBCGUtils.txt",
+        "sha256": "793ce6eff3d4f1a32cc6f1672bd2871e41476f577e48d526512f1c97cb35679d"
+      },
+      {
+        "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03-addresses/Marvel.Runtime.dll",
+        "sha256": "d1b1085922513073b9dcd656aa08ee70e01a7aef1433aa35876fdfba463278b5"
+      }
+    ],
+    "fontBackers": {
+      "material": {
+        "field": "m_DefaultMaterial",
+        "fileId": 0,
+        "pathId": "1048918868683857311",
+        "rawSha256": "86adfd97c9f2388c061b658f2d998da9352aa107e7b817fa264c675ed18d2833",
+        "type": "Material"
+      },
+      "texture": {
+        "field": "m_Texture",
+        "fileId": 0,
+        "pathId": "8903782574848973301",
+        "rawSha256": "bc355d8d9cc50b26bfa96ca02ee5386ac26c067f4fadc72783c32ae31933bc4c",
+        "type": "Texture2D"
+      }
+    },
+    "fontContainer": "assets/ui/fonts/marvel-icons-font.ttf",
+    "fontSelector": "UI/Fonts/Marvel-Icons-Font",
+    "fontSha256": "8a8784655a64d06a8c51b1ea20a14ed605bf6f81ef4556ff8412aa0ca0016b61",
+    "portraitBinding": {
+      "characterField": "BCGCharacterData.Character",
+      "imageField": "_imgID",
+      "localTexturePrefix": "portraits/portrait_",
+      "publicIdentity": "champions.json exact unique gameId; no name matching",
+      "remoteFlag": "_s3ImgID"
+    },
+    "prefab": "assets/ui/popups/prefightbuffinfoitem.prefab",
+    "renderer": {
+      "contextAppearanceOffset": 40,
+      "fallback": "Empty captured appearance hides the glyph label; generic node-type sprite is separate.",
+      "fontPathId": "7950789115386770100",
+      "fontSelectorPathId": "3598631262208381323",
+      "labelOffset": 200,
+      "labelPathId": "-5377414177855766791",
+      "prefabPathId": "3197274416054085185",
+      "questAppearanceOffset": 48,
+      "rendererPathId": "-7619293468403844443"
+    },
+    "resourceToc": {
+      "bindings": {
+        "ui/fonts/marvel-icons-font": "Assets/UI\\Fonts\\Marvel-Icons-Font.ttf",
+        "ui/popups/prefightbuffinfoitem": "Assets/UI\\Popups\\PreFightBuffInfoItem.prefab"
+      },
+      "path": "C:/Games/Marvel Contest of Champions/default/game/Champions_Data/Resources/Data/ui/toc.txt",
+      "sha256": "a7216784a9df908b83153fd1c0c027d3d34cb1def005ddb4d282e92bae2643fb"
+    },
+    "schemaVersion": 1,
+    "usesFileSha256": "070aebfdbe7dc204d8917e4ac390ddab1d00b8fd7984fafd5d5711e00a9bb049"
+  },
+  "schemaVersion": 1
+}

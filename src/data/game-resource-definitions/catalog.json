@@ -1,0 +1,121 @@
+{
+  "assets": {
+    "0124d9949c84a1f061c53cdabe115d8863c7c0c45b489d2f306db6a28ef3efd8": {
+      "byteLength": 59506,
+      "height": 256,
+      "imageUrl": "/game-rewards/resource-definitions/0124d9949c84a1f061c53cdabe115d8863c7c0c45b489d2f306db6a28ef3efd8.png",
+      "width": 256
+    },
+    "1e0069a6cf46212f3a564065531da63fccaaa6e4f427fbb259499d7f6e8c4bcb": {
+      "byteLength": 81532,
+      "height": 256,
+      "imageUrl": "/game-rewards/resource-definitions/1e0069a6cf46212f3a564065531da63fccaaa6e4f427fbb259499d7f6e8c4bcb.png",
+      "width": 256
+    },
+    "85de8eea25c67848a32f3b781df3da50dd561979191f09a5729cd761c7455ab3": {
+      "byteLength": 89345,
+      "height": 256,
+      "imageUrl": "/game-rewards/resource-definitions/85de8eea25c67848a32f3b781df3da50dd561979191f09a5729cd761c7455ab3.png",
+      "width": 256
+    },
+    "d05f985572790b26df7965d8c1d66715ead3e889ef010d9a411f96e72e4f4f61": {
+      "byteLength": 85455,
+      "height": 256,
+      "imageUrl": "/game-rewards/resource-definitions/d05f985572790b26df7965d8c1d66715ead3e889ef010d9a411f96e72e4f4f61.png",
+      "width": 256
+    },
+    "d6a21c502f22a38a56301ece3c74374a7bcfbc86fb688c2467d578596da46454": {
+      "byteLength": 98040,
+      "height": 256,
+      "imageUrl": "/game-rewards/resource-definitions/d6a21c502f22a38a56301ece3c74374a7bcfbc86fb688c2467d578596da46454.png",
+      "width": 256
+    }
+  },
+  "resources": [
+    {
+      "artworkStatus": "resolved",
+      "data": "eod2026_doomscrip",
+      "description": "Spend DoomScrip in the Von Doom Armory Store starting November 2, 18:00 UTC to February 10, 18:00 UTC. Spending DoomScrip gives points in the weekly Operation Realm Events.",
+      "iconTexture": "https://kabam-marvel.shared.mcoc-cdn.net/resources/iconTextures/6aab10786697b716372d493d/Subtab_CompanyScrip_Doomsday_ade0179632ae.png",
+      "imageUrl": "/game-rewards/resource-definitions/d6a21c502f22a38a56301ece3c74374a7bcfbc86fb688c2467d578596da46454.png",
+      "inputSha256": "d6a21c502f22a38a56301ece3c74374a7bcfbc86fb688c2467d578596da46454",
+      "name": "DOOMSCRIP",
+      "sourcePointer": "/definitions/0",
+      "type": "res"
+    },
+    {
+      "artworkStatus": "resolved",
+      "data": "essentia_currency",
+      "description": "Use Essentia to purchase items in the Store.",
+      "iconTexture": "iconCurrencyEssentia",
+      "imageUrl": "/game-rewards/resource-definitions/85de8eea25c67848a32f3b781df3da50dd561979191f09a5729cd761c7455ab3.png",
+      "inputSha256": "85de8eea25c67848a32f3b781df3da50dd561979191f09a5729cd761c7455ab3",
+      "name": "ESSENTIA",
+      "sourcePointer": "/definitions/1",
+      "type": "res"
+    },
+    {
+      "artworkStatus": "resolved",
+      "data": "mysterium",
+      "description": "Trade Mysterium in for rewards at the Trader's Outpost Store!",
+      "iconTexture": "https://kabam-marvel.shared.mcoc-cdn.net/resources/iconTextures/698e5740cdffab517d33ec37/Mysterium-Currency_40c26949d0bb.png",
+      "imageUrl": "/game-rewards/resource-definitions/d05f985572790b26df7965d8c1d66715ead3e889ef010d9a411f96e72e4f4f61.png",
+      "inputSha256": "d05f985572790b26df7965d8c1d66715ead3e889ef010d9a411f96e72e4f4f61",
+      "name": "MYSTERIUM",
+      "sourcePointer": "/definitions/2",
+      "type": "res"
+    },
+    {
+      "artworkStatus": "native-empty",
+      "data": "sp",
+      "description": "Use to Rank Up Masteries.",
+      "iconTexture": "",
+      "name": "MASTERY POINT",
+      "sourcePointer": "/definitions/3",
+      "type": "res"
+    },
+    {
+      "artworkStatus": "native-empty",
+      "data": "sp-max",
+      "description": "",
+      "iconTexture": "",
+      "name": "",
+      "sourcePointer": "/definitions/4",
+      "type": "res"
+    },
+    {
+      "artworkStatus": "resolved",
+      "data": "tower_challenge_energy",
+      "description": "Challenge Tower Entries are used to begin a fight within Challenge Towers.",
+      "iconTexture": "https://kabam-marvel.shared.mcoc-cdn.net/resources/iconTextures/69d685a02dfe4d43a4753c4a/CHALLENGETowerKEY_a830945bd79f.png",
+      "imageUrl": "/game-rewards/resource-definitions/0124d9949c84a1f061c53cdabe115d8863c7c0c45b489d2f306db6a28ef3efd8.png",
+      "inputSha256": "0124d9949c84a1f061c53cdabe115d8863c7c0c45b489d2f306db6a28ef3efd8",
+      "name": "CHALLENGE TOWER ENTRY",
+      "sourcePointer": "/definitions/5",
+      "type": "res"
+    },
+    {
+      "artworkStatus": "resolved",
+      "data": "tower_energy",
+      "description": "Class Tower Entries are used to begin a fight within Class Towers.",
+      "iconTexture": "https://kabam-marvel.shared.mcoc-cdn.net/resources/iconTextures/69d685a02dfe4d43a4753c4a/TowerKEY_a830945bd7a6.png",
+      "imageUrl": "/game-rewards/resource-definitions/1e0069a6cf46212f3a564065531da63fccaaa6e4f427fbb259499d7f6e8c4bcb.png",
+      "inputSha256": "1e0069a6cf46212f3a564065531da63fccaaa6e4f427fbb259499d7f6e8c4bcb",
+      "name": "CLASS TOWER ENTRY",
+      "sourcePointer": "/definitions/6",
+      "type": "res"
+    }
+  ],
+  "source": {
+    "allowlistSha256": "2cfac5db2ba5788fc0411b3b12634a16eeeb43feeaeff38fdb5f4ee79f558b39",
+    "artworkProofSha256": "534ceb8e4a818332c1bceeb217650d1f053766954333d88e0f3c904c5b16541c",
+    "captureSha256": "3eeacc019365e8a53a1048777f6b5639fd2ce155ef0aa21e2431a7546528800d",
+    "capturedAt": "2026-11-10T21:21:22.381997+00:00",
+    "idsSha256": "df53a55307cc26f023f4b5fc37b627e525f08603ee1ef4f7093f4b5a728f264e",
+    "layoutSha256": "a37071c661b5966d992241c1cc1c833695f592383135c6a9badd96e00bcc82d3",
+    "nativeProofSha256": "357b936abbeb46d7e67c471e6414403ba95eee23411568a0616cd9b09aa2b996",
+    "readerSha256": "608f7079de57e1257eb9892ff20740a3aefd2a997328f0d935cc58342786acd0",
+    "scopeSha256": "783016140a72c139df2e533779a0cebb797b7d9a6ad068d2dea42e10c2ceabc0"
+  },
+  "version": 1
+}

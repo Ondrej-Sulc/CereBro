@@ -1,5 +1,6 @@
 'use server'
 
+import { curatedNodeModifierSelect } from "@cerebro/core/domain/node-modifiers/native-icons";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { projectSavedQuestPlanRosterMap } from "@/lib/saved-quest-plan-projection";
@@ -73,7 +74,7 @@ export const getPlayerQuestPlanForViewing = withActionContext('getPlayerQuestPla
                             },
                             nodes: {
                                 include: {
-                                    nodeModifier: true
+                                    nodeModifier: { select: curatedNodeModifierSelect }
                                 }
                             }
                         }

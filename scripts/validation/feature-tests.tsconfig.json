@@ -1,0 +1,17 @@
+{
+  "extends": "../../web/tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "incremental": false,
+    "plugins": []
+  },
+  "include": [
+    "../../web/next-env.d.ts",
+    "../../src/tests/game-quests/**/*.test.ts",
+    "../../src/domain/node-modifiers/**/*.test.ts",
+    "../../src/domain/duel-*.test.ts",
+    "../../src/data/game-reward-definitions/*.test.ts",
+    "../../src/data/game-resource-definitions/*.test.ts"
+  ],
+  "exclude": ["../../node_modules", "../../web/node_modules"]
+}

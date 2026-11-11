@@ -4,6 +4,9 @@
 # Ignore build output directories
 **/dist
 **/web/.next
+**/*.tsbuildinfo
+**/__pycache__
+temp
 
 # Ignore local environment files
 .env

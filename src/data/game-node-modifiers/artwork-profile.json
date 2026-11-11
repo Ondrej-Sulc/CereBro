@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "catalogFileSha256": "c18f0f5944785d93f2a92b27e850a723e67fd446127847e3e232580786f2e741",
+  "usesFileSha256": "070aebfdbe7dc204d8917e4ac390ddab1d00b8fd7984fafd5d5711e00a9bb049",
+  "championsSha256": "29882a32447201f3d6f64bfe3f81c424340b0489c7bef752dff391b7ba8cffc9",
+  "bundleSha256": "91679c15633f0336087415828a089a9ba0d28e7c71a73442216b4ac379aca28e",
+  "fontSha256": "8a8784655a64d06a8c51b1ea20a14ed605bf6f81ef4556ff8412aa0ca0016b61",
+  "prefab": "assets/ui/popups/prefightbuffinfoitem.prefab",
+  "fontSelector": "UI/Fonts/Marvel-Icons-Font",
+  "evidence": [
+    {
+      "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime/QuestBuffData.txt",
+      "sha256": "b932f0319cc590a48e25dcc4170c3a585ef0b96828ab2143ed8cbb63affbec58"
+    },
+    {
+      "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime/GameBCGUtils_NestedType_BuffItemContext.txt",
+      "sha256": "d0a0df389ab2927e789a371d04a141977da89eddcf3586bd013445aa5f133408"
+    },
+    {
+      "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime/PreFightBuffInfoItem.txt",
+      "sha256": "81f8f695c98f2788dfd7877da40e970816f86c5c1eb8bfc8ffc4f89ccf8ae334"
+    },
+    {
+      "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime/NodeBuffInfoItem.txt",
+      "sha256": "fda39de1dd416dec0097c2b7cca1516a26970f2e94bd703d9e9d3bf8e5ebb940"
+    },
+    {
+      "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime/UIBuffNodeData.txt",
+      "sha256": "c65cd071a9a998c7010ab8d78e45a4f46b77743758b3148154711fbd771dcb9a"
+    },
+    {
+      "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime/BCGStatModifierAppearance.txt",
+      "sha256": "7824e5352f683f8c9c74c8592a5e6df06193eb74433ae67e2e6e7be992873589"
+    },
+    {
+      "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime/BCGCharacterData.txt",
+      "sha256": "0f1c9f89276b0b09afec3c31e009ad818f353bcbbd5c7c49fd19f11709761c56"
+    },
+    {
+      "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime/BCGBlueprintBase.txt",
+      "sha256": "adcf2145d1adf310739e70d3aa5ec5ef3c388553f82b5a936a5384ced6cfc771"
+    },
+    {
+      "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime/GameBuffUtils.txt",
+      "sha256": "006ebe5a6d3b8a1e066a572ab808296f3ef5a7102a5040a726085a902fe243e1"
+    },
+    {
+      "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03/IsilDump/Marvel.Runtime/GameBCGUtils.txt",
+      "sha256": "793ce6eff3d4f1a32cc6f1672bd2871e41476f577e48d526512f1c97cb35679d"
+    },
+    {
+      "path": "D:/CodexArtifacts/Cpp2IL-2026-11-03-addresses/Marvel.Runtime.dll",
+      "sha256": "d1b1085922513073b9dcd656aa08ee70e01a7aef1433aa35876fdfba463278b5"
+    }
+  ],
+  "renderer": {
+    "questAppearanceOffset": 48,
+    "contextAppearanceOffset": 40,
+    "labelOffset": 200,
+    "prefabPathId": "3197274416054085185",
+    "rendererPathId": "-7619293468403844443",
+    "labelPathId": "-5377414177855766791",
+    "fontSelectorPathId": "3598631262208381323",
+    "fontPathId": "7950789115386770100",
+    "fallback": "Empty captured appearance hides the glyph label; generic node-type sprite is separate."
+  },
+  "portraitBinding": {
+    "characterField": "BCGCharacterData.Character",
+    "imageField": "_imgID",
+    "remoteFlag": "_s3ImgID",
+    "localTexturePrefix": "portraits/portrait_",
+    "publicIdentity": "champions.json exact unique gameId; no name matching"
+  },
+  "fontContainer": "assets/ui/fonts/marvel-icons-font.ttf",
+  "fontBackers": {
+    "material": {
+      "field": "m_DefaultMaterial",
+      "pathId": "1048918868683857311",
+      "fileId": 0,
+      "type": "Material",
+      "rawSha256": "86adfd97c9f2388c061b658f2d998da9352aa107e7b817fa264c675ed18d2833"
+    },
+    "texture": {
+      "field": "m_Texture",
+      "pathId": "8903782574848973301",
+      "fileId": 0,
+      "type": "Texture2D",
+      "rawSha256": "bc355d8d9cc50b26bfa96ca02ee5386ac26c067f4fadc72783c32ae31933bc4c"
+    }
+  },
+  "resourceToc": {
+    "path": "C:/Games/Marvel Contest of Champions/default/game/Champions_Data/Resources/Data/ui/toc.txt",
+    "sha256": "a7216784a9df908b83153fd1c0c027d3d34cb1def005ddb4d282e92bae2643fb",
+    "bindings": {
+      "ui/fonts/marvel-icons-font": "Assets/UI\\Fonts\\Marvel-Icons-Font.ttf",
+      "ui/popups/prefightbuffinfoitem": "Assets/UI\\Popups\\PreFightBuffInfoItem.prefab"
+    }
+  }
+}

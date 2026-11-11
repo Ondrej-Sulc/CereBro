@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "type": "res",
+  "data": "sp",
+  "reference": "summonerlevelup/iconSkillPoints",
+  "url": "/game-rewards/resources/af59c73ef3abdf9fc8e156c7a45795381f2de6ae0339d19cb614aeb35bb299b8.png",
+  "sha256": "af59c73ef3abdf9fc8e156c7a45795381f2de6ae0339d19cb614aeb35bb299b8",
+  "width": 128,
+  "height": 128,
+  "source": {
+    "staticArtProofSha256": "0a0b559e6d95fd07ad48d9b3c0b56b76865103d308caae4f9e028e1dd8d03a10",
+    "nativeMetadataProofSha256": "357b936abbeb46d7e67c471e6414403ba95eee23411568a0616cd9b09aa2b996",
+    "nativeGetTexture": "CustomRedeemerMappings.ResourceRedeemerMapping.GetTexture, default tag, direct sp branch (ISIL99-104 ->312-313), before ResourcesManager lookup",
+    "binding": {
+      "blobPath": "originals/af/af59c73ef3abdf9fc8e156c7a45795381f2de6ae0339d19cb614aeb35bb299b8.png",
+      "blobSha256": "af59c73ef3abdf9fc8e156c7a45795381f2de6ae0339d19cb614aeb35bb299b8",
+      "evidence": "public-toc-loose-file",
+      "height": 128,
+      "inputSha256": "af59c73ef3abdf9fc8e156c7a45795381f2de6ae0339d19cb614aeb35bb299b8",
+      "logicalPath": "ui_home_misc_store_calendar_levelup/summonerlevelup/iconSkillPoints.png",
+      "nativePath": "summonerlevelup/iconskillpoints.png",
+      "objectId": "6596f7b4120956ee0b3e602595ae556ed889e5a19a62ff3588551f93b8a540ab",
+      "provenance": "{\"format\":\"PNG\",\"frames\":1,\"originalBlobSha256\":\"af59c73ef3abdf9fc8e156c7a45795381f2de6ae0339d19cb614aeb35bb299b8\"}",
+      "referenceId": "352eb88964874bf7221778d7b77267fd3ebb8e460a29ed264b1f765a8a075d8e",
+      "sourcePath": "Resources/Data/ui_home_misc_store_calendar_levelup/summonerlevelup/iconSkillPoints.png",
+      "width": 128
+    }
+  }
+}

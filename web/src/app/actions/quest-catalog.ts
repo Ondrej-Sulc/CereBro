@@ -1,5 +1,6 @@
 'use server'
 
+import { curatedNodeModifierSelect } from "@cerebro/core/domain/node-modifiers/native-icons";
 import { prisma } from "@/lib/prisma";
 import { withActionContext } from "@/lib/with-request-context";
 import { QuestSummary, QuestWithRelations } from "@/types/quests";
@@ -221,7 +222,7 @@ export async function getQuestPlanById(id: string): Promise<QuestWithRelations |
                         },
                         nodes: {
                             include: {
-                                nodeModifier: true
+                                nodeModifier: { select: curatedNodeModifierSelect }
                             }
                         }
                     }

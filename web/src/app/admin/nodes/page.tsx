@@ -1,3 +1,4 @@
+import { curatedNodeModifierSelect } from "@cerebro/core/domain/node-modifiers/native-icons";
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
 import AdminNodeManagerClient from "@/components/admin/admin-node-manager-client";
@@ -17,7 +18,7 @@ export default async function AdminNodeManagerPage() {
     include: {
         allocations: {
             include: {
-                nodeModifier: true
+                nodeModifier: { select: curatedNodeModifierSelect }
             }
         }
     }

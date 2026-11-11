@@ -1,5 +1,6 @@
 "use client";
 
+import { NodeModifierIcon } from "@/components/nodes/NodeModifierIcon";
 import { useState, useEffect, useMemo, useRef, type ChangeEvent, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
@@ -2516,10 +2517,12 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                                                             : "text-slate-600 hover:bg-slate-800 hover:text-amber-300"
                                                                     )}
                                                                     title={isHighlighted ? "Remove highlight" : "Highlight node"}
+                                                                    aria-pressed={isHighlighted}
+                                                                    aria-label={`${isHighlighted ? "Remove highlight from" : "Highlight"} ${modifier.name}`}
                                                                 >
                                                                     <Star className={cn("h-3 w-3", isHighlighted && "fill-current")} />
                                                                 </button>
-                                                                <span className="truncate">{modifier.name}</span>
+                                                                <NodeModifierIcon iconKey={modifier.iconKey} size={12} /><span className="truncate">{modifier.name}</span>
                                                             </div>
                                                         );
                                                     })}
@@ -2797,7 +2800,7 @@ export default function AdminQuestBuilderClient({ initialQuest, categories, tags
                                                                                 )}
                                                                             >
                                                                                 {n.isHighlighted && <Star className="h-2.5 w-2.5 fill-current" />}
-                                                                                {n.nodeModifier.name}
+                                                                                <NodeModifierIcon iconKey={n.nodeModifier.iconKey} size={11} />{n.nodeModifier.name}
                                                                             </Badge>
                                                                         ))}
                                                                     </div>

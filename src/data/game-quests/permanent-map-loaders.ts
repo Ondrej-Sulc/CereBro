@@ -1,0 +1,20 @@
+// Generated offline. Selected maps only.
+export const permanentMapLoaders = {
+  "eq_legends_e": () => import("./permanent-maps/eq_legends_e.json"),
+  "me_mausoleum_ch01_q01": () => import("./permanent-maps/me_mausoleum_ch01_q01.json"),
+  "me_mausoleum_ch01_q02": () => import("./permanent-maps/me_mausoleum_ch01_q02.json"),
+  "roadtolabyrinth_ch1_quest_1": () => import("./permanent-maps/roadtolabyrinth_ch1_quest_1.json"),
+  "roadtolabyrinth_ch1_quest_2": () => import("./permanent-maps/roadtolabyrinth_ch1_quest_2.json"),
+  "roadtolabyrinth_ch1_quest_3": () => import("./permanent-maps/roadtolabyrinth_ch1_quest_3.json"),
+  "roadtolabyrinth_ch1_quest_4": () => import("./permanent-maps/roadtolabyrinth_ch1_quest_4.json"),
+  "roadtolabyrinth_ch1_quest_5": () => import("./permanent-maps/roadtolabyrinth_ch1_quest_5.json"),
+  "roadtolabyrinth_ch1_quest_6": () => import("./permanent-maps/roadtolabyrinth_ch1_quest_6.json"),
+  "roadtolabyrinth_ch2_quest_1": () => import("./permanent-maps/roadtolabyrinth_ch2_quest_1.json"),
+  "roadtolabyrinth_ch2_quest_2": () => import("./permanent-maps/roadtolabyrinth_ch2_quest_2.json"),
+  "roadtolabyrinth_ch2_quest_3": () => import("./permanent-maps/roadtolabyrinth_ch2_quest_3.json"),
+  "roadtolabyrinth_ch2_quest_4": () => import("./permanent-maps/roadtolabyrinth_ch2_quest_4.json"),
+  "roadtolabyrinth_ch2_quest_5": () => import("./permanent-maps/roadtolabyrinth_ch2_quest_5.json"),
+  "roadtolabyrinth_ch2_quest_6": () => import("./permanent-maps/roadtolabyrinth_ch2_quest_6.json"),
+  "roadtolabyrinth_ch3_quest_1": () => import("./permanent-maps/roadtolabyrinth_ch3_quest_1.json"),
+  "roadtolabyrinth_ch3_quest_2": () => import("./permanent-maps/roadtolabyrinth_ch3_quest_2.json"),
+};

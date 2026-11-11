@@ -1,0 +1,2574 @@
+{
+  "version": 1,
+  "exporterSha256": "ab6ff81cd9cff3a21929751b6ec6900589563483482d6def5f49db9cf7970025",
+  "gameAssemblySha256": "01f46bb2e36c2160a8df939bbb080bcf2ee89ca15427692a10334efc90fd4abb",
+  "policy": "Offline evidence only. Cache images and prefab defaults never imply a quest binding or current availability.",
+  "definitionInputs": {
+    "continuation/runtime-supply.json": "f6182a313124da16011faf9123b94dc6066418f4b7484606858d5601583ae04d",
+    "expansion/maps/a04_ch01_q01.json": "0026df663ceabc9842d5212ba7e08c7ba4c5397c9af90c8b344b084643bb3673",
+    "expansion/maps/a04_ch01_q02.json": "a551c25bfaf3e2ffd45ed2839ba191be9a159afdb6c13e23b872c1a92407d9a9",
+    "expansion/maps/a04_ch01_q03.json": "5e0eeb1cba8e7c6e47f7549c708aab6b8d3c3a4f40a5c6c1808c0825988be442",
+    "expansion/maps/a04_ch01_q04.json": "aa9152ed003fab3ba4cb94fee05125a0895aeb70af558e24cc84fd1660a0c716",
+    "expansion/maps/a04_ch01_q05.json": "e7dc04748302856b947731a7686cf2bdfbeeffce36cf5f7215ee94f31a685bbe",
+    "expansion/maps/a04_ch01_q06.json": "12252591a45d593b6e100653c8128594ef4b78e096a86e46e8ad6d7d70b434ad",
+    "expansion/maps/a04_ch02_q01.json": "a0d2072e71d571aa77d03fd52c50ba12ae9c6a388ce847d1d5b1a5e5522fa7c3",
+    "expansion/maps/a04_ch02_q02.json": "5313229f642a8c08e2a9efb39af4233a9706bb6ae4bdbc863bd1fc2ec23429f5",
+    "expansion/maps/a04_ch02_q03.json": "e1db36084fe3093f8f356525b9bcaf047fcfedcde6e74c6549fe6148d67e4825",
+    "expansion/maps/a04_ch02_q04.json": "0ee24e2e7c93ebd6a9549aef6af90a4d0c52680a9480a0180e9593239f41f358",
+    "expansion/maps/a04_ch02_q05.json": "8ad51e3d0b680bf59c0ec983ae5f6d489eb0d81747ec9206b7a29e3706c6f347",
+    "expansion/maps/a04_ch02_q06.json": "bd88dd820957d79fe9e7998415cbf2358b2bfd229c499687b730fa5d4cb6274e",
+    "expansion/maps/a04_ch03_q01.json": "ad787afa134f5a53e3a502f5be0b88752366642d8ff9fa6ffd71563f8939f0bb",
+    "expansion/maps/a04_ch03_q02.json": "6d17450b040cd95372a75abfa20b8e7538b5211fa2be1a51e9fc63cdbb74714b",
+    "expansion/maps/a04_ch03_q03.json": "16e89f602f6414ab9ad72d250019a7f9a8473c49f4c373cc213ea41d922428e6",
+    "expansion/maps/a04_ch03_q04.json": "245eab07e2efd70cc7303a0984af2602dbe589e68d7ac89d135dfd051d9d3ca7",
+    "expansion/maps/a04_ch03_q05.json": "b90faf3db593a8b499225b20712716a1dc4853866fa7c65a22e3d0a2560c0ca8",
+    "expansion/maps/a04_ch03_q06.json": "f40fafcc7929717ef9396c3da0d101ea31c64907b550bcbb137184e62cbc979d",
+    "expansion/maps/a04_ch04_q01.json": "2eddb8ee406ae0a33d9d933e6646d44472bbe5fed9cadb6a001f1c5e6d8d4232",
+    "expansion/maps/a04_ch04_q02.json": "2fcc2025c9068d764887e007b052b2388e0c9b81a43bb4f75033ee885cdc7ed9",
+    "expansion/maps/a04_ch04_q03.json": "59dcaf25e25a3e0656876f4a2b5f5e2d22cf2bad7563d608ae6d87451fd82f8b",
+    "expansion/maps/a04_ch04_q04.json": "10cbaec6ac477e985770b980af0f464a1dab3b23be09349ec330420c1ca4db31",
+    "expansion/maps/a04_ch04_q05.json": "19bd8a8412b07b5aaf74d9245c111941725bec593d8b877b1281af05c06e40e0",
+    "expansion/maps/a04_ch04_q06.json": "f763b0599012425c08c8a0897d535e580c4376118eb9bea1a09df08b01506dab",
+    "expansion/maps/p01_ch01_q02.json": "3e4913edfc34689083ad363bab256e55a4b4e9e5ecb982e053e70a432df228e0",
+    "expansion/maps/p01_ch01_q03.json": "1f5bd255702f376927f04da36e0c46d3ded69ad5af86185991600f73b4bd8166",
+    "expansion/maps/p01_ch01_q04.json": "b0f1b390400b9873410da9153a14d163c0fecc94782c7434385a3ada15f83220",
+    "expansion/maps/p01_ch01_q05.json": "65c6af5733c5fc1a38eb29ee42dd1c5232a9df4436c4488e0f3c0eac3b336af5",
+    "expansion/maps/p01_ch01_q06.json": "c42fec44f9c5434642c4b94a7f7346c49fcd0452b4a85b90e5d015abeac9677d",
+    "expansion/maps/p02_ch01_q01.json": "5a737de82ff5272267552f12171bec846f1743070cc37be961acc6bea871b059",
+    "expansion/maps/p02_ch01_q02.json": "4d99762928fbccf0d85dd0ee46e55ad42585d03cdbff67e0e7b4f501ce0c1130",
+    "expansion/maps/p02_ch01_q03.json": "b6312150c3ceac047e077c1bba6e6045e32e268a9252230e7e1450e5baeaf308",
+    "expansion/maps/p02_ch01_q04.json": "521ffdb1401f96af4e6655c3bea66059c95e4252d1fa37e8659cf0590b0d4cf8",
+    "expansion/maps/p02_ch01_q05.json": "3e18df1b7a7c180e59f779501f0ababec55459e61d2d86b291adcb4ea705af24",
+    "expansion/maps/p02_ch01_q06.json": "1e39ba15e5bd16b3b1e7576f57addb891edd10dcd8bc56a23b6410d3a2e1fe23",
+    "expansion/maps/p03_ch01_q01.json": "24dce9bb000344ccd151201cee910573769cd8e7428f215eb4836e7e1dddfc73",
+    "expansion/maps/p03_ch01_q02.json": "39fb7022b99932e73c59c05459698a30090d2f27685f86f6964b268ecbd34d28",
+    "expansion/maps/p03_ch01_q03.json": "5478eacacac0289dd5e90700a673231b333bbdb7026dc153bf4471218c4ea3ff",
+    "expansion/maps/p03_ch01_q04.json": "c0e4d12b9dc2a59d59fc7dff77d80e1ea57676b8c4ad235bac36a705f4169bd2",
+    "expansion/maps/p03_ch01_q05.json": "fcfec9483417ff88065989e9e1896a356d6b50f8dc1446700ba7dbca66ed85f4",
+    "expansion/maps/p03_ch01_q06.json": "bba3fa5e07ae232cd6edc30d1a8b8c4f10d8b83eca2947548fe11a93f05ce972",
+    "expansion/maps/p03_ch02_q01.json": "6481db59848e4c44f41e3c3ac5dc2760d6b766814922fcdff74225024feeed2d",
+    "expansion/maps/p03_ch02_q02.json": "8152e6fd3ba4abf98daeb6f04257bc4da0d5a88162db61a1c90e459718287761",
+    "expansion/maps/p03_ch02_q03.json": "61bfc1666dc86461a04aad1d8583ebabeb986d5612296a31cd8a59f54386a666",
+    "expansion/maps/p03_ch02_q04.json": "e1c118be8bf38fbbdf5bd2cfe6d3f8ef659a3b28359848001bd5b74a7c10e66c",
+    "expansion/maps/p03_ch02_q05.json": "fbe7de0153a4212d476b824cb23322b884709800a5d746e9835c540f3120710a",
+    "expansion/maps/p03_ch02_q06.json": "cc560748e73be1dc9c4bbe387eff0eba304fa84636af1137301d2911991e5fd5",
+    "layouts.json": "d222efe9fd9334aa8095236abd990078470801237dd60897b04798a5b817befa"
+  },
+  "coverage": {
+    "Act": {
+      "definitions": 20,
+      "fieldsPresent": 0
+    },
+    "Chapter": {
+      "definitions": 59,
+      "fieldsPresent": 0
+    },
+    "QuestSummary": {
+      "definitions": 274,
+      "fieldsPresent": 0
+    },
+    "QuestSet": {
+      "definitions": 10,
+      "fieldsPresent": 0
+    }
+  },
+  "originalCaptureAllowlist": {
+    "file": "capture_quests.py",
+    "sha256": "0615e88f306dd19e8914fd1b69c2ba546f746eac8953fc00366149c4737de4c8",
+    "lines": [
+      "'QuestSet':words('category hash setName setId groupTag panelType difficulty difficultyLabel minLevel recommendedMinLevel expiryTime beginTime reoccur timeLimit timeLimitGrace allowRelic tags resetAttackerHp resetDefenderHp Acts difficulties QuestSummarys QuestMaps displayRewards milestoneRewards'),",
+      "'Act':words('actId groupIndex displayIndex friendlyName typeTitleOverride description Chapters championRestrictions relicRestrictions relicRestrictionsList firstCompletionRewards masteryCompletionRewards potentialCompletionRewards allowRelic difficultiesList'),",
+      "'Chapter':words('chapterId friendlyName description beginTime endTime Quests championRestrictions relicRestrictions relicRestrictionsList firstCompletionRewards masteryCompletionRewards potentialCompletionRewards allowRelic'),",
+      "'QuestSummary':words('qid setId mapId setName rootQid category panelType actIndex actFriendlyName chapterIndex questIndex begin end reoccurInterval friendlyName description theme teamTypeOverride recommendedPartyPI difficultyId teamSizeMin teamSizeMax IsTeamSizeMaxFromBaseLayout championRestrictions championRestrictionsList bannedAttackChampions protectedAttackChampions maxBannedAttackers relicRestrictions relicRestrictionsList energyPerTile walkableCount visibleWalkableCount isDetailed difficultyGainedPerWin difficultyLostPerLoss difficultyGainMax difficultyLossMax bosses finalBosses miniBosses ambushEnemies barriers barrierSwitches switchBarrierAssociations chests chestsRedeemerMap chestsPersistencyMap firstCompletionRewards firstCompletionRewardsMax masteryCompletionRewards potentialCompletionRewards allianceBossCompletionRewards pathBasedRewardsList label difficulty multiplier entryCost aiType aiName scaleBosses _costMultiple _minRatingPI _maxRatingPI modes memberCountRequirement staticRandomization allowRelic'),"
+    ]
+  },
+  "priorCaptureFieldPresence": [
+    {
+      "file": "runtime-event-rewards.json",
+      "sha256": "e1ccd01f02834bd1c93d7d306949b1b82109503f377cc31e1c9b0eebd4918f3c",
+      "artFieldsPresent": 0,
+      "use": "Supplementary field-presence check only; not a canonical definition/graph input"
+    },
+    {
+      "file": "runtime-fair-play.json",
+      "sha256": "ae5c4b286ec4e212de94aeb1ac66de4b14bcb4aafdebadbc829bb389f5ffe4a9",
+      "artFieldsPresent": 0,
+      "use": "Supplementary field-presence check only; not a canonical definition/graph input"
+    },
+    {
+      "file": "runtime-home-validated.json",
+      "sha256": "ebe5e7f2d5fbc759dbeb08d30ca174c7941c13ae4e2c81f545fb0b97c7694aa3",
+      "artFieldsPresent": 0,
+      "use": "Supplementary field-presence check only; not a canonical definition/graph input"
+    },
+    {
+      "file": "runtime-home.json",
+      "sha256": "dff494f85836c623db544c86e42016bdecbdf6f2686d65417808e71af73483e9",
+      "artFieldsPresent": 0,
+      "use": "Supplementary field-presence check only; not a canonical definition/graph input"
+    },
+    {
+      "file": "runtime-november.json",
+      "sha256": "fc84deb4880021ddb92d77305dc3ff11248e67cccfb1148681ae76af90ebb78d",
+      "artFieldsPresent": 0,
+      "use": "Supplementary field-presence check only; not a canonical definition/graph input"
+    },
+    {
+      "file": "runtime-surrender.json",
+      "sha256": "e9c68ed16f10011d1d205dffbe193c2e25817311a08b3e9b0f1abeadda40f21a",
+      "artFieldsPresent": 0,
+      "use": "Supplementary field-presence check only; not a canonical definition/graph input"
+    }
+  ],
+  "additionalDetailedCapturesAudited": 47,
+  "nativeEvidence": [
+    {
+      "file": "Marvel.Runtime/QuestSet.txt",
+      "sha256": "6b295ecbb2758e7878c9689fbeb7433f4ab10b5a4d3c2e902ed29e2bf5fba8be",
+      "method": "System.Void AddQuestSummarys(System.Collections.IDictionary data = null)",
+      "instructionRanges": [
+        [
+          1669,
+          1710
+        ],
+        [
+          1813,
+          1839
+        ],
+        [
+          2045,
+          2056
+        ],
+        [
+          2151,
+          2166
+        ]
+      ],
+      "instructions": [
+        "1669 Move rax, [0x186566160]",
+        "1670 Move r9, [rax+184]",
+        "1671 Move stack:0x28, r14",
+        "1672 Move rax, \"cdnImage\"",
+        "1673 Move stack:0x20, rax",
+        "1674 Move r9, [r9]",
+        "1675 Move r8, r15",
+        "1676 Move rdx, [r13+80]",
+        "1677 Move rcx, \"image\"",
+        "1678 Call Dot.Image, rcx, rdx, r8, r9, stack:0x0, stack:0x8",
+        "1679 Move [rsi+56], rax",
+        "1680 LoadAddress rcx, [rsi+56]",
+        "1681 Move rdx, rax",
+        "1682 Call 0x1804CF720, rcx, rdx, r8, r9",
+        "1683 Move rax, [0x186566160]",
+        "1684 Move r9, [rax+184]",
+        "1685 Move stack:0x28, r14",
+        "1686 Move rax, \"cdnImageSmall\"",
+        "1687 Move stack:0x20, rax",
+        "1688 Move r9, [r9]",
+        "1689 Move r8, r15",
+        "1690 Move rdx, [r13+80]",
+        "1691 Move rcx, \"imageSmall\"",
+        "1692 Call Dot.Image, rcx, rdx, r8, r9, stack:0x0, stack:0x8",
+        "1693 Move [rsi+64], rax",
+        "1694 LoadAddress rcx, [rsi+64]",
+        "1695 Move rdx, rax",
+        "1696 Call 0x1804CF720, rcx, rdx, r8, r9",
+        "1697 Move rax, [0x186566160]",
+        "1698 Move r9, [rax+184]",
+        "1699 Move stack:0x28, r14",
+        "1700 Move rax, \"cdnImageLarge\"",
+        "1701 Move stack:0x20, rax",
+        "1702 Move r9, [r9]",
+        "1703 Move r8, r15",
+        "1704 Move rdx, [r13+80]",
+        "1705 Move rcx, \"imageLarge\"",
+        "1706 Call Dot.Image, rcx, rdx, r8, r9, stack:0x0, stack:0x8",
+        "1707 Move [rsi+72], rax",
+        "1708 LoadAddress rcx, [rsi+72]",
+        "1709 Move rdx, rax",
+        "1710 Call 0x1804CF720, rcx, rdx, r8, r9",
+        "1813 Move r9, [rax+184]",
+        "1814 Move stack:0x28, r14",
+        "1815 Move rax, \"cdnBorderImageLocked\"",
+        "1816 Move stack:0x20, rax",
+        "1817 Move r9, [r9]",
+        "1818 Move r8, r15",
+        "1819 Move rdx, [r13+80]",
+        "1820 Move rcx, \"borderImageLocked\"",
+        "1821 Call Dot.Image, rcx, rdx, r8, r9, stack:0x0, stack:0x8",
+        "1822 Move [rsi+80], rax",
+        "1823 LoadAddress rcx, [rsi+80]",
+        "1824 Move rdx, rax",
+        "1825 Call 0x1804CF720, rcx, rdx, r8, r9",
+        "1826 Move rax, [0x186566160]",
+        "1827 Move r9, [rax+184]",
+        "1828 Move stack:0x28, r14",
+        "1829 Move rax, \"cdnBorderImageUnlocked\"",
+        "1830 Move stack:0x20, rax",
+        "1831 Move r9, [r9]",
+        "1832 Move r8, r15",
+        "1833 Move rdx, [r13+80]",
+        "1834 Move rcx, \"borderImageUnlocked\"",
+        "1835 Call Dot.Image, rcx, rdx, r8, r9, stack:0x0, stack:0x8",
+        "1836 Move [rsi+88], rax",
+        "1837 LoadAddress rcx, [rsi+88]",
+        "1838 Move rdx, rax",
+        "1839 Call 0x1804CF720, rcx, rdx, r8, r9",
+        "2045 Move rax, [0x186566160]",
+        "2046 Move r8, [rax+184]",
+        "2047 Move stack:0x20, r14",
+        "2048 Move r9, 1",
+        "2049 Move r8, [r8]",
+        "2050 Move rdx, r15",
+        "2051 Move rcx, \"image\"",
+        "2052 Call Dot.Loc, rcx, rdx, r8, r9, stack:0x0",
+        "2053 Move [rsi+40], rax",
+        "2054 LoadAddress rcx, [rsi+40]",
+        "2055 Move rdx, rax",
+        "2056 Call 0x1804CF720, rcx, rdx, r8, r9",
+        "2151 Move r9, 0",
+        "2152 Move r8, 0",
+        "2153 Move rdx, r15",
+        "2154 Move rcx, \"cdnImage\"",
+        "2155 Call Dot.Bool, rcx, rdx, r8, r9",
+        "2156 Compare rax, 0",
+        "2157 JumpIfEqual {2167}",
+        "2158 Move r9, 0",
+        "2159 Move r8, [rsi+40]",
+        "2160 Move rdx, \"/\"",
+        "2161 Move rcx, [r13+80]",
+        "2162 Call String.Concat, rcx, rdx, r8, r9",
+        "2163 Move [rsi+40], rax",
+        "2164 LoadAddress rcx, [rsi+40]",
+        "2165 Move rdx, rax",
+        "2166 Call 0x1804CF720, rcx, rdx, r8, r9"
+      ]
+    },
+    {
+      "file": "Marvel.Runtime/QuestSummary.txt",
+      "sha256": "a78e3dfd566e7b5d3c3bb894f2cc776f4ebb917417178eff488cb7a0caac87e5",
+      "method": "System.Void .ctor(System.Collections.IDictionary data, QuestSet+Category category, FightScreenPanelData+PanelType panelType, System.Boolean isDetailed, System.Boolean canPreview, System.Collections.IDictionary scaledBossTable = null, System.Int32 teamSizeMinOverride = 0, System.Int32 teamSizeMaxOverride = 0, System.Collections.IDictionary extraBossIds = null, System.Int32 battleGroup = -1)",
+      "instructionRanges": [
+        [
+          566,
+          585
+        ],
+        [
+          2933,
+          2995
+        ]
+      ],
+      "instructions": [
+        "566 Move [0x1865535BB], 1",
+        "567 Move rax, [0x186566160]",
+        "568 Move r9, [rax+184]",
+        "569 Move rax, typeof(QuestsConfig)",
+        "570 Move rdx, [rax+184]",
+        "571 Move stack:0x28, r15",
+        "572 Move rax, \"cdnActImage\"",
+        "573 Move stack:0x20, rax",
+        "574 Move r9, [r9]",
+        "575 Move r8, r12",
+        "576 Move rdx, [rdx]",
+        "577 Move rcx, \"actImage\"",
+        "578 Call Dot.Image, rcx, rdx, r8, r9, stack:0x0, stack:0x8",
+        "579 Move [r14+88], rax",
+        "580 LoadAddress rcx, [r14+88]",
+        "581 Move rdx, rax",
+        "582 Call 0x1804CF720, rcx, rdx, r8, r9",
+        "583 Move r9, 0",
+        "584 Move r8, 1",
+        "585 Move rdx, r12",
+        "2933 Move rax, [0x186566160]",
+        "2934 Move r8, [rax+184]",
+        "2935 Move r9, 0",
+        "2936 Move r8, [r8]",
+        "2937 Move rdx, r12",
+        "2938 Move rcx, \"bgImage\"",
+        "2939 Call Dot.String, rcx, rdx, r8, r9",
+        "2940 Move [r14+744], rax",
+        "2941 LoadAddress rcx, [r14+744]",
+        "2942 Move rdx, rax",
+        "2943 Call 0x1804CF720, rcx, rdx, r8, r9",
+        "2944 Move rdx, 0",
+        "2945 Move rcx, [r14+744]",
+        "2946 Call String.IsNullOrEmpty, rcx, rdx",
+        "2947 Compare rax, 0",
+        "2948 JumpIfNotEqual {2972}",
+        "2949 Move r9, 0",
+        "2950 Move r8, 0",
+        "2951 Move rdx, r12",
+        "2952 Move rcx, \"cdnBGImage\"",
+        "2953 Call Dot.Bool, rcx, rdx, r8, r9",
+        "2954 Compare rax, 0",
+        "2955 JumpIfEqual {2972}",
+        "2956 Compare [0x1865535BB], 0",
+        "2957 JumpIfNotEqual {2961}",
+        "2958 LoadAddress rcx, [0x1860BA400]",
+        "2959 Call \"il2cpp_codegen_initialize_runtime_metadata\", rcx, rdx, r8, r9",
+        "2960 Move [0x1865535BB], 1",
+        "2961 Move rax, typeof(QuestsConfig)",
+        "2962 Move rcx, [rax+184]",
+        "2963 Move r9, 0",
+        "2964 Move r8, [r14+744]",
+        "2965 Move rdx, \"/\"",
+        "2966 Move rcx, [rcx]",
+        "2967 Call String.Concat, rcx, rdx, r8, r9",
+        "2968 Move [r14+744], rax",
+        "2969 LoadAddress rcx, [r14+744]",
+        "2970 Move rdx, rax",
+        "2971 Call 0x1804CF720, rcx, rdx, r8, r9",
+        "2972 Compare [0x1865535BB], 0",
+        "2973 JumpIfNotEqual {2977}",
+        "2974 LoadAddress rcx, [0x1860BA400]",
+        "2975 Call \"il2cpp_codegen_initialize_runtime_metadata\", rcx, rdx, r8, r9",
+        "2976 Move [0x1865535BB], 1",
+        "2977 Move rax, [0x186566160]",
+        "2978 Move r9, [rax+184]",
+        "2979 Move rax, typeof(QuestsConfig)",
+        "2980 Move rdx, [rax+184]",
+        "2981 Move stack:0x28, r15",
+        "2982 Move rax, \"cdnRewardImage\"",
+        "2983 Move stack:0x20, rax",
+        "2984 Move r9, [r9]",
+        "2985 Move r8, r12",
+        "2986 Move rdx, [rdx]",
+        "2987 Move rcx, \"rewardImage\"",
+        "2988 Call Dot.Image, rcx, rdx, r8, r9, stack:0x0, stack:0x8",
+        "2989 Move [r14+760], rax",
+        "2990 LoadAddress rcx, [r14+760]",
+        "2991 Move rdx, rax",
+        "2992 Call 0x1804CF720, rcx, rdx, r8, r9",
+        "2993 Move rax, [0x186566160]",
+        "2994 Move r8, [rax+184]",
+        "2995 Move stack:0x20, r15"
+      ]
+    },
+    {
+      "file": "Marvel.Runtime/QuestSelectPanelBase.txt",
+      "sha256": "b5d0712cb126344996f50c8541cc2563ab320a94e81526e02708e0b1f02b3f29",
+      "method": "System.Void Refresh()",
+      "instructionRanges": [
+        [
+          19,
+          60
+        ]
+      ],
+      "instructions": [
+        "019 Move rdx, [rdi]",
+        "020 Move rcx, rdi",
+        "021 Move rax, [rdx+488]",
+        "022 Move rdx, [rdx+496]",
+        "023 Call rax",
+        "024 Move rsi, rax",
+        "025 Compare rax, 0",
+        "026 JumpIfEqual {380}",
+        "027 Move stack:0x40, rbx",
+        "028 Move stack:0x48, rbp",
+        "029 Move stack:0x50, r14",
+        "030 Move r8, [rdi]",
+        "031 Move rcx, rdi",
+        "032 Move rdx, [rax+56]",
+        "033 Move r9, [r8+1096]",
+        "034 Move r8, [r8+1104]",
+        "035 Call r9",
+        "036 Move rdx, [rdi]",
+        "037 Move rcx, rdi",
+        "038 Move rax, [rdx+472]",
+        "039 Move rdx, [rdx+480]",
+        "040 Call rax",
+        "041 Move rdx, 0",
+        "042 Move rcx, rax",
+        "043 Call GameQuestUtils.IsMissingUnlockRequirements, rcx, rdx",
+        "044 Move r14, [rdi+672]",
+        "045 Move rdx, 0",
+        "046 Move rax, rax",
+        "047 Xor rax, rax, 1",
+        "048 Move rbp, [rsi+80+rax*8]",
+        "049 Move rcx, rbp",
+        "050 Call String.IsNullOrEmpty, rcx, rdx",
+        "051 Move rcx, typeof(GameUIUtils)",
+        "052 Move rbx, rax",
+        "053 Compare [rcx+228], 0",
+        "054 JumpIfNotEqual {56}",
+        "055 Call \"il2cpp_runtime_class_init_export\", rcx, rdx, r8, r9",
+        "056 Xor rbx, rbx, 1",
+        "057 Move r8, 0",
+        "058 Move rdx, rbx",
+        "059 Move rcx, r14",
+        "060 Call GameUIUtils.SafeSetActive, rcx, rdx, r8"
+      ]
+    },
+    {
+      "file": "Marvel.Runtime/QuestSelectPanelBase.txt",
+      "sha256": "b5d0712cb126344996f50c8541cc2563ab320a94e81526e02708e0b1f02b3f29",
+      "method": "System.Void LoadTexture(System.String texturePath)",
+      "instructionRanges": [
+        [
+          30,
+          43
+        ]
+      ],
+      "instructions": [
+        "030 Move rcx, [rbx+408]",
+        "031 Move r8, 0",
+        "032 Move rdx, 1",
+        "033 Call GameUtils.SafeSetActive, rcx, rdx, r8",
+        "034 LoadAddress rcx, [rbx+120]",
+        "035 Move [rbx+120], rdi",
+        "036 Move rdx, rdi",
+        "037 Call 0x1804CF720, rcx, rdx, r8, r9",
+        "038 Move rcx, [rbx+416]",
+        "039 Compare rcx, 0",
+        "040 JumpIfEqual {50}",
+        "041 Move rdx, [rbx+120]",
+        "042 Move r8, 0",
+        "043 Call UITextureRef.set_baseTexturePath, rcx, rdx"
+      ]
+    },
+    {
+      "file": "Marvel.Runtime/StoryEventPanel.txt",
+      "sha256": "7a56b5dc0d1cf3552f81108855d483505c69d427a22a7631478828d367e7d5bb",
+      "method": "Act get_actData()",
+      "instructionRanges": [
+        [
+          4,
+          27
+        ]
+      ],
+      "instructions": [
+        "004 Compare [rcx+712], 0",
+        "005 Move rbx, rcx",
+        "006 JumpIfEqual {27}",
+        "007 Move rcx, [rcx+712]",
+        "008 Move r8, 0",
+        "009 Move rdx, 1",
+        "010 Move rcx, [rcx+16]",
+        "011 Call ListExtensions.IsInRange, rcx, rdx, r8",
+        "012 Compare rax, 0",
+        "013 JumpIfEqual {27}",
+        "014 Move rax, [rbx+712]",
+        "015 Compare rax, 0",
+        "016 JumpIfEqual {34}",
+        "017 Move rax, [rax+16]",
+        "018 Compare rax, 0",
+        "019 JumpIfEqual {34}",
+        "020 Compare [rax+24], 1",
+        "021 JumpIfLessOrEqual {32}",
+        "022 Move rax, [rax+40]",
+        "023 ShiftStack 32",
+        "024 Move rbx, stack:0x0",
+        "025 ShiftStack 8",
+        "026 Return rax",
+        "027 Move rax, 0"
+      ]
+    },
+    {
+      "file": "Marvel.Runtime/ChapterPanel.txt",
+      "sha256": "7e54f4dd727acb58d45d27d4b87284d3d842c28eec10fa5ae396cfbac33fe50c",
+      "method": "System.Void RefreshDisplay()",
+      "instructionRanges": [
+        [
+          168,
+          177
+        ]
+      ],
+      "instructions": [
+        "168 Move rdx, [rbx+408]",
+        "169 Compare rdx, 0",
+        "170 JumpIfEqual {265}",
+        "171 Move r8, [rbx]",
+        "172 Move rcx, rbx",
+        "173 Move rdx, [rdx+40]",
+        "174 Move rax, [r8+504]",
+        "175 Move r8, [r8+512]",
+        "176 Call rax",
+        "177 Compare [rbx+433], 0"
+      ]
+    },
+    {
+      "file": "Marvel.Runtime/SelectQuestTile.txt",
+      "sha256": "da16497f742e23fbb3485f76c0e6e4b1d14996b8e322f01bdacacb9410c3e1f4",
+      "method": "System.Void RefreshBossPortraits()",
+      "instructionRanges": [
+        [
+          50,
+          112
+        ],
+        [
+          163,
+          190
+        ],
+        [
+          202,
+          226
+        ]
+      ],
+      "instructions": [
+        "050 Move rcx, [rdi+152]",
+        "051 Compare rcx, 0",
+        "052 JumpIfEqual {238}",
+        "053 Move rdx, 0",
+        "054 Call UITextureRefCycler.ClearTextures, rcx, rdx",
+        "055 Compare [rdi+304], 0",
+        "056 JumpIfEqual {202}",
+        "057 Move rax, [rdi+304]",
+        "058 Move r14, [rax+432]",
+        "059 Move rdx, 0",
+        "060 Move rcx, rax",
+        "061 Call QuestSummary.GetFinalBoss, rcx, rdx",
+        "062 Move r15, rax",
+        "063 Move rbx, [rdi+304]",
+        "064 Compare rbx, 0",
+        "065 JumpIfEqual {238}",
+        "066 Move rbx, [rbx+416]",
+        "067 Compare rbx, 0",
+        "068 JumpIfNotEqual {71}",
+        "069 Move rsi, 0",
+        "070 Goto {73}",
+        "071 Compare [rbx+24], 1",
+        "072 NotImplemented \"setg sil\"",
+        "073 Compare r15, 0",
+        "074 JumpIfEqual {110}",
+        "075 Compare r14, 0",
+        "076 JumpIfEqual {82}",
+        "077 Move rdx, 0",
+        "078 Move rcx, r14",
+        "079 Call QuestMapTile.get_BossCharacterHidden, rcx, rdx",
+        "080 Compare rax, 0",
+        "081 JumpIfNotEqual {110}",
+        "082 Compare rsi, 0",
+        "083 JumpIfNotEqual {112}",
+        "084 Move rbx, [rdi+152]",
+        "085 Move rdx, 0",
+        "086 Move rcx, r15",
+        "087 Call 0x180727D90, rcx, rdx",
+        "088 Move rsi, rax",
+        "089 Move rdx, [rdi]",
+        "090 Move r8, [rdx+456]",
+        "091 Move rdx, [rdx+464]",
+        "092 Move rcx, rdi",
+        "093 Call r8",
+        "094 Move r14, rax",
+        "095 Move rcx, typeof(GameBCGUtils)",
+        "096 Compare [rcx+228], 0",
+        "097 JumpIfNotEqual {99}",
+        "098 Call \"il2cpp_runtime_class_init_export\", rcx, rdx, r8, r9",
+        "099 Move r8, 0",
+        "100 Move rdx, r14",
+        "101 Move rcx, rsi",
+        "102 Call GameBCGUtils.GetBlueprintImageAssetPath, rcx, rdx, r8",
+        "103 Compare rbx, 0",
+        "104 JumpIfEqual {238}",
+        "105 Move r8, 0",
+        "106 Move rdx, rax",
+        "107 Move rcx, rbx",
+        "108 Call UITextureRefCycler.AddTexture, rcx, rdx",
+        "109 Goto {202}",
+        "110 Compare rsi, 0",
+        "111 JumpIfEqual {202}",
+        "112 Move rsi, [rdi+168]",
+        "163 Move rcx, stack:0x50",
+        "164 Compare rcx, 0",
+        "165 JumpIfEqual {158}",
+        "166 Move rsi, [rdi+152]",
+        "167 Move rdx, 0",
+        "168 Call 0x180727D90, rcx, rdx",
+        "169 Move r14, rax",
+        "170 Move rdx, [rdi]",
+        "171 Move r8, [rdx+456]",
+        "172 Move rdx, [rdx+464]",
+        "173 Move rcx, rdi",
+        "174 Call r8",
+        "175 Move r15, rax",
+        "176 Move rcx, typeof(GameBCGUtils)",
+        "177 Compare [rcx+228], 0",
+        "178 JumpIfNotEqual {180}",
+        "179 Call \"il2cpp_runtime_class_init_export\", rcx, rdx, r8, r9",
+        "180 Move r8, 0",
+        "181 Move rdx, r15",
+        "182 Move rcx, r14",
+        "183 Call GameBCGUtils.GetBlueprintImageAssetPath, rcx, rdx, r8",
+        "184 Compare rsi, 0",
+        "185 JumpIfEqual {240}",
+        "186 Move r8, 0",
+        "187 Move rdx, rax",
+        "188 Move rcx, rsi",
+        "189 Call UITextureRefCycler.AddTexture, rcx, rdx",
+        "190 Goto {158}",
+        "202 Move rcx, [rdi+152]",
+        "203 Compare rcx, 0",
+        "204 JumpIfEqual {238}",
+        "205 Move rdx, 0",
+        "206 Call UITextureRefCycler.HasTextures, rcx, rdx",
+        "207 Move rbx, rax",
+        "208 Move rsi, [rdi+232]",
+        "209 Move rcx, typeof(GameUIUtils)",
+        "210 Compare [rcx+228], 0",
+        "211 JumpIfNotEqual {213}",
+        "212 Call \"il2cpp_runtime_class_init_export\", rcx, rdx, r8, r9",
+        "213 Move rdx, rbx",
+        "214 Xor rdx, rdx, 1",
+        "215 Move r8, 0",
+        "216 Move rcx, rsi",
+        "217 Call GameUIUtils.SafeIsRendering, rcx, rdx, r8",
+        "218 Move r8, 0",
+        "219 Move rdx, rbx",
+        "220 Move rcx, [rdi+160]",
+        "221 Call GameUIUtils.SafeIsRendering, rcx, rdx, r8",
+        "222 Move rcx, [rdi+152]",
+        "223 Compare rcx, 0",
+        "224 JumpIfEqual {238}",
+        "225 Move rdx, 0",
+        "226 Call UITextureRefCycler.Refresh, rcx, rdx"
+      ]
+    },
+    {
+      "file": "Marvel.Runtime/QuestSummary.txt",
+      "sha256": "a78e3dfd566e7b5d3c3bb894f2cc776f4ebb917417178eff488cb7a0caac87e5",
+      "method": "QuestBoss GetFinalBoss()",
+      "instructionRanges": [
+        [
+          25,
+          82
+        ]
+      ],
+      "instructions": [
+        "025 Move rsi, 0",
+        "026 Move stack:0xA0, rsi",
+        "027 Move rdx, [rbx+408]",
+        "028 Compare rdx, 0",
+        "029 JumpIfEqual {83}",
+        "030 Move r8, [0x186183DE8]",
+        "031 LoadAddress rcx, stack:0x60",
+        "032 Call 0x181ED22D0, rcx, rdx",
+        "033 Move xmm0, stack:0x60",
+        "034 Move stack:0x38, xmm0",
+        "035 Move xmm1, stack:0x70",
+        "036 Move stack:0x48, xmm1",
+        "037 Move xmm0, stack:0x80",
+        "038 Move stack:0x58, xmm0",
+        "039 Move stack:0x28, rsi",
+        "040 LoadAddress rbx, stack:0x38",
+        "041 Move stack:0x30, rbx",
+        "042 Move rdx, [0x1861729E8]",
+        "043 LoadAddress rcx, stack:0x38",
+        "044 Call Enumerator<Object, Object>.MoveNext, rcx, rdx",
+        "045 Compare rax, 0",
+        "046 JumpIfEqual {70}",
+        "047 Move rdi, stack:0x50",
+        "048 Compare rdi, 0",
+        "049 JumpIfEqual {85}",
+        "050 Compare [rdi+72], 0",
+        "051 JumpIfNotEqual {59}",
+        "052 Compare rsi, 0",
+        "053 JumpIfNotEqual {42}",
+        "054 Compare [rdi+73], rsi",
+        "055 JumpIfEqual {42}",
+        "056 Move rsi, rdi",
+        "057 Move stack:0xA0, rdi",
+        "058 Goto {42}",
+        "059 Move rdx, [0x186172828]",
+        "060 Move rcx, rbx",
+        "061 Call 0x18059D740, rcx, rdx, r8, r9, stack:0x0, stack:0x8, stack:0x10",
+        "062 Move rax, rdi",
+        "063 LoadAddress r11, stack:0x90",
+        "064 Move rbx, [r11+24]",
+        "065 Move rsi, [r11+32]",
+        "066 Move rsp, r11",
+        "067 Move rdi, stack:0x0",
+        "068 ShiftStack 8",
+        "069 Return rax",
+        "070 Move rdx, [0x186172828]",
+        "071 Move rcx, rbx",
+        "072 Call 0x18059D740, rcx, rdx, r8, r9, stack:0x0, stack:0x8, stack:0x10",
+        "073 Goto {81}",
+        "074 Move rdx, [0x186172828]",
+        "075 Move rcx, stack:0x30",
+        "076 Call 0x18059D740, rcx, rdx, r8, r9, stack:0x0, stack:0x8, stack:0x10",
+        "077 Move rcx, stack:0x28",
+        "078 Compare rcx, 0",
+        "079 JumpIfNotEqual {87}",
+        "080 Move rsi, stack:0xA0",
+        "081 Move rax, rsi",
+        "082 Goto {63}"
+      ]
+    },
+    {
+      "file": "Marvel.Runtime/SelectQuestTile.txt",
+      "sha256": "da16497f742e23fbb3485f76c0e6e4b1d14996b8e322f01bdacacb9410c3e1f4",
+      "method": "System.Boolean get_useGachaBossPortrait()",
+      "instructionRanges": [
+        [
+          1,
+          2
+        ]
+      ],
+      "instructions": [
+        "001 Move rax, 0",
+        "002 Return rax"
+      ]
+    },
+    {
+      "file": "Marvel.Runtime/AutoScalingQuestTile.txt",
+      "sha256": "b0bc49c51e84d4ef41f7ff51837c818920d01ed9734ba8a11be2211546010863",
+      "method": "System.Boolean get_useGachaBossPortrait()",
+      "instructionRanges": [
+        [
+          1,
+          2
+        ]
+      ],
+      "instructions": [
+        "001 Move rax, 1",
+        "002 Return rax"
+      ]
+    },
+    {
+      "file": "Marvel.Runtime/GameBCGUtils.txt",
+      "sha256": "793ce6eff3d4f1a32cc6f1672bd2871e41476f577e48d526512f1c97cb35679d",
+      "method": "System.String GetBlueprintImageAssetPath(System.String blueprintId, System.Boolean useGachaTexture = False)",
+      "instructionRanges": [
+        [
+          16,
+          69
+        ]
+      ],
+      "instructions": [
+        "016 Move rdx, 0",
+        "017 Move rcx, rdi",
+        "018 Call GameBCGUtils.GetBlueprint, rcx, rdx",
+        "019 Compare rax, 0",
+        "020 JumpIfNotEqual {54}",
+        "021 Move rcx, typeof(GameBCGUtils)",
+        "022 Compare [rcx+228], rax",
+        "023 JumpIfNotEqual {25}",
+        "024 Call \"il2cpp_runtime_class_init_export\", rcx, rdx, r8, r9",
+        "025 Move rdx, 0",
+        "026 Move rcx, rdi",
+        "027 Call GameBCGUtils.GetEvoBlueprint, rcx, rdx",
+        "028 Compare rax, 0",
+        "029 JumpIfNotEqual {38}",
+        "030 Move rax, [0x186566160]",
+        "031 Move rax, [rax+184]",
+        "032 Move rax, [rax]",
+        "033 Move rbx, stack:0x30",
+        "034 ShiftStack 32",
+        "035 Move rdi, stack:0x0",
+        "036 ShiftStack 8",
+        "037 Return rax",
+        "038 Move rdx, 0",
+        "039 Move rcx, rax",
+        "040 Compare rbx, 0",
+        "041 JumpIfEqual {48}",
+        "042 Move rbx, stack:0x30",
+        "043 ShiftStack 32",
+        "044 Move rdi, stack:0x0",
+        "045 ShiftStack 8",
+        "046 Call BCGEvoBlueprintBase.get_GachaFeatureTexturePath, rcx, rdx",
+        "047 Return rax",
+        "048 Move rbx, stack:0x30",
+        "049 ShiftStack 32",
+        "050 Move rdi, stack:0x0",
+        "051 ShiftStack 8",
+        "052 Call BCGEvoBlueprintBase.get_TexturePath, rcx, rdx",
+        "053 Return rax",
+        "054 Move rdx, 0",
+        "055 Move rcx, rax",
+        "056 Compare rbx, 0",
+        "057 JumpIfEqual {64}",
+        "058 Move rbx, stack:0x30",
+        "059 ShiftStack 32",
+        "060 Move rdi, stack:0x0",
+        "061 ShiftStack 8",
+        "062 Call BCGBlueprintBase.get_GachaFeatureTexturePath, rcx, rdx",
+        "063 Return rax",
+        "064 Move rbx, stack:0x30",
+        "065 ShiftStack 32",
+        "066 Move rdi, stack:0x0",
+        "067 ShiftStack 8",
+        "068 Call BCGBlueprintBase.get_TexturePath, rcx, rdx",
+        "069 Return rax"
+      ]
+    },
+    {
+      "file": "Kabam.Serialization/EB/Dot.txt",
+      "sha256": "5ef764dc3bdc45b4605369f15d757be0b505917d77f8f8316ac90bbef291072b",
+      "method": "System.String Image(System.String name, System.String cdn, System.Object obj, System.String defaultValue, System.String usesCdnName = null)",
+      "instructionRanges": [
+        [
+          30,
+          75
+        ],
+        [
+          94,
+          120
+        ]
+      ],
+      "instructions": [
+        "030 Move rax, 0",
+        "031 Move stack:0x58, rbx",
+        "032 Move stack:0x28, rax",
+        "033 LoadAddress r9, stack:0x60",
+        "034 Move r8, 0",
+        "035 Move stack:0x20, 1",
+        "036 Move rdx, r14",
+        "037 Move stack:0x60, rax",
+        "038 Move rcx, rsi",
+        "039 Call Dot.Loc, rcx, rdx, r8, r9, stack:0x0, stack:0x8",
+        "040 Compare rax, 0",
+        "041 JumpIfEqual {120}",
+        "042 Move rbx, stack:0x60",
+        "043 Compare rbx, 0",
+        "044 JumpIfEqual {120}",
+        "045 Move rax, stack:0x70",
+        "046 Compare rax, 0",
+        "047 JumpIfNotEqual {52}",
+        "048 Move rcx, \"s3\"",
+        "049 Move r8, 0",
+        "050 Move rdx, rsi",
+        "051 Call String.Concat, rcx, rdx, r8",
+        "052 Move r9, 0",
+        "053 Move stack:0x50, 0",
+        "054 LoadAddress r8, stack:0x50",
+        "055 Move rdx, r14",
+        "056 Move rcx, rax",
+        "057 Call Dot.Bool, rcx, rdx, r8, r9",
+        "058 Compare rax, 0",
+        "059 JumpIfEqual {118}",
+        "060 Compare stack:0x50, 0",
+        "061 JumpIfEqual {118}",
+        "062 Move rdx, 0",
+        "063 Move rcx, rbp",
+        "064 Call String.IsNullOrEmpty, rcx, rdx",
+        "065 Compare rax, 0",
+        "066 JumpIfNotEqual {104}",
+        "067 Move rcx, typeof(EB.Uri)",
+        "068 Compare [rcx+228], 0",
+        "069 JumpIfNotEqual {71}",
+        "070 Call \"il2cpp_runtime_class_init_export\", rcx, rdx, r8, r9",
+        "071 Move r8, 0",
+        "072 Move rdx, rbx",
+        "073 Move rcx, rbp",
+        "074 Call Uri.Combine, rcx, rdx, r8",
+        "075 Move rbx, rax",
+        "094 Move rax, [rcx+40]",
+        "095 Move r9, r14",
+        "096 Move r10, [rcx+24]",
+        "097 Move r8, rbx",
+        "098 Move rcx, [rcx+64]",
+        "099 Move rdx, rsi",
+        "100 Move stack:0x20, rax",
+        "101 Call r10",
+        "102 Move rbx, rax",
+        "103 Goto {121}",
+        "104 Move r8, \" uses CDN but has no CDN value\"",
+        "105 Move r9, 0",
+        "106 Move rcx, \"Image \"",
+        "107 Move rdx, rsi",
+        "108 Call String.Concat, rcx, rdx, r8, r9",
+        "109 Move rcx, typeof(EB.Logger)",
+        "110 Move rdi, rax",
+        "111 Compare [rcx+228], 0",
+        "112 JumpIfNotEqual {114}",
+        "113 Call \"il2cpp_runtime_class_init_export\", rcx, rdx, r8, r9",
+        "114 Move rcx, \"Dot\"",
+        "115 Move r8, 0",
+        "116 Move rdx, rdi",
+        "117 Call Logger.LogError, rcx, rdx, r8",
+        "118 Move rax, rbx",
+        "119 Goto {121}",
+        "120 Move rax, rdi"
+      ]
+    },
+    {
+      "file": "Kabam.Core.RuntimeSystems/EB/Cache.txt",
+      "sha256": "d0d82242cf38b9b6773f032814b9cf97cc8c261125a4f232193261ffc177b2e1",
+      "method": "System.String GetCacheFilename(System.String uriPath, System.String ext)",
+      "instructionRanges": [
+        [
+          13,
+          46
+        ]
+      ],
+      "instructions": [
+        "013 Move rcx, 0",
+        "014 Call Digest.Sha1, rcx",
+        "015 Move rcx, typeof(EB.Encoding)",
+        "016 Move rbx, rax",
+        "017 Compare [rcx+228], 0",
+        "018 JumpIfNotEqual {20}",
+        "019 Call \"il2cpp_runtime_class_init_export\", rcx, rdx, r8, r9",
+        "020 Move rdx, 0",
+        "021 Move rcx, rdi",
+        "022 Call Encoding.GetBytes, rcx, rdx",
+        "023 Compare rbx, 0",
+        "024 JumpIfEqual {48}",
+        "025 Move r8, 0",
+        "026 Move rdx, rax",
+        "027 Move rcx, rbx",
+        "028 Call Digest.Update, rcx, rdx",
+        "029 Compare rax, 0",
+        "030 JumpIfEqual {48}",
+        "031 Move rdx, 0",
+        "032 Move rcx, rax",
+        "033 Call Digest.Final, rcx, rdx",
+        "034 Move r8, 0",
+        "035 Move rdx, 0",
+        "036 Move rcx, rax",
+        "037 Call Encoding.ToHexString, rcx, rdx, r8",
+        "038 Move r8, 0",
+        "039 Move rdx, rsi",
+        "040 Move rcx, rax",
+        "041 Move rbx, stack:0x30",
+        "042 Move rsi, stack:0x38",
+        "043 ShiftStack 32",
+        "044 Move rdi, stack:0x0",
+        "045 ShiftStack 8",
+        "046 Call String.Concat, rcx, rdx, r8"
+      ]
+    },
+    {
+      "file": "Kabam.Core.RuntimeSystems/EB/Cache.txt",
+      "sha256": "d0d82242cf38b9b6773f032814b9cf97cc8c261125a4f232193261ffc177b2e1",
+      "method": "System.String GetCacheFileNoCdn(System.String url, System.Boolean encrypted = False)",
+      "instructionRanges": [
+        [
+          26,
+          50
+        ],
+        [
+          61,
+          107
+        ]
+      ],
+      "instructions": [
+        "026 Move rcx, typeof(EB.Uri)",
+        "027 Move stack:0x30, rsi",
+        "028 Call \"il2cpp_codegen_object_new\", rcx, rdx, r8, r9",
+        "029 Move r8, 0",
+        "030 Move rdx, rdi",
+        "031 Move rcx, rax",
+        "032 Move rbx, rax",
+        "033 Call Uri..ctor, rcx, rdx",
+        "034 Compare rbx, 0",
+        "035 JumpIfEqual {109}",
+        "036 Move rdx, 0",
+        "037 Move rcx, rbx",
+        "038 Call Uri.get_Path, rcx, rdx",
+        "039 Move rcx, typeof(System.IO.Path)",
+        "040 Move rdi, rax",
+        "041 Compare [rcx+228], 0",
+        "042 JumpIfNotEqual {44}",
+        "043 Call \"il2cpp_runtime_class_init_export\", rcx, rdx, r8, r9",
+        "044 Move rdx, 0",
+        "045 Move rcx, rdi",
+        "046 Call Path.GetExtension, rcx, rdx",
+        "047 Compare rbp, 0",
+        "048 Move rsi, rax",
+        "049 JumpIfEqual {51}",
+        "050 Move rsi, \".bytes\"",
+        "061 Move rcx, 0",
+        "062 Call Digest.Sha1, rcx",
+        "063 Move rcx, typeof(EB.Encoding)",
+        "064 Move rbx, rax",
+        "065 Compare [rcx+228], 0",
+        "066 JumpIfNotEqual {68}",
+        "067 Call \"il2cpp_runtime_class_init_export\", rcx, rdx, r8, r9",
+        "068 Move rdx, 0",
+        "069 Move rcx, rdi",
+        "070 Call Encoding.GetBytes, rcx, rdx",
+        "071 Compare rbx, 0",
+        "072 JumpIfEqual {109}",
+        "073 Move r8, 0",
+        "074 Move rdx, rax",
+        "075 Move rcx, rbx",
+        "076 Call Digest.Update, rcx, rdx",
+        "077 Compare rax, 0",
+        "078 JumpIfEqual {109}",
+        "079 Move rdx, 0",
+        "080 Move rcx, rax",
+        "081 Call Digest.Final, rcx, rdx",
+        "082 Move r8, 0",
+        "083 Move rdx, 0",
+        "084 Move rcx, rax",
+        "085 Call Encoding.ToHexString, rcx, rdx, r8",
+        "086 Move r8, 0",
+        "087 Move rdx, rsi",
+        "088 Move rcx, rax",
+        "089 Call String.Concat, rcx, rdx, r8",
+        "090 Move rcx, 0",
+        "091 Move rbx, rax",
+        "092 Call Cache.get_CacheFolder, rcx",
+        "093 Move rcx, typeof(System.IO.Path)",
+        "094 Move rdi, rax",
+        "095 Compare [rcx+228], 0",
+        "096 JumpIfNotEqual {98}",
+        "097 Call \"il2cpp_runtime_class_init_export\", rcx, rdx, r8, r9",
+        "098 Move r8, 0",
+        "099 Move rdx, rbx",
+        "100 Move rcx, rdi",
+        "101 Move rsi, stack:0x30",
+        "102 Move rbx, stack:0x38",
+        "103 Move rbp, stack:0x40",
+        "104 ShiftStack 32",
+        "105 Move rdi, stack:0x0",
+        "106 ShiftStack 8",
+        "107 Call Path.Combine, rcx, rdx, r8"
+      ]
+    },
+    {
+      "file": "Fuse.Runtime/UITextureRef.txt",
+      "sha256": "9a7221f7dcc4f4075a6e641e784de02643b4533c94bf6e3f86527a5dd5c85fe1",
+      "method": "System.Collections.Generic.List`1<System.String> get_potentialPaths()",
+      "instructionRanges": [
+        [
+          29,
+          79
+        ],
+        [
+          104,
+          119
+        ]
+      ],
+      "instructions": [
+        "029 Compare [rdi+555], 0",
+        "030 JumpIfNotEqual {79}",
+        "031 Move rax, typeof(UITextureRef)",
+        "032 Compare [rax+228], 0",
+        "033 JumpIfNotEqual {37}",
+        "034 Move rcx, rax",
+        "035 Call \"il2cpp_runtime_class_init_export\", rcx, rdx, r8, r9",
+        "036 Move rax, typeof(UITextureRef)",
+        "037 Move rax, [rax+184]",
+        "038 Move rcx, [rax]",
+        "039 Compare rcx, 0",
+        "040 JumpIfEqual {126}",
+        "041 Compare [rcx+33], 0",
+        "042 JumpIfEqual {51}",
+        "043 Compare [rdi+624], 0",
+        "044 JumpIfEqual {51}",
+        "045 Move rdx, \"http\"",
+        "046 Move r8, 0",
+        "047 Move rcx, [rdi+624]",
+        "048 Call String.StartsWith, rcx, rdx",
+        "049 Compare rax, 0",
+        "050 JumpIfNotEqual {79}",
+        "051 Compare [rdi+536], 0",
+        "052 Move rdx, \"_SD\"",
+        "053 JumpIfEqual {55}",
+        "054 Move rdx, \"_HD\"",
+        "055 Nop",
+        "056 Move rcx, [rdi+624]",
+        "057 Move r8, 0",
+        "058 Call String.Concat, rcx, rdx, r8",
+        "059 Compare rbx, 0",
+        "060 JumpIfEqual {126}",
+        "061 Move r8, [0x1861304C0]",
+        "062 Move rdx, rax",
+        "063 Move rcx, rbx",
+        "064 Call 0x180002600, rcx, rdx, r8, r9",
+        "065 Compare [rdi+536], 0",
+        "066 Move rdx, \"_HD\"",
+        "067 JumpIfEqual {69}",
+        "068 Move rdx, \"_SD\"",
+        "069 Nop",
+        "070 Move rcx, [rdi+624]",
+        "071 Move r8, 0",
+        "072 Call String.Concat, rcx, rdx, r8",
+        "073 Move r8, [0x1861304C0]",
+        "074 Move rdx, rax",
+        "075 Move rcx, rbx",
+        "076 Call 0x180002600, rcx, rdx, r8, r9",
+        "077 Move rdx, [rdi+624]",
+        "078 Goto {82}",
+        "079 Move rdx, [rdi+624]",
+        "104 Compare [rdi+616], 0",
+        "105 JumpIfEqual {120}",
+        "106 Move rax, typeof(UITextureRef)",
+        "107 Compare [rax+228], 0",
+        "108 JumpIfNotEqual {112}",
+        "109 Move rcx, rax",
+        "110 Call \"il2cpp_runtime_class_init_export\", rcx, rdx, r8, r9",
+        "111 Move rax, typeof(UITextureRef)",
+        "112 Move rax, [rax+184]",
+        "113 Move rdx, [rax]",
+        "114 Compare rdx, 0",
+        "115 JumpIfEqual {126}",
+        "116 Move r8, [0x1861304C0]",
+        "117 Move rcx, rbx",
+        "118 Move rdx, [rdx+24]",
+        "119 Call 0x180002600, rcx, rdx, r8, r9"
+      ]
+    },
+    {
+      "file": "Fuse.Runtime/UITextureRef.txt",
+      "sha256": "9a7221f7dcc4f4075a6e641e784de02643b4533c94bf6e3f86527a5dd5c85fe1",
+      "method": "System.Void RefreshTexture()",
+      "instructionRanges": [
+        [
+          14,
+          30
+        ],
+        [
+          64,
+          68
+        ],
+        [
+          87,
+          99
+        ]
+      ],
+      "instructions": [
+        "014 Move rcx, [rbx+624]",
+        "015 Move rdx, 0",
+        "016 Call String.IsNullOrEmpty, rcx, rdx",
+        "017 Compare rax, 0",
+        "018 JumpIfEqual {87}",
+        "019 Move rax, typeof(UITextureRef)",
+        "020 Compare [rax+228], 0",
+        "021 JumpIfNotEqual {25}",
+        "022 Move rcx, rax",
+        "023 Call \"il2cpp_runtime_class_init_export\", rcx, rdx, r8, r9",
+        "024 Move rax, typeof(UITextureRef)",
+        "025 Move rax, [rax+184]",
+        "026 Move rcx, [rax]",
+        "027 Compare rcx, 0",
+        "028 JumpIfEqual {104}",
+        "029 Compare [rcx+72], 0",
+        "030 JumpIfEqual {64}",
+        "064 Move rdx, 0",
+        "065 Move rcx, rbx",
+        "066 Call UITextureRef.ReleaseLastTexture, rcx, rdx",
+        "067 Compare [rbx+544], 0",
+        "068 Move [rbx+558], 1",
+        "087 Move rdx, [rbx]",
+        "088 Move rcx, rbx",
+        "089 Move rax, [rdx+1560]",
+        "090 Move rdx, [rdx+1568]",
+        "091 Call rax",
+        "092 Move rdx, rax",
+        "093 Move r8, 0",
+        "094 Move rcx, rbx",
+        "095 ShiftStack 32",
+        "096 Move rbx, stack:0x0",
+        "097 ShiftStack 8",
+        "098 Call UITextureRef.LoadTexture, rcx, rdx",
+        "099 Return"
+      ]
+    },
+    {
+      "file": "Fuse.Runtime/UITextureRef.txt",
+      "sha256": "9a7221f7dcc4f4075a6e641e784de02643b4533c94bf6e3f86527a5dd5c85fe1",
+      "method": "System.Void .cctor()",
+      "instructionRanges": [
+        [
+          19,
+          28
+        ]
+      ],
+      "instructions": [
+        "019 Move [rbx+16], 0x3F000000",
+        "020 Move rcx, \"Bundles/UITextures/Misc/MISSING\"",
+        "021 Move [rbx+24], rcx",
+        "022 LoadAddress rcx, [rbx+24]",
+        "023 Move rdx, \"Bundles/UITextures/Misc/MISSING\"",
+        "024 Call 0x1804CF720, rcx, rdx, r8, r9",
+        "025 Move rdx, 0",
+        "026 Move [rbx+32], 257",
+        "027 Move rcx, rbx",
+        "028 Call 0x18059D740, rcx, rdx, r8, r9, stack:0x0, stack:0x8, stack:0x10"
+      ]
+    }
+  ],
+  "namedOffsets": {
+    "Act": {
+      "image": 56,
+      "imageSmall": 64,
+      "imageLarge": 72,
+      "borderImageLocked": 80,
+      "borderImageUnlocked": 88
+    },
+    "Chapter": {
+      "image": 40
+    },
+    "QuestSummary": {
+      "<actImage>k__BackingField": 88,
+      "<bosses>k__BackingField": 408,
+      "<finalBosses>k__BackingField": 416,
+      "<miniBosses>k__BackingField": 424,
+      "<allianceBossCompletionRewards>k__BackingField": 568,
+      "<hasAllianceBossCompletionRewards>k__BackingField": 576,
+      "<bgImage>k__BackingField": 744,
+      "<bgImageUsesCDN>k__BackingField": 752,
+      "<rewardImage>k__BackingField": 760,
+      "<scaleBosses>k__BackingField": 792
+    },
+    "QuestSet": {
+      "cdn": 80
+    }
+  },
+  "bcg": {
+    "sha256": "b821489b5451d1d6ee0927f39a80d964f6c1d3aaf13bd76531e5f77d93deba8e",
+    "schemaSha256": "9cc5236aef043cf7e5655458e790ed1f0897f67398e37af3020bca74511e97c4",
+    "rootFields": [
+      {
+        "name": "stat_modifiers",
+        "tag": 1,
+        "records": 73714
+      },
+      {
+        "name": "stat_modifier_appearance",
+        "tag": 2,
+        "records": 15792
+      },
+      {
+        "name": "heroes_blueprints",
+        "tag": 3,
+        "records": 3821
+      },
+      {
+        "name": "characters",
+        "tag": 4,
+        "records": 736
+      },
+      {
+        "name": "evo_blueprints",
+        "tag": 5,
+        "records": 190
+      },
+      {
+        "name": "synergy_bonuses",
+        "tag": 6,
+        "records": 3335
+      },
+      {
+        "name": "attack_values",
+        "tag": 7,
+        "records": 7
+      },
+      {
+        "name": "blueprint_bonuses",
+        "tag": 8,
+        "records": 1
+      },
+      {
+        "name": "hero_classes",
+        "tag": 9,
+        "records": 7
+      },
+      {
+        "name": "hero_roles",
+        "tag": 10,
+        "records": 2
+      },
+      {
+        "name": "universes",
+        "tag": 11,
+        "records": 155
+      },
+      {
+        "name": "rarity_properties",
+        "tag": 12,
+        "records": 8
+      },
+      {
+        "name": "evo_costs",
+        "tag": 13,
+        "records": 10986
+      },
+      {
+        "name": "stamina_regen",
+        "tag": 14,
+        "records": 14
+      },
+      {
+        "name": "damage_types",
+        "tag": 15,
+        "records": 2
+      },
+      {
+        "name": "heroes",
+        "tag": 16,
+        "records": 15345
+      },
+      {
+        "name": "tags",
+        "tag": 17,
+        "records": 31
+      },
+      {
+        "name": "curves",
+        "tag": 18,
+        "records": 1071
+      },
+      {
+        "name": "pre_fight_abilities",
+        "tag": 19,
+        "records": 196
+      },
+      {
+        "name": "stat_modifier_formulas",
+        "tag": 20,
+        "records": 5
+      },
+      {
+        "name": "parent_child_mods",
+        "tag": 21,
+        "records": 399
+      },
+      {
+        "name": "universe_categories",
+        "tag": 22,
+        "records": 10
+      },
+      {
+        "name": "stat_modifiers_groups",
+        "tag": 23,
+        "records": 1199
+      },
+      {
+        "name": "statFocusTuning",
+        "tag": 24,
+        "records": 21
+      },
+      {
+        "name": "statFocusExceptions",
+        "tag": 25,
+        "records": 0
+      },
+      {
+        "name": "ascension",
+        "tag": 26,
+        "records": 23
+      }
+    ],
+    "unknownRootTags": []
+  },
+  "ui": {
+    "bundle": "ui/ui.assetbundle",
+    "sha256": "91679c15633f0336087415828a089a9ba0d28e7c71a73442216b4ac379aca28e",
+    "prefabs": [
+      {
+        "key": "assets/ui/otherprefabs/autoscalingeventpanel.prefab",
+        "prefabPathId": "1567741237483769260",
+        "componentPathId": "3682941513846678886",
+        "className": "AutoScalingEventPanel",
+        "fields": {
+          "_panelBackground": {
+            "pathId": "1684442361678261329",
+            "className": "UISprite",
+            "values": {
+              "mAtlas": {
+                "m_FileID": 0,
+                "m_PathID": "7638555690320633890"
+              },
+              "_legacySpriteName": "CommonSquare",
+              "_unitySprite": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "_spriteMaterial": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "mAtlasScaling": 1.0
+            }
+          },
+          "_backgroundEventListener": {
+            "pathId": "-5522623420796387997",
+            "className": "UIEventListener",
+            "values": {}
+          },
+          "_glowBackground": {
+            "pathId": "-812963747212922063",
+            "className": "UISprite",
+            "values": {
+              "mAtlas": {
+                "m_FileID": 0,
+                "m_PathID": "7638555690320633890"
+              },
+              "_legacySpriteName": "CommonTraySmlGlow",
+              "_unitySprite": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "_spriteMaterial": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "mAtlasScaling": 1.0
+            }
+          },
+          "_texture": {
+            "pathId": "5583848878449793681",
+            "className": "UITextureRef",
+            "values": {
+              "mTexture": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "TexturePathSetAtRuntime": 0,
+              "_baseTexturePath": "",
+              "_referenceTexturePath": ""
+            }
+          },
+          "_rewardTexturePath": "misc/selectablerewards_questtile",
+          "_borderSprite": {
+            "pathId": "0",
+            "className": null,
+            "values": {}
+          }
+        }
+      },
+      {
+        "key": "assets/ui/otherprefabs/autoscalingquesttile.prefab",
+        "prefabPathId": "-1223662104551533511",
+        "componentPathId": "2353666883009635347",
+        "className": "AutoScalingQuestTile",
+        "fields": {
+          "_backgroundSpriteName": "ChapterContentBackgroundGradient",
+          "_backgroundLockedSpriteName": "CommonSquare",
+          "_background": {
+            "pathId": "8710742977213089024",
+            "className": "UISprite",
+            "values": {
+              "mAtlas": {
+                "m_FileID": 0,
+                "m_PathID": "7638555690320633890"
+              },
+              "_legacySpriteName": "ChapterContentBackgroundGradient",
+              "_unitySprite": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "_spriteMaterial": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "mAtlasScaling": 1.0
+            }
+          },
+          "_bossPortraitCycler": {
+            "pathId": "5284714080852788797",
+            "className": "UITextureRefCycler",
+            "values": {
+              "_textureA": {
+                "m_FileID": 0,
+                "m_PathID": "-8053766533422594005"
+              },
+              "_textureB": {
+                "m_FileID": 0,
+                "m_PathID": "1024316186949381422"
+              }
+            }
+          },
+          "_bossPortraitCyclerWidget": {
+            "pathId": "8574151721739653254",
+            "className": "UIWidget",
+            "values": {}
+          },
+          "_rewardTextureRef": {
+            "pathId": "-2123732277495663043",
+            "className": "UITextureRef",
+            "values": {
+              "mTexture": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "TexturePathSetAtRuntime": 0,
+              "_baseTexturePath": "",
+              "_referenceTexturePath": ""
+            }
+          },
+          "_bossBackgroundImage": {
+            "pathId": "-4482905890365867917",
+            "className": "UITextureRef",
+            "values": {
+              "mTexture": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "TexturePathSetAtRuntime": 0,
+              "_baseTexturePath": "Art/UI/Images/autoscale_quest_tile_champ_bg_placeholder",
+              "_referenceTexturePath": ""
+            }
+          }
+        }
+      },
+      {
+        "key": "assets/ui/otherprefabs/chapterpanel.prefab",
+        "prefabPathId": "7614695458784511511",
+        "componentPathId": "-8378483515178730931",
+        "className": "ChapterPanel",
+        "fields": {
+          "_questTextureLoadingSpinner": {
+            "pathId": "-1506834548601247702",
+            "className": null,
+            "values": {}
+          },
+          "_questTexture": {
+            "pathId": "0",
+            "className": null,
+            "values": {}
+          },
+          "_background": {
+            "pathId": "4089863259703780032",
+            "className": "UISprite",
+            "values": {
+              "mAtlas": {
+                "m_FileID": 0,
+                "m_PathID": "7638555690320633890"
+              },
+              "_legacySpriteName": "ChapterContentBackgroundGradient",
+              "_unitySprite": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "_spriteMaterial": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "mAtlasScaling": 1.0
+            }
+          }
+        }
+      },
+      {
+        "key": "assets/ui/otherprefabs/consolidatedeventpanel.prefab",
+        "prefabPathId": "-8916628721146952550",
+        "componentPathId": "-2702973851513714671",
+        "className": "ConsolidatedEventPanel",
+        "fields": {
+          "_panelBackground": {
+            "pathId": "3656754887669243327",
+            "className": "UISprite",
+            "values": {
+              "mAtlas": {
+                "m_FileID": 0,
+                "m_PathID": "7638555690320633890"
+              },
+              "_legacySpriteName": "CommonSquare",
+              "_unitySprite": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "_spriteMaterial": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "mAtlasScaling": 1.0
+            }
+          },
+          "_backgroundEventListener": {
+            "pathId": "882888978714216058",
+            "className": "UIEventListener",
+            "values": {}
+          },
+          "_glowBackground": {
+            "pathId": "-5531908200369028126",
+            "className": "UISprite",
+            "values": {
+              "mAtlas": {
+                "m_FileID": 0,
+                "m_PathID": "7638555690320633890"
+              },
+              "_legacySpriteName": "CommonTraySmlGlow",
+              "_unitySprite": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "_spriteMaterial": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "mAtlasScaling": 1.0
+            }
+          },
+          "_texture": {
+            "pathId": "4317279130358148786",
+            "className": "UITextureRef",
+            "values": {
+              "mTexture": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "TexturePathSetAtRuntime": 0,
+              "_baseTexturePath": "",
+              "_referenceTexturePath": ""
+            }
+          },
+          "_rewardTexturePath": "misc/selectablerewards_questtile",
+          "_borderSprite": {
+            "pathId": "0",
+            "className": null,
+            "values": {}
+          },
+          "_masteryDifficultyBackgroundSpriteName": "CommonTraySmlOverlaySpecial2"
+        }
+      },
+      {
+        "key": "assets/ui/otherprefabs/eventpanel.prefab",
+        "prefabPathId": "-3448550025681429821",
+        "componentPathId": "4415292283989247377",
+        "className": "EventPanel",
+        "fields": {
+          "_panelBackground": {
+            "pathId": "-909705315351736859",
+            "className": "UISprite",
+            "values": {
+              "mAtlas": {
+                "m_FileID": 0,
+                "m_PathID": "7638555690320633890"
+              },
+              "_legacySpriteName": "CommonSquare",
+              "_unitySprite": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "_spriteMaterial": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "mAtlasScaling": 1.0
+            }
+          },
+          "_backgroundEventListener": {
+            "pathId": "-7420732139916185956",
+            "className": "UIEventListener",
+            "values": {}
+          },
+          "_glowBackground": {
+            "pathId": "0",
+            "className": null,
+            "values": {}
+          },
+          "_texture": {
+            "pathId": "7232769222017363269",
+            "className": "UITextureRef",
+            "values": {
+              "mTexture": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "TexturePathSetAtRuntime": 0,
+              "_baseTexturePath": "",
+              "_referenceTexturePath": ""
+            }
+          },
+          "_rewardTexturePath": "misc/selectablerewards_questtile",
+          "_borderSprite": {
+            "pathId": "-8531435666676947082",
+            "className": "UISprite",
+            "values": {
+              "mAtlas": {
+                "m_FileID": 0,
+                "m_PathID": "7638555690320633890"
+              },
+              "_legacySpriteName": "badgeBattlePassQuestBG",
+              "_unitySprite": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "_spriteMaterial": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "mAtlasScaling": 1.0
+            }
+          }
+        }
+      },
+      {
+        "key": "assets/ui/otherprefabs/selectquesttile.prefab",
+        "prefabPathId": "7231595952549369037",
+        "componentPathId": "-7980393216162141967",
+        "className": "SelectQuestTile",
+        "fields": {
+          "_backgroundSpriteName": "ChapterContentBackgroundGradient",
+          "_backgroundLockedSpriteName": "CommonSquare",
+          "_background": {
+            "pathId": "1058321702070531904",
+            "className": "UISprite",
+            "values": {
+              "mAtlas": {
+                "m_FileID": 0,
+                "m_PathID": "7638555690320633890"
+              },
+              "_legacySpriteName": "ChapterContentBackgroundGradient",
+              "_unitySprite": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "_spriteMaterial": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "mAtlasScaling": 1.0
+            }
+          },
+          "_bossPortraitCycler": {
+            "pathId": "-3463281933900952936",
+            "className": "UITextureRefCycler",
+            "values": {
+              "_textureA": {
+                "m_FileID": 0,
+                "m_PathID": "6047219940695434266"
+              },
+              "_textureB": {
+                "m_FileID": 0,
+                "m_PathID": "2136293547139257383"
+              }
+            }
+          },
+          "_bossPortraitCyclerWidget": {
+            "pathId": "633817464999921639",
+            "className": "UIWidget",
+            "values": {}
+          },
+          "_rewardTextureRef": {
+            "pathId": "-3053591850779125760",
+            "className": "UITextureRef",
+            "values": {
+              "mTexture": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "TexturePathSetAtRuntime": 0,
+              "_baseTexturePath": "",
+              "_referenceTexturePath": ""
+            }
+          }
+        }
+      },
+      {
+        "key": "assets/ui/otherprefabs/storyeventpanel.prefab",
+        "prefabPathId": "4509029600127197095",
+        "componentPathId": "-6047012425228771068",
+        "className": "StoryEventPanel",
+        "fields": {
+          "_panelBackground": {
+            "pathId": "-6656031524181454625",
+            "className": "UISprite",
+            "values": {
+              "mAtlas": {
+                "m_FileID": 0,
+                "m_PathID": "7638555690320633890"
+              },
+              "_legacySpriteName": "CommonSquare",
+              "_unitySprite": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "_spriteMaterial": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "mAtlasScaling": 1.0
+            }
+          },
+          "_backgroundEventListener": {
+            "pathId": "-308730195249230627",
+            "className": "UIEventListener",
+            "values": {}
+          },
+          "_glowBackground": {
+            "pathId": "6475860410507516845",
+            "className": "UISprite",
+            "values": {
+              "mAtlas": {
+                "m_FileID": 0,
+                "m_PathID": "7638555690320633890"
+              },
+              "_legacySpriteName": "CommonTraySmlGlow",
+              "_unitySprite": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "_spriteMaterial": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "mAtlasScaling": 1.0
+            }
+          },
+          "_texture": {
+            "pathId": "5387533707242485793",
+            "className": "UITextureRef",
+            "values": {
+              "mTexture": {
+                "m_FileID": 0,
+                "m_PathID": "0"
+              },
+              "TexturePathSetAtRuntime": 0,
+              "_baseTexturePath": "",
+              "_referenceTexturePath": ""
+            }
+          },
+          "_rewardTexturePath": "misc/selectablerewards_questtile",
+          "_borderSprite": {
+            "pathId": "0",
+            "className": null,
+            "values": {}
+          }
+        }
+      }
+    ],
+    "questRelatedTextureDefaults": [
+      {
+        "componentPathId": "-9206801878129423965",
+        "className": "UITextureRef",
+        "path": "Bundles/streaming/ui/quests/gate_fte",
+        "referencePath": ""
+      },
+      {
+        "componentPathId": "-6644082194553527542",
+        "className": "UITextureRef",
+        "path": "Bundles/streaming/ui/odr/quests/WH_FTE_frames",
+        "referencePath": ""
+      },
+      {
+        "componentPathId": "-6045931450366814245",
+        "className": "UITextureRef",
+        "path": "quests/gate_consume_bg",
+        "referencePath": ""
+      },
+      {
+        "componentPathId": "-5168540337228015774",
+        "className": "UITextureRef",
+        "path": "quests/avx_undo_fte",
+        "referencePath": ""
+      },
+      {
+        "componentPathId": "-4482905890365867917",
+        "className": "UITextureRef",
+        "path": "Art/UI/Images/autoscale_quest_tile_champ_bg_placeholder",
+        "referencePath": ""
+      },
+      {
+        "componentPathId": "-4038002127431372495",
+        "className": "UITextureRef",
+        "path": "misc/Collectives_QuestboardTray_Art",
+        "referencePath": ""
+      },
+      {
+        "componentPathId": "-2070235957587565831",
+        "className": "UITextureRef",
+        "path": "quests/story_progression_FTE",
+        "referencePath": ""
+      },
+      {
+        "componentPathId": "-991954108647245396",
+        "className": "UITextureRef",
+        "path": "quests/SagaDefender_FTE",
+        "referencePath": ""
+      },
+      {
+        "componentPathId": "480720970479800676",
+        "className": "UITextureRef",
+        "path": "misc/Collectives_QuestboardTray_Art",
+        "referencePath": ""
+      },
+      {
+        "componentPathId": "1632921819689184579",
+        "className": "UITextureRef",
+        "path": "misc/Collectives_QuestboardTray_Art",
+        "referencePath": ""
+      },
+      {
+        "componentPathId": "4396566958648264574",
+        "className": "UITextureRef",
+        "path": "quests/avx_pings_fte",
+        "referencePath": ""
+      },
+      {
+        "componentPathId": "4778285857544432631",
+        "className": "UITextureRef",
+        "path": "quests/gate_nonconsume_bg",
+        "referencePath": ""
+      },
+      {
+        "componentPathId": "6668926291405407080",
+        "className": "UITextureRef",
+        "path": "quests/Tutorial_IsoBurstMeter",
+        "referencePath": ""
+      },
+      {
+        "componentPathId": "7318059330461874625",
+        "className": "UITextureRef",
+        "path": "misc/Collectives_QuestboardTray_Art",
+        "referencePath": ""
+      },
+      {
+        "componentPathId": "7641142540501480909",
+        "className": "UITextureRef",
+        "path": "Bundles/streaming/ui/quests/gate_fte_persistent",
+        "referencePath": ""
+      },
+      {
+        "componentPathId": "7758107518288440750",
+        "className": "UITextureRef",
+        "path": "Bundles/streaming/ui/odr/quests/FTE_node_preview",
+        "referencePath": ""
+      },
+      {
+        "componentPathId": "8964530278828490431",
+        "className": "UITextureRef",
+        "path": "misc/Collectives_QuestboardTray_Art",
+        "referencePath": ""
+      },
+      {
+        "componentPathId": "9099541462247787168",
+        "className": "UITextureRef",
+        "path": "misc/Collectives_QuestboardTray_Art",
+        "referencePath": ""
+      }
+    ],
+    "atlasReferences": [
+      {
+        "pathId": "7638555690320633890",
+        "className": "UnityAtlasWrapper",
+        "spriteName": "CommonSquare",
+        "externalFiles": [
+          {
+            "fileId": 1,
+            "path": "archive:/CAB-0f5f4a92553687c7043da88f7afae3bb/CAB-0f5f4a92553687c7043da88f7afae3bb"
+          },
+          {
+            "fileId": 2,
+            "path": "archive:/CAB-90fdff4e34e0cc85a720e0ea72058a37/CAB-90fdff4e34e0cc85a720e0ea72058a37"
+          },
+          {
+            "fileId": 3,
+            "path": "archive:/CAB-ea49322693bc595a0af1067ad28f1c9b/CAB-ea49322693bc595a0af1067ad28f1c9b"
+          },
+          {
+            "fileId": 4,
+            "path": "archive:/CAB-ecbc2ee02c94876f48b09b05008a42f2/CAB-ecbc2ee02c94876f48b09b05008a42f2"
+          },
+          {
+            "fileId": 5,
+            "path": "Library/unity default resources"
+          },
+          {
+            "fileId": 6,
+            "path": "archive:/CAB-19700d1d65994de0f4a3ce2785b35d8b/CAB-19700d1d65994de0f4a3ce2785b35d8b"
+          },
+          {
+            "fileId": 7,
+            "path": "archive:/CAB-40dbfd4bace25d264cdc74c74ff42bf7/CAB-40dbfd4bace25d264cdc74c74ff42bf7"
+          },
+          {
+            "fileId": 8,
+            "path": "archive:/CAB-5aa462d42e744a680a36c200115c2e3d/CAB-5aa462d42e744a680a36c200115c2e3d"
+          },
+          {
+            "fileId": 9,
+            "path": "archive:/CAB-cf8749e703cd116a7ba89f49865dbdb5/CAB-cf8749e703cd116a7ba89f49865dbdb5"
+          },
+          {
+            "fileId": 10,
+            "path": "Resources/unity_builtin_extra"
+          },
+          {
+            "fileId": 11,
+            "path": "archive:/CAB-fd88e75cf20a06d21bd6644129579913/CAB-fd88e75cf20a06d21bd6644129579913"
+          },
+          {
+            "fileId": 12,
+            "path": "archive:/CAB-ed4acacbbf25938cc3461ddc53167d54/CAB-ed4acacbbf25938cc3461ddc53167d54"
+          },
+          {
+            "fileId": 13,
+            "path": "archive:/CAB-bf1b13f9d0c9427435b472df35d00581/CAB-bf1b13f9d0c9427435b472df35d00581"
+          },
+          {
+            "fileId": 14,
+            "path": "archive:/CAB-642d46f8f963075e7501ca46449a283a/CAB-642d46f8f963075e7501ca46449a283a"
+          },
+          {
+            "fileId": 15,
+            "path": "archive:/CAB-6881dbdcab9586d6cfdff24fe65869ac/CAB-6881dbdcab9586d6cfdff24fe65869ac"
+          },
+          {
+            "fileId": 16,
+            "path": "archive:/CAB-50864eab01ae866e7ba83a3dbfb0a7a8/CAB-50864eab01ae866e7ba83a3dbfb0a7a8"
+          }
+        ],
+        "properties": {
+          "m_GameObject": {
+            "m_FileID": 0,
+            "m_PathID": "-3895935174600936831"
+          },
+          "m_Enabled": 1,
+          "m_Script": {
+            "m_FileID": 0,
+            "m_PathID": "1361359031902299654"
+          },
+          "m_Name": "",
+          "material": {
+            "m_FileID": 0,
+            "m_PathID": "5371554465622065664"
+          },
+          "maskedMaterial": {
+            "m_FileID": 0,
+            "m_PathID": "0"
+          },
+          "mPixelSize": 0.5,
+          "_unityAtlas": {
+            "m_FileID": 4,
+            "m_PathID": "7355715405354601724"
+          }
+        },
+        "matchingEntries": {}
+      },
+      {
+        "pathId": "7638555690320633890",
+        "className": "UnityAtlasWrapper",
+        "spriteName": "CommonTraySmlGlow",
+        "externalFiles": [
+          {
+            "fileId": 1,
+            "path": "archive:/CAB-0f5f4a92553687c7043da88f7afae3bb/CAB-0f5f4a92553687c7043da88f7afae3bb"
+          },
+          {
+            "fileId": 2,
+            "path": "archive:/CAB-90fdff4e34e0cc85a720e0ea72058a37/CAB-90fdff4e34e0cc85a720e0ea72058a37"
+          },
+          {
+            "fileId": 3,
+            "path": "archive:/CAB-ea49322693bc595a0af1067ad28f1c9b/CAB-ea49322693bc595a0af1067ad28f1c9b"
+          },
+          {
+            "fileId": 4,
+            "path": "archive:/CAB-ecbc2ee02c94876f48b09b05008a42f2/CAB-ecbc2ee02c94876f48b09b05008a42f2"
+          },
+          {
+            "fileId": 5,
+            "path": "Library/unity default resources"
+          },
+          {
+            "fileId": 6,
+            "path": "archive:/CAB-19700d1d65994de0f4a3ce2785b35d8b/CAB-19700d1d65994de0f4a3ce2785b35d8b"
+          },
+          {
+            "fileId": 7,
+            "path": "archive:/CAB-40dbfd4bace25d264cdc74c74ff42bf7/CAB-40dbfd4bace25d264cdc74c74ff42bf7"
+          },
+          {
+            "fileId": 8,
+            "path": "archive:/CAB-5aa462d42e744a680a36c200115c2e3d/CAB-5aa462d42e744a680a36c200115c2e3d"
+          },
+          {
+            "fileId": 9,
+            "path": "archive:/CAB-cf8749e703cd116a7ba89f49865dbdb5/CAB-cf8749e703cd116a7ba89f49865dbdb5"
+          },
+          {
+            "fileId": 10,
+            "path": "Resources/unity_builtin_extra"
+          },
+          {
+            "fileId": 11,
+            "path": "archive:/CAB-fd88e75cf20a06d21bd6644129579913/CAB-fd88e75cf20a06d21bd6644129579913"
+          },
+          {
+            "fileId": 12,
+            "path": "archive:/CAB-ed4acacbbf25938cc3461ddc53167d54/CAB-ed4acacbbf25938cc3461ddc53167d54"
+          },
+          {
+            "fileId": 13,
+            "path": "archive:/CAB-bf1b13f9d0c9427435b472df35d00581/CAB-bf1b13f9d0c9427435b472df35d00581"
+          },
+          {
+            "fileId": 14,
+            "path": "archive:/CAB-642d46f8f963075e7501ca46449a283a/CAB-642d46f8f963075e7501ca46449a283a"
+          },
+          {
+            "fileId": 15,
+            "path": "archive:/CAB-6881dbdcab9586d6cfdff24fe65869ac/CAB-6881dbdcab9586d6cfdff24fe65869ac"
+          },
+          {
+            "fileId": 16,
+            "path": "archive:/CAB-50864eab01ae866e7ba83a3dbfb0a7a8/CAB-50864eab01ae866e7ba83a3dbfb0a7a8"
+          }
+        ],
+        "properties": {
+          "m_GameObject": {
+            "m_FileID": 0,
+            "m_PathID": "-3895935174600936831"
+          },
+          "m_Enabled": 1,
+          "m_Script": {
+            "m_FileID": 0,
+            "m_PathID": "1361359031902299654"
+          },
+          "m_Name": "",
+          "material": {
+            "m_FileID": 0,
+            "m_PathID": "5371554465622065664"
+          },
+          "maskedMaterial": {
+            "m_FileID": 0,
+            "m_PathID": "0"
+          },
+          "mPixelSize": 0.5,
+          "_unityAtlas": {
+            "m_FileID": 4,
+            "m_PathID": "7355715405354601724"
+          }
+        },
+        "matchingEntries": {}
+      },
+      {
+        "pathId": "7638555690320633890",
+        "className": "UnityAtlasWrapper",
+        "spriteName": "ChapterContentBackgroundGradient",
+        "externalFiles": [
+          {
+            "fileId": 1,
+            "path": "archive:/CAB-0f5f4a92553687c7043da88f7afae3bb/CAB-0f5f4a92553687c7043da88f7afae3bb"
+          },
+          {
+            "fileId": 2,
+            "path": "archive:/CAB-90fdff4e34e0cc85a720e0ea72058a37/CAB-90fdff4e34e0cc85a720e0ea72058a37"
+          },
+          {
+            "fileId": 3,
+            "path": "archive:/CAB-ea49322693bc595a0af1067ad28f1c9b/CAB-ea49322693bc595a0af1067ad28f1c9b"
+          },
+          {
+            "fileId": 4,
+            "path": "archive:/CAB-ecbc2ee02c94876f48b09b05008a42f2/CAB-ecbc2ee02c94876f48b09b05008a42f2"
+          },
+          {
+            "fileId": 5,
+            "path": "Library/unity default resources"
+          },
+          {
+            "fileId": 6,
+            "path": "archive:/CAB-19700d1d65994de0f4a3ce2785b35d8b/CAB-19700d1d65994de0f4a3ce2785b35d8b"
+          },
+          {
+            "fileId": 7,
+            "path": "archive:/CAB-40dbfd4bace25d264cdc74c74ff42bf7/CAB-40dbfd4bace25d264cdc74c74ff42bf7"
+          },
+          {
+            "fileId": 8,
+            "path": "archive:/CAB-5aa462d42e744a680a36c200115c2e3d/CAB-5aa462d42e744a680a36c200115c2e3d"
+          },
+          {
+            "fileId": 9,
+            "path": "archive:/CAB-cf8749e703cd116a7ba89f49865dbdb5/CAB-cf8749e703cd116a7ba89f49865dbdb5"
+          },
+          {
+            "fileId": 10,
+            "path": "Resources/unity_builtin_extra"
+          },
+          {
+            "fileId": 11,
+            "path": "archive:/CAB-fd88e75cf20a06d21bd6644129579913/CAB-fd88e75cf20a06d21bd6644129579913"
+          },
+          {
+            "fileId": 12,
+            "path": "archive:/CAB-ed4acacbbf25938cc3461ddc53167d54/CAB-ed4acacbbf25938cc3461ddc53167d54"
+          },
+          {
+            "fileId": 13,
+            "path": "archive:/CAB-bf1b13f9d0c9427435b472df35d00581/CAB-bf1b13f9d0c9427435b472df35d00581"
+          },
+          {
+            "fileId": 14,
+            "path": "archive:/CAB-642d46f8f963075e7501ca46449a283a/CAB-642d46f8f963075e7501ca46449a283a"
+          },
+          {
+            "fileId": 15,
+            "path": "archive:/CAB-6881dbdcab9586d6cfdff24fe65869ac/CAB-6881dbdcab9586d6cfdff24fe65869ac"
+          },
+          {
+            "fileId": 16,
+            "path": "archive:/CAB-50864eab01ae866e7ba83a3dbfb0a7a8/CAB-50864eab01ae866e7ba83a3dbfb0a7a8"
+          }
+        ],
+        "properties": {
+          "m_GameObject": {
+            "m_FileID": 0,
+            "m_PathID": "-3895935174600936831"
+          },
+          "m_Enabled": 1,
+          "m_Script": {
+            "m_FileID": 0,
+            "m_PathID": "1361359031902299654"
+          },
+          "m_Name": "",
+          "material": {
+            "m_FileID": 0,
+            "m_PathID": "5371554465622065664"
+          },
+          "maskedMaterial": {
+            "m_FileID": 0,
+            "m_PathID": "0"
+          },
+          "mPixelSize": 0.5,
+          "_unityAtlas": {
+            "m_FileID": 4,
+            "m_PathID": "7355715405354601724"
+          }
+        },
+        "matchingEntries": {}
+      },
+      {
+        "pathId": "7638555690320633890",
+        "className": "UnityAtlasWrapper",
+        "spriteName": "badgeBattlePassQuestBG",
+        "externalFiles": [
+          {
+            "fileId": 1,
+            "path": "archive:/CAB-0f5f4a92553687c7043da88f7afae3bb/CAB-0f5f4a92553687c7043da88f7afae3bb"
+          },
+          {
+            "fileId": 2,
+            "path": "archive:/CAB-90fdff4e34e0cc85a720e0ea72058a37/CAB-90fdff4e34e0cc85a720e0ea72058a37"
+          },
+          {
+            "fileId": 3,
+            "path": "archive:/CAB-ea49322693bc595a0af1067ad28f1c9b/CAB-ea49322693bc595a0af1067ad28f1c9b"
+          },
+          {
+            "fileId": 4,
+            "path": "archive:/CAB-ecbc2ee02c94876f48b09b05008a42f2/CAB-ecbc2ee02c94876f48b09b05008a42f2"
+          },
+          {
+            "fileId": 5,
+            "path": "Library/unity default resources"
+          },
+          {
+            "fileId": 6,
+            "path": "archive:/CAB-19700d1d65994de0f4a3ce2785b35d8b/CAB-19700d1d65994de0f4a3ce2785b35d8b"
+          },
+          {
+            "fileId": 7,
+            "path": "archive:/CAB-40dbfd4bace25d264cdc74c74ff42bf7/CAB-40dbfd4bace25d264cdc74c74ff42bf7"
+          },
+          {
+            "fileId": 8,
+            "path": "archive:/CAB-5aa462d42e744a680a36c200115c2e3d/CAB-5aa462d42e744a680a36c200115c2e3d"
+          },
+          {
+            "fileId": 9,
+            "path": "archive:/CAB-cf8749e703cd116a7ba89f49865dbdb5/CAB-cf8749e703cd116a7ba89f49865dbdb5"
+          },
+          {
+            "fileId": 10,
+            "path": "Resources/unity_builtin_extra"
+          },
+          {
+            "fileId": 11,
+            "path": "archive:/CAB-fd88e75cf20a06d21bd6644129579913/CAB-fd88e75cf20a06d21bd6644129579913"
+          },
+          {
+            "fileId": 12,
+            "path": "archive:/CAB-ed4acacbbf25938cc3461ddc53167d54/CAB-ed4acacbbf25938cc3461ddc53167d54"
+          },
+          {
+            "fileId": 13,
+            "path": "archive:/CAB-bf1b13f9d0c9427435b472df35d00581/CAB-bf1b13f9d0c9427435b472df35d00581"
+          },
+          {
+            "fileId": 14,
+            "path": "archive:/CAB-642d46f8f963075e7501ca46449a283a/CAB-642d46f8f963075e7501ca46449a283a"
+          },
+          {
+            "fileId": 15,
+            "path": "archive:/CAB-6881dbdcab9586d6cfdff24fe65869ac/CAB-6881dbdcab9586d6cfdff24fe65869ac"
+          },
+          {
+            "fileId": 16,
+            "path": "archive:/CAB-50864eab01ae866e7ba83a3dbfb0a7a8/CAB-50864eab01ae866e7ba83a3dbfb0a7a8"
+          }
+        ],
+        "properties": {
+          "m_GameObject": {
+            "m_FileID": 0,
+            "m_PathID": "-3895935174600936831"
+          },
+          "m_Enabled": 1,
+          "m_Script": {
+            "m_FileID": 0,
+            "m_PathID": "1361359031902299654"
+          },
+          "m_Name": "",
+          "material": {
+            "m_FileID": 0,
+            "m_PathID": "5371554465622065664"
+          },
+          "maskedMaterial": {
+            "m_FileID": 0,
+            "m_PathID": "0"
+          },
+          "mPixelSize": 0.5,
+          "_unityAtlas": {
+            "m_FileID": 4,
+            "m_PathID": "7355715405354601724"
+          }
+        },
+        "matchingEntries": {}
+      }
+    ],
+    "placeholder": {
+      "key": "assets/ui/images/autoscale_quest_tile_champ_bg_placeholder.jpg",
+      "pathId": "6708813539762824518",
+      "file": "native-menu-placeholder.png",
+      "sha256": "238282d4446792588ba4b10ba7ce8f9e4191bd4acefa0130ccbb4027bf3e2429",
+      "width": 256,
+      "height": 256,
+      "role": "Serialized native menu placeholder; not a quest-specific poster"
+    },
+    "atlasBundle": {
+      "file": "main_odr/main_atlas_procedural.assetbundle",
+      "sha256": "40e9fb53bbb9a9baef449b626fddd6992b7d987850731c4cc198b59b3bdccac7",
+      "uiManifestSha256": "0c1a9557a86c71d8a873b01b320042bd34fdc6269729053af8c43740e9bbbbfc",
+      "graphics": [
+        {
+          "spriteName": "CommonSquare",
+          "wrapperPathId": "7638555690320633890",
+          "atlasPathId": "7355715405354601724",
+          "archive": "CAB-ecbc2ee02c94876f48b09b05008a42f2",
+          "spritePathId": "-7545721499670082254",
+          "renderDataKey": [
+            {
+              "data[0]": 869113576,
+              "data[1]": 4249416432,
+              "data[2]": 743417255,
+              "data[3]": 2131679228
+            },
+            21300000
+          ],
+          "renderData": {
+            "texture": {
+              "m_FileID": 0,
+              "m_PathID": "-8656841239417078968"
+            },
+            "alphaTexture": {
+              "m_FileID": 0,
+              "m_PathID": "0"
+            },
+            "textureRect": {
+              "x": 145.0,
+              "y": 1955.0,
+              "width": 12.0,
+              "height": 12.0
+            },
+            "textureRectOffset": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "atlasRectOffset": {
+              "x": 145.0,
+              "y": 1955.0
+            },
+            "uvTransform": {
+              "x": 200.0,
+              "y": 151.0,
+              "z": 200.0,
+              "w": 1961.0
+            },
+            "downscaleMultiplier": 1.0,
+            "settingsRaw": 3,
+            "secondaryTextures": []
+          },
+          "texturePathId": "-8656841239417078968",
+          "textureName": "sactx-0-4096x2048-BC7-MainAtlas-0cdb03dc",
+          "file": "native-ui-CommonSquare.png",
+          "sha256": "3979c40b2cf0a29acc79b1485e0729e4bde4ca5663185f1f59708c179cefd2fe",
+          "width": 12,
+          "height": 12,
+          "role": "Shared native UI decoration; not authored quest art"
+        },
+        {
+          "spriteName": "CommonTraySmlGlow",
+          "wrapperPathId": "7638555690320633890",
+          "atlasPathId": "7355715405354601724",
+          "archive": "CAB-ecbc2ee02c94876f48b09b05008a42f2",
+          "spritePathId": "-7548049499053244619",
+          "renderDataKey": [
+            {
+              "data[0]": 2596117920,
+              "data[1]": 2739214568,
+              "data[2]": 3063723963,
+              "data[3]": 3323502828
+            },
+            21300000
+          ],
+          "renderData": {
+            "texture": {
+              "m_FileID": 0,
+              "m_PathID": "-8656841239417078968"
+            },
+            "alphaTexture": {
+              "m_FileID": 0,
+              "m_PathID": "0"
+            },
+            "textureRect": {
+              "x": 1513.0,
+              "y": 759.0,
+              "width": 176.0,
+              "height": 174.0
+            },
+            "textureRectOffset": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "atlasRectOffset": {
+              "x": 1513.0,
+              "y": 759.0
+            },
+            "uvTransform": {
+              "x": 200.0,
+              "y": 1601.0,
+              "z": 200.0,
+              "w": 846.0
+            },
+            "downscaleMultiplier": 1.0,
+            "settingsRaw": 3,
+            "secondaryTextures": []
+          },
+          "texturePathId": "-8656841239417078968",
+          "textureName": "sactx-0-4096x2048-BC7-MainAtlas-0cdb03dc",
+          "file": "native-ui-CommonTraySmlGlow.png",
+          "sha256": "f0447d39a16721919c464cd922e03d94126b8467b6c53d0f46ee296a672386ab",
+          "width": 176,
+          "height": 174,
+          "role": "Shared native UI decoration; not authored quest art"
+        },
+        {
+          "spriteName": "ChapterContentBackgroundGradient",
+          "wrapperPathId": "7638555690320633890",
+          "atlasPathId": "7355715405354601724",
+          "archive": "CAB-ecbc2ee02c94876f48b09b05008a42f2",
+          "spritePathId": "-1070446020311254045",
+          "renderDataKey": [
+            {
+              "data[0]": 810265659,
+              "data[1]": 3880526132,
+              "data[2]": 797161903,
+              "data[3]": 1764861688
+            },
+            21300000
+          ],
+          "renderData": {
+            "texture": {
+              "m_FileID": 0,
+              "m_PathID": "-8656841239417078968"
+            },
+            "alphaTexture": {
+              "m_FileID": 0,
+              "m_PathID": "0"
+            },
+            "textureRect": {
+              "x": 3974.0,
+              "y": 1674.0,
+              "width": 8.0,
+              "height": 256.0
+            },
+            "textureRectOffset": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "atlasRectOffset": {
+              "x": 3974.0,
+              "y": 1674.0
+            },
+            "uvTransform": {
+              "x": 200.0,
+              "y": 3978.0,
+              "z": 200.0,
+              "w": 1802.0
+            },
+            "downscaleMultiplier": 1.0,
+            "settingsRaw": 3,
+            "secondaryTextures": []
+          },
+          "texturePathId": "-8656841239417078968",
+          "textureName": "sactx-0-4096x2048-BC7-MainAtlas-0cdb03dc",
+          "file": "native-ui-ChapterContentBackgroundGradient.png",
+          "sha256": "e13554e871648e4a73d814480a45dfe02b6278059655ddff05ec98a7494fda28",
+          "width": 8,
+          "height": 256,
+          "role": "Shared native UI decoration; not authored quest art"
+        },
+        {
+          "spriteName": "badgeBattlePassQuestBG",
+          "wrapperPathId": "7638555690320633890",
+          "atlasPathId": "7355715405354601724",
+          "archive": "CAB-ecbc2ee02c94876f48b09b05008a42f2",
+          "spritePathId": "2017478322991930897",
+          "renderDataKey": [
+            {
+              "data[0]": 2743214466,
+              "data[1]": 424660831,
+              "data[2]": 705819297,
+              "data[3]": 750921102
+            },
+            21300000
+          ],
+          "renderData": {
+            "texture": {
+              "m_FileID": 0,
+              "m_PathID": "-8656841239417078968"
+            },
+            "alphaTexture": {
+              "m_FileID": 0,
+              "m_PathID": "0"
+            },
+            "textureRect": {
+              "x": 1691.0,
+              "y": 706.0,
+              "width": 136.0,
+              "height": 196.0
+            },
+            "textureRectOffset": {
+              "x": 0.0,
+              "y": 0.0
+            },
+            "atlasRectOffset": {
+              "x": 1691.0,
+              "y": 706.0
+            },
+            "uvTransform": {
+              "x": 200.0,
+              "y": 1759.0,
+              "z": 200.0,
+              "w": 804.0
+            },
+            "downscaleMultiplier": 1.0,
+            "settingsRaw": 3,
+            "secondaryTextures": []
+          },
+          "texturePathId": "-8656841239417078968",
+          "textureName": "sactx-0-4096x2048-BC7-MainAtlas-0cdb03dc",
+          "file": "native-ui-badgeBattlePassQuestBG.png",
+          "sha256": "d6ff6d398943246bb4472e631d95db2a6a27b071213bb61c6d69ac00cda9cecf",
+          "width": 136,
+          "height": 196,
+          "role": "Shared native UI decoration; not authored quest art"
+        }
+      ]
+    }
+  },
+  "richerArtBindings": {
+    "quests": 0,
+    "acts": 0,
+    "chapters": 0,
+    "reason": "Art fields absent from accepted saved definitions; cached images have no reverse quest identity index"
+  },
+  "fullAuditSha256": "e532a36a7bc23e2fe2ef4566364408aa879c4105782e9e9cec80904e057891ab",
+  "inventoryCounts": {
+    "installedTocs": 799,
+    "candidateTocReferences": 377,
+    "cachedImages": 1041,
+    "wideCandidates": 210,
+    "largeNonwideCandidates": 146,
+    "compactBannerCandidates": 8,
+    "portraitPosterCandidates": 9
+  }
+}

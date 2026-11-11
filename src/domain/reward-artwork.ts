@@ -19,6 +19,9 @@ export const rewardPaletteSchema = z.object({ version: z.literal(1),
   source: colorDictionarySchema.omit({ paletteSha256: true }).extend({ metadataSha256: hash }).strict(),
   colors: z.record(identity, rgbaSchema),
 }).strict()
+const materialShaderSchema = inventoryShaderSchema.extend({
+  bindingProofSha256: z.literal("7d6c8c80868340a3c215545b7e1ac8f675ed3bde4f94e9b91a49889d363e93a3"),
+}).strict()
 const bindingSchema = keySchema.extend({ source: z.enum(["cdn", "resource"]), reference,
   registry: z.enum(["gamestore", "evo", "crystal-token", "resource-dispatch", "selectable-reward"]), registryId: z.string(),
   tintApplied: z.boolean(), tintColor: z.string().regex(/^[a-fA-F0-9]{6}([a-fA-F0-9]{2})?$/).optional(), classId: z.string().optional(), renderTint: renderTintSchema.optional(),
@@ -32,17 +35,23 @@ const sourceSchema = z.object({ observedAt: z.iso.datetime({ offset: true }), ga
   metadata: z.array(z.object({ assembly: fileName, sha256: hash }).strict()),
   colorDictionary: colorDictionarySchema.optional(),
   inventoryShader: inventoryShaderSchema.optional(),
+  materialShader: materialShaderSchema.optional(),
   selectableRewards: z.object({ catalogSha256: hash, observedAt: z.iso.datetime({ offset: true }), gameAssemblySha256: hash, metadataSha256: hash }).strict().optional(),
 }).strict()
-function validateRenderTints(manifest: { source: { colorDictionary?: z.infer<typeof colorDictionarySchema>; inventoryShader?: z.infer<typeof inventoryShaderSchema> };
+function validateRenderTints(manifest: { source: { colorDictionary?: z.infer<typeof colorDictionarySchema>; inventoryShader?: z.infer<typeof inventoryShaderSchema>; materialShader?: z.infer<typeof materialShaderSchema> };
   assets: { type: string; data: string; role: string; registryId: string; reference: string; classId?: string; tintApplied: boolean; registry: string; origin: string; renderTint?: z.infer<typeof renderTintSchema> }[] }, context: z.RefinementCtx) {
   manifest.assets.forEach((asset, index) => {
     const inventory = asset.registry === "gamestore" && asset.type === "inv" && asset.role === "full" && asset.data === asset.registryId &&
       ["inventory/Awaken", "inventory/SkillUp"].includes(asset.reference) && asset.classId &&
       asset.renderTint?.source === "color-dictionary" && asset.renderTint.key === `class_${asset.classId}` && asset.renderTint.blendMode === "overlay" &&
       manifest.source.inventoryShader && manifest.source.inventoryShader.sha256 === manifest.source.colorDictionary?.sha256
-    if (asset.tintApplied !== Boolean(asset.renderTint) || (asset.renderTint &&
-      ((asset.registry !== "evo" && !inventory) || (asset.registry === "evo" && asset.renderTint.blendMode) || asset.origin === "published-crystal")) ||
+    const material = asset.registry === "evo" && ["ebp", "ebpf"].includes(asset.type) && asset.data === asset.registryId &&
+      asset.role === (asset.type === "ebpf" ? "fragment" : "full") &&
+      asset.renderTint?.blendMode === "overlay" && manifest.source.materialShader &&
+      manifest.source.materialShader.sha256 === manifest.source.colorDictionary?.sha256
+    if ((asset.registry === "evo" && manifest.source.materialShader && !material) ||
+      asset.tintApplied !== Boolean(asset.renderTint) || (asset.renderTint &&
+      ((asset.registry !== "evo" && !inventory) || (asset.registry === "evo" && asset.renderTint.blendMode && !material) || asset.origin === "published-crystal")) ||
       (asset.renderTint?.source === "color-dictionary" && (!asset.renderTint.key || !manifest.source.colorDictionary))) {
       context.addIssue({ code: "custom", path: ["assets", index], message: "Incomplete or unrelated reward tint provenance" })
     }
@@ -86,6 +95,7 @@ export const publishedRewardArtworkSchema = z.object({ version: z.literal(1), so
 export type RewardArtworkRole = z.infer<typeof rewardArtworkRoleSchema>
 export type RewardArtwork = z.infer<typeof publishedRewardArtworkSchema>["assets"][number]
 export type PublishedRewardArtwork = z.infer<typeof publishedRewardArtworkSchema>
+export type LocalRewardArtwork = z.infer<typeof localRewardArtworkSchema>["assets"][number] & { url: string }
 export const rewardArtworkKey = (value: { type: string; data: string; role: RewardArtworkRole }) => JSON.stringify([value.type, value.data, value.role])
 export const defaultRewardArtworkRole = (type: string): RewardArtworkRole => type === "gf" || type === "ebpf" ? "fragment" : "full"
 export function rewardArtworkObjectPath(asset: { role: RewardArtworkRole; sha256: string; origin?: string }) {
@@ -142,5 +152,29 @@ export function createRewardArtworkCatalog(input: unknown, expected?: { gachaSha
       if (asset) return { status: "resolved" as const, asset }
       const reason = missing.get(rewardArtworkKey({ type, data, role }))
       return reason ? { status: "missing" as const, reason } : { status: "unrecorded" as const }
+    } }
+}
+
+/** Local immutable corrections use the same native provenance checks as exports. */
+export function createLocalRewardArtworkCatalog(input: unknown, expected: { gachaSha256: string; colorPalette: z.infer<typeof rewardPaletteSchema> }) {
+  const manifest = localRewardArtworkSchema.parse(input)
+  if (manifest.source.gachaSha256 !== expected.gachaSha256) throw new Error("Local reward artwork snapshot mismatch")
+  const palette = expected.colorPalette
+  if (manifest.source.colorDictionary && (manifest.source.colorDictionary.sha256 !== palette.source.sha256 ||
+    manifest.source.colorDictionary.objectSha256 !== palette.source.objectSha256)) throw new Error("Local reward palette mismatch")
+  const assets = new Map<string, LocalRewardArtwork>()
+  for (const value of manifest.assets) {
+    if (value.renderTint?.source === "color-dictionary" &&
+      JSON.stringify(palette.colors[value.renderTint.key!]) !== JSON.stringify(value.renderTint.rgba)) throw new Error("Local reward tint mismatch")
+    const key = rewardArtworkKey(value)
+    if (assets.has(key)) throw new Error("Duplicate local reward artwork identity")
+    const image = { ...value, url: value.reuseUrl ?? `/game-rewards/${value.file}` }
+    freeze(image); assets.set(key, image)
+  }
+  if (manifest.coverage.resolved !== assets.size || manifest.coverage.missing !== manifest.missing.length ||
+    manifest.coverage.bindings !== assets.size + manifest.missing.length) throw new Error("Local reward coverage mismatch")
+  return { source: manifest.source, coverage: manifest.coverage,
+    getRewardArtwork(type: string | null | undefined, data: string | null | undefined, role?: RewardArtworkRole) {
+      return type && data != null ? assets.get(rewardArtworkKey({ type, data, role: role ?? defaultRewardArtworkRole(type) })) ?? null : null
     } }
 }
