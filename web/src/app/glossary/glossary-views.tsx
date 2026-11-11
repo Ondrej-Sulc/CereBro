@@ -5,9 +5,10 @@ import type { CSSProperties, ReactNode } from 'react';
 import { EFFECT_DIRECTION_LABELS, EFFECT_FORM_LABELS, readAbilitySource } from '@cerebro/core/domain/ability-source';
 import { resistanceLabel } from '@cerebro/core/domain/champion-resistance';
 import { formatGameText } from '@cerebro/core/domain/champion-ability-text/renderer';
-import { GLOSSARY_GROUPS, glossaryHref, glossaryQuery, type GlossaryFilters } from '@/lib/effect-glossary';
+import { GLOSSARY_GROUPS, glossaryHref, glossaryQuery, isSynergyApplication, type GlossaryFilters } from '@/lib/effect-glossary';
 import type { GlossaryCatalog, GlossaryDetail, GlossaryEffect } from '@/lib/data/effect-glossary';
 import { getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
+import { EffectSources } from '@/components/champions/effect-sources';
 import styles from './glossary.module.css';
 
 function effectPalette(effect: GlossaryEffect): CSSProperties {
@@ -53,8 +54,7 @@ export function GlossaryDetailView({ data }: { data: GlossaryDetail }) {
     <ChampionFilters path={path} filters={filters} />
     <div className={styles.resultToolbar}><h2>{results.total} {results.total === 1 ? 'champion' : 'champions'}</h2><details className={styles.groupInfo}><summary><Info size={14} aria-hidden="true" />{filters.group === 'ABILITY' ? 'About sources' : filters.group === 'IMMUNITY' ? 'About immunity' : 'About resistance'}</summary><p>{filters.group === 'ABILITY' ? 'Form and direction match the same source application.' : filters.group === 'IMMUNITY' ? 'Immunity can be conditional or require a synergy. Read each source.' : 'Resistance reduces a recorded mechanism. Even 100% does not establish immunity.'}</p></details></div>
     {results.rows.length ? <div className={styles.championGrid}>{results.rows.map(champion => <article key={champion.id} className={styles.championCard}><div className={styles.championIdentity}><Image src={getChampionImageUrlOrPlaceholder(champion.images, '64')} alt="" width={48} height={48} className={styles.portrait} /><div>{champion.slug ? <Link prefetch={false} href={`/champions/${champion.slug}${filters.stars ? `?rarity=${filters.stars}` : ''}`} className={styles.championName}>{champion.name}<ArrowRight size={13} aria-hidden="true" /></Link> : <h3 className={styles.championName}>{champion.name}</h3>}<p>{champion.class[0] + champion.class.slice(1).toLowerCase()}</p></div><span className={styles.applicationCount}>{champion.applications.length} {champion.applications.length === 1 ? 'source' : 'sources'}</span></div>
-      <Application application={champion.applications[0]} />
-      {champion.applications.length > 1 && <details className={styles.moreSources}><summary><ChevronDown size={14} aria-hidden="true" />{champion.applications.length - 1} more {champion.applications.length === 2 ? 'source' : 'sources'}</summary><div>{champion.applications.slice(1).map(application => <Application key={`${application.id}:${application.type}`} application={application} />)}</div></details>}
+      <ChampionSources champion={champion} stars={filters.stars}/>
     </article>)}</div> : <EmptyState title={`No matching ${filters.group === 'ABILITY' ? 'champions' : filters.group === 'IMMUNITY' ? 'immunities' : 'resistances'}`} description="No current recorded sources match this scope. Try clearing the filters or choosing another group." href={`${path}?group=${filters.group}`} label="Clear champion filters" />}
     <Pagination path={path} filters={filters} results={results} noun="champions" /><Provenance />
   </GlossaryShell>;
@@ -87,10 +87,21 @@ function ChampionFilters({ path, filters }: { path: string; filters: GlossaryFil
   </form>;
 }
 
+function ChampionSources({ champion, stars }: { champion: GlossaryDetail['results']['rows'][number]; stars: string }) {
+  const applications = champion.synergySources ? champion.applications.filter(application => !isSynergyApplication(application)) : champion.applications;
+  const query = new URLSearchParams({ tab: 'synergies' });
+  if (stars) query.set('rarity', stars);
+  return <>
+    {applications[0] && <Application application={applications[0]}/>}
+    {applications.length > 1 && <details className={styles.moreSources}><summary><ChevronDown size={14} aria-hidden="true"/>{applications.length - 1} more {applications.length === 2 ? 'source' : 'sources'}</summary><div>{applications.slice(1).map(application => <Application key={`${application.id}:${application.type}`} application={application}/>)}</div></details>}
+    {champion.synergySources && <div className={styles.kitSynergySources} data-synergy-sources data-source-ids={champion.applications.filter(isSynergyApplication).map(application => application.id).join(',')}><EffectSources effect={champion.synergySources.effect} groups={champion.synergySources.groups} synergiesHref={champion.slug ? `/champions/${champion.slug}?${query}` : undefined}/></div>}
+  </>;
+}
+
 type ApplicationData = GlossaryDetail['results']['rows'][number]['applications'][number];
 function Application({ application }: { application: ApplicationData }) {
   const source = readAbilitySource(application);
-  const synergy = application.synergyChampions.length > 0 || /^Synergy:/i.test(application.source ?? '');
+  const synergy = isSynergyApplication(application);
   // Canonical Kit parsing separates a complete header; legacy requirements remain in the original text.
   const text = application.requirements ? application.requirements.condition : synergy ? source.condition : application.overviewSummary || source.condition;
   const readable = text && !/[{}]|\b(?:unresolved|legacy|audit)\b/i.test(text);

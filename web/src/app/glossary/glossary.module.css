@@ -165,3 +165,5 @@
 @media(max-width:767px){.condition{font-size:14px;line-height:1.75}.championName{font-size:15px}.championIdentity{padding:13px 16px}.application{padding:14px 16px}.effectCard h3{font-size:16px}.effectCard>p{font-size:13px}.largeIcon{border-radius:14px}}
 
 .effectCard:hover .cardArrow{color:var(--effect-ink)}
+
+.kitSynergySources>[data-effect-sources]{border-top:0}.application+.kitSynergySources,.moreSources+.kitSynergySources{border-top:1px solid var(--line)}

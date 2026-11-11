@@ -28,6 +28,10 @@ export function normalizeGlossaryFilters(params: GlossaryParams) {
   };
 }
 export type GlossaryFilters = ReturnType<typeof normalizeGlossaryFilters>;
+export function isSynergyApplication(application: { source: string | null; synergyChampions: unknown[] }): boolean {
+  return application.synergyChampions.length > 0 || /^Synergy:/i.test(application.source ?? '');
+}
+
 export type GlossaryChampionInput = {
   id: number; name: string; slug: string | null; class: string; images: unknown;
   obtainable: string[]; isPlayable: boolean; abilities: ChampionEffectSource[];

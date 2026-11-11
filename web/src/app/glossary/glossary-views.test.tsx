@@ -18,7 +18,7 @@ describe('glossary rendered behavior', () => {
   });
   it('shows conditional protection and required partners with distinct source identities', () => {
     const application = { id: 10, championId: 1, type: 'IMMUNITY' as const, ability: { id: 5, name: 'Bleed' }, source: 'Synergy: Only while blocking with Partner (6★).', effectForm: 'UNKNOWN' as const, effectDirection: 'UNKNOWN' as const, overviewSummary: 'Short copy omitting requirements', synergyChampions: [{ championId: 2, champion: { name: 'Partner', slug: 'partner' } }], sourceHref: '/champions/test?tab=synergies', sourceLabel: 'Synergy requirements', requirements: null };
-    const data: GlossaryDetail = { effect, filters: { ...normalizeGlossaryFilters({ group: 'IMMUNITY' }), group: 'IMMUNITY' }, counts: { ABILITY: 0, IMMUNITY: 1, RESISTANCE: 0 }, results: { page: 1, pages: 1, total: 1, size: 12, rows: [{ id: 1, name: 'Test Champion', slug: 'test', class: 'SCIENCE', images: {}, obtainable: ['7*'], stars: [7], applications: [application, { ...application, id: 11, source: 'While charging Heavy' }] }] } };
+    const data: GlossaryDetail = { effect, filters: { ...normalizeGlossaryFilters({ group: 'IMMUNITY' }), group: 'IMMUNITY' }, counts: { ABILITY: 0, IMMUNITY: 1, RESISTANCE: 0 }, results: { page: 1, pages: 1, total: 1, size: 12, rows: [{ id: 1, name: 'Test Champion', slug: 'test', class: 'SCIENCE', images: {}, obtainable: ['7*'], stars: [7], synergySources: null, applications: [application, { ...application, id: 11, source: 'While charging Heavy' }] }] } };
     const doc = documentFor(renderToStaticMarkup(<GlossaryDetailView data={data} />));
     expect(doc.querySelector('[data-source-id="10"]')?.textContent).toContain('Only while blocking with Partner (6★).');
     expect(doc.querySelector('[data-source-id="11"]')).not.toBeNull();
@@ -53,6 +53,24 @@ describe('glossary rendered behavior', () => {
     const protectionDoc = documentFor(renderToStaticMarkup(<GlossaryDetailView data={{ ...data, filters: { ...scoped.filters, group: 'IMMUNITY' } }} />));
     expect(protectionDoc.querySelector('input[type=hidden][name=form]')?.getAttribute('value')).toBe('DEBUFF');
     expect(protectionDoc.querySelector('[aria-label="Active champion filters"]')?.textContent).toContain('Effect: DebuffEffect: Inflicts');
+  });
+  it('uses the shared kit synergy display with partner portraits and grouped level links', () => {
+    const condition = 'This non-stacking synergy grants temporary Vigilance on Well-Timed Blocks.';
+    const partner = { name: 'Patriot', slug: 'patriot', images: {} };
+    const application = { id: 10, championId: 1, type: 'ABILITY' as const, ability: { id: 5, name: 'Vigilance' }, source: 'Synergy: TEAMWORK', effectForm: 'PASSIVE' as const, effectDirection: 'GAIN' as const, overviewSummary: null, synergyChampions: [{ championId: 2, champion: partner }], sourceHref: '/champions/sam?tab=synergies', sourceLabel: 'Synergy requirements', requirements: null };
+    const data: GlossaryDetail = { effect: { ...effect, name: 'Vigilance' }, filters: { ...normalizeGlossaryFilters({}), group: 'ABILITY' }, counts: { ABILITY: 1, IMMUNITY: 0, RESISTANCE: 0 }, results: { page: 1, pages: 1, total: 1, size: 12, rows: [{ id: 1, name: 'Captain America (Sam Wilson)', slug: 'sam', class: 'TECH', images: {}, obtainable: ['7*'], stars: [7], applications: [application, { ...application, id: 11 }], synergySources: {
+      effect: { name: 'Vigilance', type: 'ABILITY', iconUrl: null, color: '#fff', secondaryColor: '#000', description: null, sources: [] },
+      groups: [{ key: 'PASSIVE:GAIN', effectForm: 'PASSIVE', effectDirection: 'GAIN', nativeSources: [], synergies: [1, 2].map(level => ({ key: `teamwork-${level}`, champions: [partner], unique: true, partnerRarities: [level + 4], partnerRequirement: `Patriot (${level + 4}\u2605)`, links: [{ key: `teamwork-${level}`, label: `Teamwork - Lv. ${level}`, synergyId: `teamwork-${level}`, rarities: [6, 7], conditions: [condition] }] })) }],
+    } }] } };
+    const doc = documentFor(renderToStaticMarkup(<GlossaryDetailView data={data}/>));
+    const shared = doc.querySelector('[data-effect-sources]');
+    expect(shared).not.toBeNull();
+    expect(shared?.textContent?.split(condition)).toHaveLength(2);
+    expect(shared?.querySelector('a[href="/champions/patriot"] img')).not.toBeNull();
+    for (const level of [1, 2]) expect(shared?.querySelector(`a[href="/champions/sam?tab=synergies#champion-synergy-teamwork-${level}"]`)?.textContent).toBe(`Lv. ${level}`);
+    expect(shared?.textContent).not.toContain('\u2605');
+    expect(doc.body.textContent).not.toContain('Requires this champion');
+    expect(doc.body.textContent).toContain('2 sources');
   });
   it('uses the bound effect palette for identity without changing category meaning or controls', () => {
     const colored = { ...effect, color: '#f71817', secondaryColor: '#fbc6c6', categories: [{ id: 50, name: 'Damage Over Time', description: 'Recorded category' }] };

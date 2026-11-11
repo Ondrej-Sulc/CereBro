@@ -5,7 +5,7 @@ import { formatGameText, prepareChampionAbilityTextView } from '@cerebro/core/do
 import { buildChampionKitOverviewEffects, findChampionKitAbilityTarget, getGameEffectColors, groupChampionKitSources, summarizeChampionKitSource } from '@cerebro/core/domain/champion-kit';
 import { resistanceEvidenceRecords } from '@cerebro/core/domain/champion-resistance-classification';
 import { buildChampionSynergyView } from '@cerebro/core/domain/champion-synergies';
-import { glossaryEffectId, glossaryPage, normalizeGlossaryFilters, projectGlossaryChampions, type GlossaryParams, type GlossaryChampionInput } from '../effect-glossary';
+import { glossaryEffectId, glossaryPage, isSynergyApplication, normalizeGlossaryFilters, projectGlossaryChampions, type GlossaryParams, type GlossaryChampionInput } from '../effect-glossary';
 
 const effectSelect = {
   id: true, name: true, description: true, iconUrl: true, gameGlossaryTermId: true,
@@ -72,7 +72,7 @@ export async function loadGlossaryDetail(identity: string, params: GlossaryParam
   const group = filters.group || (groups.ABILITY.length ? 'ABILITY' : groups.IMMUNITY.length ? 'IMMUNITY' : groups.RESISTANCE.length ? 'RESISTANCE' : 'ABILITY');
   const results = glossaryPage(groups[group], filters.page, 12);
   const texts = results.rows.length ? await prisma.championAbilityText.findMany({ where: { championId: { in: results.rows.map(row => row.id) } }, select: { id: true, championId: true, title: true, group: true, sortOrder: true, template: true } }) : [];
-  const synergyChampionIds = results.rows.filter(row => row.applications.some(application => application.synergyChampions.length || /^Synergy:/i.test(application.source ?? ''))).map(row => row.id);
+  const synergyChampionIds = results.rows.filter(row => row.applications.some(isSynergyApplication)).map(row => row.id);
   const synergyRows = synergyChampionIds.length ? await prisma.gameSynergy.findMany({
     where: { enabled: true, members: { some: { championId: { in: synergyChampionIds } } } },
     select: { id: true, name: true, description: true, enabled: true, unique: true, requiredHeroGroups: true,
@@ -81,10 +81,10 @@ export async function loadGlossaryDetail(identity: string, params: GlossaryParam
   const rows = results.rows.map(champion => {
     const view = prepareChampionAbilityTextView({ records: texts.filter(text => text.championId === champion.id) });
     const synergyView = buildChampionSynergyView(synergyRows, champion.id, filters.stars ? Number(filters.stars) : null);
-    return { ...champion, applications: champion.applications.map(application => {
+    const applications = champion.applications.map(application => {
       // Reuse Kit overview navigation and its canonical synergy header reader, per actual application.
       const original = links.find(link => link.id === application.id)!;
-      const synergy = application.synergyChampions.length > 0 || /^Synergy:/i.test(application.source ?? '');
+      const synergy = isSynergyApplication(application);
       const target = !synergy ? findChampionKitAbilityTarget(application.ability.name, application.source ?? '', view)
         ?? findChampionKitAbilityTarget(original.ability.name, application.source ?? '', view) : null;
       const kitInput = { ...application, synergyChampions: application.synergyChampions.map(partner => ({ champion: {
@@ -105,7 +105,17 @@ export async function loadGlossaryDetail(identity: string, params: GlossaryParam
       const sourceName = summarizeChampionKitSource(application.source ?? '');
       return { ...application, sourceHref: champion.slug ? `/champions/${champion.slug}?${query}${anchor}` : null,
         sourceLabel: synergy ? 'Synergy requirements' : target ? ['Base kit', 'Conditional'].includes(sourceName) ? 'Read source' : sourceName : 'Full abilities', requirements };
-    }) };
+    });
+    const synergyInputs = applications.filter(isSynergyApplication).map(application => ({ ...application,
+      // A legacy header cannot establish activation requirements. Keep its full condition.
+      overviewSummary: application.requirements ? application.overviewSummary : null,
+      synergyChampions: application.synergyChampions.map(partner => ({ champion: {
+        name: partner.champion.name, slug: partner.champion.slug ?? null, images: partner.champion.images,
+      } })),
+    }));
+    const synergyEffect = buildChampionKitOverviewEffects(synergyInputs, new Map()).find(item => item.type === group && item.name === effect.name);
+    const synergyGroups = synergyEffect ? groupChampionKitSources(synergyEffect, view, [...synergyView.owned, ...synergyView.incoming], { championName: champion.name }) : [];
+    return { ...champion, applications, synergySources: synergyEffect && synergyGroups.length ? { effect: synergyEffect, groups: synergyGroups } : null };
   });
   return { effect, filters: { ...filters, group, page: results.page }, counts: { ABILITY: groups.ABILITY.length, IMMUNITY: groups.IMMUNITY.length, RESISTANCE: groups.RESISTANCE.length }, results: { ...results, rows } };
 }

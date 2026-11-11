@@ -5,6 +5,8 @@ const db = vi.hoisted(() => ({
   gameSynergy: { findMany: vi.fn() },
 }));
 vi.mock('@/lib/prisma', () => ({ prisma: db }));
+import { overviewSourceHash } from '@cerebro/core/domain/champion-overview-summary';
+import { groupSynergySourceDisplay } from '@cerebro/core/domain/champion-kit-source-display';
 import { getGlossaryEffect, loadEffectGlossary, loadGlossaryDetail } from './effect-glossary';
 const effect = { id: 5, name: 'Bleed', description: 'Recorded definition.', iconUrl: null, gameGlossaryTermId: null, gameGlossaryTerm: null, categories: [] };
 beforeEach(() => {
@@ -59,6 +61,30 @@ describe('glossary read boundaries', () => {
     expect(first?.counts.ABILITY).toBe(1);
     expect(first?.results.rows[0].applications.map(row => row.id)).toEqual([1, 14]);
   });
+  it('groups equivalent synergy variants across applications while retaining every original card link', async () => {
+    const champion = { id: 1, name: 'Owner', shortName: 'Owner', slug: 'owner', class: 'SCIENCE', images: {}, obtainable: ['7*'], isPlayable: true };
+    const partner = { id: 2, name: 'Partner', shortName: 'Partner', slug: 'partner', class: 'TECH', images: {} };
+    const condition = 'While blocking, gain Bleed immunity.';
+    db.championAbilityLink.findMany.mockResolvedValue([1, 2].map(level => ({ id: level, championId: 1, abilityId: 5, type: 'IMMUNITY', source: `Synergy: TEST - Lv. ${level} (7\u2605) with Partner (${level + 4}\u2605); does not stack: ${condition}`, effectForm: 'UNKNOWN', effectDirection: 'UNKNOWN', ability: effect, champion, overviewSummary: null, synergyChampions: [{ championId: 2, champion: partner }], resistances: [] })));
+    db.gameSynergy.findMany.mockResolvedValue([1, 2].map(level => ({ id: `test-${level}`, name: `TEST - Lv. ${level}`, description: condition, enabled: true, unique: true, requiredHeroGroups: false, members: [{ role: 'OWNER', rarity: 7, champion }, { role: 'REQUIRED', rarity: level + 4, champion: partner }] })));
+    const data = await loadGlossaryDetail('5', { group: 'IMMUNITY' });
+    const row = data!.results.rows[0];
+    expect(row.applications.map(application => application.id)).toEqual([1, 2]);
+    const display = groupSynergySourceDisplay(row.synergySources!.groups[0].synergies);
+    expect(display).toHaveLength(1);
+    expect(display[0].conditions).toEqual([condition]);
+    expect(display[0].references.map(reference => reference.synergyId)).toEqual(['test-1', 'test-2']);
+    expect(display[0].references.map(reference => reference.partnerRarities)).toEqual([[5], [6]]);
+  });
+  it('retains a legacy synergy condition when a shorter summary omits its activation requirements', async () => {
+    const champion = { id: 1, name: 'Owner', slug: 'owner', class: 'SCIENCE', images: {}, obtainable: ['7*'], isPlayable: true };
+    const source = { id: 10, championId: 1, abilityId: 5, name: 'Bleed', type: 'IMMUNITY' as const, source: 'Synergy: Only while blocking with Partner (6\u2605).', effectForm: 'UNKNOWN' as const, effectDirection: 'UNKNOWN' as const, synergyChampionIds: [2] };
+    db.championAbilityLink.findMany.mockResolvedValue([{ ...source, ability: effect, champion, overviewSummary: { text: 'Short copy omitting requirements', sourceHash: overviewSourceHash(source) }, synergyChampions: [{ championId: 2, champion: { name: 'Partner', slug: 'partner', images: {} } }], resistances: [] }]);
+    const data = await loadGlossaryDetail('5', { group: 'IMMUNITY' });
+    const row = data!.results.rows[0];
+    expect(row.applications[0].overviewSummary).toBe('Short copy omitting requirements');
+    expect(row.synergySources!.groups[0].synergies[0].links[0].conditions).toEqual([source.source]);
+  });
   it('uses Kit synergy matching for exact navigation and correlated rarity requirements', async () => {
     const champion = { id: 1, name: 'Owner', shortName: 'Owner', slug: 'owner', class: 'SCIENCE', images: {}, obtainable: ['6*', '7*'], isPlayable: true };
     const partner = { id: 2, name: 'Partner', shortName: 'Partner', slug: 'partner', class: 'TECH', images: {} };
@@ -68,6 +94,9 @@ describe('glossary read boundaries', () => {
     const application = data?.results.rows[0].applications[0];
     expect(application?.requirements).toEqual({ ownerStars: [6], partners: 'Partner (5★)', nonStacking: true, condition: 'While blocking, gain Bleed immunity.' });
     expect(application?.sourceHref).toBe('/champions/owner?tab=synergies&rarity=6&synergy=test-exact#champion-synergy-test-exact');
+    const shared = data?.results.rows[0].synergySources;
+    expect(shared?.effect).toMatchObject({ name: 'Bleed', type: 'IMMUNITY' });
+    expect(shared?.groups[0].synergies[0]).toMatchObject({ champions: [{ name: 'Partner', slug: 'partner' }], partnerRarities: [5], unique: true, links: [{ synergyId: 'test-exact', rarities: [6], conditions: ['While blocking, gain Bleed immunity.'] }] });
     expect((await loadGlossaryDetail('5', { stars: '7' }))?.counts.IMMUNITY).toBe(0);
   });
 });
