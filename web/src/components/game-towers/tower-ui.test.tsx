@@ -82,7 +82,10 @@ describe("Tower browsing outcomes", () => {
     const f = floor();
     expect(f.defender!.ascensionTier).toBeGreaterThan(2);
     const host = await render(<TowerFloors floors={[f]}/>);
-    expect(host.textContent).toContain(`Ascension ${f.defender!.ascensionTier}`);
+    const build = host.querySelector("h3")!.nextElementSibling!;
+    expect(build.textContent).toContain(`Sig ${f.defender!.signature}`);
+    expect(build.textContent).toContain(`Ascension ${f.defender!.ascensionTier}`);
+    expect([...host.querySelectorAll("summary")].some(e => e.textContent === "Defender stats")).toBe(false);
     const health = [...host.querySelectorAll("dl>div")].find(e => e.querySelector("dt")?.textContent === "Max health");
     expect(health?.querySelector("dd")?.textContent).toBe(f.defender!.maxHealth!.toLocaleString("en"));
     expect(host.textContent).not.toContain("Recorded health");
