@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import SignInPage from "./page";
 
-const actions = vi.hoisted(() => ({ signInFromAuthPageAction: vi.fn(), signOutAction: vi.fn() }));
+const actions = vi.hoisted(() => ({ signInFromAuthPageAction: vi.fn(), switchDiscordAccountAction: vi.fn() }));
 vi.mock("@/app/actions/auth", () => actions);
 vi.mock("@/lib/links", () => import("../../../lib/links"));
 
@@ -14,6 +14,7 @@ describe("custom Auth.js sign-in page", () => {
       searchParams: Promise.resolve({ callbackUrl: "https://cerebro.example/profile?tab=roster" }),
     }));
     expect(html).toContain("Sign in with Discord");
+    expect(html).not.toContain("originally used");
     expect(html).toContain('name="callbackUrl" value="https://cerebro.example/profile?tab=roster"');
     expect(html).not.toContain("Account conflict");
     expect(actions.signInFromAuthPageAction).not.toHaveBeenCalled();
@@ -21,10 +22,9 @@ describe("custom Auth.js sign-in page", () => {
 
   it("shows conflict recovery at the real SignInError destination without signing anyone out on GET", async () => {
     const html = renderToStaticMarkup(await SignInPage({ searchParams: Promise.resolve({ error: "OAuthAccountNotLinked" }) }));
-    expect(html).toContain("Account conflict");
-    expect(html).toContain("Sign out of CereBro");
+    expect(html).toContain("Switch Discord account");
     expect(html).toContain("Contact support");
-    expect(actions.signOutAction).not.toHaveBeenCalled();
+    expect(actions.switchDiscordAccountAction).not.toHaveBeenCalled();
     expect(actions.signInFromAuthPageAction).not.toHaveBeenCalled();
   });
 });

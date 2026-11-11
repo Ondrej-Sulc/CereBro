@@ -11,9 +11,11 @@ vi.mock("next-auth", async () => {
   const require = createRequire(import.meta.url);
   const authRequire = createRequire(require.resolve("next-auth"));
   const { Auth } = await import(pathToFileURL(authRequire.resolve("@auth/core")).href);
+  const { AsyncLocalStorage } = await import("node:async_hooks");
+  const requests = new AsyncLocalStorage<Request>();
   return {
     default: (config: NextAuthConfig) => {
-      const handler = (request: Request) => Auth(request, {
+      const coreConfig = {
         ...config,
         basePath: "/api/auth",
         secret: "discord-oauth-regression-test-secret",
@@ -21,8 +23,18 @@ vi.mock("next-auth", async () => {
           ...provider,
           options: { ...("options" in provider ? provider.options : {}), clientId: "test-client", clientSecret: "test-secret" },
         })),
-      });
-      return { handlers: { GET: handler, POST: handler } };
+      };
+      const handler = (request: Request) => requests.run(request, () => Auth(request, coreConfig));
+      return {
+        handlers: { GET: handler, POST: handler },
+        auth: async () => {
+          const request = requests.getStore()!;
+          const response = await Auth(new Request(new URL("/api/auth/session", request.url), {
+            headers: request.headers,
+          }), coreConfig);
+          return response.json();
+        },
+      };
     },
   };
 });
@@ -30,17 +42,17 @@ vi.mock("next-auth", async () => {
 const mocks = vi.hoisted(() => ({
   logger: { error: vi.fn(), warn: vi.fn(), info: vi.fn() },
   prisma: {
-    account: { findUnique: vi.fn(), create: vi.fn() },
+    account: { findUnique: vi.fn(), findFirst: vi.fn(), create: vi.fn() },
     user: { findUnique: vi.fn(), create: vi.fn(), update: vi.fn() },
-    session: { create: vi.fn(), findUnique: vi.fn(), delete: vi.fn() },
-    botUser: { upsert: vi.fn(), update: vi.fn() },
+    session: { create: vi.fn(), findUnique: vi.fn(), delete: vi.fn(), update: vi.fn() },
+    botUser: { upsert: vi.fn(), update: vi.fn(), findUnique: vi.fn() },
     player: { updateMany: vi.fn(), findMany: vi.fn(), create: vi.fn() },
   },
 }));
 
 vi.mock("@/lib/prisma", () => ({ prisma: mocks.prisma }));
 vi.mock("@/lib/logger", () => ({ default: mocks.logger }));
-vi.mock("@/lib/cache", () => ({ getFromCache: vi.fn() }));
+vi.mock("@/lib/cache", () => ({ getFromCache: <T>(_: string, _ttl: number, load: () => Promise<T>) => load() }));
 vi.mock("@/lib/discord-profile-sync", () => import("./lib/discord-profile-sync"));
 vi.mock("@/lib/observability/auth-errors", () => import("./lib/observability/auth-errors"));
 
@@ -53,10 +65,13 @@ describe("Discord OAuth callback", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.prisma.account.findUnique.mockResolvedValue(null);
+    mocks.prisma.account.findFirst.mockResolvedValue({ providerAccountId: "other-discord" });
     mocks.prisma.user.findUnique.mockResolvedValue(null);
     mocks.prisma.session.findUnique.mockResolvedValue(null);
     mocks.prisma.user.create.mockImplementation(async ({ data }) => ({ id: "user-1", ...data }));
     mocks.prisma.session.create.mockImplementation(async ({ data }) => data);
+    mocks.prisma.session.update.mockImplementation(async ({ data }) => data);
+    mocks.prisma.botUser.findUnique.mockResolvedValue(null);
     mocks.prisma.botUser.upsert.mockResolvedValue({ id: "bot-user-1", activeProfileId: "player-1" });
     mocks.prisma.player.findMany.mockResolvedValue([{ id: "player-1", botUserId: "bot-user-1", isActive: true }]);
     vi.stubGlobal("fetch", vi.fn(async (input: RequestInfo | URL) => {
@@ -91,7 +106,7 @@ describe("Discord OAuth callback", () => {
     const params = new URLSearchParams({ code: "test-authorization-code" });
     const state = authorization.searchParams.get("state");
     if (state) params.set("state", state);
-    return { cookies, params };
+    return { cookies, params, authorization };
   }
 
   it.each(["https://discord.com", undefined])("completes sign-in with issuer %s", async (issuer) => {
@@ -136,27 +151,96 @@ describe("Discord OAuth callback", () => {
     expect(mocks.prisma.session.create).not.toHaveBeenCalled();
   });
 
-  it("routes repeated email collisions to account recovery without linking or creating a session", async () => {
+  it("requests only Discord identity, without email access", async () => {
+    const { authorization } = await startSignIn();
+    expect(authorization.searchParams.get("scope")).toBe("identify");
+  });
+
+  it.each(["player@example.com", undefined])("creates a separate login regardless of returned email %s", async (email) => {
     mocks.prisma.user.findUnique.mockResolvedValue({ id: "original-user", email: "player@example.com" });
+    const originalFetch = fetch;
+    vi.stubGlobal("fetch", vi.fn((input: RequestInfo | URL, init?: RequestInit) =>
+      String(input) === "https://discord.com/api/users/@me"
+        ? Promise.resolve(Response.json({ id: discordId, username: "Test Player", avatar: null, discriminator: "0", email }))
+        : originalFetch(input, init)));
 
-    for (let attempt = 0; attempt < 2; attempt++) {
-      const { cookies, params } = await startSignIn();
-      const response = await handlers.GET(new NextRequest(`${origin}/api/auth/callback/discord?${params}`, {
-        headers: { cookie: cookies },
-      }));
+    const { cookies, params } = await startSignIn();
+    const response = await handlers.GET(new NextRequest(`${origin}/api/auth/callback/discord?${params}`, {
+      headers: { cookie: cookies },
+    }));
 
-      expect(response.headers.get("location")).toBe(`${origin}/auth/signin?error=OAuthAccountNotLinked`);
-      expect(response.headers.getSetCookie().some((cookie) => cookie.startsWith("__Secure-authjs.session-token="))).toBe(false);
-    }
+    expect(response.headers.get("location")).toBe(origin);
+    expect(mocks.prisma.user.findUnique).not.toHaveBeenCalled();
+    expect(mocks.prisma.user.create).toHaveBeenCalled();
+    expect(mocks.prisma.user.create.mock.calls[0][0].data.email ?? null).toBeNull();
+    expect(mocks.prisma.account.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ userId: "user-1", providerAccountId: discordId }),
+    }));
+    expect(mocks.prisma.session.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ userId: "user-1" }),
+    }));
+    expect(mocks.prisma.player.create).not.toHaveBeenCalled();
+    expect(mocks.logger.error).not.toHaveBeenCalled();
+  });
 
+  it("uses an existing Discord link even when its stored email is stale", async () => {
+    const linkedUser = { id: "original-user", email: "old@example.com", emailVerified: null };
+    mocks.prisma.account.findUnique.mockImplementation(async ({ select }: { select?: unknown }) =>
+      select ? { userId: linkedUser.id } : { user: linkedUser });
+    const { cookies, params } = await startSignIn();
+    const response = await handlers.GET(new NextRequest(`${origin}/api/auth/callback/discord?${params}`, {
+      headers: { cookie: cookies },
+    }));
+
+    expect(response.headers.get("location")).toBe(origin);
+    expect(mocks.prisma.user.findUnique).not.toHaveBeenCalled();
+    expect(mocks.prisma.user.create).not.toHaveBeenCalled();
+    expect(mocks.prisma.account.create).not.toHaveBeenCalled();
+    expect(mocks.prisma.session.create).toHaveBeenCalledWith(expect.objectContaining({
+      data: expect.objectContaining({ userId: linkedUser.id }),
+    }));
+    expect(mocks.prisma.user.update).toHaveBeenCalled();
+    expect(mocks.prisma.user.update.mock.calls[0][0].data).not.toHaveProperty("email");
+  });
+
+  it("never attaches a new Discord identity to another signed-in user's account", async () => {
+    mocks.prisma.session.findUnique.mockResolvedValue({
+      sessionToken: "existing-session-token", userId: "other-user",
+      expires: new Date(Date.now() + 3600_000),
+      user: { id: "other-user", email: "other@example.com", emailVerified: null },
+    });
+    const { cookies, params } = await startSignIn();
+    const response = await handlers.GET(new NextRequest(`${origin}/api/auth/callback/discord?${params}`, {
+      headers: { cookie: `${cookies}; __Secure-authjs.session-token=existing-session-token` },
+    }));
+
+    expect(response.headers.get("location")).toBe(`${origin}/auth/signin?error=OAuthAccountNotLinked`);
     expect(mocks.prisma.account.create).not.toHaveBeenCalled();
     expect(mocks.prisma.user.create).not.toHaveBeenCalled();
     expect(mocks.prisma.session.create).not.toHaveBeenCalled();
-    expect(mocks.logger.error).toHaveBeenCalledWith(expect.objectContaining({
-      errorType: "OAuthAccountNotLinked",
-      errorReason: "email_collision",
-      errorMessage: expect.any(String),
-    }), expect.any(String));
+    expect(mocks.prisma.botUser.upsert).not.toHaveBeenCalled();
+  });
+
+  it("keeps a returning Discord user's existing session and account", async () => {
+    const linkedUser = { id: "linked-user", email: "old@example.com", emailVerified: null };
+    mocks.prisma.account.findFirst.mockResolvedValue({ providerAccountId: discordId });
+    mocks.prisma.account.findUnique.mockImplementation(async ({ select }: { select?: unknown }) =>
+      select ? { userId: linkedUser.id } : { user: linkedUser });
+    mocks.prisma.session.findUnique.mockResolvedValue({
+      sessionToken: "existing-session-token", userId: linkedUser.id,
+      expires: new Date(Date.now() + 3600_000), user: linkedUser,
+    });
+    const { cookies, params } = await startSignIn();
+    const response = await handlers.GET(new NextRequest(`${origin}/api/auth/callback/discord?${params}`, {
+      headers: { cookie: `${cookies}; __Secure-authjs.session-token=existing-session-token` },
+    }));
+
+    expect(response.headers.get("location")).toBe(origin);
+    expect(mocks.prisma.account.create).not.toHaveBeenCalled();
+    expect(mocks.prisma.user.create).not.toHaveBeenCalled();
+    expect(mocks.prisma.session.create).not.toHaveBeenCalled();
+    expect(mocks.prisma.session.delete).not.toHaveBeenCalled();
+    expect(mocks.logger.error).not.toHaveBeenCalled();
   });
 
   it("rejects an already-linked Discord account when another CereBro user is signed in", async () => {
@@ -177,7 +261,7 @@ describe("Discord OAuth callback", () => {
     expect(response.headers.get("location")).toBe(`${origin}/auth/signin?error=OAuthAccountNotLinked`);
     expect(mocks.prisma.account.create).not.toHaveBeenCalled();
     expect(mocks.prisma.session.create).not.toHaveBeenCalled();
-    expect(mocks.logger.error).toHaveBeenCalledWith(expect.objectContaining({
+    expect(mocks.logger.warn).toHaveBeenCalledWith(expect.objectContaining({
       errorType: "OAuthAccountNotLinked",
       errorReason: "session_user_conflict",
     }), expect.any(String));
@@ -218,7 +302,7 @@ describe("Discord OAuth callback", () => {
     const databaseError = new Error(sensitive.join(" "), {
       cause: { access_token: sensitive[1], refresh_token: sensitive[2], code: sensitive[3], client_secret: sensitive[4] },
     });
-    mocks.prisma.user.findUnique.mockRejectedValue(databaseError);
+    mocks.prisma.account.findUnique.mockRejectedValueOnce(databaseError);
     const { cookies, params } = await startSignIn();
     await handlers.GET(new NextRequest(`${origin}/api/auth/callback/discord?${params}`, { headers: { cookie: cookies } }));
 

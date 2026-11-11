@@ -1,15 +1,15 @@
 import Link from "next/link";
 import { AlertTriangle, RefreshCw } from "lucide-react";
-import { signOutAction } from "@/app/actions/auth";
+import { switchDiscordAccountAction } from "@/app/actions/auth";
 import { DISCORD_INVITE } from "@/lib/links";
 
 // Auth.js masks non-client-safe errors (including InvalidCheck) as Configuration.
 // Do not infer the original cause from that external error code.
 const ERROR_MESSAGES: Record<string, { title: string; detail: string }> = {
   OAuthAccountNotLinked: {
-    title: "Account conflict",
+    title: "Switch Discord account",
     detail:
-      "This Discord sign-in could not be matched safely to your CereBro account. If you are signed into a different CereBro account, sign out first. Then sign in using your original Discord account. If that still fails, contact support to review your account link.",
+      "You are signed into CereBro with a different Discord account. Switch accounts to continue, then check the account shown on Discord. Your profiles stay with the Discord account that created them. If your profiles are missing, contact support.",
   },
   Configuration: {
     title: "Sign-in could not be completed",
@@ -55,20 +55,21 @@ export default async function AuthErrorPage({
       <AlertTriangle className="mb-4 h-12 w-12 text-amber-400" />
       <h1 className="mb-2 text-2xl font-bold">{title}</h1>
       <p className="mb-8 max-w-md text-slate-400">{detail}</p>
-      {error === "OAuthAccountNotLinked" && (
-        <form action={signOutAction} className="mb-4">
-          <button type="submit" className="rounded-md border border-slate-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-slate-800">
-            Sign out of CereBro
+      {error === "OAuthAccountNotLinked" ? (
+        <form action={switchDiscordAccountAction}>
+          <button type="submit" className="rounded-md bg-sky-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-sky-700">
+            Switch Discord account
           </button>
         </form>
+      ) : (
+        <Link
+          href="/api/auth/signin"
+          className="inline-flex items-center gap-2 rounded-md bg-sky-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-sky-700"
+        >
+          <RefreshCw className="h-4 w-4" />
+          Try signing in again
+        </Link>
       )}
-      <Link
-        href="/api/auth/signin"
-        className="inline-flex items-center gap-2 rounded-md bg-sky-600 px-5 py-2.5 text-sm font-medium text-white hover:bg-sky-700"
-      >
-        <RefreshCw className="h-4 w-4" />
-        Try signing in again
-      </Link>
       <a href={DISCORD_INVITE} className="mt-4 text-sm text-sky-400 hover:text-sky-300">
         Contact support
       </a>

@@ -4,7 +4,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import { prisma } from "@/lib/prisma"
 import { getFromCache } from "@/lib/cache"
 import logger from "@/lib/logger"
-import { syncDiscordProfileOnSignIn } from "@/lib/discord-profile-sync"
+import { getDiscordAvatarUrl, getDiscordDisplayName, syncDiscordProfileOnSignIn } from "@/lib/discord-profile-sync"
 import { getSafeAuthErrorDetails } from "@/lib/observability/auth-errors"
 
 if (!process.env.DISCORD_CLIENT_ID || !process.env.DISCORD_CLIENT_SECRET) {
@@ -41,6 +41,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       issuer: "https://discord.com",
       clientId: process.env.DISCORD_CLIENT_ID,
       clientSecret: process.env.DISCORD_CLIENT_SECRET,
+      authorization: { params: { scope: "identify" } },
+      profile(profile) {
+        // Discord IDs own CereBro profiles. Ignore email even if Discord returns
+        // one from an older grant, so a reused email cannot block a new identity.
+        return {
+          id: profile.id,
+          name: getDiscordDisplayName(profile, null),
+          email: null,
+          image: getDiscordAvatarUrl(profile, null),
+        };
+      },
     }),
   ],
   callbacks: {
@@ -48,6 +59,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       try {
         if (account?.provider === "discord" && account.providerAccountId) {
           const discordId = account.providerAccountId;
+
+          // Auth.js otherwise links a previously unseen OAuth identity to the
+          // active user. Different Discord IDs must keep separate profiles.
+          const session = await auth();
+          if (session?.user && session.user.discordId !== discordId) {
+            logger.warn({
+              discordId,
+              errorType: "OAuthAccountNotLinked",
+              errorReason: "session_user_conflict",
+            }, "Discord sign-in requires switching accounts");
+            return "/auth/signin?error=OAuthAccountNotLinked";
+          }
           
           logger.info({ discordId, name: user.name }, "Processing sign in for Discord user");
 

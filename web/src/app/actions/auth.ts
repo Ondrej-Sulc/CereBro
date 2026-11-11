@@ -7,6 +7,13 @@ export const signOutAction = withActionContext('signOutAction', async () => {
   await signOut({ redirectTo: "/" })
 });
 
+export const switchDiscordAccountAction = withActionContext('switchDiscordAccountAction', async () => {
+  await signOut({ redirect: false });
+  // Show Discord's authorization screen again so the user can review the
+  // selected Discord account before returning to CereBro.
+  await signIn("discord", { redirectTo: "/" }, { prompt: "consent" });
+});
+
 export const signInAction = withActionContext('signInAction', async () => {
   await signIn("discord")
 });

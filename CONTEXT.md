@@ -118,6 +118,12 @@ Quest Planning Projection is the render-ready view of a player's route-aware pla
 
 Quest Objectives are preset planning scopes layered over a base quest plan. They add objective-specific roster restrictions, route defaults and locks, optional endpoint filtering, and a separate `PlayerQuestPlan.scopeKey` so base plans and challenge-specific plans do not overwrite each other.
 
+## Website Identity
+
+Website sign-in identifies a Discord account by its provider account ID. The same Discord ID reuses its existing authentication account and Player Profiles; a different Discord ID gets a separate account even if Discord returns an email previously used elsewhere. Discord authorization requests only `identify`, and profile mapping discards email from older grants. Existing stored emails and account links are preserved; supporter checkout can collect its own billing email.
+
+A signed-in session cannot attach another Discord identity during sign-in. The recovery page offers an explicit Switch Discord account action that ends the CereBro session and restarts Discord authorization with consent. Profile ownership stays with the original Discord ID; transferring profiles requires separate verified recovery.
+
 ## Website Observability
 
 Website Observability is the domain rule set for turning website requests, server actions, client errors, and product interactions into searchable logs, PostHog events, error reports, and dashboard metrics.

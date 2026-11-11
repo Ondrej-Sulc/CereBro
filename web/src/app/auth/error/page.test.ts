@@ -3,16 +3,18 @@ import { renderToStaticMarkup } from "react-dom/server";
 import AuthErrorPage from "./page";
 import { DISCORD_INVITE } from "../../../lib/links";
 
-vi.mock("@/app/actions/auth", () => ({ signOutAction: vi.fn() }));
+vi.mock("@/app/actions/auth", () => ({ switchDiscordAccountAction: vi.fn() }));
 vi.mock("@/lib/links", () => import("../../../lib/links"));
 
 describe("authentication recovery page", () => {
-  it("offers account-conflict guidance, safe sign-out, and support instead of only retrying", async () => {
+  it("offers an explicit account switch and explains profile ownership", async () => {
     const html = renderToStaticMarkup(await AuthErrorPage({ searchParams: Promise.resolve({ error: "OAuthAccountNotLinked" }) }));
 
-    expect(html).toContain("Account conflict");
-    expect(html).toContain("original Discord account");
-    expect(html).toContain("Sign out of CereBro");
+    expect(html).toContain("Switch Discord account");
+    expect(html).toContain("different Discord account");
+    expect(html).toContain("profiles");
+    expect(html).not.toContain("original Discord account");
+    expect(html).not.toContain("Try signing in again");
     expect(html).toContain("<form");
     expect(html).toContain(`href="${DISCORD_INVITE}"`);
     expect(html).toContain("Contact support");
