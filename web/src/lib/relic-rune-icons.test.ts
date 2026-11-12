@@ -2,6 +2,11 @@ import { describe, expect, it } from "vitest";
 import { buildRelicRuneIcons, relicRuneGlossaryId } from "./relic-rune-icons";
 
 describe("relic rune effect icons", () => {
+  it("delivers bound remote rune glyphs through the same-origin mask endpoint", () => {
+    const icons = buildRelicRuneIcons([{ id: "shock-rune", name: "Shock Debuff Potency Up" }], [{ id: "shock", iconUrl: "https://storage.googleapis.com/champion-images/mcoc/glossary-icons/shock.svg", raw: {} }]);
+    expect(icons["shock-rune"].iconUrl).toBe("/api/game-icons/glossary-icons/shock.svg");
+  });
+
   it("matches the effect in a modifier label, including Buff/Debuff qualifiers", () => {
     expect(relicRuneGlossaryId("Shock Debuff Potency Up")).toBe("shock");
     expect(relicRuneGlossaryId("Unstoppable Buff Duration Up")).toBe(

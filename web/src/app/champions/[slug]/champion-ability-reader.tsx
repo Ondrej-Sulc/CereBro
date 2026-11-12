@@ -1,5 +1,6 @@
 "use client"
 
+import { gameIconMaskUrl } from "@/lib/game-icon-url"
 import Image from "next/image"
 import { useEffect, useRef, useState, type ReactNode } from "react"
 import { ChevronRight, Search, Sparkles, X } from "lucide-react"
@@ -160,7 +161,7 @@ function AbilityRecordGroup({ group, effect, glossaryById, query, omitPanelHeadi
       <ul className={styles.abilityRules}>{records.map(({ record, hasEffectIcon }) => {
         const targeted = String(record.id) === targetRecordId
         return <li key={record.id} id={`ability-record-${record.id}`} tabIndex={targeted ? -1 : undefined} className={cn(styles.abilityRule, hasEffectIcon && styles.abilityRuleWithEffect, "relative scroll-mt-[calc(var(--champion-header-height,4rem)+var(--champion-tabs-height)+2rem)]", targeted && "rounded-r-lg border-l-2 bg-white/[.045] py-2 pl-3 pr-4 outline-none")} style={targeted ? { borderColor: accent } : undefined}>
-          {hasEffectIcon ? <span aria-hidden="true" data-ability-effect={group.title} className={styles.abilityRuleEffect} style={{ backgroundColor: `${color}16`, borderColor: `${color}40` }}><span style={{ backgroundColor: color, mask: `url(${iconUrl}) center / contain no-repeat`, WebkitMask: `url(${iconUrl}) center / contain no-repeat` }} /></span> : <span aria-hidden="true" className={styles.abilityRuleMarker} />}
+          {hasEffectIcon ? <span aria-hidden="true" data-ability-effect={group.title} className={styles.abilityRuleEffect} style={{ backgroundColor: `${color}16`, borderColor: `${color}40` }}><span style={{ backgroundColor: color, mask: `url(${gameIconMaskUrl(iconUrl!)}) center / contain no-repeat`, WebkitMask: `url(${gameIconMaskUrl(iconUrl!)}) center / contain no-repeat` }} /></span> : <span aria-hidden="true" className={styles.abilityRuleMarker} />}
           <div className={styles.abilityRuleBody}><RenderedDescriptionTemplate prepared={record.prepared} glossaryById={glossaryById} theme={DESCRIPTION_THEME} query={query} /></div>
         </li>
       })}</ul>

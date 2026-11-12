@@ -1,3 +1,4 @@
+import { gameIconMaskUrl } from "@/lib/game-icon-url"
 import { getGameEffectColors } from "@cerebro/core/domain/champion-kit";
 import {
   RELIC_ATTRIBUTE_GLOSSARY_IDS,
@@ -63,7 +64,7 @@ export function buildRelicRuneIcons(
     const term = id ? byId.get(id) : undefined;
     const iconUrl = term?.iconUrl?.trim();
     if (iconUrl)
-      icons[item.id] = { iconUrl, color: getGameEffectColors(term?.raw).color };
+      icons[item.id] = { iconUrl: gameIconMaskUrl(iconUrl), color: getGameEffectColors(term?.raw).color };
   }
   return icons;
 }

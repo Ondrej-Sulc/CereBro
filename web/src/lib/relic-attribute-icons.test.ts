@@ -2,6 +2,11 @@ import { describe, expect, it } from "vitest";
 import { buildRelicAttributeIcons } from "./relic-attribute-icons";
 
 describe("relic attribute icon presentation", () => {
+  it("delivers bound remote attribute glyphs through the same-origin mask endpoint", () => {
+    const icons = buildRelicAttributeIcons([{ id: "cruelty", iconUrl: "https://storage.googleapis.com/champion-images/mcoc/glossary-icons/cruelty.svg", raw: { color_primary: "ffd738" } }]);
+    expect(icons["Critical Damage Rating"]).toEqual({ iconUrl: "/api/game-icons/glossary-icons/cruelty.svg", color: "#ffd738" });
+  });
+
   it.each([null, "/legacy/energy.svg"])("provides the source Energy Penetration glyph regardless of glossary availability (%s)", (iconUrl) => {
     const icons = buildRelicAttributeIcons([{ id: "energy_penetration", iconUrl, raw: {} }]);
     expect(icons["Energy Penetration"]).toEqual({ iconUrl: "/icons/relic-attributes/energy-penetration.svg", color: "#b8c5d6" });

@@ -1,5 +1,6 @@
 "use client";
 
+import { gameIconMaskUrl } from "@/lib/game-icon-url"
 import { useState, useSyncExternalStore } from "react";
 import { Check, ChevronDown, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -59,8 +60,8 @@ export function RosterFilterPicker({ label, triggerLabel, icon: Icon, options, c
     >
       {hasIcons && <span aria-hidden="true" data-effect-icon={option.iconUrl ? option.name : undefined} className="h-5 w-5 shrink-0" style={option.iconUrl ? {
         backgroundColor: option.color ?? "#b8c5d6",
-        mask: `url(${JSON.stringify(option.iconUrl)}) center / contain no-repeat`,
-        WebkitMask: `url(${JSON.stringify(option.iconUrl)}) center / contain no-repeat`,
+        mask: `url(${JSON.stringify(gameIconMaskUrl(option.iconUrl))}) center / contain no-repeat`,
+        WebkitMask: `url(${JSON.stringify(gameIconMaskUrl(option.iconUrl))}) center / contain no-repeat`,
       } : undefined} />}
       <span className="min-w-0 flex-1">{option.name}</span>
       {count != null && <span aria-hidden="true" className="shrink-0 text-[11px] tabular-nums text-slate-500">{count}</span>}

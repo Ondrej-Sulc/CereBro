@@ -1,6 +1,7 @@
 "use client"
 
 // PROTOTYPE: Five structural directions for champion details, each on its own route.
+import { gameIconMaskUrl } from "@/lib/game-icon-url"
 import Image from "next/image"
 import Link from "next/link"
 import { useEffect, useId, useMemo, useRef, useState, type ReactNode } from "react"
@@ -1167,7 +1168,7 @@ function GlossaryEffectTooltip({ label, term, description, theme }: { label: str
         <span id={tooltipId} role="tooltip" className="fixed z-[100] block w-[min(290px,calc(100vw-2rem))] border border-white/15 bg-[#0b0f15]/98 p-3 text-left not-italic text-white shadow-2xl shadow-black/60 backdrop-blur-xl" style={{ left: position.left, top: position.top, transform: position.above ? "translateY(-100%)" : undefined }}>
           <span className="flex items-start gap-3">
             <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full border border-white/10" style={{ backgroundColor: `${importedColor}18` }}>
-              {term?.iconUrl ? <span className="h-5 w-5" style={{ backgroundColor: importedColor, maskImage: `url(${term.iconUrl})`, maskPosition: "center", maskRepeat: "no-repeat", maskSize: "contain", WebkitMaskImage: `url(${term.iconUrl})`, WebkitMaskPosition: "center", WebkitMaskRepeat: "no-repeat", WebkitMaskSize: "contain" }} /> : <Sparkles className="h-4 w-4" style={{ color: importedColor }} />}
+              {term?.iconUrl ? <span className="h-5 w-5" style={{ backgroundColor: importedColor, maskImage: `url(${gameIconMaskUrl(term.iconUrl)})`, maskPosition: "center", maskRepeat: "no-repeat", maskSize: "contain", WebkitMaskImage: `url(${gameIconMaskUrl(term.iconUrl)})`, WebkitMaskPosition: "center", WebkitMaskRepeat: "no-repeat", WebkitMaskSize: "contain" }} /> : <Sparkles className="h-4 w-4" style={{ color: importedColor }} />}
             </span>
             <span className="min-w-0">
               <span className="block text-[8px] font-black uppercase tracking-[.16em] text-white/30">{term?.category || "Effect glossary"}</span>
@@ -1542,11 +1543,11 @@ function DossierAbilityIcon({ item, view }: { item: ChampionDetailsPayload["abil
           className="relative h-7 w-7"
           style={{
             backgroundColor: color,
-            maskImage: `url(${item.ability.iconUrl})`,
+            maskImage: `url(${gameIconMaskUrl(item.ability.iconUrl)})`,
             maskPosition: "center",
             maskRepeat: "no-repeat",
             maskSize: "contain",
-            WebkitMaskImage: `url(${item.ability.iconUrl})`,
+            WebkitMaskImage: `url(${gameIconMaskUrl(item.ability.iconUrl)})`,
             WebkitMaskPosition: "center",
             WebkitMaskRepeat: "no-repeat",
             WebkitMaskSize: "contain",

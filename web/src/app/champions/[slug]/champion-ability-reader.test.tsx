@@ -69,6 +69,17 @@ it("uses the named effect as a decorative line marker and removes its repeated h
   expect(document.body.textContent).toContain("Energize definition.")
 })
 
+it("uses same-origin delivery for an external effect line glyph without changing its source binding", async () => {
+  const effects = effectView([{ id: 19, group: "base", title: "Fury", template: { raw: "Gain a Fury Buff." } }])
+  const source = "https://storage.googleapis.com/champion-images/mcoc/glossary-icons/fury.svg"
+  effects.glossaryById.set("fury", { ...effects.glossaryById.get("fury")!, iconUrl: source })
+  await act(async () => root.render(<ChampionAbilityReader view={effects} chapter="base" onSelectChapter={() => {}} />))
+  const glyph = document.querySelector<HTMLElement>('[data-ability-effect="Fury"] > span')!
+  expect(glyph.style.mask).toContain("/api/game-icons/glossary-icons/fury.svg")
+  expect(glyph.style.backgroundColor).toBe("rgb(204, 51, 51)")
+  expect(effects.glossaryById.get("fury")!.iconUrl).toBe(source)
+})
+
 it("retains headings that supply context and does not assign their icon to unrelated continuation lines", async () => {
   const effects = effectView([
     { id: 21, group: "base", title: "Fury", template: { raw: "Gain a Fury Buff." } },

@@ -1,3 +1,4 @@
+import { gameIconMaskUrl } from "@/lib/game-icon-url"
 import { getGameEffectColors } from "@cerebro/core/domain/champion-kit";
 
 // Presentation glyphs only: these do not imply that the relic grants a Buff.
@@ -32,7 +33,7 @@ export function buildRelicAttributeIcons(
     const iconUrl = term?.iconUrl?.trim();
     if (iconUrl) {
       icons[attribute] = {
-        iconUrl,
+        iconUrl: gameIconMaskUrl(iconUrl),
         color: getGameEffectColors(term?.raw).color,
       };
     }
