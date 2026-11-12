@@ -24,3 +24,5 @@
 .page .modifiers summary{min-height:44px}
 
 .eventGrid{grid-template-columns:repeat(2,minmax(0,1fr));max-width:600px}.page .eventDate{color:#e6c586;font-size:12px;margin-top:9px}.page .eventGap{font-size:11px;color:#a8b9cc;line-height:1.5}.eventGrid .posterCopy{padding-top:25px}@media(max-width:540px){.eventGrid .posterCopy h3{font-size:18px}.page .eventDate{font-size:11px}.page .eventGap{font-size:10px}}
+
+.reader:focus{outline:none}.blockNavigation{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px 24px;margin:22px 0}.blockNavigation>nav{flex:0 1 auto}.blockNavigation>div{flex:0 1 280px;margin-left:auto}@media(max-width:600px){.blockNavigation{gap:12px;margin:18px 0}.blockNavigation>nav,.blockNavigation>div{flex-basis:100%}}

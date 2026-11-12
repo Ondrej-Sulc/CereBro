@@ -16,7 +16,7 @@ import goblin from "../../../../src/data/game-quests/tower-events/blocks/event_g
 
 const push = vi.hoisted(() => vi.fn());
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
-vi.mock("next/link", () => ({ default: ({ href, children, prefetch, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { prefetch?: boolean }) => { void prefetch; return <a href={href} {...props}>{children}</a>; } }));
+vi.mock("next/link", () => ({ default: ({ href, children, prefetch, scroll, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { prefetch?: boolean; scroll?:boolean }) => { void prefetch; void scroll; return <a href={href} {...props}>{children}</a>; } }));
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 let root: Root | undefined;
 afterEach(async () => { if (root) await act(async () => root?.unmount()); document.body.innerHTML = ""; push.mockClear(); window.history.replaceState(null, "", "/"); });
@@ -33,6 +33,9 @@ describe("Tower browsing outcomes", () => {
     const tower: TowerCatalogEntry = { id: "event_castellan_5", name: "DOOM TOWER", section: "event", archiveStatus: "unknown", artwork: null, blockNumbers: [1], capturedBlockNumbers: [1], floorCount: 61 };
     const view: TowerBlockView = { tower, block: doom as unknown as TowerBlockView["block"], floors: [], blockRewards: [], ratingRewards: [], entryCost: [], blockModifiers: [], topBlockModifiers: [] };
     const host = await render(<TowerDetail tower={tower} view={view} current={1}/>);
+    expect([...host.querySelectorAll('h2')].filter(h=>h.textContent==='Block 1')).toHaveLength(1);
+    expect(host.querySelector('select[aria-label="Jump to block"]')).toBeNull();
+    expect(host.querySelector('#block-reader')?.getAttribute('tabindex')).toBe('-1');
     expect(host.textContent).not.toContain("Attacker restriction");
     expect(host.textContent).not.toContain("Restrictions unresolved");
     await act(async () => root!.render(<TowerDetail tower={tower} view={{ ...view, block: goblin as unknown as TowerBlockView["block"] }} current={1}/>));
@@ -104,13 +107,40 @@ describe("Tower browsing outcomes", () => {
     await act(async () => host.querySelector<HTMLButtonElement>("button[aria-pressed]")!.click());
     expect(nodes().every(e => !e.hasAttribute("open"))).toBe(true);
   });
-  it("jumps directly to block147 with filter recovery in the URL and no numeric duplicate control", async () => {
+  it("opens a compact block heading and jumps directly to147 while preserving filter context", async () => {
     const host = await render(<TowerBlockControls id="class_skill" current={1} numbers={Array.from({ length: 147 }, (_, i) => i + 1)} from="/quests/towers?q=skill"/>);
-    const select = host.querySelector<HTMLSelectElement>("select")!;
-    expect(select.options).toHaveLength(147);
-    expect(host.querySelector('input[type="number"]')).toBeNull();
-    await act(async () => { select.value = "147"; select.dispatchEvent(new Event("change", { bubbles: true })); });
-    expect(push).toHaveBeenCalledWith("/quests/towers/class_skill?block=147&from=%2Fquests%2Ftowers%3Fq%3Dskill", { scroll: false });
+    expect(host.querySelector('select')).toBeNull();
+    expect(host.querySelector('h2')?.textContent).toBe('Block 1');
+    const trigger=host.querySelector<HTMLButtonElement>('button[aria-haspopup="dialog"]')!;
+    await act(async()=>trigger.click());
+    const dialog=document.querySelector('[role="dialog"]')!;
+    expect(dialog.textContent).toContain('Go to block');
+    const input=dialog.querySelector<HTMLInputElement>('input')!;
+    expect(input.inputMode).toBe('numeric');
+    input.value='147';
+    await act(async()=>dialog.querySelector('form')!.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})));
+    expect(push).toHaveBeenCalledWith("/quests/towers/class_skill?block=147&from=%2Fquests%2Ftowers%3Fq%3Dskill#block-reader", { scroll: true });
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+  });
+  it("rejects invalid and missing block numbers and uses actual neighboring blocks", async()=>{
+    const host=await render(<TowerBlockControls id="challenge_saga" current={3} numbers={[1,3,6]}/>);
+    expect(host.textContent).toContain('3 blocks');
+    expect(host.querySelector('a[aria-label="Previous block, 1"]')?.getAttribute('href')).toBe('/quests/towers/challenge_saga?block=1#block-reader');
+    expect(host.querySelector('a[aria-label="Next block, 6"]')?.getAttribute('href')).toBe('/quests/towers/challenge_saga?block=6#block-reader');
+    await act(async()=>host.querySelector<HTMLButtonElement>('button[aria-haspopup="dialog"]')!.click());
+    const dialog=document.querySelector('[role="dialog"]')!,input=dialog.querySelector<HTMLInputElement>('input')!;
+    for(const value of ['0','2','3.5','999','']){
+      input.value=value;await act(async()=>dialog.querySelector('form')!.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true})));
+      expect(push).not.toHaveBeenCalled();expect(dialog.querySelector('[role="alert"]')).not.toBeNull();
+    }
+  });
+  it("disables boundary navigation and keeps the footer free of another selector",async()=>{
+    const host=await render(<TowerBlockControls id="event_ggsfa1" current={1} numbers={[1,2]}/>);
+    expect(host.querySelector<HTMLButtonElement>('button[aria-label="Previous block"]')?.disabled).toBe(true);
+    await act(async()=>root!.render(<TowerBlockControls id="event_ggsfa1" current={2} numbers={[1,2]} compact/>));
+    expect(host.querySelector<HTMLButtonElement>('button[aria-label="Next block"]')?.disabled).toBe(true);
+    expect(host.querySelector('select,input,h2')).toBeNull();
+    expect(host.querySelector('a[href="#block-reader"]')).not.toBeNull();
   });
   it("shows one real Challenge Tower without fabricated archive entries or a speculative status filter", async () => {
     const t: TowerCatalogEntry = { id: "challenge_saga", name: "SAGA SHOWCASE TOWER", section: "challenge", archiveStatus: "unknown", artwork: null, blockNumbers: [1, 2, 3, 4, 5, 6], floorCount: 44 };
