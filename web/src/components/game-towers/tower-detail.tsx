@@ -28,6 +28,5 @@ export function TowerDetail({ tower, view, current, from }: { tower: TowerCatalo
         <TowerBlockControls id={tower.id} numbers={tower.blockNumbers} current={current} from={from} compact/>
       </>}
     </div>}
-    <details className={styles.source}><summary>Source & definition details</summary><p>These defenders, stats, modifiers and rewards are shown from saved native Tower definitions. Health and attack are not projected from player builds. Enemy rank and ascension may exceed player upgrade limits. Tower definitions do not establish current availability, entry eligibility or account progress. Missing names, artwork and descriptions are left unresolved.</p><dl><div><dt>Tower</dt><dd>{tower.id}</dd></div>{view && <><div><dt>Block</dt><dd>{view.block.blockNumber}</dd></div><div><dt>Saved at</dt><dd>{view.block.source.capturedAt}</dd></div><div><dt>Source receipt</dt><dd>{view.block.source.captureSha256}</dd></div></>}</dl>{view && <details><summary>Native block fields</summary><pre>{JSON.stringify(view.block.blockData, null, 2)}</pre></details>}{view && <details><summary>Native floor fields & enemy stats</summary><pre>{JSON.stringify(view.block.floors, null, 2)}</pre></details>}</details>
   </div>;
 }

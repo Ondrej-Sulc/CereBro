@@ -7,7 +7,6 @@ import { QuestMapExplorer } from "./quest-map-explorer";
 import { ChampionQuestEncounterLink } from "./champion-quest-encounter-link";
 import { QuestRewards } from "./quest-rewards";
 import { QuestApplicationDetails } from "./quest-application-details";
-import { QuestProvenance } from "./quest-provenance";
 vi.mock("next/link", () => ({ default: ({ href, children, prefetch, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { prefetch?: boolean }) => { void prefetch; return <a href={href} {...props}>{children}</a>; } }));
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
@@ -84,10 +83,11 @@ describe("quest map controls", () => {
     expect(host.textContent).not.toContain(application.effectId);expect(host.querySelector('[data-game-modifier-icon]')).toBeNull();
     expect(host.textContent).not.toContain("11,11");
   });
-  it("keeps non-champion reward types and native quantity ranges truthful in public source data",async()=>{
-    const host=await render(<QuestProvenance rewards={[{key:"fragments",scope:"masteryCompletionRewards",token:"exact-token",sourceType:"gf",type:"item",name:"Crystal shards",quantity:1,amount:"5–10",imageUrl:null,href:null}]}/>);
-    expect(host.textContent).toContain("gf/exact-token 5–10");
-    expect(host.textContent).not.toContain("hero/exact-token");
+  it("keeps reward ranges and named outcomes visible without exposing internal reward tokens",async()=>{
+    const host=await render(<QuestRewards rewards={[{key:"fragments",scope:"masteryCompletionRewards",token:"exact-token",sourceType:"gf",type:"item",name:"Crystal shards",quantity:1,amount:"5–10",imageUrl:null,href:null},{key:"outcome",scope:"potentialCompletionRewards",token:"internal-offer-token",sourceType:"offer",type:"item",name:"Special offer",quantity:1,recordedOutcome:true,imageUrl:null,href:null}]}/>);
+    expect(host.textContent).toContain("Crystal shards · 5–10");
+    expect(host.textContent).toContain("Special offer");
+    expect(host.textContent).not.toMatch(/exact-token|internal-offer-token|Source data/);
   });
   it("accumulates rapid wheel input and keeps source coordinates out of public text and labels",async()=>{
     const map=(await loadQuestMap("a05_ch01_q01"))!;

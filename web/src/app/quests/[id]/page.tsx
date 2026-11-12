@@ -8,7 +8,6 @@ import { projectQuestRewards,projectRewardRecord } from "@/lib/game-quests/prese
 import { getQuestRewardRecord,getParentRewardRecord,hasRecordedRewards } from "@cerebro/core/data/game-quests/rewards";
 import { QuestRewards } from "@/components/game-quests/quest-rewards";
 import { QuestMapExplorer } from "@/components/game-quests/quest-map-explorer";
-import { QuestProvenance } from "@/components/game-quests/quest-provenance";
 import { loadUnplacedQuestDefenders } from "@cerebro/core/data/game-quests/unplaced-defenders";
 import { QuestUnplacedDefenders } from "@/components/game-quests/quest-unplaced-defenders";
 import { loadQuestSpawnRegions } from "@cerebro/core/data/game-quests/spawn-regions";
@@ -37,6 +36,5 @@ export default async function QuestPage({ params, searchParams }: Props) {
     {map ? <QuestMapExplorer key={`${map.questId}:${map.sourceHash}:${selection.path ?? ""}:${selection.node ?? ""}:${selection.region ?? ""}:${selection.application ?? ""}`} map={map} artwork={artwork} portraits={portraits} spawnRegions={spawnRegions} initialRegion={selection.region} initialPath={selection.path} initialNode={selection.node} initialApplication={selection.sourceHash && selection.sourceHash!==map.sourceHash ? undefined : selection.application} /> : <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 sm:p-9"><span className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300">Summary only</span><h2 className="mt-5 text-2xl font-semibold">This map has not been captured</h2><p className="mt-3 max-w-2xl leading-7 text-slate-400">The quest definition is browseable. Its routes, geometry, placed opponents and node applications are unavailable in this snapshot.</p><Link href="/quests?coverage=full-map" className="mt-6 inline-flex min-h-11 items-center text-sm text-sky-300">Explore captured layouts →</Link></section>}
     <QuestRewards rewards={rewards} />
     {unplaced && <div id="unplaced-defender-previews" className="scroll-mt-24"><QuestUnplacedDefenders data={unplaced} /></div>}
-    <QuestProvenance sourceHash={q.sourceHash} quest={q} rewards={rewards} />
   </div>;
 }

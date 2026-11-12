@@ -64,6 +64,8 @@ describe("Tower browsing outcomes", () => {
     expect([...host.querySelectorAll('h2')].filter(h=>h.textContent==='Block 1')).toHaveLength(1);
     expect(host.querySelector('select[aria-label="Jump to block"]')).toBeNull();
     expect(host.querySelector('#block-reader')?.getAttribute('tabindex')).toBe('-1');
+    expect(host.textContent).not.toMatch(/Source & definition details|Source receipt|Native block fields|Native floor fields/);
+    expect(host.querySelector('pre')).toBeNull();
     expect(host.textContent).not.toContain("Attacker restriction");
     expect(host.textContent).not.toContain("Restrictions unresolved");
     await act(async () => root!.render(<TowerDetail tower={tower} view={{ ...view, block: goblin as unknown as TowerBlockView["block"] }} current={1}/>));
@@ -134,7 +136,7 @@ describe("Tower browsing outcomes", () => {
     expect(nodes().every(e => e.hasAttribute("open"))).toBe(true);
     expect(host.textContent).toContain("First line\nSecond line");
     expect(host.querySelector("article ul details > summary")?.textContent).not.toContain("source-only-id");
-    expect(host.querySelector("article ul details details")?.hasAttribute("open")).toBe(false);
+    expect(host.textContent).not.toContain("source-only-id");
     await act(async () => host.querySelector<HTMLButtonElement>("button[aria-pressed]")!.click());
     expect(nodes().every(e => !e.hasAttribute("open"))).toBe(true);
   });
@@ -180,14 +182,15 @@ describe("Tower browsing outcomes", () => {
     expect(host.querySelector('select[name="status"]')).toBeNull();
     expect(host.querySelectorAll('a[href*="/quests/towers/challenge_saga"]')).toHaveLength(1);
     expect(host.querySelector("h3")?.textContent).toBe("Saga Showcase Tower");
+    expect(host.textContent).not.toContain("About this Tower collection");
   });
-  it("distinguishes unidentified nodes without inventing names and keeps source IDs secondary", async () => {
+  it("distinguishes unidentified nodes without exposing source IDs", async () => {
     const f = floor(); f.modifiers = ["raw-one", "raw-two"].map(id => ({ id, name: "Recorded modifier", description: null, iconKey: null, quantity: 1 }));
     const host = await render(<TowerFloors floors={[f]}/>);
     const summaries = [...host.querySelectorAll("article ul > li > details > summary")].map(e => e.textContent);
     expect(summaries[0]).toContain("Unidentified modifier 1");
     expect(summaries[1]).toContain("Unidentified modifier 2");
-    expect(summaries.join(" ")).not.toContain("raw-one");
+    expect(host.textContent).not.toMatch(/raw-one|raw-two|Definition details/);
   });
   it("retains separate unknown rating quantities and labels unresolved identities explicitly", async () => {
     const host = await render(<TowerRewards rewards={["twr", "tmu"].map(token => ({ key: token, scope: "Rating rewards", name: "Rating reward", token, quantity: 1, type: "item", sourceType: "gsi", imageUrl: null, href: null }))}/>);
@@ -195,6 +198,7 @@ describe("Tower browsing outcomes", () => {
     expect([...host.querySelectorAll("ol > li > strong")].map(e => e.textContent)).toEqual(["\u00d71", "\u00d71"]);
     expect(host.querySelector("details")?.open).toBe(false);
     expect(host.querySelector("summary")?.textContent).toContain("2 records");
+    expect(host.textContent).not.toMatch(/gsi\/twr|gsi\/tmu|Source item/);
   });
   it("replaces failed images with an accessible, stable fallback", async () => {
     const host = await render(<TowerImage src="/missing-art.jpg" alt="Native Tower artwork" className="art"/>);

@@ -10,7 +10,6 @@ import { loadBossPortraits } from "@/lib/game-quests/champions";
 import { QuestArtworkCard } from "@/components/game-quests/quest-artwork-card";
 import { QuestChapterPanorama } from "@/components/game-quests/quest-chapter-panorama";
 import { QuestBossCard } from "@/components/game-quests/quest-boss-card";
-import { QuestProvenance } from "@/components/game-quests/quest-provenance";
 import { getParentRewardRecord,hasRecordedRewards } from "@cerebro/core/data/game-quests/rewards";
 import { QuestParentRewards } from "@/components/game-quests/quest-parent-rewards";
 import styles from "@/components/game-quests/quest-catalog.module.css";
@@ -52,6 +51,5 @@ export default async function QuestExplorerPage({searchParams}:{searchParams:Pro
     </> : <><div className={styles.sectionHeader}><h2>{(!singleSpecial?selectedChapter?.label:undefined) ?? permanentData.specialCollections[collection] ?? (category==="Special"?"Special quests":"Quest selection")}</h2><span>{results.length} quest {results.length===1?"variant":"variants"}</span></div><div className={styles.bossGrid}>{pageQuests.map(q=><QuestBossCard key={q.id} quest={q} portraits={portraits}/>)}</div>{!results.length&&<p className={styles.empty}>No permanent quests match this view. Monthly events and Daily quests are outside this explorer.</p>}<nav aria-label="Quest result pages" className={styles.pagination}>{page>1?<Link href={url({page:String(page-1)})}>Previous</Link>:<span/>}<span>Page {page} of {totalPages}</span>{page<totalPages?<Link href={url({page:String(page+1)})}>Next</Link>:<span/>}</nav></>}
     {(query||coverage||act||chapter||collection)&&<Link href="/quests" className={styles.reset}>Clear filters</Link>}
     {(selectedAct||collection)&&parentAct&&!query&&!coverage&&<>{selectedChapter?(parentHasRewards&&<Link className="mt-6 inline-block text-sm text-sky-300" href={`${url({chapter:""})}#act-rewards`}>View Act rewards →</Link>):<QuestParentRewards quests={parentQuests} kind="act" id={parentAct}/>} {(selectedChapter||singleSpecial)&&<QuestParentRewards quests={selectedChapter?.quests??chapters[0].quests} kind="chapter" id={selectedChapter?.id??chapters[0].id}/>}</>}
-    <QuestProvenance/>
   </div>;
 }
