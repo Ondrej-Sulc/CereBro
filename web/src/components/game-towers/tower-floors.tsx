@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ArrowUpRight, ChevronDown, Heart, Swords } from "lucide-react";
 import type { TowerFloorView, TowerModifierView } from "@/lib/game-towers";
 import { GameNodeModifierIcon } from "@/components/nodes/GameNodeModifierIcon";
+import { ModifierName } from "@/components/nodes/ModifierName";
 import { gameText } from "@cerebro/core/domain/game-quests";
 import { TowerImage } from "./tower-image";
 import { TowerRewards } from "./tower-rewards";
@@ -19,7 +20,7 @@ export function TowerModifiers({ modifiers, expanded = false }: { modifiers: Tow
     const description = gameText(m.description);
     const repeated = modifiers.filter(other => other.name === m.name).length > 1;
     return <li key={`${m.id}:${i}`}><details open={expanded || undefined}>
-      <summary><GameNodeModifierIcon iconKey={m.iconKey} size={21}/><span>{name}{repeated && !unidentified && description && <small className={styles.modifierPreview}>{description}</small>}</span>{m.quantity !== null && m.quantity > 1 && <small>×{m.quantity}</small>}<ChevronDown size={15} className={styles.chevron} aria-hidden="true"/></summary>
+      <summary><GameNodeModifierIcon iconKey={m.iconKey} size={21}/><span><ModifierName name={name} href={m.definitionHref}/>{repeated && !unidentified && description && <small className={styles.modifierPreview}>{description}</small>}</span>{m.quantity !== null && m.quantity > 1 && <small>×{m.quantity}</small>}<ChevronDown size={15} className={styles.chevron} aria-hidden="true"/></summary>
       <div className={styles.modifierDescription}><p>{description || "Description unavailable for this modifier."}</p>{m.condition && <p className={styles.muted}>{gameText(m.condition)}</p>}{m.persistence && <p className={styles.muted}>{gameText(m.persistence)}</p>}</div>
     </details></li>;
   })}</ul>;

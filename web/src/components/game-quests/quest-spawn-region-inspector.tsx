@@ -1,6 +1,7 @@
 import { coordinateKey, gameText, type QuestApplication, type QuestMap } from "@cerebro/core/domain/game-quests";
 import type { QuestSpawnRegion } from "@cerebro/core/domain/game-quests/spawn-regions";
 import { GameNodeModifierIcon } from "@/components/nodes/GameNodeModifierIcon";
+import { ModifierName } from "@/components/nodes/ModifierName";
 import Link from "next/link";
 import { Link2 } from "lucide-react";
 import { QuestEncounterSummary } from "./quest-encounter-summary";
@@ -20,7 +21,7 @@ export function QuestSpawnRegionInspector({map,region,shareUrl,inspectTile}:{map
     <p className={styles.regionExplanation}>Exact trigger tile varies</p>
     <p className={styles.muted}>{region.coordinates.length} possible map {region.coordinates.length===1?"position":"positions"}. Highlighted tiles show where this defender can appear.</p>
     <section className={styles.areaEffects}><h3>Area modifiers <span>{effects.length}</span></h3>
-      {effects.length>0?<><p className={styles.muted}>Recorded on every highlighted tile.</p>{effects.map(a=><details key={a.id} open><summary><GameNodeModifierIcon iconKey={a.iconKey} size={16}/><span className={styles.areaEffectName}>{gameText(a.name)||"Area modifier"}</span></summary><p className={styles.applicationDescription}>{gameText(a.description)||"Description unavailable for this saved effect."}</p></details>)}</>:<p className={styles.muted}>Effects can vary by location. Select a highlighted tile to inspect its recorded effects.</p>}
+      {effects.length>0?<><p className={styles.muted}>Recorded on every highlighted tile.</p>{effects.map(a=><details key={a.id} open><summary><GameNodeModifierIcon iconKey={a.iconKey} size={16}/><span className={styles.areaEffectName}><ModifierName name={gameText(a.name)||"Area modifier"} href={a.definitionHref}/></span></summary><p className={styles.applicationDescription}>{gameText(a.description)||"Description unavailable for this saved effect."}</p></details>)}</>:<p className={styles.muted}>Effects can vary by location. Select a highlighted tile to inspect its recorded effects.</p>}
       <button className={styles.regionTileButton} onClick={inspectTile}>Inspect representative map tile ↗</button>
     </section>
     <details className={styles.regionSource}><summary>About this encounter region</summary><p>The region boundaries are captured from the game. Defender-to-region associations use the archived reference mapping. The portrait is a representative marker, not a fixed fight tile.</p><p>Personal defender nodes are not established by the region marker.</p>{region.definitionCandidateCount>1&&<p>{region.definitionCandidateCount} saved definition rows share this identity and build.</p>}</details>

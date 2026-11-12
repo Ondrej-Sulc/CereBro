@@ -20,6 +20,7 @@ export interface TowerModifierView {
   name: string;
   description: string | null;
   iconKey: string | null;
+  definitionHref?: string | null;
   quantity: number | null;
   sourceScope?: string;
   /** Native conditions/persistence stay separate from the modifier description. */

@@ -20,6 +20,22 @@ async function render(element: React.ReactNode) {
   return host;
 }
 describe("quest map controls", () => {
+  it("links a quest modifier name to its exact game-definition page and keeps its description toggle", async () => {
+    const map = (await loadQuestMap("me_mausoleum_ch01_q02"))!;
+    const tile = map.tiles.find(t => t.applications.some(a => a.name === "Contagion"))!;
+    const application = tile.applications.find(a => a.name === "Contagion")!;
+    const host = await render(<QuestApplicationDetails application={application} questId={map.questId} sourceHash={map.sourceHash} shareUrl="/quests/me_mausoleum_ch01_q02" choose={() => {}}/>);
+    const modifier = host.querySelector<HTMLDetailsElement>("[data-quest-application]")!;
+    const link = modifier.querySelector<HTMLAnchorElement>('a[aria-label="View Contagion node modifier"]');
+    expect(link?.getAttribute("href")).toBe(`/nodes/${encodeURIComponent(application.effectId)}`);
+    expect(modifier.open).toBe(true);
+    await act(async () => modifier.querySelector("summary")!.click());
+    expect(modifier.open).toBe(false);
+    expect(modifier.querySelector('a[aria-label="Link to Contagion modifier"]')).not.toBeNull();
+    await act(async () => root!.render(<QuestApplicationDetails application={{...application,definitionHref:null}} questId={map.questId} sourceHash={map.sourceHash} shareUrl="/quests/me_mausoleum_ch01_q02" choose={() => {}}/>));
+    expect(host.querySelector('a[href^="/nodes/"]')).toBeNull();
+    expect(host.textContent).toContain("Contagion");
+  });
   it("opens encounter modifier descriptions by default and keeps the selected defender compact", async () => {
     const map = (await loadQuestMap("me_crucible_ch01_q01"))!;
     const host = await render(<QuestMapExplorer map={map} initialNode="27,18" />);

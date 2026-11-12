@@ -1,4 +1,6 @@
 import raw from "@cerebro/core/data/game-quests/tower-presentation/catalog.json";
+import modifierSources from "@cerebro/core/data/game-quests/tower-presentation/sources.json";
+import { nativeModifierHref } from "@cerebro/core/data/game-node-modifiers/links";
 import { getQuestRewardArtwork as getRewardArtwork } from "@cerebro/core/data/game-quests/reward-artwork";
 import { getSelectableReward } from "@cerebro/core/data/game-selectable-rewards";
 import { rewardDisplayName } from "@cerebro/core/domain/reward-display";
@@ -19,6 +21,7 @@ interface PresentationCatalog {
   rewards: Record<string, { displayName?: string; gameId?: string; rarity?: number }>;
 }
 export const towerPresentation = raw as unknown as PresentationCatalog;
+const modifierProofs = modifierSources as unknown as { bcgSha256: string; modifierProofs: Record<string, { versionHash?: string }> };
 export const nativeRows = (value: unknown): NativeRow[] => Array.isArray(value)
   ? value.filter((v): v is NativeRow => v !== null && typeof v === "object" && !Array.isArray(v)) : [];
 const string = (v: unknown) => typeof v === "string" ? v : null;
@@ -48,6 +51,7 @@ export function projectTowerModifiers(value: unknown, sourceScope: string): Towe
     const description = quantity === null ? null : definition?.descriptions[String(quantity)] ?? null;
     return { id, name: definition?.name ?? "Recorded modifier", description,
       quantity, iconKey: definition?.iconKey && resolveNativeGameModifierIcon(definition.iconKey) ? definition.iconKey : null,
+      definitionHref: definition && modifierProofs.bcgSha256 === towerPresentation.bcgSha256 ? nativeModifierHref(id, modifierProofs.modifierProofs[id]?.versionHash, towerPresentation.bcgSha256) : null,
       sourceScope, condition: null, persistence: null, sourceData: r };
   });
 }

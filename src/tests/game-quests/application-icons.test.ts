@@ -4,6 +4,23 @@ import { permanentData, getBossPreview } from "../../data/game-quests/permanent"
 import { withApplicationIcons } from "../../data/game-quests/application-icons";
 import { resolveNativeModifierIcon } from "../../domain/node-modifiers/native-icons";
 import ledger from "../../data/game-quests/application-icons.json";
+import nodeIndex from "../../data/game-node-modifiers/v2/index.json";
+import { nativeModifierHref } from "../../data/game-node-modifiers/links";
+
+it("links native definitions only with a matching version and BCG, independently of display names",()=>{
+  const row=nodeIndex.records[0],hash=row.versionHashes[0],bcg=nodeIndex.profile.bcgSha256;
+  expect(nativeModifierHref(row.id,hash,bcg)).toBe(`/nodes/${encodeURIComponent(row.id)}`);
+  expect(nativeModifierHref(row.id,"different-version",bcg)).toBeNull();
+  expect(nativeModifierHref(row.id,hash,"another-bcg")).toBeNull();
+  expect(nativeModifierHref(row.name,hash,bcg)).toBeNull();
+  expect(nativeModifierHref(row.id,undefined,bcg)).toBeNull();
+});
+
+it("leaves uncaptured Act10 definition versions unlinked even when their IDs occur elsewhere",async()=>{
+  const map=(await loadQuestMap("epilogue_ch01_q01"))!;
+  expect(map.tiles.flatMap(t=>t.applications).length).toBeGreaterThan(0);
+  expect(map.tiles.flatMap(t=>t.applications).every(a=>a.definitionHref===null)).toBe(true);
+});
 
 it("binds exact source/application/version and rejects source/effect drift",async()=>{
   const map=(await loadQuestMap("a05_ch01_q01"))!;
@@ -12,11 +29,14 @@ it("binds exact source/application/version and rejects source/effect drift",asyn
   expect(record[a.id as keyof typeof record].versionHash).toMatch(/^[a-f0-9]{64}$/);
   expect(a).not.toHaveProperty("definitionVersionHash");
   expect(resolveNativeModifierIcon(a.iconKey)).toBeDefined();
+  expect(a.definitionHref).toBe(`/nodes/${encodeURIComponent(a.effectId)}`);
   const stale=withApplicationIcons({...map,sourceHash:"changed"});
   expect(stale.tiles.flatMap(t=>t.applications).every(a=>a.iconKey===null)).toBe(true);
+  expect(stale.tiles.flatMap(t=>t.applications).every(a=>a.definitionHref===null)).toBe(true);
   expect(withApplicationIcons({...map,mapId:"wrong-map"}).tiles.flatMap(t=>t.applications).every(a=>a.iconKey===null)).toBe(true);
   const changed=structuredClone(map);const altered=changed.tiles.flatMap(t=>t.applications).find(b=>b.id===a.id)!;altered.effectId="another-effect";
   expect(withApplicationIcons(changed).tiles.flatMap(t=>t.applications).find(b=>b.id===a.id)?.iconKey).toBeNull();
+  expect(withApplicationIcons(changed).tiles.flatMap(t=>t.applications).find(b=>b.id===a.id)?.definitionHref).toBeNull();
   const refreshed=(await loadQuestMap("eq_legends_e"))!;
   // This saved Realm layout has no tile modifier assignments; do not invent any.
   expect(refreshed.tiles.flatMap(t=>t.applications)).toHaveLength(0);

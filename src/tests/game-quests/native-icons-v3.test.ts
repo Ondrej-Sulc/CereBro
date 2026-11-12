@@ -43,10 +43,10 @@ it("joins every v3 assignment across all218 maps and keeps exactly the ten sourc
  for(const [qid,row] of Object.entries(artifact.maps)){
   const map=(await loadQuestMap(qid))!,applications=map.tiles.flatMap(t=>t.applications),byId=new Map(applications.map(a=>[a.id,a]));
   expect([map.mapId,map.sourceHash],qid).toEqual([row.mapId,row.sourceHash]);
-  expect(Object.entries(row.applications).every(([id,index])=>{const a=byId.get(id),proof=artifact.proofs[index];return a?.effectId===proof.effectId&&a.iconKey===proof.iconKey;}),qid).toBe(true);
+  expect(Object.entries(row.applications).every(([id,index])=>{const a=byId.get(id),proof=artifact.proofs[index];return a?.effectId===proof.effectId&&a.iconKey===proof.iconKey&&a.definitionHref===`/nodes/${encodeURIComponent(proof.effectId)}`;}),qid).toBe(true);
   total+=applications.length;bound+=applications.filter(a=>a.iconKey).length;added+=Object.keys(row.applications).length;
  }
  expect({total,bound,added}).toEqual({total:212720,bound:212710,added:62712});
  expect(artifact.unresolved).toHaveLength(10);
- for(const gap of artifact.unresolved){const map=(await loadQuestMap(gap.questId))!,app=map.tiles.flatMap(t=>t.applications).find(a=>a.id===gap.applicationId)!;expect(app.effectId).toBe(gap.effectId);expect(app.iconKey).toBeNull();}
+ for(const gap of artifact.unresolved){const map=(await loadQuestMap(gap.questId))!,app=map.tiles.flatMap(t=>t.applications).find(a=>a.id===gap.applicationId)!;expect(app.effectId).toBe(gap.effectId);expect(app.iconKey).toBeNull();expect(app.definitionHref).toBeNull();}
 },60000);

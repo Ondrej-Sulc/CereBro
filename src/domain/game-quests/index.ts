@@ -18,6 +18,7 @@ export type QuestApplication = {
   amount: number; extra: boolean; sourceCoordinate: Coordinate; sourceType: string; remainActive: boolean | null;
   linkedTargets: Coordinate[]; parameters: Record<string, unknown>;
   iconKey?: string | null;
+  definitionHref?: string | null;
 };
 export type QuestTile = {
   coordinate: Coordinate; nodeNumber: number; start: boolean; final: boolean; hidden: boolean;

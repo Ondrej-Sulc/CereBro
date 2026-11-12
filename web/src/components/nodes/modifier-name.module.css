@@ -1,0 +1,16 @@
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 3px 0;
+  color: #b9dff2;
+  border-radius: 3px;
+  vertical-align: middle;
+  text-underline-offset: 3px;
+}
+.link span { min-width: 0; overflow-wrap: anywhere; }
+.link svg { flex-shrink: 0; color: #7fa8c2; }
+.link:hover { color: #e0f4ff; text-decoration: underline; }
+.link:focus-visible { outline: 2px solid #a2e6ff; outline-offset: 3px; }

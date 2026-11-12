@@ -93,6 +93,7 @@ describe("spawn-region map presentation",()=>{
     const modifiers=[...host.querySelectorAll<HTMLDetailsElement>('[data-region-inspector] section > details')];
     expect(modifiers.length).toBeGreaterThan(0);
     expect(modifiers.every(modifier=>modifier.open)).toBe(true);
+    expect(host.querySelectorAll('[data-region-inspector] a[href^="/nodes/"]').length).toBe(modifiers.length);
   });
   it("keeps a failed regional portrait selectable with its native fallback and accessible name",async()=>{
     const {host}=await setup('fixture-region');

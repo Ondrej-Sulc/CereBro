@@ -107,6 +107,7 @@ describe("Tower source presentation", () => {
   it("keeps node-sourced text separate from an unproved Tower icon transfer", () => {
     const [v] = projectTowerModifiers([{ t: "buff", n: "avx_hp_pct3000", q: 1 }], "Block modifiers");
     expect(v).toMatchObject({ name: "Health", description: "+3000% Health", quantity: 1, sourceScope: "Block modifiers", iconKey: null, condition: null, persistence: null });
+    expect(v.definitionHref).toBe("/nodes/avx_hp_pct3000");
     const [differentQuantity] = projectTowerModifiers([{ t: "buff", n: "avx_hp_pct3000", q: 7 }], "Floor rules");
     expect(differentQuantity.quantity).toBe(7);
     expect(differentQuantity.description).toBeNull();
@@ -159,6 +160,7 @@ describe("Tower source presentation", () => {
       { t: "buff", n: "towers_rule_timer_1m", q: 1 }, { t: "buff", n: "towers_rule_dmg", q: 1 }, { t: "buff", n: "avx_atk_pct200", q: 1 },
     ], "Block rules");
     expect(timer).toMatchObject({ name: "Race to the Finish - 1 Minute", iconKey: null });
+    expect(timer.definitionHref).toBeNull();
     expect(timer.description).toContain("60 second timer");
     expect(timer.description).not.toMatch(/\{\d+\}/);
     expect(power.description).toContain("\n •");

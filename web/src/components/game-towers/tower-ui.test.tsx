@@ -128,15 +128,15 @@ describe("Tower browsing outcomes", () => {
     expect(host.querySelector("h3 a")?.getAttribute("href")).toBe("/champions/iron-man");
   });
   it("opens every floor node description together and preserves native line breaks", async () => {
-    const f = floor(); f.modifiers = [{ id: "source-only-id", name: "Health", description: "First line\\nSecond line", iconKey: null, quantity: 1 }];
+    const f = floor(); f.modifiers = [{ id: "avx_hp_pct3000", name: "Health", description: "First line\\nSecond line", iconKey: null, definitionHref: "/nodes/avx_hp_pct3000", quantity: 1 }];
     const host = await render(<TowerFloors floors={[f, { ...f, floorNumber: 2 }]}/>);
     const nodes = () => [...host.querySelectorAll("article ul > li > details")];
     expect(nodes().every(e => !e.hasAttribute("open"))).toBe(true);
     await act(async () => host.querySelector<HTMLButtonElement>("button[aria-pressed]")!.click());
     expect(nodes().every(e => e.hasAttribute("open"))).toBe(true);
     expect(host.textContent).toContain("First line\nSecond line");
-    expect(host.querySelector("article ul details > summary")?.textContent).not.toContain("source-only-id");
-    expect(host.textContent).not.toContain("source-only-id");
+    expect(host.querySelector('a[aria-label="View Health node modifier"]')?.getAttribute("href")).toBe("/nodes/avx_hp_pct3000");
+    expect(host.textContent).not.toContain("avx_hp_pct3000");
     await act(async () => host.querySelector<HTMLButtonElement>("button[aria-pressed]")!.click());
     expect(nodes().every(e => !e.hasAttribute("open"))).toBe(true);
   });
