@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Fragment } from "react";
 import { notFound } from "next/navigation";
 import { getQuestArtwork } from "@cerebro/core/data/game-quests/artwork";
 import { findQuest, loadQuestMap, isArchivedQuest } from "@cerebro/core/data/game-quests";
@@ -27,10 +28,12 @@ export default async function QuestPage({ params, searchParams }: Props) {
   const portraits = map ? await loadQuestPortraits(map) : rewardRecord?await loadRewardPortraits(rewardRecord):{};
   const artwork = getQuestArtwork(q.id);
   const rewards = map ? projectQuestRewards(map, portraits) : rewardRecord?projectRewardRecord(rewardRecord,portraits):[];
-  return <div className="mx-auto max-w-7xl px-4 py-8 sm:px-8"><Link href="/quests" className="text-sm text-sky-300">← Quest explorer</Link>
+  return <div className="mx-auto max-w-7xl px-4 py-5 sm:px-8 sm:py-7">
     <QuestPageHeader quest={q} />
-    {unplaced && <a href="#unplaced-defender-previews" className="my-4 inline-flex min-h-11 items-center text-sm text-sky-300">Additional defender previews →</a>}
-    {parentRewards.length>0&&<nav aria-label="Quest rewards context" className="my-5 flex flex-wrap gap-4 text-sm text-sky-300">{parentRewards.map(({h,act,chapter})=><span key={h.actId+h.chapterId}>{act&&<Link href={`/quests?${new URLSearchParams(q.section==="Special"?{category:"Special",collection:q.containerSetName}:{category:"Story",act:h.actId})}#act-rewards`}>Act rewards</Link>}{act&&chapter&&" / "}{chapter&&<Link href={`/quests?${new URLSearchParams({category:q.section??q.category,...(q.section==="Special"?{collection:q.containerSetName}:{act:h.actId}),chapter:h.chapterId})}#chapter-rewards`}>Chapter rewards</Link>}</span>)}</nav>}
+    {(unplaced||parentRewards.length>0)&&<nav aria-label="Quest rewards context" className="mb-4 flex flex-wrap items-center gap-x-4 text-xs text-sky-300">
+      {unplaced&&<a href="#unplaced-defender-previews" className="inline-flex min-h-11 items-center">Additional defender previews →</a>}
+      {parentRewards.map(({h,act,chapter})=><Fragment key={h.actId+h.chapterId}>{act&&<Link className="inline-flex min-h-11 items-center" href={`/quests?${new URLSearchParams(q.section==="Special"?{category:"Special",collection:q.containerSetName}:{category:"Story",act:h.actId})}#act-rewards`}>Act rewards</Link>}{chapter&&<Link className="inline-flex min-h-11 items-center" href={`/quests?${new URLSearchParams({category:q.section??q.category,...(q.section==="Special"?{collection:q.containerSetName}:{act:h.actId}),chapter:h.chapterId})}#chapter-rewards`}>Chapter rewards</Link>}</Fragment>)}
+    </nav>}
     {map && selection.sourceHash && selection.sourceHash!==map.sourceHash && <p className="mb-5 text-sm text-amber-200">This application link refers to another saved source version. The current recorded map is shown.</p>}
     {(q.scalingCurve || (map?.adaptive)) && <p className="mb-5 rounded-lg border border-amber-900/60 bg-amber-950/20 p-4 text-sm leading-6 text-amber-200">Opponents and rewards scale with progression.{q.minProgressionRank !== null && ` Shown for progression rank ${q.minProgressionRank}${q.maxProgressionRank !== q.minProgressionRank ? `–${q.maxProgressionRank}` : ""}.`} Recorded builds may differ for another profile.</p>}
     {map ? <QuestMapExplorer key={`${map.questId}:${map.sourceHash}:${selection.path ?? ""}:${selection.node ?? ""}:${selection.region ?? ""}:${selection.application ?? ""}`} map={map} artwork={artwork} portraits={portraits} spawnRegions={spawnRegions} initialRegion={selection.region} initialPath={selection.path} initialNode={selection.node} initialApplication={selection.sourceHash && selection.sourceHash!==map.sourceHash ? undefined : selection.application} /> : <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 sm:p-9"><span className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300">Summary only</span><h2 className="mt-5 text-2xl font-semibold">This map has not been captured</h2><p className="mt-3 max-w-2xl leading-7 text-slate-400">The quest definition is browseable. Its routes, geometry, placed opponents and node applications are unavailable in this snapshot.</p><Link href="/quests?coverage=full-map" className="mt-6 inline-flex min-h-11 items-center text-sm text-sky-300">Explore captured layouts →</Link></section>}
