@@ -10,11 +10,14 @@ import { TowerDetail } from "./tower-detail";
 import { TowerRewards } from "./tower-rewards";
 import { TowerImage } from "./tower-image";
 import { TowerFloorJump } from "./tower-floor-jump";
+import { TowerDiscovery } from "./tower-discovery";
 import raw from "../../../../src/data/game-quests/tower-backend/blocks/class_skill-147.json";
 import doom from "../../../../src/data/game-quests/tower-events/blocks/event_castellan_5-001.json";
 import goblin from "../../../../src/data/game-quests/tower-events/blocks/event_ggsfa1-001.json";
 
 const push = vi.hoisted(() => vi.fn());
+const loadTowerCatalog = vi.hoisted(() => vi.fn<() => Promise<TowerCatalogEntry[]>>());
+vi.mock("@/lib/game-towers", () => ({ getTowerCatalog: loadTowerCatalog }));
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push }) }));
 vi.mock("next/link", () => ({ default: ({ href, children, prefetch, scroll, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { prefetch?: boolean; scroll?:boolean }) => { void prefetch; void scroll; return <a href={href} {...props}>{children}</a>; } }));
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -27,6 +30,31 @@ async function render(element: React.ReactNode) {
 const floor = (): TowerFloorView => ({ ...raw.floors[0], defender: { ...raw.floors[0].defender!, name: "Iron Man", imageUrl: null, href: "/champions/iron-man", className: "Tech", fullHealth: raw.floors[0].defender!.maxHealth }, modifiers: [], topModifiers: [], rewards: [] });
 
 describe("Tower browsing outcomes", () => {
+  it("shows Challenge and Event artwork cards alongside all six Class Towers on the quest landing page", async () => {
+    const classes: TowerCatalogEntry[] = ["skill", "mutant", "tech", "cosmic", "mystic", "science"].map(id => ({
+      id: `class_${id}`, name: `${id.toUpperCase()} TOWER`, section: "class", archiveStatus: "unknown", classId: id,
+      artwork: { url: `/game-towers/classes/${id}.jpg`, width: 326, height: 659 }, blockNumbers: [1, 2], floorCount: 1606,
+    }));
+    const towers: TowerCatalogEntry[] = [...classes,
+      { id: "challenge_saga", name: "SAGA SHOWCASE TOWER", section: "challenge", archiveStatus: "unknown", artwork: { url: "/game-towers/challenges/challenge_saga.jpg", width: 326, height: 659 }, blockNumbers: [1, 2, 3, 4, 5, 6], floorCount: 44 },
+      { id: "event_castellan_5", name: "DOOM TOWER", section: "event", archiveStatus: "unknown", artwork: { url: "/game-towers/events/event_castellan_5.jpg", width: 326, height: 659 }, blockNumbers: [1, 2], floorCount: 61, endsAt: "2026-11-18T18:00:00Z" },
+      { id: "event_ggsfa1", name: "GREEN GOBLIN (STELLAR-FORGED) TOWER", section: "event", archiveStatus: "unknown", artwork: { url: "/game-towers/events/event_ggsfa1.jpg", width: 326, height: 659 }, blockNumbers: [1, 2], floorCount: 2 },
+    ];
+    loadTowerCatalog.mockResolvedValue(towers);
+    const host = await render(await TowerDiscovery());
+    const cards = [...host.querySelectorAll<HTMLAnchorElement>('a[href^="/quests/towers/"]')];
+    expect(cards).toHaveLength(9);
+    for (const tower of towers) {
+      const card = cards.find(link => link.getAttribute("href") === `/quests/towers/${tower.id}`)!;
+      expect(card).toBeDefined();
+      expect(card.querySelector("img")?.getAttribute("src")).toBe(tower.artwork?.url);
+      expect(card.textContent).toContain("Explore Tower");
+    }
+    expect(cards[6].textContent).toContain("Challenge Tower");
+    expect(cards[6].textContent).toContain("44 floors");
+    expect(cards[7].textContent).toContain("Event Tower");
+    expect(cards[7].querySelector("time")?.dateTime).toBe("2026-11-18T18:00:00Z");
+  });
   it("omits a native empty restriction while preserving unresolved nonempty Event restrictions", async () => {
     expect(doom.blockData.heroRestrictions).toBe("");
     expect(goblin.blockData.heroRestrictions).toBe("green_goblin_stellar:t7");
