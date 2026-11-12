@@ -83,7 +83,7 @@
 .championGrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:start}
 .championCard{border:1px solid var(--line);border-radius:10px;min-width:0;background:#0c1422;overflow:hidden}
 .championIdentity{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--line)}
-.championIdentity>div{min-width:0;flex:1}.portrait{width:44px;height:44px;border-radius:8px;object-fit:contain;background:#ffffff05}
+.championIdentity>div{min-width:0;flex:1}.portrait{width:44px;height:44px;border-radius:8px;object-fit:contain;border:2px solid var(--champion-color,#94a3b8);background:color-mix(in srgb,var(--champion-color,#94a3b8) 12%,#0c1422)}
 .championName{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600;line-height:1.5;letter-spacing:-.02em;overflow-wrap:anywhere}.championName svg{flex-shrink:0;color:#7087a3}.championName:hover{color:var(--mint)}
 .championIdentity p{font-size:10px;color:#8fa3bf;line-height:1.5;margin-top:4px;letter-spacing:.08em;text-transform:uppercase}
 .applicationCount{color:#859ab5;font-size:10px;white-space:nowrap;align-self:start;padding-top:3px}
@@ -95,7 +95,6 @@
 .condition{font-size:14px;line-height:1.75;color:#c4cfdf;overflow-wrap:anywhere;white-space:pre-line}
 .partners{font-size:11px;color:#9eafc5;line-height:1.8;margin-top:10px}.partners a{color:#cabfeb;text-decoration:underline;text-underline-offset:3px;text-decoration-color:#cabfeb40}
 .sourceFooter{display:flex;flex-wrap:wrap;align-items:start;gap:8px 18px;margin-top:12px;font-size:12px}.sourceFooter>a{display:inline-flex;align-items:center;gap:7px;color:var(--mint);min-height:28px;max-width:100%;overflow-wrap:anywhere}
-.sourceFooter details{width:100%;color:#8da2bf}.sourceFooter summary{cursor:pointer;width:fit-content;min-height:28px;line-height:28px}.sourceFooter details p{color:#a6b9d1;line-height:1.8;padding:8px 0;overflow-wrap:anywhere}
 .moreSources{border-top:1px solid var(--line)}.moreSources>summary{display:flex;align-items:center;gap:7px;cursor:pointer;list-style:none;font-size:11px;color:#a5b8ce;padding:12px 18px;min-height:44px;background:#ffffff02}.moreSources[open]>summary svg{transform:rotate(180deg)}
 .empty{border:1px dashed #8099b433;border-radius:12px;padding:50px 22px;text-align:center;color:#91a6c0;margin:20px 0}.empty>svg{margin:0 auto 18px;color:#c4d2e480}.empty h2{font-size:20px;font-weight:600;color:#e1e9f3;letter-spacing:-.03em}.empty p{max-width:450px;margin:10px auto 20px;font-size:13px;line-height:1.8}.empty a{display:inline-flex;align-items:center;gap:10px;color:var(--mint);font-size:13px;min-height:44px}
 @media(min-width:1440px){.hero{padding-top:20px}.effectCard{min-height:230px}}

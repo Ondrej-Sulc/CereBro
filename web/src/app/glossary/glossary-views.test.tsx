@@ -7,7 +7,32 @@ import type { GlossaryDetail } from '@/lib/data/effect-glossary';
 
 const effect = { id: 5, name: 'Bleed', description: 'A recorded Bleed definition.', iconUrl: null, color: '#ffffff', secondaryColor: '#222222', categories: [] };
 function documentFor(html: string) { return new DOMParser().parseFromString(html, 'text/html'); }
+
+function sourceCardDetail(): GlossaryDetail {
+  const application = { id: 40, championId: 1, type: 'ABILITY' as const, ability: { id: 5, name: 'Indestructible' }, source: 'The complete source has a longer native explanation.', effectForm: 'PASSIVE' as const, effectDirection: 'GAIN' as const, overviewSummary: 'Gain Indestructible while blocking.', synergyChampions: [], sourceHref: '/champions/gentle?tab=abilities&ability=one#ability-record-one', sourceLabel: 'Read source', requirements: null };
+  return { effect, filters: { ...normalizeGlossaryFilters({}), group: 'ABILITY' }, counts: { ABILITY: 2, IMMUNITY: 0, RESISTANCE: 0 }, results: { page: 1, pages: 1, total: 2, size: 12, rows: [
+    { id: 1, name: 'Gentle', slug: 'gentle', class: 'MUTANT', images: {}, obtainable: ['7*'], stars: [7], synergySources: null, applications: [application] },
+    { id: 2, name: 'Heimdall', slug: 'heimdall', class: 'COSMIC', images: {}, obtainable: ['7*'], stars: [7], synergySources: null, applications: [{ ...application, id: 41, championId: 2, sourceHref: '/champions/heimdall?tab=abilities&ability=two#ability-record-two' }] },
+  ] } };
+}
 describe('glossary rendered behavior', () => {
+  it('keeps the readable condition and exact source link without repeating the recorded source', () => {
+    const doc = documentFor(renderToStaticMarkup(<GlossaryDetailView data={sourceCardDetail()} />));
+    expect(doc.body.textContent).not.toContain('Recorded source');
+    expect(doc.body.textContent).not.toContain('The complete source has a longer native explanation.');
+    expect(doc.querySelector('[data-source-id="40"]')?.textContent).toContain('Gain Indestructible while blocking.');
+    expect(doc.querySelector('[data-source-id="40"] a')?.getAttribute('href')).toBe('/champions/gentle?tab=abilities&ability=one#ability-record-one');
+    expect(doc.querySelector('[data-source-id="41"] a')?.getAttribute('href')).toBe('/champions/heimdall?tab=abilities&ability=two#ability-record-two');
+  });
+  it('highlights champion portraits with their own class colors independently of the effect color', () => {
+    const data = sourceCardDetail();
+    data.effect = { ...data.effect, color: '#f97316' };
+    const doc = documentFor(renderToStaticMarkup(<GlossaryDetailView data={data} />));
+    const portraits = Array.from(doc.querySelectorAll<HTMLElement>('article > div > img'));
+    expect(portraits.map(portrait => portrait.style.getPropertyValue('--champion-color'))).toEqual(['#eab308', '#06b6d4']);
+    expect(doc.querySelector('a[href="/champions/gentle"]')).not.toBeNull();
+    expect(doc.querySelector('a[href="/champions/heimdall"]')).not.toBeNull();
+  });
   it('exposes labeled GET filters, deterministic links and recovery from unmatched search', () => {
     const data = { filters: normalizeGlossaryFilters({ q: 'unmatched' }), categories: [], catalogTotal: 883, results: { rows: [], page: 1, pages: 1, total: 0, size: 24 } };
     const doc = documentFor(renderToStaticMarkup(<GlossaryCatalogView data={data} />));
