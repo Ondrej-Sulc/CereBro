@@ -119,6 +119,9 @@ describe("Tower browsing outcomes", () => {
     expect([...host.querySelectorAll("summary")].some(e => e.textContent === "Defender stats")).toBe(false);
     const health = [...host.querySelectorAll("dl>div")].find(e => e.querySelector("dt")?.textContent === "Max health");
     expect(health?.querySelector("dd")?.textContent).toBe(f.defender!.maxHealth!.toLocaleString("en"));
+    const stats = host.querySelector("article dl")!;
+    expect([...stats.querySelectorAll("dt")].map(term => term.textContent)).toEqual(["Challenge rating", "Max health", "Attack"]);
+    expect(stats.querySelector("dd")?.textContent).toBe(f.defender!.challengeRating!.toLocaleString("en"));
     expect(host.textContent).not.toContain("Recorded health");
     expect(host.querySelector("h3 a")?.getAttribute("href")).toBe("/champions/iron-man");
   });

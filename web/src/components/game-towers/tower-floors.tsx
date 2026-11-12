@@ -8,6 +8,7 @@ import { gameText } from "@cerebro/core/domain/game-quests";
 import { TowerImage } from "./tower-image";
 import { TowerRewards } from "./tower-rewards";
 import styles from "./towers.module.css";
+import statStyles from "./tower-stats.module.css";
 
 const number = (value: number | null) => value === null ? "Not recorded" : value.toLocaleString("en");
 
@@ -33,7 +34,7 @@ export function TowerFloors({ floors }: { floors: TowerFloorView[] }) {
       <div className={styles.floorNumber}><span>FLOOR</span><strong>{String(f.floorNumber).padStart(2, "0")}</strong></div>
       <article className={styles.floorBody} aria-labelledby={`floor-title-${f.floorNumber}`}>
         <div className={styles.defender}><TowerImage src={d?.imageUrl} className={styles.portrait}/><div className={styles.defenderCopy}><p className={styles.defenderClass}>{d?.className || "Defender"}</p><h3 id={`floor-title-${f.floorNumber}`}>{d?.href ? <Link href={d.href}>{d.name}<ArrowUpRight size={16} aria-hidden="true"/></Link> : d?.name || "Defender not recorded"}</h3>{d && <p className={styles.enemyBuild}>{d.rarity !== null && <span>{d.rarity}<span aria-hidden="true">★</span><span className={styles.srOnly}> star</span></span>}{d.rank !== null && <span>Rank {d.rank}</span>}{d.level !== null && <span>Level {d.level}</span>}{d.signature !== null && <span title="Signature level">Sig {d.signature}</span>}{d.ascensionTier !== null && d.ascensionTier > 0 && <span className={styles.ascension}>Ascension {d.ascensionTier}</span>}</p>}</div></div>
-        {d && <dl className={styles.stats}><div><dt><Heart size={13} aria-hidden="true"/>Max health</dt><dd>{number(d.maxHealth)}</dd></div><div><dt><Swords size={13} aria-hidden="true"/>Attack</dt><dd>{number(d.attack)}</dd></div><div><dt>Challenge rating</dt><dd>{number(d.challengeRating)}</dd></div></dl>}
+        {d && <dl className={statStyles.stats}><div className={statStyles.rating}><dt>Challenge rating</dt><dd className={d.challengeRating === null ? statStyles.unavailable : undefined}>{number(d.challengeRating)}</dd></div><div><dt><Heart size={13} aria-hidden="true"/>Max health</dt><dd>{number(d.maxHealth)}</dd></div><div><dt><Swords size={13} aria-hidden="true"/>Attack</dt><dd>{number(d.attack)}</dd></div></dl>}
         {modifiers.length > 0 && <details className={styles.floorNodes} open={expanded || undefined}><summary>Floor nodes <span>{modifiers.length}</span></summary><TowerModifiers modifiers={modifiers} expanded={expanded}/></details>}
         {f.rewards.length > 0 && <div className={styles.floorDetails}><details><summary>Floor rewards <span>{f.rewards.length}</span></summary><TowerRewards rewards={f.rewards} compact/></details></div>}
       </article>
