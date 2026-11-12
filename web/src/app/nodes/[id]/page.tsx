@@ -8,7 +8,7 @@ import { DiscoveryLocations } from "@/components/discovery/discovery-locations"
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params
   const definition = expandedNodeIndex.records.find(d => d.id === id)
-  return { title: definition ? `${definition.name} | Node modifiers | CereBro` : "Node modifier not found | CereBro" }
+  return { title: definition ? `${definition.name === definition.id ? "Unnamed modifier" : definition.name} | Node modifiers | CereBro` : "Node modifier not found | CereBro" }
 }
 export default async function NodeDetailPage({ params, searchParams }: { params: Promise<{ id: string }>; searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
   const { id } = await params

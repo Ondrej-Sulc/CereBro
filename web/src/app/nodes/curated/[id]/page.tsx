@@ -9,12 +9,12 @@ import { CuratedNodeDetailView } from "../../public-catalog-view"
 import styles from "../../nodes.module.css"
 
 export const dynamic = "force-dynamic"
-export const metadata: Metadata = { title: "Curated node modifier | CereBro" }
+export const metadata: Metadata = { title: "Node modifier | CereBro" }
 export default async function CuratedModifierPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
   let records: Awaited<ReturnType<typeof getPublicCuratedModifiers>>
   try { records = await getPublicCuratedModifiers() } catch {
-    return <div className={styles.page}><h1>Curated catalog temporarily unavailable</h1><p>This record could not be read just now.</p><Link className={styles.back} href="/nodes">Back to node modifiers</Link></div>
+    return <div className={styles.page}><h1>Modifier temporarily unavailable</h1><p>Please try again later.</p><Link className={styles.back} href="/nodes">Back to node modifiers</Link></div>
   }
   const modifier = records.find(row => row.id === id)
   if (!modifier) notFound()

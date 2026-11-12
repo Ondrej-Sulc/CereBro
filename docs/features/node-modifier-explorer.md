@@ -1,5 +1,13 @@
 # Node modifier explorer
 
+## Public presentation (12 November 2026)
+
+Public game and CereBro modifier pages show player descriptions, effect variants and useful location navigation. Source dumps, hashes, native record IDs, raw templates, component/assignment receipts, capture-history notes and internal completeness filters are removed from all public renderers. Unresolved numeric formatting tokens use a plain unavailable description. Legacy completeness query parameters no longer silently filter public results. Curated identities and descriptions remain independent of game definitions; the public labels are CereBro and Game.
+
+`/nodes/[id]/source` is an administrator-only diagnostic export. It checks the canonical BotUser administrator identity before reading detail storage and returns `private, no-store` responses with `Vary: Cookie`. Public pages do not link to it. Source shards, proof ledgers, hashes and assignments are retained unchanged for internal verification.
+
+The historical implementation receipts below describe earlier source-inspection UI; they do not describe current public presentation.
+
 The additive [native glyph extension](node-modifier-native-glyph-extension.md) now exports the 204 shapes listed as pending in the immutable v2 proof below. It supplies a separate game-only registry/renderer and exact binding overlay; all original/v2 artifact bytes and the 24 curated choices remain unchanged.
 
 The verified native glyphs are also available through a tiny shared registry and reusable web component. Curated records use an explicit nullable presentation key, independently of game-definition identity; consumer coverage, the unapplied migration and release sequencing are documented in [Shared native modifier icons](node-modifier-icons.md).
@@ -24,7 +32,7 @@ The server-only reader selects exactly these three fields, caches successful rea
 | Native portraits | 409 exact game IDs; 409 verified portraits, 290 exact public champion links |
 | Reused native glyph coverage | 150,130 tile assignments have a verified binding to an existing exported shape |
 
-The v2 build reads only actual per-tile attacker/defender and named source Buff lists. Arbitrary BCG gameplay effects, rewards, paths and unassigned effect pools are not promoted into node definitions. Full Buff versions, exact component order, absent components, parameters, raw applications, assignment identities, source pointers and map hashes remain in separate lazy detail shards. A complete read-only JSON evidence download is available from each native detail page; the default page has bounded quest groups and evidence previews. No whole quest catalog or graph is copied/imported at runtime.
+The v2 build reads only actual per-tile attacker/defender and named source Buff lists. Arbitrary BCG gameplay effects, rewards, paths and unassigned effect pools are not promoted into node definitions. Full Buff versions, exact component order, absent components, parameters, raw applications, assignment identities, source pointers and map hashes remain in separate lazy detail shards. The complete read-only JSON export is now administrator-only, and public pages have no evidence previews or source download links. No whole quest catalog or graph is copied/imported at runtime.
 
 Containing category/set, native act/chapter membership and exact summary indices supply readable location labels. The projection never parses qid suffixes or links undeployed quest routes. Defender portraits use only exact native character/image references and existing exact public gameId bindings; NPC/legacy portraits retain no invented champion link. There are no public coordinate literals. Distinct resolved wordings appear once, with grouped recorded source/placement contexts beneath them. Local/defender defaults stay quiet; linked/global/trap and attacker exceptions stay visible. The larger corpus contains **4,204 observations where the source configuration flag differs from assigned-list membership**. Both are preserved separately; the display side follows the explicit attackerBuffs/defenderBuffs list. Neither establishes whether an effect is currently active.
 

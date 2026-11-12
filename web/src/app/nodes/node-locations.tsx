@@ -62,11 +62,10 @@ export function WhereItAppears({ catalog, definition, variant, projection = modi
         </div>}
         {context.role !== "Local" && <div className={styles.origin}><span>Source</span>{context.sourceNodes.some(node => node.defenders.length) ? <Placements nodes={context.sourceNodes.filter(node => node.defenders.length)} catalog={catalog} portraitBindings={portraitBindings} /> : <p>{context.sourceNodes.length ? "Map effect source" : "Source placement not recorded"}</p>}</div>}
         {context.affectedNodes.length > 0 ? <div className={styles.affected}>{context.role !== "Local" && <span>Affected fights</span>}<Placements nodes={context.affectedNodes} catalog={catalog} portraitBindings={portraitBindings} /></div> : <p className={styles.locationUnknown}>Effect source recorded; affected fight not recorded.</p>}
-        {context.amounts.some(amount => amount !== undefined && amount !== 1) && <p className={styles.locationUnknown}>Recorded amount: {context.amounts.map(String).join(", ")}</p>}
       </div>)}
     </article>)}
     {pages > 1 && baseHref && <nav className={styles.pagination} aria-label="Recorded quest pages">{current > 1 ? <Link href={`${baseHref}?usesPage=${current - 1}`}>Previous quests</Link> : <span />}<span>{locations.quests.length} recorded quests · {current}/{pages}</span>{current < pages ? <Link href={`${baseHref}?usesPage=${current + 1}`}>More quests</Link> : <span />}</nav>}
-    {locations.unresolvedApplications > 0 && <p className={styles.locationUnknown}>{locations.quests.length ? "Some quest locations could not be verified for this effect." : "Quest location could not be verified for this effect."} Original evidence is available in Source data.</p>}
-    {locations.quests.some(q => q.contexts.some(c => c.role === "Link" || c.role === "Global")) && <p className={styles.assignmentNote}>Recorded assignments. Linked and global effects may depend on their source remaining active.</p>}
+    {locations.unresolvedApplications > 0 && <p className={styles.locationUnknown}>{locations.quests.length ? "Some quest locations are unavailable." : "Quest locations are unavailable."}</p>}
+    {locations.quests.some(q => q.contexts.some(c => c.role === "Link" || c.role === "Global")) && <p className={styles.assignmentNote}>Linked and global modifiers may depend on their source remaining active.</p>}
   </section>
 }

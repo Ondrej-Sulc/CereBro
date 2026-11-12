@@ -2,11 +2,15 @@ import { describe, expect, it, vi } from "vitest"
 vi.mock("server-only", () => ({}))
 import { renderToStaticMarkup } from "react-dom/server"
 import { JSDOM } from "jsdom"
+import Link from "next/link"
 import { nodeModifierCatalog } from "@cerebro/core/data/game-node-modifiers"
 import { NodeCatalogView, NodeDetailView } from "./node-views"
 import NodeDetailPage, { generateMetadata } from "./[id]/page"
 import { resolvedVariants } from "./node-presentation"
 import { DefenderList } from "./node-locations"
+import { ExpandedNodeDetailView } from "./expanded-detail-view"
+import { expandedNodeIndex } from "@/lib/expanded-node-modifiers"
+import { modifierUseProjection } from "@cerebro/core/data/game-node-modifiers/uses"
 
 function visibleContent(doc: Document) {
   const copy = doc.body.cloneNode(true) as HTMLElement
@@ -29,35 +33,34 @@ describe("public node explorer", () => {
     expect(doc.querySelector('h1')?.textContent).toBe("Node modifiers")
     expect(doc.querySelector('a[href="/nodes/avx_hp_pct200"] code')).toBeNull()
     expect(doc.querySelector('a[href="/nodes/avx_hp_pct200"]')?.textContent).toContain("+200% Health")
+    expect(doc.querySelector('pre,code,#source-data,select[name=binding]')).toBeNull()
+    expect(doc.body.textContent).not.toMatch(/saved maps|BCG|SHA-256|Source data/)
   })
   it("provides a useful zero-result recovery", () => {
     const html = renderToStaticMarkup(<NodeCatalogView catalog={nodeModifierCatalog} filters={{ q: "not-real" }} />)
     expect(html).toContain("No modifiers match these filters")
-    expect(html).toContain("Show all recorded definitions")
+    expect(html).toContain("Show all modifiers")
   })
-  it("leads with one resolved effect and keeps templates, precision and evidence under closed Source data", () => {
+  it("shows resolved effects without embedding internal templates, hashes or source dumps", () => {
     const definition = nodeModifierCatalog.definitions.find(d => d.id === "ava_ea20")!
     const doc = new JSDOM(renderToStaticMarkup(<NodeDetailView catalog={nodeModifierCatalog} definition={definition} />)).window.document
     const text = doc.body.textContent
     expect(text).toContain("increased by 20%")
-    expect(text).toContain("increased by {1}%")
-    expect(text).toContain("0.20000000298023224")
-    expect(text).toContain(nodeModifierCatalog.profile.inputs[0].sha256)
+    expect(text).not.toContain("increased by {1}%")
+    expect(text).not.toContain("0.20000000298023224")
+    expect(text).not.toContain(nodeModifierCatalog.profile.inputs[0].sha256)
     expect(doc.querySelector('a[href="/nodes"]')).not.toBeNull()
     const visible = visibleContent(doc)
     expect(visible.match(/increased by 20%/g)).toHaveLength(1)
     expect(visible).not.toMatch(/\{1\}|BCG|ava_ea20|SHA-256|Quest-use navigation|At a glance/)
-    const source = doc.querySelector('details#source-data')
-    expect(source?.querySelector('summary')?.textContent).toBe("Source data")
-    expect(source?.hasAttribute('open')).toBe(false)
-    expect(source?.textContent).toContain("0.20000000298023224")
-    expect(source?.textContent).toContain("increased by {1}%")
+    expect(doc.querySelector('#source-data, pre, code')).toBeNull()
+    expect(text).not.toMatch(/Source data|BCG|SHA-256|catalog revision|saved map samples/i)
   })
   it("shows incomplete component evidence without suppressing recorded game text", () => {
     const definition = nodeModifierCatalog.definitions.find(d => d.id === "saga_boost_aspect_of_strength")!
     const html = renderToStaticMarkup(<NodeDetailView catalog={nodeModifierCatalog} definition={definition} />)
-    expect(html).toContain("Some source data is missing")
-    expect(html).toContain("saga_aspctstr_effct_ps1_seq1")
+    expect(html).not.toContain("Some source data is missing")
+    expect(html).not.toContain("saga_aspctstr_effct_ps1_seq1")
     expect(html).toContain("Where it appears")
   })
   it("shows Disarray wording once with all six distinct assignment identities", () => {
@@ -75,10 +78,10 @@ describe("public node explorer", () => {
     expect(doc.querySelector('a[aria-label="Hulk"]')?.getAttribute('href')).toBe('/champions/hulk')
     expect(doc.querySelector('a[aria-label="Magik"]')?.getAttribute('href')).toBe('/champions/magik')
     expect(doc.querySelector('[data-native-modifier-icon]')).not.toBeNull()
-    expect(doc.querySelector('#source-data')?.textContent).toContain('"nodeNumber": 4')
+    expect(doc.querySelector('#source-data')).toBeNull()
     expect(visibleContent(doc)).not.toContain("Recorded assignments")
     expect(doc.querySelectorAll('[data-resolved-variant]')).toHaveLength(1)
-    expect(doc.querySelector('#source-data')?.textContent).toContain("Application 6")
+    expect(definition.versions.flatMap(v => v.applications)).toHaveLength(6)
   })
   it("shows readable quest names for multiple uses and no unavailable quest links", () => {
     const definition = nodeModifierCatalog.definitions.find(d => d.id === "pve_ai_sp3")!
@@ -117,10 +120,29 @@ describe("public node explorer", () => {
   it("keeps location fallback honest when the source projection cannot bind the catalog", () => {
     const definition = nodeModifierCatalog.definitions.find(d => d.id === "ava_ea20")!
     const doc = new JSDOM(renderToStaticMarkup(<NodeDetailView catalog={{ ...nodeModifierCatalog, contentHash: 'unrecognized-source' }} definition={definition} />)).window.document
-    expect(visibleContent(doc)).toContain("Quest location could not be verified")
+    expect(visibleContent(doc)).toContain("Quest locations are unavailable")
     expect(visibleContent(doc)).not.toContain("Fair Play")
     expect(doc.querySelector('[data-quest-use]')).toBeNull()
-    expect(doc.querySelector('#source-data')?.textContent).toContain("ava_ea20")
+    expect(doc.querySelector('#source-data')).toBeNull()
+  })
+  it("keeps expanded game wording and useful locations while removing all internal disclosures", () => {
+    const definition = nodeModifierCatalog.definitions.find(d => d.id === "ava_ea20")!
+    const before = JSON.stringify(definition)
+    const doc = new JSDOM(renderToStaticMarkup(<ExpandedNodeDetailView index={expandedNodeIndex} detail={{ contract: expandedNodeIndex.contract, catalogHash: expandedNodeIndex.catalogHash, definition, projection: modifierUseProjection }} portraits={{}} locations={<section><h2>Where it appears</h2><Link href="/quests/a05_ch01_q01?node=1%2C1">Fair Play</Link></section>} />)).window.document
+    expect(doc.querySelector('h1')?.textContent).toContain('Gifted')
+    expect(doc.body.textContent).toContain('increased by 20%')
+    expect(doc.querySelector('a[href^="/quests/"]')).not.toBeNull()
+    expect(doc.querySelector('pre, code, #source-data, a[href$="/source"]')).toBeNull()
+    expect(doc.body.textContent).not.toMatch(/source data|SHA-256|BCG|catalog source|assignment evidence|recorded game data|full versions/i)
+    expect(JSON.stringify(definition)).toBe(before)
+  })
+  it("uses a plain unavailable message instead of raw formatting tokens or unnamed native IDs", () => {
+    const original = nodeModifierCatalog.definitions.find(d => d.id === "ava_ea20")!
+    const definition = { ...original, versions: original.versions.map(v => ({ ...v, raw: { ...v.raw, localizedName: "" }, applications: v.applications.map(a => ({ ...a, text: "Increased by {1:F2}%." })) })) }
+    const doc = new JSDOM(renderToStaticMarkup(<NodeDetailView catalog={nodeModifierCatalog} definition={definition}/>)).window.document
+    expect(doc.querySelector('h1')?.textContent).toContain('Unnamed modifier')
+    expect(doc.body.textContent).toContain('Description unavailable')
+    expect(doc.body.textContent).not.toMatch(/\{1:F2\}|ava_ea20/)
   })
   it("groups wording only for display, retaining versions, parameter differences and missing text", () => {
     const definition = nodeModifierCatalog.definitions.find(d => d.id === "ava_ea20")!

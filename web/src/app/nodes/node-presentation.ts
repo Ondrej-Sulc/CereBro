@@ -1,5 +1,11 @@
 import { plainGameText, type ModifierApplication, type ModifierDefinition, type ModifierVersion } from "@cerebro/core/domain/node-modifiers/catalog"
 
+/** Unresolved native formatting tokens are implementation fields, not player descriptions. */
+export function publicModifierText(value: string | null | undefined) {
+  const text = plainGameText(value)
+  return /\{\d+(?::[^}]*)?\}/.test(text) ? "" : text
+}
+
 export interface ResolvedVariant {
   text: string | null
   applications: { version: ModifierVersion; application: ModifierApplication }[]
