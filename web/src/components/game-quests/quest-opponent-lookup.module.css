@@ -1,0 +1,72 @@
+.page{max-width:1040px;margin:0 auto;padding:28px 32px 48px;color:#e5edf4}
+.back{display:inline-flex;align-items:center;min-height:44px;color:#99d6eb;font-size:13px}
+.hero{display:flex;align-items:center;gap:18px;margin:22px 0 20px}
+.hero>div{min-width:0}
+.hero h1{font-size:32px;font-weight:650;letter-spacing:-.035em;line-height:1.2;overflow-wrap:anywhere;margin:5px 0}
+.hero h1 a{color:inherit}
+.hero h1 a:hover{color:#b5e6f5}
+.hero h1 a>span{font-size:18px;color:#7799b3}
+.eyebrow{font-size:12px;color:#8db9d0}
+.heroMeta{font-size:13px;color:#8fa8bd;line-height:1.6}
+.picker{max-width:420px;margin:0 0 28px}
+.picker>label{display:block;font-size:12px;color:#9db4c8;margin-bottom:8px}
+.picker .championSelect{border-radius:8px;background:#101e30;border-color:#344c62;min-height:46px}
+.picker .championSelect:focus-visible{box-shadow:none;outline:2px solid #a7dff0;outline-offset:2px}
+.loading{display:block;font-size:12px;color:#9db4c8;margin-top:7px}
+.resultTools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin-bottom:14px}
+.tabs{display:flex;gap:5px;flex-wrap:wrap}
+.tabs a{display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px;border:1px solid transparent;border-radius:8px;color:#9ab1c6;font-size:13px}
+.tabs a[aria-current=page]{border-color:#42647b;background:#122b3f;color:#d7f2ff}
+.tabs a:hover{background:#14273b;color:#cde9f7}
+.tabs a>span{font-size:11px;color:#88adc2}
+.filters{margin-left:auto;max-width:100%}
+.filters>summary{display:flex;align-items:center;gap:8px;min-height:44px;padding:8px 12px;border:1px solid #34485c;border-radius:8px;font-size:12px;color:#a9c5d9;list-style:none;cursor:pointer}
+.filters>summary::-webkit-details-marker{display:none}
+.activeDot{width:5px;height:5px;border-radius:50%;background:#8bd1eb}
+.filters[open]{width:100%}
+.filters[open]>summary{width:fit-content;margin-left:auto}
+.filters form{display:flex;align-items:end;gap:12px;flex-wrap:wrap;padding:16px;margin-top:10px;border:1px solid #2b4054;border-radius:10px;background:#0e1b2c}
+.filters label{font-size:11px;color:#9db4c8}
+.query{flex:1;min-width:210px}
+.filters :is(input[type=search],select){display:block;width:100%;margin-top:7px;min-height:44px;border:1px solid #3c5369;border-radius:6px;padding:0 10px;background:#0a1524;color:#e2edf5;font-size:13px}
+.filters .checkbox{display:flex;align-items:center;gap:8px;min-height:44px;font-size:12px}
+.checkbox input{accent-color:#9eddf0;width:16px;height:16px}
+.filters button{min-height:44px;border:1px solid #87c7de;border-radius:6px;padding:0 18px;background:#a6ddeb;color:#0a2134;font-size:12px;font-weight:600}
+.resultCount{font-size:12px;color:#8fa8bd;margin:0 0 14px;line-height:1.6}
+.resultCount a{color:#9ed8ed;text-decoration:underline;text-underline-offset:3px}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.resultCard{min-width:0;overflow:hidden;border:1px solid #30475d;border-radius:12px;background:linear-gradient(140deg,#13263a,#0c1828 85%)}
+.resultCard:has(.resultLink:hover){border-color:#76aac3}
+.resultLink{display:flex;flex-direction:column;padding:18px;height:100%}
+.questHeading{display:flex;align-items:flex-start;gap:16px;min-width:0}
+.number{flex-shrink:0;color:#b2e2f3;font-size:24px;font-weight:650;font-variant-numeric:tabular-nums;letter-spacing:-.035em;line-height:1.2}
+.questHeading>div{min-width:0}
+.questHeading h2{font-size:17px;font-weight:600;line-height:1.4;letter-spacing:-.015em;overflow-wrap:anywhere}
+.questHeading p{font-size:12px;color:#8ca6bc;margin-top:5px;line-height:1.5}
+.cardFooter{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:auto;padding-top:18px}
+.matchInfo{display:flex;flex-wrap:wrap;align-items:center;gap:8px;color:#bdd0e1;font-size:12px}
+.boss{color:#efd087;background:#4b3e1e66;padding:2px 6px;border-radius:4px;font-size:10px}
+.region{color:#8ed9c6;font-size:10px}
+.action{display:inline-flex;align-items:center;justify-content:flex-end;gap:8px;min-height:44px;color:#a5dbef;font-size:12px;text-align:right}
+.multiHeading{padding:18px 18px 12px}
+.matchList{list-style:none;padding:0 18px 8px}
+.matchList a{display:flex;align-items:center;gap:12px;min-height:48px;border-top:1px solid #2a4054;color:#a5dbef}
+.matchList a>svg{margin-left:auto;flex-shrink:0}
+.matchNumber{font-size:11px;color:#8aa6bc}
+.empty{border:1px solid #2e4358;border-radius:12px;padding:24px;background:#0c1727}
+.empty h2{font-size:18px;font-weight:600}
+.empty p{margin:10px 0;color:#98afc3;font-size:13px;line-height:1.7}
+.empty>a{display:inline-flex;align-items:center;min-height:44px;color:#a6dcef;font-size:13px}
+.pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:12px;color:#8fa8bd;margin-top:20px}
+.pagination a{display:inline-flex;align-items:center;min-height:44px;color:#a5d9ec}
+.note{font-size:12px;color:#8ab7b1;line-height:1.7;margin-top:18px}
+.coverage{font-size:12px;color:#829bb2;margin-top:24px;border-top:1px solid #21364b;padding-top:8px}
+.coverage summary{display:flex;align-items:center;min-height:44px;cursor:pointer;list-style:none}
+.coverage summary::before{content:'+';margin-right:8px}
+.coverage[open] summary::before{content:'−'}
+.coverage p{line-height:1.8;max-width:720px;margin-bottom:12px}
+.page :is(a,button,input,select,summary):focus-visible{outline:2px solid #a7dff0;outline-offset:3px}
+.resultLink:focus-visible{outline-offset:-3px;border-radius:inherit}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+@media(max-width:540px){.page{padding:18px 16px 36px}.hero{gap:14px;margin:16px 0 20px}.hero h1{font-size:26px}.hero [data-quest-portrait]{width:56px!important;height:56px!important}.picker{margin-bottom:20px}.tabs{gap:0}.tabs a{padding:8px 10px;font-size:12px}.resultTools{gap:8px}.filters>summary{padding:8px 10px}.filters form{gap:10px;padding:12px}.query{flex-basis:100%;min-width:0}.filters label:not(.query){flex:1}.resultLink{padding:16px}.questHeading{gap:14px}.number{font-size:23px}.questHeading h2{font-size:16px}.cardFooter{padding-top:12px}.multiHeading{padding:16px 16px 10px}.matchList{padding:0 16px 6px}}
+@media(max-width:360px){.picker>label{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.tabs a{padding:8px}.filterLabel{display:none}.filters>summary{min-width:44px;justify-content:center}.hero{margin-top:12px}}
