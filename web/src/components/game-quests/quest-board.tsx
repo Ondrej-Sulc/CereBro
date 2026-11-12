@@ -141,7 +141,9 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
         }}
         onPointerUp={e=>endPointer(e.pointerId)}
         onPointerCancel={e=>endPointer(e.pointerId,true)}
-        onLostPointerCapture={e=>endPointer(e.pointerId)}
+        // A touch starts with implicit capture on its SVG target. Losing that
+        // child capture while the viewport takes over must not end the gesture.
+        onLostPointerCapture={e=>{if(e.target===e.currentTarget)endPointer(e.pointerId);}}
         onClickCapture={e => { if (suppressClick.current) { e.preventDefault(); e.stopPropagation();suppressClick.current=false; } }}
         onKeyDown={e => { if (e.target !== e.currentTarget) return; const amount = 100; if (e.key.startsWith("Arrow")) { e.preventDefault(); e.currentTarget.scrollBy({ left: e.key === "ArrowRight" ? amount : e.key === "ArrowLeft" ? -amount : 0, top: e.key === "ArrowDown" ? amount : e.key === "ArrowUp" ? -amount : 0 }); } }}>
         <svg className={styles.scene} data-zoom={scale} data-board-ready={ready} role="group" aria-label={`Quest map, recorded route ${pathIndex + 1} highlighted`} width={board.width * scale} height={board.height * scale} viewBox={`0 0 ${board.width} ${board.height}`}>

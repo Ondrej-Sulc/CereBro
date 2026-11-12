@@ -3,7 +3,7 @@ import { act, createRef } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { loadQuestMap } from "@cerebro/core/data/game-quests";
-import type { QuestMap } from "@cerebro/core/domain/game-quests";
+import type { Coordinate, QuestMap } from "@cerebro/core/domain/game-quests";
 import { questBoardGeometry } from "@cerebro/core/domain/game-quests/board";
 import { QuestBoard } from "./quest-board";
 
@@ -53,12 +53,12 @@ afterEach(async () => {
   vi.restoreAllMocks(); vi.unstubAllGlobals();
 });
 
-async function renderBoard() {
+async function renderBoard(onChoose: (coordinate: Coordinate) => void = () => {}) {
   const host = document.createElement("div"); document.body.append(host);
   root = createRoot(host);
   const selected = map.encounters[0].coordinate.join(",");
   await act(async () => root!.render(<QuestBoard map={map} portraits={{}} selected={selected} pathIndex={0}
-    onChoose={() => {}} viewportRef={createRef<HTMLDivElement>()} />));
+    onChoose={onChoose} viewportRef={createRef<HTMLDivElement>()} />));
   return host;
 }
 const scale = (host: HTMLElement) => Number(host.querySelector("[data-zoom]")?.getAttribute("data-zoom"));
@@ -67,8 +67,105 @@ function button(host: HTMLElement, label: string) {
   expect(found, label).toBeDefined(); return found!;
 }
 const fit = () => { const b = questBoardGeometry(map); return Math.min(size.width / b.width, size.height / b.height); };
+function touchPointer(target: Element, type: string, x: number, y: number, pointerId = 1) {
+  const event = new MouseEvent(type, { bubbles: true, cancelable: true, button: 0, buttons: 1, clientX: x, clientY: y });
+  Object.defineProperties(event, { pointerId: { value: pointerId }, pointerType: { value: "touch" } });
+  target.dispatchEvent(event);
+}
 
 describe("quest map viewport controls", () => {
+  it("keeps a one-finger drag active when capture transfers from an SVG child to the viewport", async () => {
+    const capture = vi.fn();
+    define(Element.prototype, "setPointerCapture", { value: capture });
+    const host = await renderBoard();
+    await act(async () => button(host, "Focus selected location").click());
+    const viewport = host.querySelector<HTMLElement>('[aria-label="Scrollable quest map"]')!;
+    const scene = host.querySelector("svg[data-zoom]")!;
+    viewport.scrollTo({ left: 200, top: 200 });
+    await act(async () => {
+      touchPointer(scene, "pointerdown", 300, 300);
+      touchPointer(scene, "pointermove", 280, 280);
+    });
+    expect(capture).toHaveBeenCalledWith(1);
+    expect([viewport.scrollLeft, viewport.scrollTop]).toEqual([220, 220]);
+    // Touch implicitly captures the SVG target. Transferring capture to the
+    // viewport emits a bubbling lostpointercapture from that original target.
+    await act(async () => {
+      touchPointer(scene, "lostpointercapture", 280, 280);
+      touchPointer(viewport, "pointermove", 220, 210);
+    });
+    expect([viewport.scrollLeft, viewport.scrollTop]).toEqual([280, 290]);
+  });
+  it.each(["pointercancel", "lostpointercapture"])("ends the drag on viewport %s and accepts a fresh touch", async type => {
+    define(Element.prototype, "setPointerCapture", { value: vi.fn() });
+    const host = await renderBoard();
+    await act(async () => button(host, "Focus selected location").click());
+    const viewport = host.querySelector<HTMLElement>('[aria-label="Scrollable quest map"]')!;
+    const scene = host.querySelector("svg[data-zoom]")!;
+    viewport.scrollTo({ left: 200, top: 200 });
+    await act(async () => {
+      touchPointer(scene, "pointerdown", 300, 300);
+      touchPointer(scene, "pointermove", 280, 280);
+      touchPointer(viewport, type, 280, 280);
+      touchPointer(viewport, "pointermove", 220, 210);
+    });
+    expect([viewport.scrollLeft, viewport.scrollTop]).toEqual([220, 220]);
+    await act(async () => {
+      touchPointer(scene, "pointerdown", 280, 280, 2);
+      touchPointer(scene, "pointermove", 250, 240, 2);
+    });
+    expect([viewport.scrollLeft, viewport.scrollTop]).toEqual([250, 260]);
+  });
+  it("pinches through capture handoff and continues panning with the remaining finger", async () => {
+    define(Element.prototype, "setPointerCapture", { value: vi.fn() });
+    const host = await renderBoard();
+    await act(async () => button(host, "Focus selected location").click());
+    const viewport = host.querySelector<HTMLElement>('[aria-label="Scrollable quest map"]')!;
+    const scene = host.querySelector("svg[data-zoom]")!;
+    viewport.scrollTo({ left: 200, top: 200 });
+    const before = scale(host);
+    await act(async () => {
+      touchPointer(scene, "pointerdown", 200, 300);
+      touchPointer(scene, "pointerdown", 300, 300, 2);
+      touchPointer(scene, "lostpointercapture", 300, 300, 2);
+      touchPointer(viewport, "pointermove", 320, 300, 2);
+    });
+    expect(scale(host)).toBeCloseTo(before * 1.2);
+    await act(async () => {
+      touchPointer(scene, "pointerup", 200, 300);
+      touchPointer(scene, "lostpointercapture", 200, 300);
+    });
+    const left = viewport.scrollLeft, top = viewport.scrollTop;
+    await act(async () => touchPointer(viewport, "pointermove", 300, 280, 2));
+    expect(viewport.scrollLeft).toBeCloseTo(left + 20);
+    expect(viewport.scrollTop).toBeCloseTo(top + 20);
+  });
+  it("keeps encounter taps working and suppresses selection after a touch drag", async () => {
+    define(Element.prototype, "setPointerCapture", { value: vi.fn() });
+    const choose = vi.fn();
+    const host = await renderBoard(choose);
+    const encounter = host.querySelector("[data-map-encounter]")!;
+    await act(async () => {
+      touchPointer(encounter, "pointerdown", 200, 200);
+      touchPointer(encounter, "pointerup", 200, 200);
+      encounter.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    });
+    expect(choose).toHaveBeenCalledOnce();
+    await act(async () => {
+      touchPointer(encounter, "pointerdown", 200, 200);
+      touchPointer(encounter, "pointermove", 180, 170);
+      touchPointer(encounter, "lostpointercapture", 180, 170);
+      touchPointer(encounter, "pointerup", 180, 170);
+      encounter.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    });
+    expect(choose).toHaveBeenCalledOnce();
+    await act(async () => {
+      touchPointer(encounter, "pointerdown", 200, 200);
+      touchPointer(encounter, "pointerup", 200, 200);
+      encounter.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+    });
+    expect(choose).toHaveBeenCalledTimes(2);
+  });
   it.each([{ width: 390, height: 560 }, { width: 980, height: 640 }])("starts with the whole map fitted at $width pixels", async viewport => {
     size = viewport;
     const host = await renderBoard();
