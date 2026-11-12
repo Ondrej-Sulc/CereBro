@@ -90,6 +90,9 @@ describe("spawn-region map presentation",()=>{
     const sharedArea=host.querySelector('[data-region-inspector]')!.textContent!;
     expect(sharedArea).toContain('Recorded on every highlighted tile.');
     expect(sharedArea).toContain('About this encounter region');
+    const modifiers=[...host.querySelectorAll<HTMLDetailsElement>('[data-region-inspector] section > details')];
+    expect(modifiers.length).toBeGreaterThan(0);
+    expect(modifiers.every(modifier=>modifier.open)).toBe(true);
   });
   it("keeps a failed regional portrait selectable with its native fallback and accessible name",async()=>{
     const {host}=await setup('fixture-region');

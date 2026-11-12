@@ -21,6 +21,46 @@ async function render(element: React.ReactNode) {
   return host;
 }
 describe("quest map controls", () => {
+  it("opens encounter modifier descriptions by default and keeps the selected defender compact", async () => {
+    const map = (await loadQuestMap("me_crucible_ch01_q01"))!;
+    const host = await render(<QuestMapExplorer map={map} initialNode="27,18" />);
+    const inspector = host.querySelector('section[aria-labelledby="coordinate-heading"]')!;
+    const modifiers = [...inspector.querySelectorAll<HTMLDetailsElement>('[data-quest-application]')];
+    expect(modifiers).toHaveLength(9);
+    expect(modifiers.every(modifier => modifier.open)).toBe(true);
+    expect(inspector.querySelector('h2')?.textContent).toContain("Crossbones");
+    expect([...inspector.querySelectorAll('h2,h3')].filter(h => h.textContent?.includes("Crossbones"))).toHaveLength(1);
+    expect(inspector.textContent).not.toMatch(/Selected location|Recorded build|Defender data|Local · defender/);
+    expect(inspector.textContent).toContain("Node modifiers");
+    const connections = inspector.querySelector<HTMLDetailsElement>('[data-map-connections]')!;
+    expect(connections.open).toBe(false);
+    expect(modifiers.at(-1)!.compareDocumentPosition(connections) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it("hides routine modifier metadata while retaining linked sources, attacker labels and sharing", async () => {
+    const map = (await loadQuestMap("a05_ch01_q01"))!;
+    const application = map.tiles.flatMap(t => t.applications)[0];
+    const choose = vi.fn();
+    const host = await render(<QuestApplicationDetails application={{ ...application, sourceType:"Local",target:"defender",amount:1,remainActive:false,linkedTargets:[] }} questId={map.questId} sourceHash={map.sourceHash} shareUrl="/quests/a05_ch01_q01?path=0" choose={choose}/>);
+    expect(host.querySelector<HTMLDetailsElement>('[data-quest-application]')?.open).toBe(true);
+    expect(host.querySelector('[data-modifier-context]')).toBeNull();
+    expect(host.querySelector('summary')?.textContent).not.toMatch(/Local|defender/);
+    await act(async () => root!.render(<QuestApplicationDetails application={{...application,sourceType:"Link",target:"attacker"}} questId={map.questId} sourceHash={map.sourceHash} shareUrl="/quests/a05_ch01_q01?path=0" choose={choose}/>));
+    expect(host.querySelector('summary')?.textContent).toContain("Linked");
+    expect(host.querySelector('summary')?.textContent).toContain("Attacker");
+    expect(host.querySelector<HTMLDetailsElement>('[data-modifier-context]')?.open).toBe(false);
+    const source = [...host.querySelectorAll('button')].find(b=>b.textContent?.includes("Source location"))!;
+    await act(async()=>source.click());
+    expect(choose).toHaveBeenCalledWith(application.sourceCoordinate,true);
+    const share = host.querySelector<HTMLAnchorElement>('a[aria-label^="Link to "]')!;
+    expect(new URL(share.href).searchParams.get('application')).toBe(application.id);
+    expect(new URL(share.href).searchParams.get('sourceHash')).toBe(map.sourceHash);
+    expect(host.textContent).not.toContain(map.sourceHash);
+    await act(async () => root!.render(<QuestApplicationDetails application={{...application,sourceType:"Global",target:"defender"}} questId={map.questId} sourceHash={map.sourceHash} shareUrl="/quests/a05_ch01_q01?path=0" choose={choose}/>));
+    expect(host.querySelector('summary')?.textContent).toContain("Global");
+    expect(host.querySelector('summary')?.textContent).not.toContain("defender");
+  });
+
   it("renders saved native description line breaks without changing source text", async () => {
     const map = (await loadQuestMap("me_mausoleum_ch01_q01"))!;
     const application = map.tiles.flatMap(t => t.applications).find(a => a.id === "4,4:defender:10")!;
@@ -40,8 +80,8 @@ describe("quest map controls", () => {
     const host=await render(<QuestApplicationDetails application={application} questId={map.questId} sourceHash={map.sourceHash} shareUrl="/quests/a06_ch02_q05?node=11%2C11" initialOpen choose={()=>{}}/>);
     expect(host.querySelector('summary')?.textContent).toContain("Like Old Days");
     expect(host.textContent).toContain("Description unavailable for this saved application.");
-    expect(host.textContent).toContain("A native icon has not been established");
-    expect(host.textContent).toContain("pve_ragthor_sb3");expect(host.querySelector('[data-game-modifier-icon]')).toBeNull();
+    expect(application.effectId).toBe("pve_ragthor_sb3");
+    expect(host.textContent).not.toContain(application.effectId);expect(host.querySelector('[data-game-modifier-icon]')).toBeNull();
     expect(host.textContent).not.toContain("11,11");
   });
   it("keeps non-champion reward types and native quantity ranges truthful in public source data",async()=>{

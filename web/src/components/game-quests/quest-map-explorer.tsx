@@ -2,6 +2,7 @@
 
 import { useEffect,useRef, useState } from "react";
 import Link from "next/link";
+import { Link2 } from "lucide-react";
 import { coordinateKey, routeEncounters, type Coordinate, type QuestMap } from "@cerebro/core/domain/game-quests";
 import { QuestApplicationDetails } from "./quest-application-details";
 import { QuestBoard } from "./quest-board";
@@ -11,6 +12,7 @@ import { questPositionLabel } from "@cerebro/core/domain/game-quests/navigation"
 import type { QuestSpawnRegionLayer } from "@cerebro/core/domain/game-quests/spawn-regions";
 import { entryCoordinate, mapDefenders, regionPortrait } from "./quest-spawn-region-presentation";
 import { QuestSpawnRegionInspector } from "./quest-spawn-region-inspector";
+import { QuestEncounterSummary } from "./quest-encounter-summary";
 import styles from "./quest-map-explorer.module.css";
 
 export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}, artwork, initialApplication, spawnRegions, initialRegion }: { map: QuestMap; initialPath?: string; initialNode?: string; initialApplication?:string; portraits?: Record<string, Portrait>; artwork?: { url: string; theme: string } | null; spawnRegions?:QuestSpawnRegionLayer; initialRegion?:string }) {
@@ -63,20 +65,21 @@ export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}
         <QuestBoard map={map} portraits={portraits} selected={selected} pathIndex={pathIndex} onChoose={choose} viewportRef={scrollRef} artwork={artwork} spawnRegions={layer} selectedRegion={selectedRegion?.id} onChooseRegion={chooseRegion} onChooseRoute={chooseRoute}/>
       </section>
       <section className={styles.inspector} aria-labelledby="coordinate-heading" aria-live="polite">
-        <div className={styles.inspectorHeading}><p>{selectedRegion?'Encounter region':'Selected location'}</p><h2 id="coordinate-heading">{selectedRegion?selectedRegion.defender.name:questPositionLabel(map,selectedTile.coordinate)}</h2><Link href={shareUrl} className={styles.share} data-region-share={selectedRegion?true:undefined}>{selectedRegion?'Link to this region':'Link to this location'} ↗</Link></div>
         <div className={styles.inspectorBody}>
-          {selectedRegion?<QuestSpawnRegionInspector map={map} region={selectedRegion} inspectTile={()=>choose(selectedRegion.anchor,true)}/>:<>
-          {selectedTile.start && <p className={styles.tag}>Quest start</p>}{selectedTile.final && <p className={styles.tag}>Finish</p>}{selectedTile.hidden && <p className={styles.tag}>Source marked hidden</p>}
-          {selectedEncounters.map(e => { const portrait = questEncounterPortrait(e,portraits); return <div key={e.id} className={styles.defender}>
-            <div className={styles.defenderIdentity}><QuestPortrait portrait={portrait} large /><div><h3>{e.champion ? <Link href={portrait?.href ?? `/champions/${e.champion.slug}`}>{portrait?.name ?? e.champion.name} ↗</Link> : e.name}</h3>{portrait && e.champion && <p style={{ color: portrait.color }}>{portrait.className}</p>}{!e.champion && <p className={styles.unknown}>NPC / legacy defender</p>}</div></div>
-            <p>{e.rarity}★ · Rank {e.rank} · Level {e.level} · Sig {e.signature}</p><small>Recorded build{map.adaptive ? " · adaptive source" : ""}</small>
-            <p className={styles.muted}>{e.pathIndices.length > 1 ? `Shared by routes ${e.pathIndices.map(i => i + 1).join(", ")}` : e.pathIndices.length ? `Route ${e.pathIndices[0] + 1}` : "Outside recorded routes"}</p>
+          {selectedRegion?<QuestSpawnRegionInspector map={map} region={selectedRegion} shareUrl={shareUrl} inspectTile={()=>choose(selectedRegion.anchor,true)}/>:<>
+          <div className={styles.inspectorHeader}>
+            {selectedEncounters.length===1 ? (()=>{const e=selectedEncounters[0],portrait=questEncounterPortrait(e,portraits);return <QuestEncounterSummary headingId="coordinate-heading" name={portrait?.name??e.champion?.name??e.name} portrait={portrait} href={e.champion?portrait?.href??`/champions/${e.champion.slug}`:null} rarity={e.rarity} rank={e.rank} level={e.level} signature={e.signature} ascension={e.ascension} npc={!e.champion}/>;})() : <h2 id="coordinate-heading">{questPositionLabel(map,selectedTile.coordinate)}</h2>}
+            <Link href={shareUrl} className={styles.inspectorShare} aria-label="Link to this location" title="Link to this location"><Link2 size={18} aria-hidden="true"/></Link>
+          </div>
+          {selectedTile.start && <p className={styles.tag}>Quest start</p>}{selectedTile.final && <p className={styles.tag}>Final boss</p>}
+          {selectedEncounters.map(e => { const portrait = questEncounterPortrait(e,portraits); return <div key={e.id} className={styles.encounterNotes}>
+            {selectedEncounters.length>1&&<QuestEncounterSummary name={portrait?.name??e.champion?.name??e.name} portrait={portrait} href={e.champion?portrait?.href??`/champions/${e.champion.slug}`:null} rarity={e.rarity} rank={e.rank} level={e.level} signature={e.signature} ascension={e.ascension} npc={!e.champion}/>}
+            {map.adaptive&&<p className={styles.muted}>Adaptive build</p>}
             {e.candidates.length > 1 && <p>Recorded alternatives: {e.candidates.map(c => c.name).join(", ")}</p>}
-            <details className={styles.identity}><summary>Defender data</summary><p>Character: {e.gameId} · Blueprint: {e.tierId} · Placement: {e.bossKey}{!e.champion && " · No exact playable champion match"}</p></details>
           </div>; })}
           {!selectedEncounters.length && <p className={styles.muted}>No placed defender recorded here.</p>}
-          <div className={styles.connections}><h3>Outgoing connections</h3>{!selectedTile.links.length && !selectedTile.portals.length && <p className={styles.muted}>No outgoing connection recorded.</p>}{selectedTile.links.map(c => <button key={`l:${coordinateKey(c)}`} onClick={() => choose(c, true)}>→ {questPositionLabel(map,c)}</button>)}{selectedTile.portals.map((p, i) => <button className={styles.portal} key={`p:${i}`} onClick={() => choose(p.target, true)}>Portal → {questPositionLabel(map,p.target)}{p.label && ` · ${p.label}`}{selectedTile.randomPortal && " · Random target"}</button>)}</div>
-          <div className={styles.applications}><h3>Node applications <span>{selectedTile.applications.length}</span></h3>{!selectedTile.applications.length && <p className={styles.muted}>No assigned applications recorded here.</p>}{selectedTile.applications.map(a => <QuestApplicationDetails key={a.id} application={a} questId={map.questId} sourceHash={map.sourceHash} shareUrl={shareUrl} initialOpen={selectedApplication===a.id} positionLabel={c=>questPositionLabel(map,c)} choose={choose}/>)}</div>
+          <div className={styles.modifierSection}><h3>Node modifiers <span>{selectedTile.applications.length}</span></h3>{!selectedTile.applications.length && <p className={styles.muted}>No node modifiers recorded here.</p>}{selectedTile.applications.map(a => <QuestApplicationDetails key={a.id} application={a} questId={map.questId} sourceHash={map.sourceHash} shareUrl={shareUrl} highlighted={selectedApplication===a.id} positionLabel={c=>questPositionLabel(map,c)} choose={choose}/>)}</div>
+          {(selectedTile.links.length>0||selectedTile.portals.length>0)&&<details className={styles.connections} data-map-connections><summary>Map connections</summary>{selectedTile.links.map(c => <button key={`l:${coordinateKey(c)}`} onClick={() => choose(c, true)}>→ {questPositionLabel(map,c)}</button>)}{selectedTile.portals.map((p, i) => <button className={styles.portal} key={`p:${i}`} onClick={() => choose(p.target, true)}>Portal → {questPositionLabel(map,p.target)}{p.label && ` · ${p.label}`}{selectedTile.randomPortal && " · Random target"}</button>)}</details>}
           </>}
         </div>
       </section>

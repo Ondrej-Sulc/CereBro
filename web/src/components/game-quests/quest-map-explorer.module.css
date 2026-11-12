@@ -8,3 +8,31 @@
 .layout{grid-template-columns:minmax(0,1fr) 300px;gap:18px}.toolbar{padding:16px 18px}.toolbar h2{font-size:17px}.mapPanel{border-color:#314253;background:#0b1725;box-shadow:0 20px 60px #0003}.inspector{border-color:#2c4053}.inspectorBody{max-height:690px}.inspectorHeading{padding:16px 18px;background:linear-gradient(130deg,#182f43,#0d1c2d)}.inspectorHeading h2{font-size:23px}.inspectorHeading>p{font-size:9px}.defenderIdentity{gap:12px}.defender h3{font-size:17px}.summary{font-size:12px}.summary strong{font-size:17px}@media(max-width:1100px){.layout{grid-template-columns:1fr}.inspectorBody{max-height:none}.inspector{max-width:none}}
 .identity p{overflow-wrap:anywhere}
 .applicationDescription{white-space:pre-line}
+
+.inspectorBody{padding:18px}
+.inspectorHeader{display:flex;align-items:flex-start;gap:10px;margin-bottom:16px}
+.inspectorHeader>h2{min-width:0;flex:1;font-size:20px;font-weight:650;line-height:1.35;overflow-wrap:anywhere}
+.inspectorShare{display:grid;place-items:center;flex-shrink:0;width:36px;min-height:44px;color:#8ebed6;border-radius:7px}
+.inspectorShare:hover{background:#173047;color:#c8edfc}
+.encounterSummary{flex:1;min-width:0}
+.encounterIdentity{display:flex;align-items:center;gap:12px;min-width:0}
+.encounterIdentity>div{min-width:0}
+.encounterIdentity :is(h2,h3){margin:0;font-size:20px;font-weight:650;line-height:1.3;overflow-wrap:anywhere}
+.encounterIdentity a{color:#d1e8f6}
+.encounterClass{font-size:12px;margin-top:3px}
+.encounterBuild{display:flex;flex-wrap:wrap;gap:3px 10px;margin:10px 0 0;color:#bdcbdc;font-size:12px;line-height:1.6}
+.encounterBuild span{white-space:nowrap}
+.encounterBuild span:first-child{color:#e2e8f0}
+.encounterNotes:empty{display:none}
+.encounterNotes{font-size:12px;line-height:1.7;margin-bottom:10px}
+.modifierSection{margin-top:18px}
+.modifierSection>h3{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;font-size:15px;font-weight:600}
+.modifierSection>h3>span{font-size:12px;font-weight:400;color:#8196ae}
+.connections>summary{display:flex;align-items:center;min-height:44px;cursor:pointer;font-size:12px;color:#9bb8cd;list-style:none}
+.connections>summary::before{content:'+';margin-right:8px}
+.connections[open]>summary::before{content:'?'}
+.connections button{display:inline-block}
+.areaEffects{margin-top:18px}
+.areaEffects details>p{font-size:13px}
+.regionExplanation{font-size:13px!important;margin:0 0 4px}
+@media(max-width:540px){.inspectorBody{padding:16px}.encounterIdentity :is(h2,h3){font-size:19px}}
