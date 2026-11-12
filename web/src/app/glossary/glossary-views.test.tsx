@@ -11,8 +11,48 @@ describe('glossary rendered behavior', () => {
   it('exposes labeled GET filters, deterministic links and recovery from unmatched search', () => {
     const data = { filters: normalizeGlossaryFilters({ q: 'unmatched' }), categories: [], catalogTotal: 883, results: { rows: [], page: 1, pages: 1, total: 0, size: 24 } };
     const doc = documentFor(renderToStaticMarkup(<GlossaryCatalogView data={data} />));
-    expect(doc.querySelector('form')?.getAttribute('action')).toBe('/glossary');
+    expect(doc.querySelector('form')?.getAttribute('action')).toBe('/glossary#effects-results');
     expect(doc.querySelector('input[name=q]')?.getAttribute('value')).toBe('unmatched');
+    expect(doc.body.textContent).toContain('No effects found');
+    expect(doc.querySelector('a[href="/glossary"]')).not.toBeNull();
+  });
+  it('puts directly linked categories and full catalog counts ahead of secondary search', () => {
+    const categories = [
+      { id: 7, name: 'Death Counters', description: 'Prevent being knocked out.', _count: { abilities: 6 } },
+      { id: 8, name: 'Damage Over Time', description: '', _count: { abilities: 15 } },
+    ];
+    const data = { filters: normalizeGlossaryFilters({}), categories, catalogTotal: 20, results: { rows: [effect], page: 1, pages: 1, total: 20, size: 24 } };
+    const doc = documentFor(renderToStaticMarkup(<GlossaryCatalogView data={data} />));
+    const nav = doc.querySelector('nav[aria-label="Effect categories"]');
+    expect(nav).not.toBeNull();
+    expect(nav!.compareDocumentPosition(doc.querySelector('form')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(nav?.querySelector('a[href="/glossary?category=7#effects-results"]')?.textContent).toContain('Death Counters6');
+    expect(nav?.querySelectorAll('a')).toHaveLength(2);
+    expect(doc.querySelector('a[aria-current="page"]')?.textContent).toContain('All effects20');
+    expect(doc.querySelector('select[name=category]')).toBeNull();
+  });
+  it('retains the category during search, exposes selection and resets pagination on category changes', () => {
+    const categories = [{ id: 7, name: 'Death Counters', description: 'Prevent being knocked out.', _count: { abilities: 6 } }];
+    const filters = normalizeGlossaryFilters({ category: '7', q: 'death', page: '2' });
+    const data = { filters, categories, catalogTotal: 883, results: { rows: [effect], page: 2, pages: 3, total: 50, size: 24 } };
+    const doc = documentFor(renderToStaticMarkup(<GlossaryCatalogView data={data} />));
+    const form = doc.querySelector('form[role=search]')!;
+    const fields = new FormData(form as HTMLFormElement);
+    expect(fields.get('category')).toBe('7');
+    expect(fields.get('q')).toBe('death');
+    expect(fields.has('page')).toBe(false);
+    expect(doc.querySelector('nav[aria-label="Effect categories"] a[aria-current=page]')?.getAttribute('href')).toBe('/glossary?q=death&category=7#effects-results');
+    expect(doc.querySelector('a[rel=next]')?.getAttribute('href')).toBe('/glossary?q=death&category=7&page=3');
+    expect(doc.querySelector('a[href="/glossary?category=7#effects-results"]')?.textContent).toContain('Clear search');
+    expect(doc.querySelector('a[href="#effect-categories"]')?.textContent).toBe('Change category');
+    expect(doc.querySelector('#effects-results h2')?.textContent).toBe('Death Counters');
+  });
+  it('keeps category context and recovery links for unknown or empty results', () => {
+    const filters = normalizeGlossaryFilters({ category: '999', q: 'missing' });
+    const data = { filters, categories: [], catalogTotal: 883, results: { rows: [], page: 1, pages: 1, total: 0, size: 24 } };
+    const doc = documentFor(renderToStaticMarkup(<GlossaryCatalogView data={data} />));
+    expect(doc.querySelector('input[type=hidden][name=category]')?.getAttribute('value')).toBe('999');
+    expect(doc.querySelector('#effects-results h2')?.textContent).toBe('Unknown category');
     expect(doc.body.textContent).toContain('No effects found');
     expect(doc.querySelector('a[href="/glossary"]')).not.toBeNull();
   });

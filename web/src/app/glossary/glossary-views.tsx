@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, BookOpen, ChevronDown, Info, Search, ShieldCheck, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, Info, Search, ShieldCheck, SlidersHorizontal, Sparkles } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
 import { EFFECT_DIRECTION_LABELS, EFFECT_FORM_LABELS, readAbilitySource } from '@cerebro/core/domain/ability-source';
 import { resistanceLabel } from '@cerebro/core/domain/champion-resistance';
@@ -9,6 +9,7 @@ import { GLOSSARY_GROUPS, glossaryHref, glossaryQuery, isSynergyApplication, typ
 import type { GlossaryCatalog, GlossaryDetail, GlossaryEffect } from '@/lib/data/effect-glossary';
 import { getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { EffectSources } from '@/components/champions/effect-sources';
+import { GlossarySearchForm } from './glossary-search-form';
 import styles from './glossary.module.css';
 
 function effectPalette(effect: GlossaryEffect): CSSProperties {
@@ -30,16 +31,25 @@ export function GlossaryCatalogView({ data }: { data: GlossaryCatalog }) {
   const selectedCategory = categories.find(category => category.id === filters.category);
   return <GlossaryShell>
     <header className={styles.hero}><h1>Effect glossary</h1><p className={styles.intro}>Explore effects and find champions that apply them or protect against them.</p><div className={styles.heroStats}><span><strong>{data.catalogTotal}</strong> effects</span><span><strong>{categories.length}</strong> categories</span></div></header>
-    <div className={styles.browseLayout}>
-      <aside className={styles.categorySidebar} aria-label="Effect categories"><h2>Categories</h2><Link prefetch={false} aria-current={!filters.category ? 'page' : undefined} href={glossaryQuery('/glossary', filters, { category: null, page: 1 })}>All effects<span>{data.catalogTotal}</span></Link>{categories.map(category => <Link prefetch={false} key={category.id} aria-current={category.id === filters.category ? 'page' : undefined} href={glossaryQuery('/glossary', filters, { category: category.id, page: 1 })}>{category.name}<span>{category._count.abilities}</span></Link>)}</aside>
-      <section className={styles.browseResults} aria-label="Browse effects">
-        <form key={glossaryQuery("/glossary", filters)} action="/glossary" method="get" className={styles.searchForm} role="search"><label className={styles.searchLabel}><span>Search effects</span><div><Search size={18} aria-hidden="true" /><input name="q" type="search" defaultValue={filters.q} maxLength={100} placeholder="Search names or definitions…" /></div></label><label className={styles.mobileCategory}><span>Category</span><select name="category" defaultValue={filters.category ?? ''}><option value="">All effects</option>{categories.map(category => <option key={category.id} value={category.id}>{category.name}</option>)}{filters.category && !selectedCategory && <option value={filters.category}>Unknown category</option>}</select></label><input className={styles.desktopCategory} type="hidden" name="category" value={filters.category ?? ''} disabled /><button className={styles.applyButton} type="submit">Search<ArrowRight size={15} aria-hidden="true" /></button></form>
-        <div className={styles.resultsHeading}><div><h2>{selectedCategory?.name ?? (filters.category ? 'Unknown category' : 'All effects')}</h2><p>{filters.q ? `Results for “${filters.q}” · ` : ''}{results.total} {results.total === 1 ? 'effect' : 'effects'}</p></div>{(filters.q || filters.category) && <Link href="/glossary" className={styles.textLink}>Clear filters</Link>}</div>
-        {selectedCategory?.description && <p className={styles.categoryDescription}>{selectedCategory.description}</p>}
-        {results.rows.length ? <div className={styles.effectGrid}>{results.rows.map(effect => <Link prefetch={false} key={effect.id} href={glossaryHref(effect.id)} className={styles.effectCard} style={effectPalette(effect)}><div className={styles.cardTop}><EffectIcon effect={effect} /><ArrowRight size={17} aria-hidden="true" className={styles.cardArrow} /></div><h3>{effect.name}</h3><p className={!effect.description ? styles.missingDefinition : undefined}>{effect.description || "Definition not recorded"}</p><div className={styles.cardCategories}>{effect.categories.slice(0, 2).map(category => <span key={category.id}>{category.name}</span>)}</div></Link>)}</div> : <EmptyState title="No effects found" description="Try a shorter search or explore all categories." href="/glossary" label="Browse all effects" />}
-        <Pagination path="/glossary" filters={filters} results={results} noun="effects" />
-      </section>
-    </div><Provenance />
+    <section id="effect-categories" className={styles.categoryBrowser} aria-labelledby="category-title">
+      <div className={styles.categoryHeading}><h2 id="category-title">Browse by category</h2><Link prefetch={false} className={styles.allCategories} aria-current={!filters.category ? 'page' : undefined} href={`${glossaryQuery('/glossary', filters, { category: null, page: 1 })}#effects-results`}>All effects<span>{data.catalogTotal}</span></Link></div>
+      <nav className={styles.categoryGrid} aria-label="Effect categories">{categories.map(category => <Link prefetch={false} key={category.id} aria-current={category.id === filters.category ? 'page' : undefined} href={`${glossaryQuery('/glossary', filters, { category: category.id, page: 1 })}#effects-results`}>
+        <span className={styles.categoryName}>{category.name}</span><span className={styles.categoryCount}>{category._count.abilities}</span>{category.id === filters.category && <Check size={13} className={styles.categoryCheck} aria-hidden="true" />}
+      </Link>)}</nav>
+      <p className={styles.categoryNote}>Effects can appear in more than one category.</p>
+    </section>
+    <section id="effects-results" className={styles.browseResults} aria-labelledby="effects-title" tabIndex={-1}>
+      <div className={styles.resultsHeading}><div><h2 id="effects-title">{selectedCategory?.name ?? (filters.category ? 'Unknown category' : 'All effects')}</h2><p>{results.total} {results.total === 1 ? 'effect' : 'effects'}{filters.q ? ` matching “${filters.q}”` : ''}</p></div><Link href="#effect-categories" className={styles.textLink}>Change category</Link></div>
+      {selectedCategory?.description && <p className={styles.categoryDescription}>{selectedCategory.description}</p>}
+      <GlossarySearchForm key={glossaryQuery('/glossary', filters)} className={styles.searchForm}>
+        {filters.category && <input type="hidden" name="category" value={filters.category} />}
+        <label className={styles.searchLabel}><span className={styles.srOnly}>Search effects</span><div><Search size={17} aria-hidden="true" /><input name="q" type="search" defaultValue={filters.q} maxLength={100} placeholder={filters.category ? 'Search within this category…' : 'Search all effects…'} /></div></label>
+        <button className={styles.catalogSearchButton} type="submit" aria-label="Search effects"><ArrowRight size={18} aria-hidden="true" /></button>
+        {filters.q && <Link href={`${glossaryQuery('/glossary', filters, { q: '', page: 1 })}#effects-results`} className={styles.clearSearch}>Clear search</Link>}
+      </GlossarySearchForm>
+      {results.rows.length ? <div className={styles.effectGrid}>{results.rows.map(effect => <Link prefetch={false} key={effect.id} href={glossaryHref(effect.id)} className={styles.effectCard} style={effectPalette(effect)}><div className={styles.cardTop}><EffectIcon effect={effect} /><ArrowRight size={17} aria-hidden="true" className={styles.cardArrow} /></div><h3>{effect.name}</h3><p className={!effect.description ? styles.missingDefinition : undefined}>{effect.description || 'Definition not recorded'}</p><div className={styles.cardCategories}>{effect.categories.filter(category => category.id !== filters.category).slice(0, 2).map(category => <span key={category.id}>{category.name}</span>)}</div></Link>)}</div> : <EmptyState title="No effects found" description="Try a shorter search or explore all categories." href="/glossary" label="Browse all effects" />}
+      <Pagination path="/glossary" filters={filters} results={results} noun="effects" />
+    </section><Provenance />
   </GlossaryShell>;
 }
 
