@@ -161,6 +161,9 @@ jobs:
       - name: Verify Class, Challenge and Event Tower presentation
         run: pnpm exec vitest run --config web/src/lib/game-towers/vitest.config.mts
 
+      - name: Verify node locations and exact reward sources
+        run: pnpm exec vitest run --config web/src/lib/game-discovery/vitest.config.mts
+
       - name: Verify public node catalogs and shared modifier icons
         run: pnpm exec vitest run src/domain/node-modifiers web/src/app/nodes web/src/components/nodes web/src/lib/public-node-modifiers.test.ts web/src/lib/expanded-node-modifiers.icons.test.ts web/src/lib/expanded-node-detail-storage.test.ts web/src/app/admin/nodes/actions.icons.test.ts --maxWorkers=1
 

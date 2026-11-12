@@ -11,13 +11,13 @@ type Props = {
   name: string; category?: string; edition?: string | null; artwork?: string | null; banner?: string | null
   championCount?: number; rarities?: number[]; rewardCount: number; openings?: Opening[]
   observedAt: string; ratesObservedAt?: string | null; firstRecordedAt?: string | null
-  availability?: CrystalAvailability | null; as?: "section" | "header"
+  availability?: CrystalAvailability | null; as?: "section" | "header"; earningHref?: string
 }
 const title = (name: string) => name === name.toLocaleUpperCase("en")
   ? name.toLocaleLowerCase("en").replace(/\b[a-z]/g, letter => letter.toUpperCase()).replace(/Iso-8/g, "ISO-8") : name
 const stars = (values: number[]) => values.length === 1 ? `${values[0]}★` : `${Math.min(...values)}–${Math.max(...values)}★`
 
-export function CrystalPageHeader({ name, category, edition, artwork, banner, championCount = 0, rarities = [], rewardCount, openings = [], observedAt, ratesObservedAt, firstRecordedAt, availability, as: Element = "section" }: Props) {
+export function CrystalPageHeader({ name, category, edition, artwork, banner, championCount = 0, rarities = [], rewardCount, openings = [], observedAt, ratesObservedAt, firstRecordedAt, availability, earningHref, as: Element = "section" }: Props) {
   return <Element className={styles.hero} aria-labelledby="crystal-title">
     <div className={styles.heroTop} data-banner={!!banner}>
       {banner && <div className={styles.banner}><CrystalBanner src={banner} name={name} /></div>}
@@ -28,6 +28,7 @@ export function CrystalPageHeader({ name, category, edition, artwork, banner, ch
           {rarities.length > 0 && <span className={styles.starFact}>{stars(rarities)}</span>}
           {championCount > 0 && <a href="#champion-pool-title"><Users aria-hidden="true" /><strong>{championCount.toLocaleString("en")}</strong>{championCount === 1 ? "champion" : "champions"}<ArrowDown aria-hidden="true" /></a>}
           {rewardCount > 0 && <a href="#crystal-other-rewards" title={`${rewardCount} recorded reward categories`}><Gift aria-hidden="true" /><strong>{rewardCount}</strong>reward types<ArrowDown aria-hidden="true" /></a>}
+          {earningHref && <a href={earningHref}><Gift aria-hidden="true"/>Where to earn ↗</a>}
         </div>
       </div>
       <div className={styles.crystal}><CrystalArtwork primary={artwork} /></div>

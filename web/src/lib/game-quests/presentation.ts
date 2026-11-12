@@ -6,8 +6,9 @@ import { listCrystalOpenings } from "@cerebro/core/data/game-crystal-openings";
 import { getCrystalPresentation } from "@cerebro/core/data/game-crystals";
 import { getQuestRewardArtwork as getRewardArtwork } from "@cerebro/core/data/game-quests/reward-artwork";
 import { getSelectableReward } from "@cerebro/core/data/game-selectable-rewards";
-import { getQuestRewardRecord,type QuestRewardRecord } from "@cerebro/core/data/game-quests/rewards";
+import { getQuestRewardRecord,type QuestRewardRecord,type NativeQuestReward } from "@cerebro/core/data/game-quests/rewards";
 import { findQuest } from "@cerebro/core/data/game-quests";
+import { permanentData } from "@cerebro/core/data/game-quests/permanent";
 import { rewardDisplayName } from "@cerebro/core/domain/reward-display";
 import { getNativeRewardPresentation, nativeRewardName, type RewardRankChange } from "@cerebro/core/data/game-reward-presentation";
 import { getPublicRewardDefinition } from "@cerebro/core/data/game-reward-definitions";
@@ -65,18 +66,21 @@ export function questRewardScope(scope: string) {
 
 const labels:Record<string,string>={res:"Resource",ebp:"Upgrade material",ebpf:"Material fragments",gf:"Crystal shards",inv:"Item",sra:"Reward selector",utitle:"Title",profilebadge:"Profile badge",emote:"Emote",evta:"Recorded event",off:"Offer availability",gent:"Recorded event"};
 export function projectRewardRecord(record:QuestRewardRecord,portraits:Record<string,QuestPortrait>={}):QuestRewardView[]{
- return Object.entries(record.scopes).flatMap(([scope,rows])=>rows.map(r=>{
+ return Object.entries(record.scopes).flatMap(([scope,rows])=>rows.map(r=>projectRewardRow(r,scope,`${record.key}:${scope}:${r.sourceIndex}`,portraits)));
+}
+export function projectRewardRow(r:NativeQuestReward,scope:string,key:string,portraits:Record<string,QuestPortrait>={}):QuestRewardView{
   const placeholder=r.type==="inv"&&r.data==="unknown_rewards";
-  if(placeholder)return {key:`${record.key}:${scope}:${r.sourceIndex}`,scope,token:r.data,sourceType:r.type,quantity:r.quantity,amount:"",type:"item",name:"Reward details not specified",href:null,imageUrl:null,placeholder:true};
+  if(placeholder)return {key,scope,token:r.data,sourceType:r.type,quantity:r.quantity,amount:"",type:"item",name:"Reward details not specified",href:null,imageUrl:null,placeholder:true};
   const crystal=r.type==="gs"?resolveQuestCrystal(r.data):null;
   const selector=r.type==="sra"?getSelectableReward(r.data):null;
   const native=getNativeRewardPresentation(r.type,r.data);
   const publicDefinition=getPublicRewardDefinition(r.type,r.data);
   const publicResource=getPublicResourceDefinition(r.type,r.data);
   const identity=r.identity,portrait=identity?.champion?portraits[identity.gameId]:null;
+  const nativePortrait=identity?permanentData.nativePortraits[identity.gameId]:undefined;
+  const nativeImage=nativePortrait?.character===identity?.gameId&&nativePortrait?.sourceBcgSha256===permanentData.bcgSha256?nativePortrait.url:null;
   const title=r.type==="res"&&r.data==="sc"?rewardDisplayName({type:r.type,data:r.data}):selector?.name||publicDefinition?.name||publicResource?.name||(native?nativeRewardName(native,r.type):r.displayName);
   const min=r.minQuantity,max=r.maxQuantity;
   const amount=min!==undefined&&max!==undefined&&min!==max?min<=max?`${min.toLocaleString("en")}–${max.toLocaleString("en")}`:"Quantity range unavailable":`×${r.quantity.toLocaleString("en")}`;
-  return {key:`${record.key}:${scope}:${r.sourceIndex}`,scope,token:r.data,sourceType:r.type,quantity:r.quantity,amount,type:identity?"champion":crystal?"crystal":"item",name:identity?portrait?.name??identity.champion?.name??identity.name:crystal?.name??title??`${labels[r.type]??"Recorded"} reward`,href:identity?.champion?portrait?.href??`/champions/${identity.champion.slug}`:crystal?.href??(r.type==="gf"?resolveQuestCrystal(r.data).href:null),imageUrl:identity?portrait?.imageUrl??null:getRewardArtwork(r.type,r.data)?.url??getStaticResourceRewardArtwork(r.type,r.data)?.url??publicResource?.imageUrl??publicDefinition?.imageUrl??crystal?.imageUrl??null,rarity:identity?.rarity,itemRarity:native?.rarity,signaturePoints:native?.signaturePoints,rankChange:native?.rankChange,recordedOutcome:!["hero","gs","gf","res","ebp","ebpf","inv","sra","utitle","profilebadge","emote"].includes(r.type)};
- }));
+  return {key,scope,token:r.data,sourceType:r.type,quantity:r.quantity,amount,type:identity?"champion":crystal?"crystal":"item",name:identity?portrait?.name??identity.champion?.name??identity.name:crystal?.name??title??`${labels[r.type]??"Recorded"} reward`,href:identity?.champion?portrait?.href??`/champions/${identity.champion.slug}`:crystal?.href??(r.type==="gf"?resolveQuestCrystal(r.data).href:null),imageUrl:identity?portrait?.imageUrl??nativeImage:getRewardArtwork(r.type,r.data)?.url??getStaticResourceRewardArtwork(r.type,r.data)?.url??publicResource?.imageUrl??publicDefinition?.imageUrl??crystal?.imageUrl??null,rarity:identity?.rarity,itemRarity:native?.rarity,signaturePoints:native?.signaturePoints,rankChange:native?.rankChange,recordedOutcome:!["hero","gs","gf","res","ebp","ebpf","inv","sra","utitle","profilebadge","emote"].includes(r.type)};
 }

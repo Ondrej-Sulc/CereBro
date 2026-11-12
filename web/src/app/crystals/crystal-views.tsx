@@ -18,7 +18,7 @@ import styles from "./crystal-detail-page.module.css"
 type Details = NonNullable<Awaited<ReturnType<typeof loadCrystalDetails>>>
 const opening = (selection: { draw: number; pick: number } | null) => selection ? `Choose ${selection.pick} of ${selection.draw}` : "Standard opening"
 
-export function CrystalDetailView({ data }: { data: Details }) {
+export function CrystalDetailView({ data, earningHref }: { data: Details; earningHref?: string }) {
   const currentId = data.opening?.id ?? data.id
   const displayName = data.opening?.name ?? data.name
   const rewards = data.opening?.rewardPresentation
@@ -51,7 +51,7 @@ export function CrystalDetailView({ data }: { data: Details }) {
     <CrystalPageHeader name={displayName} category={CRYSTAL_CATEGORIES.find(category => category.id === data.category)?.name} edition={edition}
       artwork={data.opening?.artworkUrl ?? data.artworkUrl} banner={data.opening?.bannerArtworkUrl ?? data.bannerArtworkUrl}
       championCount={data.championCount} rarities={data.rarities} rewardCount={rewardCount} observedAt={data.observedAt}
-      ratesObservedAt={data.opening?.odds?.status === "captured" ? data.opening.odds.observedAt : undefined}
+      ratesObservedAt={data.opening?.odds?.status === "captured" ? data.opening.odds.observedAt : undefined} earningHref={earningHref}
       availability={!data.availabilityReview ? data.availability : null}
       openings={openings.length > 1 || data.variants.some(variant => variant.selection) ? openings.map(option => ({
         label: option.label, description: option.description, current: option.sourceIds.includes(currentId),

@@ -30,6 +30,17 @@ async function render(element: React.ReactNode) {
 const floor = (): TowerFloorView => ({ ...raw.floors[0], defender: { ...raw.floors[0].defender!, name: "Iron Man", imageUrl: null, href: "/champions/iron-man", className: "Tech", fullHealth: raw.floors[0].defender!.maxHealth }, modifiers: [], topModifiers: [], rewards: [] });
 
 describe("Tower browsing outcomes", () => {
+  it("opens a linked modifier or floor reward without expanding unrelated floors", async () => {
+    const first = floor(), second = { ...floor(), floorNumber: 2 };
+    first.modifiers = [{ id: "avx_hp_pct800", name: "Health", description: "+800% Health", quantity: 1, iconKey: null }];
+    first.rewards = [{ key: "gold", scope: "Floor rewards", token: "sc", sourceType: "res", type: "item", name: "Gold", quantity: 4000, imageUrl: null, href: null }];
+    second.rewards = first.rewards;
+    const host = await render(<TowerFloors floors={[first, second]} modifier="avx_hp_pct800" rewardFloor={1}/>);
+    expect(host.querySelector('[data-selected-modifier] details[open]')).not.toBeNull();
+    const rewardDisclosure = (n: number) => [...host.querySelectorAll<HTMLDetailsElement>(`#floor-${n} details`)].find(d => d.querySelector('summary')?.textContent?.startsWith("Floor rewards"));
+    expect(rewardDisclosure(1)?.open).toBe(true);
+    expect(rewardDisclosure(2)?.open).toBe(false);
+  });
   it("shows Challenge and Event artwork cards alongside all six Class Towers on the quest landing page", async () => {
     const classes: TowerCatalogEntry[] = ["skill", "mutant", "tech", "cosmic", "mystic", "science"].map(id => ({
       id: `class_${id}`, name: `${id.toUpperCase()} TOWER`, section: "class", archiveStatus: "unknown", classId: id,

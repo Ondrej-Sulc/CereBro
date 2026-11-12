@@ -7,9 +7,10 @@ import { GameNodeModifierIcon } from "@/components/nodes/GameNodeModifierIcon"
 import { resolvedVariants } from "./node-presentation"
 import { WhereItAppears } from "./node-locations"
 import styles from "./nodes.module.css"
+import type { ReactNode } from "react"
 
-export function ExpandedNodeDetailView({ index, detail, portraits, page = 1 }: {
-  index: ExpandedModifierIndex; detail: ExpandedModifierDetail; portraits: Record<string, DefenderArtwork>; page?: number
+export function ExpandedNodeDetailView({ index, detail, portraits, page = 1, locations }: {
+  index: ExpandedModifierIndex; detail: ExpandedModifierDetail; portraits: Record<string, DefenderArtwork>; page?: number; locations?: ReactNode
 }) {
   const definition = detail.definition, summary = index.records.find(row => row.id === definition.id)!
   const catalog: NodeModifierCatalog = { schemaVersion: 2, contract: index.contract, contentHash: index.catalogHash, profileHash: index.profileHash, profile: index.profile, definitions: [definition] }
@@ -21,8 +22,9 @@ export function ExpandedNodeDetailView({ index, detail, portraits, page = 1 }: {
     <div className={styles.variants}>{variants.map((variant, i) => <section className={styles.variant} key={i} data-resolved-variant>
       <h2>{variants.length > 1 ? `Effect variant ${i + 1}` : "Effect"}</h2>
       <p className={styles.resolvedText}>{variant.text || "Resolved wording was not recorded. Original values remain in Source data."}</p>
-      <WhereItAppears catalog={catalog} definition={definition} variant={variant} projection={detail.projection} portraitBindings={portraits} page={page} pageSize={6} baseHref={base} />
+      {!locations && <WhereItAppears catalog={catalog} definition={definition} variant={variant} projection={detail.projection} portraitBindings={portraits} page={page} pageSize={6} baseHref={base} />}
     </section>)}</div>
+    {locations}
     {summary.missing && <p className={styles.notice}>Some effect components were not available in the saved source. Recorded wording is shown without guessing missing values.</p>}
     <details id="source-data" className={styles.sourceData}><summary>Source data</summary>
       <dl><dt>Exact native Buff ID</dt><dd><code>{definition.id}</code></dd><dt>Catalog source revision</dt><dd><code>{index.catalogHash}</code></dd><dt>Definition versions</dt><dd>{definition.versions.length}</dd><dt>Source contexts</dt><dd>{detail.projection.uses.length}</dd></dl>

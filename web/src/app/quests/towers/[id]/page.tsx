@@ -16,5 +16,5 @@ export default async function TowerPage({ params, searchParams }: Props) {
   const current = requested ?? tower.blockNumbers[0] ?? 1;
   const from = typeof p.from === "string" && /^\/quests\/towers(?:\?|$)/.test(p.from) ? p.from : undefined;
   const view = tower.blockNumbers.includes(current) ? await getTowerBlockView(tower.id, current) : null;
-  return <TowerDetail tower={tower} view={view} current={current} from={from}/>;
+  return <TowerDetail tower={tower} view={view} current={current} from={from} modifier={typeof p.modifier === "string" ? p.modifier : undefined} rewardFloor={typeof p.rewardFloor === "string" && /^\d+$/.test(p.rewardFloor) ? Number(p.rewardFloor) : undefined}/>;
 }

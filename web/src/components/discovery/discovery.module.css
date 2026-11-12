@@ -1,0 +1,39 @@
+.page{max-width:1040px;margin:auto;padding:24px 28px 48px;color:#e4edf5}
+.back{display:inline-flex;align-items:center;min-height:44px;color:#a4d9ed;font-size:13px}
+.hero{display:flex;align-items:center;gap:16px;margin:18px 0 24px}
+.art{position:relative;display:flex;width:76px;height:76px;align-items:center;justify-content:center;flex-shrink:0}
+.art img{max-width:100%;max-height:100%;object-fit:contain}
+.hero h1{font-size:28px;font-weight:650;line-height:1.25;letter-spacing:-.025em;overflow-wrap:anywhere}
+.hero p{color:#94afc3;font-size:13px;margin-top:6px}
+.sectionHeading{display:flex;align-items:baseline;justify-content:space-between;gap:14px;margin-bottom:16px}
+.sectionHeading h2{font-size:20px;font-weight:600}
+.sectionHeading>span,.count{color:#90aabe;font-size:12px}
+.locations{scroll-margin-top:86px;margin-top:24px}
+.filters{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin:0 0 14px}
+.filters label{display:block;font-size:11px;color:#9db7ca}
+.filters .search{flex:1;min-width:190px}
+.filters input,.filters select{display:block;width:100%;min-height:44px;border:1px solid #344e65;border-radius:7px;background:#0e1c2e;color:#dfedf6;padding:0 11px;font-size:13px;margin-top:6px;min-width:0}
+.filters button{display:flex;align-items:center;justify-content:center;gap:7px;min-height:44px;padding:0 15px;border:1px solid #567b91;border-radius:7px;background:#163145;color:#c9edfa;font-size:12px}
+.count{margin-bottom:10px}
+.count a{color:#acdff0;text-decoration:underline}
+.rows{list-style:none;margin:0;padding:0;border:1px solid #2b4257;border-radius:10px;overflow:hidden;background:#0b1727}
+.rows>li+li{border-top:1px solid #253b50}
+.row{display:flex;gap:16px;align-items:center;padding:14px 16px;min-height:76px;color:#d9e9f4}
+.row:hover{background:#132a3d}
+.copy{min-width:0;flex:1}
+.collection{font-size:10px;color:#84abc1}
+.copy h3{font-size:15px;font-weight:600;line-height:1.4;margin-top:2px;overflow-wrap:anywhere}
+.copy p{font-size:12px;color:#99b5c9;margin-top:4px;line-height:1.5}
+.copy .scope{color:#acd6da}
+.row>svg{flex-shrink:0;color:#8cbbd1}
+.quantity{font-size:15px;color:#bce6f4;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pagination{display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#90a9bf;margin-top:14px}
+.pagination a{display:inline-flex;align-items:center;min-height:44px;color:#b1ddec}
+.empty,.note{font-size:12px;line-height:1.7;color:#90aabe;margin-top:16px}
+.catalog{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;list-style:none;margin-top:16px;padding:0}
+.rewardCard{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid #2d445b;border-radius:9px;background:#0e1d2f;min-height:88px}
+.rewardCard .art{width:52px;height:52px}
+.rewardCard h2{font-size:13px;font-weight:600;line-height:1.5;overflow-wrap:anywhere}
+.rewardCard p{font-size:11px;color:#8eb3c7;margin-top:3px}
+.page :is(a,input,select,button):focus-visible,.locations :is(a,input,select,button):focus-visible{outline:2px solid #a6e1f3;outline-offset:3px}
+@media(max-width:600px){.page{padding:16px 16px 36px}.hero{margin:12px 0 18px;gap:12px}.hero h1{font-size:23px}.hero .art{width:60px;height:60px}.filters{position:relative}.filters .search{flex-basis:100%}.filters .search input{padding-right:54px}.filters label:not(.search){flex:1;min-width:0}.filters button{position:absolute;right:0;top:22px;width:44px;min-width:44px;padding:0;border-radius:0 7px 7px 0}.filters button span{display:none}.sectionHeading{gap:8px}.sectionHeading h2{font-size:18px}.sectionHeading>span{font-size:11px}.row{padding:12px;gap:10px}.copy h3{font-size:14px}.catalog{grid-template-columns:1fr}.quantity{font-size:13px}}
