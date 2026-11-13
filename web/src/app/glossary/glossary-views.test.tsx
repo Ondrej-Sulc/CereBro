@@ -24,6 +24,21 @@ describe('glossary rendered behavior', () => {
     expect(doc.querySelector('[data-source-id="40"] a')?.getAttribute('href')).toBe('/champions/gentle?tab=abilities&ability=one#ability-record-one');
     expect(doc.querySelector('[data-source-id="41"] a')?.getAttribute('href')).toBe('/champions/heimdall?tab=abilities&ability=two#ability-record-two');
   });
+  it('uses kit source references inline with the form and condition instead of a separate source footer', () => {
+    const data = sourceCardDetail();
+    const application = data.results.rows[0].applications[0];
+    Object.assign(application, { effectForm: 'BUFF', overviewSummary: 'Charging Heavy grants temporary non-stacking Amplify.',
+      sourceLabel: 'Charging Heavy', sourceHref: '/champions/gentle?tab=abilities&rarity=7&ability=heavy&chapter=base#ability-record-heavy' });
+    const doc = documentFor(renderToStaticMarkup(<GlossaryDetailView data={data}/>));
+    const source = doc.querySelector('[data-source-id="40"]')!;
+    expect(source.querySelectorAll('a')).toHaveLength(1);
+    const paragraph = source.querySelector('p')!;
+    expect(paragraph.textContent).toBe('Buff Charging Heavy grants temporary non-stacking Amplify.');
+    expect(paragraph.querySelector('a')?.textContent).toBe('Charging Heavy');
+    expect(paragraph.querySelector('a')?.getAttribute('href')).toBe(application.sourceHref);
+    expect(source.textContent).not.toContain('Gains');
+    expect(source.textContent).not.toContain('Read source');
+  });
   it('highlights champion portraits with their own class colors independently of the effect color', () => {
     const data = sourceCardDetail();
     data.effect = { ...data.effect, color: '#f97316' };
@@ -132,6 +147,9 @@ describe('glossary rendered behavior', () => {
     expect(shared).not.toBeNull();
     expect(shared?.textContent?.split(condition)).toHaveLength(2);
     expect(shared?.querySelector('a[href="/champions/patriot"] img')).not.toBeNull();
+    const badge = shared?.querySelector('[data-synergy-badge]');
+    expect(badge?.textContent).toBe('Synergy');
+    expect(badge?.querySelector('a')?.getAttribute('aria-label')).toBe('View Patriot');
     for (const level of [1, 2]) expect(shared?.querySelector(`a[href="/champions/sam?tab=synergies#champion-synergy-teamwork-${level}"]`)?.textContent).toBe(`Lv. ${level}`);
     expect(shared?.textContent).not.toContain('\u2605');
     expect(doc.body.textContent).not.toContain('Requires this champion');

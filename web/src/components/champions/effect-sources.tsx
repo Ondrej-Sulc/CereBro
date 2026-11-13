@@ -5,7 +5,7 @@ import Link from "next/link"
 import { ArrowUpRight, ChevronDown } from "lucide-react"
 import { Fragment, type ReactNode } from "react"
 import { EFFECT_FORM_LABELS, EFFECT_DIRECTION_LABELS } from "@cerebro/core/domain/ability-source"
-import type { ChampionKitEffect, ChampionKitAbilityTarget, ChampionKitSourceGroup } from "@/lib/champion-kit"
+import type { ChampionKitEffect, ChampionKitAbilityTarget, ChampionKitSourceGroup, ChampionKitPartnerSources } from "@/lib/champion-kit"
 import { findInlineSourceReference, groupSynergySourceDisplay } from "@/lib/champion-kit-source-display"
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
 import type { ChampionImages } from "@/types/champion"
@@ -34,7 +34,7 @@ export function EffectSources({ effect, groups, onViewAbility, onViewSynergies, 
           const reference = abilityReference(effect.name, source.label, source.target, onViewAbility, abilityHref)
           return <div key={source.key} className="min-w-0 space-y-1.5">
             {source.resistance && <ResistanceBadge detail={source.resistance} />}
-            <SourceCondition condition={source.condition} form={group.effectForm} reference={reference} />
+            <EffectSourceCondition condition={source.condition} form={group.effectForm} reference={reference} />
             <RecordedValues values={source.values} />
           </div>
         })}
@@ -60,33 +60,38 @@ export function EffectSources({ effect, groups, onViewAbility, onViewSynergies, 
           }))
           const prefix = variants ? <><span className="font-medium text-indigo-200">{source.family}</span>{": "}{references.map((reference, index) => <Fragment key={visibleReferences[index].key}>{index > 0 && " · "}<SourceReference {...reference} /></Fragment>)}</> : undefined
           return <div key={source.key} className="space-y-1.5">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="rounded border border-indigo-300/20 bg-indigo-300/[.07] px-2 py-0.5 text-[11px] font-semibold leading-4 text-indigo-200">Synergy</span>
-              {bonus && source.champions.length > 1 && <span className="text-xs text-slate-400">Any one of</span>}
-              {source.champions.map(champion => {
-                const content = <><Image src={getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "64")} alt="" width={20} height={20} className="h-5 w-5 shrink-0 rounded object-contain" /><span>{champion.name}</span></>
-                const className = "inline-flex items-center gap-1.5 rounded-md border border-white/[.08] bg-white/[.03] py-0.5 pl-0.5 pr-2 text-xs text-slate-300 hover:border-white/25 hover:text-white"
-                return champion.slug ? <Link key={champion.slug} href={`/champions/${champion.slug}`} className={className}>{content}</Link> : <span key={champion.name} className={className}>{content}</span>
-              })}
-            </div>
+            <SynergySourceBadge champions={source.champions} anyOne={!!bonus && source.champions.length > 1} />
             {source.resistance && <ResistanceBadge detail={source.resistance} />}
             {bonus ? <>
-              <SourceCondition condition={`${bonus.text}${bonus.nonStacking ? " Does not stack." : ""}`} form={group.effectForm} reference={!variants ? references[0] : undefined} prefix={prefix} />
+              <EffectSourceCondition condition={`${bonus.text}${bonus.nonStacking ? " Does not stack." : ""}`} form={group.effectForm} reference={!variants ? references[0] : undefined} prefix={prefix} />
               <p className="text-xs leading-5 text-slate-400">Applies to {bonus.sources.map((application, index) => {
                 const reference = abilityReference(effect.name, application.label, application.target, onViewAbility, abilityHref)
                 return <Fragment key={application.target.recordId}>{index > 0 && (index === bonus.sources.length - 1 ? " and " : ", ")}{reference ? <SourceReference {...reference} /> : application.label}</Fragment>
               })}.</p>
               <details className="group/source-details">
                 <summary className="flex min-h-11 cursor-pointer list-none items-center gap-1.5 rounded text-xs text-slate-400 hover:text-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300 sm:min-h-8"><ChevronDown aria-hidden="true" className="h-3 w-3 transition-transform group-open/source-details:rotate-180" />Source details <span className="text-slate-500">({source.conditions.length})</span></summary>
-                <div className="space-y-3 pb-1 pt-1">{source.conditions.map(condition => <SourceCondition key={condition} condition={condition} form={group.effectForm} />)}</div>
+                <div className="space-y-3 pb-1 pt-1">{source.conditions.map(condition => <EffectSourceCondition key={condition} condition={condition} form={group.effectForm} />)}</div>
               </details>
-            </> : (source.conditions.length ? source.conditions : [""]).map((condition, index) => <SourceCondition key={condition} condition={condition} form={group.effectForm} reference={!index && !variants ? references[0] : undefined} prefix={!index ? prefix : undefined} />)}
+            </> : (source.conditions.length ? source.conditions : [""]).map((condition, index) => <EffectSourceCondition key={condition} condition={condition} form={group.effectForm} reference={!index && !variants ? references[0] : undefined} prefix={!index ? prefix : undefined} />)}
             <RecordedValues values={source.values} />
           </div>
         })}
       </div>}
     </section>)}
   </div>
+}
+
+export function SynergySourceBadge({ champions, anyOne = false }: { champions: ChampionKitPartnerSources["champions"]; anyOne?: boolean }) {
+  return <span data-synergy-badge className="inline-flex max-w-full flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-indigo-300/20 bg-indigo-300/[.07] px-2 py-1 text-indigo-200">
+    <span className="text-[11px] font-semibold leading-4">Synergy</span>
+    {anyOne && <span className="text-xs text-slate-400">Any one of</span>}
+    {champions.length > 0 && <span className="inline-flex max-w-full flex-wrap items-center gap-1">{champions.map(champion => {
+      const portrait = <Image src={getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "64")} alt="" width={24} height={24} className="h-6 w-6 rounded object-contain" />
+      const className = "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded border border-indigo-200/15 bg-slate-950/30 transition-colors hover:border-indigo-200/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+      return champion.slug ? <Link key={champion.slug} prefetch={false} href={`/champions/${champion.slug}`} aria-label={`View ${champion.name}`} title={champion.name} className={className}>{portrait}</Link>
+        : <span key={champion.name} role="img" aria-label={champion.name} title={champion.name} className={className}>{portrait}</span>
+    })}</span>}
+  </span>
 }
 
 type SourceReferenceProps = { label: string; ariaLabel: string; onSelect?: () => void; href?: string }
@@ -106,7 +111,7 @@ function SourceReference({ label, ariaLabel, onSelect, href }: SourceReferencePr
       : <span className="font-medium text-slate-300">{label}</span>}</>
 }
 
-function SourceCondition({ condition, form, reference, prefix }: { condition: string; form: ChampionKitSourceGroup["effectForm"]; reference?: SourceReferenceProps; prefix?: ReactNode }) {
+export function EffectSourceCondition({ condition, form, reference, prefix }: { condition: string; form: ChampionKitSourceGroup["effectForm"]; reference?: SourceReferenceProps; prefix?: ReactNode }) {
   const match = reference ? findInlineSourceReference(condition, reference.label) : null
   return <p className="break-words text-sm leading-6 text-slate-300">
     {form !== "UNKNOWN" && <><span className="mr-1.5 inline-flex align-middle"><EffectFormBadge form={form} /></span>{" "}</>}

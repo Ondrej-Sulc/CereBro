@@ -1,7 +1,7 @@
 import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { EffectSources } from './effect-sources';
+import { EffectSources, SynergySourceBadge } from './effect-sources';
 import type { ChampionKitEffect, ChampionKitSourceGroup } from '@/lib/champion-kit';
 import { buildRosterKitDetails } from '@/lib/roster-kit-details';
 
@@ -93,6 +93,25 @@ describe('inline effect source references', () => {
     expect(html).toContain('Powerful hits work below &lt;50% Health.');
     expect(html).not.toContain('>Powerful</span>');
     expect(html).not.toContain('>Buff</span>');
+  });
+});
+
+describe('synergy partner portraits', () => {
+  it('keeps partners inside one compact badge with named accessible links and no visible name chips', () => {
+    const champions = [
+      { name: 'Ms. Marvel (Kamala Khan)', slug: 'ms-marvel', images: null },
+      { name: 'She-Hulk', slug: 'she-hulk', images: null },
+      { name: 'Spider-Man (Miles Morales)', slug: null, images: null },
+    ];
+    const html = renderToStaticMarkup(createElement(SynergySourceBadge, { champions, anyOne: true }));
+    expect(html).toContain('data-synergy-badge');
+    expect(html.match(/<img /g)).toHaveLength(3);
+    expect(html.replace(/<[^>]+>/g, '')).toBe('SynergyAny one of');
+    expect(html).toContain('href="/champions/ms-marvel"');
+    expect(html).toContain('aria-label="View Ms. Marvel (Kamala Khan)"');
+    expect(html).toContain('href="/champions/she-hulk"');
+    expect(html).toContain('role="img" aria-label="Spider-Man (Miles Morales)"');
+    expect(html).not.toContain('/champions/null');
   });
 });
 

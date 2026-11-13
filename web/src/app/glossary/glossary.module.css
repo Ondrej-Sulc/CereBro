@@ -92,9 +92,6 @@
 .sourceBadges>span{font-size:10px;line-height:1.5;border:1px solid #ffffff12;background:#ffffff05;border-radius:4px;padding:2px 6px;color:#adc0d6}
 .sourceBadges [data-form=BUFF]{color:#a5e7ce;background:#87e0bb08;border-color:#87e0bb25}.sourceBadges [data-form=DEBUFF]{color:#f1b0bf;background:#f1a3b408;border-color:#f1a3b425}.sourceBadges [data-form=PASSIVE]{color:#d4bbee;background:#d4bbee08;border-color:#d4bbee25}
 .sourceBadges .synergyBadge{color:#c7bbed;border-color:#b8a1f330}.sourceBadges .resistanceBadge{color:#a4deeb;border-color:#a4deeb30}
-.condition{font-size:14px;line-height:1.75;color:#c4cfdf;overflow-wrap:anywhere;white-space:pre-line}
-.partners{font-size:11px;color:#9eafc5;line-height:1.8;margin-top:10px}.partners a{color:#cabfeb;text-decoration:underline;text-underline-offset:3px;text-decoration-color:#cabfeb40}
-.sourceFooter{display:flex;flex-wrap:wrap;align-items:start;gap:8px 18px;margin-top:12px;font-size:12px}.sourceFooter>a{display:inline-flex;align-items:center;gap:7px;color:var(--mint);min-height:28px;max-width:100%;overflow-wrap:anywhere}
 .moreSources{border-top:1px solid var(--line)}.moreSources>summary{display:flex;align-items:center;gap:7px;cursor:pointer;list-style:none;font-size:11px;color:#a5b8ce;padding:12px 18px;min-height:44px;background:#ffffff02}.moreSources[open]>summary svg{transform:rotate(180deg)}
 .empty{border:1px dashed #8099b433;border-radius:12px;padding:50px 22px;text-align:center;color:#91a6c0;margin:20px 0}.empty>svg{margin:0 auto 18px;color:#c4d2e480}.empty h2{font-size:20px;font-weight:600;color:#e1e9f3;letter-spacing:-.03em}.empty p{max-width:450px;margin:10px auto 20px;font-size:13px;line-height:1.8}.empty a{display:inline-flex;align-items:center;gap:10px;color:var(--mint);font-size:13px;min-height:44px}
 @media(min-width:1440px){.hero{padding-top:20px}.effectCard{min-height:230px}}
@@ -164,15 +161,14 @@
 .effectPage .advancedFilters[open]>summary{border-color:var(--effect-ink)}
 .effectPage .advancedFilters>summary>span{background:#ffffff0b;color:var(--effect-ink)}
 .effectPage .activeScope>span{background:#ffffff03;color:#b9c7da}
-.effectPage .sourceFooter>a{text-decoration:underline;text-underline-offset:4px;text-decoration-color:color-mix(in srgb,var(--effect-color) 45%,transparent)}
 .sourceBadges>span,.sourceBadges [data-form],.sourceBadges .synergyBadge{color:#acbcd1;border-color:#becde226;background:#d2def206}
 .sourceBadges .resistanceBadge{font-weight:600;color:#e0e9f4;border-color:#c1d0e43a;background:#c1d0e40a}
-.effectPage .requirements,.effectPage .partners{color:#a9b8cc}
+.effectPage .requirements{color:#a9b8cc}
 .effectPage .requirements strong{color:#dce5f2}
-.effectPage .requirements a,.effectPage .partners a{color:#c9d5e6;text-decoration-color:#c9d5e650}
+.effectPage .requirements a{color:#c9d5e6;text-decoration-color:#c9d5e650}
 .effectPage .partnerAlternatives>span:not(.partnerConnector){border-color:#adbbd13b}
 .cardCategories>span{font-size:10px;letter-spacing:.005em;background:none;border-color:#b1c3d51a;color:#8fa1b9}
-@media(max-width:767px){.condition{font-size:14px;line-height:1.75}.championName{font-size:15px}.championIdentity{padding:13px 16px}.application{padding:14px 16px}.effectCard h3{font-size:16px}.effectCard>p{font-size:13px}.largeIcon{border-radius:14px}}
+@media(max-width:767px){.championName{font-size:15px}.championIdentity{padding:13px 16px}.application{padding:14px 16px}.effectCard h3{font-size:16px}.effectCard>p{font-size:13px}.largeIcon{border-radius:14px}}
 
 .effectCard:hover .cardArrow{color:var(--effect-ink)}
 

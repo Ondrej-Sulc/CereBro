@@ -10,7 +10,7 @@ import { GLOSSARY_GROUPS, glossaryHref, glossaryQuery, isSynergyApplication, typ
 import type { GlossaryCatalog, GlossaryDetail, GlossaryEffect } from '@/lib/data/effect-glossary';
 import { getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from '@/lib/championClassHelper';
-import { EffectSources } from '@/components/champions/effect-sources';
+import { EffectSources, EffectSourceCondition, SynergySourceBadge } from '@/components/champions/effect-sources';
 import { GlossarySearchForm } from './glossary-search-form';
 import styles from './glossary.module.css';
 
@@ -118,10 +118,12 @@ function Application({ application }: { application: ApplicationData }) {
   const text = application.requirements ? application.requirements.condition : synergy ? source.condition : application.overviewSummary || source.condition;
   const readable = text && !/[{}]|\b(?:unresolved|legacy|audit)\b/i.test(text);
   const condition = formatGameText(readable ? text : 'Read the full source for its conditions.');
-  return <div className={styles.application} data-source-id={application.id}><div className={styles.sourceBadges}>{source.effectForm !== 'UNKNOWN' && <span data-form={source.effectForm}>{EFFECT_FORM_LABELS[source.effectForm]}</span>}{application.type === 'ABILITY' && source.effectDirection !== 'UNKNOWN' && <span>{EFFECT_DIRECTION_LABELS[source.effectDirection]}</span>}{synergy && <span className={styles.synergyBadge}>Synergy required</span>}{application.resistance && <span className={styles.resistanceBadge}>{resistanceLabel(application.resistance)}</span>}</div><p className={styles.condition}>{condition}</p>
+  const reference = application.sourceHref ? { label: application.sourceLabel, ariaLabel: `Read ${application.ability.name}: ${application.sourceLabel}`, href: application.sourceHref } : undefined;
+  return <div className={styles.application} data-source-id={application.id}>
+    {synergy && <div className="mb-2"><SynergySourceBadge champions={application.synergyChampions.map(partner => ({ name: partner.champion.name, slug: partner.champion.slug ?? null, images: partner.champion.images }))}/></div>}
+    {application.resistance && <div className={styles.sourceBadges}><span className={styles.resistanceBadge}>{resistanceLabel(application.resistance)}</span></div>}
+    <EffectSourceCondition condition={condition} form={source.effectForm} reference={reference}/>
     {application.requirements && <div className={styles.requirements}><p>Requires this champion at <strong>{application.requirements.ownerStars.map(star => `${star}★`).join('/')}</strong> with:</p><div className={styles.partnerAlternatives}>{application.requirements.partners.split(/(\s+(?:OR|AND)\s+)/i).map((part, index) => <span key={index} className={/^\s+(?:OR|AND)\s+$/i.test(part) ? styles.partnerConnector : undefined}><PartnerRequirement text={part} partners={application.synergyChampions} /></span>)}</div>{application.requirements.nonStacking && !/do(?:es)? not stack/i.test(condition) && <p>Does not stack.</p>}</div>}
-    {!!application.synergyChampions.length && !application.requirements && <p className={styles.partners}>Required partners: {application.synergyChampions.map((partner, index) => <span key={partner.championId}>{index > 0 && ', '}{partner.champion.slug ? <Link prefetch={false} href={`/champions/${partner.champion.slug}`}>{partner.champion.name}</Link> : partner.champion.name}</span>)}</p>}
-    {application.sourceHref && <div className={styles.sourceFooter}><Link prefetch={false} href={application.sourceHref}>{application.sourceLabel}<ArrowRight size={13} aria-hidden="true" /></Link></div>}
   </div>;
 }
 function PartnerRequirement({ text, partners }: { text: string; partners: ApplicationData['synergyChampions'] }) {
