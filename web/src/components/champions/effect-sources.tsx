@@ -87,7 +87,7 @@ export function SynergySourceBadge({ champions, anyOne = false }: { champions: C
     {anyOne && <span className="text-xs text-slate-400">Any one of</span>}
     {champions.length > 0 && <span className="inline-flex max-w-full flex-wrap items-center gap-1">{champions.map(champion => {
       const portrait = <Image src={getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "64")} alt="" width={24} height={24} className="h-6 w-6 rounded object-contain" />
-      const className = "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded border border-indigo-200/15 bg-slate-950/30 transition-colors hover:border-indigo-200/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
+      const className = "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
       return champion.slug ? <Link key={champion.slug} prefetch={false} href={`/champions/${champion.slug}`} aria-label={`View ${champion.name}`} title={champion.name} className={className}>{portrait}</Link>
         : <span key={champion.name} role="img" aria-label={champion.name} title={champion.name} className={className}>{portrait}</span>
     })}</span>}
