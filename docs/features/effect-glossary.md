@@ -4,7 +4,9 @@ Standalone, read-only `/glossary` and `/glossary/[id]` pages. Effect glossary is
 
 ## Category-first browsing (12 November 2026)
 
-All actual effect categories are exposed as direct, counted navigation cards above secondary search on phones and desktop. Category links reset pagination, retain the current search, and jump to the results; Change category returns to the cards. All effects removes only the category, and Clear search retains it. Counts remain full-catalog membership counts (which can overlap), while the result total reflects both active filters. No category, definition, palette or champion-source data is inferred or changed.
+All actual effect categories are exposed as compact, counted navigation tiles above secondary search on phones and desktop. Neutral icons and a task-based order keep related control categories together; Self and Opponent appear as secondary labels. Canonical category IDs, names and membership counts remain intact. All effects is a tile in the same grid. Category links reset pagination, retain the current search, and jump to the results. All effects removes only the category, and Clear search retains it. Counts remain full-catalog membership counts (which can overlap), while the result total reflects both active filters. No category, definition, palette or champion-source data is inferred or changed.
+
+The native keyboard-accessible category disclosure starts expanded on the initial all-effects page and collapsed on a selected-category URL. Choosing any tile closes it, including All effects or the current category; the summary reopens it. Category and search scope remain in the URL for bookmarks and Back/Forward navigation, while disclosure state stays local to the picker. A selected summary shows its category and full membership count once; a search additionally shows the filtered result count. The shorter browse header leaves more space for navigation and results.
 
 Search uses a compact native GET form below the chosen category, preserving its category in an enabled hidden field. Its small client wrapper restores the text from the URL after pageshow, Back/Forward and in-app navigation, preventing a restored typed draft from contradicting the actual results. The existing effect details, source/partner semantics, bounded readers and links remain unchanged.
 
@@ -34,17 +36,18 @@ Routes include loading, empty, unmatched, invalid/missing and retryable-error st
 
 ## Focused validation
 
-Four glossary suites are registered in the existing CI command **Verify champion data, UI and Discord rendering**, alongside the existing Discord glossary suite. All preexisting CI coverage, including both attack releases, is retained:
+Five glossary suites are registered in the existing CI command **Verify champion data, UI and Discord rendering**, alongside the existing Discord glossary suite. All preexisting CI coverage, including both attack releases, is retained:
 
 - `web/src/lib/effect-glossary.test.ts`
 - `web/src/lib/data/effect-glossary.test.ts`
 - `web/src/app/glossary/glossary-views.test.tsx`
+- `web/src/app/glossary/glossary-category-picker.test.tsx`
 - `web/src/app/glossary/glossary-search-form.test.tsx`
 
 Run from the checkout root:
 
 ```powershell
-pnpm exec vitest run web/src/lib/effect-glossary.test.ts web/src/lib/data/effect-glossary.test.ts web/src/app/glossary/glossary-views.test.tsx web/src/app/glossary/glossary-search-form.test.tsx --maxWorkers=1
+pnpm exec vitest run web/src/lib/effect-glossary.test.ts web/src/lib/data/effect-glossary.test.ts web/src/app/glossary/glossary-views.test.tsx web/src/app/glossary/glossary-category-picker.test.tsx web/src/app/glossary/glossary-search-form.test.tsx --maxWorkers=1
 ```
 
 These cover canonical/invalid IDs, duplicate-name isolation, same-source form/direction matching, separate applications/partners, current vs stale overview and resistance receipts, 100% resistance, conditional immunity, owner-star filtering, public identities, bounded browse reads, count/pagination scope, visible-page text reads, exact synergy navigation, labeled GET forms and unmatched recovery.

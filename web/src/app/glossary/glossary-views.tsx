@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronDown, Info, Search, ShieldCheck, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, ChevronDown, Info, Search, ShieldCheck, SlidersHorizontal, Sparkles } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { ChampionClass } from '@prisma/client';
 import { EFFECT_DIRECTION_LABELS, EFFECT_FORM_LABELS, readAbilitySource } from '@cerebro/core/domain/ability-source';
@@ -12,6 +12,7 @@ import { getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
 import { getChampionClassColors } from '@/lib/championClassHelper';
 import { EffectSources, EffectSourceCondition, SynergySourceBadge } from '@/components/champions/effect-sources';
 import { GlossarySearchForm } from './glossary-search-form';
+import { GlossaryCategories } from './glossary-categories';
 import styles from './glossary.module.css';
 
 function effectPalette(effect: GlossaryEffect): CSSProperties {
@@ -32,16 +33,10 @@ export function GlossaryCatalogView({ data }: { data: GlossaryCatalog }) {
   const { filters, results, categories } = data;
   const selectedCategory = categories.find(category => category.id === filters.category);
   return <GlossaryShell>
-    <header className={styles.hero}><h1>Effect glossary</h1><p className={styles.intro}>Explore effects and find champions that apply them or protect against them.</p><div className={styles.heroStats}><span><strong>{data.catalogTotal}</strong> effects</span><span><strong>{categories.length}</strong> categories</span></div></header>
-    <section id="effect-categories" className={styles.categoryBrowser} aria-labelledby="category-title">
-      <div className={styles.categoryHeading}><h2 id="category-title">Browse by category</h2><Link prefetch={false} className={styles.allCategories} aria-current={!filters.category ? 'page' : undefined} href={`${glossaryQuery('/glossary', filters, { category: null, page: 1 })}#effects-results`}>All effects<span>{data.catalogTotal}</span></Link></div>
-      <nav className={styles.categoryGrid} aria-label="Effect categories">{categories.map(category => <Link prefetch={false} key={category.id} aria-current={category.id === filters.category ? 'page' : undefined} href={`${glossaryQuery('/glossary', filters, { category: category.id, page: 1 })}#effects-results`}>
-        <span className={styles.categoryName}>{category.name}</span><span className={styles.categoryCount}>{category._count.abilities}</span>{category.id === filters.category && <Check size={13} className={styles.categoryCheck} aria-hidden="true" />}
-      </Link>)}</nav>
-      <p className={styles.categoryNote}>Effects can appear in more than one category.</p>
-    </section>
-    <section id="effects-results" className={styles.browseResults} aria-labelledby="effects-title" tabIndex={-1}>
-      <div className={styles.resultsHeading}><div><h2 id="effects-title">{selectedCategory?.name ?? (filters.category ? 'Unknown category' : 'All effects')}</h2><p>{results.total} {results.total === 1 ? 'effect' : 'effects'}{filters.q ? ` matching “${filters.q}”` : ''}</p></div><Link href="#effect-categories" className={styles.textLink}>Change category</Link></div>
+    <header className={styles.hero}><h1>Effect glossary</h1><p className={styles.intro}>Find effects, champions and counters.</p></header>
+    <GlossaryCategories categories={categories} filters={filters}/>
+    <section id="effects-results" className={styles.browseResults} data-category-selected={!!selectedCategory} aria-labelledby="effects-title" tabIndex={-1}>
+      <div className={styles.resultsHeading}><div><h2 id="effects-title">{selectedCategory ? 'Effects' : filters.category ? 'Unknown category' : 'All effects'}</h2>{(!selectedCategory || filters.q) && <p>{results.total} {results.total === 1 ? 'effect' : 'effects'}{filters.q ? ` matching “${filters.q}”` : ''}</p>}</div></div>
       {selectedCategory?.description && <p className={styles.categoryDescription}>{selectedCategory.description}</p>}
       <GlossarySearchForm key={glossaryQuery('/glossary', filters)} className={styles.searchForm}>
         {filters.category && <input type="hidden" name="category" value={filters.category} />}

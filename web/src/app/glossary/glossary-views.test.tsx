@@ -56,7 +56,7 @@ describe('glossary rendered behavior', () => {
     expect(doc.body.textContent).toContain('No effects found');
     expect(doc.querySelector('a[href="/glossary"]')).not.toBeNull();
   });
-  it('puts directly linked categories and full catalog counts ahead of secondary search', () => {
+  it('opens categories ahead of secondary search and keeps the catalog total out of repeated header badges', () => {
     const categories = [
       { id: 7, name: 'Death Counters', description: 'Prevent being knocked out.', _count: { abilities: 6 } },
       { id: 8, name: 'Damage Over Time', description: '', _count: { abilities: 15 } },
@@ -66,9 +66,12 @@ describe('glossary rendered behavior', () => {
     const nav = doc.querySelector('nav[aria-label="Effect categories"]');
     expect(nav).not.toBeNull();
     expect(nav!.compareDocumentPosition(doc.querySelector('form')!) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(nav?.querySelector('a[href="/glossary?category=7#effects-results"]')?.textContent).toContain('Death Counters6');
-    expect(nav?.querySelectorAll('a')).toHaveLength(2);
-    expect(doc.querySelector('a[aria-current="page"]')?.textContent).toContain('All effects20');
+    expect(nav?.querySelector('a[href="/glossary?category=7#effects-results"]')?.textContent).toContain('Death counters6');
+    expect(nav?.querySelectorAll('a')).toHaveLength(3);
+    expect(doc.querySelector('a[aria-current="page"]')?.textContent).toBe('All effects');
+    expect(doc.querySelector('details[data-category-picker]')?.hasAttribute('open')).toBe(true);
+    expect(doc.querySelector('header')?.textContent).not.toContain('20');
+    expect(doc.querySelector('#effects-results h2')?.nextElementSibling?.textContent).toBe('20 effects');
     expect(doc.querySelector('select[name=category]')).toBeNull();
   });
   it('retains the category during search, exposes selection and resets pagination on category changes', () => {
@@ -84,8 +87,11 @@ describe('glossary rendered behavior', () => {
     expect(doc.querySelector('nav[aria-label="Effect categories"] a[aria-current=page]')?.getAttribute('href')).toBe('/glossary?q=death&category=7#effects-results');
     expect(doc.querySelector('a[rel=next]')?.getAttribute('href')).toBe('/glossary?q=death&category=7&page=3');
     expect(doc.querySelector('a[href="/glossary?category=7#effects-results"]')?.textContent).toContain('Clear search');
-    expect(doc.querySelector('a[href="#effect-categories"]')?.textContent).toBe('Change category');
-    expect(doc.querySelector('#effects-results h2')?.textContent).toBe('Death Counters');
+    const picker = doc.querySelector('details[data-category-picker]');
+    expect(picker?.hasAttribute('open')).toBe(false);
+    expect(picker?.querySelector('summary')?.textContent).toBe('Death counters6 effects');
+    expect(doc.querySelector('#effects-results h2')?.textContent).toBe('Effects');
+    expect(doc.querySelector('#effects-results h2')?.nextElementSibling?.textContent).toBe('50 effects matching “death”');
   });
   it('keeps category context and recovery links for unknown or empty results', () => {
     const filters = normalizeGlossaryFilters({ category: '999', q: 'missing' });
@@ -95,6 +101,27 @@ describe('glossary rendered behavior', () => {
     expect(doc.querySelector('#effects-results h2')?.textContent).toBe('Unknown category');
     expect(doc.body.textContent).toContain('No effects found');
     expect(doc.querySelector('a[href="/glossary"]')).not.toBeNull();
+    expect(doc.querySelector('details[data-category-picker]')?.hasAttribute('open')).toBe(true);
+  });
+  it('pairs related categories, separates scope labels, and retains unknown categories and exact links', () => {
+    const categories = [
+      { id: 4, name: 'Power Control (Self)', description: '', _count: { abilities: 15 } },
+      { id: 3, name: 'Power Control (Opponent)', description: '', _count: { abilities: 24 } },
+      { id: 2, name: 'Damage Over Time (DoT)', description: '', _count: { abilities: 27 } },
+      { id: 99, name: 'New category', description: '', _count: { abilities: 1 } },
+    ];
+    const original = structuredClone(categories);
+    const data = { filters: normalizeGlossaryFilters({}), categories, catalogTotal: 883, results: { rows: [effect], page: 1, pages: 1, total: 883, size: 24 } };
+    const doc = documentFor(renderToStaticMarkup(<GlossaryCatalogView data={data}/>));
+    const choices = Array.from(doc.querySelectorAll('nav[aria-label="Effect categories"] a'));
+    expect(choices.map(choice => choice.getAttribute('href'))).toEqual([
+      '/glossary#effects-results', '/glossary?category=2#effects-results', '/glossary?category=3#effects-results', '/glossary?category=4#effects-results', '/glossary?category=99#effects-results',
+    ]);
+    expect(choices[2].textContent).toBe('Power controlOpponent24');
+    expect(choices[3].textContent).toBe('Power controlSelf15');
+    expect(choices[2].getAttribute('aria-label')).toBe('Power Control (Opponent), 24 effects');
+    expect(choices[4].textContent).toBe('New category1');
+    expect(categories).toEqual(original);
   });
   it('shows conditional protection and required partners with distinct source identities', () => {
     const application = { id: 10, championId: 1, type: 'IMMUNITY' as const, ability: { id: 5, name: 'Bleed' }, source: 'Synergy: Only while blocking with Partner (6★).', effectForm: 'UNKNOWN' as const, effectDirection: 'UNKNOWN' as const, overviewSummary: 'Short copy omitting requirements', synergyChampions: [{ championId: 2, champion: { name: 'Partner', slug: 'partner' } }], sourceHref: '/champions/test?tab=synergies', sourceLabel: 'Synergy requirements', requirements: null };
