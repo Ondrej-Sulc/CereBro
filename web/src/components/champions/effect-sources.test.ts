@@ -99,8 +99,8 @@ describe('inline effect source references', () => {
 describe('synergy partner portraits', () => {
   it('keeps partners inside one compact badge with named accessible links and no visible name chips', () => {
     const champions = [
-      { name: 'Ms. Marvel (Kamala Khan)', slug: 'ms-marvel', images: null },
-      { name: 'She-Hulk', slug: 'she-hulk', images: null },
+      { name: 'Ms. Marvel (Kamala Khan)', slug: 'ms-marvel', images: null, class: 'COSMIC' },
+      { name: 'She-Hulk', slug: 'she-hulk', images: null, class: 'SCIENCE' },
       { name: 'Spider-Man (Miles Morales)', slug: null, images: null },
     ];
     const html = renderToStaticMarkup(createElement(SynergySourceBadge, { champions, anyOne: true }));
@@ -112,6 +112,9 @@ describe('synergy partner portraits', () => {
     expect(html).toContain('href="/champions/she-hulk"');
     expect(html).toContain('role="img" aria-label="Spider-Man (Miles Morales)"');
     expect(html).not.toContain('/champions/null');
+    expect(html).toContain('filter:drop-shadow(0 0 4px #06b6d455)');
+    expect(html).toContain('filter:drop-shadow(0 0 4px #22c55e55)');
+    expect(html.match(/filter:drop-shadow/g)).toHaveLength(2);
   });
 });
 

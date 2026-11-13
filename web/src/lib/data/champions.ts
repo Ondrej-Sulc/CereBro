@@ -26,7 +26,7 @@ const ABILITY_SELECT = {
   },
   synergyChampions: {
     select: {
-      champion: { select: { name: true, images: true } },
+      champion: { select: { name: true, images: true, class: true } },
     },
   },
 } as const;

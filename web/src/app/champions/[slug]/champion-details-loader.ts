@@ -59,7 +59,7 @@ const getChampionDetails = unstable_cache(
           },
           synergyChampions: {
             select: {
-              champion: { select: { id: true, name: true, slug: true, images: true } },
+              champion: { select: { id: true, name: true, slug: true, images: true, class: true } },
             },
           },
         },
@@ -156,7 +156,7 @@ const getChampionDetails = unstable_cache(
       },
     },
   }),
-  ["champion-details-game-bindings-v1"],
+  ["champion-details-game-bindings-v2"],
   { revalidate: 3600, tags: [CHAMPION_DETAILS_TAG] }
 )
 

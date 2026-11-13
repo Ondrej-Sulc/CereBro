@@ -9,7 +9,7 @@ export type RosterKitLink = Partial<EffectSourceMetadata> & {
   overviewSummary?: string | null
   resistances?: KitResistance[]
   ability: { name: string; iconUrl: string | null; gameGlossaryTermId: string | null; description: string | null; gameGlossaryTerm: { raw: unknown } | null; categories: { name: string }[] }
-  synergyChampions: { champion: { name: string; images: unknown; slug?: string | null } }[]
+  synergyChampions: { champion: { name: string; images: unknown; slug?: string | null; class?: string | null } }[]
 }
 export type RosterKitFilters = {
   abilities: string[]; immunities: string[]; categories: string[]

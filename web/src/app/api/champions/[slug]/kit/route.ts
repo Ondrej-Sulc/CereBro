@@ -34,7 +34,7 @@ export const GET = withRouteContext(async (request: NextRequest, context: { para
       overviewSummary: { select: { text: true, sourceHash: true } },
       ability: { select: { name: true, description: true, iconUrl: true, gameGlossaryTermId: true,
         gameGlossaryTerm: { select: { raw: true } }, categories: { select: { name: true } } } },
-      synergyChampions: { select: { championId: true, champion: { select: { name: true, slug: true, images: true } } } },
+      synergyChampions: { select: { championId: true, champion: { select: { name: true, slug: true, images: true, class: true } } } },
     } },
     abilityTexts: { select: { id: true, group: true, title: true, sortOrder: true, template: true }, orderBy: [{ group: "asc" }, { sortOrder: "asc" }] },
     abilityCurves: true,

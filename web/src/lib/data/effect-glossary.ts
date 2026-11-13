@@ -56,7 +56,7 @@ export async function loadGlossaryDetail(identity: string, params: GlossaryParam
     include: {
       champion: { select: championSelect }, ability: { select: { id: true, name: true } },
       overviewSummary: { select: { text: true, sourceHash: true } },
-      synergyChampions: { include: { champion: { select: { id: true, name: true, slug: true, images: true } } } },
+      synergyChampions: { include: { champion: { select: { id: true, name: true, slug: true, images: true, class: true } } } },
       resistances: { include: { effect: { select: { id: true, name: true } } } },
     }, orderBy: { id: 'asc' },
   });
@@ -88,7 +88,7 @@ export async function loadGlossaryDetail(identity: string, params: GlossaryParam
       const target = !synergy ? findChampionKitAbilityTarget(application.ability.name, application.source ?? '', view)
         ?? findChampionKitAbilityTarget(original.ability.name, application.source ?? '', view) : null;
       const kitInput = { ...application, synergyChampions: application.synergyChampions.map(partner => ({ champion: {
-        name: partner.champion.name, slug: partner.champion.slug ?? null, images: partner.champion.images,
+        name: partner.champion.name, slug: partner.champion.slug ?? null, images: partner.champion.images, class: partner.champion.class,
       } })) };
       const kitEffect = synergy ? buildChampionKitOverviewEffects([kitInput], new Map())[0] : null;
       const synergySource = kitEffect ? groupChampionKitSources(kitEffect, view, [...synergyView.owned, ...synergyView.incoming])[0]?.synergies[0] : undefined;
@@ -110,7 +110,7 @@ export async function loadGlossaryDetail(identity: string, params: GlossaryParam
       // A legacy header cannot establish activation requirements. Keep its full condition.
       overviewSummary: application.requirements ? application.overviewSummary : null,
       synergyChampions: application.synergyChampions.map(partner => ({ champion: {
-        name: partner.champion.name, slug: partner.champion.slug ?? null, images: partner.champion.images,
+        name: partner.champion.name, slug: partner.champion.slug ?? null, images: partner.champion.images, class: partner.champion.class,
       } })),
     }));
     const synergyEffect = buildChampionKitOverviewEffects(synergyInputs, new Map()).find(item => item.type === group && item.name === effect.name);

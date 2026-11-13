@@ -12,11 +12,23 @@ const entry = { id: 1, championId: 487, abilityId: 1, type: 'ABILITY', source: '
   ability: { name: 'Damage Reduction', categories: [] }, effectForm: 'UNKNOWN', effectDirection: 'GAIN', synergyChampions: [],
   overviewSummary: null, resistances: [{ effect: { name: 'Bleed', categories: [] }, mechanism: 'DURATION', percent: null,
     valueRecords: [{ id: 1, group: 'signature', title: null, template: { raw: text } }] }] };
-beforeEach(() => db.champion.findUnique.mockResolvedValue({ id: 487, name: 'Ant-Man (Future)', shortName: 'Ant-Man', gameId: 'antman_future',
+beforeEach(() => db.champion.findUnique.mockReset().mockResolvedValue({ id: 487, name: 'Ant-Man (Future)', shortName: 'Ant-Man', gameId: 'antman_future',
   abilities: [entry], abilityTexts: [], abilityCurves: [], stats: [] }));
 const request = (query: string) => GET(new NextRequest(`http://localhost/api/champions/ant-man-future/kit${query}`), { params: Promise.resolve({ slug: 'ant-man-future' }) });
 
 describe('kit build context', () => {
+  it('preserves the actual partner class through kit source grouping', async () => {
+    db.champion.findUnique.mockResolvedValueOnce({ id: 487, name: 'Owner', shortName: 'Owner', gameId: 'owner',
+      abilities: [{ ...entry, source: 'Synergy: Classmates (7★) with Partner (7★): Gain Bleed.',
+        ability: { name: 'Bleed', categories: [] }, effectForm: 'PASSIVE', resistances: [],
+        synergyChampions: [{ championId: 2, champion: { name: 'Partner', slug: 'partner', images: null, class: 'TECH' } }] }],
+      abilityTexts: [], abilityCurves: [], stats: [] });
+    const response = await request('?rarity=7');
+    const body = await response.json();
+    expect(response.status).toBe(200);
+    expect(body.groups['GAIN:Bleed'][0].synergies[0].champions[0].class).toBe('TECH');
+    expect(db.champion.findUnique.mock.calls[0][0].select.abilities.select.synergyChampions.select.champion.select.class).toBe(true);
+  });
   it('uses the requested signature, marks catalog defaults as previews, and leaves sources intact', async () => {
     for (const [query, label] of [['?rarity=7&sig=1&rank=4', 'Sig 1'], ['?rarity=7', 'Sig 200 preview'], ['?rarity=7&sig=0', 'Unawakened']]) {
       const response = await request(query);

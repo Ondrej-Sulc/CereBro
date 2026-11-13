@@ -4,10 +4,12 @@ import Image from "next/image"
 import Link from "next/link"
 import { ArrowUpRight, ChevronDown } from "lucide-react"
 import { Fragment, type ReactNode } from "react"
+import type { ChampionClass } from "@prisma/client"
 import { EFFECT_FORM_LABELS, EFFECT_DIRECTION_LABELS } from "@cerebro/core/domain/ability-source"
 import type { ChampionKitEffect, ChampionKitAbilityTarget, ChampionKitSourceGroup, ChampionKitPartnerSources } from "@/lib/champion-kit"
 import { findInlineSourceReference, groupSynergySourceDisplay } from "@/lib/champion-kit-source-display"
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
+import { getChampionClassColors } from "@/lib/championClassHelper"
 import type { ChampionImages } from "@/types/champion"
 import { resistanceLabel, type ResistanceDetail } from "@cerebro/core/domain/champion-resistance"
 import type { RecordedResistanceValue } from "@/lib/champion-resistance-values"
@@ -86,7 +88,8 @@ export function SynergySourceBadge({ champions, anyOne = false }: { champions: C
     <span className="text-[11px] font-semibold leading-4">Synergy</span>
     {anyOne && <span className="text-xs text-slate-400">Any one of</span>}
     {champions.length > 0 && <span className="inline-flex max-w-full flex-wrap items-center gap-1">{champions.map(champion => {
-      const portrait = <Image src={getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "64")} alt="" width={24} height={24} className="h-6 w-6 rounded object-contain" />
+      const color = champion.class ? getChampionClassColors(champion.class as ChampionClass)?.color : undefined
+      const portrait = <Image src={getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "64")} alt="" width={24} height={24} className="h-6 w-6 rounded object-contain" style={color ? { filter: `drop-shadow(0 0 4px ${color}55)` } : undefined} />
       const className = "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sky-300"
       return champion.slug ? <Link key={champion.slug} prefetch={false} href={`/champions/${champion.slug}`} aria-label={`View ${champion.name}`} title={champion.name} className={className}>{portrait}</Link>
         : <span key={champion.name} role="img" aria-label={champion.name} title={champion.name} className={className}>{portrait}</span>

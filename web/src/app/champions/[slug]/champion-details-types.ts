@@ -27,7 +27,7 @@ export type ChampionDetailsPayload = {
     overviewSummary?: string | null
     resistances?: KitResistance[]
     ability: { name: string; description?: string | null; categories: Array<{ name: string }>; iconUrl?: string | null; gameGlossaryTermId?: string | null }
-    synergyChampions: Array<{ champion: { name: string; slug: string | null; images: unknown } }>
+    synergyChampions: Array<{ champion: { name: string; slug: string | null; images: unknown; class?: ChampionClass | null } }>
   }>
   abilityTexts: Array<{
     id: number

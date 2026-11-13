@@ -5,7 +5,7 @@ import type { ResistanceDetail } from "./champion-resistance"
 import { nativeResistanceValues, synergyResistanceValues, type RecordedResistanceValue, type ResistanceValueContext } from "./champion-resistance-values"
 import { recordedSynergyBonus, type SynergyBonusSource } from "./champion-kit-synergy-bonus"
 
-type KitChampion = { name: string; slug: string | null; images: unknown }
+type KitChampion = { name: string; slug: string | null; images: unknown; class?: string | null }
 type KitAbility = { name: string; description?: string | null; iconUrl?: string | null; gameGlossaryTermId?: string | null; gameGlossaryTerm?: { raw: unknown } | null }
 export type KitResistance = ResistanceDetail & { effect: KitAbility }
 type KitLink = Partial<EffectSourceMetadata> & {

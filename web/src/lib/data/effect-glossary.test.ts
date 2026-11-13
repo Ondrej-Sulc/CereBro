@@ -75,6 +75,8 @@ describe('glossary read boundaries', () => {
     expect(display[0].conditions).toEqual([condition]);
     expect(display[0].references.map(reference => reference.synergyId)).toEqual(['test-1', 'test-2']);
     expect(display[0].references.map(reference => reference.partnerRarities)).toEqual([[5], [6]]);
+    expect(display[0].champions[0].class).toBe('TECH');
+    expect(db.championAbilityLink.findMany.mock.calls[0][0].include.synergyChampions.include.champion.select.class).toBe(true);
   });
   it('retains a legacy synergy condition when a shorter summary omits its activation requirements', async () => {
     const champion = { id: 1, name: 'Owner', slug: 'owner', class: 'SCIENCE', images: {}, obtainable: ['7*'], isPlayable: true };

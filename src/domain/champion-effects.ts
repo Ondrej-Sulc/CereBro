@@ -7,7 +7,7 @@ export type EffectAbility = {
   id: number; name: string; emoji?: string | null;
   categories?: Array<{ name: string }>;
 };
-export type EffectPartner = { championId: number; champion: { name: string; discordEmoji?: string | null; slug?: string | null; images?: unknown } };
+export type EffectPartner = { championId: number; champion: { name: string; discordEmoji?: string | null; slug?: string | null; images?: unknown; class?: string | null } };
 export type ChampionEffectSource = EffectSourceMetadata & {
   id: number; championId: number; abilityId: number; type: "ABILITY" | "IMMUNITY"; source: string | null;
   ability: EffectAbility;
