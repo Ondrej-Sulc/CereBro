@@ -1389,6 +1389,7 @@ enum DuelStatus {
 }
 
 enum DuelSource {
+  CEREBRO
   USER_SUGGESTION
   GUIA_MTC
   COCPIT
