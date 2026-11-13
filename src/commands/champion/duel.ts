@@ -32,7 +32,9 @@ export function getDuelContent(
         }
 
         // Add source indicator
-        if (duel.source === DuelSource.USER_SUGGESTION) {
+        if (duel.source === DuelSource.CEREBRO) {
+          duelString += " · CereBro";
+        } else if (duel.source === DuelSource.USER_SUGGESTION) {
           duelString += " 👤";
         } else if (duel.source === DuelSource.GUIA_MTC) {
           duelString += " <:GuiaMTC:0>";

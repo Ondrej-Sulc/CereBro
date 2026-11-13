@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { DuelSource, DuelStatus } from "@prisma/client";
+import { DUEL_SOURCE_LABELS as sourceLabels } from "@cerebro/core/domain/duel-source";
 import { Check, Pencil, Trash2, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -85,13 +86,6 @@ interface DuelTableClientProps {
   page: number;
   pageCount: number;
 }
-
-const sourceLabels: Record<DuelSource, string> = {
-  USER_SUGGESTION: "User",
-  GUIA_MTC: "GuiaMTC",
-  COCPIT: "CoCPit",
-  MCOCHUB: "MCOCHUB",
-};
 
 const statusLabels: Record<DuelStatus, string> = {
   ACTIVE: "Active",
@@ -531,7 +525,7 @@ function EditDuelDialog({
   const [championId, setChampionId] = useState(() => (duel ? String(duel.champion.id) : ""));
   const [playerName, setPlayerName] = useState(() => duel?.playerName ?? "");
   const [rank, setRank] = useState(() => duel?.rank ?? "");
-  const [source, setSource] = useState<DuelSource>(() => duel?.source ?? "USER_SUGGESTION");
+  const [source, setSource] = useState<DuelSource>(() => duel?.source ?? "CEREBRO");
   const [status, setStatus] = useState<DuelStatus>(() => duel?.status ?? "SUGGESTED");
 
   function save() {

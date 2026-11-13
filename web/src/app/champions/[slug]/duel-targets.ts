@@ -1,5 +1,7 @@
+import { DUEL_SOURCE_LABELS } from "@cerebro/core/domain/duel-source"
+
 export type DuelTargetStatus = "ACTIVE" | "OUTDATED"
-export type DuelTargetSource = "USER_SUGGESTION" | "GUIA_MTC" | "COCPIT" | "MCOCHUB"
+export type DuelTargetSource = keyof typeof DUEL_SOURCE_LABELS
 
 export type DuelTargetInput = {
   id: number
@@ -15,16 +17,9 @@ export type PreparedDuelTarget = DuelTargetInput & {
 }
 
 export type DuelSourceCredit = {
-  source: Exclude<DuelTargetSource, "USER_SUGGESTION">
+  source: Exclude<DuelTargetSource, "USER_SUGGESTION" | "CEREBRO">
   label: string
   url: string
-}
-
-const sourceLabels: Record<DuelTargetSource, string> = {
-  USER_SUGGESTION: "User",
-  GUIA_MTC: "GuiaMTC",
-  COCPIT: "CoCPit",
-  MCOCHUB: "MCOCHUB",
 }
 
 const externalSourceCredits: DuelSourceCredit[] = [
@@ -39,7 +34,7 @@ const statusSortOrder: Record<DuelTargetStatus, number> = {
 }
 
 export function getDuelSourceLabel(source: DuelTargetSource) {
-  return sourceLabels[source]
+  return DUEL_SOURCE_LABELS[source]
 }
 
 export function serializeDuelUpdatedAt(updatedAt: Date | string) {

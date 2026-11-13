@@ -3,7 +3,7 @@ import { DuelSource, DuelStatus, Prisma } from "@prisma/client";
 export const DUEL_PAGE_SIZE = 50;
 
 export const duelStatusOptions = ["SUGGESTED", "OUTDATED", "ACTIVE", "ARCHIVED", "all"] as const;
-export const duelSourceOptions = ["USER_SUGGESTION", "GUIA_MTC", "COCPIT", "MCOCHUB", "all"] as const;
+export const duelSourceOptions = ["CEREBRO", "USER_SUGGESTION", "GUIA_MTC", "COCPIT", "MCOCHUB", "all"] as const;
 
 export type DuelStatusFilter = (typeof duelStatusOptions)[number];
 export type DuelSourceFilter = (typeof duelSourceOptions)[number];

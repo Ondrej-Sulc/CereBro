@@ -147,7 +147,7 @@ export default async function AdminDuelsPage({ searchParams }: AdminDuelsPagePro
           >
             {duelSourceOptions.map((source) => (
               <option key={source} value={source}>
-                {source === "all" ? "All Sources" : source}
+                {source === "all" ? "All Sources" : source === "CEREBRO" ? "CereBro" : source}
               </option>
             ))}
           </select>

@@ -66,6 +66,9 @@ jobs:
       - name: Verify champion page interactions and native stat icons
         run: pnpm exec vitest run src/tests/stat-icons.test.ts 'web/src/app/champions/[slug]/champion-stats-panel.test.tsx' 'web/src/app/champions/[slug]/champion-attack-profile.test.tsx' 'web/src/app/champions/[slug]/champion-details-navigation.test.tsx' 'web/src/app/champions/[slug]/champion-ability-reader.test.tsx' 'web/src/app/champions/[slug]/champion-synergies-interaction.test.tsx' web/src/lib/champion-synergies.test.ts web/src/lib/champion-ability-search.test.ts web/src/lib/champion-attack-profile.test.ts web/src/lib/champion-attack-sequence.test.ts --maxWorkers=1
 
+      - name: Verify duel source attribution
+        run: pnpm exec vitest run src/commands/champion/duel.test.ts 'web/src/app/champions/[slug]/duel-targets.test.ts' web/src/app/admin/duels/actions.test.ts --maxWorkers=1
+
       - name: Build Bot (src)
         run: pnpm run build-only
 

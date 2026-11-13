@@ -65,6 +65,13 @@ describe("duel target display helpers", () => {
     ])).toEqual([])
   })
 
+  it("identifies CereBro targets without crediting them as users or external community sources", () => {
+    const input = duel({ source: "CEREBRO", playerName: "Verified target" })
+    expect(prepareDuelTargets([input]).targets[0].sourceLabel).toBe("CereBro")
+    expect(getExternalDuelSourceCredits([input])).toEqual([])
+    expect(getDuelSourceLabel("USER_SUGGESTION")).toBe("User")
+  })
+
   it("returns empty display groups for an empty duel list", () => {
     const result = prepareDuelTargets([])
 
