@@ -20,6 +20,14 @@ describe('effect glossary identities and filters', () => {
   it('bounds input and clamps invalid filter values', () => {
     expect(normalizeGlossaryFilters({ q: [' a ', 'ignored'], page: '-5', form: 'BUFF', direction: 'GAIN', stars: '8', group: 'bad' })).toMatchObject({ q: 'a', page: 1, form: 'BUFF', direction: 'GAIN', stars: '', group: '' });
   });
+  it('accepts only glossary browse return destinations and keeps browse filters separate from champion filters', () => {
+    const filters = normalizeGlossaryFilters({ q: 'Gentle', returnTo: '/glossary?category=7&q=bleed&page=2&group=IMMUNITY&returnTo=%2Felsewhere#other' });
+    expect(filters).toMatchObject({ q: 'Gentle', returnTo: '/glossary?q=bleed&category=7&page=2#effects-results' });
+    for (const returnTo of ['https://example.com/glossary', '//example.com/glossary', '/champions', '/glossary/5', '/glossary/../admin', 'javascript:alert(1)']) {
+      expect(normalizeGlossaryFilters({ returnTo }).returnTo).toBe('');
+    }
+    expect(normalizeGlossaryFilters({}).returnTo).toBe('');
+  });
 });
 
 describe('public source-bound effect projection', () => {

@@ -44,7 +44,7 @@ export function GlossaryCatalogView({ data }: { data: GlossaryCatalog }) {
         <button className={styles.catalogSearchButton} type="submit" aria-label="Search effects"><ArrowRight size={18} aria-hidden="true" /></button>
         {filters.q && <Link href={`${glossaryQuery('/glossary', filters, { q: '', page: 1 })}#effects-results`} className={styles.clearSearch}>Clear search</Link>}
       </GlossarySearchForm>
-      {results.rows.length ? <div className={styles.effectGrid}>{results.rows.map(effect => <Link prefetch={false} key={effect.id} href={glossaryHref(effect.id)} className={styles.effectCard} style={effectPalette(effect)}><div className={styles.cardTop}><EffectIcon effect={effect} /><ArrowRight size={17} aria-hidden="true" className={styles.cardArrow} /></div><h3>{effect.name}</h3><p className={!effect.description ? styles.missingDefinition : undefined}>{effect.description || 'Definition not recorded'}</p><div className={styles.cardCategories}>{effect.categories.filter(category => category.id !== filters.category).slice(0, 2).map(category => <span key={category.id}>{category.name}</span>)}</div></Link>)}</div> : <EmptyState title="No effects found" description="Try a shorter search or explore all categories." href="/glossary" label="Browse all effects" />}
+      {results.rows.length ? <div className={styles.effectGrid}>{results.rows.map(effect => <Link prefetch={false} key={effect.id} href={glossaryHref(effect.id, glossaryQuery('/glossary', filters, { page: results.page }))} className={styles.effectCard} style={effectPalette(effect)}><div className={styles.cardTop}><EffectIcon effect={effect} /><ArrowRight size={17} aria-hidden="true" className={styles.cardArrow} /></div><h3>{effect.name}</h3><p className={!effect.description ? styles.missingDefinition : undefined}>{effect.description || 'Definition not recorded'}</p><div className={styles.cardCategories}>{effect.categories.filter(category => category.id !== filters.category).slice(0, 2).map(category => <span key={category.id}>{category.name}</span>)}</div></Link>)}</div> : <EmptyState title="No effects found" description="Try a shorter search or explore all categories." href="/glossary" label="Browse all effects" />}
       <Pagination path="/glossary" filters={filters} results={results} noun="effects" />
     </section><Provenance />
   </GlossaryShell>;
@@ -54,7 +54,7 @@ export function GlossaryDetailView({ data }: { data: GlossaryDetail }) {
   const { effect, filters, counts, results } = data;
   const path = glossaryHref(effect.id);
   return <GlossaryShell effect={effect}>
-    <Link className={styles.backLink} href="/glossary"><ArrowLeft size={16} aria-hidden="true" />Effect glossary</Link>
+    <Link className={styles.backLink} href={filters.returnTo || '/glossary'}><ArrowLeft size={16} aria-hidden="true" />Effect glossary</Link>
     <header className={styles.detailHero}><EffectIcon effect={effect} large /><div><h1>{effect.name}</h1><div className={styles.detailCategories}>{effect.categories.map(category => <Link key={category.id} href={`/glossary?category=${category.id}`}>{category.name}</Link>)}</div></div></header>
     <p className={styles.definition}>{effect.description || 'No definition is recorded for this effect yet.'}</p>
     <nav className={styles.groupTabs} aria-label="Champion effect groups">{GLOSSARY_GROUPS.map(item => <Link prefetch={false} key={item.id} href={glossaryQuery(path, filters, { group: item.id, page: 1 })} aria-current={filters.group === item.id ? 'page' : undefined}>{item.id === 'ABILITY' ? <Sparkles size={16} aria-hidden="true" /> : <ShieldCheck size={16} aria-hidden="true" />}<span>{item.label}</span><strong>{counts[item.id]}</strong></Link>)}</nav>
@@ -73,9 +73,10 @@ function ChampionFilters({ path, filters }: { path: string; filters: GlossaryFil
     filters.stars && `${filters.stars}★`, filters.form && `${ability ? '' : 'Effect: '}${EFFECT_FORM_LABELS[filters.form as keyof typeof EFFECT_FORM_LABELS]}`,
     filters.direction && `${ability ? '' : 'Effect: '}${EFFECT_DIRECTION_LABELS[filters.direction as keyof typeof EFFECT_DIRECTION_LABELS]}`].filter(Boolean);
   const active = [filters.q && `“${filters.q}”`, ...advanced].filter(Boolean);
-  const reset = `${path}?group=${filters.group}`;
+  const reset = glossaryQuery(path, { ...filters, q: '', category: null, stars: '', championClass: '', form: '', direction: '', page: 1 });
   return <form key={glossaryQuery(path, filters)} action={path} method="get" className={styles.detailControls} role="search" aria-label="Find champions">
     <input type="hidden" name="group" value={filters.group} />
+    {filters.returnTo && <input type="hidden" name="returnTo" value={filters.returnTo} />}
     {!ability && <><input type="hidden" name="form" value={filters.form} /><input type="hidden" name="direction" value={filters.direction} /></>}
     <div className={styles.championSearchRow}>
       <label className={styles.championSearch}><span className={styles.srOnly}>Search champions</span><input type="search" name="q" defaultValue={filters.q} placeholder="Search champions…" maxLength={100} /></label>

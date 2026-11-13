@@ -16,6 +16,37 @@ function sourceCardDetail(): GlossaryDetail {
   ] } };
 }
 describe('glossary rendered behavior', () => {
+  it('returns from an effect to the same category, search and result page, including after detail filters', () => {
+    const filters = normalizeGlossaryFilters({ q: 'bleed', category: '7', page: '2' });
+    const catalog = documentFor(renderToStaticMarkup(<GlossaryCatalogView data={{ filters, categories: [], catalogTotal: 883,
+      results: { rows: [effect], page: 2, pages: 3, total: 50, size: 24 } }}/>));
+    const href = catalog.querySelector('a:has(h3)')!.getAttribute('href')!;
+    const detailUrl = new URL(href, 'https://cerebro.test');
+    const returnTo = '/glossary?q=bleed&category=7&page=2#effects-results';
+    expect(detailUrl.searchParams.get('returnTo')).toBe(returnTo);
+    const detail = sourceCardDetail();
+    detail.filters = { ...normalizeGlossaryFilters(Object.fromEntries(detailUrl.searchParams)), group: 'ABILITY' };
+    const doc = documentFor(renderToStaticMarkup(<GlossaryDetailView data={detail}/>));
+    expect(doc.querySelector('a')?.getAttribute('href')).toBe(returnTo);
+    const groupLink = doc.querySelector('nav[aria-label="Champion effect groups"] a')!.getAttribute('href')!;
+    expect(new URL(groupLink, 'https://cerebro.test').searchParams.get('returnTo')).toBe(returnTo);
+    const fields = new FormData(doc.querySelector('form[aria-label="Find champions"]') as HTMLFormElement);
+    expect(fields.get('returnTo')).toBe(returnTo);
+    const filtered = sourceCardDetail();
+    filtered.filters = { ...normalizeGlossaryFilters({ ...Object.fromEntries(Array.from(fields, ([key, value]) => [key, String(value)])), q: 'Gentle', page: '2' }), group: 'ABILITY' };
+    filtered.results = { ...filtered.results, page: 2, pages: 3, total: 30 };
+    const filteredDoc = documentFor(renderToStaticMarkup(<GlossaryDetailView data={filtered}/>));
+    expect(filteredDoc.querySelector('a')?.getAttribute('href')).toBe(returnTo);
+    const reset = filteredDoc.querySelector('form[aria-label="Find champions"] a')!.getAttribute('href')!;
+    expect(new URL(reset, 'https://cerebro.test').searchParams.get('returnTo')).toBe(returnTo);
+    expect(new URL(filteredDoc.querySelector('a[rel=next]')!.getAttribute('href')!, 'https://cerebro.test').searchParams.get('returnTo')).toBe(returnTo);
+  });
+  it('keeps a safe glossary fallback for directly opened effects', () => {
+    const detail = sourceCardDetail();
+    detail.filters = { ...normalizeGlossaryFilters({ returnTo: 'https://example.com' }), group: 'ABILITY' };
+    const doc = documentFor(renderToStaticMarkup(<GlossaryDetailView data={detail}/>));
+    expect(doc.querySelector('a')?.getAttribute('href')).toBe('/glossary');
+  });
   it('keeps the readable condition and exact source link without repeating the recorded source', () => {
     const doc = documentFor(renderToStaticMarkup(<GlossaryDetailView data={sourceCardDetail()} />));
     expect(doc.body.textContent).not.toContain('Recorded source');
@@ -186,7 +217,7 @@ describe('glossary rendered behavior', () => {
     const colored = { ...effect, color: '#f71817', secondaryColor: '#fbc6c6', categories: [{ id: 50, name: 'Damage Over Time', description: 'Recorded category' }] };
     const data = { filters: normalizeGlossaryFilters({}), categories: [], catalogTotal: 1, results: { rows: [colored], page: 1, pages: 1, total: 1, size: 24 } };
     const doc = documentFor(renderToStaticMarkup(<GlossaryCatalogView data={data} />));
-    const card = doc.querySelector('a[href="/glossary/5"]');
+    const card = doc.querySelector('a:has(h3)');
     expect(card?.getAttribute('style')).toContain('--effect-color:#f71817');
     expect(card?.getAttribute('style')).toContain('--effect-secondary:#fbc6c6');
     expect(card?.textContent).toContain('Damage Over Time');

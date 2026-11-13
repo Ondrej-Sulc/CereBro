@@ -10,6 +10,8 @@ The native keyboard-accessible category disclosure starts expanded on the initia
 
 Search uses a compact native GET form below the chosen category, preserving its category in an enabled hidden field. Its small client wrapper restores the text from the URL after pageshow, Back/Forward and in-app navigation, preventing a restored typed draft from contradicting the actual results. The existing effect details, source/partner semantics, bounded readers and links remain unchanged.
 
+Effect cards carry the originating browse category, effect search and result page in a canonical local `returnTo` URL. The detail return link restores that result list at `#effects-results`; detail group changes, champion search, reset and pagination retain the browse context separately from their own filters. Direct effect links retain the unfiltered glossary fallback. Return destinations accept only `/glossary` browse parameters, excluding external destinations, nested return URLs and champion filters.
+
 ## Identity and reading
 
 - URLs use the existing positive PostgreSQL `Ability.id` (for example `/glossary/706`, Bleed). IDs survive name edits and avoid normalized-name collisions without new slugs. Noncanonical numeric forms, text slugs, unsafe integers and missing records show the glossary's not-found state. Ability names are currently unique in Prisma; the projection still matches IDs, never names.
