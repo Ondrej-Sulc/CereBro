@@ -66,7 +66,7 @@ export type ChampionDetailsPayload = {
     playerName: string
     rank: string | null
     status: "ACTIVE" | "OUTDATED"
-    source: "USER_SUGGESTION" | "GUIA_MTC" | "COCPIT" | "MCOCHUB"
+    source: "CEREBRO" | "USER_SUGGESTION" | "GUIA_MTC" | "COCPIT" | "MCOCHUB"
     updatedAt: Date | string
   }>
 }
