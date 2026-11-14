@@ -52,7 +52,7 @@ function VariantDetails({ variants }: { variants: CrystalRewardVariant[] }) {
 
 function RewardEntry({ row, variant, open, onOpenChange }: { row?: CrystalRewardRate; variant?: CrystalRewardVariant; open?: boolean; onOpenChange?: (open: boolean) => void }) {
   const variants = row?.variants ?? (variant ? [variant] : [])
-  const label = displayLabel(row?.rate.label || variant?.label || "Reward category")
+  const label = displayLabel(row?.displayName || row?.rate.label || variant?.label || "Reward category")
   const destinations = new Set(variants.map(item => item.reward.href))
   const href = row?.visual.href ?? (destinations.size === 1 ? variants[0]?.reward.href : null)
   const expandable = variants.length > 1 || variants.some(item => amounts(item).length > 1)

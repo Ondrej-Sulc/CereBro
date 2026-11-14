@@ -5,6 +5,7 @@ import { getCrystalDetails } from "@cerebro/core/data/game-crystals"
 import { getCrystalOpening } from "@cerebro/core/data/game-crystal-openings"
 import { loadCrystalDetails, type CrystalSearchParams } from "@/lib/data/crystals"
 import { loadCrystalOpening } from "@/lib/data/crystal-openings"
+import { getCrystalPageRewards } from "@/lib/data/crystal-catalog-rewards"
 import { CrystalDetailView } from "../crystal-views"
 import { CrystalOpeningDetail } from "../crystal-opening-detail"
 import { getRewardDiscovery } from "@cerebro/core/data/game-discovery"
@@ -24,7 +25,9 @@ export default async function CrystalPage({ params, searchParams }: { params: Pr
   if (!data) {
     const opening = loadCrystalOpening(id)
     if (!opening) notFound()
-    return <CrystalOpeningDetail data={opening} returnTo={parseCrystalReturnTo(filters.returnTo)} earningHref={earningHref} />
+    const rewards = await getCrystalPageRewards(id)
+    if (!rewards) notFound()
+    return <CrystalOpeningDetail data={opening} opening={rewards} returnTo={parseCrystalReturnTo(filters.returnTo)} earningHref={earningHref} />
   }
   return <CrystalDetailView data={data} earningHref={earningHref} />
 }

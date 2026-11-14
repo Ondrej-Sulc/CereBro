@@ -6,7 +6,7 @@ import { getCrystalChronology } from "@cerebro/core/domain/crystal-chronology"
 import { classifyCrystalCategory, CRYSTAL_CATEGORIES } from "@cerebro/core/domain/crystal-categories"
 import type { loadCrystalOpening } from "@/lib/data/crystal-openings"
 import { crystalCatalogHref, crystalHref } from "@/lib/crystal-navigation"
-import { loadCrystalPageRewards } from "@/lib/data/crystal-page-rewards"
+import type { CrystalPageRewards } from "@/lib/data/crystal-page-rewards"
 import { CrystalPageHeader, CrystalPageSections } from "./crystal-page-header"
 import { CrystalOpeningRules } from "./crystal-reward-cards"
 import { CrystalRewardsBrowser } from "./crystal-rewards-browser"
@@ -14,10 +14,9 @@ import styles from "./crystal-detail-page.module.css"
 
 type Opening = NonNullable<ReturnType<typeof loadCrystalOpening>>
 
-export function CrystalOpeningDetail({ data, returnTo, earningHref }: { data: Opening; returnTo?: string | null; earningHref?: string }) {
+export function CrystalOpeningDetail({ data, opening, returnTo, earningHref }: { data: Opening; opening: CrystalPageRewards; returnTo?: string | null; earningHref?: string }) {
   const edition = getCrystalChronology([data.id]).label
   const category = classifyCrystalCategory({ id: data.id, name: data.name, isMainPool: false })
-  const opening = loadCrystalPageRewards(data.id)!
   const rewards = opening.rewardPresentation
   const rewardCount = rewards.groups.reduce((count, group) => count + group.rows.length, 0) + rewards.unrated.length
   const hasRules = !!(opening.pity || opening.boxRules || opening.conditionalBonuses.length)

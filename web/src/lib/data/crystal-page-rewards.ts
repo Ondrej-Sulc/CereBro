@@ -5,7 +5,7 @@ import { getRewardArtwork } from "@cerebro/core/data/game-reward-artwork"
 import { getSelectableReward } from "@cerebro/core/data/game-selectable-rewards"
 import type { CrystalCatalogDetails } from "@cerebro/core/domain/champion-crystals"
 import type { CrystalOpeningReward } from "@cerebro/core/domain/crystal-openings"
-import { rewardDisplayName } from "@cerebro/core/domain/reward-display"
+import { publicRewardDisplayName } from "@cerebro/core/domain/reward-display"
 import { getNativeRewardPresentation, nativeRewardName, type RewardRankChange } from "@cerebro/core/data/game-reward-presentation"
 import { getPublicRewardDefinition } from "@cerebro/core/data/game-reward-definitions"
 import { getStaticResourceRewardArtwork } from "@cerebro/core/data/game-resource-artwork"
@@ -27,13 +27,18 @@ export type CrystalRewardCard = CrystalOpeningReward & {
   itemClassName?: string
 }
 
+export type CrystalCatalogReward = Readonly<{ name: string; href: string | null; imageUrl: string | null; className?: string; rarity?: number }>
+export function crystalCatalogRewardKey(reward: Pick<CrystalOpeningReward, "type" | "data" | "context" | "rarity">) {
+  return JSON.stringify([reward.type, reward.data, reward.context?.rarity ?? null, reward.rarity ?? null])
+}
+
 export function resolveCrystalPageOpening(family: CrystalCatalogDetails, incomingId: string, legacyVariant?: string) {
   const ids = new Set(family.variants.flatMap(variant => variant.sourceIds))
   return legacyVariant && ids.has(legacyVariant) ? legacyVariant : ids.has(incomingId) ? incomingId
     : ids.has(family.id) ? family.id : family.variants[0]?.sourceIds[0] ?? null
 }
 
-export function loadCrystalPageRewards(id: string) {
+export function loadCrystalPageRewards(id: string, catalog: ReadonlyMap<string, CrystalCatalogReward> = new Map()) {
   const opening = getCrystalOpening(id)
   if (!opening) return null
   const card = (reward: CrystalOpeningReward, categoryId: string): CrystalRewardCard => {
@@ -43,9 +48,10 @@ export function loadCrystalPageRewards(id: string) {
     const native = getNativeRewardPresentation(reward.type, reward.data)
     const publicDefinition = getPublicRewardDefinition(reward.type, reward.data)
     const publicResource = getPublicResourceDefinition(reward.type, reward.data)
-    return { ...reward, displayName: selector?.name ?? (publicDefinition?.name || null) ?? publicResource?.name ?? (native ? nativeRewardName(native, reward.type) : rewardDisplayName(reward)), itemName: native?.name, itemClassName: native?.className, itemRarity: native?.rarity, signaturePoints: native?.signaturePoints, rankChange: native?.rankChange, key: `${categoryId}:${reward.sourceIndex}`, categoryId,
-      href: nested ? crystalHref(nested.id) : null,
-      imageUrl: artwork?.url ?? getStaticResourceRewardArtwork(reward.type, reward.data)?.url ?? publicResource?.imageUrl ?? publicDefinition?.imageUrl ?? (reward.type === "gs" && nested ? getCrystalPresentation(nested.id)?.artworkUrl ?? null : null),
+    const entry = catalog.get(crystalCatalogRewardKey(reward))
+    return { ...reward, displayName: entry?.name ?? selector?.name ?? (publicDefinition?.name || null) ?? publicResource?.name ?? (native ? nativeRewardName(native, reward.type) : publicRewardDisplayName(reward)), itemName: native?.name, itemClassName: entry?.className ?? native?.className, itemRarity: entry?.rarity ?? native?.rarity, signaturePoints: native?.signaturePoints, rankChange: native?.rankChange, key: `${categoryId}:${reward.sourceIndex}`, categoryId,
+      href: entry?.href ?? (nested ? crystalHref(nested.id) : null),
+      imageUrl: entry?.imageUrl ?? artwork?.url ?? getStaticResourceRewardArtwork(reward.type, reward.data)?.url ?? publicResource?.imageUrl ?? publicDefinition?.imageUrl ?? (reward.type === "gs" && nested ? getCrystalPresentation(nested.id)?.artworkUrl ?? null : null),
       selection: nested?.selection ?? null }
   }
   const categoryCards = opening.categories.map(category => ({ id: category.id, rewards: category.rewards.map(reward => card(reward, category.id)) }))

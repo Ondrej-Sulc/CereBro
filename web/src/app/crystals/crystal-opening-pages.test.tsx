@@ -1,14 +1,19 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import type { ImgHTMLAttributes } from "react"
 import { expect, it, vi } from "vitest"
-vi.mock("next/image", () => ({ default: ({ fill: _fill, priority: _priority, ...props }: ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean; priority?: boolean }) => <img {...props} /> }))
+vi.mock("next/image", () => ({ default: ({ fill, priority, alt = "", ...props }: ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean; priority?: boolean }) => {
+  void fill; void priority
+  // eslint-disable-next-line @next/next/no-img-element -- DOM boundary for server-page rendering.
+  return <img alt={alt} {...props} />
+} }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }) }))
 import { loadCrystalOpening } from "@/lib/data/crystal-openings"
+import { loadCrystalPageRewards } from "@/lib/data/crystal-page-rewards"
 import { CrystalOpeningDetail } from "./crystal-opening-detail"
 
 it("renders the exact Banquet edition's mixed reward categories without inventing drop counts or dates", () => {
   const data = loadCrystalOpening("superior_banquet_crystal_dec25")!
-  const html = renderToStaticMarkup(<CrystalOpeningDetail data={data} />)
+  const html = renderToStaticMarkup(<CrystalOpeningDetail data={data} opening={loadCrystalPageRewards(data.id)!} />)
   expect(html).toContain("Dec 2025")
   expect(html).toContain("superior_banquet_crystal_catalysts_dec2025")
   expect(html).toContain("superior_banquet_crystal_gold_iso_dec2025")
@@ -33,7 +38,7 @@ it("renders the exact Banquet edition's mixed reward categories without inventin
 it("omits an empty rate section and keeps data notes within the reward crystal header", () => {
   const data = loadCrystalOpening("greater_banquet_crystal_dec22")!
   expect(data.odds?.status).not.toBe("captured")
-  const html = renderToStaticMarkup(<CrystalOpeningDetail data={data} />)
+  const html = renderToStaticMarkup(<CrystalOpeningDetail data={data} opening={loadCrystalPageRewards(data.id)!} />)
   expect(html.includes("Rates captured")).toBe(false)
   expect(html.includes('id="opening-odds-title"')).toBe(false)
   expect(html.includes("returned no rate table")).toBe(false)

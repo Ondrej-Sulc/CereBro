@@ -5,7 +5,8 @@ import { getCrystalFamilies, getCrystalDetails, getCrystalChampions, getChampion
 import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
 import { isChampionImages } from "@/lib/championHelper"
 import { CRYSTAL_CATEGORIES, crystalEditionLabel, isCrystalCategoryId } from "@cerebro/core/domain/crystal-categories"
-import { loadCrystalPageRewards, resolveCrystalPageOpening } from "./crystal-page-rewards"
+import { resolveCrystalPageOpening } from "./crystal-page-rewards"
+import { getCrystalPageRewards } from "./crystal-catalog-rewards"
 import { crystalBrowseOpeningSummary, getCrystalBrowseEntries } from "./crystal-browse-catalog"
 import { filterCrystalPool } from "../crystal-pool"
 import { CRYSTAL_REWARD_FILTERS, crystalRewardFilterUsesChampionStars } from "../crystal-reward-filters"
@@ -136,7 +137,7 @@ export async function loadCrystalDetails(id: string, params: CrystalSearchParams
   const details = getCrystalDetails(id)
   if (!details) return null
   const selectedOpeningId = resolveCrystalPageOpening(details, id, first(params.variant))
-  const opening = selectedOpeningId ? loadCrystalPageRewards(selectedOpeningId) : null
+  const opening = selectedOpeningId ? await getCrystalPageRewards(selectedOpeningId) : null
   const contents = opening?.champions ?? details.contents.map(reward => ({ ...reward, firstEditionRarities: reward.cosmeticRewards?.filter(item => item.cosmeticId === "first_edition").map(item => item.rarity) ?? [] }))
   const counts: Record<string, number> = {}
   for (const champion of contents) for (const rarity of champion.rarities) counts[rarity] = (counts[rarity] ?? 0) + 1

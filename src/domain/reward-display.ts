@@ -10,3 +10,15 @@ export function rewardDisplayName(reward: { type: string; data: string; displayN
   if (reward.type === "sra" && /^[a-f0-9]{24}$/i.test(reward.displayName || reward.data)) return "Reward selector"
   return (reward.type === "res" ? resourceNames[reward.data] : undefined) || reward.displayName || reward.data || rewardTypeLabel(reward.type)
 }
+
+/** Public UI fallback. Source IDs remain on the reward, never as its title. */
+export function publicRewardDisplayName(reward: { type: string; data: string; displayName?: string }) {
+  const name = rewardDisplayName(reward)
+  if (!/^ID_[A-Z0-9_]+$/.test(name) && (name !== reward.data || /\s/.test(name) && !name.includes("_"))) return name
+  const labels: Record<string, string> = {
+    res: "Resource", inv: "Inventory item", relic2: "Relic", bp: "Champion blueprint",
+    sra: "Reward selector", gs: "Crystal", gf: "Crystal shards", hero: "Champion", hcos: "Champion cosmetic",
+    ebp: "Upgrade material", ebpf: "Material fragments", nothing: "No reward", utitle: "Title", profilebadge: "Profile badge",
+  }
+  return labels[reward.type] ?? "Reward"
+}

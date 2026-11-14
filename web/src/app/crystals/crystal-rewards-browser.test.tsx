@@ -11,7 +11,8 @@ vi.mock("next/link", () => ({ default: ({ prefetch, ...props }: AnchorHTMLAttrib
   void prefetch
   return <a {...props} />
 } }))
-import { loadCrystalPageRewards } from "@/lib/data/crystal-page-rewards"
+import { crystalCatalogRewardKey, loadCrystalPageRewards } from "@/lib/data/crystal-page-rewards"
+import { getCrystalOpening } from "@cerebro/core/data/game-crystal-openings"
 import type { CrystalRewardPresentation } from "@/lib/crystal-reward-presentation"
 import { CrystalBrowseBoundary } from "./crystal-browse-boundary"
 import { CrystalOpeningRules } from "./crystal-reward-cards"
@@ -48,6 +49,24 @@ function expectNoRewardToolbar() {
 
 const rowKeys = (host: ParentNode = container) => [...host.querySelectorAll('[data-odds-row]')].map(row => row.getAttribute("data-odds-row"))
 
+it("shows catalog relic portraits and variant links inside their original guaranteed category", async () => {
+  const source = getCrystalOpening("7_star_relic_statcast_nexus_crystal")!
+  const catalog = new Map(source.categories[0].rewards.map((reward, i) => [crystalCatalogRewardKey(reward), {
+    name: `7-Star Catalog relic ${i + 1}`, imageUrl: `/relic-${i + 1}.png`, href: `/relics/variant-${i + 1}?rarity=7`, rarity: 7,
+  }]))
+  const opening = loadCrystalPageRewards(source.id, catalog)!
+  await act(async () => root.render(<CrystalRewardsBrowser presentation={opening.rewardPresentation} primary />))
+  expect(container.querySelectorAll('[data-odds-row]')).toHaveLength(1)
+  expect(container.querySelector('[data-unrated]')).toBeNull()
+  expect(container.querySelectorAll('[aria-label="Reward variants"] > li')).toHaveLength(120)
+  expect(container.querySelector('a[href="/relics/variant-1?rarity=7"]')?.textContent).toContain('7-Star Catalog relic 1')
+  expect(container.querySelector('img[src="/relic-1.png"]')).not.toBeNull()
+  expect(container.textContent).not.toContain('relic_statcast_')
+  expect(container.textContent).not.toContain('Other recorded rewards')
+  expect(container.querySelector('[title="Server-disclosed value: 100%"]')).not.toBeNull()
+  expect(container.textContent).toContain('Individual option rates are not disclosed.')
+})
+
 it("shows six class-colored rank gems with rank and star overlays on their disclosed rate rows", async () => {
   await render("7star_rankup_gem_crystal_r4")
   expect(container.querySelectorAll('[data-odds-row]')).toHaveLength(6)
@@ -58,6 +77,17 @@ it("shows six class-colored rank gems with rank and star overlays on their discl
   expect(container.querySelectorAll('[data-reward-rank="3-4"]')).toHaveLength(6)
   expect(container.querySelectorAll('[data-reward-stars="7"]')).toHaveLength(6)
   expect(container.querySelector('[data-unrated]')).toBeNull()
+})
+
+it("resolves the older rank gem rate labels without exposing the server's Missing Odds IDs", async () => {
+  const opening = await render("3star_rankup_gem_crystal_r3")
+  expect(container.textContent).not.toMatch(/Missing Odds|rankup_rare2_/)
+  expect(container.querySelectorAll('[data-odds-row]')).toHaveLength(6)
+  expect(container.querySelector('[data-unrated]')).toBeNull()
+  expect(container.querySelectorAll('[data-reward-rank="2-3"]')).toHaveLength(6)
+  expect([...container.querySelectorAll('[data-odds-row] strong')].map(el => el.textContent).join(' ')).toMatch(/Science/i)
+  expect(opening.odds!.groups![0].rows[0].label).toBe('Missing Odds inv|rankup_rare2_chemical')
+  expect(container.querySelectorAll('[title="Server-disclosed value: 16.65%"]')).toHaveLength(1)
 })
 
 it("shows all four Elder Web of Corruption rates together, most common first without a toolbar", async () => {

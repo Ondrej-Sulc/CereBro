@@ -4,7 +4,7 @@ import type { CrystalRewardCard } from "./data/crystal-page-rewards"
 import { crystalOddsIconKind, crystalOddsRowKey, type CrystalOddsRowVisual, type CrystalOddsVisuals } from "./crystal-odds-presentation"
 
 export type CrystalRewardVariant = { reward: CrystalRewardCard; label: string; className: string | null; options: CrystalRewardCard[] }
-export type CrystalRewardRate = { key: string; rate: CrystalOddsRow; variants: CrystalRewardVariant[]; visual: CrystalOddsRowVisual }
+export type CrystalRewardRate = { key: string; rate: CrystalOddsRow; displayName?: string; variants: CrystalRewardVariant[]; visual: CrystalOddsRowVisual }
 export type CrystalRewardPrize = Pick<CrystalOddsGroup, "sourceIndex" | "name" | "isFeatured"> & { rows: CrystalRewardRate[]; guaranteed: boolean }
 export type CrystalRewardPresentation = { groups: CrystalRewardPrize[]; unrated: CrystalRewardVariant[]; championOdds: CrystalOddsOpening | null; hasRates: boolean }
 
@@ -42,6 +42,8 @@ function variantName(reward: CrystalRewardCard) {
 function aliases(reward: CrystalRewardCard) {
   const name = variantName(reward)
   const result = new Set([normalize(name)])
+  // Relic rarity comes from an exact native context-to-catalog rarity join.
+  if (reward.type === "relic2" && reward.itemRarity) result.add(normalize(`${reward.itemRarity}-Star Relic`))
   if (hero(reward) && reward.rarity) {
     result.add(normalize(`${reward.rarity}-Star Hero`))
     result.add(normalize(`${reward.rarity}-Star Champion`))
@@ -66,6 +68,8 @@ function aliases(reward: CrystalRewardCard) {
 function matches(row: CrystalOddsRow, reward: CrystalRewardCard, names: Set<string>) {
   if (row.rewardType && row.rewardType !== reward.type) return false
   if (row.rewardType && row.rewardData !== undefined) return row.rewardData === reward.data
+  const missingName = /^Missing Odds inv\|([a-zA-Z0-9_]+)$/.exec(row.label ?? "")
+  if (missingName) return reward.type === "inv" && !!reward.itemName && reward.data === missingName[1]
   return names.has(normalize(row.label || row.rewardData || ""))
 }
 
@@ -127,7 +131,9 @@ export function buildCrystalRewardPresentation(odds: CrystalOddsOpening | null, 
     guaranteed: group.rows.length > 0 && group.rows.every(row => Number(row.percentValue) === 100 && !row.prefix),
     rows: group.rows.map(rate => {
       const key = crystalOddsRowKey(group.sourceIndex, rate.sourceIndex)
-      return { key, rate, variants: variants((bound.get(key) ?? []).filter(reward => !hero(reward))),
+      const options = variants((bound.get(key) ?? []).filter(reward => !hero(reward)))
+      return { key, rate, variants: options,
+        ...(/^Missing Odds /.test(rate.label ?? "") ? { displayName: options.length === 1 ? options[0].label : "Reward category" } : {}),
         visual: visuals[key] ?? { imageUrl: null, href: null, kind: crystalOddsIconKind(rate.label ?? "") } }
     }) })).filter(group => group.rows.length)
   if (projected.every(group => /^PRIZE\s*\d+$/i.test(group.name ?? "")) && new Set(projected.map(group => group.name)).size === projected.length) {

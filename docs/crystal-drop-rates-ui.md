@@ -64,6 +64,22 @@ PRIZE numbering, quantities and probability magnitudes are never matching rules.
 Contradictory or ambiguous bindings remain under Other recorded rewards without
 an assigned percentage; no per-option probability is calculated.
 
+Relic rewards reuse the current public relic catalog for names, portraits and
+exact variant links. Their recorded rarity context must match a current selectable
+catalog rarity before a star label or rarity-specific link is added. Only that
+verified rarity can bind an option to a disclosed `N-Star Relic` category; the
+category rate never becomes an individual relic chance. Missing/retired catalog
+entries remain unassigned. Legacy blueprint rewards reuse champion portraits and
+links only through their explicitly recorded game ID; they remain blueprint rewards.
+The small read-only catalog projections are cached for five minutes and are loaded
+only for openings containing those reward types.
+
+The older `Missing Odds inv|<item>` labels carry an exact inventory identity.
+When that item has verified native presentation metadata in the same opening,
+the public row uses its readable name while retaining the original rate record.
+Unresolved public reward titles use neutral type labels rather than internal IDs
+or translation keys. Source identities, quantities and original labels remain stored.
+
 An amount list only combines entries with the same source category, identity,
 artwork, destination and reward conditions. Amounts remain exact options, never
 summed or converted to an invented continuous range. Repeated shard rewards in

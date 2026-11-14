@@ -9,7 +9,7 @@ import { getSelectableReward } from "@cerebro/core/data/game-selectable-rewards"
 import { getQuestRewardRecord,type QuestRewardRecord,type NativeQuestReward } from "@cerebro/core/data/game-quests/rewards";
 import { findQuest } from "@cerebro/core/data/game-quests";
 import { permanentData } from "@cerebro/core/data/game-quests/permanent";
-import { rewardDisplayName } from "@cerebro/core/domain/reward-display";
+import { publicRewardDisplayName as rewardDisplayName } from "@cerebro/core/domain/reward-display";
 import { getNativeRewardPresentation, nativeRewardName, type RewardRankChange } from "@cerebro/core/data/game-reward-presentation";
 import { getPublicRewardDefinition } from "@cerebro/core/data/game-reward-definitions";
 import { getStaticResourceRewardArtwork } from "@cerebro/core/data/game-resource-artwork";
@@ -79,7 +79,7 @@ export function projectRewardRow(r:NativeQuestReward,scope:string,key:string,por
   const identity=r.identity,portrait=identity?.champion?portraits[identity.gameId]:null;
   const nativePortrait=identity?permanentData.nativePortraits[identity.gameId]:undefined;
   const nativeImage=nativePortrait?.character===identity?.gameId&&nativePortrait?.sourceBcgSha256===permanentData.bcgSha256?nativePortrait.url:null;
-  const title=r.type==="res"&&r.data==="sc"?rewardDisplayName({type:r.type,data:r.data}):selector?.name||publicDefinition?.name||publicResource?.name||(native?nativeRewardName(native,r.type):r.displayName);
+  const title=r.type==="res"&&r.data==="sc"?rewardDisplayName({type:r.type,data:r.data}):selector?.name||publicDefinition?.name||publicResource?.name||(native?nativeRewardName(native,r.type):r.displayName?rewardDisplayName(r):undefined);
   const min=r.minQuantity,max=r.maxQuantity;
   const amount=min!==undefined&&max!==undefined&&min!==max?min<=max?`${min.toLocaleString("en")}–${max.toLocaleString("en")}`:"Quantity range unavailable":`×${r.quantity.toLocaleString("en")}`;
   return {key,scope,token:r.data,sourceType:r.type,quantity:r.quantity,amount,type:identity?"champion":crystal?"crystal":"item",name:identity?portrait?.name??identity.champion?.name??identity.name:crystal?.name??title??`${labels[r.type]??"Recorded"} reward`,href:identity?.champion?portrait?.href??`/champions/${identity.champion.slug}`:crystal?.href??(r.type==="gf"?resolveQuestCrystal(r.data).href:null),imageUrl:identity?portrait?.imageUrl??nativeImage:getRewardArtwork(r.type,r.data)?.url??getStaticResourceRewardArtwork(r.type,r.data)?.url??publicResource?.imageUrl??publicDefinition?.imageUrl??crystal?.imageUrl??null,rarity:identity?.rarity,itemRarity:native?.rarity,signaturePoints:native?.signaturePoints,rankChange:native?.rankChange,recordedOutcome:!["hero","gs","gf","res","ebp","ebpf","inv","sra","utitle","profilebadge","emote"].includes(r.type)};
