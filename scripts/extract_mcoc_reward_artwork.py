@@ -49,8 +49,15 @@ def inventory_shader_provenance(resources, palette_source):
 def resolve_inventory_tint(item, hero_classes, colors):
     # Reviewed neutral champion-consumable branch only. Other inventory artwork
     # keeps its existing pixels until its own renderer has been reviewed.
-    if (item.get('image', {}).get('en') not in {'inventory/Awaken', 'inventory/SkillUp'} or
-        item.get('ImageS3') or not item.get('UseOnHero') or item.get('SigState') not in {'a', 'd'}):
+    reference = item.get('image', {}).get('en')
+    signature_item = reference in {'inventory/Awaken', 'inventory/SkillUp'} and item.get('SigState') in {'a', 'd'}
+    # Rank-up gems have no SigState. The native rank and first hero rank-up
+    # redeemer identify this separately reviewed neutral inventory texture.
+    redeemers = item.get('Redeemers') or []
+    rank_item = (reference in {'inventory/RankUp_Gems', 'inventory/RAnkUp_Gems'} and
+                 type(item.get('Rank')) is int and item['Rank'] > 0 and
+                 bool(redeemers) and redeemers[0].get('Type') == 'hrup')
+    if item.get('ImageS3') or not item.get('UseOnHero') or not (signature_item or rank_item):
         return {}
     if hero_classes is None: raise ValueError('Inventory rendering requires exact BCG hero classes')
     by_id = {}

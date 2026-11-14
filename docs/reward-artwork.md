@@ -129,6 +129,14 @@ publication, but consumers must use the updated manifest.
 
 Unsupported registries, including relics, cosmetics and champion blueprints, remain explicitly missing. Selectable-reward objects now use their exact game definition registry; see [selectable-rewards.md](selectable-rewards.md) for capture, provenance and publication. Hero portraits are handled by the existing champion image pipeline. One `ave` currency resource is absent from the captured resource files; one old event resource has no reviewed static texture branch. These cases retain their source IDs and reasons.
 
+### Class rank-up gems
+
+Class rank-up gems use the same native `GetTextureColor` → `GetClassFromTags` → `GetColourAndMaterialForItem` overlay chain. The reviewed `GameStoreUtils.txt` SHA-256 is `b1a54b54fdb524a2b4e491de9e91c22545f0e07f3a795340553041969a2aed87`. Their exact resource references are `inventory/RankUp_Gems` and the captured case variant `inventory/RAnkUp_Gems`. These items have no signature-state requirement: the extractor requires `UseOnHero`, a positive integer `Rank`, and a first `hrup` redeemer. Class comes from the native tags and BCG class records. Generic items without a class, relic items and separate event/CDN artwork keep their existing pixels.
+
+`scripts/game-quests/build_rank_gem_artwork.py` reproduces 108 exact class bindings from the pinned GameStore/BCG registries, palette, shader and original neutral PNG. Six lossless content-addressed WebPs live under `web/public/game-rewards/full/`. `rank-gem-corrections.json` is a separate local sidecar, so regenerating material corrections does not erase rank-gem artwork. The shared reward reader validates every replacement against its original texture reference and input hash, making the class artwork available to crystal, quest and Tower rewards. The original published manifest and GCS objects remain unchanged; all six rendered images preserve the original alpha channel.
+
+Crystal reward cards carry the native item name and class alongside rank/rarity metadata. Only the native `RANK UP GEM` presentation with an increasing one-rank range supplies the class/category label aliases used for disclosed rate matching. This binds the six class rate rows in `7star_rankup_gem_crystal_r4` to their actual gem rewards, removing the duplicate unrated list. Source percentages, reward identities and quantities remain unchanged; the shared white rank numbers and gold star strip remain separate overlays. Missing native presentation stays unresolved instead of guessing from an ID suffix.
+
 ## Provenance and publication
 
 Manifest provenance includes the opening gacha SHA-256, unchanged normalized opening-catalog SHA-256, exact BCG/GameStore binary hashes, reviewed Marvel/Fuse metadata hashes, current game metadata hash (which verifies the public CDN base) and reused crystal-manifest hash. It contains no local paths, credentials, account data or raw binaries.

@@ -42,7 +42,7 @@ function validateRenderTints(manifest: { source: { colorDictionary?: z.infer<typ
   assets: { type: string; data: string; role: string; registryId: string; reference: string; classId?: string; tintApplied: boolean; registry: string; origin: string; renderTint?: z.infer<typeof renderTintSchema> }[] }, context: z.RefinementCtx) {
   manifest.assets.forEach((asset, index) => {
     const inventory = asset.registry === "gamestore" && asset.type === "inv" && asset.role === "full" && asset.data === asset.registryId &&
-      ["inventory/Awaken", "inventory/SkillUp"].includes(asset.reference) && asset.classId &&
+      ["inventory/Awaken", "inventory/SkillUp", "inventory/RankUp_Gems", "inventory/RAnkUp_Gems"].includes(asset.reference) && asset.classId &&
       asset.renderTint?.source === "color-dictionary" && asset.renderTint.key === `class_${asset.classId}` && asset.renderTint.blendMode === "overlay" &&
       manifest.source.inventoryShader && manifest.source.inventoryShader.sha256 === manifest.source.colorDictionary?.sha256
     const material = asset.registry === "evo" && ["ebp", "ebpf"].includes(asset.type) && asset.data === asset.registryId &&

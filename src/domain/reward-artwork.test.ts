@@ -69,6 +69,10 @@ it("requires the reviewed inventory overlay shader, exact registry identity and 
     url: `https://storage.googleapis.com/champion-images/rewards/full/${hash}.webp` }
   const input = { ...fixture, source, assets: [asset] }
   expect(createRewardArtworkCatalog(input).getRewardArtwork("inv", "awaken_t6_mutant")?.renderTint?.blendMode).toBe("overlay")
+  for (const reference of ["inventory/RankUp_Gems", "inventory/RAnkUp_Gems"]) {
+    const rank = { ...asset, data: "rankup_t73_mutant", registryId: "rankup_t73_mutant", reference }
+    expect(createRewardArtworkCatalog({ ...input, assets: [rank] }).getRewardArtwork("inv", rank.data)?.renderTint?.blendMode).toBe("overlay")
+  }
   for (const change of [{ registryId: "other" }, { classId: "tech" }, { reference: "unreviewed" },
     { renderTint: { ...asset.renderTint, blendMode: undefined } }, { registry: "evo" }]) {
     expect(() => createRewardArtworkCatalog({ ...input, assets: [{ ...asset, ...change }] })).toThrow()

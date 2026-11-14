@@ -23,6 +23,8 @@ export type CrystalRewardCard = CrystalOpeningReward & {
   rankChange?: RewardRankChange
   itemRarity?: number
   signaturePoints?: number
+  itemName?: string
+  itemClassName?: string
 }
 
 export function resolveCrystalPageOpening(family: CrystalCatalogDetails, incomingId: string, legacyVariant?: string) {
@@ -41,7 +43,7 @@ export function loadCrystalPageRewards(id: string) {
     const native = getNativeRewardPresentation(reward.type, reward.data)
     const publicDefinition = getPublicRewardDefinition(reward.type, reward.data)
     const publicResource = getPublicResourceDefinition(reward.type, reward.data)
-    return { ...reward, displayName: selector?.name ?? (publicDefinition?.name || null) ?? publicResource?.name ?? (native ? nativeRewardName(native, reward.type) : rewardDisplayName(reward)), itemRarity: native?.rarity, signaturePoints: native?.signaturePoints, rankChange: native?.rankChange, key: `${categoryId}:${reward.sourceIndex}`, categoryId,
+    return { ...reward, displayName: selector?.name ?? (publicDefinition?.name || null) ?? publicResource?.name ?? (native ? nativeRewardName(native, reward.type) : rewardDisplayName(reward)), itemName: native?.name, itemClassName: native?.className, itemRarity: native?.rarity, signaturePoints: native?.signaturePoints, rankChange: native?.rankChange, key: `${categoryId}:${reward.sourceIndex}`, categoryId,
       href: nested ? crystalHref(nested.id) : null,
       imageUrl: artwork?.url ?? getStaticResourceRewardArtwork(reward.type, reward.data)?.url ?? publicResource?.imageUrl ?? publicDefinition?.imageUrl ?? (reward.type === "gs" && nested ? getCrystalPresentation(nested.id)?.artworkUrl ?? null : null),
       selection: nested?.selection ?? null }

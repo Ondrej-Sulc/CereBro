@@ -24,6 +24,26 @@ class MaterialShaderRegressionTests(unittest.TestCase):
                 with Image.open(Path(directory) / result['file']) as exported:
                     self.assertEqual(exported.convert('RGBA').getpixel((0, 0)), expected)
 class RewardArtworkBindingsTests(unittest.TestCase):
+    def test_rank_up_gems_use_native_class_tags_and_keep_generic_or_unreviewed_items_neutral(self):
+        classes = ['mutant', 'trained', 'chemical', 'mystic', 'cosmic', 'tech']
+        colors = json.loads((Path(__file__).resolve().parents[1]/'src/data/game-reward-artwork/palette.json').read_text())['colors']
+        item = {'Name': 'rankup_t73_mutant', 'HTags': 't7:mutant', 'UseOnHero': True,
+                'Rank': 3, 'Redeemers': [{'Type': 'hrup', 'Quantity': 1}], 'image': {'en': 'inventory/RankUp_Gems'}}
+        items = [{**item, 'Name': 'rankup_t73_'+key, 'HTags': 't7:'+key} for key in classes]
+        controls = [{**item, 'Name': 'generic', 'HTags': 't7'},
+                    {**item, 'Name': 'relic', 'UseOnHero': False, 'UseOnRelic': True},
+                    {**item, 'Name': 'cdn', 'ImageS3': True},
+                    {**item, 'Name': 'not_rank_up', 'Redeemers': [{'Type': 'skl', 'Quantity': 1}]},
+                    {**item, 'Name': 'no_rank', 'Rank': 0}]
+        opening = {'categories': [{'rewards': [{'type': 'inv', 'data': row['Name']} for row in items+controls]}]}
+        result = build_bindings(opening, {}, [], items+controls, colors, hero_classes=[{'ClassID': key} for key in classes])
+        rows = {row['data']: row for row in result['bindings']}
+        for key in classes:
+            self.assertEqual(rows['rankup_t73_'+key]['renderTint'], {'source': 'color-dictionary', 'key': 'class_'+key,
+                             'rgba': colors['class_'+key], 'blendMode': 'overlay'})
+        for control in controls:
+            self.assertFalse(rows[control['Name']]['tintApplied'])
+
     def test_native_pve_energy_branch_does_not_alias_unrelated_tower_resources(self):
         opening = {'categories': [{'rewards': [{'type': 'res', 'data': value} for value in ['pve-energy', 'tower_energy', 'tower_challenge_energy']]}]}
         result = build_bindings(opening, {}, [], [])

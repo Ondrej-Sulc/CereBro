@@ -2,8 +2,15 @@
 import { act, type AnchorHTMLAttributes, type ImgHTMLAttributes } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
-vi.mock("next/image", () => ({ default: ({ sizes: _sizes, ...props }: ImgHTMLAttributes<HTMLImageElement>) => <img {...props} /> }))
-vi.mock("next/link", () => ({ default: ({ prefetch: _prefetch, ...props }: AnchorHTMLAttributes<HTMLAnchorElement> & { prefetch?: boolean | null }) => <a {...props} /> }))
+vi.mock("next/image", () => ({ default: ({ sizes, alt = "", ...props }: ImgHTMLAttributes<HTMLImageElement>) => {
+  void sizes
+  // eslint-disable-next-line @next/next/no-img-element -- DOM boundary for the real reward component tests.
+  return <img alt={alt} {...props} />
+} }))
+vi.mock("next/link", () => ({ default: ({ prefetch, ...props }: AnchorHTMLAttributes<HTMLAnchorElement> & { prefetch?: boolean | null }) => {
+  void prefetch
+  return <a {...props} />
+} }))
 import { loadCrystalPageRewards } from "@/lib/data/crystal-page-rewards"
 import type { CrystalRewardPresentation } from "@/lib/crystal-reward-presentation"
 import { CrystalBrowseBoundary } from "./crystal-browse-boundary"
@@ -40,6 +47,18 @@ function expectNoRewardToolbar() {
 }
 
 const rowKeys = (host: ParentNode = container) => [...host.querySelectorAll('[data-odds-row]')].map(row => row.getAttribute("data-odds-row"))
+
+it("shows six class-colored rank gems with rank and star overlays on their disclosed rate rows", async () => {
+  await render("7star_rankup_gem_crystal_r4")
+  expect(container.querySelectorAll('[data-odds-row]')).toHaveLength(6)
+  const images = [...container.querySelectorAll<HTMLImageElement>('img[data-reward-artwork]')]
+  expect(images).toHaveLength(6)
+  expect(new Set(images.map(image => image.getAttribute('src'))).size).toBe(6)
+  expect(images.every(image => image.getAttribute('src')?.startsWith('/game-rewards/full/'))).toBe(true)
+  expect(container.querySelectorAll('[data-reward-rank="3-4"]')).toHaveLength(6)
+  expect(container.querySelectorAll('[data-reward-stars="7"]')).toHaveLength(6)
+  expect(container.querySelector('[data-unrated]')).toBeNull()
+})
 
 it("shows all four Elder Web of Corruption rates together, most common first without a toolbar", async () => {
   const opening = await render("elder_web_of_corruption_saga_crystal")

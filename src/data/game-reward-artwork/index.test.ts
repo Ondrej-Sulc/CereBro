@@ -4,6 +4,23 @@ import path from "node:path"
 import { expect, it } from "vitest"
 import { getRewardArtwork, getRewardArtworkStatus, rewardArtworkCoverage, rewardArtworkSource, rewardClassColors } from "./index"
 
+it("renders native class rank-up gem pixels distinctly while retaining the neutral generic gem", () => {
+  // The recorded 6-star generic control shares the exact unnumbered base texture.
+  const generic = getRewardArtwork("inv", "rankup_t63")!
+  expect(generic.tintApplied).toBe(false)
+  const images = ["mutant", "trained", "chemical", "mystic", "cosmic", "tech"].map(classId => {
+    const gem = getRewardArtwork("inv", `rankup_t73_${classId}`)!
+    expect(gem.inputSha256).toBe(generic.inputSha256)
+    expect(gem.tintApplied).toBe(true)
+    expect(gem.renderTint).toEqual({ source: "color-dictionary", key: `class_${classId}`, rgba: rewardClassColors[`class_${classId}`], blendMode: "overlay" })
+    expect(gem.url).not.toBe(generic.url)
+    const bytes = readFileSync(path.resolve(process.cwd(), "web/public", gem.url.slice(1)))
+    expect(createHash("sha256").update(bytes).digest("hex")).toBe(gem.sha256)
+    return gem.url
+  })
+  expect(new Set(images).size).toBe(6)
+})
+
 it("binds published game reward images to the unchanged all-opening source", () => {
   const bytes = readFileSync(path.resolve(process.cwd(), "src/data/game-crystal-openings/catalog.json"))
   expect(rewardArtworkSource.openingCatalogSha256).toBe(createHash("sha256").update(bytes).digest("hex"))

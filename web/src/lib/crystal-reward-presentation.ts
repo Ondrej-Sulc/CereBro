@@ -20,9 +20,13 @@ type Cell = { key: string; group: CrystalOddsGroup; row: CrystalOddsRow }
 const classes: Record<string, string> = { chemical: "Science", cosmic: "Cosmic", mutant: "Mutant", mystic: "Mystic", tech: "Tech", trained: "Skill" }
 const hero = (reward: CrystalRewardCard) => reward.type === "hero" || reward.type === "hcos"
 const normalize = (text: string) => text.normalize("NFKD").toLocaleLowerCase("en").replace(/\b(shard|fragment)s\b/g, "$1").replace(/[^a-z0-9]/g, "")
-const rewardClass = (reward: CrystalRewardCard) => classes[reward.data.split("_").at(-1) ?? ""] ?? null
+const rewardClass = (reward: CrystalRewardCard) => reward.itemClassName ?? classes[reward.data.split("_").at(-1) ?? ""] ?? null
 
 function inventoryName(reward: CrystalRewardCard) {
+  if (reward.type === "inv" && reward.itemName === "RANK UP GEM" && reward.itemRarity &&
+    reward.rankChange && reward.rankChange.to === reward.rankChange.from + 1) {
+    return { stars: String(reward.itemRarity), item: "Rank Up Gem", plusFive: false }
+  }
   const match = reward.type === "inv" && reward.data.match(/^(sigupfive|sigup|awaken)_t([1-7])(?:_(chemical|cosmic|mutant|mystic|tech|trained|generic))?$/)
   if (!match) return null
   return { stars: match[2], item: match[1] === "awaken" ? "Awakening Gem" : "Signature Stone", plusFive: match[1] === "sigupfive" }
@@ -30,7 +34,7 @@ function inventoryName(reward: CrystalRewardCard) {
 
 function variantName(reward: CrystalRewardCard) {
   const inventory = inventoryName(reward)
-  if (inventory) return [`${inventory.stars}-Star`, rewardClass(reward), inventory.plusFive ? "+5" : null, inventory.item].filter(Boolean).join(" ")
+  if (inventory && inventory.item !== "Rank Up Gem") return [`${inventory.stars}-Star`, rewardClass(reward), inventory.plusFive ? "+5" : null, inventory.item].filter(Boolean).join(" ")
   const name = rewardDisplayName(reward)
   return reward.type === "ebpf" && !/fragment/i.test(name) ? `${name} Fragments` : name
 }
@@ -50,6 +54,10 @@ function aliases(reward: CrystalRewardCard) {
   const inventory = inventoryName(reward)
   if (inventory) {
     result.add(normalize(`${inventory.stars}-Star ${inventory.item}`))
+    if (inventory.item === "Rank Up Gem" && reward.itemClassName) {
+      result.add(normalize(`${reward.itemClassName} ${inventory.item}`))
+      result.add(normalize(`${inventory.stars}-Star ${reward.itemClassName} ${inventory.item}`))
+    }
     if (inventory.plusFive) result.add(normalize(`${inventory.stars}-Star +5 ${inventory.item}`))
   }
   return result

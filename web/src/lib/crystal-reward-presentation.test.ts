@@ -4,6 +4,36 @@ import { loadCrystalPageRewards, type CrystalRewardCard } from "./data/crystal-p
 import { buildCrystalRewardPresentation, sortCrystalRewardRows, type CrystalRewardRate } from "./crystal-reward-presentation"
 import { crystalStarCategoryRates } from "./crystal-odds-presentation"
 
+it("attaches each disclosed class rank-up gem rate to its exact colored gem and native rank details", () => {
+  const opening = loadCrystalPageRewards("7star_rankup_gem_crystal_r4")!
+  const before = JSON.stringify([opening.odds, opening.otherRewards])
+  const view = opening.rewardPresentation
+  expect(view.groups.flatMap(group => group.rows).map(row => row.rate)).toEqual(opening.odds!.groups!.flatMap(group => group.rows))
+  const rows = view.groups.flatMap(group => group.rows)
+  expect(rows).toHaveLength(6)
+  expect(view.unrated).toEqual([])
+  const images = rows.map(row => {
+    expect(row.variants).toHaveLength(1)
+    const reward = row.variants[0].reward
+    expect(row.rate.label?.toLowerCase()).toBe(`${row.variants[0].className} Rank Up Gem`.toLowerCase())
+    expect(reward.rankChange).toEqual({ from: 3, to: 4 })
+    expect(reward.itemRarity).toBe(7)
+    expect(reward.quantity).toBe(1)
+    expect(reward.imageUrl).toMatch(/\/game-rewards\/full\/[a-f0-9]{64}\.webp$/)
+    return reward.imageUrl
+  })
+  expect(new Set(images).size).toBe(6)
+  expect(JSON.stringify([opening.odds, opening.otherRewards])).toBe(before)
+})
+
+it("does not assign class rank gem rates from item-name suffixes without the native presentation binding", () => {
+  const opening = loadCrystalPageRewards("7star_rankup_gem_crystal_r4")!
+  const rewards = opening.otherRewards.map(reward => ({ ...reward, itemName: undefined, itemClassName: undefined }))
+  const view = buildCrystalRewardPresentation(opening.odds, [{ id: rewards[0].categoryId, rewards }])
+  expect(view.groups.flatMap(group => group.rows).every(row => row.variants.length === 0)).toBe(true)
+  expect(view.unrated).toHaveLength(6)
+})
+
 it("keeps the Elder Web of Corruption's entire mixed rate group together", () => {
   const opening = loadCrystalPageRewards("elder_web_of_corruption_saga_crystal")!
   const view = opening.rewardPresentation
