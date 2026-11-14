@@ -65,6 +65,14 @@ The SVG uses actual coordinate endpoints for ordinary and portal edges. Cyan fol
 
 Node details preserve game effect ID, assigned target, source type/coordinate, quantity, persistence marker, linked target coordinates, resolved/raw text and parameter/reference data. React escapes text; display formatting only removes game markup. No sibling node-definition module or nonexistent node/glossary destination is imported/linked.
 
+The selected location groups modifiers into Local, Linked and Global sections;
+other source types retain separate sections. Matching target, quantity,
+persistence, source position and ordered linked locations share one collapsed
+modifier-details disclosure. Different context stays separate. Every application
+keeps its own description, definition link and source-hash-bound share anchor;
+equal names or descriptions never merge assignments. The chain icons open direct
+links to the selected map location or modifier; they do not copy to the clipboard.
+
 Quest-scoped direct champion rewards and `gs` crystal opening references render separately from opponents. The current view groups actual reward rows by Completion, 100% exploration and Potential rewards, hiding empty scopes. Item kind, quantity and direct-champion rarity remain attached. A server projection resolves `gs` data by **exact unique `sourceMetadata.token`** in the canonical opening reader, not by name or assumed opening ID. For example `quest_crystal` resolves to the existing `/crystals/quest_crystal_improvedspin`; `class_cat_crystal` resolves to Tier 4 Class Catalyst Crystal; `mythic_shard_crystal` resolves to Mythic Crystal. Canonical reward artwork is preferred, with the exact opening's crystal artwork as a supported fallback. Unknown or ambiguous tokens have a neutral Crystal reward presentation and no link. All exact tokens and native scopes remain in the single Data & reward details disclosure. A crystal reference does not guarantee a named champion. First/mastery/potential scope labels remain attached. This is not a full reward browser: act/chapter rewards, materials, positioned path rewards, selectors, nested rewards and possible crystal membership are not expanded. Gates, energy/portal costs, adaptive final stats and conditional source removal are not inferred.
 
 ## Modifier occurrence contract for the node track

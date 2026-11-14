@@ -16,4 +16,11 @@
 .context[open]>summary::before{content:'−'}
 .context p{margin:5px 0}
 .context button{color:#a0d6ea;text-decoration:underline;text-underline-offset:3px;margin-right:6px;min-height:44px}
+.scope{margin-top:18px;min-width:0}
+.scopeHeading{display:flex;align-items:center;gap:8px;margin-bottom:8px;color:#b1c4d8;font-size:12px;font-weight:600}
+.scopeHeading>span{padding:1px 6px;border-radius:5px;background:#1a2c40;color:#91a9c1;font-size:11px;font-weight:400}
+.scope[data-modifier-scope="Link"]>.scopeHeading{color:#9bd3e7}
+.scope[data-modifier-scope="Global"]>.scopeHeading{color:#c4b5e4}
+.contextGroup+.contextGroup{margin-top:12px}
+.context[data-shared-modifier-context]{margin:0 0 8px;padding:4px 10px;border-radius:7px;background:#102335}
 @media(prefers-reduced-motion:reduce){.chevron{transition:none}}

@@ -20,6 +20,65 @@ async function render(element: React.ReactNode) {
   return host;
 }
 describe("quest map controls", () => {
+  it("groups Medusa's linked and global modifiers while sharing only their repeated context", async () => {
+    const map = (await loadQuestMap("a09_ch03_q02"))!;
+    const tile = map.tiles.find(t => t.coordinate.join(',') === '13,19')!;
+    const before = JSON.stringify(tile.applications);
+    const host = await render(<QuestMapExplorer map={map} initialNode="13,19" initialApplication={tile.applications[3].id} />);
+    const inspector = host.querySelector('section[aria-labelledby="coordinate-heading"]')!;
+    const linked = inspector.querySelector('[data-modifier-scope="Link"]')!;
+    const global = inspector.querySelector('[data-modifier-scope="Global"]')!;
+    expect(linked).not.toBeNull();
+    expect(global).not.toBeNull();
+    expect(linked.querySelector('h4')?.textContent).toBe('Linked6');
+    expect(global.querySelector('h4')?.textContent).toBe('Global8');
+    expect(linked.querySelectorAll('[data-quest-application]')).toHaveLength(6);
+    expect(global.querySelectorAll('[data-quest-application]')).toHaveLength(8);
+    expect([...inspector.querySelectorAll('[data-quest-application]')].map(row => row.getAttribute('data-quest-application'))).toEqual(tile.applications.map(a => a.id));
+    const context = linked.querySelector<HTMLDetailsElement>('[data-shared-modifier-context="6"]')!;
+    expect(context.open).toBe(false);
+    expect(context.querySelector('summary')?.textContent).toContain('Shared modifier details');
+    expect(inspector.querySelectorAll('[data-modifier-context]')).toHaveLength(1);
+    expect(context.querySelectorAll('button')).toHaveLength(7);
+    expect(linked.querySelector('[data-quest-application] [data-modifier-context]')).toBeNull();
+    const highlighted = inspector.querySelector('[data-highlighted]')!;
+    expect(highlighted.getAttribute('data-quest-application')).toBe(tile.applications[3].id);
+    const share = highlighted.querySelector<HTMLAnchorElement>('a[aria-label^="Link to "]')!;
+    expect(new URL(share.href).searchParams.get('application')).toBe(tile.applications[3].id);
+    expect(new URL(share.href).searchParams.get('sourceHash')).toBe(map.sourceHash);
+    expect(JSON.stringify(tile.applications)).toBe(before);
+    await act(async () => context.querySelector('summary')!.click());
+    expect(context.open).toBe(true);
+    await act(async () => context.querySelector('button')!.click());
+    expect(new URL(window.location.href).searchParams.get('node')).toBe(tile.applications[0].sourceCoordinate.join(','));
+  });
+
+  it("keeps different modifier context and unknown scopes separate without merging applications", async () => {
+    const map = (await loadQuestMap("a09_ch03_q02"))!;
+    const tile = map.tiles.find(t => t.coordinate.join(',') === '13,19')!;
+    const base = tile.applications[0];
+    const variations = [
+      {}, {}, { amount: 2 }, { remainActive: null }, { remainActive: true },
+      { sourceCoordinate: tile.coordinate }, { linkedTargets: [tile.coordinate] }, { target: 'attacker' as const },
+    ].map((changes, index) => ({ ...base, ...changes, id: `variant-${index}`, name: `Modifier ${index}` }));
+    const routine = { ...base, sourceCoordinate: tile.coordinate, linkedTargets: [] };
+    const applications = [...variations, ...['Global', 'Local', 'Other scope'].map(sourceType => ({ ...routine, sourceType, id: sourceType }))];
+    const fixture = { ...map, tiles: map.tiles.map(t => t === tile ? { ...t, applications } : t) };
+    const host = await render(<QuestMapExplorer map={fixture} initialNode="13,19" />);
+    const inspector = host.querySelector('section[aria-labelledby="coordinate-heading"]')!;
+    expect([...inspector.querySelectorAll('[data-modifier-scope]')].map(section => section.getAttribute('data-modifier-scope'))).toEqual(['Local', 'Link', 'Global', 'Other scope']);
+    const linked = inspector.querySelector('[data-modifier-scope="Link"]')!;
+    expect(linked.querySelectorAll('[data-quest-application]')).toHaveLength(8);
+    expect(linked.querySelectorAll('[data-modifier-context]')).toHaveLength(7);
+    expect(linked.querySelectorAll('[data-shared-modifier-context="2"]')).toHaveLength(1);
+    expect(linked.textContent).toContain('Quantity 2');
+    expect(linked.textContent).toContain('Persistence not recorded');
+    expect(linked.textContent).toContain('Source marked persistent');
+    expect(linked.textContent).toContain('Attacker');
+    expect(inspector.querySelector('[data-modifier-scope="Local"] [data-modifier-context]')).toBeNull();
+    expect(inspector.querySelectorAll('[data-quest-application]')).toHaveLength(applications.length);
+  });
+
   it("links a quest modifier name to its exact game-definition page and keeps its description toggle", async () => {
     const map = (await loadQuestMap("me_mausoleum_ch01_q02"))!;
     const tile = map.tiles.find(t => t.applications.some(a => a.name === "Contagion"))!;

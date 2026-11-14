@@ -4,7 +4,7 @@ import { useEffect,useRef, useState } from "react";
 import Link from "next/link";
 import { Link2 } from "lucide-react";
 import { coordinateKey, routeEncounters, type Coordinate, type QuestMap } from "@cerebro/core/domain/game-quests";
-import { QuestApplicationDetails } from "./quest-application-details";
+import { QuestModifierGroups } from "./quest-modifier-groups";
 import { QuestBoard } from "./quest-board";
 import { QuestPortrait, questEncounterPortrait } from "./quest-portrait";
 import type { QuestPortrait as Portrait } from "@/lib/game-quests/presentation";
@@ -78,7 +78,7 @@ export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}
             {e.candidates.length > 1 && <p>Recorded alternatives: {e.candidates.map(c => c.name).join(", ")}</p>}
           </div>; })}
           {!selectedEncounters.length && <p className={styles.muted}>No placed defender recorded here.</p>}
-          <div className={styles.modifierSection}><h3>Node modifiers <span>{selectedTile.applications.length}</span></h3>{!selectedTile.applications.length && <p className={styles.muted}>No node modifiers recorded here.</p>}{selectedTile.applications.map(a => <QuestApplicationDetails key={a.id} application={a} questId={map.questId} sourceHash={map.sourceHash} shareUrl={shareUrl} highlighted={selectedApplication===a.id} positionLabel={c=>questPositionLabel(map,c)} choose={choose}/>)}</div>
+          <div className={styles.modifierSection}><h3>Node modifiers <span>{selectedTile.applications.length}</span></h3>{!selectedTile.applications.length && <p className={styles.muted}>No node modifiers recorded here.</p>}<QuestModifierGroups applications={selectedTile.applications} questId={map.questId} sourceHash={map.sourceHash} shareUrl={shareUrl} selectedApplication={selectedApplication} positionLabel={c=>questPositionLabel(map,c)} choose={choose}/></div>
           {(selectedTile.links.length>0||selectedTile.portals.length>0)&&<details className={styles.connections} data-map-connections><summary>Map connections</summary>{selectedTile.links.map(c => <button key={`l:${coordinateKey(c)}`} onClick={() => choose(c, true)}>→ {questPositionLabel(map,c)}</button>)}{selectedTile.portals.map((p, i) => <button className={styles.portal} key={`p:${i}`} onClick={() => choose(p.target, true)}>Portal → {questPositionLabel(map,p.target)}{p.label && ` · ${p.label}`}{selectedTile.randomPortal && " · Random target"}</button>)}</details>}
           </>}
         </div>
