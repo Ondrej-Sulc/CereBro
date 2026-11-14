@@ -38,3 +38,25 @@ it("avoids overlapping dense-map labels while leaving the source positions uncha
     expect(label.x<x+radius&&label.x+label.width>x-radius&&label.y<y+radius&&label.y+label.height>y-radius).toBe(false);
   }
 });
+
+it.each([.48, 1, 2])("keeps selected labels readable and collision-free at %s map zoom", async zoom => {
+  const map = (await loadQuestMap('a09_ch03_q02'))!;
+  const selected = map.encounters.find(e => coordinateKey(e.coordinate) === '13,19')!;
+  const before = JSON.stringify(map);
+  const labels = questBoardLabels(map, [selected.id], 1 / zoom);
+  const selectedLabel = labels.get(selected.id)!;
+  expect(selectedLabel).toBeDefined();
+  expect(selectedLabel.height * zoom).toBeCloseTo(30);
+  const board = questBoardGeometry(map), boxes = [...labels.values()];
+  for (const [index, label] of boxes.entries()) {
+    expect(label.x).toBeGreaterThanOrEqual(0); expect(label.y).toBeGreaterThanOrEqual(0);
+    expect(label.x + label.width).toBeLessThanOrEqual(board.width);
+    expect(label.y + label.height).toBeLessThanOrEqual(board.height);
+    for (const other of boxes.slice(index + 1)) expect(label.x < other.x + other.width && label.x + label.width > other.x && label.y < other.y + other.height && label.y + label.height > other.y).toBe(false);
+    for (const encounter of map.encounters) {
+      const [x, y] = board.point(encounter.coordinate), radius = encounter.final ? 41 : 35;
+      expect(label.x < x + radius && label.x + label.width > x - radius && label.y < y + radius && label.y + label.height > y - radius).toBe(false);
+    }
+  }
+  expect(JSON.stringify(map)).toBe(before);
+});

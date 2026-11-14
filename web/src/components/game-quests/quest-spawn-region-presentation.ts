@@ -1,7 +1,7 @@
 import { coordinateKey, type Coordinate, type QuestEncounter, type QuestMap } from "@cerebro/core/domain/game-quests";
 import type { QuestSpawnRegion, QuestSpawnRegionLayer } from "@cerebro/core/domain/game-quests/spawn-regions";
 import type { QuestPortrait } from "@/lib/game-quests/presentation";
-import { questBoardGeometry } from "@cerebro/core/domain/game-quests/board";
+import { questBoardGeometry, questLabelCandidates } from "@cerebro/core/domain/game-quests/board";
 
 export type MapDefenderEntry = { kind: "fixed"; encounter: QuestEncounter } | { kind: "region"; region: QuestSpawnRegion };
 export function regionPortrait(region: QuestSpawnRegion): QuestPortrait {
@@ -36,13 +36,13 @@ export function regionBoardGeometry(map:QuestMap,layer?:QuestSpawnRegionLayer){
   return {...base,pitch,width:base.width*ratio,height:base.height*ratio,point:(c:Coordinate):Coordinate=>{const p=base.point(c);return[p[0]*ratio,p[1]*ratio];}};
 }
 export type RegionLabelBox={x:number;y:number;width:number;height:number};
-export function regionBoardLabels(map:QuestMap,layer:QuestSpawnRegionLayer,board:ReturnType<typeof regionBoardGeometry>,prioritized:string[]){
+export function regionBoardLabels(map:QuestMap,layer:QuestSpawnRegionLayer,board:ReturnType<typeof regionBoardGeometry>,prioritized:string[],unit=1){
   const overlaps=(a:RegionLabelBox,b:RegionLabelBox)=>a.x<b.x+b.width&&a.x+a.width>b.x&&a.y<b.y+b.height&&a.y+a.height>b.y;
-  const anchors=[...map.encounters.map(e=>({id:e.id,coordinate:e.coordinate,radius:e.final?33:27})),...layer.regions.map(r=>({id:r.id,coordinate:r.anchor,radius:28}))];
+  const anchors=[...map.encounters.map(e=>({id:e.id,name:e.name,coordinate:e.coordinate,radius:e.final?33:27})),...layer.regions.map(r=>({id:r.id,name:r.defender.name,coordinate:r.anchor,radius:28}))];
   const portraits=anchors.map(a=>{const [x,y]=board.point(a.coordinate),r=a.radius+8;return{x:x-r,y:y-r,width:r*2,height:r*2};});
   const result=new Map<string,RegionLabelBox>();
   for(const a of anchors.sort((a,b)=>{const x=prioritized.indexOf(a.id),y=prioritized.indexOf(b.id);return(x<0?999:x)-(y<0?999:y);})){const [x,y]=board.point(a.coordinate);
-    const options=[{x:x-80,y:y+a.radius+14,width:160,height:25},{x:x-80,y:y-a.radius-40,width:160,height:25},{x:x+a.radius+12,y:y-12,width:160,height:25},{x:x-a.radius-172,y:y-12,width:160,height:25}];
+    const options=questLabelCandidates(x,y,a.radius,a.name,unit,board);
     const box=options.find(o=>o.x>=0&&o.y>=0&&o.x+o.width<=board.width&&o.y+o.height<=board.height&&!portraits.some(p=>overlaps(o,p))&&![...result.values()].some(p=>overlaps(o,p)));
     if(box)result.set(a.id,box);
   }

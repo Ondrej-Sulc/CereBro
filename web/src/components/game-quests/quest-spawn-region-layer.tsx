@@ -4,6 +4,7 @@ import type { Coordinate, QuestMap } from "@cerebro/core/domain/game-quests";
 import type { QuestSpawnRegionLayer } from "@cerebro/core/domain/game-quests/spawn-regions";
 import { regionCorridors, type RegionLabelBox } from "./quest-spawn-region-presentation";
 import styles from "./quest-board.module.css";
+import { QuestMapNameplate } from "./quest-map-nameplate";
 
 type RegionProps={map:QuestMap;layer:QuestSpawnRegionLayer;point:(c:Coordinate)=>Coordinate;selected?:string;hovered?:string;pathIndex:number};
 export function QuestSpawnRegionAreas({map,layer,point,selected,hovered,pathIndex}:RegionProps){
@@ -17,8 +18,8 @@ export function QuestSpawnRegionAreas({map,layer,point,selected,hovered,pathInde
   })}</g>;
 }
 
-export function QuestSpawnRegionMarkers({layer,point,selected,hovered,pathIndex,names,onChoose,onHover,uid,labels}:RegionProps&{
-  names:boolean;onChoose:(id:string)=>void;onHover:(id:string|null)=>void;uid:string;labels:Map<string,RegionLabelBox>;
+export function QuestSpawnRegionMarkers({layer,point,selected,hovered,pathIndex,names,onChoose,onHover,uid,labels,labelScale=1}:RegionProps&{
+  names:boolean;onChoose:(id:string)=>void;onHover:(id:string|null)=>void;uid:string;labels:Map<string,RegionLabelBox>;labelScale?:number;
 }){
   const [failed,setFailed]=useState<Set<string>>(new Set());
   return <g>{layer.regions.map((region,index)=>{
@@ -38,7 +39,7 @@ export function QuestSpawnRegionMarkers({layer,point,selected,hovered,pathIndex,
       {!failed.has(region.id)&&<image data-region-portrait={region.defender.gameId} href={region.defender.imageUrl} x={x-22} y={y-22} width="44" height="44" clipPath={`url(#${uid}-region-${index})`} opacity={active||isSelected?1:.8} onError={()=>setFailed(current=>new Set([...current,region.id]))}/>}
       <rect x={x-17} y={y+20} width="34" height="16" rx="5" fill="#092820" stroke="#64c9b2"/>
       <text x={x} y={y+31} textAnchor="middle" fill="#baf8e8" fontSize="10" fontWeight="600">{region.defender.rarity}★ ∼</text>
-      {label&&<g className={styles.nameLabel}><rect {...label} rx="6" fill="#061c1d" fillOpacity=".97" stroke={isSelected?"#8debd5":"#315b55"}/><text x={label.x+label.width/2} y={label.y+17} textAnchor="middle" fill="#e6fff8" fontSize="11" fontWeight="600">{region.defender.name.length>27?region.defender.name.slice(0,25)+'…':region.defender.name}</text></g>}
+      {label&&<QuestMapNameplate box={label} name={region.defender.name} selected={isSelected} accent="#70e2c9" unit={labelScale}/>}
     </g>;
   })}</g>;
 }

@@ -62,6 +62,9 @@ async function renderBoard(onChoose: (coordinate: Coordinate) => void = () => {}
   return host;
 }
 const scale = (host: HTMLElement) => Number(host.querySelector("[data-zoom]")?.getAttribute("data-zoom"));
+async function zoomToDetail(host: HTMLElement) {
+  while (scale(host) < 1) await act(async () => button(host, "Zoom in").click());
+}
 function button(host: HTMLElement, label: string) {
   const found = [...host.querySelectorAll("button")].find(b => (b.getAttribute("aria-label") || b.textContent) === label);
   expect(found, label).toBeDefined(); return found!;
@@ -78,7 +81,7 @@ describe("quest map viewport controls", () => {
     const capture = vi.fn();
     define(Element.prototype, "setPointerCapture", { value: capture });
     const host = await renderBoard();
-    await act(async () => button(host, "Focus selected location").click());
+    await zoomToDetail(host);
     const viewport = host.querySelector<HTMLElement>('[aria-label="Scrollable quest map"]')!;
     const scene = host.querySelector("svg[data-zoom]")!;
     viewport.scrollTo({ left: 200, top: 200 });
@@ -99,7 +102,7 @@ describe("quest map viewport controls", () => {
   it.each(["pointercancel", "lostpointercapture"])("ends the drag on viewport %s and accepts a fresh touch", async type => {
     define(Element.prototype, "setPointerCapture", { value: vi.fn() });
     const host = await renderBoard();
-    await act(async () => button(host, "Focus selected location").click());
+    await zoomToDetail(host);
     const viewport = host.querySelector<HTMLElement>('[aria-label="Scrollable quest map"]')!;
     const scene = host.querySelector("svg[data-zoom]")!;
     viewport.scrollTo({ left: 200, top: 200 });
@@ -119,7 +122,7 @@ describe("quest map viewport controls", () => {
   it("pinches through capture handoff and continues panning with the remaining finger", async () => {
     define(Element.prototype, "setPointerCapture", { value: vi.fn() });
     const host = await renderBoard();
-    await act(async () => button(host, "Focus selected location").click());
+    await zoomToDetail(host);
     const viewport = host.querySelector<HTMLElement>('[aria-label="Scrollable quest map"]')!;
     const scene = host.querySelector("svg[data-zoom]")!;
     viewport.scrollTo({ left: 200, top: 200 });
@@ -201,15 +204,28 @@ describe("quest map viewport controls", () => {
     expect(scale(host)).toBeCloseTo(fit());
   });
 
-  it("zooms from fit to readable defender detail and centers after the SVG commits", async () => {
+  it("keeps readable nameplates and contrasting route layers without changing native endpoints", async () => {
     const host = await renderBoard();
-    await act(async () => button(host, "Focus selected location").click());
-    expect(scale(host)).toBeGreaterThanOrEqual(1);
-    expect(button(host, "Fit map").getAttribute("aria-pressed")).toBe("false");
-    const board = questBoardGeometry(map), [x, y] = board.point(map.encounters[0].coordinate);
-    const element = host.querySelector<HTMLElement>('[aria-label="Scrollable quest map"]')!;
-    expect(element.scrollLeft).toBeCloseTo(Math.max(0, Math.min(board.width * scale(host) - size.width, x * scale(host) - size.width / 2)));
-    expect(element.scrollTop).toBeCloseTo(Math.max(0, Math.min(board.height * scale(host) - size.height, y * scale(host) - size.height / 2)));
+    const board = questBoardGeometry(map);
+    const edges = [...host.querySelectorAll('[data-route-edge]')];
+    expect(edges).toHaveLength(board.edges.length);
+    for (const edge of edges) {
+      const casing = edge.querySelector('[data-route-casing]')!;
+      const line = edge.querySelector('[data-route-line]')!;
+      expect(casing.getAttribute('vector-effect')).toBe('non-scaling-stroke');
+      expect(line.getAttribute('vector-effect')).toBe('non-scaling-stroke');
+      expect(Number(casing.getAttribute('stroke-width'))).toBeGreaterThan(Number(line.getAttribute('stroke-width')));
+      const native = board.edges.find(row => row.from.join(',') === edge.getAttribute('data-from') && row.to.join(',') === edge.getAttribute('data-to'))!;
+      expect(native).toBeDefined();
+      if (!native.portal) {
+        expect([Number(line.getAttribute('x1')), Number(line.getAttribute('y1'))]).toEqual(board.point(native.from));
+        expect([Number(line.getAttribute('x2')), Number(line.getAttribute('y2'))]).toEqual(board.point(native.to));
+      }
+    }
+    const textSize = () => Number(host.querySelector('[data-map-nameplate] text')?.getAttribute('font-size')) * scale(host);
+    expect(textSize()).toBeCloseTo(12);
+    await zoomToDetail(host);
+    expect(textSize()).toBeCloseTo(12);
   });
 
   it("requests real browser fullscreen and exits through the browser API", async () => {
@@ -271,14 +287,31 @@ describe("quest map viewport controls", () => {
     expect(document.activeElement).toBe(opener);
   });
 
-  it("labels the overview control and opens and closes the actual minimap", async () => {
+  it("automatically shows a synchronized overview only above fit zoom without Focus or Overview buttons", async () => {
     const host = await renderBoard();
-    const toggle = button(host, "Toggle map overview");
-    expect(toggle.textContent).toContain("Overview");
-    await act(async () => toggle.click());
+    expect(host.querySelector('[aria-label="Toggle map overview"]')).toBeNull();
+    expect(host.querySelector('[aria-label="Focus selected location"]')).toBeNull();
+    expect(host.querySelector('svg[aria-label="Map overview"]')).toBeNull();
+    await act(async () => button(host, 'Zoom in').click());
+    const mini = host.querySelector<SVGSVGElement>('svg[aria-label="Map overview"]')!;
+    expect(mini).not.toBeNull();
+    const viewport = host.querySelector<HTMLElement>('[aria-label="Scrollable quest map"]')!;
+    await act(async () => { viewport.scrollTo({ left: 20, top: 25 }); viewport.dispatchEvent(new Event('scroll')); });
+    const camera = mini.querySelector('[data-overview-viewport]')!;
+    expect(Number(camera.getAttribute('x'))).toBeCloseTo(20 / scale(host));
+    expect(Number(camera.getAttribute('y'))).toBeCloseTo(25 / scale(host));
+    expect(Number(camera.getAttribute('width'))).toBeCloseTo(Math.min(questBoardGeometry(map).width, size.width / scale(host)));
+    vi.spyOn(mini, 'getBoundingClientRect').mockReturnValue({ x:0,y:0,left:0,top:0,width:140,height:150,right:140,bottom:150,toJSON:()=>({}) });
+    await act(async () => mini.dispatchEvent(new MouseEvent('click', { clientX:70,clientY:75,bubbles:true })));
+    expect(viewport.scrollLeft).toBeCloseTo(Math.max(0, (questBoardGeometry(map).width * scale(host) - size.width) / 2));
+    const top = viewport.scrollTop;
+    await act(async () => mini.dispatchEvent(new KeyboardEvent('keydown', { key:'ArrowDown',bubbles:true,cancelable:true })));
+    expect(viewport.scrollTop).toBeCloseTo(Math.max(0, Math.min(questBoardGeometry(map).height * scale(host) - size.height, top + size.height / 2)));
+    await act(async () => button(host, 'Fit map').click());
+    expect(host.querySelector('svg[aria-label="Map overview"]')).toBeNull();
+    await act(async () => button(host, 'Zoom in').click());
     expect(host.querySelector('svg[aria-label="Map overview"]')).not.toBeNull();
-    expect(toggle.getAttribute("aria-expanded")).toBe("true");
-    await act(async () => toggle.click());
+    await act(async () => button(host, 'Zoom out').click());
     expect(host.querySelector('svg[aria-label="Map overview"]')).toBeNull();
   });
 

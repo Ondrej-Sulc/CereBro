@@ -15,4 +15,6 @@
 .board[data-fullscreen=true] .canvasWrap{flex:1;min-height:0}
 .board[data-fullscreen=true] .viewport{height:100%;max-height:none}
 .board[data-window-fullscreen=true]{position:fixed;inset:0;z-index:1000;width:100vw;height:100dvh}
-@media(max-width:600px){.controls{display:grid;grid-template-columns:1fr auto;gap:7px}.namesToggle{justify-self:end}.controlActions{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.controlActions button{white-space:normal;line-height:1.25}.controls .zoom button:last-child{font-size:10px}.board[data-fullscreen=true] .controls{padding-top:max(9px,env(safe-area-inset-top));padding-inline:max(9px,env(safe-area-inset-left))}.board[data-fullscreen=true] .legend{padding-bottom:max(10px,env(safe-area-inset-bottom))}}
+.nameLabel{filter:drop-shadow(0 2px 3px #0009)}
+.navigator svg:focus-visible{outline:2px solid #a2e6ff;outline-offset:3px;border-radius:3px}
+@media(max-width:600px){.controls{display:flex;flex-wrap:wrap;gap:6px}.namesToggle{margin-left:auto}.controlActions{display:flex;flex-shrink:0}.controlActions button{min-width:40px;padding:0 8px}.controlActions button>span{display:none}.controls .zoom button:last-child{font-size:10px}.board[data-fullscreen=true] .controls{padding-top:max(9px,env(safe-area-inset-top));padding-inline:max(9px,env(safe-area-inset-left))}.board[data-fullscreen=true] .legend{padding-bottom:max(10px,env(safe-area-inset-bottom))}}
