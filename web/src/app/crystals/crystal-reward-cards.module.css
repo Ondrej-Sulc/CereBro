@@ -29,7 +29,7 @@ a.card:focus-visible { outline: 2px solid #b4c5ee; outline-offset: 4px; }
 .bonus > p, .rule > p { margin-top: 10px; color: #8aa2c1; font-size: 11px; line-height: 1.8; }
 .ruleGrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 12px; }
 .rule { padding: 18px; border: 1px solid #36465f; border-radius: 11px; background: #111d2e; }
-.rule h3 { color: #d1e1f8; font-size: 13px; font-weight: 600; line-height: 1.6; }
+.rule h3 { color: #d1e1f8; font-size: 13px; font-weight: 600; line-height: 1.6; white-space: pre-wrap; }
 @media (max-width: 639px) {
   .section { margin-top: 26px; }
   .section > header { gap: 7px; }

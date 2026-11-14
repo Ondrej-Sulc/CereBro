@@ -3,6 +3,7 @@ import { CrystalIntentLink } from "./crystal-intent-link"
 import { ArrowUpRight, ChevronDown, Package } from "lucide-react"
 import type { CrystalPageRewards, CrystalRewardCard } from "@/lib/data/crystal-page-rewards"
 import { rewardDisplayName } from "@cerebro/core/domain/reward-display"
+import { parseSynergyDescription } from "@cerebro/core/domain/champion-synergies"
 import { rewardTypeLabel } from "./crystal-reward-labels"
 import { groupCrystalRewardCards, type CrystalRewardGroup } from "@/lib/crystal-reward-groups"
 import { groupCrystalAscensionBonuses } from "@/lib/crystal-ascension-bonuses"
@@ -43,6 +44,10 @@ function Cards({ rewards }: { rewards: CrystalRewardCard[] }) {
   return <div className={styles.grid}>{groupCrystalRewardCards(rewards).map(group => group.options.length > 1 ? <AmountOptionsCard key={group.reward.key} group={group} /> : <RewardCard key={group.reward.key} reward={group.reward} />)}</div>
 }
 
+function RuleDescription({ text }: { text: string }) {
+  return parseSynergyDescription(text).map((segment, index) => <span key={index} style={{ color: segment.color, fontWeight: segment.bold ? 700 : undefined, fontStyle: segment.italic ? "italic" : undefined }}>{segment.text}</span>)
+}
+
 export function CrystalOpeningRules({ opening }: { opening: CrystalPageRewards }) {
   const grouped = groupCrystalAscensionBonuses(opening.conditionalBonuses)
   const compact = grouped.groups.reduce((count, group) => count + group.members.length, 0) >= 8
@@ -52,7 +57,7 @@ export function CrystalOpeningRules({ opening }: { opening: CrystalPageRewards }
     {compact && <CrystalAscensionBonuses groups={grouped.groups} />}
     {otherBonuses.length > 0 && <section className={styles.section} aria-labelledby={otherTitle}><header><div><p className={styles.eyebrow}>With specific outcomes</p><h2 id={otherTitle}>{compact ? "Other bonus rewards" : "Bonus rewards"}</h2></div></header><div className={styles.bonuses}>{otherBonuses.map(bonus => <div className={styles.bonus} key={bonus.key} data-bonus-outcome={bonus.key}><h3>{bonus.trigger.displayName || bonus.trigger.data}{bonus.trigger.rarity ? ` · ${bonus.trigger.rarity}★` : ""}</h3><Cards rewards={bonus.rewards} />{bonus.autoAscend && <p>These materials are used for automatic ascension when applicable.</p>}</div>)}</div></section>}
     {(opening.pity || opening.boxRules) && <section className={styles.section} aria-label="Opening rules"><header><h2>Opening rules</h2></header><div className={styles.ruleGrid}>
-      {opening.pity?.groups.map(group => <div className={styles.rule} key={group.id}><span className={styles.eyebrow}>Grace guarantee</span><h3>{(group.descriptionTemplate || group.shortDescriptionTemplate || "Recorded threshold: {0} openings").replaceAll("{0}", group.payoutLimit.toLocaleString("en"))}</h3><p>Recorded limit · {group.payoutLimit} openings. Your personal progress is not included.</p></div>)}
+      {opening.pity?.groups.map(group => <div className={styles.rule} key={group.id}><span className={styles.eyebrow}>Grace guarantee</span><h3><RuleDescription text={(group.descriptionTemplate || group.shortDescriptionTemplate || "Recorded threshold: {0} openings").replaceAll("{0}", group.payoutLimit.toLocaleString("en"))} /></h3><p>Recorded limit · {group.payoutLimit} openings. Your personal progress is not included.</p></div>)}
       {opening.boxRules && <div className={styles.rule}><span className={styles.eyebrow}>Box crystal</span><h3>{opening.boxRules.openLimit} recorded openings per cycle</h3>{opening.boxRules.allowManualReset && <p>Manual reset is supported by this definition.</p>}</div>}
     </div></section>}
   </>

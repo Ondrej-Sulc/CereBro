@@ -124,6 +124,11 @@ keeps that source ID and disables automatic prefetch. Neither artwork nor a
 shared name establishes individual champion probabilities or shared odds across
 crystal openings. The immutable odds evidence and raw catalogs remain unchanged.
 
+Grace guarantee descriptions use the shared game-text parser after substituting
+the recorded opening threshold. Native color and emphasis tags render as safe
+React text spans, preserving line breaks and literal brackets without changing
+the source templates or interpreting HTML.
+
 Tests cover gold, full/fragment separation, ambiguous class/crystal labels,
 nested links, preserved percentages while filtering, zero and tiny rates,
 prefixes, numeric group order and missing disclosures. Combined-view tests also
