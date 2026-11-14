@@ -160,8 +160,8 @@ it("keeps Champions first and Alliance second while retaining every public desti
   expect(links).toEqual([
     "/champions",
     "/alliance/onboarding",
-    "/relics",
     "/crystals",
+    "/relics",
     "/planning/quests",
     "/quests",
     "/glossary",
@@ -177,13 +177,16 @@ it("keeps Champions first and Alliance second while retaining every public desti
   expect(discord.getAttribute("target")).toBe("_blank");
   expect(discord.getAttribute("rel")).toContain("noopener");
   expect(hrefs(dialog())).not.toContain("/admin");
+  expect(hrefs(dialog().querySelector('[aria-label="Explore"]')!)).toEqual([
+    "/crystals", "/relics", "/planning/quests", "/quests", "/glossary", "/nodes", "/assets",
+  ]);
 });
 
 it.each([false, true])(
   "prioritizes desktop alliance routes for alliance=%s",
   async (alliance) => {
     await render({ user: member, alliance, profile: true });
-    expect([...document.querySelector('nav[aria-label="Primary"]')!.children].map(child => child.textContent)).toEqual(["Champions", "Alliance", "Relics", "Explore", "More"]);
+    expect([...document.querySelector('nav[aria-label="Primary"]')!.children].map(child => child.textContent)).toEqual(["Champions", "Alliance", "Explore", "More"]);
     await open("Alliance");
     expect(button("Alliance").id).toBe("site-header-alliance-trigger");
     expect(document.querySelector('[role="menu"]')?.getAttribute("aria-labelledby")).toBe(button("Alliance").id);
@@ -222,8 +225,8 @@ it("retains all alliance destinations in the panel using the real membership pro
     "/alliance/roster",
     "/alliance",
     "/analysis/season-overview",
-    "/relics",
     "/crystals",
+    "/relics",
     "/planning/quests",
     "/quests",
     "/glossary",
@@ -245,6 +248,9 @@ it.each([
   ["/alliance/roster", "Alliance"],
   ["/analysis/season-overview", "Alliance"],
   ["/planning/quests/shared/plan-id", "Explore"],
+  ["/relics", "Explore"],
+  ["/relics/black-panther", "Explore"],
+  ["/profile/relics", "Explore"],
   ["/war-videos/video-id", "More"],
 ] as const)("highlights only the owning desktop group for members at %s", async (path, current) => {
   await route(path);
@@ -269,11 +275,13 @@ describe("remembered collection intent", () => {
       if (remembered)
         document.cookie = `cerebro-${section}-view=${remembered}; Path=/`;
       await render({ profile });
+      if (section === "relics") await open("Explore");
       const link = document.querySelector<HTMLAnchorElement>(
-        `nav[aria-label="Primary"] a[href="/${section}"]`,
+        `${section === "relics" ? '[role="menu"]' : 'nav[aria-label="Primary"]'} a[href="/${section}"]`,
       )!;
       await act(async () => link.click());
       expect(push).toHaveBeenLastCalledWith(`/${section}?view=${expected}`);
+      expect(document.querySelector('[role="menu"]')).toBeNull();
       await open("Menu");
       await act(async () =>
         dialog()
@@ -354,11 +362,11 @@ it.each([
     await route(path);
     await render();
     const primary = document.querySelector('nav[aria-label="Primary"]')!;
-    expect(hrefs(primary)).toEqual(["/champions", "/relics"]);
+    expect(hrefs(primary)).toEqual(["/champions"]);
     expect(button("Explore").hasAttribute("data-active")).toBe(current);
     expect(button("More").hasAttribute("data-active")).toBe(false);
     await open("Explore");
-    expect(hrefs(document.querySelector('[role="menu"]')!)).toEqual(["/crystals", "/planning/quests", "/quests", "/glossary", "/nodes", "/assets"]);
+    expect(hrefs(document.querySelector('[role="menu"]')!)).toEqual(["/crystals", "/relics", "/planning/quests", "/quests", "/glossary", "/nodes", "/assets"]);
     const link = document.querySelector<HTMLAnchorElement>(`[role="menu"] a[href="${href}"]`)!;
     expect(link?.textContent).toBe(label);
     expect(link.getAttribute("aria-current")).toBe(current ? "page" : null);
@@ -368,7 +376,7 @@ it.each([
     expect(push).not.toHaveBeenCalled(); // ordinary public links never redirect to a personal view
     await open("Menu");
     const panel = dialog();
-    expect(hrefs(panel.querySelector('[aria-label="Explore"]')!)).toEqual(["/crystals", "/planning/quests", "/quests", "/glossary", "/nodes", "/assets"]);
+    expect(hrefs(panel.querySelector('[aria-label="Explore"]')!)).toEqual(["/crystals", "/relics", "/planning/quests", "/quests", "/glossary", "/nodes", "/assets"]);
     await act(async () => panel.querySelector<HTMLAnchorElement>(`a[href="${href}"]`)!.click());
     expect(dialog()).toBeNull();
     expect(signInAction).not.toHaveBeenCalled();

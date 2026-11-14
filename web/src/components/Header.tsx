@@ -55,6 +55,7 @@ const relics: Destination = {
 };
 const explore: Destination[] = [
   { label: "Crystals", href: "/crystals", icon: Diamond },
+  relics,
   { label: "Quest Planner", href: "/planning/quests", icon: Map },
   { label: "Quest explorer", href: "/quests", icon: Map },
   { label: "Effect glossary", href: "/glossary", icon: BookOpen },
@@ -245,7 +246,6 @@ export default function Header({
                 )}
               </>,
             )}
-            {destination(relics)}
             {dropdown(
               "explore",
               "Explore",
@@ -317,9 +317,6 @@ export default function Header({
                         destination(item),
                       )}
                     </section>
-                    <div className={`${styles.catalogs} ${styles.panelGroup}`}>
-                      {destination(relics)}
-                    </div>
                     <section className={styles.panelGroup} aria-label="Explore">
                       <h2>Explore</h2>
                       {explore.map((item) => destination(item))}
