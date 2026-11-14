@@ -31,7 +31,6 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { CollectionNavLink } from "@/components/collections/collection-navigation";
@@ -45,32 +44,28 @@ type Destination = {
   icon: LucideIcon;
   section?: "champions" | "relics";
 };
-const catalogs: Destination[] = [
-  {
-    label: "Champions",
-    href: "/champions",
-    section: "champions",
-    icon: LayoutGrid,
-  },
-  { label: "Relics", href: "/relics", section: "relics", icon: Gem },
+const champions: Destination = {
+  label: "Champions",
+  href: "/champions",
+  section: "champions",
+  icon: LayoutGrid,
+};
+const relics: Destination = {
+  label: "Relics", href: "/relics", section: "relics", icon: Gem,
+};
+const explore: Destination[] = [
   { label: "Crystals", href: "/crystals", icon: Diamond },
-];
-const moreCatalogs: Destination[] = [
-  { label: "Effect glossary", href: "/glossary", icon: BookOpen },
+  { label: "Quest Planner", href: "/planning/quests", icon: Map },
   { label: "Quest explorer", href: "/quests", icon: Map },
+  { label: "Effect glossary", href: "/glossary", icon: BookOpen },
   { label: "Node modifiers", href: "/nodes", icon: Tags },
   { label: "Game assets", href: "/assets", icon: ImageIcon },
 ];
-const quest: Destination = {
-  label: "Quest Planner",
-  href: "/planning/quests",
-  icon: Map,
-};
 const alliance: Destination[] = [
-  { label: "Overview", href: "/alliance", icon: Users },
-  { label: "Roster Overview", href: "/alliance/roster", icon: LayoutGrid },
   { label: "Attack Planning", href: "/planning", icon: Swords },
   { label: "Defense Strategy", href: "/planning/defense", icon: Shield },
+  { label: "Roster Overview", href: "/alliance/roster", icon: LayoutGrid },
+  { label: "Alliance Overview", href: "/alliance", icon: Users },
   { label: "Season Stats", href: "/analysis/season-overview", icon: Trophy },
 ];
 const onboarding: Destination = {
@@ -184,11 +179,12 @@ export default function Header({
       </div>
     );
   };
-  const planningActive = [quest, ...alliance, onboarding].some((item) =>
+  const allianceDestinations = isInAlliance ? alliance : [onboarding];
+  const allianceActive = allianceDestinations.some((item) =>
     isCurrent(pathname, item),
   );
   const dropdown = (
-    name: "plan" | "more",
+    name: "alliance" | "explore" | "more",
     label: string,
     active: boolean,
     children: ReactNode,
@@ -238,30 +234,29 @@ export default function Header({
             <span>CereBro</span>
           </Link>
           <nav className={styles.desktopNav} aria-label="Primary">
-            {catalogs.map((item) => destination(item))}
+            {destination(champions)}
             {dropdown(
-              "plan",
-              "Plan",
-              planningActive,
+              "alliance",
+              "Alliance",
+              allianceActive,
               <>
-                {destination(quest, true)}
-                <DropdownMenuSeparator className={styles.separator} />
-                <DropdownMenuLabel className={styles.groupLabel}>
-                  Alliance
-                </DropdownMenuLabel>
-                {(isInAlliance ? alliance : [onboarding]).map((item) =>
+                {allianceDestinations.map((item) =>
                   destination(item, true),
                 )}
               </>,
             )}
+            {destination(relics)}
+            {dropdown(
+              "explore",
+              "Explore",
+              explore.some((item) => isCurrent(pathname, item)),
+              <>{explore.map((item) => destination(item, true))}</>,
+            )}
             {dropdown(
               "more",
               "More",
-              [...moreCatalogs, ...community].some((item) => isCurrent(pathname, item)),
+              community.some((item) => isCurrent(pathname, item)),
               <>
-                <DropdownMenuLabel className={styles.groupLabel}>More catalogs</DropdownMenuLabel>
-                {moreCatalogs.map((item) => destination(item, true))}
-                <DropdownMenuSeparator className={styles.separator} />
                 <DropdownMenuLabel className={styles.groupLabel}>Community &amp; help</DropdownMenuLabel>
                 {community.map((item) => destination(item, true))}
               </>,
@@ -311,22 +306,23 @@ export default function Header({
                   </div>
                   <nav className={styles.panelNav} aria-label="Site navigation">
                     <div className={styles.catalogs}>
-                      {catalogs.map((item) => destination(item))}
+                      {destination(champions)}
                     </div>
-                    <section className={styles.panelGroup} aria-label="More catalogs">
-                      <h2>More catalogs</h2>
-                      {moreCatalogs.map((item) => destination(item))}
-                    </section>
                     <section
                       className={styles.panelGroup}
-                      aria-label="Planning"
+                      aria-label="Alliance"
                     >
-                      <h2>Plan</h2>
-                      {destination(quest)}
-                      <h3>Alliance</h3>
-                      {(isInAlliance ? alliance : [onboarding]).map((item) =>
+                      <h2>Alliance</h2>
+                      {allianceDestinations.map((item) =>
                         destination(item),
                       )}
+                    </section>
+                    <div className={`${styles.catalogs} ${styles.panelGroup}`}>
+                      {destination(relics)}
+                    </div>
+                    <section className={styles.panelGroup} aria-label="Explore">
+                      <h2>Explore</h2>
+                      {explore.map((item) => destination(item))}
                     </section>
                     <section
                       className={styles.panelGroup}

@@ -1,6 +1,6 @@
 # Public effect glossary
 
-Standalone, read-only `/glossary` and `/glossary/[id]` pages. Effect glossary is a secondary public catalog in the deployed direct-navigation Header: desktop More and the phone menu's More catalogs group. Champions, Relics and Crystals retain their primary row and collection behavior. No schema, migration, manifest, auth, roster or saved-observation changes are required.
+Standalone, read-only `/glossary` and `/glossary/[id]` pages. Effect glossary is a secondary public catalog in the deployed direct-navigation Header: desktop Explore and the phone menu's Explore group. Champions stays first, alliance tools follow, and Relics retains its collection behavior. Crystals is the first Explore destination. No schema, migration, manifest, auth, roster or saved-observation changes are required.
 
 ## Category-first browsing (12 November 2026)
 

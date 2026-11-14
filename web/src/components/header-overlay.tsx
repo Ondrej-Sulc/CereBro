@@ -8,7 +8,7 @@ import {
   type SetStateAction,
 } from "react";
 
-export type HeaderOverlay = "navigation" | "plan" | "more" | "account" | null;
+export type HeaderOverlay = "navigation" | "alliance" | "explore" | "more" | "account" | null;
 export const HeaderOverlayContext = createContext<{
   overlay: HeaderOverlay;
   setOverlay: Dispatch<SetStateAction<HeaderOverlay>>;
