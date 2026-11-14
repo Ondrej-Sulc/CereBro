@@ -1,7 +1,7 @@
 "use client";
 import { questEncounterPortrait } from "./quest-portrait";
 
-import { useEffect,useLayoutEffect, useId, useMemo, useRef, useState, type RefObject } from "react";
+import { useEffect,useLayoutEffect, useId, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
 import { Expand, Hand, Minus, Plus, Scan, Shrink, Signpost } from "lucide-react";
 import { coordinateKey, type Coordinate, type QuestMap } from "@cerebro/core/domain/game-quests";
 import { questBoardLabels } from "@cerebro/core/domain/game-quests/board";
@@ -88,6 +88,18 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
   const path = map.paths.find(p => p.index === pathIndex)!;
   const routeKeys = new Set(path.coordinates.map(coordinateKey));
   const routeEdges = new Set(path.coordinates.slice(1).map((c, i) => `${coordinateKey(path.coordinates[i])}>${coordinateKey(c)}`));
+  // Keep a travelling highlight continuous across the route's short SVG edges.
+  const routePhases = useMemo(() => {
+    const phases = new Map<string,number>();
+    let distance = 0;
+    for (let i=1;i<path.coordinates.length;i++) {
+      const from=path.coordinates[i-1],to=path.coordinates[i],a=board.point(from),b=board.point(to);
+      const key=`${coordinateKey(from)}>${coordinateKey(to)}`;
+      if(!phases.has(key))phases.set(key,(distance*scale)%60);
+      distance+=Math.hypot(b[0]-a[0],b[1]-a[1]);
+    }
+    return phases;
+  }, [path,board,scale]);
   const labelScale = 1 / scale;
   const labels = useMemo(() => {const prioritized=[selectedRegion,hoveredRegion,...map.encounters.filter(e=>coordinateKey(e.coordinate)===selected||e.id===hover).map(e=>e.id)].filter((id):id is string=>typeof id==='string');return spawnRegions?regionBoardLabels(map,spawnRegions,board,prioritized,labelScale):questBoardLabels(map,prioritized,labelScale);}, [map,spawnRegions,board,selected,hover,selectedRegion,hoveredRegion,labelScale]);
   const portalTargets = new Set(board.edges.filter(e=>e.portal).map(e=>coordinateKey(e.to)));
@@ -129,20 +141,22 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
         onClickCapture={e => { if (suppressClick.current) { e.preventDefault(); e.stopPropagation();suppressClick.current=false; } }}
         onKeyDown={e => { if (e.target !== e.currentTarget) return; const amount = 100; if (e.key.startsWith("Arrow")) { e.preventDefault(); e.currentTarget.scrollBy({ left: e.key === "ArrowRight" ? amount : e.key === "ArrowLeft" ? -amount : 0, top: e.key === "ArrowDown" ? amount : e.key === "ArrowUp" ? -amount : 0 }); } }}>
         <svg className={styles.scene} data-zoom={scale} data-board-ready={ready} role="group" aria-label={`Quest map, recorded route ${pathIndex + 1} highlighted`} width={board.width * scale} height={board.height * scale} viewBox={`0 0 ${board.width} ${board.height}`}>
-          <title>Defender map. Bright connections show the selected recorded route; purple dashed connections are portals. Dashed teal portraits represent encounter regions.</title>
+          <title>Defender map. Flowing blue-white connections show the selected recorded route; curved violet connections are portals. Dashed teal portraits represent encounter regions.</title>
           <defs>
-            <marker id={`${uid}-arrow`} viewBox="0 0 10 10" refX="7" refY="5" markerWidth="3" markerHeight="3" orient="auto"><path d="M1 1 8 5 1 9" fill="none" stroke="#c5eaf8" strokeWidth="2" /></marker>
             <marker id={`${uid}-portal`} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M1 1 8 5 1 9" fill="none" stroke="#e0bdff" strokeWidth="2" /></marker>
-            <filter id={`${uid}-glow`} x="-70%" y="-70%" width="240%" height="240%"><feGaussianBlur stdDeviation="3" /></filter>
             {map.encounters.map((e, i) => { const [x, y] = board.point(e.coordinate); const radius = e.final ? 31 : 25; return <clipPath key={e.id} id={`${uid}-portrait-${i}`}><circle cx={x} cy={y} r={radius} /></clipPath>; })}
           </defs>
-          <g aria-hidden="true">{board.edges.filter(e => !e.portal).map((e, i) => { const [x1,y1] = board.point(e.from), [x2,y2] = board.point(e.to); const active = routeEdges.has(`${coordinateKey(e.from)}>${coordinateKey(e.to)}`); return <g key={i} data-route-edge data-from={coordinateKey(e.from)} data-to={coordinateKey(e.to)} data-route-selected={active}>
-            <line data-route-casing x1={x1} y1={y1} x2={x2} y2={y2} stroke="#020b16" strokeWidth={active ? 6.5 : 4} strokeOpacity=".9" strokeLinecap="round" vectorEffect="non-scaling-stroke"/>
-            <line data-route-line x1={x1} y1={y1} x2={x2} y2={y2} stroke={active ? "#b8f2ff" : "#8ea8bb"} strokeOpacity={active ? 1 : .8} strokeWidth={active ? 3 : 1.5} strokeLinecap="round" vectorEffect="non-scaling-stroke" markerEnd={active && i % 4 === 0 ? `url(#${uid}-arrow)` : undefined}/>
+          <g aria-hidden="true">{board.edges.filter(e => !e.portal).map((e, i) => { const [x1,y1] = board.point(e.from), [x2,y2] = board.point(e.to); const key=`${coordinateKey(e.from)}>${coordinateKey(e.to)}`,active = routeEdges.has(key); return <g key={i} data-route-edge data-from={coordinateKey(e.from)} data-to={coordinateKey(e.to)} data-route-selected={active}>
+            <line data-route-casing x1={x1} y1={y1} x2={x2} y2={y2} stroke="#020b16" strokeWidth={active ? 3.6 : 2.8} strokeOpacity=".6" strokeLinecap="round" vectorEffect="non-scaling-stroke"/>
+            <line data-route-glow className={styles.routeGlow} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#57baff" strokeWidth={active ? 5.2 : 3.8} strokeOpacity={active ? .28 : .17} strokeLinecap="round" vectorEffect="non-scaling-stroke"/>
+            <line data-route-line x1={x1} y1={y1} x2={x2} y2={y2} stroke={active ? "#d5efff" : "#9cc8e5"} strokeOpacity={active ? 1 : .8} strokeWidth={active ? 1.3 : 1} strokeLinecap="round" vectorEffect="non-scaling-stroke"/>
+            {active&&<line key={pathIndex} data-route-pulse className={styles.routePulse} style={{'--route-phase':`${routePhases.get(key)??0}px`} as CSSProperties} x1={x1} y1={y1} x2={x2} y2={y2} stroke="#f2fbff" strokeWidth="1.8" strokeDasharray="9 51" strokeLinecap="round" vectorEffect="non-scaling-stroke"/>}
           </g>; })}</g>
-          <g aria-hidden="true">{board.edges.filter(e => e.portal).map((e, i) => { const [x1,y1] = board.point(e.from),[x2,y2] = board.point(e.to); const active = routeEdges.has(`${coordinateKey(e.from)}>${coordinateKey(e.to)}`); const d = `M${x1},${y1} Q${(x1+x2)/2+(y2-y1)*.12},${(y1+y2)/2-(x2-x1)*.12} ${x2},${y2}`; return <g key={i} data-route-edge data-route-portal data-from={coordinateKey(e.from)} data-to={coordinateKey(e.to)} data-route-selected={active}>
-            <path data-route-casing d={d} fill="none" stroke="#10091d" strokeWidth={active ? 6 : 4.5} strokeDasharray="8 7" vectorEffect="non-scaling-stroke"/>
-            <path data-route-line d={d} fill="none" stroke={active ? "#e8c4ff" : "#c9a3e6"} strokeWidth={active ? 3 : 1.8} strokeOpacity={active ? 1 : .85} strokeDasharray="8 7" vectorEffect="non-scaling-stroke" markerEnd={`url(#${uid}-portal)`}/>
+          <g aria-hidden="true">{board.edges.filter(e => e.portal).map((e, i) => { const [x1,y1] = board.point(e.from),[x2,y2] = board.point(e.to); const key=`${coordinateKey(e.from)}>${coordinateKey(e.to)}`,active = routeEdges.has(key); const d = `M${x1},${y1} Q${(x1+x2)/2+(y2-y1)*.12},${(y1+y2)/2-(x2-x1)*.12} ${x2},${y2}`; return <g key={i} data-route-edge data-route-portal data-from={coordinateKey(e.from)} data-to={coordinateKey(e.to)} data-route-selected={active}>
+            <path data-route-casing d={d} fill="none" stroke="#10091d" strokeWidth={active ? 3.8 : 3} strokeOpacity=".6" vectorEffect="non-scaling-stroke"/>
+            <path data-route-glow className={styles.routeGlow} d={d} fill="none" stroke="#b181f0" strokeWidth={active ? 5.5 : 4} strokeOpacity={active ? .28 : .17} vectorEffect="non-scaling-stroke"/>
+            <path data-route-line d={d} fill="none" stroke={active ? "#f0dcff" : "#c9a3e6"} strokeWidth={active ? 1.5 : 1.2} strokeOpacity={active ? 1 : .85} vectorEffect="non-scaling-stroke" markerEnd={`url(#${uid}-portal)`}/>
+            {active&&<path key={pathIndex} data-route-pulse className={styles.routePulse} style={{'--route-phase':`${routePhases.get(key)??0}px`} as CSSProperties} d={d} fill="none" stroke="#fcf5ff" strokeWidth="1.9" strokeDasharray="9 51" strokeLinecap="round" vectorEffect="non-scaling-stroke"/>}
           </g>; })}</g>
           {spawnRegions&&<QuestSpawnRegionAreas map={map} layer={spawnRegions} point={board.point} selected={selectedRegion} hovered={hoveredRegion??undefined} pathIndex={pathIndex}/>}
           {map.tiles.map(t => { const key = coordinateKey(t.coordinate); const [x,y] = board.point(t.coordinate); const fights = board.encounters.get(key) ?? []; const active = routeKeys.has(key); if (fights.length) return null; return <g key={key} data-coordinate={key} className={styles.tile} onClick={() => onChoose(t.coordinate)}><title>{`${positionNames.get(key)}${t.start ? " · Quest start" : t.portals.length ? " · Portal" : ""}`}</title>{t.portals.length ? <><circle cx={x} cy={y} r="14" fill="#241733" stroke="#d7aeff" strokeWidth="2" /><circle cx={x} cy={y} r="8" fill="none" stroke="#cf9dff" strokeWidth="1.5" /><text x={x} y={y+4} textAnchor="middle" fill="#f0dbff" fontSize="10" fontWeight="bold">P</text></> : t.start ? <><circle cx={x} cy={y} r="13" fill="#103f3c" stroke="#60e6bd" strokeWidth="2" /><path d={`M${x-3} ${y-5}l8 5-8 5z`} fill="#b0ffe6" /></> : <circle cx={x} cy={y} r={active ? 2.6 : 1.7} fill={active ? "#d3f6ff" : "#a0b3c5"} opacity={active ? .9 : .3} />}</g>; })}

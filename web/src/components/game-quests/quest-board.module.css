@@ -16,5 +16,12 @@
 .board[data-fullscreen=true] .viewport{height:100%;max-height:none}
 .board[data-window-fullscreen=true]{position:fixed;inset:0;z-index:1000;width:100vw;height:100dvh}
 .nameLabel{filter:drop-shadow(0 2px 3px #0009)}
+.routeGlow{pointer-events:none}
+.routePulse{animation:questRouteFlow 3s linear infinite;pointer-events:none}
+@keyframes questRouteFlow{from{stroke-dashoffset:var(--route-phase,0px)}to{stroke-dashoffset:calc(var(--route-phase,0px) - 60px)}}
+.legend .selectedRoute{background:#d5efff;box-shadow:0 0 5px #57baff99}
+.legend .alternative{background:#9cc8e5}
+.legend .portal{background:#c9a3e6;box-shadow:0 0 5px #b181f077}
+@media(prefers-reduced-motion:reduce){.routePulse{animation:none;display:none}}
 .navigator svg:focus-visible{outline:2px solid #a2e6ff;outline-offset:3px;border-radius:3px}
 @media(max-width:600px){.controls{display:flex;flex-wrap:wrap;gap:6px}.namesToggle{margin-left:auto}.controlActions{display:flex;flex-shrink:0}.controlActions button{min-width:40px;padding:0 8px}.controlActions button>span{display:none}.controls .zoom button:last-child{font-size:10px}.board[data-fullscreen=true] .controls{padding-top:max(9px,env(safe-area-inset-top));padding-inline:max(9px,env(safe-area-inset-left))}.board[data-fullscreen=true] .legend{padding-bottom:max(10px,env(safe-area-inset-bottom))}}

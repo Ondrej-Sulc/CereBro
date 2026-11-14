@@ -212,6 +212,15 @@ describe("quest map viewport controls", () => {
     for (const edge of edges) {
       const casing = edge.querySelector('[data-route-casing]')!;
       const line = edge.querySelector('[data-route-line]')!;
+      expect(edge.querySelector('[data-route-glow]')).not.toBeNull();
+      expect(Number(line.getAttribute('stroke-width'))).toBeLessThanOrEqual(1.5);
+      expect(line.hasAttribute('stroke-dasharray')).toBe(false);
+      const pulse = edge.querySelector('[data-route-pulse]');
+      expect(Boolean(pulse)).toBe(edge.getAttribute('data-route-selected') === 'true');
+      if (pulse) {
+        expect(pulse.getAttribute('vector-effect')).toBe('non-scaling-stroke');
+        expect(pulse.getAttribute('style')).toContain('--route-phase:');
+      }
       expect(casing.getAttribute('vector-effect')).toBe('non-scaling-stroke');
       expect(line.getAttribute('vector-effect')).toBe('non-scaling-stroke');
       expect(Number(casing.getAttribute('stroke-width'))).toBeGreaterThan(Number(line.getAttribute('stroke-width')));
@@ -226,6 +235,7 @@ describe("quest map viewport controls", () => {
     expect(textSize()).toBeCloseTo(12);
     await zoomToDetail(host);
     expect(textSize()).toBeCloseTo(12);
+    expect(host.textContent).not.toMatch(/unexplored|explored/i);
   });
 
   it("requests real browser fullscreen and exits through the browser API", async () => {
