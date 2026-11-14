@@ -27,6 +27,8 @@
 .variantImage img { width: 100%; height: 100%; object-fit: contain; }
 @media (max-width: 479px) { .variantImage { width: 30px; height: 30px; } }
 .artwork > svg { width: 29px; height: 29px; color: #96b1d1; stroke-width: 1.5; }
+.starCategory { display: inline-flex; align-items: center; gap: 3px; color: #e2ca91; font-size: 21px; font-weight: 600; line-height: 1; }
+.starCategory svg { width: 15px; height: 15px; }
 .artStack { position: relative; display: block; width: 52px; height: 46px; }
 .artStack img { position: absolute; width: 35px; height: 35px; object-fit: contain; filter: drop-shadow(0 1px 3px #000a); }
 .artStack img:nth-child(1) { left: -2px; top: 6px; transform: rotate(-12deg); }

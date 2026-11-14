@@ -11,6 +11,13 @@ import { getCrystalOpening } from "@cerebro/core/data/game-crystal-openings"
 import { loadCrystalPageRewards } from "./crystal-page-rewards"
 import { getChampionCrystalAscensionSources } from "./champion-crystal-ascension"
 
+it("keeps named champion rate portraits independent of champion search and star filters", async () => {
+  findMany.mockResolvedValue([{ gameId: "ghostrider_reyes", name: "Ghost Rider (Robbie Reyes)", slug: "ghost-rider-robbie-reyes", class: "MYSTIC", images: { p_64: "/robbie.png" }, obtainable: ["5", "6", "7"] }])
+  const data = (await loadCrystalDetails("vfh_ghostrider_reyes_all_rider_crystal", { q: "hulk", rarity: "5" }))!
+  expect(data.champions.some(champion => champion.gameId === "ghostrider_reyes")).toBe(false)
+  for (const key of ["0:0", "0:1", "0:2", "1:4"]) expect(data.opening!.oddsVisuals[key].imageUrl).toBe("/robbie.png")
+})
+
 it("resolves existing full portrait metadata only for small galleries without changing dense portrait sources", async () => {
   findMany.mockResolvedValue([
     { gameId: "domino", name: "Domino", slug: "domino", class: "MUTANT", images: { p_64: "/domino-64.png", p_128: "/domino-128.png", full_primary: "/domino-full.png" }, obtainable: ["7"] },

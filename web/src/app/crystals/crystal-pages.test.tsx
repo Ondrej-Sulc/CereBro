@@ -1,8 +1,16 @@
 import { renderToStaticMarkup } from "react-dom/server"
 import { expect, it, vi } from "vitest"
 import type { ImgHTMLAttributes } from "react"
-vi.mock("next/image", () => ({ default: ({ fill: _fill, priority: _priority, ...props }: ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean; priority?: boolean }) => <img {...props} /> }))
-vi.mock("@/lib/prisma", () => ({ prisma: { champion: { findMany: async () => [{ gameId: "hulk", name: "Hulk", slug: "hulk", class: "SCIENCE", images: null, obtainable: ["7"] }] } } }))
+import { JSDOM } from "jsdom"
+vi.mock("next/image", () => ({ default: ({ fill, priority, alt = "", ...props }: ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean; priority?: boolean }) => {
+  void fill; void priority
+  // eslint-disable-next-line @next/next/no-img-element -- DOM boundary for server-page rendering.
+  return <img alt={alt} {...props} />
+} }))
+vi.mock("@/lib/prisma", () => ({ prisma: { champion: { findMany: async () => [
+  { gameId: "hulk", name: "Hulk", slug: "hulk", class: "SCIENCE", images: null, obtainable: ["7"] },
+  { gameId: "ghostrider_reyes", name: "Ghost Rider (Robbie Reyes)", slug: "ghost-rider-robbie-reyes", class: "MYSTIC", images: { p_64: "/robbie.png" }, obtainable: ["5", "6", "7"] },
+] } } }))
 vi.mock("next/cache", () => ({ unstable_cache: (fn: unknown) => fn }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn(), replace: vi.fn() }) }))
 import { loadCrystalCatalog, loadCrystalDetails, loadCrystalComparison } from "@/lib/data/crystals"
@@ -10,6 +18,25 @@ import { CrystalComparisonView } from "./crystal-comparison"
 import { CrystalCatalogView, CrystalDetailView } from "./crystal-views"
 import { CrystalFamilyGrid } from "./crystal-catalog-browser"
 import { parseCrystalReturnTo } from "@/lib/crystal-browse-return"
+
+it("renders named featured and ascended champion portraits with compact featured rows and neutral star categories", async () => {
+  const data = (await loadCrystalDetails("vfh_ghostrider_reyes_all_rider_crystal", { q: "hulk", rarity: "5" }))!
+  const original = JSON.stringify(data.opening?.odds)
+  const document = new JSDOM(renderToStaticMarkup(<CrystalDetailView data={data} />)).window.document
+  for (const key of ["0:0", "0:1", "0:2", "1:4"]) {
+    const row = document.querySelector(`[data-odds-row="${key}"]`)!
+    expect(row.querySelector('img')?.getAttribute('src')).toBe('/robbie.png')
+    expect(row.querySelector('a')?.getAttribute('href')).toBe('/champions/ghost-rider-robbie-reyes')
+  }
+  expect(document.querySelector('[aria-label="FEATURED PRIZES"]')?.hasAttribute('data-tiles')).toBe(false)
+  for (const [key, rarity] of [["1:0", "7"], ["1:1", "6"], ["1:2", "5"], ["1:3", "7"]]) {
+    const row = document.querySelector(`[data-odds-row="${key}"]`)!
+    expect(row.querySelector('[data-odds-rarity]')?.getAttribute('data-odds-rarity')).toBe(rarity)
+    expect(row.querySelector('img')).toBeNull()
+  }
+  expect([...document.querySelectorAll('[data-odds-row]')].map(row => row.getAttribute('data-odds-row')).sort()).toEqual(['0:0', '0:1', '0:2', '1:0', '1:1', '1:2', '1:3', '1:4', '1:5'])
+  expect(JSON.stringify(data.opening?.odds)).toBe(original)
+})
 
 it("shows each comparison capture separately when opening and archived content dates differ", async () => {
   const data = await loadCrystalComparison({ rarity: "7" })

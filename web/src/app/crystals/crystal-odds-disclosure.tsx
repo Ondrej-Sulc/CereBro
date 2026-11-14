@@ -3,7 +3,7 @@
 import Image from "next/image"
 import { CrystalIntentLink } from "./crystal-intent-link"
 import { useId, useMemo, useState } from "react"
-import { ArrowUpRight, Coins, Gem, Gift, Info, Layers, Package, Search, UserRound, X } from "lucide-react"
+import { ArrowUpRight, Coins, Gem, Gift, Info, Layers, Package, Search, Star, UserRound, X } from "lucide-react"
 import type { CrystalOddsGroup, CrystalOddsOpening, CrystalOddsRow } from "@cerebro/core/domain/crystal-odds"
 import { crystalOddsIconKind, crystalOddsRowKey, crystalRatePercentage as percentage, type CrystalOddsRowVisual, type CrystalOddsVisuals } from "@/lib/crystal-odds-presentation"
 import styles from "./crystal-odds-disclosure.module.css"
@@ -16,7 +16,7 @@ function RateRow({ row, group, visual, caption }: { row: CrystalOddsRow; group: 
   const label = row.label || row.rewardData || `Reward ${row.sourceIndex + 1}`
   const Icon = icons[visual?.kind ?? crystalOddsIconKind(label)]
   const name = <span className={styles.rewardName}>{label}{visual?.href && <ArrowUpRight aria-hidden="true" />}</span>
-  const identity = <><span className={styles.artwork}>{visual?.imageUrl ? <Image data-odds-reward-artwork src={visual.imageUrl} alt="" width={32} height={32} loading="lazy" /> : <Icon aria-hidden="true" />}</span>{caption ? <span className={styles.identityCopy}><span className={styles.guaranteeCaption}>{caption}</span>{name}</span> : name}</>
+  const identity = <><span className={styles.artwork}>{visual?.imageUrl ? <Image data-odds-reward-artwork src={visual.imageUrl} alt="" width={40} height={40} sizes="40px" loading="lazy" /> : visual?.rarity ? <span className={styles.starCategory} data-odds-rarity={visual.rarity} aria-hidden="true">{visual.rarity}<Star fill="currentColor" /></span> : <Icon aria-hidden="true" />}</span>{caption ? <span className={styles.identityCopy}><span className={styles.guaranteeCaption}>{caption}</span>{name}</span> : name}</>
   return <div className={styles.row} data-odds-row={crystalOddsRowKey(group, row.sourceIndex)}>
     <dt>{visual?.href ? <CrystalIntentLink className={styles.identity} href={visual.href}>{identity}</CrystalIntentLink> : <span className={styles.identity}>{identity}</span>}</dt>
     <dd title={`Server-disclosed value: ${row.prefix ?? ""}${row.percentValue}%`} data-certain={Number(row.percentValue) === 100 && !row.prefix || undefined}>{row.prefix}{percentage(row.percentValue)}%</dd>
@@ -63,7 +63,7 @@ export function CrystalOddsDisclosure({ odds, visuals = {}, compact = false, emb
         {totalRows > 10 && <div className={styles.search}><Search aria-hidden="true" /><label className={styles.srOnly} htmlFor={searchId}>Search drop-rate rewards</label><input id={searchId} aria-label="Search drop-rate rewards" type="search" placeholder="Find a reward…" value={query} onChange={event => setQuery(event.target.value)} />{query && <button type="button" aria-label="Clear reward search" onClick={() => setQuery("")}><X aria-hidden="true" /></button>}</div>}
       </div>}
       {narrowed && <p className={styles.filterStatus} role="status">Showing {shown} of {totalRows} outcomes · Rates stay as disclosed<button type="button" onClick={() => { setQuery(""); setSelectedGroup("all") }}>Clear filters</button></p>}
-      <div className={styles.groups} data-single={groups.length === 1 || undefined}>{filtered.map(({ group, rows }) => <article className={styles.group} key={group.sourceIndex} data-wide={group.rows.length >= 9 || undefined} data-tiles={compact && groups.length === 1 && totalRows <= 8 || undefined} aria-label={groupName(group)}>
+      <div className={styles.groups} data-single={groups.length === 1 || undefined}>{filtered.map(({ group, rows }) => <article className={styles.group} key={group.sourceIndex} data-wide={group.rows.length >= 9 || undefined} data-tiles={compact && !embedded && groups.length === 1 && totalRows <= 8 || undefined} aria-label={groupName(group)}>
         {(groups.length > 1 || group.name?.trim()) && <header className={styles.groupHeading}><h3>{groupName(group)}</h3><span>{group.isFeatured && <strong>Featured</strong>}{rows.length === group.rows.length ? `${rows.length} ${rows.length === 1 ? "outcome" : "outcomes"}` : `${rows.length} of ${group.rows.length} outcomes`}</span></header>}
         <dl className={styles.rates} data-count={rows.length}>{rows.map(row => <RateRow key={row.sourceIndex} row={row} group={group.sourceIndex} visual={visuals[crystalOddsRowKey(group.sourceIndex, row.sourceIndex)]} />)}</dl>
       </article>)}</div>

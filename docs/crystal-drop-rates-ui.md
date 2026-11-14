@@ -93,6 +93,14 @@ only; source quantities are unchanged. Header opening choices and the collapsed
 About this data disclosure share one wrapping footer row, rather than forcing
 opening choices onto a full-width mobile row.
 
+Named champion rate rows reuse the complete, unfiltered pool's portrait metadata.
+Direct rows require an exact hero/cosmetic reward identity in this opening;
+ascended rows require the exact auto-ascension bonus binding and one champion/rarity.
+Labels alone do not establish a named champion. Broad star categories use neutral
+star badges instead of borrowing a champion portrait. Missing or ambiguous portrait
+metadata stays unpictured. Embedded champion disclosures use compact rows, retaining
+their separate Featured/All Prizes groups, original labels and exact percentages.
+
 Ordinary star-category rates annotate the star choices when the source is exactly
 one unnamed, unfeatured group with the complete distinct set of pool rarities.
 Only whole champion-only source groups move beside the pool. Mixed groups retain

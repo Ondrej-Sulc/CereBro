@@ -2,7 +2,7 @@
 
 import Image from "next/image"
 import { useState, type ReactNode } from "react"
-import { ArrowUpRight, Check, ChevronDown, Coins, Gem, Gift, Info, Layers, Package, UserRound } from "lucide-react"
+import { ArrowUpRight, Check, ChevronDown, Coins, Gem, Gift, Info, Layers, Package, Star, UserRound } from "lucide-react"
 import type { CrystalRewardPresentation, CrystalRewardPrize, CrystalRewardRate, CrystalRewardVariant } from "@/lib/crystal-reward-presentation"
 import { crystalRewardAmount, sortCrystalRewardRows } from "@/lib/crystal-reward-presentation"
 import { crystalOddsIconKind, crystalRatePercentage as percent } from "@/lib/crystal-odds-presentation"
@@ -40,7 +40,7 @@ function Artwork({ row, variants, label }: { row?: CrystalRewardRate; variants: 
   const detailLabel = pointNote ?? rankNote
   return <span className={`${styles.artwork} relative`} role={detailLabel ? "img" : undefined} aria-label={detailLabel}>{single ? <Image data-reward-artwork src={single} alt="" width={48} height={48} sizes="48px" loading="lazy" />
     : images.length > 1 ? <span className={styles.artStack}>{images.slice(0, 3).map(src => <Image data-reward-artwork key={src} src={src} alt="" width={36} height={36} sizes="36px" loading="lazy" />)}</span>
-    : <Icon aria-hidden="true" />}{single && details && <RewardItemOverlay rank={details.rankChange} signaturePoints={details.signaturePoints} rarity={details.itemRarity}/>}</span>
+    : row?.visual.rarity ? <span className={styles.starCategory} data-odds-rarity={row.visual.rarity} aria-hidden="true">{row.visual.rarity}<Star fill="currentColor" /></span> : <Icon aria-hidden="true" />}{single && details && <RewardItemOverlay rank={details.rankChange} signaturePoints={details.signaturePoints} rarity={details.itemRarity}/>}</span>
 }
 
 function VariantDetails({ variants }: { variants: CrystalRewardVariant[] }) {

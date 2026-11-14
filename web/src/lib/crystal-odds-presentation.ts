@@ -1,7 +1,7 @@
 import type { CrystalOddsOpening, CrystalOddsRow } from "@cerebro/core/domain/crystal-odds"
 
 export type CrystalOddsIconKind = "champion" | "crystal" | "material" | "resource" | "selector" | "item"
-export type CrystalOddsRowVisual = { imageUrl: string | null; href: string | null; kind: CrystalOddsIconKind }
+export type CrystalOddsRowVisual = { imageUrl: string | null; href: string | null; kind: CrystalOddsIconKind; rarity?: number }
 export type CrystalOddsVisuals = Record<string, CrystalOddsRowVisual>
 export function crystalRatePercentage(value: string) {
   const number = Number(value)

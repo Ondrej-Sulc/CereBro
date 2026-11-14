@@ -53,6 +53,10 @@
 .artwork { display: grid; width: 30px; height: 30px; flex-shrink: 0; place-items: center; border-radius: 7px; background: radial-gradient(ellipse, #5873a126, transparent 75%); }
 .artwork img { width: 28px; height: 28px; object-fit: contain; }
 .artwork svg { width: 19px; height: 19px; color: #849fbe; stroke-width: 1.5; }
+.starCategory { display: inline-flex; align-items: center; gap: 3px; color: #e2ca91; font-size: 17px; font-weight: 600; line-height: 1; }
+.starCategory svg { width: 13px; height: 13px; color: currentColor; }
+.embedded .artwork { width: 40px; height: 40px; }
+.embedded .artwork img { width: 36px; height: 36px; }
 .rewardName { min-width: 0; color: #b5c8e3; font-size: 12px; line-height: 18px; overflow-wrap: anywhere; }
 .rewardName svg { display: inline; width: 11px; height: 11px; margin-left: 5px; color: #789bc7; vertical-align: -1px; }
 a.identity .rewardName { color: #b8d2fb; }

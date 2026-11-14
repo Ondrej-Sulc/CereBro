@@ -7,6 +7,7 @@ import { isChampionImages } from "@/lib/championHelper"
 import { CRYSTAL_CATEGORIES, crystalEditionLabel, isCrystalCategoryId } from "@cerebro/core/domain/crystal-categories"
 import { resolveCrystalPageOpening } from "./crystal-page-rewards"
 import { getCrystalPageRewards } from "./crystal-catalog-rewards"
+import { withCrystalChampionRateVisuals } from "./crystal-champion-odds"
 import { crystalBrowseOpeningSummary, getCrystalBrowseEntries } from "./crystal-browse-catalog"
 import { filterCrystalPool } from "../crystal-pool"
 import { CRYSTAL_REWARD_FILTERS, crystalRewardFilterUsesChampionStars } from "../crystal-reward-filters"
@@ -137,7 +138,7 @@ export async function loadCrystalDetails(id: string, params: CrystalSearchParams
   const details = getCrystalDetails(id)
   if (!details) return null
   const selectedOpeningId = resolveCrystalPageOpening(details, id, first(params.variant))
-  const opening = selectedOpeningId ? await getCrystalPageRewards(selectedOpeningId) : null
+  let opening = selectedOpeningId ? await getCrystalPageRewards(selectedOpeningId) : null
   const contents = opening?.champions ?? details.contents.map(reward => ({ ...reward, firstEditionRarities: reward.cosmeticRewards?.filter(item => item.cosmeticId === "first_edition").map(item => item.rarity) ?? [] }))
   const counts: Record<string, number> = {}
   for (const champion of contents) for (const rarity of champion.rarities) counts[rarity] = (counts[rarity] ?? 0) + 1
@@ -163,6 +164,7 @@ export async function loadCrystalDetails(id: string, params: CrystalSearchParams
       portraitUrl, ...(galleryPortraitUrl ? { galleryPortraitUrl } : {}),
       rarities: reward.rarities, obtainable: champion?.obtainable ?? [], ...(firstEditionRarities.length ? { firstEditionRarities } : {}) }
   }).sort((a, b) => a.name.localeCompare(b.name, "en") || a.gameId.localeCompare(b.gameId, "en"))
+  if (opening) opening = withCrystalChampionRateVisuals(opening, all)
   const projection = filterCrystalPool(all, { rarity, q, championClass })
   const filtered = projection.champions
   // Portraits let the entire pool fit in one view. Legacy page links still show the full pool.
