@@ -87,6 +87,12 @@ different prize groups keep their own quantities and rates. Guaranteed extras
 keep their separate original prize panels. Conditional bonuses and Grace/box
 rules remain outside the rate join.
 
+Single relics omit the redundant `×1` label and its empty amount row. Larger
+quantities, ranges and mixed amount choices remain visible. This is presentation
+only; source quantities are unchanged. Header opening choices and the collapsed
+About this data disclosure share one wrapping footer row, rather than forcing
+opening choices onto a full-width mobile row.
+
 Ordinary star-category rates annotate the star choices when the source is exactly
 one unnamed, unfeatured group with the complete distinct set of pool rarities.
 Only whole champion-only source groups move beside the pool. Mixed groups retain

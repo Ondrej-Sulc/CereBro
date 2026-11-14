@@ -27,7 +27,7 @@ export function CrystalPageHeader({ name, category, edition, artwork, banner, ch
         <div className={styles.facts}>
           {rarities.length > 0 && <span className={styles.starFact}>{stars(rarities)}</span>}
           {championCount > 0 && <a href="#champion-pool-title"><Users aria-hidden="true" /><strong>{championCount.toLocaleString("en")}</strong>{championCount === 1 ? "champion" : "champions"}<ArrowDown aria-hidden="true" /></a>}
-          {rewardCount > 0 && <a href="#crystal-other-rewards" title={`${rewardCount} recorded reward categories`}><Gift aria-hidden="true" /><strong>{rewardCount}</strong>reward types<ArrowDown aria-hidden="true" /></a>}
+          {rewardCount > 0 && <a href="#crystal-other-rewards" title={`${rewardCount} recorded reward ${rewardCount === 1 ? "category" : "categories"}`}><Gift aria-hidden="true" /><strong>{rewardCount}</strong>reward {rewardCount === 1 ? "type" : "types"}<ArrowDown aria-hidden="true" /></a>}
           {earningHref && <a href={earningHref}><Gift aria-hidden="true"/>Where to earn ↗</a>}
         </div>
       </div>

@@ -12,7 +12,10 @@ import styles from "./crystal-rewards-browser.module.css"
 
 const icons = { champion: UserRound, crystal: Gem, material: Layers, resource: Coins, selector: Gift, item: Package }
 const groupName = (group: CrystalRewardPrize) => group.name?.trim().replace(/^PRIZE\s*(\d+)$/i, "Prize $1") || `Reward group ${group.sourceIndex + 1}`
-const amounts = (variant: CrystalRewardVariant) => [...new Set(variant.options.map(crystalRewardAmount).filter(Boolean))]
+const amounts = (variant: CrystalRewardVariant) => {
+  const values = [...new Set(variant.options.map(crystalRewardAmount).filter(Boolean))]
+  return variant.reward.type === "relic2" && values.length === 1 && values[0] === "×1" ? [] : values
+}
 const displayLabel = (value: string) => value === value.toLocaleUpperCase("en") && /[A-Z]/.test(value)
   ? value.toLocaleLowerCase("en").replace(/\b[a-z]/g, letter => letter.toUpperCase()).replace(/Iso-8/g, "ISO-8") : value
 
@@ -21,7 +24,7 @@ function description(variants: CrystalRewardVariant[]) {
   const values = [...new Set(variants.flatMap(amounts))]
   const classes = new Set(variants.map(variant => variant.className).filter(Boolean))
   const parts = variants.length > 1 ? [classes.size === variants.length ? `${classes.size} classes` : `${variants.length} variants`] : []
-  if (values.length === 1) parts.unshift(values[0])
+  if (values.length === 1 && variants.every(variant => amounts(variant).length === 1)) parts.unshift(values[0])
   else if (values.length > 1) parts.push(`${values.length} ${variants.length > 1 ? "amounts" : "amount options"}`)
   if (variants.length === 1 && variants[0].reward.selection) parts.push(`Choose ${variants[0].reward.selection.pick} of ${variants[0].reward.selection.draw}`)
   return parts.join(" · ")
@@ -41,13 +44,18 @@ function Artwork({ row, variants, label }: { row?: CrystalRewardRate; variants: 
 }
 
 function VariantDetails({ variants }: { variants: CrystalRewardVariant[] }) {
-  if (variants.length === 1) return <ul className={styles.amounts} aria-label={`Recorded amounts for ${variants[0].label}`}>{amounts(variants[0]).map(amount => <li key={amount}>{amount}</li>)}</ul>
+  if (variants.length === 1) {
+    const values = amounts(variants[0])
+    return values.length ? <ul className={styles.amounts} aria-label={`Recorded amounts for ${variants[0].label}`}>{values.map(amount => <li key={amount}>{amount}</li>)}</ul> : null
+  }
   const classOptions = variants.every(variant => !!variant.className) && new Set(variants.map(variant => variant.className)).size === variants.length
-  return <ul className={styles.variantGrid} data-class-options={classOptions || undefined} aria-label="Reward variants">{variants.map(variant => <li key={variant.reward.key} data-reward-category={variant.reward.categoryId}>
+  return <ul className={styles.variantGrid} data-class-options={classOptions || undefined} aria-label="Reward variants">{variants.map(variant => {
+    const values = amounts(variant)
+    return <li key={variant.reward.key} data-reward-category={variant.reward.categoryId}>
     <span className={styles.variantImage}>{variant.reward.imageUrl ? <Image data-reward-artwork src={variant.reward.imageUrl} alt="" width={40} height={40} sizes="40px" loading="lazy" /> : <Package aria-hidden="true" />}<RewardItemOverlay rank={variant.reward.rankChange} signaturePoints={variant.reward.signaturePoints} rarity={variant.reward.itemRarity}/></span>
     <div>{variant.reward.href ? <CrystalIntentLink href={variant.reward.href}>{displayLabel(variant.label)}<ArrowUpRight aria-hidden="true" /></CrystalIntentLink> : <strong title={variant.label}>{classOptions ? variant.className : displayLabel(variant.label)}</strong>}
-      <ul className={styles.amounts}>{amounts(variant).map(amount => <li key={amount}>{amount}</li>)}</ul></div>
-  </li>)}</ul>
+      {values.length > 0 && <ul className={styles.amounts}>{values.map(amount => <li key={amount}>{amount}</li>)}</ul>}</div>
+  </li>})}</ul>
 }
 
 function RewardEntry({ row, variant, open, onOpenChange }: { row?: CrystalRewardRate; variant?: CrystalRewardVariant; open?: boolean; onOpenChange?: (open: boolean) => void }) {

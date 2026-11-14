@@ -78,8 +78,9 @@
   .facts > a, .starFact { font-size: 11px; gap: 5px; padding: 4px 7px; }
   .facts svg:first-child { display: none; }
   .facts a svg:last-child { display: block; }
-  .heroFooter { padding: 6px 16px; gap: 4px 14px; }
-  .openings { width: 100%; gap: 4px 13px; }
+  .heroFooter { padding: 6px 16px; gap: 4px 10px; }
+  .openings { gap: 6px; }
+  .openings > div { padding-inline: 8px; }
   .openings dd { font-size: 10px; }
   .heroFooter > details[aria-label="About this data"] { margin-left: auto; }
   .sectionNav { top: var(--site-header-height, 64px); justify-content: space-between; gap: 3px; margin: 16px 0 22px; padding-inline: 8px; }
@@ -95,18 +96,9 @@
 .page h2[id], .page [id="crystal-other-rewards"] { scroll-margin-top: 140px; }
 @media (max-width: 767px) { .page h2[id], .page [id="crystal-other-rewards"] { scroll-margin-top: calc(var(--site-header-height, 64px) + 76px); } }
 
-.heroFooter:has(.openings) > details[aria-label="About this data"] { margin-left: 0; }
 .gallery { scroll-padding-top: 56px; scroll-padding-bottom: 12px; }
 .gallery [data-champion-toolbar] { position: sticky; top: -5px; z-index: 2; margin-top: -5px; padding: 8px 0; background: #070d1bf5; backdrop-filter: blur(12px); }
 .page:has([id="champion-pool-title"]:target) .sectionNav a[href="#champion-pool-title"], .page:has([id="crystal-other-rewards"]:target) .sectionNav a[href="#crystal-other-rewards"], .page:has([id="opening-rules"]:target) .sectionNav a[href="#opening-rules"] { border-color: #526e96; background: #1b304e; color: #e3eeff; }
 @media (max-width: 359px) { .sectionNav a > span { display: none; } }
-@media (max-width: 767px) { .heroFooter:has(.openings) > details[aria-label="About this data"] { margin-left: auto; } .openings { gap: 6px; } }
 
 @media (max-width: 359px) { .facts a svg:last-child { display: none; } .heroFooter { gap: 4px 10px; } .heroFooter > details[aria-label="About this data"] > summary { gap: 6px; font-size: 10px; } }
-
-@media (max-width: 767px) {
-  .heroFooter { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
-  .heroFooter > .openings { grid-column: 1 / -1; }
-  .heroFooter > details[aria-label="About this data"], .heroFooter:has(.openings) > details[aria-label="About this data"] { grid-column: 2; margin: 0; }
-  .heroFooter > details[open], .heroFooter > details[open][aria-label="About this data"] { grid-column: 1 / -1; }
-}

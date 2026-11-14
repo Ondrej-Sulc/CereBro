@@ -59,12 +59,40 @@ it("shows catalog relic portraits and variant links inside their original guaran
   expect(container.querySelectorAll('[data-odds-row]')).toHaveLength(1)
   expect(container.querySelector('[data-unrated]')).toBeNull()
   expect(container.querySelectorAll('[aria-label="Reward variants"] > li')).toHaveLength(120)
+  expect(container.querySelectorAll('[aria-label="Reward variants"] > li ul')).toHaveLength(0)
+  expect(container.textContent).not.toContain('×1')
+  expect(opening.otherRewards.every(reward => reward.quantity === 1)).toBe(true)
   expect(container.querySelector('a[href="/relics/variant-1?rarity=7"]')?.textContent).toContain('7-Star Catalog relic 1')
   expect(container.querySelector('img[src="/relic-1.png"]')).not.toBeNull()
   expect(container.textContent).not.toContain('relic_statcast_')
   expect(container.textContent).not.toContain('Other recorded rewards')
   expect(container.querySelector('[title="Server-disclosed value: 100%"]')).not.toBeNull()
   expect(container.textContent).toContain('Individual option rates are not disclosed.')
+})
+
+it("omits only uniform unit relic amounts, preserving larger quantities, ranges and mixed amount options", async () => {
+  const opening = loadCrystalPageRewards("7_star_relic_statcast_nexus_crystal")!
+  const source = opening.otherRewards[0]
+  const one = { ...source, key: "one", displayName: "One relic" }
+  const two = { ...source, key: "two", displayName: "Two relics", quantity: 2, minQuantity: 2, maxQuantity: 2 }
+  const range = { ...source, key: "range", displayName: "Relic range", maxQuantity: 2 }
+  const item = { ...one, key: "item", type: "inv" as const, displayName: "Inventory item" }
+  const variants = [one, two, range, item].map(reward => ({ reward, label: reward.displayName, className: null, options: [reward] }))
+  const mixed = { reward: { ...one, key: "mixed" }, label: "Mixed relic amounts", className: null, options: [one, two] }
+  const original = JSON.stringify([source, variants, mixed])
+  await act(async () => root.render(<CrystalRewardsBrowser presentation={{ groups: [], unrated: [...variants, mixed], championOdds: null, hasRates: false }} />))
+  const rows = [...container.querySelectorAll('[data-unrated]')]
+  expect(rows[0].textContent).not.toContain('×1')
+  expect(rows[1].textContent).toContain('×2')
+  expect(rows[2].textContent).toContain('1–2')
+  expect(rows[3].textContent).toContain('×1')
+  expect([...rows[4].querySelectorAll('li')].map(li => li.textContent)).toEqual(['×1', '×2'])
+  const group = opening.rewardPresentation.groups[0]
+  await act(async () => root.render(<CrystalRewardsBrowser presentation={{ ...opening.rewardPresentation, unrated: [], groups: [{ ...group, rows: [{ ...group.rows[0], variants: variants.slice(0, 2) }] }] }} />))
+  const summary = container.querySelector('[data-odds-row] > summary')!
+  expect(summary.textContent).toContain('2 variants')
+  expect(summary.textContent).not.toContain('×2') // no shared amount when options differ
+  expect(JSON.stringify([source, variants, mixed])).toBe(original)
 })
 
 it("shows six class-colored rank gems with rank and star overlays on their disclosed rate rows", async () => {
