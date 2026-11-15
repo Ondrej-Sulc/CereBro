@@ -41,6 +41,11 @@ it("leads with the quest number and title, followed by an explicitly labelled bo
   expect(bosses.textContent).toContain("Psylocke");
   expect(bosses.textContent).toContain("4★");
   expect(bosses.querySelector("img")?.getAttribute("src")).toBe("/test/psylocke.png");
+  const marker = bosses.querySelector('[data-quest-boss-marker]')!;
+  expect(marker).not.toBeNull();
+  expect(marker.getAttribute('aria-hidden')).toBe('true');
+  expect(marker.querySelector('svg.lucide-flame')).not.toBeNull();
+  expect(marker.querySelector('svg.lucide-skull')).not.toBeNull();
   expect(host.querySelectorAll("a")).toHaveLength(1);
 });
 
@@ -64,6 +69,7 @@ it("keeps every exact boss in a multi-boss Special quest, including native NPC p
     expect(rows[i].textContent).toContain(`${boss.rarity}★`);
   });
   expect(rows.every(row => row.querySelector("img"))).toBe(true);
+  expect(rows.every(row => row.querySelectorAll('[data-quest-boss-marker]').length===1)).toBe(true);
   expect(host.querySelectorAll("a")).toHaveLength(1);
 });
 
@@ -71,6 +77,7 @@ it("shows an honest missing-boss message when the preview does not match this so
   const host = render({ ...story, sourceHash: "different-source" });
   expect(host.querySelector("ul")).toBeNull();
   expect(host.querySelector("img")).toBeNull();
+  expect(host.querySelector('[data-quest-boss-marker]')).toBeNull();
   expect(host.textContent).toContain("Boss information unavailable");
   expect(host.textContent).not.toContain("Psylocke");
 });

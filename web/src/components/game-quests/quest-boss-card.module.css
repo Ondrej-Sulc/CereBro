@@ -93,13 +93,6 @@
   border-top: 1px solid #7898b42e;
 }
 
-.bossLabel {
-  margin: 0 0 10px;
-  color: #91acc1;
-  font-size: 12px;
-  font-weight: 500;
-}
-
 .bossList {
   display: grid;
   gap: 12px;
@@ -113,6 +106,45 @@
   min-width: 0;
   align-items: center;
   gap: 12px;
+}
+
+.portraitFrame {
+  position: relative;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+}
+
+.bossMarker {
+  position: absolute;
+  left: -5px;
+  bottom: -4px;
+  width: 24px;
+  height: 28px;
+  pointer-events: none;
+  filter: drop-shadow(0 1px 1px #030b16) drop-shadow(0 0 4px #e4564938);
+}
+
+.flame {
+  position: absolute;
+  inset: 0;
+  width: 24px;
+  height: 28px;
+  color: #d45751;
+  fill: currentColor;
+  stroke: #f58c7b;
+  stroke-width: 1.2;
+}
+
+.skull {
+  position: absolute;
+  left: 5px;
+  bottom: 3px;
+  width: 14px;
+  height: 14px;
+  fill: #eee7e0;
+  stroke: #6f272c;
+  stroke-width: 2.1;
 }
 
 .portrait {

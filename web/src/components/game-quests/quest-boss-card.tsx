@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, UserRound } from "lucide-react";
+import { ArrowRight, Flame, Skull, UserRound } from "lucide-react";
 import { permanentData, getBossPreview } from "@cerebro/core/data/game-quests/permanent";
 import type { QuestSummary } from "@cerebro/core/domain/game-quests";
 import { hierarchyLabel } from "@cerebro/core/domain/game-quests";
@@ -22,12 +22,14 @@ export function QuestBossCard({ quest:q, portraits }: { quest:QuestSummary; port
       {(difficulty || q.coverage!=="full-map") && <p className={styles.variant}>{[difficulty,q.coverage!=="full-map" ? "Map unavailable" : ""].filter(Boolean).join(" · ")}</p>}
       <div className={styles.bossSection}>
         {bosses.length ? <>
-          <p className={styles.bossLabel}>{bossLabel}</p>
-          <ul className={styles.bossList} aria-label={bossLabel}>{bosses.map((b,i)=>{
+          <ul className={styles.bossList} aria-label={bossLabel} role="list">{bosses.map((b,i)=>{
             const portrait=b.champion ? portraits[b.gameId] : undefined;
             const src=portrait?.imageUrl ?? (!b.champion ? permanentData.nativePortraits[b.gameId]?.url : null);
             return <li key={`${b.tierId}:${i}`}>
-              <span className={styles.portrait} style={{borderColor:portrait?.color ?? "#7891aa"}}>{src ? <Image src={src} alt="" width={48} height={48} sizes="48px"/> : <UserRound size={24} aria-hidden="true"/>}</span>
+              <span className={styles.portraitFrame}>
+                <span className={styles.portrait} style={{borderColor:portrait?.color ?? "#7891aa"}}>{src ? <Image src={src} alt="" width={48} height={48} sizes="48px"/> : <UserRound size={24} aria-hidden="true"/>}</span>
+                <span className={styles.bossMarker} data-quest-boss-marker aria-hidden="true"><Flame className={styles.flame}/><Skull className={styles.skull}/></span>
+              </span>
               <span className={styles.bossIdentity}><span className={styles.bossName}>{portrait?.name ?? b.champion?.name ?? b.name}</span><span className={styles.rarity}>{b.rarity}★</span></span>
             </li>;
           })}</ul>

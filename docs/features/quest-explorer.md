@@ -75,6 +75,14 @@ links to the selected map location or modifier; they do not copy to the clipboar
 
 Quest-scoped direct champion rewards and `gs` crystal opening references render separately from opponents. The current view groups actual reward rows by Completion, 100% exploration and Potential rewards, hiding empty scopes. Item kind, quantity and direct-champion rarity remain attached. A server projection resolves `gs` data by **exact unique `sourceMetadata.token`** in the canonical opening reader, not by name or assumed opening ID. For example `quest_crystal` resolves to the existing `/crystals/quest_crystal_improvedspin`; `class_cat_crystal` resolves to Tier 4 Class Catalyst Crystal; `mythic_shard_crystal` resolves to Mythic Crystal. Canonical reward artwork is preferred, with the exact opening's crystal artwork as a supported fallback. Unknown or ambiguous tokens have a neutral Crystal reward presentation and no link. All exact tokens and native scopes remain in the single Data & reward details disclosure. A crystal reference does not guarantee a named champion. First/mastery/potential scope labels remain attached. This is not a full reward browser: act/chapter rewards, materials, positioned path rewards, selectors, nested rewards and possible crystal membership are not expanded. Gates, energy/portal costs, adaptive final stats and conditional source removal are not inferred.
 
+## Quest boss marker
+
+Quest-selection boss portraits carry a static red flame-and-skull corner badge.
+The badge replaces the repeated visible Boss caption; the boss list retains its
+accessible label. Champion names, rarity, exact previews and navigation links are
+unchanged. Missing boss information has no badge, while multi-boss previews mark
+each established boss independently.
+
 ## Compact reward display
 
 Act, chapter and quest rewards share a compact icon grid, four columns on phones.
