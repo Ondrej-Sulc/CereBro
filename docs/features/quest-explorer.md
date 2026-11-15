@@ -75,6 +75,19 @@ links to the selected map location or modifier; they do not copy to the clipboar
 
 Quest-scoped direct champion rewards and `gs` crystal opening references render separately from opponents. The current view groups actual reward rows by Completion, 100% exploration and Potential rewards, hiding empty scopes. Item kind, quantity and direct-champion rarity remain attached. A server projection resolves `gs` data by **exact unique `sourceMetadata.token`** in the canonical opening reader, not by name or assumed opening ID. For example `quest_crystal` resolves to the existing `/crystals/quest_crystal_improvedspin`; `class_cat_crystal` resolves to Tier 4 Class Catalyst Crystal; `mythic_shard_crystal` resolves to Mythic Crystal. Canonical reward artwork is preferred, with the exact opening's crystal artwork as a supported fallback. Unknown or ambiguous tokens have a neutral Crystal reward presentation and no link. All exact tokens and native scopes remain in the single Data & reward details disclosure. A crystal reference does not guarantee a named champion. First/mastery/potential scope labels remain attached. This is not a full reward browser: act/chapter rewards, materials, positioned path rewards, selectors, nested rewards and possible crystal membership are not expanded. Gates, energy/portal costs, adaptive final stats and conditional source removal are not inferred.
 
+## Compact reward display
+
+Act, chapter and quest rewards share a compact icon grid, four columns on phones.
+Artwork, exact quantities/ranges, rarity and native rank/signature overlays remain
+visible within their original scopes. A remembered Show names preference adds
+labels below the icons and synchronizes mounted sections. Missing/failed or
+visually ambiguous artwork keeps its label even in compact mode. Each tile opens
+an accessible details popover with its full name, quantity, existing reward link
+and Where to earn action; Escape closes it and restores trigger focus. Potential
+outcomes and non-item observations remain distinct. Preference restoration waits
+until hydration and storage failures do not prevent use of the toggle. Native
+reward/catalog resolution stays on the server; only resolved views reach the grid.
+
 ## Modifier occurrence contract for the node track
 
 Use `effectOccurrences(map, exactGameEffectId)` from `src/domain/game-quests/index.ts` after `loadQuestMap(questId)`. The exact lookup returns **assigned applications**, including applications on non-encounter coordinates, with:

@@ -9,7 +9,7 @@ import { QuestRewards } from "./quest-rewards";
 import { QuestApplicationDetails } from "./quest-application-details";
 vi.mock("next/link", () => ({ default: ({ href, children, prefetch, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { prefetch?: boolean }) => { void prefetch; return <a href={href} {...props}>{children}</a>; } }));
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
-vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
+vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
 HTMLElement.prototype.scrollBy = vi.fn();
 HTMLElement.prototype.scrollTo = vi.fn();
 let root: Root | undefined;
@@ -160,7 +160,8 @@ describe("quest map controls", () => {
   });
   it("keeps reward ranges and named outcomes visible without exposing internal reward tokens",async()=>{
     const host=await render(<QuestRewards rewards={[{key:"fragments",scope:"masteryCompletionRewards",token:"exact-token",sourceType:"gf",type:"item",name:"Crystal shards",quantity:1,amount:"5–10",imageUrl:null,href:null},{key:"outcome",scope:"potentialCompletionRewards",token:"internal-offer-token",sourceType:"offer",type:"item",name:"Special offer",quantity:1,recordedOutcome:true,imageUrl:null,href:null}]}/>);
-    expect(host.textContent).toContain("Crystal shards · 5–10");
+    expect(host.textContent).toContain("Crystal shards");
+    expect(host.textContent).toContain("5–10");
     expect(host.textContent).toContain("Special offer");
     expect(host.textContent).not.toMatch(/exact-token|internal-offer-token|Source data/);
   });
@@ -246,8 +247,9 @@ describe("quest map controls", () => {
     const host = await render(<QuestRewards rewards={[{ key: "one", name: "MYTHIC CRYSTAL", scope: "masteryCompletionRewards", token: "mythic_shard_crystal", type: "crystal", quantity: 1, href: "/crystals/mythic_shard_crystal", imageUrl: null }]} />);
     expect(host.textContent).toContain("100% exploration");
     expect(host.textContent).not.toContain("Fixed champion rewards");
-    expect(host.querySelector("li > div > p")?.textContent).not.toContain("mythic_shard_crystal");
-    expect(host.querySelector('a')?.getAttribute("href")).toBe("/crystals/mythic_shard_crystal");
+    expect(host.textContent).not.toContain("mythic_shard_crystal");
+    await act(async () => host.querySelector<HTMLButtonElement>('[data-quest-reward] button')!.click());
+    expect(document.querySelector('[role="dialog"] a')?.getAttribute("href")).toBe("/crystals/mythic_shard_crystal");
     await act(async () => root!.render(<QuestRewards rewards={[]} />));
     expect(host.textContent).toBe("");
   });
