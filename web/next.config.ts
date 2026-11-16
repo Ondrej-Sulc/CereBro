@@ -46,6 +46,8 @@ const nextConfig: NextConfig = {
     APP_VERSION: buildId,
   },
   experimental: {
+    // Reduce peak memory pressure under the website build's configured 4GB heap cap.
+    webpackMemoryOptimizations: true,
     serverActions: {
       bodySizeLimit: '10000mb',
     },
