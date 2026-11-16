@@ -27,11 +27,11 @@ export function QuestPageHeader({ quest: q }: { quest: QuestSummary }) {
       </Fragment>)}
     </nav>
     <header className={styles.header} data-has-art={Boolean(art)} data-menu-art-role={art?.role ?? "none"}>
-      {art && <><div className={styles.art}><Image src={art.url} alt="" fill sizes="(max-width:600px) 55vw, (max-width:1280px) 60vw, 650px" priority/></div><div className={styles.shade}/></>}
       <div className={styles.copy}>
         <div className={styles.meta}><span>{special ? "Special quest" : q.section ?? q.category}</span>{difficulty && difficulty.toLocaleLowerCase() !== q.name.toLocaleLowerCase() && <span className={styles.difficulty}>{difficulty}</span>}</div>
         <div className={styles.heading}><span className={styles.number} data-quest-number>{hierarchyLabel(q)}</span><div><h1>{q.name}</h1>{location && <p className={styles.location}>{location}</p>}</div></div>
       </div>
+      {art && <div className={styles.art}><Image src={art.url} alt="" width={art.width} height={art.height} sizes="(max-width:360px) 60px, (max-width:600px) 76px, 168px" priority/></div>}
     </header>
   </div>;
 }
