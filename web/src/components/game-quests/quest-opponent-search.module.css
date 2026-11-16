@@ -1,0 +1,10 @@
+.picker { min-width: 0; }
+.picker > label { display: block; margin-bottom: 9px; color: #d1e2ed; font-size: 12px; font-weight: 600; line-height: 1.5; }
+.field { position: relative; }
+.field > svg { position: absolute; z-index: 1; top: 50%; width: 15px; height: 15px; color: #83a7bc; pointer-events: none; transform: translateY(-50%); }
+.field > svg:first-child { left: 13px; }
+.picker .championSelect { min-height: 48px; padding-left: 28px; padding-right: 8px; border: 1px solid #426079; border-radius: 9px; background: #091725b8; box-shadow: inset 0 1px #ffffff04; }
+.picker .championSelect:hover { border-color: #78a8be; background: #102338; }
+.picker .championSelect:focus-visible { box-shadow: none; outline: 2px solid #a7dff0; outline-offset: 3px; }
+.hint { min-height: 18px; margin-top: 9px; color: #829eb4; font-size: 11px; line-height: 1.65; }
+.loading { color: #b0d9e8; }

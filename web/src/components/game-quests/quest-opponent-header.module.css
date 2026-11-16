@@ -1,0 +1,73 @@
+.header {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 33%);
+  align-items: center;
+  gap: 32px;
+  overflow: hidden;
+  margin: 10px 0 26px;
+  padding: 30px 32px;
+  border: 1px solid #6e9bb13d;
+  border-radius: 18px;
+  background:
+    radial-gradient(ellipse at 3% 30%, color-mix(in srgb, var(--opponent-color) 10%, transparent), transparent 48%),
+    radial-gradient(ellipse at 90% 0%, #1d53652b, transparent 52%),
+    linear-gradient(112deg, #102034, #0b1626 65%, #0c1b2c);
+  box-shadow: inset 0 1px #d9f0ff08, 0 14px 45px #02081422;
+  color: #e6f1f8;
+}
+
+.routes { position: absolute; z-index: -1; inset: 0 0 0 auto; width: 95%; height: 100%; stroke: #9eb8d0; stroke-width: .8; opacity: .11; pointer-events: none; mask-image: linear-gradient(90deg, transparent 15%, #000 85%); }
+.routes circle { fill: #142a3e; stroke: #9bd9e6; }
+.routeHighlight { stroke: #a9e2ec; stroke-dasharray: 4 7; }
+.copy { position: relative; min-width: 0; }
+.eyebrow { display: flex; align-items: center; gap: 9px; margin: 0 0 16px; color: #93c9de; font-size: 10px; font-weight: 650; line-height: 1.5; letter-spacing: .18em; text-transform: uppercase; }
+.eyebrow::before { width: 20px; height: 1px; background: #93c9de80; content: ''; }
+.identity { display: flex; align-items: center; gap: 18px; min-width: 0; }
+.identity > div { min-width: 0; }
+.identity h1 { margin: 0; color: #edf5fb; font-size: clamp(26px, 2.8vw, 36px); font-weight: 700; line-height: 1.18; letter-spacing: -.04em; overflow-wrap: anywhere; }
+.identity h1 a { color: inherit; }
+.identity h1 a:hover { color: #b4e5f4; }
+.identity h1 svg { display: inline; width: 17px; height: 17px; margin-left: 7px; vertical-align: baseline; color: #83adc3; }
+.portrait { position: relative; display: inline-flex; flex-shrink: 0; filter: drop-shadow(0 7px 20px #030b1466); }
+.portrait::before { position: absolute; z-index: -1; inset: -20px; background: radial-gradient(circle, color-mix(in srgb, var(--opponent-color) 15%, transparent), transparent 69%); content: ''; }
+.className { display: flex; align-items: center; gap: 7px; margin-top: 7px; color: #9db5c8; font-size: 12px; line-height: 1.5; }
+.className > span { width: 5px; height: 5px; border-radius: 50%; background: var(--opponent-color); }
+.explorerIcon { display: grid; place-items: center; width: 64px; height: 64px; flex-shrink: 0; border: 1px solid #80b8d137; border-radius: 18px; background: radial-gradient(circle at 35% 25%, #29677c40, #0f2133); color: #a8dbe9; }
+.explorerIcon svg { width: 30px; height: 30px; stroke-width: 1.4; }
+.lede { max-width: 480px; margin: 17px 0 0; color: #9eb5c9; font-size: 13px; line-height: 1.8; text-wrap: pretty; }
+.stats { display: flex; flex-wrap: wrap; gap: 7px 22px; margin-top: 18px; color: #8faabd; font-size: 11px; line-height: 1.6; }
+.stats > span { display: flex; align-items: center; gap: 5px; }
+.stats svg { width: 14px; height: 14px; margin-right: 3px; color: #80aabd; }
+.stats strong { color: #d5e8f0; font-size: 12px; font-weight: 650; font-variant-numeric: tabular-nums; }
+.lookup { position: relative; min-width: 0; padding-left: 28px; border-left: 1px solid #8bb7cb21; }
+.header :is(a, button):focus-visible { outline: 2px solid #a7dff0; outline-offset: 4px; border-radius: 4px; }
+
+@media (max-width: 850px) {
+  .header { grid-template-columns: minmax(0, 1fr) 260px; gap: 22px; padding: 26px; }
+  .identity { gap: 14px; }
+  .identity h1 { font-size: 28px; }
+  .lookup { padding-left: 22px; }
+}
+
+@media (max-width: 700px) {
+  .header { grid-template-columns: minmax(0, 1fr); gap: 22px; padding: 24px; margin-bottom: 22px; border-radius: 14px; }
+  .lookup { padding: 20px 0 0; border-left: 0; border-top: 1px solid #8bb7cb21; }
+  .routes { width: 140%; opacity: .08; }
+  .lede { margin-top: 15px; }
+  .stats { margin-top: 15px; }
+}
+
+@media (max-width: 420px) {
+  .header { padding: 20px; gap: 18px; }
+  .eyebrow { margin-bottom: 13px; font-size: 9px; }
+  .identity { gap: 13px; }
+  .identity h1 { font-size: 26px; }
+  .portrait [data-quest-portrait] { width: 60px !important; height: 60px !important; }
+  .explorerIcon { width: 52px; height: 52px; border-radius: 14px; }
+  .explorerIcon svg { width: 26px; height: 26px; }
+  .lede { font-size: 12px; }
+  .stats { gap: 7px 16px; font-size: 10px; }
+  .lookup { padding-top: 18px; }
+}

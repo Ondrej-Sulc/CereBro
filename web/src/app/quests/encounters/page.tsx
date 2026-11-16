@@ -4,7 +4,7 @@ import { permanentData } from "@cerebro/core/data/game-quests/permanent";
 import { getQuestOpponentChampions } from "@/lib/game-quests/opponent-champions";
 import { QuestOpponentResults } from "@/components/game-quests/quest-opponent-results";
 import { QuestOpponentSearch } from "@/components/game-quests/quest-opponent-search";
-import { QuestPortrait } from "@/components/game-quests/quest-portrait";
+import { QuestOpponentHeader } from "@/components/game-quests/quest-opponent-header";
 import styles from "@/components/game-quests/quest-opponent-lookup.module.css";
 
 export const metadata = { title: "Find champion quest encounters | CereBro" };
@@ -24,8 +24,9 @@ export default async function ChampionEncountersPage({ searchParams }: { searchP
   const filters={query:one(params,"q").slice(0,180),section:category==="Story"||category==="Special"?category:"",rarity:/^(?:[1-9]|1[0-2])$/.test(rarity)?rarity:"",bossOnly:one(params,"role")==="boss",page:one(params,"page")};
   return <div className={styles.page}>
     <Link href="/quests" className={styles.back}>← Quest explorer</Link>
-    <header className={styles.hero}>{portrait&&<QuestPortrait portrait={portrait} large/>}<div><p className={styles.eyebrow}>Quest encounters</p><h1>{champion?.href?<Link href={champion.href}>{name}<span aria-hidden="true"> ↗</span></Link>:name??"Find a quest opponent"}</h1>{champion&&<p className={styles.heroMeta}>{champion.className}</p>}</div></header>
-    <QuestOpponentSearch gameId={gameId} champions={champions.map(c=>({id:c.id,name:c.name,class:c.class,portraitUrl:c.portraitUrl}))}/>
-    {gameId?<QuestOpponentResults gameId={gameId} matches={matches} filters={filters}/>:<p className={styles.note}>Choose a champion to find their quest encounters and open them on the map.</p>}
+    <QuestOpponentHeader portrait={portrait} name={name} matches={matches}>
+      <QuestOpponentSearch gameId={gameId} champions={champions.map(c=>({id:c.id,name:c.name,class:c.class,portraitUrl:c.portraitUrl}))}/>
+    </QuestOpponentHeader>
+    {gameId&&<QuestOpponentResults gameId={gameId} matches={matches} filters={filters}/>}
   </div>;
 }
