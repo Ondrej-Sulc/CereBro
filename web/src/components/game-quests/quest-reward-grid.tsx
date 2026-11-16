@@ -30,7 +30,6 @@ function useRewardNames() {
 
 const name = (r:QuestRewardView) => `${r.rarity?`${r.rarity}★ `:""}${r.name}`;
 const amount = (r:QuestRewardView) => r.placeholder ? "" : r.amount??`×${r.quantity.toLocaleString("en")}`;
-const visualIdentity = (r:QuestRewardView) => JSON.stringify([r.imageUrl,r.rankChange,r.signaturePoints,r.itemRarity,r.rarity]);
 function kind(r:QuestRewardView) {
   if(r.type==="champion")return "Champion";
   if(r.type==="crystal")return "Crystal";
@@ -62,18 +61,13 @@ function RewardTile({reward:r,showName}:{reward:QuestRewardView;showName:boolean
 
 export function QuestRewardGrid({title,id,groups}:{title:string;id:string;groups:{scope:string;label:string;rewards:QuestRewardView[]}[]}) {
   const [showNames,setShowNames] = useRewardNames();
-  const identities = new Map<string,Set<string>>();
-  for(const r of groups.flatMap(group=>group.rewards)) {
-    const key=visualIdentity(r),names=identities.get(key)??new Set<string>();
-    names.add(name(r));identities.set(key,names);
-  }
   return <>
     <header className={styles.header}><h2 id={`${id}-title`}>{title}</h2>{groups.length>0&&<label className={styles.toggle}><input type="checkbox" aria-label="Show reward names" checked={showNames} onChange={event=>setShowNames(event.currentTarget.checked)}/>Show names</label>}</header>
     {groups.length>0&&<p className={styles.hint}>Tap a reward for details.</p>}
     <div className={styles.scopes}>{groups.map(group=><section key={group.scope} id={`${id}-${group.scope}`} data-quest-reward-scope={group.scope} aria-labelledby={`${id}-${group.scope}-title`}>
       <h3 id={`${id}-${group.scope}-title`}>{group.label}</h3>
       {group.scope==="potentialCompletionRewards"&&<p className={styles.possible}>Possible outcomes; not guaranteed</p>}
-      <ul className={styles.grid}>{group.rewards.map(r=><RewardTile key={r.key} reward={r} showName={showNames||(identities.get(visualIdentity(r))?.size??0)>1}/>)}</ul>
+      <ul className={styles.grid}>{group.rewards.map(r=><RewardTile key={r.key} reward={r} showName={showNames}/>)}</ul>
     </section>)}</div>
   </>;
 }

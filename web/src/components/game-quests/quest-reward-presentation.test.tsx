@@ -93,10 +93,38 @@ it('supports the toggle when storage is blocked and keeps possible outcomes dist
   expect(host.querySelector('details')?.textContent).toContain('Recorded offer');
 });
 
-it('keeps labels for ambiguous art while using native overlays to distinguish other items', async () => {
+it('honors compact mode for rewards sharing artwork while retaining overlays and accessible names', async () => {
   const host = await render(<QuestRewards rewards={[reward({key:'alpha',name:'Alpha material'}),reward({key:'beta',name:'Beta material'}),reward({key:'stone',name:'Signature stone',signaturePoints:5,itemRarity:6,quantity:7})]}/>);
-  expect([...host.querySelectorAll('[data-reward-name]')].map(label=>label.textContent)).toEqual(['Alpha material','Beta material']);
+  expect(host.querySelectorAll('[data-reward-name]')).toHaveLength(0);
+  expect(host.querySelector('[data-quest-reward="alpha"] button')?.getAttribute('aria-label')).toContain('Alpha material');
+  expect(host.querySelector('[data-quest-reward="beta"] button')?.getAttribute('title')).toContain('Beta material');
   expect(host.querySelector('[data-reward-signature-points="5"]')).not.toBeNull();
+  await act(async()=>host.querySelector<HTMLInputElement>('input[aria-label="Show reward names"]')!.click());
+  expect([...host.querySelectorAll('[data-reward-name]')].map(label=>label.textContent)).toEqual(['Alpha material','Beta material','Signature stone']);
+  await act(async()=>host.querySelector<HTMLInputElement>('input[aria-label="Show reward names"]')!.click());
+  expect(host.querySelectorAll('[data-reward-name]')).toHaveLength(0);
+});
+
+it('keeps actual Act 8 crystal rewards compact even when the hero and class selector share an icon', async()=>{
+  const record=getParentRewardRecord([findQuest('a08_ch04_q06')!],'act','act_08')!;
+  const rewards=projectRewardRecord(record);
+  const crystals=rewards.filter(r=>r.type==='crystal');
+  const hero=crystals.find(r=>r.name==='7-STAR HERO CRYSTAL')!;
+  const selector=crystals.find(r=>r.name==='7-STAR CLASS HERO CRYSTAL SELECTOR CRYSTAL')!;
+  expect(hero.imageUrl).toBeTruthy();
+  expect(selector.imageUrl).toBe(hero.imageUrl);
+  const host=await render(<QuestRewards rewards={rewards} title="Act rewards"/>);
+  expect(host.querySelector<HTMLInputElement>('input[aria-label="Show reward names"]')?.checked).toBe(false);
+  for(const crystal of [hero,selector]){
+    const tile=[...host.querySelectorAll('[data-quest-reward]')].find(row=>row.getAttribute('data-quest-reward')===crystal.key)!;
+    expect(tile.querySelector('img')).not.toBeNull();
+    expect(tile.querySelector('[data-reward-name]')).toBeNull();
+    const trigger=tile.querySelector<HTMLButtonElement>('button')!;
+    await act(async()=>trigger.click());
+    expect(document.querySelector('[role="dialog"] h4')?.textContent).toBe(crystal.name);
+    expect(document.querySelector(`[role="dialog"] a[href="${crystal.href}"]`)).not.toBeNull();
+    await act(async()=>document.querySelector<HTMLButtonElement>('[aria-label="Close reward details"]')!.click());
+  }
 });
 
 it('hydrates compact server markup before restoring the remembered names preference', async () => {
