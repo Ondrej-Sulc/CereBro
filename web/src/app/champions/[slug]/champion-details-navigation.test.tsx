@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 
-import { act } from "react"
+import { act, type ReactNode } from "react"
 import { createRoot, type Root } from "react-dom/client"
 import { afterEach, beforeEach, expect, it, vi } from "vitest"
 import { ChampionDetailsClient } from "./champion-details-client"
@@ -20,7 +20,7 @@ vi.mock("next/navigation", async () => {
   return { useSearchParams: () => new URLSearchParams(useSyncExternalStore(subscribe, () => window.location.search, () => "")) }
 })
 vi.mock("next/image", () => ({ default: () => null }))
-vi.mock("./champion-kit-overview", () => ({ ChampionKitOverview: ({ onViewSynergies }: { onViewSynergies: (id: string) => void }) => <button onClick={() => onViewSynergies("catalog_alias")}>Read synergy source</button> }))
+vi.mock("./champion-kit-overview", () => ({ ChampionKitOverview: ({ onViewSynergies, sideContent }: { onViewSynergies: (id: string) => void; sideContent?:ReactNode }) => <><button onClick={() => onViewSynergies("catalog_alias")}>Read synergy source</button>{sideContent}</> }))
 vi.mock("@/app/profile/roster/prestige-curve-chart", () => ({ PrestigeCurveChart: ({ data, currentSig }: { data: Array<{ sig: number; prestige: number }>; currentSig: number }) => <output aria-label="Prestige chart data">{data.find(point => point.sig === currentSig)?.prestige}</output> }))
 vi.mock("./champion-synergies-panel", () => ({ ChampionSynergiesPanel: ({ targetSynergyId, onClearTarget }: { targetSynergyId: string | null; onClearTarget: () => void }) => <div data-synergy-probe={targetSynergyId ?? ""}><button onClick={onClearTarget}>Clear linked source</button></div> }))
 
@@ -100,6 +100,28 @@ async function traverse(direction: "back" | "forward") {
     await popped
   })
 }
+
+it("shows duel targets without recommending the first active player and preserves copying and status", async()=>{
+  const duelProps:ChampionDetailsProps={...props,champion:{...props.champion,duels:[
+    {id:1,playerName:'DeusXMachina!',rank:'7★ R5',status:'ACTIVE',source:'CEREBRO',updatedAt:'2026-11-12T12:00:00Z'},
+    {id:2,playerName:'SwiTcher',rank:'7★ R4',status:'ACTIVE',source:'CEREBRO',updatedAt:'2026-11-13T12:00:00Z'},
+    {id:3,playerName:'Old target',rank:'6★ R5',status:'OUTDATED',source:'GUIA_MTC',updatedAt:'2026-11-01T12:00:00Z'},
+  ]}}
+  await act(async()=>root.render(<ChampionDetailsClient {...duelProps}/>))
+  const section=[...document.querySelectorAll('section')].find(section=>section.querySelector('h2')?.textContent==='Duel targets')!
+  expect(section).toBeDefined()
+  expect(section.textContent).not.toContain('Recommended')
+  expect(section.querySelector('svg.lucide-target')).toBeNull()
+  expect(section.textContent).toContain('CereBro')
+  expect(section.textContent).toContain('Updated Nov 13')
+  expect(section.textContent).toContain('Outdated')
+  expect(section.querySelector('a[href="https://www.guiamtc.com/"]')).not.toBeNull()
+  for(const name of ['DeusXMachina!','SwiTcher']){
+    await click(`Copy ${name}`)
+    expect(writeClipboard).toHaveBeenLastCalledWith(name)
+    expect(section.querySelector(`button[aria-label="Copied ${name}"]`)).not.toBeNull()
+  }
+})
 
 it("retains the exact source and build through section changes and Back/Forward", async () => {
   await act(async () => root.render(<ChampionDetailsClient {...props} />))

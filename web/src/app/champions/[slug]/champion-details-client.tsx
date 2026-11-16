@@ -5,7 +5,7 @@ import { ChampionQuestEncounterLink } from "@/components/game-quests/champion-qu
 import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react"
-import { BookOpen, Check, ChevronDown, Compass, Copy, Crosshair, Layers3, Link2, SlidersHorizontal, Swords, Target, Users } from "lucide-react"
+import { BookOpen, Check, ChevronDown, Compass, Copy, Crosshair, Layers3, Link2, SlidersHorizontal, Swords, Users } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import * as Dialog from "@radix-ui/react-dialog"
 import { TooltipProvider } from "@/components/ui/tooltip"
@@ -433,7 +433,6 @@ function DossierDuelTargets({ view }: { view: ChampionDetailsView }) {
   const prepared = useMemo(() => prepareDuelTargets(view.champion.duels), [view.champion.duels])
   const credits = useMemo(() => getExternalDuelSourceCredits(view.champion.duels), [view.champion.duels])
   if (!view.champion.duels.length) return null
-  const featuredId = prepared.activeTargets[0]?.id
 
   const copyTarget = async (id: number, playerName: string) => {
     try {
@@ -457,10 +456,10 @@ function DossierDuelTargets({ view }: { view: ChampionDetailsView }) {
       </div>
       <div className="mt-5 max-h-[520px] overflow-y-auto border-y border-white/10">
         {prepared.targets.map(duel => (
-          <div key={duel.id} className={cn("group relative flex items-center gap-3 border-b border-white/10 px-2 py-3.5 last:border-0", duel.id === featuredId && "bg-white/[.035]")}>
-            {duel.id === featuredId ? <Target className="h-4 w-4 shrink-0" style={{ color: view.accent }} /> : <span className={cn("ml-1 h-2 w-2 shrink-0 rounded-full", duel.status === "ACTIVE" ? "bg-emerald-400" : "bg-amber-400")} />}
+          <div key={duel.id} className="group relative flex items-center gap-3 border-b border-white/10 px-2 py-3.5 last:border-0">
+            <span className={cn("ml-1 h-2 w-2 shrink-0 rounded-full", duel.status === "ACTIVE" ? "bg-emerald-400" : "bg-amber-400")} />
             <div className="min-w-0 flex-1">
-              <div className="flex min-w-0 flex-wrap items-center gap-2"><span className="select-text break-all text-sm font-bold text-white/80 group-hover:text-white">{duel.playerName}</span>{duel.id === featuredId && <span className="shrink-0 text-xs font-semibold" style={{ color: view.accent }}>Recommended</span>}</div>
+              <div className="flex min-w-0 flex-wrap items-center gap-2"><span className="select-text break-all text-sm font-bold text-white/80 group-hover:text-white">{duel.playerName}</span></div>
               <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-normal text-white/50"><span>{duel.sourceLabel}</span><span>{formatDuelDate(duel.updatedAt)}</span>{duel.status === "OUTDATED" && <span className="text-amber-300/70">Outdated</span>}</div>
             </div>
             <div className="flex shrink-0 items-center gap-2">
