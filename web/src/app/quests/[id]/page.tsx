@@ -5,7 +5,7 @@ import { getQuestArtwork } from "@cerebro/core/data/game-quests/artwork";
 import { findQuest, loadQuestMap, isArchivedQuest } from "@cerebro/core/data/game-quests";
 import { QuestPageHeader } from "@/components/game-quests/quest-page-header";
 import { loadQuestPortraits,loadRewardPortraits } from "@/lib/game-quests/champions";
-import { projectQuestRewards,projectRewardRecord } from "@/lib/game-quests/presentation";
+import { projectQuestRewards,projectRewardRecord,questParentRewardTitle } from "@/lib/game-quests/presentation";
 import { getQuestRewardRecord,getParentRewardRecord,hasRecordedRewards } from "@cerebro/core/data/game-quests/rewards";
 import { QuestRewards } from "@/components/game-quests/quest-rewards";
 import { QuestMapExplorer } from "@/components/game-quests/quest-map-explorer";
@@ -32,7 +32,7 @@ export default async function QuestPage({ params, searchParams }: Props) {
     <QuestPageHeader quest={q} />
     {(unplaced||parentRewards.length>0)&&<nav aria-label="Quest rewards context" className="mb-4 flex flex-wrap items-center gap-x-4 text-xs text-sky-300">
       {unplaced&&<a href="#unplaced-defender-previews" className="inline-flex min-h-11 items-center">Additional defender previews →</a>}
-      {parentRewards.map(({h,act,chapter})=><Fragment key={h.actId+h.chapterId}>{act&&<Link className="inline-flex min-h-11 items-center" href={`/quests?${new URLSearchParams(q.section==="Special"?{category:"Special",collection:q.containerSetName}:{category:"Story",act:h.actId})}#act-rewards`}>Act rewards</Link>}{chapter&&<Link className="inline-flex min-h-11 items-center" href={`/quests?${new URLSearchParams({category:q.section??q.category,...(q.section==="Special"?{collection:q.containerSetName}:{act:h.actId}),chapter:h.chapterId})}#chapter-rewards`}>Chapter rewards</Link>}</Fragment>)}
+      {parentRewards.map(({h,act,chapter})=><Fragment key={h.actId+h.chapterId}>{act&&<Link className="inline-flex min-h-11 items-center" href={`/quests?${new URLSearchParams(q.section==="Special"?{category:"Special",collection:q.containerSetName}:{category:"Story",act:h.actId})}#act-rewards`}>{questParentRewardTitle([q],"act")}</Link>}{chapter&&<Link className="inline-flex min-h-11 items-center" href={`/quests?${new URLSearchParams({category:q.section??q.category,...(q.section==="Special"?{collection:q.containerSetName}:{act:h.actId}),chapter:h.chapterId})}#chapter-rewards`}>Chapter rewards</Link>}</Fragment>)}
     </nav>}
     {map && selection.sourceHash && selection.sourceHash!==map.sourceHash && <p className="mb-5 text-sm text-amber-200">This application link refers to another saved source version. The current recorded map is shown.</p>}
     {(q.scalingCurve || (map?.adaptive)) && <p className="mb-5 rounded-lg border border-amber-900/60 bg-amber-950/20 p-4 text-sm leading-6 text-amber-200">Opponents and rewards scale with progression.{q.minProgressionRank !== null && ` Shown for progression rank ${q.minProgressionRank}${q.maxProgressionRank !== q.minProgressionRank ? `–${q.maxProgressionRank}` : ""}.`} Recorded builds may differ for another profile.</p>}

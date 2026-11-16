@@ -43,6 +43,11 @@ it("preserves native placeholder observations without inventing a grant",()=>{
  const view=projectRewardRecord(r).find(v=>v.token==="unknown_rewards")!;
  expect(view.placeholder).toBe(true);expect(view.amount).toBe("");expect(view.href).toBeNull();
  expect(view.name).toBe("Reward details not specified");
+ expect(hasRecordedRewards(r)).toBe(false);
+ expect(r.scopes.firstCompletionRewards[0].data).toBe("unknown_rewards");
+ expect(getParentRewardRecord([q],"act","act_08")).toBeUndefined();
+ expect(hasRecordedRewards(getQuestRewardRecord(findQuest("me_crucible_ch01_q02")!))).toBe(true);
+ expect(hasRecordedRewards({...r,scopes:{firstCompletionRewards:[...r.scopes.firstCompletionRewards,{sourceIndex:1,type:"res",data:"sc",quantity:25}]}})).toBe(true);
 });
 it("presents exact material/currency quantities separately per reward scope without dropping rows",()=>{
  const q=findQuest("a05_ch01_q01")!,r=getQuestRewardRecord(q)!,views=projectRewardRecord(r);

@@ -120,10 +120,15 @@ it('keeps actual Act 8 crystal rewards compact even when the hero and class sele
     expect(tile.querySelector('img')).not.toBeNull();
     expect(tile.querySelector('[data-reward-name]')).toBeNull();
     const trigger=tile.querySelector<HTMLButtonElement>('button')!;
+    await act(async()=>trigger.focus());
     await act(async()=>trigger.click());
     expect(document.querySelector('[role="dialog"] h4')?.textContent).toBe(crystal.name);
     expect(document.querySelector(`[role="dialog"] a[href="${crystal.href}"]`)).not.toBeNull();
     await act(async()=>document.querySelector<HTMLButtonElement>('[aria-label="Close reward details"]')!.click());
+    await vi.waitFor(()=>{
+      expect(document.querySelector('[role="dialog"]')).toBeNull();
+      expect(document.activeElement).toBe(trigger);
+    });
   }
 });
 

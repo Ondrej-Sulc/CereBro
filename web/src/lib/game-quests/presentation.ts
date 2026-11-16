@@ -1,12 +1,12 @@
 import type { ChampionClass } from "@prisma/client";
-import type { QuestMap } from "@cerebro/core/domain/game-quests";
+import type { QuestMap, QuestSummary } from "@cerebro/core/domain/game-quests";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { listCrystalOpenings } from "@cerebro/core/data/game-crystal-openings";
 import { getCrystalPresentation } from "@cerebro/core/data/game-crystals";
 import { getQuestRewardArtwork as getRewardArtwork } from "@cerebro/core/data/game-quests/reward-artwork";
 import { getSelectableReward } from "@cerebro/core/data/game-selectable-rewards";
-import { getQuestRewardRecord,type QuestRewardRecord,type NativeQuestReward } from "@cerebro/core/data/game-quests/rewards";
+import { getQuestRewardRecord,isQuestRewardPlaceholder,type QuestRewardRecord,type NativeQuestReward } from "@cerebro/core/data/game-quests/rewards";
 import { findQuest } from "@cerebro/core/data/game-quests";
 import { permanentData } from "@cerebro/core/data/game-quests/permanent";
 import { publicRewardDisplayName as rewardDisplayName } from "@cerebro/core/domain/reward-display";
@@ -52,6 +52,10 @@ export function projectQuestRewards(map: QuestMap, portraits: Record<string, Que
     ...map.rewards.possibleCrystals.map((r, i) => ({ key: `gs:${i}`, scope: r.scope, token: r.token, quantity: r.quantity, type: "crystal" as const, ...resolveQuestCrystal(r.token) })),
   ];
 }
+export function questParentRewardTitle(quests:QuestSummary[],kind:"act"|"chapter") {
+  if(kind==="chapter")return "Chapter rewards";
+  return quests.length>0&&quests.every(quest=>(quest.section??quest.category)==="Story")?"Act rewards":"Collection rewards";
+}
 export function questRewardScope(scope: string) {
   const labels: Record<string, string> = {
     firstCompletionRewards: "First completion",
@@ -69,7 +73,7 @@ export function projectRewardRecord(record:QuestRewardRecord,portraits:Record<st
  return Object.entries(record.scopes).flatMap(([scope,rows])=>rows.map(r=>projectRewardRow(r,scope,`${record.key}:${scope}:${r.sourceIndex}`,portraits)));
 }
 export function projectRewardRow(r:NativeQuestReward,scope:string,key:string,portraits:Record<string,QuestPortrait>={}):QuestRewardView{
-  const placeholder=r.type==="inv"&&r.data==="unknown_rewards";
+  const placeholder=isQuestRewardPlaceholder(r);
   if(placeholder)return {key,scope,token:r.data,sourceType:r.type,quantity:r.quantity,amount:"",type:"item",name:"Reward details not specified",href:null,imageUrl:null,placeholder:true};
   const crystal=r.type==="gs"?resolveQuestCrystal(r.data):null;
   const selector=r.type==="sra"?getSelectableReward(r.data):null;
