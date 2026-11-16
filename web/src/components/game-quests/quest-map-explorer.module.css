@@ -30,9 +30,34 @@
 .modifierSection>h3>span{font-size:12px;font-weight:400;color:#8196ae}
 .connections>summary{display:flex;align-items:center;min-height:44px;cursor:pointer;font-size:12px;color:#9bb8cd;list-style:none}
 .connections>summary::before{content:'+';margin-right:8px}
-.connections[open]>summary::before{content:'?'}
+.connections[open]>summary::before{content:'-'}
 .connections button{display:inline-block}
 .areaEffects{margin-top:18px}
 .areaEffects details>p{font-size:13px}
 .regionExplanation{font-size:13px!important;margin:0 0 4px}
 @media(max-width:540px){.inspectorBody{padding:16px}.encounterIdentity :is(h2,h3){font-size:19px}}
+
+.routeControl{display:flex;align-items:center;gap:7px;min-width:0;margin-right:auto;color:#8daec5}
+.routeLabel{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.explorer .routeControl select{width:180px;min-width:0;min-height:40px;border-color:#354e65;background:#112337;font-size:12px;padding:0 8px}
+.mapAbout{margin:12px 0 0;color:#88a3ba;font-size:11px}
+.mapAbout>summary{display:flex;align-items:center;min-height:36px;width:fit-content;cursor:pointer}
+.mapAbout .summary{margin:4px 0 12px;gap:8px 20px;font-size:11px}
+.mapAbout .summary strong{font-size:13px}
+.inspectorShare{display:inline-flex;justify-content:center;gap:5px;width:auto;min-width:44px;font-size:11px;padding:0 5px}
+.connectedPoints{margin-top:18px;border-top:1px solid #293c4e;color:#94b2c8;font-size:12px}
+.connectedPoints>summary{display:flex;align-items:center;gap:7px;min-height:46px;cursor:pointer;list-style:none}
+.connectedPoints>summary::-webkit-details-marker{display:none}
+.connectedPoints>summary>span{flex:1}
+.connectedPoints>summary>small{font-size:10px;color:#7e9ab0}
+.connectedPoints>summary>svg:last-child{transition:transform .15s}
+.connectedPoints[open]>summary>svg:last-child{transform:rotate(180deg)}
+.connectedPoints>p{font-size:11px;color:#88a1b7;margin:0 0 8px;line-height:1.6}
+.connectionList{display:flex;flex-direction:column;gap:6px}
+.connectionList button{display:flex;align-items:center;justify-content:space-between;gap:8px;text-align:left;border:1px solid #2b4258;border-radius:7px;background:#102033;padding:8px 10px;color:#b1d7ed;font-size:12px}
+.connectionList button:hover{background:#1a344b;border-color:#5f91af}
+.connectionList button[data-portal-link]{color:#d3c0ed;border-color:#51446b}
+.connectionList small{display:block;font-size:10px;color:#ae9cc7;margin-top:3px}
+@media(max-width:600px){.routeControl{gap:0;flex:1}.routeControl>svg{display:none}.explorer .routeControl select{width:100%;font-size:11px;padding-inline:5px}.inspectorBody{padding:14px}}
+
+.connectedPoints>summary:focus-visible,.mapAbout>summary:focus-visible{outline:2px solid #7dd3fc;outline-offset:2px;border-radius:5px}

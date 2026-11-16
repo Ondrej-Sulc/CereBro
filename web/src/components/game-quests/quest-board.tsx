@@ -1,8 +1,8 @@
 "use client";
 import { questEncounterPortrait } from "./quest-portrait";
 
-import { useEffect,useLayoutEffect, useId, useMemo, useRef, useState, type CSSProperties, type RefObject } from "react";
-import { Expand, Hand, Minus, Plus, Scan, Shrink, Signpost } from "lucide-react";
+import { useEffect,useLayoutEffect, useId, useMemo, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
+import { ChevronDown, Expand, Minus, Plus, Scan, Shrink, Signpost } from "lucide-react";
 import { coordinateKey, type Coordinate, type QuestMap } from "@cerebro/core/domain/game-quests";
 import { questBoardLabels } from "@cerebro/core/domain/game-quests/board";
 import { questPositionLabel, questZoom } from "@cerebro/core/domain/game-quests/navigation";
@@ -14,12 +14,13 @@ import { useQuestMapFullscreen } from "./use-quest-map-fullscreen";
 import { QuestMapNameplate } from "./quest-map-nameplate";
 import styles from "./quest-board.module.css";
 
-export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, viewportRef, artwork, spawnRegions, selectedRegion, onChooseRegion, onChooseRoute }: {
+export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, viewportRef, artwork, spawnRegions, selectedRegion, onChooseRegion, onChooseRoute, highlightRoute = true, routeControl }: {
   map: QuestMap; portraits: Record<string, QuestPortrait>; selected: string; pathIndex: number;
   onChoose: (c: Coordinate, center?: boolean) => void; viewportRef: RefObject<HTMLDivElement | null>;
   artwork?: { url: string; theme: string } | null;
   spawnRegions?: QuestSpawnRegionLayer; selectedRegion?: string; onChooseRegion?: (id:string) => void;
   onChooseRoute?: (index: number) => void;
+  highlightRoute?: boolean; routeControl?: ReactNode;
 }) {
   const board = useMemo(() => regionBoardGeometry(map,spawnRegions), [map,spawnRegions]);
   const uid = useId().replace(/:/g, "");
@@ -86,8 +87,8 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
   // Fit follows viewport/fullscreen changes until the user chooses a closer view.
   }, [board.width, board.height, viewportRef]);
   const path = map.paths.find(p => p.index === pathIndex)!;
-  const routeKeys = new Set(path.coordinates.map(coordinateKey));
-  const routeEdges = new Set(path.coordinates.slice(1).map((c, i) => `${coordinateKey(path.coordinates[i])}>${coordinateKey(c)}`));
+  const routeKeys = new Set(highlightRoute ? path.coordinates.map(coordinateKey) : []);
+  const routeEdges = new Set(highlightRoute ? path.coordinates.slice(1).map((c, i) => `${coordinateKey(path.coordinates[i])}>${coordinateKey(c)}`) : []);
   // Keep a travelling highlight continuous across the route's short SVG edges.
   const routePhases = useMemo(() => {
     const phases = new Map<string,number>();
@@ -120,11 +121,12 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
     aria-modal={fullscreen.windowMode || undefined} aria-label={fullscreen.windowMode ? "Quest map full screen" : undefined}
     tabIndex={fullscreen.windowMode ? -1 : undefined}>
     <div className={styles.controls}>
-      <div className={styles.zoom}><button aria-label="Zoom out" title="Zoom out" disabled={scale <= fitScale + .001} onClick={() => zoom(scaleRef.current / 1.35)}><Minus size={15} /></button><output aria-label="Map zoom">{Math.round(scale * 100)}%</output><button aria-label="Zoom in" title="Zoom in" disabled={scale >= Math.max(2.5,fitScale*2.5)} onClick={() => zoom(scaleRef.current * 1.35)}><Plus size={15} /></button><button aria-pressed={fitting} disabled={!ready} title="Show the whole map" onClick={fitMap}><Scan size={15} />Fit map</button></div>
-      <button className={styles.namesToggle} aria-pressed={names} title={names ? "Hide defender names" : "Show defender names"} onClick={() => setNames(v => !v)}><Signpost size={15} />Names</button>
+      {routeControl}
+      <div className={styles.zoom}><button aria-label="Zoom out" title="Zoom out" disabled={scale <= fitScale + .001} onClick={() => zoom(scaleRef.current / 1.35)}><Minus size={15} /></button><output aria-label="Map zoom">{Math.round(scale * 100)}%</output><button aria-label="Zoom in" title="Zoom in" disabled={scale >= Math.max(2.5,fitScale*2.5)} onClick={() => zoom(scaleRef.current * 1.35)}><Plus size={15} /></button><button aria-pressed={fitting} disabled={!ready} title="Show the whole map" onClick={fitMap}><Scan size={15} /><span>Fit map</span></button></div>
+      <button className={styles.namesToggle} aria-pressed={names} title={names ? "Hide defender names" : "Show defender names"} onClick={() => setNames(v => !v)}><Signpost size={15} /><span>Names</span></button>
       <div className={styles.controlActions}><button data-map-fullscreen-toggle aria-label={fullscreen.fullscreen ? "Exit full screen" : "Enter full screen"} title={fullscreen.fullscreen ? "Exit full screen (Esc)" : "View map in full screen"} aria-pressed={fullscreen.fullscreen} disabled={fullscreen.busy} onClick={() => void fullscreen.toggle()}>{fullscreen.fullscreen ? <Shrink size={16} /> : <Expand size={16} />}<span>{fullscreen.fullscreen ? "Exit full screen" : "Full screen"}</span></button></div>
     </div>
-    {fullscreen.fullscreen && <div className={styles.fullscreenContext}>{onChooseRoute && <label>Route<select aria-label="Full screen recorded route" value={pathIndex} onChange={e => onChooseRoute(Number(e.target.value))}>{map.paths.map(route => <option key={route.index} value={route.index}>Route {route.index + 1}</option>)}</select></label>}<span aria-live="polite">{spawnRegions?.regions.find(region => region.id === selectedRegion)?.defender.name ?? positionNames.get(selected)}</span></div>}
+    {fullscreen.fullscreen && <div className={styles.fullscreenContext}>{!routeControl && onChooseRoute && <label>Route<select aria-label="Full screen recorded route" value={pathIndex} onChange={e => onChooseRoute(Number(e.target.value))}>{map.paths.map(route => <option key={route.index} value={route.index}>Route {route.index + 1}</option>)}</select></label>}<span aria-live="polite">{spawnRegions?.regions.find(region => region.id === selectedRegion)?.defender.name ?? positionNames.get(selected)}</span></div>}
     <div className={styles.canvasWrap} style={artwork ? { backgroundImage: `linear-gradient(180deg,rgba(5,12,24,.55),rgba(4,10,20,.72)),url("${artwork.url}")` } : undefined}>
       <div ref={viewportRef} className={styles.viewport} role="region" aria-label="Scrollable quest map" aria-busy={!ready} tabIndex={0}
         onScroll={e=>{if(overviewOpen)setViewport({x:e.currentTarget.scrollLeft,y:e.currentTarget.scrollTop,width:e.currentTarget.clientWidth,height:e.currentTarget.clientHeight});}}
@@ -140,8 +142,8 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
         onLostPointerCapture={e=>{if(e.target===e.currentTarget)endPointer(e.pointerId);}}
         onClickCapture={e => { if (suppressClick.current) { e.preventDefault(); e.stopPropagation();suppressClick.current=false; } }}
         onKeyDown={e => { if (e.target !== e.currentTarget) return; const amount = 100; if (e.key.startsWith("Arrow")) { e.preventDefault(); e.currentTarget.scrollBy({ left: e.key === "ArrowRight" ? amount : e.key === "ArrowLeft" ? -amount : 0, top: e.key === "ArrowDown" ? amount : e.key === "ArrowUp" ? -amount : 0 }); } }}>
-        <svg className={styles.scene} data-zoom={scale} data-board-ready={ready} role="group" aria-label={`Quest map, recorded route ${pathIndex + 1} highlighted`} width={board.width * scale} height={board.height * scale} viewBox={`0 0 ${board.width} ${board.height}`}>
-          <title>Defender map. Flowing blue-white connections show the selected recorded route; curved violet connections are portals. Dashed teal portraits represent encounter regions.</title>
+        <svg className={styles.scene} data-zoom={scale} data-board-ready={ready} role="group" aria-label={highlightRoute ? `Quest map, recorded route ${pathIndex + 1} highlighted` : "Quest map, all paths"} width={board.width * scale} height={board.height * scale} viewBox={`0 0 ${board.width} ${board.height}`}>
+          <title>{`Defender map. ${highlightRoute?"Flowing blue-white connections highlight a recorded route.":"Blue-white connections show all paths."} Violet connections are portals. Dashed teal portraits represent encounter regions.`}</title>
           <defs>
             <marker id={`${uid}-portal`} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M1 1 8 5 1 9" fill="none" stroke="#e0bdff" strokeWidth="2" /></marker>
             {map.encounters.map((e, i) => { const [x, y] = board.point(e.coordinate); const radius = e.final ? 31 : 25; return <clipPath key={e.id} id={`${uid}-portrait-${i}`}><circle cx={x} cy={y} r={radius} /></clipPath>; })}
@@ -158,11 +160,11 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
             <path data-route-line d={d} fill="none" stroke={active ? "#f0dcff" : "#c9a3e6"} strokeWidth={active ? 1.5 : 1.2} strokeOpacity={active ? 1 : .85} vectorEffect="non-scaling-stroke" markerEnd={`url(#${uid}-portal)`}/>
             {active&&<path key={pathIndex} data-route-pulse className={styles.routePulse} style={{'--route-phase':`${routePhases.get(key)??0}px`} as CSSProperties} d={d} fill="none" stroke="#fcf5ff" strokeWidth="1.9" strokeDasharray="9 51" strokeLinecap="round" vectorEffect="non-scaling-stroke"/>}
           </g>; })}</g>
-          {spawnRegions&&<QuestSpawnRegionAreas map={map} layer={spawnRegions} point={board.point} selected={selectedRegion} hovered={hoveredRegion??undefined} pathIndex={pathIndex}/>}
-          {map.tiles.map(t => { const key = coordinateKey(t.coordinate); const [x,y] = board.point(t.coordinate); const fights = board.encounters.get(key) ?? []; const active = routeKeys.has(key); if (fights.length) return null; return <g key={key} data-coordinate={key} className={styles.tile} onClick={() => onChoose(t.coordinate)}><title>{`${positionNames.get(key)}${t.start ? " · Quest start" : t.portals.length ? " · Portal" : ""}`}</title>{t.portals.length ? <><circle cx={x} cy={y} r="14" fill="#241733" stroke="#d7aeff" strokeWidth="2" /><circle cx={x} cy={y} r="8" fill="none" stroke="#cf9dff" strokeWidth="1.5" /><text x={x} y={y+4} textAnchor="middle" fill="#f0dbff" fontSize="10" fontWeight="bold">P</text></> : t.start ? <><circle cx={x} cy={y} r="13" fill="#103f3c" stroke="#60e6bd" strokeWidth="2" /><path d={`M${x-3} ${y-5}l8 5-8 5z`} fill="#b0ffe6" /></> : <circle cx={x} cy={y} r={active ? 2.6 : 1.7} fill={active ? "#d3f6ff" : "#a0b3c5"} opacity={active ? .9 : .3} />}</g>; })}
+          {spawnRegions&&<QuestSpawnRegionAreas map={map} layer={spawnRegions} point={board.point} selected={selectedRegion} hovered={hoveredRegion??undefined} pathIndex={pathIndex} highlightRoute={highlightRoute}/>}
+          {map.tiles.map(t => { const key = coordinateKey(t.coordinate); const [x,y] = board.point(t.coordinate); const fights = board.encounters.get(key) ?? []; const active = !highlightRoute || routeKeys.has(key); if (fights.length) return null; return <g key={key} data-coordinate={key} className={styles.tile} onClick={() => onChoose(t.coordinate)}><title>{`${positionNames.get(key)}${t.start ? " · Quest start" : t.portals.length ? " · Portal" : ""}`}</title>{t.portals.length ? <><circle cx={x} cy={y} r="14" fill="#241733" stroke="#d7aeff" strokeWidth="2" /><circle cx={x} cy={y} r="8" fill="none" stroke="#cf9dff" strokeWidth="1.5" /><text x={x} y={y+4} textAnchor="middle" fill="#f0dbff" fontSize="10" fontWeight="bold">P</text></> : t.start ? <><circle cx={x} cy={y} r="13" fill="#103f3c" stroke="#60e6bd" strokeWidth="2" /><path d={`M${x-3} ${y-5}l8 5-8 5z`} fill="#b0ffe6" /></> : <circle cx={x} cy={y} r={active ? 2.6 : 1.7} fill={active ? "#d3f6ff" : "#a0b3c5"} opacity={active ? .9 : .3} />}</g>; })}
           {map.encounters.map((e, i) => {
             const key = coordinateKey(e.coordinate), [x,y] = board.point(e.coordinate), portrait = questEncounterPortrait(e,portraits);
-            const active = routeKeys.has(key), isSelected = !selectedRegion && selected === key, label = portrait?.name ?? e.champion?.name ?? e.name;
+            const active = !highlightRoute || routeKeys.has(key), isSelected = !selectedRegion && selected === key, label = portrait?.name ?? e.champion?.name ?? e.name;
             const radius = e.final ? 33 : 27, showLabel = isSelected || hover === e.id || names, labelBox=labels.get(e.id);
             return <g key={e.id} role="button" tabIndex={0} aria-label={`${label}, ${e.rarity} stars${e.final ? ", final boss" : ""}${e.pathIndices.length>1 ? `, shared by ${e.pathIndices.length} recorded routes` : ""}`} aria-pressed={isSelected} data-coordinate={key} data-map-encounter={e.id} className={styles.encounter}
               onMouseEnter={() => setHover(e.id)} onMouseLeave={() => setHover(null)} onFocus={() => setHover(e.id)} onBlur={() => setHover(null)}
@@ -179,15 +181,14 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
               {showLabel && labelBox && <QuestMapNameplate box={labelBox} name={label} accent={e.final ? '#f5c765' : portrait?.color ?? '#8bbad1'} selected={isSelected} unit={labelScale}/>}
             </g>;
           })}
-          {spawnRegions&&onChooseRegion&&<QuestSpawnRegionMarkers map={map} layer={spawnRegions} point={board.point} selected={selectedRegion} hovered={hoveredRegion??undefined} pathIndex={pathIndex} names={names} onChoose={onChooseRegion} onHover={setHoveredRegion} uid={uid} labels={labels} labelScale={labelScale}/>}
+          {spawnRegions&&onChooseRegion&&<QuestSpawnRegionMarkers map={map} layer={spawnRegions} point={board.point} selected={selectedRegion} hovered={hoveredRegion??undefined} pathIndex={pathIndex} highlightRoute={highlightRoute} names={names} onChoose={onChooseRegion} onHover={setHoveredRegion} uid={uid} labels={labels} labelScale={labelScale}/>}
         </svg>
       </div>
-      <div className={styles.panHint}><Hand size={13} /><span>Drag to pan · Scroll to zoom</span></div>
       {overviewOpen && <div id={`${uid}-overview`} className={styles.navigator}><span>Overview</span><svg role="group" tabIndex={0} aria-label="Map overview" width={miniWidth} height={miniHeight} viewBox={`0 0 ${board.width} ${board.height}`} onClick={e => { const rect=e.currentTarget.getBoundingClientRect();if(!rect.width||!rect.height)return;const x=(e.clientX-rect.left)/rect.width*board.width,y=(e.clientY-rect.top)/rect.height*board.height; viewportRef.current?.scrollTo({left:Math.max(0,Math.min(board.width*scale-viewport.width,x*scale-viewport.width/2)),top:Math.max(0,Math.min(board.height*scale-viewport.height,y*scale-viewport.height/2)),behavior:"smooth"}); }} onKeyDown={e=>{if(!['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();const element=viewportRef.current;if(element)element.scrollTo({left:Math.max(0,Math.min(board.width*scale-viewport.width,element.scrollLeft+(e.key==='ArrowRight'?viewport.width/2:e.key==='ArrowLeft'?-viewport.width/2:0))),top:Math.max(0,Math.min(board.height*scale-viewport.height,element.scrollTop+(e.key==='ArrowDown'?viewport.height/2:e.key==='ArrowUp'?-viewport.height/2:0))),behavior:'smooth'});}}>
         <title>Click to move around the map, or use arrow keys</title>
-        {board.edges.map((e,i)=>{const a=board.point(e.from),b=board.point(e.to);return <line key={i} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={e.portal?"#ad85d0":"#6c91a7"} strokeWidth="4"/>;})}{map.encounters.map(e=>{const [x,y]=board.point(e.coordinate);return <circle key={e.id} cx={x} cy={y} r="12" fill={e.final?"#efc772":routeKeys.has(coordinateKey(e.coordinate))?"#c5f4ff":"#677d8e"}/>;})}<rect data-overview-viewport x={viewport.x/scale} y={viewport.y/scale} width={Math.min(board.width,viewport.width/scale)} height={Math.min(board.height,viewport.height/scale)} fill="#77d8ff" fillOpacity=".12" stroke="#a6e5ff" strokeWidth="5" />
+        {board.edges.map((e,i)=>{const a=board.point(e.from),b=board.point(e.to);return <line key={i} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke={e.portal?"#ad85d0":"#6c91a7"} strokeWidth="4"/>;})}{map.encounters.map(e=>{const [x,y]=board.point(e.coordinate);return <circle key={e.id} cx={x} cy={y} r="12" fill={e.final?"#efc772":!highlightRoute||routeKeys.has(coordinateKey(e.coordinate))?"#c5f4ff":"#677d8e"}/>;})}<rect data-overview-viewport x={viewport.x/scale} y={viewport.y/scale} width={Math.min(board.width,viewport.width/scale)} height={Math.min(board.height,viewport.height/scale)} fill="#77d8ff" fillOpacity=".12" stroke="#a6e5ff" strokeWidth="5" />
       </svg></div>}
     </div>
-    <div className={styles.legend}><span><i className={styles.selectedRoute}/>Selected route</span><span><i className={styles.alternative}/>Other routes</span><span><i className={styles.portal}/>Portal</span><span><i className={styles.boss}/>Final boss</span>{spawnRegions&&<span><i className={styles.regionKey}/>Encounter region · ∼</span>}<span>Badge = shared routes</span></div>
+    <details className={styles.mapKey}><summary>Map key<ChevronDown size={13} aria-hidden="true"/></summary><div className={styles.legend}>{highlightRoute?<><span><i className={styles.selectedRoute}/>Selected route</span><span><i className={styles.alternative}/>Other routes</span></>:<span><i className={styles.alternative}/>Paths</span>}<span><i className={styles.portal}/>Portal</span><span><i className={styles.boss}/>Final boss</span>{spawnRegions&&<span><i className={styles.regionKey}/>Encounter region · ∼</span>}<span>Badge = shared routes</span><p>Drag to pan · Pinch or scroll to zoom</p></div></details>
   </div>;
 }

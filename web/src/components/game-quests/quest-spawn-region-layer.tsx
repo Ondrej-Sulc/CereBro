@@ -6,11 +6,11 @@ import { regionCorridors, type RegionLabelBox } from "./quest-spawn-region-prese
 import styles from "./quest-board.module.css";
 import { QuestMapNameplate } from "./quest-map-nameplate";
 
-type RegionProps={map:QuestMap;layer:QuestSpawnRegionLayer;point:(c:Coordinate)=>Coordinate;selected?:string;hovered?:string;pathIndex:number};
-export function QuestSpawnRegionAreas({map,layer,point,selected,hovered,pathIndex}:RegionProps){
+type RegionProps={map:QuestMap;layer:QuestSpawnRegionLayer;point:(c:Coordinate)=>Coordinate;selected?:string;hovered?:string;pathIndex:number;highlightRoute?:boolean};
+export function QuestSpawnRegionAreas({map,layer,point,selected,hovered,pathIndex,highlightRoute=true}:RegionProps){
   const corridors=useMemo(()=>new Map(layer.regions.map(region=>[region.id,regionCorridors(map,region)])),[map,layer]);
   return <g aria-hidden="true" pointerEvents="none">{layer.regions.map(region=>{
-    const active=selected===region.id||hovered===region.id,route=region.pathIndices.includes(pathIndex);
+    const active=selected===region.id||hovered===region.id,route=!highlightRoute||region.pathIndices.includes(pathIndex);
     return <g key={region.id} data-region-highlight={region.id} data-region-active={active} className={styles.regionArea} opacity={active?1:route?.55:.25}>
       {(corridors.get(region.id)??[]).map(([from,to],index)=>{const a=point(from),b=point(to);return <line key={index} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#50d8bf" strokeWidth={active?17:10} strokeOpacity={active?.25:.17} strokeLinecap="round"/>;})}
       {region.coordinates.map(c=>{const [x,y]=point(c);return <circle key={c.join(',')} data-region-tile={region.id} cx={x} cy={y} r={active?11:7} fill="#63e3ca" fillOpacity={active?.22:.12} stroke="#72e8d0" strokeWidth={active?1.8:.7} strokeOpacity={active?.9:.35}/>;})}
@@ -18,12 +18,12 @@ export function QuestSpawnRegionAreas({map,layer,point,selected,hovered,pathInde
   })}</g>;
 }
 
-export function QuestSpawnRegionMarkers({layer,point,selected,hovered,pathIndex,names,onChoose,onHover,uid,labels,labelScale=1}:RegionProps&{
+export function QuestSpawnRegionMarkers({layer,point,selected,hovered,pathIndex,highlightRoute=true,names,onChoose,onHover,uid,labels,labelScale=1}:RegionProps&{
   names:boolean;onChoose:(id:string)=>void;onHover:(id:string|null)=>void;uid:string;labels:Map<string,RegionLabelBox>;labelScale?:number;
 }){
   const [failed,setFailed]=useState<Set<string>>(new Set());
   return <g>{layer.regions.map((region,index)=>{
-    const [x,y]=point(region.anchor),active=region.pathIndices.includes(pathIndex),isSelected=selected===region.id,label=names||isSelected||hovered===region.id?labels.get(region.id):undefined;
+    const [x,y]=point(region.anchor),active=!highlightRoute||region.pathIndices.includes(pathIndex),isSelected=selected===region.id,label=names||isSelected||hovered===region.id?labels.get(region.id):undefined;
     return <g key={region.id} role="button" tabIndex={0} aria-pressed={isSelected}
       aria-label={`${region.defender.name}, encounter region, ${region.coordinates.length} possible map ${region.coordinates.length===1?'position':'positions'}, ${region.defender.rarity} stars`}
       data-spawn-region={region.id} data-coordinate={region.anchor.join(',')} className={styles.regionMarker}

@@ -20,6 +20,69 @@ async function render(element: React.ReactNode) {
   return host;
 }
 describe("quest map controls", () => {
+  it('starts with all paths and treats route highlighting as optional shareable state', async () => {
+    const map=(await loadQuestMap('a05_ch01_q01'))!;
+    const before=JSON.stringify(map);
+    window.history.replaceState(null,'','/quests/a05_ch01_q01');
+    const host=await render(<QuestMapExplorer map={map}/>);
+    const route=host.querySelector<HTMLSelectElement>('[aria-label="Recorded routes"]')!;
+    expect(route.value).toBe('');
+    expect(host.querySelectorAll('[data-route-pulse]')).toHaveLength(0);
+    expect(host.querySelector('a[aria-label="Link to this location"]')?.getAttribute('href')).not.toContain('path=');
+    await act(async()=>{route.value='2';route.dispatchEvent(new Event('change',{bubbles:true}));});
+    expect(new URL(window.location.href).searchParams.get('path')).toBe('2');
+    expect(host.querySelectorAll('[data-route-pulse]').length).toBeGreaterThan(0);
+    const explicit=window.location.href;
+    await act(async()=>{route.value='';route.dispatchEvent(new Event('change',{bubbles:true}));});
+    expect(new URL(window.location.href).searchParams.has('path')).toBe(false);
+    expect(host.querySelectorAll('[data-route-pulse]')).toHaveLength(0);
+    await act(async()=>{window.history.replaceState(null,'',explicit);window.dispatchEvent(new PopStateEvent('popstate'));});
+    expect(route.value).toBe('2');
+    expect(JSON.stringify(map)).toBe(before);
+  });
+
+  it('explains connected points and selects the exact adjacent target without anonymous Map location buttons', async()=>{
+    const map=(await loadQuestMap('me_crucible_ch01_q01'))!;
+    const tile=map.tiles.find(t=>t.coordinate.join(',')==='27,18')!;
+    const host=await render(<QuestMapExplorer map={map} initialNode="27,18"/>);
+    const connections=host.querySelector<HTMLDetailsElement>('[data-map-connections]')!;
+    expect(connections.querySelector('summary')?.textContent).toContain('Connected points');
+    expect(connections.textContent).toContain('Inspect adjacent positions');
+    expect(connections.open).toBe(false);
+    expect([...connections.querySelectorAll('button')].some(button=>button.textContent?.includes('Map location'))).toBe(false);
+    await act(async()=>connections.querySelector('summary')!.click());
+    await act(async()=>connections.querySelector('button')!.click());
+    expect(new URL(window.location.href).searchParams.get('node')).toBe(tile.links[0].join(','));
+  });
+  it('keeps the single optional route control inside full screen and preserves selection on exit', async()=>{
+    const map=(await loadQuestMap('a05_ch01_q01'))!;
+    const host=await render(<QuestMapExplorer map={map}/>);
+    await act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="Enter full screen"]')!.click());
+    const board=host.querySelector('[data-quest-board]')!;
+    expect(board.getAttribute('data-fullscreen')).toBe('true');
+    expect(host.querySelectorAll('[aria-label="Recorded routes"]')).toHaveLength(1);
+    const route=board.querySelector<HTMLSelectElement>('[aria-label="Recorded routes"]')!;
+    expect(route.value).toBe('');
+    await act(async()=>{route.value='2';route.dispatchEvent(new Event('change',{bubbles:true}));});
+    expect(new URL(window.location.href).searchParams.get('path')).toBe('2');
+    await act(async()=>document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true})));
+    expect(board.getAttribute('data-fullscreen')).toBe('false');
+    expect(route.value).toBe('2');
+    expect(host.querySelector('[aria-label="Link to this location"]')?.getAttribute('href')).toContain('path=2');
+  });
+  it('opens a global modifier and its scope when restoring an exact source-bound link',async()=>{
+    const map=(await loadQuestMap('a09_ch03_q02'))!;
+    const tile=map.tiles.find(t=>t.coordinate.join(',')==='13,19')!;
+    const application=tile.applications.find(a=>a.sourceType==='Global')!;
+    const host=await render(<QuestMapExplorer map={map} initialNode="13,19"/>);
+    const scope=host.querySelector<HTMLDetailsElement>('[data-modifier-scope="Global"] > details')!;
+    expect(scope.open).toBe(false);
+    const params=new URLSearchParams({node:'13,19',application:application.id,sourceHash:map.sourceHash});
+    await act(async()=>{window.history.replaceState(null,'',`/quests/${map.questId}?${params}`);window.dispatchEvent(new PopStateEvent('popstate'));});
+    expect(scope.open).toBe(true);
+    expect(host.querySelector<HTMLDetailsElement>(`[data-quest-application="${application.id}"]`)?.open).toBe(true);
+    expect(host.querySelectorAll('[data-quest-application]')).toHaveLength(14);
+  });
   it("groups Medusa's linked and global modifiers while sharing only their repeated context", async () => {
     const map = (await loadQuestMap("a09_ch03_q02"))!;
     const tile = map.tiles.find(t => t.coordinate.join(',') === '13,19')!;
@@ -43,6 +106,8 @@ describe("quest map controls", () => {
     expect(linked.querySelector('[data-quest-application] [data-modifier-context]')).toBeNull();
     const highlighted = inspector.querySelector('[data-highlighted]')!;
     expect(highlighted.getAttribute('data-quest-application')).toBe(tile.applications[3].id);
+    expect((highlighted as HTMLDetailsElement).open).toBe(true);
+    expect(inspector.querySelector<HTMLDetailsElement>('[data-modifier-scope="Global"] > details')?.open).toBe(false);
     const share = highlighted.querySelector<HTMLAnchorElement>('a[aria-label^="Link to "]')!;
     expect(new URL(share.href).searchParams.get('application')).toBe(tile.applications[3].id);
     expect(new URL(share.href).searchParams.get('sourceHash')).toBe(map.sourceHash);
@@ -87,21 +152,23 @@ describe("quest map controls", () => {
     const modifier = host.querySelector<HTMLDetailsElement>("[data-quest-application]")!;
     const link = modifier.querySelector<HTMLAnchorElement>('a[aria-label="View Contagion node modifier"]');
     expect(link?.getAttribute("href")).toBe(`/nodes/${encodeURIComponent(application.effectId)}`);
-    expect(modifier.open).toBe(true);
-    await act(async () => modifier.querySelector("summary")!.click());
     expect(modifier.open).toBe(false);
+    await act(async () => modifier.querySelector("summary")!.click());
+    expect(modifier.open).toBe(true);
     expect(modifier.querySelector('a[aria-label="Link to Contagion modifier"]')).not.toBeNull();
     await act(async () => root!.render(<QuestApplicationDetails application={{...application,definitionHref:null}} questId={map.questId} sourceHash={map.sourceHash} shareUrl="/quests/me_mausoleum_ch01_q02" choose={() => {}}/>));
     expect(host.querySelector('a[href^="/nodes/"]')).toBeNull();
     expect(host.textContent).toContain("Contagion");
   });
-  it("opens encounter modifier descriptions by default and keeps the selected defender compact", async () => {
+  it("keeps encounter modifier rows compact until expanded", async () => {
     const map = (await loadQuestMap("me_crucible_ch01_q01"))!;
     const host = await render(<QuestMapExplorer map={map} initialNode="27,18" />);
     const inspector = host.querySelector('section[aria-labelledby="coordinate-heading"]')!;
     const modifiers = [...inspector.querySelectorAll<HTMLDetailsElement>('[data-quest-application]')];
     expect(modifiers).toHaveLength(9);
-    expect(modifiers.every(modifier => modifier.open)).toBe(true);
+    expect(modifiers.every(modifier => !modifier.open)).toBe(true);
+    await act(async()=>modifiers[0].querySelector('summary')!.click());
+    expect(modifiers[0].open).toBe(true);
     expect(inspector.querySelector('h2')?.textContent).toContain("Crossbones");
     expect([...inspector.querySelectorAll('h2,h3')].filter(h => h.textContent?.includes("Crossbones"))).toHaveLength(1);
     expect(inspector.textContent).not.toMatch(/Selected location|Recorded build|Defender data|Local · defender/);
@@ -116,7 +183,7 @@ describe("quest map controls", () => {
     const application = map.tiles.flatMap(t => t.applications)[0];
     const choose = vi.fn();
     const host = await render(<QuestApplicationDetails application={{ ...application, sourceType:"Local",target:"defender",amount:1,remainActive:false,linkedTargets:[] }} questId={map.questId} sourceHash={map.sourceHash} shareUrl="/quests/a05_ch01_q01?path=0" choose={choose}/>);
-    expect(host.querySelector<HTMLDetailsElement>('[data-quest-application]')?.open).toBe(true);
+    expect(host.querySelector<HTMLDetailsElement>('[data-quest-application]')?.open).toBe(false);
     expect(host.querySelector('[data-modifier-context]')).toBeNull();
     expect(host.querySelector('summary')?.textContent).not.toMatch(/Local|defender/);
     await act(async () => root!.render(<QuestApplicationDetails application={{...application,sourceType:"Link",target:"attacker"}} questId={map.questId} sourceHash={map.sourceHash} shareUrl="/quests/a05_ch01_q01?path=0" choose={choose}/>));
@@ -183,7 +250,7 @@ describe("quest map controls", () => {
     const host = await render(<QuestMapExplorer map={map} />);
     expect(host.querySelector('[data-encounter-coverage]')?.textContent).toContain("only the final-boss placement");
     expect(host.querySelectorAll('[data-map-encounter]')).toHaveLength(1);
-    expect(host.querySelector('[aria-label="Recorded routes"] option')?.textContent).toBe("Route 1 · 1 fight");
+    expect(host.querySelector('[aria-label="Recorded routes"] option[value="0"]')?.textContent).toBe("Route 1 · 1 fight");
     expect(map.paths).toHaveLength(20);
   });
   it("shows native application labels without color markup while preserving source text", async () => {
@@ -213,7 +280,7 @@ describe("quest map controls", () => {
   it("ignores invalid route/coordinate links and keeps an NPC unlinked", async () => {
     const map = (await loadQuestMap("a04_ch04_q06"))!;
     const host = await render(<QuestMapExplorer map={map} initialPath="99" initialNode="24,1" />);
-    expect(host.querySelector<HTMLSelectElement>('[aria-label="Recorded routes"]')?.value).toBe("0");
+    expect(host.querySelector<HTMLSelectElement>('[aria-label="Recorded routes"]')?.value).toBe("");
     expect(host.textContent).toContain("NPC / legacy defender");
     expect(host.querySelector('[data-quest-portrait="fallback"]')).not.toBeNull();
     expect(host.querySelector('a[href="/champions/maestro"]')).toBeNull();

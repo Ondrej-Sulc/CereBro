@@ -24,7 +24,7 @@ async function setup(initialRegion?: string) {
     defender:{tierId:"npc_abyss_thing_t6",gameId:"ex_thing",name:"EX. THING",rarity:6,imageUrl:"/game-quests/unplaced-art/native-thing.webp",rank:5,level:65,signature:200,ascensionTier:0},
   }]};
   const host=document.createElement("div");document.body.append(host);root=createRoot(host);
-  await act(async()=>root!.render(<QuestMapExplorer map={map} spawnRegions={layer} initialRegion={initialRegion}/>));
+  await act(async()=>root!.render(<QuestMapExplorer map={map} spawnRegions={layer} initialPath="0" initialRegion={initialRegion}/>));
   return {host,map,layer};
 }
 describe("spawn-region map presentation",()=>{
@@ -35,7 +35,7 @@ describe("spawn-region map presentation",()=>{
     expect(host.querySelectorAll('[data-region-tile="fixture-region"]')).toHaveLength(layer.regions[0].coordinates.length);
     expect(host.querySelector('[data-encounter-coverage]')).toBeNull();
     expect(host.textContent).toContain("1 encounter region");
-    expect(host.querySelector('[aria-label="Recorded routes"] option')?.textContent).toBe("Route 1 · 2 defenders");
+    expect(host.querySelector('[aria-label="Recorded routes"] option[value="0"]')?.textContent).toBe("Route 1 · 2 defenders");
   });
   it("selects a region by keyboard, shares its identity and restores it with Back",async()=>{
     const {host,layer}=await setup();
@@ -84,7 +84,8 @@ describe("spawn-region map presentation",()=>{
     expect(host.querySelector(`[data-spawn-region="${singleton.id}"]`)?.getAttribute('aria-label')).toContain('1 possible map position,');
     expect(JSON.stringify(map.encounters)).toBe(placements);
     expect(host.querySelector('[data-region-inspector]')?.textContent).toContain(target.defender.name);
-    expect(target.pathIndices).toContain(Number(host.querySelector<HTMLSelectElement>('[aria-label="Recorded routes"]')!.value));
+    expect(host.querySelector<HTMLSelectElement>('[aria-label="Recorded routes"]')!.value).toBe('');
+    expect(host.querySelector('[data-region-inspector] a')?.getAttribute('href')).not.toContain('path=');
     expect(host.querySelector(`image[data-region-portrait="${target.defender.gameId}"]`)?.getAttribute('href')).toBe(target.defender.imageUrl);
     expect(host.querySelector('[data-region-inspector] a[href^="/champions/"]')).toBeNull();
     const sharedArea=host.querySelector('[data-region-inspector]')!.textContent!;
