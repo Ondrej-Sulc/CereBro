@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useId, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent, type MouseEvent } from 'react';
 import { ArrowRight, CornerDownLeft, Search, Sparkles, X } from 'lucide-react';
-import { glossaryHref } from '@/lib/effect-glossary';
+import { glossaryHref } from '@/lib/glossary-navigation';
 import { rankGlossarySearchOptions, type GlossarySearchOption } from '@/lib/glossary-search';
 import styles from './glossary-search-form.module.css';
 
