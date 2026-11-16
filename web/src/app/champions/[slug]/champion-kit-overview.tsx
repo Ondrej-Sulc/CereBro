@@ -24,7 +24,7 @@ export function ChampionKitOverview({ view, sideContent, ...navigation }: {
   view: ChampionDetailsView
   sideContent?: ReactNode
 } & EffectNavigation) {
-  const [display, setDisplay] = useState<KitDisplay>("detailed")
+  const [display, setDisplay] = useState<KitDisplay>("compact")
   useEffect(() => {
     // Restore browser-only preferences after hydration, without a synchronous effect render.
     const frame = window.requestAnimationFrame(() => {
