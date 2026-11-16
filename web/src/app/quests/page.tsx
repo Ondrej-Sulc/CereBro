@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { TowerDiscovery } from "@/components/game-towers/tower-discovery";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -11,6 +10,7 @@ import { QuestArtworkCard } from "@/components/game-quests/quest-artwork-card";
 import { QuestChapterPanorama } from "@/components/game-quests/quest-chapter-panorama";
 import { QuestBossCard } from "@/components/game-quests/quest-boss-card";
 import { getParentRewardRecord,hasRecordedRewards } from "@cerebro/core/data/game-quests/rewards";
+import { QuestExplorerHeader } from "@/components/game-quests/quest-explorer-header";
 import { QuestParentRewards } from "@/components/game-quests/quest-parent-rewards";
 import { questParentRewardTitle } from "@/lib/game-quests/presentation";
 import styles from "@/components/game-quests/quest-catalog.module.css";
@@ -36,12 +36,13 @@ export default async function QuestExplorerPage({searchParams}:{searchParams:Pro
   const page=Math.min(totalPages,Math.max(1,Number.parseInt(one(p,"page"),10)||1));
   const pageQuests=results.slice((page-1)*18,page*18);
   const portraits=(query||coverage||chapter||singleSpecial||(collection&&!chapters.length)) ? await loadBossPortraits(pageQuests) : {};
-  const art=getGroupMenuArtwork(selectedChapter?.quests ?? parentQuests,collection&&parentAct?{kind:"act",id:parentAct}:chapter?{kind:"chapter",id:chapter}:parentAct?{kind:"act",id:parentAct}:undefined);
+  const art=parentAct?getGroupMenuArtwork(selectedChapter?.quests ?? parentQuests,collection?{kind:"act",id:parentAct}:chapter?{kind:"chapter",id:chapter}:{kind:"act",id:parentAct}):undefined;
+  const headerQuests=selectedChapter?.quests??(collection||selectedAct?parentQuests:category?questCatalog.filter(q=>(q.section??q.category)===category):questCatalog);
   const special=Object.entries(permanentData.specialCollections).map(([id,label])=>({id,label,quests:questCatalog.filter(q=>q.containerSetName===id)}));
   const parentHasRewards=hasRecordedRewards(getParentRewardRecord(parentQuests,"act",parentAct));
   const showChapters=overview&&Boolean(parentAct)&&chapters.length>0&&!singleSpecial;
   return <div className={styles.catalog}>
-    <header className={styles.hero} data-menu-art={Boolean(art)}>{art&&<><Image src={art.url} alt="" fill sizes="100vw" priority className={styles.heroImage}/><div className={styles.heroPoster}><Image src={art.url} alt="" fill sizes="(max-width:600px) 150px, 240px" priority/></div></>}<div className={styles.heroShade}/><div className={styles.heroCopy}><p className={styles.eyebrow}>Explore the Battlerealm</p><h1>Quest explorer</h1><p>Discover the Story. Face the legends.<br/>Read every recorded route and defender.</p></div><div className={styles.heroStat}><strong>{questCatalog.filter(q=>q.coverage==="full-map").length}</strong>mapped quests<span>/</span><strong>{questCatalog.length}</strong>permanent variants</div></header>
+    <QuestExplorerHeader quests={headerQuests} primaryArtwork={art} totalCount={questCatalog.length} mappedCount={questCatalog.filter(q=>q.coverage==="full-map").length}/>
     <nav aria-label="Quest categories" className={styles.categories}>{["","Story","Special"].map(c=><Link key={c} href={url({category:c,act:"",chapter:"",collection:"",page:""})} aria-current={category===c?"page":undefined}>{c||"All quests"}</Link>)}<Link href="/quests/towers">Towers</Link><Link href="/rewards">Find rewards</Link></nav>
     <form action="/quests" className={styles.search}><input type="hidden" name="category" value={category}/><input type="hidden" name="act" value={act}/><input type="hidden" name="chapter" value={chapter}/><input type="hidden" name="collection" value={collection}/><label>Find a quest<input type="search" name="q" aria-label="Search quests" defaultValue={query} placeholder="Search by quest or chapter"/></label><label>Map coverage<select name="coverage" defaultValue={coverage}><option value="">All quests</option><option value="full-map">Layout captured</option><option value="summary-only">Summary only</option></select></label><button>Search</button></form>
     {(act||collection||chapter)&&<nav aria-label="Quest location" className={styles.breadcrumb}><Link href={url({act:"",chapter:"",collection:""})}>{collection?"Special quests":"Story"}</Link><span>/</span><Link href={url({chapter:""})}>{selectedAct?.label ?? permanentData.specialCollections[collection]}</Link>{selectedChapter&&!singleSpecial&&<><span>/</span><span>{selectedChapter.label}</span></>}</nav>}
