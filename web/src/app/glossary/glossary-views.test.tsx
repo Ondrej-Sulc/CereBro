@@ -108,7 +108,7 @@ describe('glossary rendered behavior', () => {
     expect(doc.body.textContent).toContain('No effects found');
     expect(doc.querySelector('a[href="/glossary"]')).not.toBeNull();
   });
-  it('opens categories ahead of secondary search and keeps the catalog total out of repeated header badges', () => {
+  it('opens categories ahead of search and keeps the full catalog count in the banner', () => {
     const categories = [
       { id: 7, name: 'Death Counters', description: 'Prevent being knocked out.', _count: { abilities: 6 } },
       { id: 8, name: 'Damage Over Time', description: '', _count: { abilities: 15 } },
@@ -122,7 +122,8 @@ describe('glossary rendered behavior', () => {
     expect(nav?.querySelectorAll('a')).toHaveLength(3);
     expect(doc.querySelector('a[aria-current="page"]')?.textContent).toBe('All effects');
     expect(doc.querySelector('details[data-category-picker]')?.hasAttribute('open')).toBe(true);
-    expect(doc.querySelector('header')?.textContent).not.toContain('20');
+    expect(doc.querySelector('header')?.textContent).toMatch(/20\s+effects/);
+    expect(doc.querySelector('header')?.textContent).toMatch(/2\s+categories/);
     expect(doc.querySelector('#effects-results h2')?.nextElementSibling?.textContent).toBe('20 effects');
     expect(doc.querySelector('select[name=category]')).toBeNull();
   });
@@ -132,6 +133,8 @@ describe('glossary rendered behavior', () => {
     const data = { filters, categories, catalogTotal: 883, searchOptions: [], results: { rows: [effect], page: 2, pages: 3, total: 50, size: 24 } };
     const doc = documentFor(renderToStaticMarkup(<GlossaryCatalogView data={data} />));
     const form = doc.querySelector('form[role=search]')!;
+    expect(doc.querySelector('header')?.textContent).toMatch(/883\s+effects/);
+    expect(doc.querySelector('header')?.textContent).toMatch(/1\s+category/);
     const fields = new FormData(form as HTMLFormElement);
     expect(fields.get('category')).toBe('7');
     expect(fields.get('q')).toBe('death');

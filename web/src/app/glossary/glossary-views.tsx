@@ -14,6 +14,7 @@ import { EffectSources, EffectSourceCondition, SynergySourceBadge } from '@/comp
 import { GlossarySearchForm } from './glossary-search-form';
 import { GlossaryCategories } from './glossary-categories';
 import { GlossaryChampionGrid } from './glossary-champion-grid';
+import { GlossaryBanner } from './glossary-banner';
 import styles from './glossary.module.css';
 
 function effectPalette(effect: GlossaryEffect): CSSProperties {
@@ -34,7 +35,7 @@ export function GlossaryCatalogView({ data }: { data: GlossaryCatalog }) {
   const { filters, results, categories } = data;
   const selectedCategory = categories.find(category => category.id === filters.category);
   return <GlossaryShell>
-    <header className={styles.hero}><h1>Effect glossary</h1><p className={styles.intro}>Find effects, champions and counters.</p></header>
+    <GlossaryBanner effectCount={data.catalogTotal} categoryCount={categories.length} />
     <GlossaryCategories categories={categories} filters={filters}/>
     <section id="effects-results" className={styles.browseResults} data-category-selected={!!selectedCategory} aria-labelledby="effects-title" tabIndex={-1}>
       <div className={styles.resultsHeading}><div><h2 id="effects-title">{selectedCategory ? 'Effects' : filters.category ? 'Unknown category' : 'All effects'}</h2>{(!selectedCategory || filters.q) && <p>{results.total} {results.total === 1 ? 'effect' : 'effects'}{filters.q ? ` matching “${filters.q}”` : ''}</p>}</div></div>
