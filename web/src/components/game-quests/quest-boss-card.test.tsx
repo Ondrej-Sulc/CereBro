@@ -82,6 +82,23 @@ it("shows an honest missing-boss message when the preview does not match this so
   expect(host.textContent).not.toContain("Psylocke");
 });
 
+it("keeps the full boss identities available in a compact Act 10 roster", () => {
+  const quest = findQuest("epilogue_ch02_q01")!;
+  const bosses = getBossPreview(quest)!.bosses;
+  const host = render(quest, {});
+  const roster = host.querySelector('ul[aria-label="Bosses"]')!;
+  expect(roster.children).toHaveLength(3);
+  for (const [index, boss] of bosses.entries()) {
+    const row = roster.children[index];
+    const name = boss.champion?.name ?? boss.name;
+    expect(row.getAttribute("title")).toBe(`${name} · ${boss.rarity}-star boss`);
+    expect(row.textContent).toContain(name);
+  }
+  const single = render(findQuest("epilogue_ch02_q02")!, {});
+  expect(single.querySelectorAll('ul[aria-label="Boss"] > li')).toHaveLength(1);
+  expect(single.textContent).toContain("IRON MAN (CERASTES)");
+});
+
 it("retains variant difficulty and a clear summary-only label when applicable", () => {
   const host = render({ ...story, difficulty: "Paragon", coverage: "summary-only" });
   expect(host.textContent).toContain("Paragon");
