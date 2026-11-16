@@ -3,10 +3,12 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { AnchorHTMLAttributes, ImgHTMLAttributes } from "react";
 import { expect, it, vi } from "vitest";
 import { findQuest } from "@cerebro/core/data/game-quests";
-import { getQuestMenuArtwork } from "@cerebro/core/data/game-quests/menu-art";
+import { getQuestMenuArtwork,getGroupMenuArtwork } from "@cerebro/core/data/game-quests/menu-art";
+import { getBossPreview } from "@cerebro/core/data/game-quests/permanent";
+import type { QuestPortrait } from "@/lib/game-quests/presentation";
 import { QuestPageHeader } from "./quest-page-header";
 
-vi.mock("next/link", () => ({ default: (props: AnchorHTMLAttributes<HTMLAnchorElement>) => <a {...props}/> }));
+vi.mock("next/link", () => ({ default: ({prefetch,...props}: AnchorHTMLAttributes<HTMLAnchorElement>&{prefetch?:boolean}) => {void prefetch;return <a {...props}/>;} }));
 vi.mock("next/image", () => ({ default: ({ fill, priority, alt, ...props }: ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean; priority?: boolean }) => {
   void fill; void priority;
   // eslint-disable-next-line @next/next/no-img-element -- Native image mock preserves decorative alt semantics.
@@ -19,16 +21,49 @@ const render = (id: string, stale = false) => {
   return host;
 };
 
-it.each(["pve_may2023_shootingstar_6","a05_ch03_q03","realm3"])("keeps %s's exact artwork as one intrinsically sized decorative poster",id=>{
+it.each(["pve_may2023_shootingstar_6","a05_ch03_q03","realm3"])("keeps %s's exact artwork at its intrinsic aspect ratio",id=>{
   const q=findQuest(id)!,art=getQuestMenuArtwork(q)!;
   expect(art).not.toBeNull();
-  const host=render(id),image=host.querySelector('header img')!;
-  expect(host.querySelectorAll('header img')).toHaveLength(1);
+  const host=render(id),image=[...host.querySelectorAll('header [data-quest-category-art] img')].find(image=>image.getAttribute('src')===art.url)!;
+  expect(image).toBeDefined();
   expect(image.getAttribute('src')).toBe(art.url);
   expect(image.getAttribute('width')).toBe(String(art.width));
   expect(image.getAttribute('height')).toBe(String(art.height));
   expect(image.getAttribute('alt')).toBe('');
   expect(image.closest('h1')).toBeNull();
+});
+
+it("layers exact Act and Chapter art and lists all three Consul bosses without the selected map defender",()=>{
+  const q=findQuest('a09_ch03_q03')!,bosses=getBossPreview(q)!.bosses;
+  const portraits:Record<string,QuestPortrait>=Object.fromEntries([...bosses.map(b=>[b.gameId,{name:b.champion?.name??b.name,imageUrl:`/test/${b.gameId}.png`,href:`/champions/${b.champion?.slug}`,className:'Boss',color:'#abc'}]),['iceman',{name:'Iceman',imageUrl:'/test/iceman.png',href:'/champions/iceman',className:'Mutant',color:'#abc'}]]);
+  const host=document.createElement('div');host.innerHTML=renderToStaticMarkup(<QuestPageHeader quest={q} portraits={portraits}/>);
+  const art=[...host.querySelectorAll('[data-quest-category-art] img')].map(image=>image.getAttribute('src'));
+  for(const kind of ['act','chapter'] as const){
+    const image=getGroupMenuArtwork([q],{kind,id:kind==='act'?q.hierarchy[0].actId:q.hierarchy[0].chapterId})!;
+    expect(art).toContain(image.url);
+  }
+  expect(new Set(art).size).toBe(art.length);
+  expect([...host.querySelectorAll('[data-quest-header-boss]')].map(row=>row.getAttribute('data-quest-header-boss'))).toEqual(bosses.map(b=>b.gameId));
+  expect(host.querySelector('[data-quest-header-boss="iceman"]')).toBeNull();
+  expect(host.querySelector('ul[aria-label="Bosses"]')).not.toBeNull();
+  for(const boss of bosses){
+    const row=host.querySelector(`[data-quest-header-boss="${boss.gameId}"]`)!;
+    expect(row.textContent).toContain(boss.champion!.name);
+    expect(row.querySelector('a')?.getAttribute('href')).toBe('/champions/'+boss.champion!.slug);
+  }
+});
+
+it("preserves distinct native NPC bosses and never links them through a playable alias",()=>{
+  const q=findQuest('me_crucible_ch01_q01')!,bosses=getBossPreview(q)!.bosses,host=document.createElement('div');
+  host.innerHTML=renderToStaticMarkup(<QuestPageHeader quest={q} portraits={{kang_boss_tech:{name:'Playable Kang alias',imageUrl:'/test/playable-kang.png',href:'/champions/kang',className:'Tech',color:'#abc'}}}/>);
+  expect(host.querySelectorAll('[data-quest-header-boss]')).toHaveLength(bosses.length);
+  for(const boss of bosses){
+    const row=host.querySelector(`[data-quest-header-boss="${boss.gameId}"]`)!;
+    expect(row.querySelector('img')).not.toBeNull();
+    expect(row.querySelector('a')).toBeNull();
+    expect(row.textContent).toContain(boss.name);
+  }
+  expect(host.textContent).not.toContain('Playable Kang alias');
 });
 
 it("keeps the Story quest identity and links to its exact Act and Chapter", () => {
@@ -52,6 +87,7 @@ it("uses the Special collection without exposing the single native Stars wrapper
 it("retains the title, number and hierarchy when artwork is unavailable", () => {
   const host = render("a05_ch03_q03", true);
   expect(host.querySelector("img")).toBeNull();
+  expect(host.querySelector('[data-quest-header-boss]')).toBeNull();
   expect(host.querySelector("h1")?.textContent).toBe("Dire Warning");
   expect(host.querySelector('[data-quest-number]')?.textContent).toBe("5.3.3");
   expect(host.querySelector('nav[aria-label="Quest location"]')).not.toBeNull();
