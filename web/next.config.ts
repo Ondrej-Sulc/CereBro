@@ -46,10 +46,6 @@ const nextConfig: NextConfig = {
     APP_VERSION: buildId,
   },
   experimental: {
-    // Custom Webpack configuration disables this memory-saving worker by default.
-    webpackBuildWorker: true,
-    // Reduce peak memory pressure under the website build's configured 4GB heap cap.
-    webpackMemoryOptimizations: true,
     serverActions: {
       bodySizeLimit: '10000mb',
     },

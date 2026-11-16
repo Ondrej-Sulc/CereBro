@@ -86,7 +86,8 @@ ENV NEXT_SERVER_ACTIONS_ENCRYPTION_KEY=$NEXT_SERVER_ACTIONS_ENCRYPTION_KEY
 # 2. Build the Next.js application
 # Railway's builder supports cache mounts only. Source-map upload requires a
 # separate CI build with a build-only credential; it stays disabled in this image.
-RUN POSTHOG_UPLOAD_SOURCEMAPS=false NODE_OPTIONS="--max-old-space-size=4096" pnpm --filter web run build
+# Full Webpack compilation needs more than 4GiB; scope this headroom to the build.
+RUN POSTHOG_UPLOAD_SOURCEMAPS=false NODE_OPTIONS="--max-old-space-size=6144" pnpm --filter web run build
 
 # 3. Prune dev dependencies to create a lean, production-only node_modules
 # RUN CI=true pnpm prune --prod # This command is broken and removes 'next'
