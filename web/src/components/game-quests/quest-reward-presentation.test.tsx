@@ -7,6 +7,7 @@ import { findQuest } from "@cerebro/core/data/game-quests";
 import { getParentRewardRecord } from "@cerebro/core/data/game-quests/rewards";
 import { projectRewardRecord, type QuestRewardView } from "@/lib/game-quests/presentation";
 import { QuestRewards } from "./quest-rewards";
+import { RewardTile } from "./quest-reward-grid";
 
 vi.mock("next/image", () => ({ default: ({alt = '', ...props}: ImgHTMLAttributes<HTMLImageElement>) => createElement("img", {...props,alt}) }));
 
@@ -35,7 +36,7 @@ it('defaults to compact tiles while preserving exact chapter quantities and sepa
   const record = getParentRewardRecord([q], 'chapter', 'a06_ch02')!;
   const rewards = projectRewardRecord(record);
   const host = await render(<QuestRewards rewards={rewards} title="Chapter rewards"/>);
-  expect(host.querySelector<HTMLInputElement>('input[aria-label="Show reward names"]')?.checked).toBe(false);
+  expect(host.querySelector('button[aria-label="Show reward names"]')?.getAttribute('aria-pressed')).toBe('false');
   expect(host.querySelectorAll('[data-quest-reward]')).toHaveLength(rewards.filter(r=>!r.recordedOutcome).length);
   expect(host.querySelector('[data-quest-reward-scope="firstCompletionRewards"]')?.textContent).toContain('First completion');
   expect(host.querySelector('[data-quest-reward-scope="masteryCompletionRewards"]')?.textContent).toContain('100% exploration');
@@ -47,13 +48,13 @@ it('defaults to compact tiles while preserving exact chapter quantities and sepa
 
 it('remembers names across remounts and keeps multiple reward sections synchronized', async () => {
   const host = await render(<><QuestRewards rewards={[reward()]} title="Act rewards" id="act-rewards"/><QuestRewards rewards={[reward()]} title="Chapter rewards" id="chapter-rewards"/></>);
-  const toggles = [...host.querySelectorAll<HTMLInputElement>('input[aria-label="Show reward names"]')];
+  const toggles = [...host.querySelectorAll<HTMLButtonElement>('button[aria-label="Show reward names"]')];
   await act(async () => toggles[0].click());
-  expect(toggles.every(toggle=>toggle.checked)).toBe(true);
+  expect(toggles.every(toggle=>toggle.getAttribute('aria-pressed')==='true')).toBe(true);
   expect(host.querySelectorAll('[data-reward-name]')).toHaveLength(2);
   await act(async () => mounted!.render(null));
   await act(async () => mounted!.render(<QuestRewards rewards={[reward()]}/>));
-  expect(host.querySelector<HTMLInputElement>('input[aria-label="Show reward names"]')?.checked).toBe(true);
+  expect(host.querySelector('button[aria-label="Show reward names"]')?.getAttribute('aria-pressed')).toBe('true');
 });
 
 it('opens accessible reward details with exact amounts and links, then restores focus on Escape', async () => {
@@ -85,8 +86,8 @@ it('supports the toggle when storage is blocked and keeps possible outcomes dist
   vi.spyOn(Storage.prototype,'getItem').mockImplementation(()=>{throw new Error('blocked');});
   vi.spyOn(Storage.prototype,'setItem').mockImplementation(()=>{throw new Error('blocked');});
   const host = await render(<QuestRewards rewards={[reward({quantity:0}),reward({key:'potential',scope:'potentialCompletionRewards'}),reward({key:'recorded',name:'Recorded offer',recordedOutcome:true})]}/>);
-  await act(async () => host.querySelector<HTMLInputElement>('input')!.click());
-  expect(host.querySelector<HTMLInputElement>('input')?.checked).toBe(true);
+  await act(async () => host.querySelector<HTMLButtonElement>('button[aria-label="Show reward names"]')!.click());
+  expect(host.querySelector('button[aria-label="Show reward names"]')?.getAttribute('aria-pressed')).toBe('true');
   expect(host.textContent).toContain('×0');
   expect(host.querySelector('[data-quest-reward-scope="potentialCompletionRewards"]')?.textContent).toContain('not guaranteed');
   expect(host.querySelectorAll('[data-quest-reward]')).toHaveLength(2);
@@ -99,9 +100,9 @@ it('honors compact mode for rewards sharing artwork while retaining overlays and
   expect(host.querySelector('[data-quest-reward="alpha"] button')?.getAttribute('aria-label')).toContain('Alpha material');
   expect(host.querySelector('[data-quest-reward="beta"] button')?.getAttribute('title')).toContain('Beta material');
   expect(host.querySelector('[data-reward-signature-points="5"]')).not.toBeNull();
-  await act(async()=>host.querySelector<HTMLInputElement>('input[aria-label="Show reward names"]')!.click());
+  await act(async()=>host.querySelector<HTMLButtonElement>('button[aria-label="Show reward names"]')!.click());
   expect([...host.querySelectorAll('[data-reward-name]')].map(label=>label.textContent)).toEqual(['Alpha material','Beta material','Signature stone']);
-  await act(async()=>host.querySelector<HTMLInputElement>('input[aria-label="Show reward names"]')!.click());
+  await act(async()=>host.querySelector<HTMLButtonElement>('button[aria-label="Show reward names"]')!.click());
   expect(host.querySelectorAll('[data-reward-name]')).toHaveLength(0);
 });
 
@@ -114,7 +115,7 @@ it('keeps actual Act 8 crystal rewards compact even when the hero and class sele
   expect(hero.imageUrl).toBeTruthy();
   expect(selector.imageUrl).toBe(hero.imageUrl);
   const host=await render(<QuestRewards rewards={rewards} title="Act rewards"/>);
-  expect(host.querySelector<HTMLInputElement>('input[aria-label="Show reward names"]')?.checked).toBe(false);
+  expect(host.querySelector('button[aria-label="Show reward names"]')?.getAttribute('aria-pressed')).toBe('false');
   for(const crystal of [hero,selector]){
     const tile=[...host.querySelectorAll('[data-quest-reward]')].find(row=>row.getAttribute('data-quest-reward')===crystal.key)!;
     expect(tile.querySelector('img')).not.toBeNull();
@@ -135,15 +136,43 @@ it('keeps actual Act 8 crystal rewards compact even when the hero and class sele
 it('hydrates compact server markup before restoring the remembered names preference', async () => {
   const element = <QuestRewards rewards={[reward()]}/>;
   const first = await render(element);
-  await act(async () => first.querySelector<HTMLInputElement>('input')!.click());
+  await act(async () => first.querySelector<HTMLButtonElement>('button[aria-label="Show reward names"]')!.click());
   await act(async () => mounted!.unmount()); mounted=undefined; first.remove();
   const host=document.createElement('div');host.innerHTML=renderToString(element);document.body.append(host);
   expect(host.querySelector('[data-reward-name]')).toBeNull();
   const errors=vi.spyOn(console,'error').mockImplementation(()=>{});
   await act(async () => { mounted=hydrateRoot(host,element); });
-  expect(host.querySelector<HTMLInputElement>('input')?.checked).toBe(true);
+  expect(host.querySelector('button[aria-label="Show reward names"]')?.getAttribute('aria-pressed')).toBe('true');
   expect(host.querySelector('[data-reward-name]')?.textContent).toBe('Gold');
   expect(errors).not.toHaveBeenCalled();
+});
+
+it('uses a focused native pressed button instead of a checkbox and supports switching names off again', async () => {
+  const host = await render(<QuestRewards rewards={[reward()]}/>);
+  const toggle = host.querySelector<HTMLButtonElement>('button[aria-label="Show reward names"]')!;
+  expect(toggle).not.toBeNull();
+  expect(toggle.type).toBe('button');
+  expect(toggle.textContent).toBe('Show names');
+  expect(toggle.querySelector('svg')?.getAttribute('aria-hidden')).toBe('true');
+  expect(host.querySelector('input[type="checkbox"]')).toBeNull();
+  toggle.focus();
+  await act(async () => toggle.click());
+  expect(document.activeElement).toBe(toggle);
+  expect(toggle.getAttribute('aria-pressed')).toBe('true');
+  expect(host.querySelector('[data-reward-name]')?.textContent).toBe('Gold');
+  await act(async () => toggle.click());
+  expect(document.activeElement).toBe(toggle);
+  expect(toggle.getAttribute('aria-pressed')).toBe('false');
+  expect(host.querySelector('[data-reward-name]')).toBeNull();
+});
+
+it('omits source discovery for entry costs while retaining the actual reward detail link', async () => {
+  const host = await render(<ul><RewardTile reward={reward({type:'crystal',sourceType:'gs',token:'mythic_shard_crystal',name:'Mythic Crystal',href:'/crystals/mythic_shard_crystal',scope:'Entry cost'})} showName={false} showSources={false}/></ul>);
+  await act(async () => host.querySelector<HTMLButtonElement>('[data-quest-reward] button')!.click());
+  const dialog = document.querySelector('[role="dialog"]')!;
+  expect(dialog.textContent).toContain('Entry cost');
+  expect(dialog.querySelector('a[href="/crystals/mythic_shard_crystal"]')).not.toBeNull();
+  expect(dialog.querySelector('a[href^="/rewards?"]')).toBeNull();
 });
 
 it("renders the actual Act 10 exploration gem with its rank numbers on the icon and in its name", async () => {

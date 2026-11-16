@@ -1,9 +1,11 @@
 .container{margin-top:24px;padding:16px;border:1px solid #273449;border-radius:12px;background:#0b142280;color:#e2e8f0;scroll-margin-top:90px}
 .header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 16px;margin-bottom:16px}
 .header h2{margin:0;font-size:20px;font-weight:600;line-height:1.35}
-.toggle{display:inline-flex;align-items:center;gap:8px;min-height:44px;cursor:pointer;color:#a9bfd2;font-size:12px}
-.toggle input{width:16px;height:16px;accent-color:#7dd3fc}
-.toggle input:focus-visible{outline:2px solid #7dd3fc;outline-offset:4px}
+.toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;flex-shrink:0;min-height:44px;padding:7px 11px;border:1px solid #354961;border-radius:7px;background:#101b2b;color:#9eb3d3;font-family:inherit;font-size:11px;white-space:nowrap;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.toggle[aria-pressed=true]{background:#2a3f60;border-color:#94a9d4;color:#edf2ff}
+.toggle:hover{color:#e6eeff;border-color:#6c85ab}
+.toggle svg{width:17px;height:17px}
+.toggle:focus-visible{outline:2px solid #7dd3fc;outline-offset:4px}
 .hint{margin:-6px 0 16px;color:#839db6;font-size:11px;line-height:1.5}
 .scopes{display:grid;gap:24px}
 .scopes>section{min-width:0;scroll-margin-top:96px}
@@ -35,3 +37,4 @@
 .actions a:hover{text-decoration:underline}
 @media(min-width:640px){.container{padding:20px}.grid{grid-template-columns:repeat(auto-fill,minmax(76px,1fr))}.name{font-size:11px}}
 @media(min-width:900px){.scopes{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}}
+@media(prefers-reduced-motion:reduce){.toggle{transition:none}}
