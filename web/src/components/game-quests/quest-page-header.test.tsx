@@ -2,7 +2,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import type { AnchorHTMLAttributes, ImgHTMLAttributes } from "react";
 import { expect, it, vi } from "vitest";
-import { findQuest } from "@cerebro/core/data/game-quests";
+import { findQuest,loadQuestMap } from "@cerebro/core/data/game-quests";
 import { getQuestMenuArtwork,getGroupMenuArtwork } from "@cerebro/core/data/game-quests/menu-art";
 import { getBossPreview } from "@cerebro/core/data/game-quests/permanent";
 import type { QuestPortrait } from "@/lib/game-quests/presentation";
@@ -64,6 +64,20 @@ it("preserves distinct native NPC bosses and never links them through a playable
     expect(row.textContent).toContain(boss.name);
   }
   expect(host.textContent).not.toContain('Playable Kang alias');
+});
+
+it("uses an explicit final boss from the matching map when the menu preview is empty",async()=>{
+  const q=findQuest('me_pain2024_fin_ques2')!,map=(await loadQuestMap(q.id))!;
+  expect(getBossPreview(q)?.bosses).toHaveLength(0);
+  const before=JSON.stringify(map),host=document.createElement('div');
+  host.innerHTML=renderToStaticMarkup(<QuestPageHeader quest={q} map={map}/>);
+  expect([...host.querySelectorAll('[data-quest-header-boss]')].map(row=>row.getAttribute('data-quest-header-boss'))).toEqual(['ares']);
+  expect(host.querySelector('[data-quest-header-boss="ares"] a')).toBeNull();
+  expect(JSON.stringify(map)).toBe(before);
+  host.innerHTML=renderToStaticMarkup(<QuestPageHeader quest={q} map={{...map,sourceHash:'mismatched'}}/>);
+  expect(host.querySelector('[data-quest-header-boss]')).toBeNull();
+  host.innerHTML=renderToStaticMarkup(<QuestPageHeader quest={{...q,sourceHash:'stale'}} map={map}/>);
+  expect(host.querySelector('[data-quest-header-boss]')).toBeNull();
 });
 
 it("keeps the Story quest identity and links to its exact Act and Chapter", () => {

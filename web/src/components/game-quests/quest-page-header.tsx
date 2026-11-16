@@ -6,13 +6,13 @@ import { getQuestMenuArtwork,getGroupMenuArtwork } from "@cerebro/core/data/game
 import { getQuestArtwork } from "@cerebro/core/data/game-quests/artwork";
 import type {MenuArtwork} from "@cerebro/core/domain/game-quests/menu-art";
 import type {QuestPortrait} from "@/lib/game-quests/presentation";
-import { hierarchyLabel, type QuestSummary } from "@cerebro/core/domain/game-quests";
+import { hierarchyLabel, type QuestMap, type QuestSummary } from "@cerebro/core/domain/game-quests";
 import { questDifficulty } from "@cerebro/core/domain/game-quests/browse";
 import { questCatalog } from "@cerebro/core/data/game-quests";
 import { permanentData,getBossPreview } from "@cerebro/core/data/game-quests/permanent";
 import styles from "./quest-page-header.module.css";
 
-export function QuestPageHeader({ quest: q,portraits={} }: { quest: QuestSummary;portraits?:Record<string,QuestPortrait> }) {
+export function QuestPageHeader({ quest: q,portraits={},map }: { quest: QuestSummary;portraits?:Record<string,QuestPortrait>;map?:QuestMap }) {
   const special = q.section === "Special";
   const showChapter = !special || new Set(questCatalog.filter(other => other.containerSetId === q.containerSetId).flatMap(other => other.hierarchy.map(h => h.chapterId))).size > 1;
   const collection = permanentData.specialCollections[q.containerSetName] ?? "Special quests";
@@ -28,7 +28,10 @@ export function QuestPageHeader({ quest: q,portraits={} }: { quest: QuestSummary
   if(!artworks.length)addArt(getQuestMenuArtwork(q));
   const background=getQuestArtwork(q.id);
   const terrain=background?.sourceHash===q.sourceHash?background:null;
-  const bosses=getBossPreview(q)?.bosses??[];
+  const preview=getBossPreview(q);
+  // A source-matched map can establish a final boss missing from the menu preview.
+  const mapMatches=preview&&map?.questId===q.id&&map.mapId===q.mapId&&map.sourceHash===q.mapSourceHash;
+  const bosses=preview?.bosses.length?preview.bosses:mapMatches?map!.encounters.filter(encounter=>encounter.final):[];
   const bossLabel=bosses.length===1?"Boss":"Bosses";
   return <div className={styles.wrapper}>
     <nav className={styles.breadcrumb} aria-label="Quest location">
