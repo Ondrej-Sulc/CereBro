@@ -8,6 +8,7 @@ import { progressedMapLoaders } from "./progressed-map-loaders.js";
 import { act10MapLoaders } from "./act10-map-loaders.js";
 import { permanentData } from "./permanent";
 import { withApplicationIcons } from "./application-icons";
+import { withAct10Modifiers } from "./act10-modifiers";
 import type { QuestSummary, QuestMap, EncounterOccurrence } from "../../domain/game-quests";
 
 const publicIds = new Set(permanentData.publicQuestIds);
@@ -35,7 +36,7 @@ export async function loadQuestMap(id: string): Promise<QuestMap | undefined> {
   if (Object.hasOwn(act10MapLoaders,id)) {
     const map = (await act10MapLoaders[id]()).default as unknown as QuestMap;
     if (map.questId !== id || map.mapId !== quest.mapId || map.sourceHash !== quest.mapSourceHash) throw new Error("Act 10 source mismatch");
-    return withApplicationIcons(map);
+    return withAct10Modifiers(withApplicationIcons(map));
   }
   if (Object.hasOwn(progressedMapLoaders,id)) {
     const map = (await progressedMapLoaders[id as keyof typeof progressedMapLoaders]()).default as unknown as QuestMap;

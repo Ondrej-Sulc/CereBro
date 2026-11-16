@@ -20,6 +20,7 @@ web/src/lib/game-artwork/tools/build_discovery.py text eol=lf
 # Reviewed capture projections and their source indexes hash exact bytes, including
 # native CRLF endings. Git must not rewrite them between Windows and Linux.
 src/data/game-quests/** -text whitespace=cr-at-eol
+src/tests/game-quests/fixtures/act10-modifier*.json -text whitespace=cr-at-eol
 src/data/game-node-modifiers/** -text whitespace=cr-at-eol
 src/domain/node-modifiers/native-icon-registry.ts -text whitespace=cr-at-eol
 src/domain/node-modifiers/native-game-icon-registry.ts -text whitespace=cr-at-eol

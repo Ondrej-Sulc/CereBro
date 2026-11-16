@@ -5,6 +5,7 @@
 .heading::-webkit-details-marker,.scopeSummary::-webkit-details-marker,.context>summary::-webkit-details-marker{display:none}
 .heading:hover{background:#19304766}
 .icon{display:grid;place-items:center;flex-shrink:0;width:30px;height:30px;border-radius:7px;background:#1e3044;color:#c9d8e6}
+.icon:empty{display:none}
 .name{min-width:0;flex:1;overflow-wrap:anywhere}
 .badges{display:flex;flex-wrap:wrap;gap:4px;max-width:80px;color:#a3cce1}
 .badges small{font-size:10px;font-weight:450;padding:2px 5px;background:#203b50;border-radius:4px}

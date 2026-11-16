@@ -20,7 +20,9 @@ it("loads all16 real Act10 maps and establishes234/234 coverage without changing
     expect(createHash("sha256").update(readFileSync(`src/data/game-quests/act10-maps/${id}.json`)).digest("hex")).toBe(meta.publicMapSha256);
     totals.tiles+=map.tiles.length;totals.paths+=map.paths.length;totals.placements+=map.encounters.length;
     totals.portals+=map.tiles.reduce((n,t)=>n+t.portals.length,0);totals.applications+=map.tiles.reduce((n,t)=>n+t.applications.length,0);
-    expect(map.tiles.flatMap(t=>t.applications).every(a=>a.iconKey===null&&a.description===null&&a.parameters.definitionCoverage==="unresolved-native-definition-version")).toBe(true);
+    const saved=JSON.parse(readFileSync(`src/data/game-quests/act10-maps/${id}.json`,'utf8')) as typeof map;
+    expect(saved.tiles.flatMap(t=>t.applications).every(a=>a.iconKey===null&&a.description===null&&a.parameters.definitionCoverage==="unresolved-native-definition-version")).toBe(true);
+    expect(map.tiles.flatMap(t=>t.applications).every(a=>a.description&&a.parameters.definitionCoverage==="resolved-native-public-definition")).toBe(true);
     for(const e of map.encounters){
       expect(findChampionEncounters(e.gameId)).toContainEqual(expect.objectContaining({questId:id,encounterId:e.id,sourceHash:meta.sourceHash}));
       if(!e.champion){const art=permanentData.nativePortraits[e.gameId];expect(art.character).toBe(e.gameId);expect(art.sourceBcgSha256).toBe(act10Data.bcgSha256);}

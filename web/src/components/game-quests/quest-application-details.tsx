@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { ArrowUpRight, ChevronDown, Link2 } from "lucide-react";
-import { GameNodeModifierIcon } from "@/components/nodes/GameNodeModifierIcon";
+import { QuestNodeModifierIcon } from "./quest-node-modifier-icon";
 import { gameText, type QuestApplication, type Coordinate } from "@cerebro/core/domain/game-quests";
 import styles from "./quest-application-details.module.css";
 
@@ -26,7 +26,7 @@ export function QuestApplicationDetails({ application:a, sourceHash, shareUrl, i
   const name=gameText(a.name)||"Node modifier";
   const sourceLabel=!showSourceType||a.sourceType==="Local"?null:a.sourceType==="Link"?"Linked":a.sourceType;
   return <details className={styles.modifier} id={anchor} open={initialOpen||highlighted} data-quest-application={a.id} data-highlighted={highlighted||undefined}>
-    <summary className={styles.heading}><span className={styles.icon}><GameNodeModifierIcon iconKey={a.iconKey} size={19}/></span><span className={styles.name}>{name}</span>{(sourceLabel||a.target==="attacker")&&<span className={styles.badges}>{sourceLabel&&<small>{sourceLabel}</small>}{a.target==="attacker"&&<small>Attacker</small>}</span>}<ChevronDown size={14} className={styles.chevron} aria-hidden="true"/></summary>
+    <summary className={styles.heading}><span className={styles.icon}><QuestNodeModifierIcon iconKey={a.iconKey} size={19}/></span><span className={styles.name}>{name}</span>{(sourceLabel||a.target==="attacker")&&<span className={styles.badges}>{sourceLabel&&<small>{sourceLabel}</small>}{a.target==="attacker"&&<small>Attacker</small>}</span>}<ChevronDown size={14} className={styles.chevron} aria-hidden="true"/></summary>
     <p className={styles.description}>{gameText(a.description)||"Description unavailable for this saved application."}</p>
     {showContext&&<QuestApplicationContext application={a} choose={choose} positionLabel={positionLabel}/>}
     <div className={styles.actions}>

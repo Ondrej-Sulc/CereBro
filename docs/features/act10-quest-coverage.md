@@ -27,7 +27,25 @@ All 32 placements resolve exact blueprints: 21 playable placements and 11 NPC oc
 
 ## Coverage limits
 
-All **271 modifier applications / 149 IDs** are retained. Complete native modifier definitions and versions were absent from this acquisition. Every row therefore has explicit unresolved definition coverage, null description and null icon; the UI says “Modifier details unavailable.” Matching an ID alone cannot transfer a name, description or icon. Unsupported propagation, legacy/entity/boss modifiers or map-wide modifier inputs cause normalization to stop rather than disappear into an empty list. Runtime scaling extras are excluded.
+All **271 modifier applications / 149 IDs** are retained. Complete native modifier definitions and versions were absent from the original acquisition, so the immutable map shards retain unresolved definition coverage, null descriptions and null icons. The later, independently dated projection below resolves their display data. Matching an ID alone cannot transfer a historical name, description or icon. Unsupported propagation, legacy/entity/boss modifiers or map-wide modifier inputs still cause normalization to stop rather than disappear into an empty list. Runtime scaling extras are excluded.
+
+## Recovered modifier descriptions (November 16)
+
+The approved finite public-definition capture recovered all **149 exact IDs**, with no missing definitions, at `2026-11-16T14:47:10.335988+00:00`. The native `BuffsDB.GetBuffDetails` method establishes global-before-user lookup priority. The first global-only read returned no requested definitions; the separately approved amendment read only the listed public definition fields for those same IDs in the fallback table. Active buffs, ownership, progression, inventory, expiry/usage fields, raw source objects, credentials and unrelated record values were excluded. Both read handles were closed and their individual read authorities revoked. No gameplay or game methods were invoked.
+
+`act10-modifiers.json` adds names and fully formatted descriptions for **all 271 assignments** without rewriting any map shard, route, defender, build or reward. The server projection requires the exact quest/map/source hash, application ID, native redeemer, quantity, target, coordinate, scope and persistence context. Changed identities or contexts stay unresolved; existing independent definitions are preserved. The original map capture date is unchanged. “About this map” separately dates the modifier-description observation.
+
+The portable input fixtures retain only the approved public fields and selected display inputs from the public BCG cache produced during normal client startup. The captured definition SHA is `c2c7e45ce3cfe4014b358313dda07f2596b1013d176f3facf2f29626d503c7cf`; the component BCG SHA is `ea95b7299aba4fd4ef4accbc6c251ba73cfd186c41ac58369134907d327cbf6a`. This is a separate observation from the older map snapshots, not a claim about their historical definition versions.
+
+The formatter follows the pinned `QuestBuffData`, `GameUtils.GetFormattedLocalizedBuff`, BCG display-formula and localization methods. It uses the exact first component, appearance and formula; chance, magnitude, duration and stack-count arguments are independently checked against **73 existing native descriptions with identical raw definitions**. All 73 agree, and no unresolved numeric placeholders remain in the 149 descriptions. Unknown components, formulas and template arguments stop the build.
+
+The current first-component appearances establish **208 native icon assignments**. Thirteen additional outlines are exported from the already verified native font with exact cmap, glyph, bounds and content hashes; the earlier icon registries and assets remain unchanged. The 63 generic BCG attack/health assignments retain readable text and an unbound icon: their attribute-based glyph input was outside this capture, so no icon is inferred from the name or ID. The full raw definition/component catalogs are not shipped to the browser.
+
+```powershell
+python -X utf8 -B scripts/game-quests/build_act10_modifiers.py
+python -X utf8 -B -m unittest discover -s scripts/game-quests -p test_act10_modifiers.py -v
+pnpm exec vitest run --config scripts/game-quests/vitest.config.mts src/tests/game-quests/act10-modifiers.test.ts src/tests/game-quests/act10.test.ts web/src/components/game-quests/quest-act10-modifiers.test.tsx
+```
 
 Quest rewards use the fresh map observation, while Act/Chapter rewards retain their prior independent dates and identities. The native `QuestSummary` constructor establishes first, maximum-first, mastery, potential and alliance arrays; `RedeemerItem` establishes the compact `t`/`n`/`q` aliases. `_replayItemAwards` is preserved as its own observed wire array; this static snapshot does not establish a native replay property or a guaranteed reward. Maximum-first/replay/event/stat outcomes are never summed into completion or exploration grants. The existing presentation keeps non-item outcomes separate. No account progress, eligibility, final combat stats or current availability is inferred.
 
