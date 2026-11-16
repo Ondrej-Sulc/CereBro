@@ -38,12 +38,9 @@ export function GlossaryCatalogView({ data }: { data: GlossaryCatalog }) {
     <section id="effects-results" className={styles.browseResults} data-category-selected={!!selectedCategory} aria-labelledby="effects-title" tabIndex={-1}>
       <div className={styles.resultsHeading}><div><h2 id="effects-title">{selectedCategory ? 'Effects' : filters.category ? 'Unknown category' : 'All effects'}</h2>{(!selectedCategory || filters.q) && <p>{results.total} {results.total === 1 ? 'effect' : 'effects'}{filters.q ? ` matching “${filters.q}”` : ''}</p>}</div></div>
       {selectedCategory?.description && <p className={styles.categoryDescription}>{selectedCategory.description}</p>}
-      <GlossarySearchForm key={glossaryQuery('/glossary', filters)} className={styles.searchForm}>
-        {filters.category && <input type="hidden" name="category" value={filters.category} />}
-        <label className={styles.searchLabel}><span className={styles.srOnly}>Search effects</span><div><Search size={17} aria-hidden="true" /><input name="q" type="search" defaultValue={filters.q} maxLength={100} placeholder={filters.category ? 'Search within this category…' : 'Search all effects…'} /></div></label>
-        <button className={styles.catalogSearchButton} type="submit" aria-label="Search effects"><ArrowRight size={18} aria-hidden="true" /></button>
-        {filters.q && <Link href={`${glossaryQuery('/glossary', filters, { q: '', page: 1 })}#effects-results`} className={styles.clearSearch}>Clear search</Link>}
-      </GlossarySearchForm>
+      <GlossarySearchForm key={glossaryQuery('/glossary', filters)} options={data.searchOptions} initialQuery={filters.q} categoryId={filters.category}
+        returnTo={`${glossaryQuery('/glossary', filters, { page: results.page })}#effects-results`}
+        clearHref={`${glossaryQuery('/glossary', filters, { q: '', page: 1 })}#effects-results`}/>
       {results.rows.length ? <div className={styles.effectGrid}>{results.rows.map(effect => <Link prefetch={false} key={effect.id} href={glossaryHref(effect.id, glossaryQuery('/glossary', filters, { page: results.page }))} className={styles.effectCard} style={effectPalette(effect)}><div className={styles.cardTop}><EffectIcon effect={effect} /><ArrowRight size={17} aria-hidden="true" className={styles.cardArrow} /></div><h3>{effect.name}</h3><p className={!effect.description ? styles.missingDefinition : undefined}>{effect.description || 'Definition not recorded'}</p><div className={styles.cardCategories}>{effect.categories.filter(category => category.id !== filters.category).slice(0, 2).map(category => <span key={category.id}>{category.name}</span>)}</div></Link>)}</div> : <EmptyState title="No effects found" description="Try a shorter search or explore all categories." href="/glossary" label="Browse all effects" />}
       <Pagination path="/glossary" filters={filters} results={results} noun="effects" />
     </section><Provenance />

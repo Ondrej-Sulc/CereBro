@@ -1,0 +1,36 @@
+.lookup{position:relative;isolation:isolate;z-index:2;margin-bottom:20px}
+.form{margin:0}
+.controlArea{position:relative}
+.controls{display:flex;gap:8px;align-items:stretch}
+.field{position:relative;display:flex;align-items:center;flex:1;min-width:0;border:1px solid #3b5169;border-radius:9px;background:#0b1524;transition:border-color .15s,box-shadow .15s}
+.field:focus-within{border-color:#9fc9df;box-shadow:0 0 0 3px #92bad01a}
+.searchIcon{position:absolute;left:14px;color:#88a4bd;pointer-events:none}
+.field input{width:100%;min-width:0;min-height:48px;border:0;border-radius:inherit;outline:none;background:transparent;padding:11px 46px 11px 42px;color:#e8f0f8;font-family:inherit;font-size:14px;line-height:1.5}
+.field input::placeholder{color:#7d94ac;opacity:1}
+.lookup .field input:focus-visible{outline:none}
+.field input::-webkit-search-cancel-button{-webkit-appearance:none}
+.clearInput{position:absolute;right:2px;display:grid;place-items:center;width:44px;height:44px;border:0;border-radius:7px;background:transparent;color:#8da8c0;cursor:pointer}
+.clearInput:hover{background:#21384e;color:#e0eef8}
+.submit{display:flex;align-items:center;justify-content:center;gap:10px;min-width:100px;min-height:48px;padding:0 16px;border:1px solid #63839c;border-radius:9px;background:#183247;color:#c9e7f6;font-family:inherit;font-size:13px;font-weight:550;cursor:pointer;transition:background .15s,border-color .15s}
+.submit:hover{border-color:#b6dce9;background:#24465e}
+.help{display:flex;justify-content:space-between;align-items:baseline;gap:8px 16px;flex-wrap:wrap;margin-top:8px;color:#829bb2;font-size:11px;line-height:1.6}
+.help p{margin:0}
+.help>a{display:inline-flex;align-items:center;min-height:44px;color:#b5d9e8;text-decoration:underline;text-underline-offset:3px}
+.popup{position:absolute;inset:100% 0 auto;margin-top:7px;z-index:20;overflow:hidden;border:1px solid #405a70;border-radius:11px;background:#0d1929;box-shadow:0 18px 45px #0008}
+.status{margin:0;padding:10px 14px;border-bottom:1px solid #293d52;color:#90a9bf;font-size:11px;line-height:1.6}
+.list{max-height:390px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#405d76 transparent;list-style:none;margin:0;padding:5px}
+.list:empty{padding:0}
+.option{display:flex;align-items:center;gap:12px;min-height:76px;padding:10px;border-radius:7px;color:#e3edf7;text-decoration:none}
+.option:hover,.option[aria-selected=true]{background:#1c3449}
+.icon{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border:1px solid color-mix(in srgb,var(--effect-color) 42%,transparent);border-radius:10px;background:color-mix(in srgb,var(--effect-color) 12%,#0b1524);color:var(--effect-color)}
+.icon img{max-width:28px;max-height:28px;object-fit:contain}
+.copy{display:block;min-width:0;flex:1}
+.name{display:block;font-size:13px;line-height:1.4;font-weight:550;overflow-wrap:anywhere}
+.description{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:4px;color:#91a9bf;font-size:11px;line-height:1.5;overflow-wrap:anywhere}
+.category{display:block;margin-top:5px;color:#7793ad;font-size:10px;line-height:1.4;overflow-wrap:anywhere}
+.optionArrow{flex-shrink:0;color:#7d9db6}
+.footer{display:flex;align-items:center;gap:7px;margin:0;padding:9px 14px;border-top:1px solid #293d52;color:#809cb4;font-size:10px;line-height:1.5}
+.lookup :is(a,button):focus-visible{outline:2px solid #b5e2f4;outline-offset:-3px}
+.srOnly{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:639px){.field input{font-size:16px;padding-left:39px}.searchIcon{left:12px;width:17px}.submit{min-width:48px;padding:0 13px}.submit>span{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.help{font-size:10px}.list{max-height:330px}.option{gap:9px;padding:9px 7px}.icon{flex-basis:36px;width:36px;height:36px;border-radius:8px}.icon img{max-width:25px;max-height:25px}.name{font-size:12px}.description{font-size:10px}.category{font-size:9px}.status{padding:10px 12px}.footer{display:none}}
+@media(prefers-reduced-motion:reduce){.field,.submit{transition:none}}

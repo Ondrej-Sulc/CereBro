@@ -27,11 +27,56 @@ describe('glossary read boundaries', () => {
     expect(await loadGlossaryDetail('999', {})).toBeNull();
     expect(db.championAbilityLink.findMany).not.toHaveBeenCalled();
   });
-  it('bounds browse queries and preserves search/category while clamping pages', async () => {
-    const data = await loadEffectGlossary({ q: 'Bleed', category: '50', page: '99999' });
-    expect(data.results).toMatchObject({ page: 3, pages: 3, total: 50 });
-    expect(db.ability.findMany).toHaveBeenCalledWith(expect.objectContaining({ take: 24, skip: 48,
-      where: expect.objectContaining({ categories: { some: { id: 50 } }, OR: expect.any(Array) }) }));
+  it('keeps the full category suggestion set beyond pagination while clamping ranked search results', async () => {
+    const category = { id: 50, name: 'Damage Over Time', description: 'Public category description.' };
+    const effects = Array.from({ length: 52 }, (_, index) => ({ ...effect, id: index + 1, name: `Bleed ${String(index + 1).padStart(2, '0')}`, categories: [category] }));
+    db.ability.findMany.mockResolvedValue([...effects, { ...effect, id: 99, name: 'Bleed outside category' }]);
+    db.abilityCategory.findMany.mockResolvedValue([{ ...category, _count: { abilities: 52 } }]);
+    const data = await loadEffectGlossary({ q: 'blee', category: '50', page: '99999' });
+    expect(data.results).toMatchObject({ page: 3, pages: 3, total: 52, size: 24 });
+    expect(data.results.rows.map(row => row.id)).toEqual([49, 50, 51, 52]);
+    expect(data.filters).toMatchObject({ q: 'blee', category: 50, page: 3 });
+    expect(data.searchOptions.map(option => option.id)).toEqual(effects.map(row => row.id));
+    expect(data.searchOptions.some(option => option.id === 99)).toBe(false);
+    expect(data.catalogTotal).toBe(53);
+    expect(data.categories).toEqual([{ ...category, _count: { abilities: 52 } }]);
+  });
+  it('sends only public effect lookup fields and excludes native raw and category metadata', async () => {
+    db.ability.findMany.mockResolvedValue([{ ...effect, categories: [{ id: 50, name: 'Damage Over Time', description: 'Category prose.' }],
+      gameGlossaryTermId: 'native-bleed', gameGlossaryTerm: { description: 'Full native definition.', iconUrl: '/bleed.svg', raw: { color_primary: 'f71817', privateTestMarker: 'must-not-project' } } }]);
+    const data = await loadEffectGlossary({ q: 'bleed' });
+    expect(data.searchOptions).toHaveLength(1);
+    const option = data.searchOptions[0];
+    expect(option).toMatchObject({ id: 5, name: 'Bleed', description: 'Recorded definition.', iconUrl: '/bleed.svg', color: '#f71817', categories: [{ id: 50, name: 'Damage Over Time' }] });
+    expect(Object.keys(option).sort()).toEqual(['categories', 'color', 'description', 'iconUrl', 'id', 'name', 'searchText', 'secondaryColor']);
+    expect(JSON.stringify(option)).not.toMatch(/must-not-project|gameGlossaryTerm|Category prose/);
+  });
+  it('retains searches of displayed and bound native definitions with the same matching as suggestions', async () => {
+    db.ability.findMany.mockResolvedValue([
+      { ...effect, id: 5, name: 'Protected', description: 'A short reviewed summary.', gameGlossaryTerm: { description: 'Heavy attacks prevent regeneration.', iconUrl: null, raw: {} } },
+      { ...effect, id: 6, name: 'Separate', description: 'Unrelated words.' },
+    ]);
+    const native = await loadEffectGlossary({ q: 'regeneration heavy' });
+    expect(native.results.rows.map(row => row.id)).toEqual([5]);
+    expect(native.results.rows[0].description).toBe('A short reviewed summary.');
+    const reviewed = await loadEffectGlossary({ q: 'reviewed summary' });
+    expect(reviewed.results.rows.map(row => row.id)).toEqual([5]);
+    const empty = await loadEffectGlossary({ q: 'no-such-definition' });
+    expect(empty.results.rows).toEqual([]);
+    expect(empty.searchOptions).toHaveLength(2);
+    const unknownCategory = await loadEffectGlossary({ category: '999' });
+    expect(unknownCategory.searchOptions).toEqual([]);
+    expect(unknownCategory.results.total).toBe(0);
+  });
+  it('avoids duplicating the displayed definition in suggestion search data and keeps blank browsing alphabetical', async () => {
+    db.ability.findMany.mockResolvedValue([
+      { ...effect, id: 7, name: 'Poison', description: null, gameGlossaryTerm: { description: '  Native definition.  ', iconUrl: null, raw: {} } },
+      { ...effect, id: 5, name: 'Bleed', gameGlossaryTerm: { description: effect.description, iconUrl: null, raw: {} } },
+    ]);
+    const data = await loadEffectGlossary({ q: '   ' });
+    expect(data.results.rows.map(row => row.name)).toEqual(['Bleed', 'Poison']);
+    expect(data.searchOptions.map(option => option.description)).toEqual(['Recorded definition.', 'Native definition.']);
+    expect(data.searchOptions.every(option => !Object.hasOwn(option, 'searchText'))).toBe(true);
   });
   it('restricts details to the exact effect and public champion sources', async () => {
     const data = await loadGlossaryDetail('5', {});

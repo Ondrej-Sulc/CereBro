@@ -6,6 +6,7 @@ import { buildChampionKitOverviewEffects, findChampionKitAbilityTarget, getGameE
 import { resistanceEvidenceRecords } from '@cerebro/core/domain/champion-resistance-classification';
 import { buildChampionSynergyView } from '@cerebro/core/domain/champion-synergies';
 import { glossaryEffectId, glossaryPage, isSynergyApplication, normalizeGlossaryFilters, projectGlossaryChampions, type GlossaryParams, type GlossaryChampionInput } from '../effect-glossary';
+import { rankGlossarySearchOptions, type GlossarySearchOption } from '../glossary-search';
 
 const effectSelect = {
   id: true, name: true, description: true, iconUrl: true, gameGlossaryTermId: true,
@@ -29,21 +30,34 @@ export const getGlossaryEffect = cache(async (identity: string) => {
 
 export async function loadEffectGlossary(params: GlossaryParams) {
   const filters = normalizeGlossaryFilters(params);
-  const where: Prisma.AbilityWhereInput = {
-    ...(filters.q ? { OR: [{ name: { contains: filters.q, mode: 'insensitive' } },
-      { description: { contains: filters.q, mode: 'insensitive' } },
-      { gameGlossaryTerm: { description: { contains: filters.q, mode: 'insensitive' } } }] } : {}),
-    ...(filters.category ? { categories: { some: { id: filters.category } } } : {}),
-  };
-  const [total, categories, catalogTotal] = await Promise.all([
-    prisma.ability.count({ where }),
+  const [catalog, categories] = await Promise.all([
+    loadCatalogEffects(),
     prisma.abilityCategory.findMany({ orderBy: { name: 'asc' }, select: { id: true, name: true, description: true, _count: { select: { abilities: true } } } }),
-    prisma.ability.count(),
   ]);
-  const size = 24, pages = Math.max(1, Math.ceil(total / size)), page = Math.min(filters.page, pages);
-  const rows = await prisma.ability.findMany({ where, select: effectSelect, orderBy: [{ name: 'asc' }, { id: 'asc' }], take: size, skip: (page - 1) * size });
-  return { filters: { ...filters, page }, categories, catalogTotal, results: { rows: rows.map(presentEffect), total, pages, page, size } };
+  const scoped = catalog.filter(row => !filters.category || row.effect.categories.some(category => category.id === filters.category));
+  const searchOptions = scoped.map(row => row.option);
+  const effectsById = new Map(scoped.map(row => [row.effect.id, row.effect]));
+  const matches = filters.q ? rankGlossarySearchOptions(searchOptions, filters.q, searchOptions.length) : searchOptions;
+  const results = glossaryPage(matches.map(option => effectsById.get(option.id)!), filters.page, 24);
+  return { filters: { ...filters, page: results.page }, categories, catalogTotal: catalog.length, searchOptions, results };
 }
+
+// Request-scoped reuse keeps server results and client suggestions on one public catalog projection.
+const loadCatalogEffects = cache(async () => {
+  const rows = await prisma.ability.findMany({ select: effectSelect, orderBy: [{ name: 'asc' }, { id: 'asc' }] });
+  return rows.map(row => {
+    const effect = presentEffect(row);
+    const nativeDescription = row.gameGlossaryTerm?.description?.trim();
+    const searchText = nativeDescription ? formatGameText(nativeDescription) : null;
+    const option: GlossarySearchOption = {
+      id: effect.id, name: effect.name, description: effect.description, iconUrl: effect.iconUrl,
+      color: effect.color, secondaryColor: effect.secondaryColor,
+      categories: effect.categories.map(({ id, name }) => ({ id, name })),
+      ...(searchText && searchText !== effect.description ? { searchText } : {}),
+    };
+    return { effect, option };
+  }).sort((a, b) => a.effect.name.localeCompare(b.effect.name, 'en') || a.effect.id - b.effect.id);
+});
 
 const championSelect = { id: true, name: true, slug: true, class: true, images: true, obtainable: true, isPlayable: true } as const;
 export async function loadGlossaryDetail(identity: string, params: GlossaryParams) {

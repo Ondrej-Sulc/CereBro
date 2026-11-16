@@ -1,9 +1,13 @@
 // @vitest-environment jsdom
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { Children, isValidElement, type ComponentProps, type ReactElement, type ReactNode } from 'react';
 import { GlossaryCatalogView, GlossaryDetailView } from './glossary-views';
+import { GlossarySearchForm } from './glossary-search-form';
 import { normalizeGlossaryFilters } from '@/lib/effect-glossary';
 import type { GlossaryDetail } from '@/lib/data/effect-glossary';
+
+vi.mock('next/navigation', () => ({ useSearchParams: () => new URLSearchParams(), useRouter: () => ({ push: vi.fn() }) }));
 
 const effect = { id: 5, name: 'Bleed', description: 'A recorded Bleed definition.', iconUrl: null, color: '#ffffff', secondaryColor: '#222222', categories: [] };
 function documentFor(html: string) { return new DOMParser().parseFromString(html, 'text/html'); }
@@ -16,9 +20,26 @@ function sourceCardDetail(): GlossaryDetail {
   ] } };
 }
 describe('glossary rendered behavior', () => {
+  it('passes the full scoped autocomplete projection and exact current return state to search', () => {
+    const filters = normalizeGlossaryFilters({ q: 'bleed', category: '7', page: '2' });
+    const options = [{ ...effect, categories: [{ id: 7, name: 'Damage Over Time' }] }];
+    const page = GlossaryCatalogView({ data: { filters, categories: [], catalogTotal: 883, searchOptions: options,
+      results: { rows: [effect], page: 2, pages: 3, total: 50, size: 24 } } });
+    function findSearch(node: ReactNode): ReactElement<ComponentProps<typeof GlossarySearchForm>> | undefined {
+      if (!isValidElement<{ children?: ReactNode }>(node)) return undefined;
+      if (node.type === GlossarySearchForm) return node as ReactElement<ComponentProps<typeof GlossarySearchForm>>;
+      return Children.toArray(node.props.children).map(findSearch).find(Boolean);
+    }
+    const search = findSearch(page)!;
+    expect(search.props.options).toEqual(options);
+    expect(search.props.initialQuery).toBe('bleed');
+    expect(search.props.categoryId).toBe(7);
+    expect(search.props.returnTo).toBe('/glossary?q=bleed&category=7&page=2#effects-results');
+    expect(search.props.clearHref).toBe('/glossary?category=7#effects-results');
+  });
   it('returns from an effect to the same category, search and result page, including after detail filters', () => {
     const filters = normalizeGlossaryFilters({ q: 'bleed', category: '7', page: '2' });
-    const catalog = documentFor(renderToStaticMarkup(<GlossaryCatalogView data={{ filters, categories: [], catalogTotal: 883,
+    const catalog = documentFor(renderToStaticMarkup(<GlossaryCatalogView data={{ filters, categories: [], catalogTotal: 883, searchOptions: [],
       results: { rows: [effect], page: 2, pages: 3, total: 50, size: 24 } }}/>));
     const href = catalog.querySelector('a:has(h3)')!.getAttribute('href')!;
     const detailUrl = new URL(href, 'https://cerebro.test');
@@ -80,7 +101,7 @@ describe('glossary rendered behavior', () => {
     expect(doc.querySelector('a[href="/champions/heimdall"]')).not.toBeNull();
   });
   it('exposes labeled GET filters, deterministic links and recovery from unmatched search', () => {
-    const data = { filters: normalizeGlossaryFilters({ q: 'unmatched' }), categories: [], catalogTotal: 883, results: { rows: [], page: 1, pages: 1, total: 0, size: 24 } };
+    const data = { filters: normalizeGlossaryFilters({ q: 'unmatched' }), categories: [], catalogTotal: 883, searchOptions: [], results: { rows: [], page: 1, pages: 1, total: 0, size: 24 } };
     const doc = documentFor(renderToStaticMarkup(<GlossaryCatalogView data={data} />));
     expect(doc.querySelector('form')?.getAttribute('action')).toBe('/glossary#effects-results');
     expect(doc.querySelector('input[name=q]')?.getAttribute('value')).toBe('unmatched');
@@ -92,7 +113,7 @@ describe('glossary rendered behavior', () => {
       { id: 7, name: 'Death Counters', description: 'Prevent being knocked out.', _count: { abilities: 6 } },
       { id: 8, name: 'Damage Over Time', description: '', _count: { abilities: 15 } },
     ];
-    const data = { filters: normalizeGlossaryFilters({}), categories, catalogTotal: 20, results: { rows: [effect], page: 1, pages: 1, total: 20, size: 24 } };
+    const data = { filters: normalizeGlossaryFilters({}), categories, catalogTotal: 20, searchOptions: [], results: { rows: [effect], page: 1, pages: 1, total: 20, size: 24 } };
     const doc = documentFor(renderToStaticMarkup(<GlossaryCatalogView data={data} />));
     const nav = doc.querySelector('nav[aria-label="Effect categories"]');
     expect(nav).not.toBeNull();
@@ -108,7 +129,7 @@ describe('glossary rendered behavior', () => {
   it('retains the category during search, exposes selection and resets pagination on category changes', () => {
     const categories = [{ id: 7, name: 'Death Counters', description: 'Prevent being knocked out.', _count: { abilities: 6 } }];
     const filters = normalizeGlossaryFilters({ category: '7', q: 'death', page: '2' });
-    const data = { filters, categories, catalogTotal: 883, results: { rows: [effect], page: 2, pages: 3, total: 50, size: 24 } };
+    const data = { filters, categories, catalogTotal: 883, searchOptions: [], results: { rows: [effect], page: 2, pages: 3, total: 50, size: 24 } };
     const doc = documentFor(renderToStaticMarkup(<GlossaryCatalogView data={data} />));
     const form = doc.querySelector('form[role=search]')!;
     const fields = new FormData(form as HTMLFormElement);
@@ -126,7 +147,7 @@ describe('glossary rendered behavior', () => {
   });
   it('keeps category context and recovery links for unknown or empty results', () => {
     const filters = normalizeGlossaryFilters({ category: '999', q: 'missing' });
-    const data = { filters, categories: [], catalogTotal: 883, results: { rows: [], page: 1, pages: 1, total: 0, size: 24 } };
+    const data = { filters, categories: [], catalogTotal: 883, searchOptions: [], results: { rows: [], page: 1, pages: 1, total: 0, size: 24 } };
     const doc = documentFor(renderToStaticMarkup(<GlossaryCatalogView data={data} />));
     expect(doc.querySelector('input[type=hidden][name=category]')?.getAttribute('value')).toBe('999');
     expect(doc.querySelector('#effects-results h2')?.textContent).toBe('Unknown category');
@@ -142,7 +163,7 @@ describe('glossary rendered behavior', () => {
       { id: 99, name: 'New category', description: '', _count: { abilities: 1 } },
     ];
     const original = structuredClone(categories);
-    const data = { filters: normalizeGlossaryFilters({}), categories, catalogTotal: 883, results: { rows: [effect], page: 1, pages: 1, total: 883, size: 24 } };
+    const data = { filters: normalizeGlossaryFilters({}), categories, catalogTotal: 883, searchOptions: [], results: { rows: [effect], page: 1, pages: 1, total: 883, size: 24 } };
     const doc = documentFor(renderToStaticMarkup(<GlossaryCatalogView data={data}/>));
     const choices = Array.from(doc.querySelectorAll('nav[aria-label="Effect categories"] a'));
     expect(choices.map(choice => choice.getAttribute('href'))).toEqual([
@@ -215,7 +236,7 @@ describe('glossary rendered behavior', () => {
   });
   it('uses the bound effect palette for identity without changing category meaning or controls', () => {
     const colored = { ...effect, color: '#f71817', secondaryColor: '#fbc6c6', categories: [{ id: 50, name: 'Damage Over Time', description: 'Recorded category' }] };
-    const data = { filters: normalizeGlossaryFilters({}), categories: [], catalogTotal: 1, results: { rows: [colored], page: 1, pages: 1, total: 1, size: 24 } };
+    const data = { filters: normalizeGlossaryFilters({}), categories: [], catalogTotal: 1, searchOptions: [], results: { rows: [colored], page: 1, pages: 1, total: 1, size: 24 } };
     const doc = documentFor(renderToStaticMarkup(<GlossaryCatalogView data={data} />));
     const card = doc.querySelector('a:has(h3)');
     expect(card?.getAttribute('style')).toContain('--effect-color:#f71817');
