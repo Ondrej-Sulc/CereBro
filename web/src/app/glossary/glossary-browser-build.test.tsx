@@ -13,10 +13,13 @@ const bundler = createRequire(vite.resolve('vite/package.json'))('esbuild') as {
   }): Promise<{ errors: unknown[] }>;
 };
 
-it('bundles effect autocomplete for the browser without Node-only dependencies', async () => {
+it.each([
+  ['effect autocomplete', 'glossary-search-form.tsx'],
+  ['flowing champion cards', 'glossary-champion-grid.tsx'],
+])('bundles %s for the browser without Node-only dependencies', async (_feature, entry) => {
   await expect(bundler.build({
     absWorkingDir: fileURLToPath(new URL('../../../../', import.meta.url)),
-    entryPoints: ['web/src/app/glossary/glossary-search-form.tsx'],
+    entryPoints: [`web/src/app/glossary/${entry}`],
     bundle: true, write: false, platform: 'browser', format: 'esm', tsconfig: 'web/tsconfig.json',
     external: ['next/*', 'react', 'react/*', 'react-dom', 'react-dom/*', 'lucide-react', '*.css'],
     logLevel: 'silent',
