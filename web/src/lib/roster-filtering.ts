@@ -5,6 +5,7 @@ import type { ProfileRosterEntry } from "@/app/profile/roster/types";
 import { getObtainableStarLevels, isChampionObtainableAs } from "./champion-obtainable";
 import { getRosterAscensionLevel } from "./roster-ascension-filter";
 import { prepareRosterKit, matchesPreparedRosterKitFilters, type RosterKitFilters, type RosterKitLink } from "./roster-kit";
+import { matchesChampionScope, type ChampionScope } from "./champion-catalog-scope";
 
 export type FacetCounts = Readonly<Record<string, number>>;
 export type RosterFacetCounts = Record<"stars" | "ranks" | "ascension" | "classes" | "tags" | "abilities" | "categories" | "immunities" | "forms" | "directions", FacetCounts>;
@@ -21,12 +22,14 @@ export type RosterFiltersState = RosterKitFilters & {
   tags: string[];
   tagLogic: "AND" | "OR";
   showUnowned: boolean;
+  championScope?: ChampionScope;
 };
 
 export type FilterableRosterEntry = Pick<ProfileRosterEntry, "id" | "championId" | "stars" | "rank" | "isAscended" | "ascensionLevel" | "isUnowned"> & {
   champion: {
     name: string;
     class: ChampionClass;
+    isPlayable?: boolean;
     ascendableRarities?: number[];
     tags?: { name: string }[];
     abilities?: RosterKitLink[];
@@ -87,14 +90,15 @@ type BasicFacet = "classes" | "stars" | "ranks" | "ascension";
 function matchesBasic(item: IndexedEntry, filters: RosterFiltersState, search: string, omit?: BasicFacet) {
   const entry = item.entry;
   return item.searchName.includes(search)
+    && matchesChampionScope(entry.champion, filters.championScope)
     && (!filters.ascensionEligible || !entry.isUnowned || filters.eligibilityIncludesUnowned)
     && (!filters.ascensionEligible || (entry.isUnowned
       ? item.unownedRarities.some(rarity => rarity === 7 && (!filters.stars.length || filters.stars.includes(rarity)) && item.ascendableRarities.has(rarity))
       : entry.stars === 7 && item.ascendableRarities.has(entry.stars)))
     && (omit === "classes" || !filters.classes.length || filters.classes.includes(entry.champion.class))
     && (omit === "stars" || !filters.stars.length || entry.isUnowned || filters.stars.includes(entry.stars))
-    && (omit === "ranks" || !filters.ranks.length || entry.isUnowned || filters.ranks.includes(entry.rank))
-    && (omit === "ascension" || !filters.ascension.length || filters.ascension.includes(getRosterAscensionLevel(entry)));
+    && (omit === "ranks" || !filters.ranks.length || (entry.isUnowned ? entry.champion.isPlayable !== false : filters.ranks.includes(entry.rank)))
+    && (omit === "ascension" || !filters.ascension.length || (!(entry.isUnowned && entry.champion.isPlayable === false) && filters.ascension.includes(getRosterAscensionLevel(entry))));
 }
 
 function matchesTags(item: IndexedEntry, filters: RosterFiltersState) {
@@ -132,10 +136,10 @@ export function filterRosterWithFacets<T extends FilterableRosterEntry>(index: R
 
     if (tags && kit) {
       if (matchesBasic(item, filters, search, "classes")) add("classes", item.entry.champion.class);
-      if (matchesBasic(item, filters, search, "ranks")) {
+      if (!(item.entry.isUnowned && item.entry.champion.isPlayable === false) && matchesBasic(item, filters, search, "ranks")) {
         for (const rank of [1, 2, 3, 4, 5, 6]) if (item.entry.isUnowned || item.entry.rank === rank) add("ranks", rank);
       }
-      if (matchesBasic(item, filters, search, "ascension")) add("ascension", getRosterAscensionLevel(item.entry));
+      if (!(item.entry.isUnowned && item.entry.champion.isPlayable === false) && matchesBasic(item, filters, search, "ascension")) add("ascension", getRosterAscensionLevel(item.entry));
     }
     if (!basic) continue;
     if (kit && (filters.tagLogic === "OR" || tags)) for (const tag of item.tags) add("tags", tag);

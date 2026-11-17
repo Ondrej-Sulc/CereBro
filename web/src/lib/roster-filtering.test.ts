@@ -24,6 +24,37 @@ const owned = (champion: Champion, stars = 6, rank = 4, ascensionLevel = 0) => (
 } as unknown as ProfileRosterEntry);
 
 describe("contextual roster facets", () => {
+  it("defaults to playable identities and keeps NPC scope in every contextual facet", () => {
+    const playable = { ...champion(1, { tags: ["Hero"] }), isPlayable: true };
+    const npc = { ...champion(2, { class: "MYSTIC", tags: ["Boss"], obtainable: [] }), isPlayable: false };
+    const legacy = { ...champion(3, { class: "MYSTIC", tags: ["Boss"], obtainable: ["6"] }), isPlayable: false };
+    const index = createRosterFilterIndex([], [playable, npc, legacy, champion(4)]);
+    expect(filterRosterWithFacets(index, defaults).entries.map(row => row.championId)).toEqual([1, 4]);
+    const special = filterRosterWithFacets(index, { ...defaults, championScope: "nonPlayable" });
+    expect(special.entries.map(row => row.championId)).toEqual([2, 3]);
+    expect(special.entries.every(row => row.isUnowned && row.rank === 0 && row.stars === 0)).toBe(true);
+    expect(special.counts.classes).toEqual({ MYSTIC: 2 });
+    expect(special.counts.tags).toEqual({ Boss: 2 });
+    expect(special.counts.stars).toEqual({ 6: 1 });
+    expect(special.counts.ranks).toEqual({});
+    expect(special.counts.ascension).toEqual({});
+    expect(filterRosterWithFacets(index, { ...defaults, championScope: "nonPlayable", ranks: [3] }).entries).toEqual([]);
+    expect(filterRosterWithFacets(index, { ...defaults, championScope: "nonPlayable", ascension: [0] }).entries).toEqual([]);
+    expect(filterRosterWithFacets(index, { ...defaults, championScope: "all" }).entries).toHaveLength(4);
+    expect(filterRosterWithFacets(index, { ...defaults, championScope: "nonPlayable", stars: [7] }).entries).toEqual([]);
+  });
+
+  it("never manufactures owned NPC copies and composes scope with owned-only mode", () => {
+    const playable = { ...champion(1), isPlayable: true };
+    const npc = { ...champion(2, { obtainable: [] }), isPlayable: false };
+    const actualNpc = owned(npc);
+    const index = createRosterFilterIndex([owned(playable)], [playable, npc]);
+    expect(filterRosterWithFacets(index, { ...defaults, showUnowned: false, championScope: "nonPlayable" }).entries).toEqual([]);
+    expect(filterRosterWithFacets(index, { ...defaults, showUnowned: false, championScope: "all" }).entries.map(row => row.championId)).toEqual([1]);
+    const existing = createRosterFilterIndex([actualNpc], [npc]);
+    expect(filterRosterWithFacets(existing, { ...defaults, showUnowned: false, championScope: "nonPlayable" }).entries).toEqual([actualNpc]);
+  });
+
   it("matches catalog scopes only at obtainable selected stars with positive canonical paths", () => {
     const rows = [
       { ...champion(1), gameId: "hulk" },

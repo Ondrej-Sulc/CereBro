@@ -3,13 +3,13 @@
 import { useEffect, useState, type CSSProperties } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { ArrowUpRight, Hash, Shield, Sparkles, Swords, Tag, UsersRound, X } from "lucide-react"
+import { ArrowUpRight, Hash, Shield, Sparkles, Swords, Tag, UserRound, UsersRound, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogTitle } from "@/components/ui/dialog"
 import { CompactEffectGrid, CompactEffectTile } from "@/components/champions/compact-effect-grid"
 import { EffectSources } from "@/components/champions/effect-sources"
 import { getChampionClassColors } from "@/lib/championClassHelper"
-import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
+import { getChampionImageUrlOrPlaceholder, isChampionImages } from "@/lib/championHelper"
 import { buildRosterKitSections, matchingRosterKitSourceGroups, type RosterKitEffect } from "@/lib/roster-kit"
 import type { RosterKitDetails } from "@/lib/roster-kit-details"
 import type { ChampionKitSourceGroup, ChampionKitAbilityTarget } from "@/lib/champion-kit"
@@ -18,7 +18,7 @@ import type { FilterState, ProfileRosterEntry } from "../types"
 const SECTION_ICONS = { IMMUNITY: Shield, GAIN: Sparkles, INFLICT: Swords, UNKNOWN: Sparkles }
 
 export type QuickChampionItem = Pick<ProfileRosterEntry, "id" | "stars" | "rank" | "sigLevel" | "isAwakened" | "ascensionLevel" | "isUnowned"> & {
-  champion: Pick<ProfileRosterEntry["champion"], "name" | "class" | "slug" | "images" | "tags" | "abilities">
+  champion: Pick<ProfileRosterEntry["champion"], "name" | "class" | "slug" | "images" | "tags" | "abilities"> & { isPlayable?: boolean }
 }
 
 export function QuickChampionDialog({ item, prestige, open, onOpenChange, filters, showUnownedState }: {
@@ -30,6 +30,7 @@ export function QuickChampionDialog({ item, prestige, open, onOpenChange, filter
   showUnownedState: boolean
 }) {
   const classColors = getChampionClassColors(item.champion.class)
+  const nonPlayable = item.champion.isPlayable === false
   const heroUrl = getChampionImageUrlOrPlaceholder(item.champion.images, "full", "hero")
   const portraitUrl = getChampionImageUrlOrPlaceholder(item.champion.images, "full")
   const [details, setDetails] = useState<RosterKitDetails | null>(null)
@@ -100,18 +101,19 @@ export function QuickChampionDialog({ item, prestige, open, onOpenChange, filter
         <div className="relative flex min-h-[154px] items-center gap-4 p-4 pr-9 sm:min-h-[174px] sm:gap-5 sm:p-6 sm:pr-12">
           <div className="relative h-24 w-20 shrink-0 overflow-hidden rounded-xl border border-white/10 bg-black/25 shadow-lg shadow-black/25 sm:h-28 sm:w-24">
             <Image src={portraitUrl} alt="" fill sizes="96px" className="object-cover object-top" />
+            {!isChampionImages(item.champion.images) && <div aria-hidden="true" className="absolute inset-0 flex items-center justify-center text-slate-600"><UserRound className="h-12 w-12" strokeWidth={1} /></div>}
             <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="mb-2 text-[10px] font-semibold uppercase tracking-[.18em]" style={{ color: classColors.color }}>{item.champion.class}</p>
             <DialogTitle className="text-2xl font-semibold leading-tight tracking-tight text-white sm:text-[32px]">{item.champion.name}</DialogTitle>
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-2 text-xs font-medium text-slate-400">
-              {showUnownedState ? <span className="rounded border border-white/10 bg-white/[.035] px-2 py-1 text-[10px] uppercase tracking-wider">Unowned</span> : owned && <>
+              {nonPlayable ? <span className="rounded border border-slate-500/40 bg-white/[.035] px-2 py-1 text-[10px] uppercase tracking-wider">NPC &amp; legacy</span> : showUnownedState ? <span className="rounded border border-white/10 bg-white/[.035] px-2 py-1 text-[10px] uppercase tracking-wider">Unowned</span> : owned && <>
                 <span className="text-slate-100">{item.stars}<span className="ml-0.5 text-amber-300">★</span></span>
                 <span>Rank {item.rank}</span><span>Sig {item.isAwakened ? item.sigLevel : 0}</span>
                 {(item.ascensionLevel || 0) > 0 && <span className="text-amber-200">A{item.ascensionLevel}</span>}
               </>}
-              {prestige !== undefined && prestige > 0 && <span className="inline-flex items-baseline gap-1.5 border-l border-white/10 pl-3"><strong className="font-semibold tabular-nums text-slate-100">{prestige.toLocaleString()}</strong><span className="text-[10px] text-slate-500">Prestige</span></span>}
+              {!nonPlayable && prestige !== undefined && prestige > 0 && <span className="inline-flex items-baseline gap-1.5 border-l border-white/10 pl-3"><strong className="font-semibold tabular-nums text-slate-100">{prestige.toLocaleString()}</strong><span className="text-[10px] text-slate-500">Prestige</span></span>}
             </div>
           </div>
         </div>

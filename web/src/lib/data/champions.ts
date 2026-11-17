@@ -32,7 +32,7 @@ const ABILITY_SELECT = {
 } as const;
 
 export async function getCachedChampions(): Promise<Champion[]> {
-  const champions = await getFromCache("all-champions-full-v8", CACHE_TTL, async () => {
+  const champions = await getFromCache("all-champions-full-v9", CACHE_TTL, async () => {
     const champions = await prisma.champion.findMany({
       where: { isPlayable: true },
       orderBy: { name: "asc" },
@@ -62,7 +62,7 @@ export async function getCachedChampions(): Promise<Champion[]> {
 }
 
 export async function getCachedAllChampions(): Promise<Champion[]> {
-  const champions = await getFromCache("all-champions-full-total-v7", CACHE_TTL, async () => {
+  const champions = await getFromCache("all-champions-full-total-v8", CACHE_TTL, async () => {
     const champions = await prisma.champion.findMany({
       orderBy: { name: "asc" },
       select: {

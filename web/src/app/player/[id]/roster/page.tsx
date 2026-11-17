@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/prisma";
-import { getCachedChampions } from "@/lib/data/champions";
+import { getCachedAllChampions } from "@/lib/data/champions";
 import { attachResistances, getResistanceIndex } from "@/lib/data/champion-resistances";
 import { rosterKitOptions } from "@/lib/roster-kit-options";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
@@ -117,7 +117,7 @@ export default async function PlayerRosterPage({ params, searchParams }: PlayerR
             },
             orderBy: [{ stars: "desc" }, { rank: "desc" }],
         }),
-        getCachedChampions(),
+        getCachedAllChampions(),
         prisma.tag.findMany({ orderBy: { name: "asc" } }),
         prisma.abilityCategory.findMany({ orderBy: { name: "asc" } }),
     ]);

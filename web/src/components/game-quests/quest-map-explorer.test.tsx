@@ -7,6 +7,7 @@ import { QuestMapExplorer } from "./quest-map-explorer";
 import { ChampionQuestEncounterLink } from "./champion-quest-encounter-link";
 import { QuestRewards } from "./quest-rewards";
 import { QuestApplicationDetails } from "./quest-application-details";
+import { projectQuestPortraits } from "@/lib/game-quests/presentation";
 vi.mock("next/link", () => ({ default: ({ href, children, prefetch, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { prefetch?: boolean }) => { void prefetch; return <a href={href} {...props}>{children}</a>; } }));
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 vi.stubGlobal("ResizeObserver", class { observe() {} unobserve() {} disconnect() {} });
@@ -20,6 +21,17 @@ async function render(element: React.ReactNode) {
   return host;
 }
 describe("quest map controls", () => {
+  it("links an exact DB-bound NPC from its recorded map location without changing placement or classification", async () => {
+    const map = (await loadQuestMap("me_pain2024_fin_ques2"))!, encounter = map.encounters.find(encounter => encounter.gameId === "ares")!, before = JSON.stringify(map);
+    const portraits = projectQuestPortraits(map, [{ id: 809, gameId: "ares", name: "Ares", slug: "ares", class: "SKILL", images: { p_128: "/test/ares.png" } }]);
+    const host = await render(<QuestMapExplorer map={map} portraits={portraits} initialNode={encounter.coordinate.join(",")} />);
+    const inspector = host.querySelector('section[aria-labelledby="coordinate-heading"]')!;
+    expect(inspector.querySelector('a[href="/champions/ares"]')).not.toBeNull();
+    expect(inspector.textContent).toContain("NPC / legacy defender");
+    expect(host.querySelector('[data-map-portrait="ares"]')).not.toBeNull();
+    expect(host.querySelectorAll('[data-map-encounter]')).toHaveLength(map.encounters.length);
+    expect(JSON.stringify(map)).toBe(before);
+  });
   it('labels a recorded boss separately from an empty quest finish',async()=>{
     const map=(await loadQuestMap('a09_ch03_q02'))!;
     const host=await render(<QuestMapExplorer map={map} initialNode="40,10"/>);

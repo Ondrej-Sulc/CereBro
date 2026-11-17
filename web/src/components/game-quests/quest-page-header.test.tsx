@@ -7,6 +7,7 @@ import { getQuestMenuArtwork,getGroupMenuArtwork } from "@cerebro/core/data/game
 import { getBossPreview } from "@cerebro/core/data/game-quests/permanent";
 import type { QuestPortrait } from "@/lib/game-quests/presentation";
 import { QuestPageHeader } from "./quest-page-header";
+import { projectQuestPortraits } from "@/lib/game-quests/presentation";
 
 vi.mock("next/link", () => ({ default: ({prefetch,...props}: AnchorHTMLAttributes<HTMLAnchorElement>&{prefetch?:boolean}) => {void prefetch;return <a {...props}/>;} }));
 vi.mock("next/image", () => ({ default: ({ fill, priority, alt, ...props }: ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean; priority?: boolean }) => {
@@ -78,6 +79,29 @@ it("uses an explicit final boss from the matching map when the menu preview is e
   expect(host.querySelector('[data-quest-header-boss]')).toBeNull();
   host.innerHTML=renderToStaticMarkup(<QuestPageHeader quest={{...q,sourceHash:'stale'}} map={map}/>);
   expect(host.querySelector('[data-quest-header-boss]')).toBeNull();
+});
+
+it("links an exact DB-bound Ares while keeping unrelated and invalid NPC portraits unlinked", async () => {
+  const q = findQuest("me_pain2024_fin_ques2")!, map = (await loadQuestMap(q.id))!, before = JSON.stringify(map);
+  const portraits = projectQuestPortraits(map, [{ id: 809, gameId: "ares", name: "Ares", slug: "ares", class: "SKILL", images: { p_128: "/test/ares.png" } }]);
+  const host = document.createElement("div");
+  host.innerHTML = renderToStaticMarkup(<QuestPageHeader quest={q} map={map} portraits={portraits} />);
+  expect(host.querySelector('[data-quest-header-boss="ares"] a')?.getAttribute("href")).toBe("/champions/ares");
+  const invalid: QuestPortrait = { name: "Wrong alias", href: "/champions/kang", imageUrl: "/test/kang.png", className: "Tech", color: "blue", championBinding: { id: 809, gameId: "kang" } };
+  host.innerHTML = renderToStaticMarkup(<QuestPageHeader quest={q} map={map} portraits={{ ares: invalid }} />);
+  expect(host.querySelector('[data-quest-header-boss="ares"] a')).toBeNull();
+  expect(host.textContent).not.toContain("Wrong alias"); expect(host.querySelector('img[src="/test/kang.png"]')).toBeNull();
+  expect(JSON.stringify(map)).toBe(before);
+});
+
+it("links Grandmaster through the exact native boss ID without turning the snapshot into a playable identity", () => {
+  const quest = findQuest("a06_ch04_q06")!, bosses = getBossPreview(quest)!.bosses, before = JSON.stringify(bosses);
+  expect(bosses.find(boss => boss.gameId === "grandmaster_boss")!.champion).toBeNull();
+  const portraits = projectQuestPortraits({ encounters: bosses, rewards: { fixedChampions: [] } }, [{ id: 810, gameId: "grandmaster_boss", name: "Grandmaster", slug: "grandmaster-boss", class: "SUPERIOR", images: { p_128: "/test/grandmaster.png" } }]);
+  const host = document.createElement("div");
+  host.innerHTML = renderToStaticMarkup(<QuestPageHeader quest={quest} portraits={portraits} />);
+  expect(host.querySelector('[data-quest-header-boss="grandmaster_boss"] a')?.getAttribute("href")).toBe("/champions/grandmaster-boss");
+  expect(JSON.stringify(bosses)).toBe(before);
 });
 
 it("keeps the Story quest identity and links to its exact Act and Chapter", () => {

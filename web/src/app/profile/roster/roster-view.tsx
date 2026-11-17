@@ -5,6 +5,8 @@ import { ChampionClass } from "@prisma/client";
 import { useToast } from "@/hooks/use-toast";
 import { ascensionEligibilityHref } from "@/lib/roster-ascension-filter";
 import { useAscensionEligibilityFilter } from "@/hooks/use-ascension-eligibility-filter";
+import { useChampionScopeFilter } from "@/hooks/use-champion-scope-filter";
+import { championScopeHref, matchesChampionScope } from "@/lib/champion-catalog-scope";
 import { useRouter } from "next/navigation";
 import { VirtuosoGrid } from "react-virtuoso";
 import { Champion } from "@/types/champion";
@@ -208,6 +210,8 @@ export function RosterView({
   const [sortBy, setSortBy] = useCollectionState<RosterSortField>("sort", enablePrestigeInsights ? "PRESTIGE" : "NAME");
   const [sortDirection, setSortDirection] = useCollectionState<SortDirection>("direction", enablePrestigeInsights ? "DESC" : "ASC");
   const [showUnowned, setShowUnowned] = useCollectionState("unowned", isChampionsCatalog || !isCollectionScreen);
+  const [championScope, setChampionScope] = useChampionScopeFilter();
+  const playableChampions = useMemo(() => allChampions.filter(champion => matchesChampionScope(champion)), [allChampions]);
   const [editingItem, setEditingItem] = useState<ProfileRosterEntry | null>(null);
   const [quickItem, setQuickItem] = useState<ProfileRosterEntry | null>(null);
   const [showInsights, setShowInsights] = useState(enablePrestigeInsights ? initialShowInsights : false);
@@ -388,6 +392,7 @@ export function RosterView({
 
   const handleAddChampion = async () => {
     if (newChampion.championId === null) { toast({ title: "Error", description: "Please select a champion", variant: "destructive" }); return; }
+    if (!playableChampions.some(champion => champion.id === newChampion.championId)) { toast({ title: "Error", description: "Only playable champions can be added to a roster", variant: "destructive" }); return; }
     try {
       const response = await fetch("/api/profile/roster/add", {
         method: "POST", headers: { "Content-Type": "application/json" },
@@ -493,10 +498,10 @@ export function RosterView({
     search, classes: filterClasses, stars: filterStars, ranks: filterRanks, ascension: filterAscensionLevels, ascensionEligible, eligibilityIncludesUnowned: isChampionsCatalog,
     tags: tagFilter, tagLogic, abilities: abilityFilter, categories: abilityCategoryFilter,
     immunities: immunityFilter, includeResistances, abilityLogic, categoryLogic: abilityCategoryLogic,
-    immunityLogic, effectForms, effectDirections, minResistancePotency, showUnowned,
+    immunityLogic, effectForms, effectDirections, minResistancePotency, showUnowned, championScope,
   }), [filterIndex, isChampionsCatalog, search, filterClasses, filterStars, filterRanks, filterAscensionLevels, ascensionEligible, tagFilter, tagLogic,
     abilityFilter, abilityCategoryFilter, immunityFilter, includeResistances, abilityLogic, abilityCategoryLogic,
-    immunityLogic, effectForms, effectDirections, minResistancePotency, showUnowned]);
+    immunityLogic, effectForms, effectDirections, minResistancePotency, showUnowned, championScope]);
 
   const filteredRoster = useMemo(() => [...matchingRoster].sort((a, b) => compareRosterEntries(a, b, sortBy, sortDirection, {
       prestigeMap,
@@ -505,10 +510,10 @@ export function RosterView({
 
   const visibleChampionCount = filteredRoster.length;
   const totalChampionCount = isChampionsCatalog
-    ? allChampions.length
+    ? allChampions.filter(champion => matchesChampionScope(champion, championScope)).length
     : showUnowned
       ? filteredRoster.length
-      : roster.length;
+      : roster.filter(entry => matchesChampionScope(entry.champion, championScope)).length;
 
   const countLabel = isChampionsCatalog
     ? visibleChampionCount === totalChampionCount
@@ -557,7 +562,7 @@ export function RosterView({
   };
 
   const handleToggleAttackReservation = useCallback(async (item: ProfileRosterEntry) => {
-    if (item.isUnowned) return;
+    if (item.isUnowned || item.champion.isPlayable === false) return;
 
     const nextReserved = !item.reservedForAttack;
     const previousRoster = roster;
@@ -654,7 +659,8 @@ export function RosterView({
             <Button
               variant="outline"
               onClick={() => {
-                navigator.clipboard.writeText(ascensionEligibilityHref(shareUrl, ascensionEligible));
+                const scopedUrl = new URL(championScopeHref(shareUrl, championScope), shareUrl).toString();
+                navigator.clipboard.writeText(ascensionEligibilityHref(scopedUrl, ascensionEligible));
                 toast({ title: "Copied!", description: "Roster link copied to clipboard." });
               }}
               className="h-10 px-4 gap-2 border-slate-700 bg-slate-900 text-slate-400 hover:text-slate-200"
@@ -715,6 +721,7 @@ export function RosterView({
       {!showInsights && (
         <>
           <RosterFilters
+            championScope={championScope} onChampionScopeChange={setChampionScope}
             facetCounts={facetCounts}
             search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode}
             showUnowned={showUnowned} onShowUnownedChange={setShowUnowned}
@@ -765,8 +772,8 @@ export function RosterView({
       )}
 
       {quickItem && <QuickChampionDialog key={quickItem.id} item={quickItem} prestige={isChampionsCatalog ? undefined : prestigeMap[quickItem.id]} open onOpenChange={open => { if (!open) setQuickItem(null); }} filters={{ tags: tagFilter, categories: abilityCategoryFilter, abilities: abilityFilter, immunities: immunityFilter, includeResistances, effectForms, effectDirections, minResistancePotency }} showUnownedState={!!quickItem.isUnowned && !isChampionsCatalog} />}
-      {effectiveCanEdit && <EditChampionModal item={editingItem} prestige={editingItem ? prestigeMap[editingItem.id] : undefined} onClose={() => setEditingItem(null)} onUpdate={handleUpdate} onDelete={handleDelete} onItemChange={setEditingItem} />}
-      {effectiveCanEdit && <AddChampionModal open={isAddingChampion} onOpenChange={setIsAddingChampion} allChampions={allChampions} onAdd={handleAddChampion} newChampion={newChampion} onNewChampionChange={handleNewChampionChange} />}
+      {effectiveCanEdit && editingItem?.champion.isPlayable !== false && <EditChampionModal item={editingItem} prestige={editingItem ? prestigeMap[editingItem.id] : undefined} onClose={() => setEditingItem(null)} onUpdate={handleUpdate} onDelete={handleDelete} onItemChange={setEditingItem} />}
+      {effectiveCanEdit && <AddChampionModal open={isAddingChampion} onOpenChange={setIsAddingChampion} allChampions={playableChampions} onAdd={handleAddChampion} newChampion={newChampion} onNewChampionChange={handleNewChampionChange} />}
       <PrestigeChartModal chartData={chartData} loading={loadingChart} onClose={() => setChartData(null)} />
     </div>
   );

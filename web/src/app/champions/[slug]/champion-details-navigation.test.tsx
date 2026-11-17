@@ -101,6 +101,16 @@ async function traverse(direction: "back" | "forward") {
   })
 }
 
+it("identifies NPC champions and keeps a dossier with no collectible tiers viewable", async () => {
+  const npcProps: ChampionDetailsProps = { ...props, champion: { ...props.champion, name: "Ares", shortName: "Ares", isPlayable: false, stats: [], attacks: [] } }
+  await act(async () => root.render(<ChampionDetailsClient {...npcProps} />))
+  expect(document.querySelector('section[aria-label="Ares banner"]')?.textContent).toContain("NPC & legacy")
+  expect(document.querySelector('[aria-label="Adjust build"]')).toBeNull()
+  await click("Stats")
+  expect(document.body.textContent).toContain("Build stats are not available for this champion yet.")
+  expect(document.body.textContent).toContain("No attack hit data has been recorded for this champion yet.")
+})
+
 it("shows duel targets without recommending the first active player and preserves copying and status", async()=>{
   const duelProps:ChampionDetailsProps={...props,champion:{...props.champion,duels:[
     {id:1,playerName:'DeusXMachina!',rank:'7★ R5',status:'ACTIVE',source:'CEREBRO',updatedAt:'2026-11-12T12:00:00Z'},

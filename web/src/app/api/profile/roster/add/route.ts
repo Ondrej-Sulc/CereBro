@@ -118,8 +118,11 @@ export const POST = withRouteContext(async (req: Request) => {
       effectivePlayerId = data.targetPlayerId;
     }
 
-    const champion = await prisma.champion.findUnique({ where: { id: data.championId }, select: { gameId: true } });
+    const champion = await prisma.champion.findUnique({ where: { id: data.championId }, select: { gameId: true, isPlayable: true } });
     if (!champion) return NextResponse.json({ error: "Champion not found" }, { status: 404 });
+    if (!champion.isPlayable) {
+      return NextResponse.json({ error: "Only playable champions can be added to a roster" }, { status: 400 });
+    }
     const maxLevel = getChampionAscension(champion.gameId, data.stars)?.maxLevel ?? null;
     let newRoster;
     try {

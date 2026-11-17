@@ -1,0 +1,118 @@
+{
+  "schemaVersion": 1,
+  "scope": "Only the 297 newly absent exact native special champion identities; all existing champions and curated kits excluded.",
+  "seed": {
+    "path": "temp/npc-kit-feasibility-20261117/new-only-ability-texts.json",
+    "sha256": "ca62d5dce53e0e607ea9f713e2c379239b0d569353550621faaca296c6e87964",
+    "bytes": 10798742
+  },
+  "sourceHashes": {
+    "catalogAudit": "ee1638d0ec5f46599fc0f54e2db15ed8ccf5740165c492fbce9cffd0b96a287e",
+    "descriptions": "eb6d18a5d0b9c22db6d8969c0008f28ed6520b0b08f3cbc2c15e5049145f5829",
+    "bindings": "84e910fca36d45fc1aefebcd01f5009347dc9a4a2cbc218a94190c1a77e20c0e",
+    "display": "f61cb76cf9b1574587194ece9d4af816b11a2aae0472d93ea87125a5fb8ecc97",
+    "frozenBcg": "b821489b5451d1d6ee0927f39a80d964f6c1d3aaf13bd76531e5f77d93deba8e",
+    "frozenSchema": "9cc5236aef043cf7e5655458e790ed1f0897f67398e37af3020bca74511e97c4"
+  },
+  "counts": {
+    "newIds": 297,
+    "protectedExistingIds": 9,
+    "descriptionIdentities": 295,
+    "textBearingIds": 266,
+    "textRows": 4743,
+    "statsDependentRows": 964,
+    "statsDependentIds": 244,
+    "unavailableStatNodes": 971,
+    "inventedStatNodes": 0,
+    "attackRows": 0,
+    "hitRows": 0,
+    "abilityCurveRows": 0,
+    "fullAbilitiesEdits": 0
+  },
+  "currentFrozenBindingVerification": {
+    "method": "Decoded frozen BCG with named schema. Rebuilt every exact bindingComponentId using the game formatter slots, formulas and growth. Every saved HUD and binding matches.",
+    "modifierIds": 73714,
+    "formulas": 5,
+    "curves": 1071,
+    "numericRowsChecked": 2612,
+    "identicalRows": 2612,
+    "mismatches": 0
+  },
+  "missingDescriptions": [
+    "beast_legacy",
+    "enforced_doombot_superior_raid"
+  ],
+  "emptyTextIds": [
+    "adaptoid_blackbolt",
+    "adaptoid_blackpanther",
+    "adaptoid_colossus",
+    "adaptoid_cyclops",
+    "adaptoid_drax",
+    "adaptoid_electro",
+    "adaptoid_gold_juggernaut",
+    "adaptoid_ironman",
+    "adaptoid_juggernaut",
+    "adaptoid_scarletwitch",
+    "adaptoid_spiderman",
+    "adaptoid_vision",
+    "adaptoid_wintersoldier",
+    "beast_legacy",
+    "captainmarvel_x",
+    "carinativan",
+    "chair",
+    "collector",
+    "doombot_superior",
+    "enforced_doombot_superior_raid",
+    "grandmaster",
+    "grandmaster_event",
+    "guillotine_blackswan",
+    "herbie",
+    "humantorch_old",
+    "infinityclaw",
+    "isosphere",
+    "lockheed",
+    "lockjaw",
+    "skrull",
+    "wolverine_xforce"
+  ],
+  "held": [
+    {
+      "gameId": "ex_loki",
+      "sourceId": "signature",
+      "reason": "Missing verified growth curve crv_aol_loki_ui"
+    }
+  ],
+  "omittedGenericSpecials": [
+    {
+      "gameId": "collector",
+      "sourceId": "special:1"
+    },
+    {
+      "gameId": "collector",
+      "sourceId": "special:2"
+    },
+    {
+      "gameId": "collector",
+      "sourceId": "special:3"
+    },
+    {
+      "gameId": "jeangrey",
+      "sourceId": "special:1"
+    },
+    {
+      "gameId": "jeangrey",
+      "sourceId": "special:2"
+    },
+    {
+      "gameId": "jeangrey",
+      "sourceId": "special:3"
+    }
+  ],
+  "missingStats": {
+    "selectedStat": null,
+    "visibleText": "Value unavailable",
+    "tooltip": "This value is not available for the selected build yet.",
+    "importedCurves": [],
+    "caution": "Keep ChampionAbilityCurve creation outside this seed: the separate existing chart evaluator has a null-to-zero fallback."
+  }
+}

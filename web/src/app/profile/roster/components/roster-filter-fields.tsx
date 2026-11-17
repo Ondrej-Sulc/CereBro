@@ -12,8 +12,16 @@ import { cn } from "@/lib/utils";
 import { EFFECT_FORMS, EFFECT_DIRECTIONS, EFFECT_FORM_LABELS, EFFECT_DIRECTION_LABELS, type EffectForm, type EffectDirection } from "@cerebro/core/domain/ability-source";
 import { CLASSES, CLASS_ICONS } from "../constants";
 import type { FacetCounts } from "@/lib/roster-filtering";
+import { CHAMPION_SCOPE_LABELS, normalizeChampionScope, type ChampionScope } from "@/lib/champion-catalog-scope";
 
 export const filterControlClass = "border-transparent bg-transparent text-slate-400 shadow-none hover:bg-slate-800/60 hover:text-slate-100";
+
+export function ChampionScopeFilter({ value, onChange }: { value: ChampionScope; onChange: (value: ChampionScope) => void }) {
+  return <Select value={value} onValueChange={value => onChange(normalizeChampionScope(value))}>
+    <SelectTrigger aria-label="Champion availability" className={cn("h-11 w-full min-w-0 gap-2 text-xs sm:h-9 sm:w-[144px]", filterControlClass, value !== "playable" && "bg-sky-400/10 text-sky-100")}><SelectValue /></SelectTrigger>
+    <SelectContent>{(Object.keys(CHAMPION_SCOPE_LABELS) as ChampionScope[]).map(scope => <SelectItem key={scope} value={scope} className="min-h-11 sm:min-h-8">{CHAMPION_SCOPE_LABELS[scope]}</SelectItem>)}</SelectContent>
+  </Select>;
+}
 
 /** Canonical seven-star eligibility, independent of the copy's current Ascension level. */
 export function AscensionEligibilityFilter({ value, onChange }: { value: boolean; onChange: (value: boolean) => void }) {
@@ -65,7 +73,7 @@ export function ClassChoices({ values, onChange, counts, inline = false, compact
 
 function ClassOptions({ values, onChange, counts, compact = false, inline = false }: { values: ChampionClass[]; onChange: (values: ChampionClass[]) => void; counts?: FacetCounts; compact?: boolean; inline?: boolean }) {
   return <div role="group" aria-label="Champion class" className={cn("gap-1", compact ? "grid grid-cols-2" : "flex flex-wrap")}>
-      {CLASSES.map(value => <button
+      {(counts?.SUPERIOR || values.includes("SUPERIOR") ? [...CLASSES, "SUPERIOR" as ChampionClass] : CLASSES).map(value => <button
         key={value}
         type="button"
         aria-pressed={values.includes(value)}

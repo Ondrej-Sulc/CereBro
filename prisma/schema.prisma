@@ -131,7 +131,7 @@ model Champion {
   shortName                    String
   gameId                       String?                      @unique
   class                        ChampionClass
-  releaseDate                  DateTime
+  releaseDate                  DateTime?
   obtainable                   String[]
   images                       Json
   discordEmoji                 String?

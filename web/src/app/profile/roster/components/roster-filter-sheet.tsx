@@ -5,7 +5,7 @@ import { ChevronDown, Layers, Shield, Tag, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { AscensionEligibilityFilter, AbilitySourceFields, ChoiceGroup, ClassChoices, FilterField, ImmunitySourceFields, OwnershipFilter } from "./roster-filter-fields";
+import { AscensionEligibilityFilter, ChampionScopeFilter, AbilitySourceFields, ChoiceGroup, ClassChoices, FilterField, ImmunitySourceFields, OwnershipFilter } from "./roster-filter-fields";
 import { RosterFilterPicker } from "./roster-filter-picker";
 import type { RosterFiltersProps } from "./roster-filters";
 
@@ -54,6 +54,7 @@ export function RosterFilterSheet({ id, p, open, onOpenChange, onReset, onCloseF
         </TabsList>
         <TabsContent value="roster" className="mt-0 min-h-0 flex-1 space-y-5 overflow-y-auto px-4 pb-5">
           {p.contextControls && <div className="grid grid-cols-2 items-end gap-3">{p.contextControls}</div>}
+          {p.onChampionScopeChange && <FilterField label="Champion availability"><ChampionScopeFilter value={p.championScope ?? "playable"} onChange={p.onChampionScopeChange} /></FilterField>}
           <FilterField label="Rarity"><ChoiceGroup label="Rarity" options={[7, 6, 5].map(value => ({ value, label: `${value}★` }))} values={p.filterStars} onChange={p.onFilterStarsChange} counts={p.facetCounts?.stars} showCounts compact /></FilterField>
           <ClassChoices values={p.filterClasses} onChange={p.onFilterClassesChange} counts={p.facetCounts?.classes} compact />
           {p.showOwnershipFilter !== false && <OwnershipFilter showUnowned={p.showUnowned} onChange={p.onShowUnownedChange} compact />}

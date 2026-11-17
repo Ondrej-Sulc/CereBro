@@ -5,7 +5,7 @@ import {
   resolveCollectionView,
 } from "@/lib/collection-view";
 import { CollectionScreen } from "@/components/collections/collection-navigation";
-import { getCachedChampions } from "@/lib/data/champions";
+import { getCachedAllChampions } from "@/lib/data/champions";
 import {
   attachResistances,
   getResistanceIndex,
@@ -259,7 +259,7 @@ function normalizePrestigeInsightTab(
 
 async function loadChampionCatalogData() {
   const [championRows, tags, abilityCategories] = await Promise.all([
-    getCachedChampions(),
+    getCachedAllChampions(),
     prisma.tag.findMany({ orderBy: { name: "asc" } }),
     prisma.abilityCategory.findMany({ orderBy: { name: "asc" } }),
   ]);
@@ -292,7 +292,7 @@ async function loadPublicCatalogPrestigeByChampionId(
   const prestigeByChampionId: Record<number, number> = {};
 
   for (const champion of allChampions) {
-    if (!isChampionObtainableAs(champion, 7)) continue;
+    if (champion.isPlayable === false || !isChampionObtainableAs(champion, 7)) continue;
 
     const prestige = projector.project({
       championId: champion.id,

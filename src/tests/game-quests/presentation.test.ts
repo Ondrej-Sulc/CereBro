@@ -1,7 +1,8 @@
 import { expect, it } from "vitest";
 import { findQuest, loadQuestMap, questCatalog, searchQuests } from "../../data/game-quests";
 import { storyActs, storyChapters, groupQuestRows } from "../../domain/game-quests/browse";
-import { projectQuestPortraits, projectQuestRewards, resolveQuestCrystal, questRewardScope } from "../../../web/src/lib/game-quests/presentation";
+import { projectQuestPortraits, projectQuestRewards, projectRewardRow, resolveQuestCrystal, questRewardScope, questChampionGameIds, type PublicChampionRow } from "../../../web/src/lib/game-quests/presentation";
+import type { NativeQuestReward } from "../../data/game-quests/rewards";
 
 it("drills through authored membership and keeps native names independent from indices", () => {
   const acts = storyActs(questCatalog);
@@ -20,13 +21,31 @@ it("drills through authored membership and keeps native names independent from i
 });
 it("uses exact batched identities and never gives an unresolved NPC a similar portrait", async () => {
   const map = (await loadQuestMap("a04_ch04_q06"))!;
+  const hulkId = map.encounters.find(encounter => encounter.gameId === "hulk")!.champion!.id;
   const portraits = projectQuestPortraits(map, [
-    { gameId: "hulk", name: "Hulk", slug: "hulk", class: "SCIENCE", images: { p_128: "https://example.com/hulk.png" } },
-    { gameId: "maestro", name: "Maestro", slug: "maestro", class: "SCIENCE", images: { p_128: "https://example.com/guessed.png" } },
+    { id: hulkId, gameId: "hulk", name: "Hulk", slug: "hulk", class: "SCIENCE", images: { p_128: "https://example.com/hulk.png" } },
+    { id: hulkId, gameId: "maestro", name: "Maestro", slug: "maestro", class: "SCIENCE", images: { p_128: "https://example.com/guessed.png" } },
   ]);
   expect(portraits.hulk.imageUrl).toBe("https://example.com/hulk.png");
   expect(portraits.hulk.className).toBe("Science");
   expect(portraits.maestro).toBeUndefined();
+});
+
+it("binds Ares and Grandmaster dossiers only to exact positive database identities without mutating the snapshot", () => {
+  const source = { encounters: [{ gameId: "ares", champion: null }, { gameId: "grandmaster_boss", champion: null }], rewards: { fixedChampions: [{ gameId: "ares", champion: null }] } };
+  const before = JSON.stringify(source);
+  const row = (id: number, gameId: string): PublicChampionRow => ({ id, gameId, name: gameId, slug: gameId, class: "SKILL", images: { p_128: `/native/${gameId}.webp` } });
+  expect(questChampionGameIds(source)).toEqual(["ares", "grandmaster_boss"]);
+  const portraits = projectQuestPortraits(source, [row(809, "ares"), row(810, "grandmaster_boss")]);
+  expect(portraits.ares).toMatchObject({ href: "/champions/ares", imageUrl: "/native/ares.webp", championBinding: { id: 809, gameId: "ares" } });
+  expect(portraits.grandmaster_boss).toMatchObject({ href: "/champions/grandmaster_boss", championBinding: { id: 810, gameId: "grandmaster_boss" } });
+  const reward = { type: "hero", data: "ares_t7", quantity: 1, sourceIndex: 0, identity: { gameId: "ares", tierId: "ares_t7", rarity: 7, name: "ARES", champion: null } } as unknown as NativeQuestReward;
+  expect(projectRewardRow(reward, "firstCompletionRewards", "ares", portraits).href).toBe("/champions/ares");
+  expect(projectRewardRow(reward, "firstCompletionRewards", "ares", { ares: { ...portraits.grandmaster_boss } }).href).toBeNull();
+  expect(projectQuestPortraits(source, [row(0, "ares"), row(811, "grandmaster")])).toEqual({});
+  expect(projectQuestPortraits(source, [row(809, "ares"), row(809, "grandmaster_boss")])).toEqual({});
+  expect(projectQuestPortraits(source, [row(809, "ares"), row(811, "ares")])).toEqual({});
+  expect(JSON.stringify(source)).toBe(before);
 });
 it("resolves exact crystal tokens to actual supported destinations and scopes", async () => {
   expect(resolveQuestCrystal("quest_crystal").href).toBe("/crystals/quest_crystal_improvedspin");

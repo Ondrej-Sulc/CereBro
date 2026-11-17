@@ -20,7 +20,7 @@ export const getChampionMetadata = unstable_cache(
     where: { slug },
     select: { name: true },
   }),
-  ["champion-details-metadata"],
+  ["champion-details-metadata-v2"],
   { revalidate: 3600, tags: [CHAMPION_DETAILS_TAG] }
 )
 
@@ -33,6 +33,7 @@ const getChampionDetails = unstable_cache(
       shortName: true,
       slug: true,
       gameId: true,
+      isPlayable: true,
       obtainable: true,
       class: true,
       images: true,
@@ -156,7 +157,7 @@ const getChampionDetails = unstable_cache(
       },
     },
   }),
-  ["champion-details-game-bindings-v2"],
+  ["champion-details-game-bindings-v3"],
   { revalidate: 3600, tags: [CHAMPION_DETAILS_TAG] }
 )
 

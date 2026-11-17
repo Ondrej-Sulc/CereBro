@@ -17,7 +17,8 @@ export type AdminChampionData = {
     shortName: string
     class: ChampionClass
     images: ChampionImages
-    releaseDate: Date
+    releaseDate: Date | null
+    isPlayable: boolean
     obtainable: string[]
     fullAbilities: Prisma.JsonValue
     _count: { abilities: number }

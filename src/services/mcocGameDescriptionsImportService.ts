@@ -272,7 +272,7 @@ export function buildDescriptionTemplate(text: string, source?: GameDescriptionT
   };
 }
 
-function buildTextRecords(champion: GameDescriptionChampion): PreparedTextRecord[] {
+export function buildGameDescriptionTextRecords(champion: GameDescriptionChampion): PreparedTextRecord[] {
   const records: PreparedTextRecord[] = [];
   let sortOrder = 0;
 
@@ -356,7 +356,7 @@ function summarizeMatches(
 
     if (match.status === 'matched') {
       matched++;
-      textRecords += buildTextRecords(champion).length;
+      textRecords += buildGameDescriptionTextRecords(champion).length;
       continue;
     }
 
@@ -421,7 +421,7 @@ export async function importMcocGameDescriptions(
   const bindingIssues: string[] = [];
   for (const [gameId, champion] of Object.entries(descriptions)) {
     if (matches.get(gameId)?.status !== 'matched') continue;
-    const records = buildTextRecords(champion).map(record => ({ ...record,
+    const records = buildGameDescriptionTextRecords(champion).map(record => ({ ...record,
       template: attachAbilityBindings(record.template, bindingsBySource.get(JSON.stringify([gameId, record.sourceId]))) }));
     const check = (nodes: GameDescriptionTemplateNode[], sourceId: string) => {
       for (const node of nodes) {

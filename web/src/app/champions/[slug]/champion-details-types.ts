@@ -13,6 +13,7 @@ export type ChampionDetailsPayload = {
   shortName: string
   slug: string | null
   gameId: string | null
+  isPlayable?: boolean
   class: ChampionClass
   images: unknown
   gameSynergies: ChampionSynergy[]

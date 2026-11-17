@@ -1,5 +1,5 @@
 import type { ChampionClass } from "@prisma/client";
-import type { QuestMap, QuestSummary } from "@cerebro/core/domain/game-quests";
+import type { GameIdentity, QuestMap, QuestSummary } from "@cerebro/core/domain/game-quests";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { listCrystalOpenings } from "@cerebro/core/data/game-crystal-openings";
@@ -14,19 +14,38 @@ import { getNativeRewardPresentation, nativeRewardName, type RewardRankChange } 
 import { getPublicRewardDefinition } from "@cerebro/core/data/game-reward-definitions";
 import { getStaticResourceRewardArtwork } from "@cerebro/core/data/game-resource-artwork";
 import { getPublicResourceDefinition } from "@cerebro/core/data/game-resource-definitions";
+import { questChampionPortrait } from "./champion-binding";
 
-export type QuestPortrait = { name: string; href: string | null; imageUrl: string | null; className: string; color: string; nativeGameId?:string };
-export type PublicChampionRow = { gameId: string | null; name: string; slug: string | null; images: unknown; class: ChampionClass };
-type IdentitySource = { encounters: {gameId:string;champion:unknown | null}[]; rewards:{fixedChampions:{gameId:string;champion:unknown | null}[]} };
+export type QuestPortrait = { name: string; href: string | null; imageUrl: string | null; className: string; color: string; nativeGameId?:string; championBinding?: { id: number; gameId: string } };
+export type PublicChampionRow = { id: number; gameId: string | null; name: string; slug: string | null; images: unknown; class: ChampionClass };
+type Identity = Pick<GameIdentity, "gameId" | "champion">;
+type IdentitySource = { encounters: Identity[]; rewards:{fixedChampions:Identity[]} };
 export function questChampionGameIds(map: IdentitySource) {
-  return [...new Set([...map.encounters, ...map.rewards.fixedChampions].filter(e => e.champion !== null).map(e => e.gameId))].sort();
+  return [...new Set([...map.encounters, ...map.rewards.fixedChampions].map(e => e.gameId).filter(Boolean))].sort();
 }
+
 export function projectQuestPortraits(map: IdentitySource, rows: PublicChampionRow[]): Record<string, QuestPortrait> {
   const allowed = new Set(questChampionGameIds(map));
-  return Object.fromEntries(rows.filter(row => row.gameId && allowed.has(row.gameId)).map(row => {
+  const claimedIds = new Map<number, Set<string>>(), expectedIds = new Map<string, Set<number>>();
+  for (const identity of [...map.encounters, ...map.rewards.fixedChampions]) {
+    if (!identity.champion) continue;
+    const id = identity.champion.id;
+    claimedIds.set(id, new Set([...(claimedIds.get(id) ?? []), identity.gameId]));
+    expectedIds.set(identity.gameId, new Set([...(expectedIds.get(identity.gameId) ?? []), id]));
+  }
+  const candidates = rows.filter(row => row.gameId && allowed.has(row.gameId) && Number.isSafeInteger(row.id) && row.id > 0
+    && [...(claimedIds.get(row.id) ?? [])].every(gameId => gameId === row.gameId)
+    && [...(expectedIds.get(row.gameId) ?? [])].every(id => id === row.id));
+  const idCounts = new Map<number, number>(), gameIdCounts = new Map<string | null, number>();
+  for (const row of candidates) {
+    idCounts.set(row.id, (idCounts.get(row.id) ?? 0) + 1);
+    gameIdCounts.set(row.gameId, (gameIdCounts.get(row.gameId) ?? 0) + 1);
+  }
+  return Object.fromEntries(candidates.filter(row => idCounts.get(row.id) === 1 && gameIdCounts.get(row.gameId) === 1).map(row => {
     const url = getChampionImageUrl(row.images, "128");
-    return [row.gameId, { name: row.name, href: row.slug ? `/champions/${row.slug}` : null, imageUrl: /^https?:\/\//.test(url) ? url : null,
-      className: row.class.charAt(0) + row.class.slice(1).toLowerCase(), color: getChampionClassColors(row.class).color }];
+    return [row.gameId, { name: row.name, href: row.slug ? `/champions/${encodeURIComponent(row.slug)}` : null, imageUrl: /^(https?:\/\/|\/(?!\/))/.test(url) ? url : null,
+      className: row.class.charAt(0) + row.class.slice(1).toLowerCase(), color: getChampionClassColors(row.class).color,
+      championBinding: { id: row.id, gameId: row.gameId! } }];
   }));
 }
 export type QuestRewardView = { key: string; scope: string; token: string; name: string; quantity: number; type: "champion" | "crystal" | "item"; imageUrl: string | null; href: string | null; rarity?: number; itemRarity?: number; signaturePoints?: number; rankChange?: RewardRankChange; sourceType?:string;amount?:string;recordedOutcome?:boolean;placeholder?:boolean };
@@ -47,8 +66,11 @@ export function projectQuestRewards(map: QuestMap, portraits: Record<string, Que
   const q=findQuest(map.questId),record=q?getQuestRewardRecord(q):undefined;
   if(record)return projectRewardRecord(record,portraits);
   return [
-    ...map.rewards.fixedChampions.map((r, i) => ({ key: `hero:${i}`, scope: r.scope, token: r.tierId, type: "champion" as const, quantity: r.quantity, rarity: r.rarity,
-      name: portraits[r.gameId]?.name ?? r.champion?.name ?? r.name, href: r.champion ? portraits[r.gameId]?.href ?? `/champions/${r.champion.slug}` : null, imageUrl: portraits[r.gameId]?.imageUrl ?? null })),
+    ...map.rewards.fixedChampions.map((r, i) => {
+      const portrait = questChampionPortrait(r, portraits);
+      return { key: `hero:${i}`, scope: r.scope, token: r.tierId, type: "champion" as const, quantity: r.quantity, rarity: r.rarity,
+        name: portrait?.name ?? r.champion?.name ?? r.name, href: portrait?.href ?? (r.champion ? `/champions/${r.champion.slug}` : null), imageUrl: portrait?.imageUrl ?? null };
+    }),
     ...map.rewards.possibleCrystals.map((r, i) => ({ key: `gs:${i}`, scope: r.scope, token: r.token, quantity: r.quantity, type: "crystal" as const, ...resolveQuestCrystal(r.token) })),
   ];
 }
@@ -80,11 +102,11 @@ export function projectRewardRow(r:NativeQuestReward,scope:string,key:string,por
   const native=getNativeRewardPresentation(r.type,r.data);
   const publicDefinition=getPublicRewardDefinition(r.type,r.data);
   const publicResource=getPublicResourceDefinition(r.type,r.data);
-  const identity=r.identity,portrait=identity?.champion?portraits[identity.gameId]:null;
+  const identity=r.identity,portrait=identity?questChampionPortrait(identity,portraits):undefined;
   const nativePortrait=identity?permanentData.nativePortraits[identity.gameId]:undefined;
   const nativeImage=nativePortrait?.character===identity?.gameId&&nativePortrait?.sourceBcgSha256===permanentData.bcgSha256?nativePortrait.url:null;
   const title=r.type==="res"&&r.data==="sc"?rewardDisplayName({type:r.type,data:r.data}):selector?.name||publicDefinition?.name||publicResource?.name||(native?nativeRewardName(native,r.type):r.displayName?rewardDisplayName(r):undefined);
   const min=r.minQuantity,max=r.maxQuantity;
   const amount=min!==undefined&&max!==undefined&&min!==max?min<=max?`${min.toLocaleString("en")}–${max.toLocaleString("en")}`:"Quantity range unavailable":`×${r.quantity.toLocaleString("en")}`;
-  return {key,scope,token:r.data,sourceType:r.type,quantity:r.quantity,amount,type:identity?"champion":crystal?"crystal":"item",name:identity?portrait?.name??identity.champion?.name??identity.name:crystal?.name??title??`${labels[r.type]??"Recorded"} reward`,href:identity?.champion?portrait?.href??`/champions/${identity.champion.slug}`:crystal?.href??(r.type==="gf"?resolveQuestCrystal(r.data).href:null),imageUrl:identity?portrait?.imageUrl??nativeImage:getRewardArtwork(r.type,r.data)?.url??getStaticResourceRewardArtwork(r.type,r.data)?.url??publicResource?.imageUrl??publicDefinition?.imageUrl??crystal?.imageUrl??null,rarity:identity?.rarity,itemRarity:native?.rarity,signaturePoints:native?.signaturePoints,rankChange:native?.rankChange,recordedOutcome:!["hero","gs","gf","res","ebp","ebpf","inv","sra","utitle","profilebadge","emote"].includes(r.type)};
+  return {key,scope,token:r.data,sourceType:r.type,quantity:r.quantity,amount,type:identity?"champion":crystal?"crystal":"item",name:identity?portrait?.name??identity.champion?.name??identity.name:crystal?.name??title??`${labels[r.type]??"Recorded"} reward`,href:identity?portrait?.href??(identity.champion?`/champions/${identity.champion.slug}`:null):crystal?.href??(r.type==="gf"?resolveQuestCrystal(r.data).href:null),imageUrl:identity?portrait?.imageUrl??nativeImage:getRewardArtwork(r.type,r.data)?.url??getStaticResourceRewardArtwork(r.type,r.data)?.url??publicResource?.imageUrl??publicDefinition?.imageUrl??crystal?.imageUrl??null,rarity:identity?.rarity,itemRarity:native?.rarity,signaturePoints:native?.signaturePoints,rankChange:native?.rankChange,recordedOutcome:!["hero","gs","gf","res","ebp","ebpf","inv","sra","utitle","profilebadge","emote"].includes(r.type)};
 }

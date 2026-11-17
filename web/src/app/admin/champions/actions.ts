@@ -53,6 +53,7 @@ export const getChampions = withActionContext('getChampions', async (): Promise<
       class: true,
       images: true,
       releaseDate: true,
+      isPlayable: true,
       obtainable: true,
       fullAbilities: true,
       attacks: {
@@ -114,7 +115,7 @@ export const updateChampionDetails = withActionContext('updateChampionDetails', 
         name: string
         shortName: string
         class: string
-        releaseDate: Date
+        releaseDate: Date | null
         obtainable: string[]
     }
 ) => {
@@ -124,6 +125,15 @@ export const updateChampionDetails = withActionContext('updateChampionDetails', 
         throw new Error(`Invalid champion class: ${data.class}`)
     }
     const championClassValue = data.class as ChampionClass
+
+    const champion = await prisma.champion.findUnique({ where: { id }, select: { isPlayable: true } })
+    if (!champion) throw new Error("Champion not found")
+    if (data.releaseDate === null && champion.isPlayable) {
+        throw new Error("Release date is required for playable champions")
+    }
+    if (data.releaseDate !== null && (!(data.releaseDate instanceof Date) || Number.isNaN(data.releaseDate.getTime()))) {
+        throw new Error("Invalid release date")
+    }
 
     await prisma.champion.update({
         where: { id },

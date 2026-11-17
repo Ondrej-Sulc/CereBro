@@ -24,6 +24,15 @@ function props(overrides: Partial<RosterFiltersProps> = {}): RosterFiltersProps 
 }
 
 describe("active roster filter rules", () => {
+  it("summarizes NPC scope and clears it independently of ownership", () => {
+    const onChampionScopeChange = vi.fn();
+    const p = props({ championScope: "nonPlayable", onChampionScopeChange, showUnowned: false });
+    const rules = buildActiveFilterRules(p);
+    expect(rules.map(rule => rule.label)).toEqual(["NPC & legacy", "Owned only"]);
+    rules.find(rule => rule.id === "champion-scope")!.remove();
+    expect(onChampionScopeChange).toHaveBeenCalledWith("playable");
+    expect(p.onShowUnownedChange).not.toHaveBeenCalled();
+  });
   it("removes eligibility independently of owned ascension level, rarity and class", () => {
     const p = props({ ascensionEligible: true, filterAscensionLevels: [2], filterStars: [7], filterClasses: ["COSMIC"] });
     const rules = buildActiveFilterRules(p);

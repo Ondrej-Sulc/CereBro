@@ -89,12 +89,12 @@ export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}
           <p className={styles.inspectorEyebrow}>{selectedRegion ? "Encounter region" : selectedEncounters.length ? "Encounter details" : "Map location"}</p>
           {selectedRegion?<QuestSpawnRegionInspector map={map} region={selectedRegion} shareUrl={shareUrl} inspectTile={()=>choose(selectedRegion.anchor,true)}/>:<>
           <div className={styles.inspectorHeader}>
-            {selectedEncounters.length===1 ? (()=>{const e=selectedEncounters[0],portrait=questEncounterPortrait(e,portraits);return <QuestEncounterSummary headingId="coordinate-heading" name={portrait?.name??e.champion?.name??e.name} portrait={portrait} href={e.champion?portrait?.href??`/champions/${e.champion.slug}`:null} rarity={e.rarity} rank={e.rank} level={e.level} signature={e.signature} ascension={e.ascension} npc={!e.champion}/>;})() : <h2 id="coordinate-heading">{questPositionLabel(map,selectedTile.coordinate)}</h2>}
+            {selectedEncounters.length===1 ? (()=>{const e=selectedEncounters[0],portrait=questEncounterPortrait(e,portraits);return <QuestEncounterSummary headingId="coordinate-heading" name={portrait?.name??e.champion?.name??e.name} portrait={portrait} href={portrait?.href??(e.champion?`/champions/${e.champion.slug}`:null)} rarity={e.rarity} rank={e.rank} level={e.level} signature={e.signature} ascension={e.ascension} npc={!e.champion}/>;})() : <h2 id="coordinate-heading">{questPositionLabel(map,selectedTile.coordinate)}</h2>}
             <Link href={shareUrl} className={styles.inspectorShare} aria-label="Link to this location" title="Link to this location"><Link2 size={15} aria-hidden="true"/><span>Link</span></Link>
           </div>
           {selectedTile.start && <p className={styles.tag}>Quest start</p>}{(selectedBoss||selectedTile.final) && <p className={styles.tag}>{selectedBoss?selectedTile.final?"Final boss":"Boss":"Quest finish"}</p>}
           {selectedEncounters.map(e => { const portrait = questEncounterPortrait(e,portraits); return <div key={e.id} className={styles.encounterNotes}>
-            {selectedEncounters.length>1&&<QuestEncounterSummary name={portrait?.name??e.champion?.name??e.name} portrait={portrait} href={e.champion?portrait?.href??`/champions/${e.champion.slug}`:null} rarity={e.rarity} rank={e.rank} level={e.level} signature={e.signature} ascension={e.ascension} npc={!e.champion}/>}
+            {selectedEncounters.length>1&&<QuestEncounterSummary name={portrait?.name??e.champion?.name??e.name} portrait={portrait} href={portrait?.href??(e.champion?`/champions/${e.champion.slug}`:null)} rarity={e.rarity} rank={e.rank} level={e.level} signature={e.signature} ascension={e.ascension} npc={!e.champion}/>}
             {map.adaptive&&<p className={styles.muted}>Adaptive build</p>}
             {e.candidates.length > 1 && <p>Recorded alternatives: {e.candidates.map(c => c.name).join(", ")}</p>}
           </div>; })}

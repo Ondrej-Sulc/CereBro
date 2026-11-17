@@ -11,6 +11,7 @@ import { questDifficulty } from "@cerebro/core/domain/game-quests/browse";
 import { questCatalog } from "@cerebro/core/data/game-quests";
 import { permanentData,getBossPreview } from "@cerebro/core/data/game-quests/permanent";
 import styles from "./quest-page-header.module.css";
+import { questEncounterPortrait } from "./quest-portrait";
 
 export function QuestPageHeader({ quest: q,portraits={},map }: { quest: QuestSummary;portraits?:Record<string,QuestPortrait>;map?:QuestMap }) {
   const special = q.section === "Special";
@@ -48,12 +49,13 @@ export function QuestPageHeader({ quest: q,portraits={},map }: { quest: QuestSum
         <div className={styles.meta}><span>{special ? "Special quest" : q.section ?? q.category}</span>{difficulty && difficulty.toLocaleLowerCase() !== q.name.toLocaleLowerCase() && <span className={styles.difficulty}>{difficulty}</span>}</div>
         <div className={styles.heading}><span className={styles.number} data-quest-number>{hierarchyLabel(q)}</span><div><h1>{q.name}</h1>{location && <p className={styles.location}>{location}</p>}</div></div>
         {bosses.length>0?<div className={styles.bosses}><p>{bossLabel}</p><ul aria-label={bossLabel} role="list">{bosses.map((boss,index)=>{
-          const portrait=boss.champion?portraits[boss.gameId]:undefined;
+          const portrait=questEncounterPortrait(boss,portraits);
           const native=permanentData.nativePortraits[boss.gameId];
           const src=portrait?.imageUrl??(!boss.champion&&native?.character===boss.gameId&&native.sourceBcgSha256===permanentData.bcgSha256?native.url:null);
           const name=portrait?.name??boss.champion?.name??boss.name;
           const identity=<><span className={styles.bossFrame}><span className={styles.bossPortrait} style={{borderColor:portrait?.color??"#829cb0"}}>{src?<Image src={src} alt="" width={44} height={44} sizes="44px"/>:<UserRound size={22} aria-hidden="true"/>}</span><span className={styles.bossMarker} aria-hidden="true"><Flame className={styles.flame}/><Skull className={styles.skull}/></span></span><span className={styles.bossName}><strong>{name}</strong><small>{boss.rarity}★</small></span></>;
-          return <li key={`${boss.tierId}:${index}`} data-quest-header-boss={boss.gameId}>{boss.champion?<Link prefetch={false} href={portrait?.href??`/champions/${encodeURIComponent(boss.champion.slug)}`} className={styles.bossIdentity}>{identity}</Link>:<div className={styles.bossIdentity}>{identity}</div>}</li>;
+          const href=portrait?.href??(boss.champion?`/champions/${encodeURIComponent(boss.champion.slug)}`:null);
+          return <li key={`${boss.tierId}:${index}`} data-quest-header-boss={boss.gameId}>{href?<Link prefetch={false} href={href} className={styles.bossIdentity}>{identity}</Link>:<div className={styles.bossIdentity}>{identity}</div>}</li>;
         })}</ul></div>:<p className={styles.noBoss}>Boss information unavailable</p>}
       </div>
       {artworks.length>0&&<div className={styles.artStage} aria-hidden="true" data-category-art-count={artworks.length}>{artworks.map((art,index)=><div key={art.url} className={styles.art} data-quest-category-art={art.role}><Image src={art.url} alt="" width={art.width} height={art.height} sizes="(max-width:600px) 80px, 112px" priority={index===0}/></div>)}</div>}

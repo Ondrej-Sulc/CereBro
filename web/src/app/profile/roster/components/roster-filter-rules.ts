@@ -1,5 +1,6 @@
 import { EFFECT_FORM_LABELS, EFFECT_DIRECTION_LABELS } from "@cerebro/core/domain/ability-source";
 import type { RosterFiltersProps } from "./roster-filters";
+import { CHAMPION_SCOPE_LABELS } from "@/lib/champion-catalog-scope";
 
 export type RosterFilterRule = { id: string; label: string; accent?: boolean; remove: () => void };
 
@@ -8,6 +9,7 @@ const joinSelection = (values: string[], logic: "AND" | "OR") => values.join(log
 /** A summary and its removal describe the same complete filter rule. */
 export function buildActiveFilterRules(p: RosterFiltersProps): RosterFilterRule[] {
   const rules: RosterFilterRule[] = [];
+  if (p.onChampionScopeChange && p.championScope && p.championScope !== "playable") rules.push({ id: "champion-scope", label: CHAMPION_SCOPE_LABELS[p.championScope], remove: () => p.onChampionScopeChange?.("playable") });
   if (p.search) rules.push({ id: "search", label: `Name: ${p.search}`, remove: () => p.onSearchChange("") });
   if (p.ascensionEligible) rules.push({ id: "ascension-eligible", label: "7\u2605 Ascension eligible", remove: () => p.onAscensionEligibleChange(false) });
 

@@ -4,7 +4,9 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { CollectionMemoryProvider, CollectionScreen } from "@/components/collections/collection-navigation";
 import { useAscensionEligibilityFilter } from "@/hooks/use-ascension-eligibility-filter";
+import { useChampionScopeFilter } from "@/hooks/use-champion-scope-filter";
 import { RosterFilters, type RosterFiltersProps } from "./roster-filters";
+import { ClassChoices } from "./roster-filter-fields";
 
 vi.mock("next/navigation", () => ({
   useRouter: () => navigationRouter,
@@ -17,11 +19,13 @@ let mobile = false;
 let navigationParams: URLSearchParams | null = null;
 const noop = () => {};
 function Harness({ catalog = false }: { catalog?: boolean }) {
+  const [championScope, setChampionScope] = useChampionScopeFilter();
   const [eligible, setEligible] = useAscensionEligibilityFilter();
   const [stars, setStars] = useState<number[]>([]);
   const [classes, setClasses] = useState<RosterFiltersProps["filterClasses"]>([]);
   const [levels, setLevels] = useState<number[]>(catalog ? [] : [2]);
   const p: RosterFiltersProps = {
+    championScope, onChampionScopeChange: setChampionScope,
     search: "", onSearchChange: noop, viewMode: "view", onViewModeChange: noop,
     showUnowned: false, onShowUnownedChange: noop, onAddClick: noop,
     sortBy: "NAME", onSortByChange: noop, sortDirection: "ASC", onSortDirectionChange: noop,
@@ -62,6 +66,26 @@ async function click(element: HTMLElement) { expect(element).toBeTruthy(); await
 const toggle = (scope: ParentNode = document) => scope.querySelector<HTMLButtonElement>('button[aria-label="7\u2605 Ascension"]')!;
 const remove = () => document.querySelector<HTMLButtonElement>('button[aria-label="Remove 7\u2605 Ascension eligible filter"]')!;
 async function render(catalog = true) { await act(async () => root.render(<Harness catalog={catalog} />)); }
+
+it.each([false, true])("selects NPC availability and resets through the shared filter UI (mobile %s)", async useMobile => {
+  mobile = useMobile; await render();
+  let scopeRoot: ParentNode = document;
+  if (useMobile) {
+    await click(document.querySelector<HTMLButtonElement>('button[aria-controls$="-mobile"]')!);
+    scopeRoot = document.querySelector('[role="dialog"]')!;
+  }
+  const triggers = [...scopeRoot.querySelectorAll<HTMLElement>('[aria-label="Champion availability"]')];
+  const trigger = useMobile ? triggers[0] : triggers[triggers.length - 1];
+  await act(async () => trigger.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })));
+  const option = [...document.querySelectorAll<HTMLElement>('[role="option"]')].find(option => option.textContent === "NPC & legacy")!;
+  expect(option).toBeTruthy();
+  await act(async () => { option.focus(); option.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })); });
+  expect(window.location.search).toContain("championScope=nonPlayable");
+  if (useMobile) await click([...scopeRoot.querySelectorAll<HTMLButtonElement>("button")].find(button => button.textContent === "Clear all")!);
+  else await click(document.querySelector<HTMLButtonElement>('[aria-label="Remove NPC & legacy filter"]')!);
+  expect(window.location.search).not.toContain("championScope");
+  expect(window.location.search).toContain("insights=true"); expect(window.location.hash).toBe("#results");
+});
 
 it.each([true, false])("offers a focusable seven-star toggle without checkbox/help/scope picker (catalog %s)", async catalog => {
   await render(catalog);
@@ -174,4 +198,17 @@ it("follows back/forward without reviving absent eligibility", async () => {
   await travel("back"); expect(toggle().getAttribute("aria-pressed")).toBe("true");
   await travel("back"); expect(toggle().getAttribute("aria-pressed")).toBe("false"); expect(window.location.search).toBe("?view=catalog");
   await travel("forward"); expect(toggle().getAttribute("aria-pressed")).toBe("true");
+});
+
+it("exposes Superior when the active catalog contains bosses and keeps selected classes clearable", async () => {
+  const onChange = vi.fn();
+  await act(async () => root.render(<ClassChoices values={[]} onChange={onChange} counts={{ SCIENCE: 2 }} />));
+  expect(document.body.textContent).not.toContain("Superior");
+  await act(async () => root.render(<ClassChoices values={[]} onChange={onChange} counts={{ SUPERIOR: 4 }} />));
+  await click(button("Superior"));
+  expect(onChange).toHaveBeenCalledWith(["SUPERIOR"]);
+  await act(async () => root.render(<ClassChoices values={["SUPERIOR"]} onChange={onChange} counts={{ SUPERIOR: 0 }} />));
+  expect(button("Superior").disabled).toBe(false);
+  await click(button("Superior"));
+  expect(onChange).toHaveBeenLastCalledWith([]);
 });

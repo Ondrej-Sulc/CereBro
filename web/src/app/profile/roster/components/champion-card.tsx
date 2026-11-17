@@ -5,9 +5,9 @@ import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
-import { Trophy, Edit2, Swords } from "lucide-react";
+import { Trophy, Edit2, Swords, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getStarBorderClass, getChampionImageUrlOrPlaceholder } from '@/lib/championHelper';
+import { getStarBorderClass, getChampionImageUrlOrPlaceholder, isChampionImages } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
 import { ChampionImages } from "@/types/champion";
 import { ProfileRosterEntry } from "../types";
@@ -26,15 +26,17 @@ interface ChampionCardProps {
 
 export const ChampionCard = memo(({ item, prestige, onClick, onQuickView, mode, catalogMode = false, canManageAttackReservations = false, onToggleAttackReservation }: ChampionCardProps) => {
     const classColors = getChampionClassColors(item.champion.class);
-    const showUnownedState = !!item.isUnowned && !catalogMode;
+    const nonPlayable = item.champion.isPlayable === false;
+    const editing = mode === 'edit' && !nonPlayable;
+    const showUnownedState = !!item.isUnowned && !catalogMode && !nonPlayable;
 
     const borderClass = showUnownedState
         ? 'border-slate-700 border-dashed'
-        : catalogMode && item.isUnowned
+        : nonPlayable || catalogMode && item.isUnowned
             ? 'border-slate-800 shadow-black/10'
             : getStarBorderClass(item.stars);
     const activateCard = () => {
-        if (mode === 'edit') {
+        if (editing) {
             if (!item.isUnowned) onClick(item);
         } else {
             onQuickView(item);
@@ -52,7 +54,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, onQuickView, mode, 
             role="button"
             tabIndex={0}
             data-roster-entry-id={item.id}
-            aria-label={`${mode === 'edit' ? 'Edit' : 'View'} ${item.champion.name}`}
+            aria-label={`${editing ? 'Edit' : 'View'} ${item.champion.name}`}
             aria-haspopup="dialog"
             onClick={activateCard}
             onKeyDown={event => {
@@ -70,11 +72,13 @@ export const ChampionCard = memo(({ item, prestige, onClick, onQuickView, mode, 
                 sizes="(min-width: 1536px) 120px, (min-width: 1280px) 8.34vw, (min-width: 1024px) 10vw, (min-width: 768px) 12.5vw, (min-width: 640px) 16.67vw, 20vw"
                 className="object-cover p-1 transition-transform duration-300 group-hover:scale-[1.07]"
             />
+            {!isChampionImages(item.champion.images) && <div aria-hidden="true" className="absolute inset-0 flex items-center justify-center text-slate-600"><UserRound className="h-14 w-14" strokeWidth={1} /></div>}
 
             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent opacity-80" />
 
             <div className="absolute top-1 left-1 flex flex-col items-start gap-0.5 z-10">
-                {!item.isUnowned && (
+                {nonPlayable && <Badge variant="outline" className="bg-slate-950/90 border-slate-500/40 text-slate-200 text-[8px] px-1 py-0 h-4 leading-none">NPC &amp; legacy</Badge>}
+                {!nonPlayable && !item.isUnowned && (
                     <>
                         <Badge variant="outline" className="bg-black/80 border-white/20 text-white text-[9px] px-1 py-0 h-4 font-black leading-none">
                             {item.stars}<span className="text-yellow-500 mx-0.5">★</span>R{item.rank}{item.stars === 7 && item.ascensionLevel > 0 && <span className="text-amber-400 ml-0.5">A{item.ascensionLevel}</span>}
@@ -89,13 +93,13 @@ export const ChampionCard = memo(({ item, prestige, onClick, onQuickView, mode, 
             </div>
 
             <div className="absolute top-1 right-1 flex flex-col items-end gap-1 z-10">
-                {!item.isUnowned && item.isAscended && (
+                {!nonPlayable && !item.isUnowned && item.isAscended && (
                     <div className="bg-yellow-900/80 p-1 rounded border border-yellow-500/30 shadow-sm" title="Ascended">
                         <Trophy className="w-3 h-3 text-yellow-400" />
                     </div>
                 )}
 
-                {!item.isUnowned && canManageAttackReservations && onToggleAttackReservation && (
+                {!nonPlayable && !item.isUnowned && canManageAttackReservations && onToggleAttackReservation && (
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
@@ -141,7 +145,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, onQuickView, mode, 
             </div>
 
             <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/95 via-black/70 to-transparent">
-                {!item.isUnowned && prestige && (
+                {!nonPlayable && !item.isUnowned && prestige && (
                     <div className="flex justify-end mb-0.5">
                         <span className="text-[9px] font-mono font-bold text-slate-300 bg-black/60 px-1 rounded border border-white/5">
                             {prestige.toLocaleString('en-US')}
@@ -151,7 +155,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, onQuickView, mode, 
                 <p className="text-[10px] sm:text-xs font-bold text-white leading-tight truncate text-center sm:text-left drop-shadow-sm">{item.champion.name}</p>
             </div>
 
-            {mode === 'edit' && !item.isUnowned && (
+            {editing && !item.isUnowned && (
                 <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                     <div className="bg-sky-600 p-2 rounded-full scale-75 group-hover:scale-100 transition-transform">
                         <Edit2 className="w-4 h-4 text-white" />

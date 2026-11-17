@@ -5,13 +5,13 @@ import { ChampionQuestEncounterLink } from "@/components/game-quests/champion-qu
 import Image from "next/image"
 import { useSearchParams } from "next/navigation"
 import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react"
-import { BookOpen, Check, ChevronDown, Compass, Copy, Crosshair, Layers3, Link2, SlidersHorizontal, Swords, Users } from "lucide-react"
+import { BookOpen, Check, ChevronDown, Compass, Copy, Crosshair, Layers3, Link2, SlidersHorizontal, Swords, UserRound, Users } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import * as Dialog from "@radix-ui/react-dialog"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { getChampionClassColors } from "@/lib/championClassHelper"
-import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper"
+import { getChampionImageUrlOrPlaceholder, isChampionImages } from "@/lib/championHelper"
 import { applyAscensionToStatValue, maxAscensionLevelForRarity, maxSigForRarity, projectMcocPrestige } from "@/lib/mcoc-prestige"
 import { getAscensionEffects } from "@cerebro/core/domain/champion-ascension"
 import { prepareChampionAbilityTextView } from "@/lib/champion-ability-text"
@@ -202,12 +202,14 @@ function ChampionDossier({ view, pageState, updatePageState }: {
                 <div className="flex items-center gap-4">
                   <div className={styles.heroPortrait}>
                     <Image src={view.portraitUrl} alt={`${view.champion.name} portrait`} fill sizes="64px" className="object-cover" />
+                    {!isChampionImages(view.champion.images) && <div aria-hidden="true" className="absolute inset-0 flex items-center justify-center text-slate-600"><UserRound className="h-10 w-10" strokeWidth={1} /></div>}
                     <span className="pointer-events-none absolute inset-1 border border-white/10" />
                     <span className="pointer-events-none absolute bottom-0 left-0 h-1 w-8" style={{ background: view.accent }} />
                   </div>
                   <div>
                     <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[.2em]" style={{ color: view.accent }}><span className="h-1.5 w-1.5 rounded-full" style={{ background: view.accent, boxShadow: `0 0 14px ${view.accent}` }} />{view.champion.class} class</div>
                     {view.champion.shortName && view.champion.shortName !== view.champion.name && <div className="mt-2 text-xs font-bold text-white/40">{view.champion.shortName}</div>}
+                    {view.champion.isPlayable === false && <div className="mt-2 inline-flex rounded border border-slate-500/40 bg-slate-950/60 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-300">NPC &amp; legacy</div>}
                   </div>
                 </div>
               </div>

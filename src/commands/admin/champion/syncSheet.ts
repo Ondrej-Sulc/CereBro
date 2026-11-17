@@ -58,7 +58,7 @@ export async function handleChampionSyncSheet(interaction: CommandInteraction) {
             .filter((tag) => tag.category === "Alliance Wars")
             .map((tag) => tag.name)
             .join(", "),
-          champion.releaseDate.toISOString().split("T")[0],
+          champion.releaseDate?.toISOString().split("T")[0] ?? "Unknown",
           champion.obtainable.join(", "),
           getChampionImageUrl(champion.images, "32", "primary") || "",
           getChampionImageUrl(champion.images, "64", "primary") || "",

@@ -10,15 +10,18 @@ import { cn } from "@/lib/utils";
 import type { ChampionClass } from "@prisma/client";
 import type { RosterSortField, SortDirection } from "../types";
 import type { EffectForm, EffectDirection } from "@cerebro/core/domain/ability-source";
-import { AscensionEligibilityFilter, ChoiceGroup, ClassChoices, MobileClassFilter, OwnershipFilter, ProgressionFilter, SourceRefinement, ImmunityRefinement } from "./roster-filter-fields";
+import { AscensionEligibilityFilter, ChampionScopeFilter, ChoiceGroup, ClassChoices, MobileClassFilter, OwnershipFilter, ProgressionFilter, SourceRefinement, ImmunityRefinement } from "./roster-filter-fields";
 import { RosterFilterPicker } from "./roster-filter-picker";
 import { RosterFilterSheet, useMobileRosterFilters } from "./roster-filter-sheet";
 import { buildActiveFilterRules, type RosterFilterRule } from "./roster-filter-rules";
 import type { RosterEffectOption, ProtectionOption } from "@/lib/roster-kit-options";
 import type { RosterFacetCounts } from "@/lib/roster-filtering";
+import type { ChampionScope } from "@/lib/champion-catalog-scope";
 
 export interface RosterFiltersProps {
     facetCounts?: RosterFacetCounts;
+    championScope?: ChampionScope;
+    onChampionScopeChange?: (value: ChampionScope) => void;
     search: string;
     onSearchChange: (val: string) => void;
     viewMode: 'view' | 'edit';
@@ -95,6 +98,7 @@ const managementDefaults: RosterManagementProps = {
 };
 
 function clearSelections(p: RosterFiltersProps) {
+  p.onChampionScopeChange?.("playable");
   p.onSearchChange("");
   p.onFilterStarsChange([]);
   p.onFilterClassesChange([]);
@@ -132,7 +136,8 @@ export function RosterFilters(props: SharedRosterFiltersProps) {
     + p.effectForms.length + p.effectDirections.length + Number(p.ascensionEligible && !p.catalogEligibility)
     + Number(!p.includeResistances) + Number(p.includeResistances && p.minResistancePotency != null)
     + (p.showRankFilter !== false ? p.filterRanks.length : 0)
-    + (p.showAscensionFilter !== false ? p.filterAscensionLevels.length : 0);
+    + (p.showAscensionFilter !== false ? p.filterAscensionLevels.length : 0)
+    + Number(p.championScope !== undefined && p.championScope !== "playable");
 
   return <div className="space-y-3">
     <section aria-label="Champion filters" className="space-y-2 rounded-xl bg-slate-900/40 p-3 sm:space-y-4 sm:p-4">
@@ -156,7 +161,8 @@ export function RosterFilters(props: SharedRosterFiltersProps) {
         <MobileClassFilter values={p.filterClasses} onChange={p.onFilterClassesChange} counts={p.facetCounts?.classes} />
         <MoreFiltersButton expanded={expanded} panelId={`${panelId}-mobile`} count={advancedCount} onToggle={() => setExpanded(!expanded)} compact buttonRef={mobileFilterButton} />
       </div>
-      {(p.catalogEligibility || p.showOwnershipFilter !== false || p.showSort !== false) && <div className={cn("grid items-center gap-1 border-t border-slate-800/60 pt-1 sm:hidden", (p.catalogEligibility || p.showOwnershipFilter !== false) && p.showSort !== false ? "grid-cols-2" : "grid-cols-[minmax(0,180px)]", !p.catalogEligibility && p.showOwnershipFilter === false && "justify-end")}>
+      {(p.onChampionScopeChange || p.catalogEligibility || p.showOwnershipFilter !== false || p.showSort !== false) && <div className={cn("grid items-center gap-1 border-t border-slate-800/60 pt-1 sm:hidden", (p.onChampionScopeChange || p.catalogEligibility || p.showOwnershipFilter !== false) && p.showSort !== false ? "grid-cols-2" : "grid-cols-[minmax(0,180px)]", !p.onChampionScopeChange && !p.catalogEligibility && p.showOwnershipFilter === false && "justify-end")}>
+        {p.onChampionScopeChange && <ChampionScopeFilter value={p.championScope ?? "playable"} onChange={p.onChampionScopeChange} />}
         {p.catalogEligibility && <div><AscensionEligibilityFilter value={p.ascensionEligible} onChange={p.onAscensionEligibleChange} /></div>}
         {p.showOwnershipFilter !== false && <OwnershipFilter showUnowned={p.showUnowned} onChange={p.onShowUnownedChange} compact />}
         {p.showSort !== false && <RosterSort p={p} compact />}
@@ -172,6 +178,7 @@ export function RosterFilters(props: SharedRosterFiltersProps) {
           {p.catalogEligibility && <AscensionEligibilityFilter value={p.ascensionEligible} onChange={p.onAscensionEligibleChange} />}
         </div>
         <ClassChoices values={p.filterClasses} onChange={p.onFilterClassesChange} counts={p.facetCounts?.classes} inline />
+        {p.onChampionScopeChange && <ChampionScopeFilter value={p.championScope ?? "playable"} onChange={p.onChampionScopeChange} />}
         {p.showOwnershipFilter !== false && <div className="ml-auto"><OwnershipFilter showUnowned={p.showUnowned} onChange={p.onShowUnownedChange} inline /></div>}
       </div>
 

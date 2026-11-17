@@ -197,7 +197,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
   if (!champion) return null
 
   const handleSaveDetails = async () => {
-    if (!name || !shortName || !champClass || !releaseDate) {
+    if (!name || !shortName || !champClass || (champion.isPlayable && !releaseDate)) {
         toast({ title: "Please fill in all required fields", variant: "destructive" })
         return
     }
@@ -208,7 +208,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
             name,
             shortName,
             class: champClass,
-            releaseDate,
+            releaseDate: releaseDate ?? null,
             obtainable: obtainable.split(",").map(s => s.trim()).filter(Boolean)
         })
         toast({ title: "Details updated" })
@@ -406,7 +406,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                         <DialogDescription className="text-sm font-medium text-slate-400 flex items-center gap-2">
                             <span className="bg-slate-800/50 px-2 py-0.5 rounded text-xs font-mono">{champion.shortName}</span>
                             <span>•</span>
-                            Released {format(new Date(champion.releaseDate), 'MMMM yyyy')}
+                            Released {champion.releaseDate ? format(new Date(champion.releaseDate), 'MMMM yyyy') : 'Unknown'}
                         </DialogDescription>
                     </div>
                 </div>
@@ -484,7 +484,7 @@ export function ChampionEditor({ champion, allChampions, allAbilities, open, onO
                                                     )}
                                                 >
                                                     <CalendarIcon className="mr-2 h-4 w-4 opacity-70" />
-                                                    {releaseDate ? format(releaseDate, "PPP") : <span>Pick a date</span>}
+                                                    {releaseDate ? format(releaseDate, "PPP") : <span>{champion.isPlayable ? "Pick a date" : "Unknown"}</span>}
                                                 </Button>
                                             </PopoverTrigger>
                                             <PopoverContent className="w-auto p-0 bg-slate-900 border-slate-800" align="start">
