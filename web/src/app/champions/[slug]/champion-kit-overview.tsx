@@ -56,6 +56,8 @@ export function ChampionKitOverview({ view, sideContent, ...navigation }: {
     ...(sideContent ? [{ id: "champion-kit-duels", title: "Duel targets", count: view.champion.duels.length }] : []),
   ]
   const shared = { view, synergyCards, display, ...navigation }
+  if (!abilities.length && !immunities.length && !sideContent) return null
+  const hasSidebar = immunities.length > 0 || !!otherEffects || !!sideContent
   return <>
     <div className={styles.kitOverviewHeader}>
       <h2>Kit overview</h2>
@@ -65,18 +67,17 @@ export function ChampionKitOverview({ view, sideContent, ...navigation }: {
       </div>
     </div>
     <nav aria-label="Jump to kit section" className={styles.kitJumpLinks}>
-      {jumps.map(jump => <button key={jump.id} type="button" onClick={() => scrollToChampionSection(document.getElementById(jump.id), true)}>{jump.title}<span>{jump.count}</span></button>)}
+      {jumps.filter(jump => jump.count > 0).map(jump => <button key={jump.id} type="button" onClick={() => scrollToChampionSection(document.getElementById(jump.id), true)}>{jump.title}<span>{jump.count}</span></button>)}
     </nav>
-    <div className={styles.kitOverview}>
-    <div className={`${styles.kitEffects} ${mainSections.length > 1 ? styles.kitEffectsSplit : ""}`}>
+    <div className={styles.kitOverview} data-has-effects={mainSections.length > 0} data-has-sidebar={hasSidebar}>
+    {mainSections.length > 0 && <div className={`${styles.kitEffects} ${mainSections.length > 1 ? styles.kitEffectsSplit : ""}`}>
       {mainSections.map(section => <ChampionEffectList key={section.direction} id={`champion-kit-${section.direction.toLowerCase()}`} {...DIRECTION_SECTIONS[section.direction]} effects={section.effects} {...shared} />)}
-      {!sections.length && <ChampionEffectList title="Abilities" effects={[]} {...shared} />}
-    </div>
-    <aside className={styles.kitSidebar}>
-      <div className={styles.kitImmunities}><ChampionEffectList id="champion-kit-protections" title="Immunities & resistances" description={immunities.some(effect => effect.type === "RESISTANCE") ? "Resistance reduces an effect; it can still apply." : undefined} effects={immunities} {...shared} /></div>
+    </div>}
+    {hasSidebar && <aside className={styles.kitSidebar}>
+      {immunities.length > 0 && <div className={styles.kitImmunities}><ChampionEffectList id="champion-kit-protections" title="Immunities & resistances" description={immunities.some(effect => effect.type === "RESISTANCE") ? "Resistance reduces an effect; it can still apply." : undefined} effects={immunities} {...shared} /></div>}
       {otherEffects && <div className={styles.kitOtherEffects}><ChampionEffectList id="champion-kit-other" {...DIRECTION_SECTIONS.UNKNOWN} effects={otherEffects.effects} {...shared} /></div>}
       {sideContent && <div id="champion-kit-duels" tabIndex={-1} className={`${styles.kitSideContent} ${styles.kitJumpTarget}`}>{sideContent}</div>}
-    </aside>
+    </aside>}
     </div>
   </>
 }
@@ -102,7 +103,7 @@ function ChampionEffectList({ id, title, description, icon, effects, view, syner
       </div>
       {display === "compact" ? <CompactEffectGrid>{effects.map(effect => <CompactEffectCard key={`${effect.type}:${effect.name}`} effect={effect} view={view} synergyCards={synergyCards} {...navigation} />)}</CompactEffectGrid>
         : <div className={effects.length ? styles.kitDetailedEffects : undefined}>{effects.map(effect => <EffectCard key={`${effect.type}:${effect.name}`} effect={effect} view={view} synergyCards={synergyCards} wide={!immunity} {...navigation} />)}</div>}
-      {!effects.length && <p className="rounded-xl border border-dashed border-white/10 px-5 py-6 text-sm leading-6 text-slate-400">No {title.toLowerCase()} recorded for this champion.</p>}
+
     </section>
   )
 }

@@ -11,6 +11,7 @@ import { getChampionSynergies } from "@/lib/data/champion-synergies"
 import { getChampionCrystalSummary } from "@cerebro/core/data/game-crystals"
 import { getChampionAcquisition } from "@cerebro/core/data/champion-acquisition"
 import { getChampionAscensionRules } from "@cerebro/core/data/game-ascension"
+import { findChampionEncounters } from "@cerebro/core/data/game-quests"
 
 const CHAMPION_DETAILS_TAG = "champion-details"
 const CHAMPION_DETAILS_SHARED_TAG = "champion-details-shared"
@@ -235,6 +236,7 @@ export async function loadChampionDetails(slug: string) {
   return {
     champion: {
       ...champion,
+      hasQuestEncounters: !!champion.gameId && findChampionEncounters(champion.gameId).length > 0,
       stats: getObtainableChampionStats(champion),
       gameSynergies,
       crystalAvailability: getChampionCrystalSummary(champion.gameId),

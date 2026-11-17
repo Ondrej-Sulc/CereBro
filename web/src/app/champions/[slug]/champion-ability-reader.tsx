@@ -11,6 +11,7 @@ import { buildChampionKitEffects, getGameEffectColors, type ChampionKitEffect } 
 import { championAbilityTextContent, filterChampionAbilityPanels } from "@/lib/champion-ability-search"
 import { scrollToChampionSection } from "@/lib/champion-page-navigation"
 import type { ChampionDetailsView, GlossaryTerm } from "./champion-details-types"
+import { getChampionBiography, getChampionDescriptionPanels } from "./champion-section-availability"
 import styles from "./champion-dossier.module.css"
 
 const DESCRIPTION_THEME = {
@@ -43,7 +44,8 @@ type ReaderNavigation = {
 export function ChampionAbilityReader({ view, ...navigation }: {
   view: ChampionDetailsView
 } & ReaderNavigation) {
-  const panels = [view.descriptionView.signaturePanel, ...view.descriptionView.descriptionPanels].filter(panel => panel.introRecord || panel.specialAttackIntros?.length || panel.recordGroups.length > 0)
+  const panels = getChampionDescriptionPanels(view.descriptionView)
+  if (!panels.length && !getChampionBiography(view.descriptionView).length && !navigation.targetRecordId) return null
   return <DossierDescriptions view={view} panels={panels} {...navigation} />
 }
 
@@ -54,7 +56,7 @@ function DossierDescriptions({ view, panels, targetRecordId, chapter, onSelectCh
   const targetPanel = panels.find(panel => panel.recordGroups.some(group => group.records.some(record => String(record.id) === targetRecordId)))
   const targetAvailable = !!targetPanel
   const selectedPanel = panels.find(panel => championAbilityPanelMatchesChapter(panel, chapter))
-  const activeChapter = targetPanel?.group ?? selectedPanel?.group ?? (chapter === "biography" && view.descriptionView.bioRecords.length > 0 ? "biography" : "all")
+  const activeChapter = targetPanel?.group ?? selectedPanel?.group ?? ((chapter === "biography" || !panels.length) && getChampionBiography(view.descriptionView).length > 0 ? "biography" : "all")
   const [query, setQuery] = useState("")
   const [previousTarget, setPreviousTarget] = useState(targetRecordId)
   if (previousTarget !== targetRecordId) {
@@ -63,7 +65,7 @@ function DossierDescriptions({ view, panels, targetRecordId, chapter, onSelectCh
   }
   const search = filterChampionAbilityPanels(panels, query)
   const visiblePanels = search.panels.filter(panel => activeChapter === "all" || panel.group === activeChapter)
-  const biography = view.descriptionView.bioRecords.filter(record => !query.trim() || championAbilityTextContent(record.prepared).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()))
+  const biography = getChampionBiography(view.descriptionView).filter(record => !query.trim() || championAbilityTextContent(record.prepared).toLocaleLowerCase().includes(query.trim().toLocaleLowerCase()))
   const visibleCount = activeChapter === "biography" ? biography.length : filterChampionAbilityPanels(visiblePanels, "").passageCount
   const readerRef = useRef<HTMLElement>(null)
   const searchRef = useRef<HTMLInputElement>(null)
@@ -95,12 +97,12 @@ function DossierDescriptions({ view, panels, targetRecordId, chapter, onSelectCh
     onSelectChapter(chapter)
     window.requestAnimationFrame(() => scrollToChampionSection(readerRef.current))
   }
-  const chapters = [{ key: "all", label: "All abilities" }, ...panels.map(panel => ({ key: panel.group, label: chapterLabel(panel.title) })), ...(view.descriptionView.bioRecords.length ? [{ key: "biography", label: "Biography" }] : [])]
+  const chapters = [...(panels.length ? [{ key: "all", label: "All abilities" }] : []), ...panels.map(panel => ({ key: panel.group, label: chapterLabel(panel.title) })), ...(getChampionBiography(view.descriptionView).length ? [{ key: "biography", label: "Biography" }] : [])]
   const activeChapterLabel = chapters.find(item => item.key === activeChapter)?.label ?? "All abilities"
   const resultStatus = <p role="status" aria-live="polite" className={styles.readerResultCount}>{visibleCount} {visibleCount === 1 ? "passage" : "passages"}{query.trim() ? " found" : ""} in {activeChapterLabel}</p>
   return (
     <section ref={readerRef} id="champion-descriptions" aria-label="Full ability descriptions" className="scroll-mt-[calc(var(--champion-header-height,4rem)+var(--champion-tabs-height)+1.5rem)]">
-      <div className={styles.sectionHeader}><h2>Full abilities</h2><p>Signature, base abilities, and special attacks. Read together or focus on a section.</p></div>
+      <div className={styles.sectionHeader}><h2>{panels.length ? "Full abilities" : "Biography"}</h2><p>{panels.length ? "Signature, base abilities, and special attacks. Read together or focus on a section." : "Background and history for this character."}</p></div>
       <div className={styles.readerTools}>
         <div className="relative min-w-0"><Search aria-hidden="true" className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-slate-500" /><input ref={searchRef} aria-label="Search ability text" type="search" value={query} maxLength={200} onChange={event => setQuery(event.target.value)} placeholder="Find an effect, condition, or value…" className="h-11 w-full rounded-lg border border-white/10 bg-[#080d14] pl-11 pr-11 text-sm text-slate-100 placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400 [&::-webkit-search-cancel-button]:appearance-none" />{query && <button type="button" aria-label="Clear ability search" onClick={clearSearch} className="absolute right-1.5 top-1.5 grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-white/5 hover:text-white"><X aria-hidden="true" className="h-4 w-4" /></button>}</div>
         <select aria-label="Ability section" value={activeChapter} onChange={event => selectChapter(event.target.value)} className={styles.readerSectionSelect}>{chapters.map(chapter => <option key={chapter.key} value={chapter.key}>{chapter.label}</option>)}</select>

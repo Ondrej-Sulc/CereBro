@@ -17,7 +17,7 @@ import { getAscensionEffects } from "@cerebro/core/domain/champion-ascension"
 import { prepareChampionAbilityTextView } from "@/lib/champion-ability-text"
 import { buildChampionSynergyView } from "@/lib/champion-synergies"
 import { cn } from "@/lib/utils"
-import { championPageHref, championPageSearchParams, readChampionPageState, type ChampionPageState } from "@/lib/champion-page-state"
+import { championPageHref, championPageSearchParams, readChampionPageState, resolveChampionPageSection, type ChampionPageState } from "@/lib/champion-page-state"
 import { scrollToChampionSection } from "@/lib/champion-page-navigation"
 import { useToast } from "@/hooks/use-toast"
 import type { ChampionImages } from "@/types/champion"
@@ -28,6 +28,7 @@ import { BuildReadout, ChampionAbilityReader } from "./champion-ability-reader"
 import { ChampionKitOverview } from "./champion-kit-overview"
 import { ChampionStatsPanel } from "./champion-stats-panel"
 import { ChampionAcquisitionPanel } from "./champion-acquisition-panel"
+import { getChampionSectionAvailability } from "./champion-section-availability"
 import styles from "./champion-dossier.module.css"
 
 export type { ChampionDetailsPayload, ChampionStatRow } from "./champion-details-types"
@@ -41,7 +42,7 @@ export function ChampionDetailsClient(props: ChampionDetailsProps) {
   const updatePageState = (patch: Partial<ChampionPageState>, push = false) => {
     const url = new URL(window.location.href)
     const current = readChampionPageState(url.searchParams, stats, champion.ascensionRules)
-    const next = readChampionPageState(championPageSearchParams(url.search, { ...current, ...patch }), stats, champion.ascensionRules)
+    const next = resolveChampionPageSection(readChampionPageState(championPageSearchParams(url.search, { ...current, ...patch }), stats, champion.ascensionRules), availableSections)
     const changesDestination = patch.tab !== undefined || patch.ability !== undefined || patch.chapter !== undefined || patch.synergy !== undefined
     const href = championPageHref(url.href, next, changesDestination)
     if (push) window.history.pushState(null, "", href)
@@ -74,6 +75,7 @@ export function ChampionDetailsClient(props: ChampionDetailsProps) {
     sigLevel: cappedSig,
     stat: selectedStat ? { ...selectedStat, health, attack } : undefined,
   })
+  const glossaryById = new Map(props.glossaryTerms.map(term => [term.id, term]))
   const view: ChampionDetailsView = {
     champion,
     portraitUrl: getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "full"),
@@ -101,7 +103,7 @@ export function ChampionDetailsClient(props: ChampionDetailsProps) {
     maxStats: maxStatsByTier[tierKey] ?? {},
     abilities: champion.abilities.filter(item => item.type === "ABILITY"),
     immunities: champion.abilities.filter(item => item.type === "IMMUNITY"),
-    glossaryById: new Map(props.glossaryTerms.map(term => [term.id, term])),
+    glossaryById,
     descriptionView,
     setRarity: value => {
       if (value === selectedRarity) return
@@ -114,7 +116,20 @@ export function ChampionDetailsClient(props: ChampionDetailsProps) {
     setAscensionLevel: value => updatePageState({ ascension: value }),
   }
 
-  return <TooltipProvider><ChampionDossier key={champion.id} view={view} pageState={pageState} updatePageState={updatePageState} /></TooltipProvider>
+  const availability = getChampionSectionAvailability({ champion, descriptionView, glossaryById })
+  const availableSections = availability.sections.map(section => section.value)
+  const visiblePageState = resolveChampionPageSection(pageState, availableSections)
+  const sectionKey = availableSections.join(",")
+  const requestedTab = searchParams.get("tab")
+  useEffect(() => {
+    if (!requestedTab || sectionKey.split(",").includes(requestedTab)) return
+    const url = new URL(window.location.href)
+    const current = readChampionPageState(url.searchParams, stats, champion.ascensionRules)
+    const next = resolveChampionPageSection(current, sectionKey ? sectionKey.split(",") as ChampionPageState["tab"][] : [])
+    const href = championPageHref(url.href, next)
+    if (href !== `${url.pathname}${url.search}${url.hash}`) window.history.replaceState(null, "", href)
+  }, [requestedTab, sectionKey, stats, champion.ascensionRules])
+  return <TooltipProvider><ChampionDossier key={champion.id} view={view} availability={availability} pageState={visiblePageState} updatePageState={updatePageState} /></TooltipProvider>
 }
 
 const DOSSIER_TABS = [
@@ -125,11 +140,16 @@ const DOSSIER_TABS = [
   { value: "crystals", label: "How to obtain", icon: Compass },
 ] as const
 
-function ChampionDossier({ view, pageState, updatePageState }: {
+function ChampionDossier({ view, pageState, updatePageState, availability }: {
+  availability: ReturnType<typeof getChampionSectionAvailability>
   view: ChampionDetailsView
   pageState: ChampionPageState
   updatePageState: (patch: Partial<ChampionPageState>, push?: boolean) => void
 }) {
+  const tabs = availability.sections.map(section => ({ ...DOSSIER_TABS.find(tab => tab.value === section.value)!, label: section.label }))
+  const showToolbar = tabs.length > 1 || !!view.selectedStat
+  const hasSection = (value: ChampionPageState["tab"]) => tabs.some(tab => tab.value === value)
+  const singleSectionLabel = tabs.length === 1 ? { "aria-label": tabs[0].label, "aria-labelledby": undefined } : {}
   const dossierRef = useRef<HTMLDivElement>(null)
   const tabsRef = useRef<HTMLDivElement>(null)
   const heroRef = useRef<HTMLElement>(null)
@@ -161,7 +181,7 @@ function ChampionDossier({ view, pageState, updatePageState }: {
     const observer = new ResizeObserver(measureBar)
     observer.observe(bar)
     return () => { observer.disconnect(); identityObserver?.disconnect() }
-  }, [])
+  }, [showToolbar])
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     if (window.scrollY === 0 && params.has("tab") && !params.has("ability") && !params.has("synergy") && !window.location.hash) {
@@ -185,7 +205,7 @@ function ChampionDossier({ view, pageState, updatePageState }: {
   }
 
   return (
-    <div ref={dossierRef} className={cn(styles.dossier, "relative min-h-screen overflow-x-clip bg-[#080b10] pb-16 text-slate-200")} style={{ "--champion-accent": view.accent } as CSSProperties}>
+    <div ref={dossierRef} className={cn(styles.dossier, "relative min-h-screen overflow-x-clip bg-[#080b10] pb-16 text-slate-200")} style={{ "--champion-accent": view.accent, ...(!showToolbar ? { "--champion-tabs-height": "0px" } : {}) } as CSSProperties}>
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[900px] bg-[radial-gradient(circle_at_76%_22%,rgba(255,255,255,.05),transparent_42%)]" />
       <Tabs value={pageState.tab} onValueChange={selectSection} className={styles.dossierSections}>
         <div className={styles.heroFrame}>
@@ -222,27 +242,29 @@ function ChampionDossier({ view, pageState, updatePageState }: {
             </div>
           </section>
         </div>
-        <div ref={tabsRef} className={styles.tabsBar} data-champion-context data-docked={heroAbsent}>
+        {showToolbar && <div ref={tabsRef} className={styles.tabsBar} data-champion-context data-docked={heroAbsent}>
           <div className={styles.contextInner}>
             <div className={styles.contextBuild} aria-label="Champion build">
               <span className={styles.contextName} data-visible={heroAbsent} aria-hidden={!heroAbsent} title={view.champion.name}>{view.champion.name}</span>
               <BuildReadout view={view} className={styles.contextReadout} showAscension />
             </div>
-            <DossierSectionNavigation value={pageState.tab} onSelect={selectSection} accent={view.accent} championName={view.champion.name} showName={heroAbsent} />
+            {tabs.length > 1 && <DossierSectionNavigation tabs={tabs} value={pageState.tab} onSelect={selectSection} accent={view.accent} championName={view.champion.name} showName={heroAbsent} />}
             <DossierBuildControls view={view} />
           </div>
-        </div>
+        </div>}
         <div className="relative w-full px-5 sm:px-8 lg:px-10 2xl:px-12">
           <div ref={sectionRef} className={styles.sections} data-champion-section-content>
-          <TabsContent value="overview" className="mt-0 pb-8 pt-10">
-            <ChampionKitOverview view={view} onViewAbility={openAbility} onViewSynergies={openSynergy} sideContent={view.champion.duels.length > 0 ? <DossierDuelTargets view={view} /> : undefined} />
+          {hasSection("overview") && <TabsContent value="overview" {...singleSectionLabel} className="mt-0 pb-8 pt-10">
+            {availability.hasKit && <ChampionKitOverview view={view} onViewAbility={hasSection("abilities") ? openAbility : undefined} onViewSynergies={hasSection("synergies") ? openSynergy : undefined} sideContent={view.champion.duels.length > 0 ? <DossierDuelTargets view={view} /> : undefined} />}
+            {!availability.hasKit && view.champion.duels.length > 0 && <DossierDuelTargets view={view} />}
             <DossierTraits view={view} />
-            <ChampionQuestEncounterLink gameId={view.champion.gameId} />
-          </TabsContent>
-          <TabsContent value="abilities" className="mt-0 pb-8 pt-10"><ChampionAbilityReader view={view} targetRecordId={pageState.ability} chapter={pageState.chapter} onSelectChapter={openChapter} onClearTarget={() => updatePageState({ ability: null, chapter: null })} /></TabsContent>
-          <TabsContent value="synergies" className="mt-0 pb-8 pt-10"><DossierSynergies view={view} targetSynergyId={pageState.synergy} onClearTarget={() => updatePageState({ synergy: null }, true)} /></TabsContent>
-          <TabsContent value="stats" className="mt-0 pb-8 pt-10"><ChampionStatsPanel view={view} onViewAbility={openChapter} /></TabsContent>
-          <TabsContent value="crystals" className="mt-0 pb-8 pt-10"><ChampionAcquisitionPanel key={view.selectedRarity} acquisition={view.champion.acquisition} availability={view.champion.crystalAvailability} selectedRarity={view.selectedRarity} championName={view.champion.name} championSlug={view.champion.slug} ascensionRules={view.ascensionRules} /></TabsContent>
+            {view.champion.hasQuestEncounters && <ChampionQuestEncounterLink gameId={view.champion.gameId} />}
+          </TabsContent>}
+          {hasSection("abilities") && <TabsContent value="abilities" {...singleSectionLabel} className="mt-0 pb-8 pt-10"><ChampionAbilityReader view={view} targetRecordId={pageState.ability} chapter={pageState.chapter} onSelectChapter={openChapter} onClearTarget={() => updatePageState({ ability: null, chapter: null })} /></TabsContent>}
+          {hasSection("synergies") && <TabsContent value="synergies" {...singleSectionLabel} className="mt-0 pb-8 pt-10"><DossierSynergies view={view} targetSynergyId={pageState.synergy} onClearTarget={() => updatePageState({ synergy: null }, true)} /></TabsContent>}
+          {hasSection("stats") && <TabsContent value="stats" {...singleSectionLabel} className="mt-0 pb-8 pt-10"><ChampionStatsPanel view={view} onViewAbility={hasSection("abilities") ? openChapter : undefined} /></TabsContent>}
+          {hasSection("crystals") && <TabsContent value="crystals" {...singleSectionLabel} className="mt-0 pb-8 pt-10"><ChampionAcquisitionPanel key={view.selectedRarity} acquisition={view.champion.acquisition} availability={view.champion.crystalAvailability} selectedRarity={view.selectedRarity} championName={view.champion.name} championSlug={view.champion.slug} ascensionRules={view.ascensionRules} /></TabsContent>}
+          {!tabs.length && <p className="py-10 text-sm leading-6 text-slate-400">Additional details have not been recorded for this character yet.</p>}
           </div>
         </div>
       </Tabs>
@@ -250,7 +272,8 @@ function ChampionDossier({ view, pageState, updatePageState }: {
   )
 }
 
-function DossierSectionNavigation({ value, onSelect, accent, championName, showName }: {
+function DossierSectionNavigation({ tabs, value, onSelect, accent, championName, showName }: {
+  tabs: Array<Omit<typeof DOSSIER_TABS[number], "label"> & { label: string }>
   value: ChampionPageState["tab"]
   onSelect: (value: ChampionPageState["tab"]) => void
   accent: string
@@ -263,7 +286,7 @@ function DossierSectionNavigation({ value, onSelect, accent, championName, showN
   const currentChoiceRef = useRef<HTMLButtonElement>(null)
   const desktopTabsRef = useRef<HTMLDivElement>(null)
   const pickerRef = useRef<HTMLButtonElement>(null)
-  const active = DOSSIER_TABS.find(tab => tab.value === value) ?? DOSSIER_TABS[0]
+  const active = tabs.find(tab => tab.value === value) ?? tabs[0]
 
   useEffect(() => {
     if (!window.matchMedia) return
@@ -299,7 +322,7 @@ function DossierSectionNavigation({ value, onSelect, accent, championName, showN
         }}>
         <Dialog.Title className={styles.sectionSheetTitle}>Champion sections</Dialog.Title>
         <div className={styles.sectionChoices}>
-          {DOSSIER_TABS.map(tab => <button key={tab.value} type="button" ref={tab.value === value ? currentChoiceRef : undefined}
+          {tabs.map(tab => <button key={tab.value} type="button" ref={tab.value === value ? currentChoiceRef : undefined}
             className={styles.sectionChoice} aria-current={tab.value === value ? "page" : false}
             onClick={() => { if (tab.value !== value) onSelect(tab.value); setOpen(false) }}>
             <tab.icon aria-hidden="true" className={styles.sectionPickerIcon} />
@@ -311,7 +334,7 @@ function DossierSectionNavigation({ value, onSelect, accent, championName, showN
       </Dialog.Content></Dialog.Portal>
     </Dialog.Root>
     <TabsList ref={desktopTabsRef} aria-label="Champion sections" className={styles.tabsList}>
-      {DOSSIER_TABS.map(tab => <TabsTrigger key={tab.value} value={tab.value} className={styles.tab}>
+      {tabs.map(tab => <TabsTrigger key={tab.value} value={tab.value} className={styles.tab}>
         <tab.icon aria-hidden="true" className={styles.tabIcon} />
         <span className={styles.tabLabel}>{tab.label}</span>
       </TabsTrigger>)}

@@ -1,10 +1,22 @@
 import { describe, expect, it } from "vitest"
-import { championPageHref, championPageSearchParams, readChampionPageState, readChampionSynergyHash } from "./champion-page-state"
+import { championPageHref, championPageSearchParams, readChampionPageState, readChampionSynergyHash, resolveChampionPageSection } from "./champion-page-state"
 
 const stats = [{ rarity: 6, rank: 4 }, { rarity: 7, rank: 6 }, { rarity: 7, rank: 5 }, { rarity: 4, rank: 5 }]
 const read = (query: string) => readChampionPageState(new URLSearchParams(query), stats)
 
 describe("shared champion page state", () => {
+  it("redirects unavailable sections without losing build or unrelated URL context", () => {
+    const state = read("tab=synergies&synergy=old&rarity=7&rank=5&sig=75")
+    const fallback = resolveChampionPageSection(state, ["abilities"])
+    expect(fallback).toEqual({ ...state, tab: "abilities", synergy: null, ability: null, chapter: null })
+    const href = championPageHref("https://cerebro.test/champions/npc?filter=kept#champion-synergy-old", fallback)
+    expect(href).toContain("tab=abilities")
+    expect(href).toContain("filter=kept")
+    expect(href).toContain("sig=75")
+    expect(href).not.toContain("#champion-synergy")
+    expect(resolveChampionPageSection(state, []).tab).toBe("overview")
+    expect(resolveChampionPageSection(state, ["synergies"])).toBe(state)
+  })
   it("uses the selected champion's recorded eligibility and treats an explicit missing path as A0", () => {
     const query = new URLSearchParams("rarity=7&ascension=5")
     expect(readChampionPageState(query, stats, [{ rarity: 7, maxLevel: 0 }]).ascension).toBe(0)

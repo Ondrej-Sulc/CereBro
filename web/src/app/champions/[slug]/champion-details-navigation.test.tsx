@@ -32,7 +32,13 @@ const stat = (rank: number): ChampionStatRow => ({
   energyResistance: null, physicalResistance: null, baseAbilityIds: [], sigAbilityIds: [],
 })
 const props: ChampionDetailsProps = {
-  champion: { id: 1, name: "Current", shortName: "Current", slug: "current", gameId: null, class: "SCIENCE", images: {}, gameSynergies: [], tags: [], abilities: [], abilityTexts: [], abilityCurves: [], attacks: [], stats: [stat(6), stat(5)], prestigeData: [], duels: [] },
+  champion: { id: 1, name: "Current", shortName: "Current", slug: "current", gameId: null, class: "SCIENCE", images: {}, gameSynergies: [{ id: "catalog_alias", name: "Partners", description: "Gain Fury.", enabled: true, unique: false, requiredHeroGroups: false, members: [
+    { role: "OWNER", rarity: 7, champion: { id: 1, name: "Current", slug: "current", images: {} } },
+    { role: "REQUIRED", rarity: 7, champion: { id: 2, name: "Partner", slug: "partner", images: {} } },
+  ] }], tags: [], abilities: [{ id: 1, type: "ABILITY", source: "Base kit", effectForm: "UNKNOWN", effectDirection: "UNKNOWN", ability: { name: "Fury", categories: [] }, synergyChampions: [] }],
+  abilityTexts: [{ id: 123, group: "base", title: "Abilities", sortOrder: 0, template: { raw: "Gain Fury." } }], abilityCurves: [],
+  attacks: [{ id: 1, type: "L1", hits: [{ id: 1, properties: [] }] }], stats: [stat(6), stat(5)], prestigeData: [], duels: [],
+  crystalAvailability: { observedAt: "2026-11-17T00:00:00Z", crystals: [{ name: "Hero crystal", sourceIds: ["hero"], rarities: [7], isMainPool: true, selection: null }] } },
   glossaryTerms: [], maxStatsByTier: {},
 }
 let barResize: () => void
@@ -102,13 +108,14 @@ async function traverse(direction: "back" | "forward") {
 }
 
 it("identifies NPC champions and keeps a dossier with no collectible tiers viewable", async () => {
-  const npcProps: ChampionDetailsProps = { ...props, champion: { ...props.champion, name: "Ares", shortName: "Ares", isPlayable: false, stats: [], attacks: [] } }
+  const npcProps: ChampionDetailsProps = { ...props, champion: { ...props.champion, name: "Ares", shortName: "Ares", isPlayable: false, stats: [], attacks: [], abilities: [], abilityTexts: [], gameSynergies: [] } }
   await act(async () => root.render(<ChampionDetailsClient {...npcProps} />))
   expect(document.querySelector('section[aria-label="Ares banner"]')?.textContent).toContain("NPC & legacy")
   expect(document.querySelector('[aria-label="Adjust build"]')).toBeNull()
-  await click("Stats")
-  expect(document.body.textContent).toContain("Build stats are not available for this champion yet.")
-  expect(document.body.textContent).toContain("No attack hit data has been recorded for this champion yet.")
+  expect(document.querySelector('[data-champion-context]')).toBeNull()
+  expect(document.querySelectorAll('[role="tab"]')).toHaveLength(0)
+  expect(document.body.textContent).toContain("Additional details have not been recorded")
+  expect(document.body.textContent).not.toContain("Build stats are not available")
 })
 
 it("shows duel targets without recommending the first active player and preserves copying and status", async()=>{
@@ -146,7 +153,7 @@ it("retains the exact source and build through section changes and Back/Forward"
   await traverse("back")
   expect(document.querySelector('[data-synergy-probe="catalog_alias"]')).not.toBeNull()
   await traverse("forward")
-  expect(document.body.textContent).toContain("Combat ratings")
+  expect(document.querySelector('[aria-label="Selected build stats"]')).not.toBeNull()
 })
 
 it("reopens and copies a linked synergy with its exact source ID and selected build", async () => {
@@ -546,4 +553,31 @@ it("uses the header edge for docking identity and initializes restored scroll be
   expect(name.getAttribute('data-visible')).toBe('false')
   await act(async () => heroNotifications.at(-1)!(false, 63))
   expect(name.getAttribute('data-visible')).toBe('true')
+})
+
+
+it("hides unavailable sections in desktop and mobile navigation and replaces a stale tab link", async () => {
+  const sparse: ChampionDetailsProps = { ...props, champion: { ...props.champion, isPlayable: false, stats: [], attacks: [], abilities: [], gameSynergies: [], hasQuestEncounters: true } }
+  window.history.replaceState(null, "", "/champions/current?tab=synergies&synergy=old&ref=kept#champion-synergy-old")
+  await act(async () => root.render(<ChampionDetailsClient {...sparse} />))
+  const tabs = [...document.querySelectorAll('[role="tab"]')].map(tab => tab.textContent)
+  expect(tabs).toEqual(["Overview", "Full abilities"])
+  expect(new URLSearchParams(window.location.search).get("tab")).toBe("overview")
+  expect(window.location.search).toContain("ref=kept")
+  expect(window.location.hash).toBe("")
+  const dialog = await openSectionPicker()
+  expect([...dialog.querySelectorAll('button[aria-current]')].map(button => button.textContent)).toEqual(["Overview", "Full abilities"])
+})
+
+it("opens native abilities directly when they are the only recorded content", async () => {
+  const sparse: ChampionDetailsProps = { ...props, champion: { ...props.champion, isPlayable: false, stats: [], attacks: [], abilities: [], gameSynergies: [] } }
+  window.history.replaceState(null, "", "/champions/current?tab=stats")
+  await act(async () => root.render(<ChampionDetailsClient {...sparse} />))
+  expect(document.querySelectorAll('[role="tab"]')).toHaveLength(0)
+  expect(document.querySelector('[data-champion-context]')).toBeNull()
+  expect(document.querySelector('[aria-label="Full ability descriptions"]')).not.toBeNull()
+  expect(document.querySelector('[role="tabpanel"]')?.getAttribute("aria-label")).toBe("Full abilities")
+  expect(document.querySelector('[role="tabpanel"]')?.hasAttribute("aria-labelledby")).toBe(false)
+  expect(window.location.search).toContain("tab=abilities")
+  expect(document.body.textContent).not.toContain("No attack hit data")
 })

@@ -16,6 +16,12 @@ export type ChampionPageState = {
 
 export const CHAMPION_SYNERGY_HASH_PREFIX = "#champion-synergy-"
 
+/** Preserve build/filter context when an old link points to an unrecorded section. */
+export function resolveChampionPageSection(state: ChampionPageState, available: readonly ChampionSection[]): ChampionPageState {
+  if (available.includes(state.tab)) return state
+  return { ...state, tab: available[0] ?? "overview", ability: null, chapter: null, synergy: null }
+}
+
 function validSynergyId(value: string | null) {
   if (!value || value.length > 200 || /\s/.test(value)) return null
   return [...value].some(character => character.charCodeAt(0) < 32 || character.charCodeAt(0) === 127) ? null : value

@@ -14,54 +14,70 @@ type Rating = { label: string; value: number | string | null; icon?: ChampionSta
 
 export function ChampionStatsPanel({ view, onViewAbility }: { view: ChampionDetailsView; onViewAbility?: (chapter: string) => void }) {
   const stat = view.selectedStat
+  const summaries = ([
+    { label: "Prestige", value: view.prestige },
+    { label: "Health", value: view.health, icon: "health" },
+    { label: "Attack", value: view.attack, icon: "attack" },
+  ] satisfies Rating[]).filter(rating => isRecordedValue(rating.value))
+  const offense: { featured: Rating[]; ratings: Rating[] } = {
+    featured: stat ? [{ label: "Critical rating", value: stat.criticalRating, icon: "criticalRating" }, { label: "Critical damage rating", value: stat.criticalDamageRating, icon: "criticalDamageRating" }] : [],
+    ratings: stat ? [
+      { label: "Armor penetration", value: stat.armorPenetration, icon: "armorPenetration" },
+      { label: "Block penetration", value: stat.blockPenetration, icon: "blockPenetration" },
+      { label: "Special damage multiplier", value: stat.specialDamageMultiplier != null && Number.isFinite(stat.specialDamageMultiplier) ? `${stat.specialDamageMultiplier.toFixed(2)}×` : null },
+    ] : [],
+  }
+  const defense: { featured: Rating[]; ratings: Rating[] } = {
+    featured: stat ? [{ label: "Armor rating", value: stat.armorRating, icon: "armorRating" }, { label: "Block proficiency", value: stat.blockProficiency, icon: "blockProficiency" }] : [],
+    ratings: stat ? [
+      { label: "Critical resistance", value: stat.criticalResistance, icon: "criticalResistance" },
+      { label: "Physical resistance", value: stat.physicalResistance, icon: "physicalResistance" },
+      { label: "Energy resistance", value: stat.energyResistance, icon: "energyResistance" },
+    ] : [],
+  }
+  const hasOffense = [...offense.featured, ...offense.ratings].some(rating => isRecordedValue(rating.value))
+  const hasDefense = [...defense.featured, ...defense.ratings].some(rating => isRecordedValue(rating.value))
+  const context: Rating[] = stat ? [{ label: "Level", value: stat.level }, { label: "Challenger rating", value: stat.challengeRating }].filter(rating => isRecordedValue(rating.value)) : []
+  const hasStats = summaries.length > 0 || context.length > 0 || hasOffense || hasDefense
+  const attacks = view.champion.attacks.filter(attack => attack.hits.length > 0)
+  if (!hasStats && !attacks.length) return null
   return (
-    <section aria-labelledby="champion-stats-heading">
-      <dl className={styles.statsSummary} aria-label="Selected build stats">
-        <div>
-          <dt>Prestige</dt><dd><span>{formatStat(view.prestige)}</span><PrestigeChartAction view={view} /></dd>
+    <section aria-labelledby={hasStats ? "champion-stats-heading" : "champion-attacks-heading"} className={!hasStats ? "[&>#champion-attacks]:mt-0 [&>#champion-attacks]:border-t-0 [&>#champion-attacks]:pt-0" : undefined}>
+      {hasStats && <>
+        <div className={styles.statsHeader}>
+          <h2 id="champion-stats-heading" className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">{hasOffense || hasDefense ? "Combat ratings" : "Build stats"}</h2>
+          {context.length > 0 && <dl className={styles.statsBuildContext}>{context.map(rating => <div key={rating.label}><dt>{rating.label}</dt><dd>{formatStat(rating.value)}</dd></div>)}</dl>}
         </div>
-        <div><dt>{stat && <ChampionStatIcon stat="health" plain />}Health</dt><dd><span>{formatStat(view.health)}</span></dd></div>
-        <div><dt>{stat && <ChampionStatIcon stat="attack" plain />}Attack</dt><dd><span>{formatStat(view.attack)}</span></dd></div>
-      </dl>
-      <div className={styles.statsHeader}>
-        <h2 id="champion-stats-heading" className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">Combat ratings</h2>
-        {stat && <dl className={styles.statsBuildContext}>
-          <div><dt>Level</dt><dd>{stat.level ?? "—"}</dd></div>
-          <div><dt>Challenger rating</dt><dd>{stat.challengeRating}</dd></div>
+        {summaries.length > 0 && <dl className={styles.statsSummary} aria-label="Selected build stats" style={{ gridTemplateColumns: `repeat(${summaries.length}, minmax(0, 1fr))` }}>
+          {summaries.map(rating => <div key={rating.label}>
+            <dt>{rating.icon && <ChampionStatIcon stat={rating.icon} plain />}{rating.label}</dt>
+            <dd><span>{formatStat(rating.value)}</span>{rating.label === "Prestige" && <PrestigeChartAction view={view} />}</dd>
+          </div>)}
         </dl>}
-      </div>
-      {stat ? (
-        <div className={styles.statsRatingGrid}>
+      </>}
+      {(hasOffense || hasDefense) && <div className={styles.statsRatingGrid} style={!hasOffense || !hasDefense ? { gridTemplateColumns: "minmax(0, 1fr)" } : undefined}>
+          {hasOffense &&
           <RatingPanel name="Offense" detail="Criticals & penetration" tone="offense" icon={Swords}
-            featured={[{ label: "Critical rating", value: stat.criticalRating, icon: "criticalRating" }, { label: "Critical damage rating", value: stat.criticalDamageRating, icon: "criticalDamageRating" }]}
-            ratings={[
-              { label: "Armor penetration", value: stat.armorPenetration, icon: "armorPenetration" },
-              { label: "Block penetration", value: stat.blockPenetration, icon: "blockPenetration" },
-              { label: "Special damage multiplier", value: stat.specialDamageMultiplier == null ? null : `${stat.specialDamageMultiplier.toFixed(2)}×` },
-            ]} />
+            {...offense} />}
+          {hasDefense &&
           <RatingPanel name="Defense" detail="Armor, blocking & resistance" tone="defense" icon={Shield}
-            featured={[{ label: "Armor rating", value: stat.armorRating, icon: "armorRating" }, { label: "Block proficiency", value: stat.blockProficiency, icon: "blockProficiency" }]}
-            ratings={[
-              { label: "Critical resistance", value: stat.criticalResistance, icon: "criticalResistance" },
-              { label: "Physical resistance", value: stat.physicalResistance, icon: "physicalResistance" },
-              { label: "Energy resistance", value: stat.energyResistance, icon: "energyResistance" },
-            ]} />
-        </div>
-      ) : <p className={styles.statsEmpty}>Build stats are not available for this champion yet.</p>}
-      <ChampionAttackProfile view={view} onViewAbility={onViewAbility} />
+            {...defense} />}
+      </div>}
+      {attacks.length > 0 && <ChampionAttackProfile view={{ ...view, champion: { ...view.champion, attacks } }} onViewAbility={onViewAbility} />}
     </section>
   )
 }
 
 function PrestigeChartAction({ view }: { view: ChampionDetailsView }) {
   const stat = view.selectedStat
-  if (!stat || view.prestige == null) return null
-  const endpoints = view.champion.prestigeData.filter(point => point.rarity === stat.rarity && point.rank === stat.rank)
+  if (!stat || !isRecordedValue(view.prestige)) return null
+  const endpoints = view.champion.prestigeData.filter(point => point.rarity === stat.rarity && point.rank === stat.rank && isRecordedValue(point.prestige))
   if (endpoints.length < 2) return null
   const points = expandMcocPrestigeCurve({ prestigeData: endpoints, stat }).map(point => ({
     ...point,
     prestige: applyAscensionToPrestige(point.prestige, stat.rarity, view.ascensionLevel)!,
   }))
+  if (points.length < 2) return null
 
   return <Popover>
     <PopoverTrigger asChild>
@@ -81,24 +97,30 @@ function RatingPanel({ name, detail, tone, icon: Icon, featured, ratings }: {
   name: string; detail: string; tone: "offense" | "defense"; icon: typeof Swords; featured: Rating[]; ratings: Rating[]
 }) {
   const headingId = `champion-ratings-${tone}`
+  const recordedFeatured = featured.filter(rating => isRecordedValue(rating.value))
+  const recordedRatings = ratings.filter(rating => isRecordedValue(rating.value))
   return (
     <section aria-labelledby={headingId} className={styles.statsRatingPanel} data-tone={tone}>
       <header className={styles.statsRatingHeader}>
         <span className={styles.statsRatingIcon}><Icon aria-hidden="true" /></span>
         <div><h3 id={headingId}>{name}</h3><p>{detail}</p></div>
       </header>
-      <dl className={styles.statsFeaturedRatings}>
-        {featured.map(rating => <div key={rating.label}>
-          <dt>{rating.label}</dt><dd data-empty={rating.value == null || rating.value === 0}>{rating.icon && <ChampionStatIcon stat={rating.icon} />}<span>{formatStat(rating.value)}</span></dd>
+      {recordedFeatured.length > 0 && <dl className={styles.statsFeaturedRatings} style={{ gridTemplateColumns: `repeat(${recordedFeatured.length}, minmax(0, 1fr))` }}>
+        {recordedFeatured.map(rating => <div key={rating.label}>
+          <dt>{rating.label}</dt><dd>{rating.icon && <ChampionStatIcon stat={rating.icon} />}<span>{formatStat(rating.value)}</span></dd>
         </div>)}
-      </dl>
-      <dl className={styles.statsRatingList}>
-        {ratings.map(rating => <div key={rating.label}>
-          <dt>{rating.icon && <ChampionStatIcon stat={rating.icon} />}<span>{rating.label}</span></dt><dd data-empty={rating.value == null || rating.value === 0}>{formatStat(rating.value)}</dd>
+      </dl>}
+      {recordedRatings.length > 0 && <dl className={styles.statsRatingList}>
+        {recordedRatings.map(rating => <div key={rating.label}>
+          <dt>{rating.icon && <ChampionStatIcon stat={rating.icon} />}<span>{rating.label}</span></dt><dd>{formatStat(rating.value)}</dd>
         </div>)}
-      </dl>
+      </dl>}
     </section>
   )
+}
+
+function isRecordedValue(value: number | string | null | undefined) {
+  return typeof value === "number" ? Number.isFinite(value) : typeof value === "string" && value.trim().length > 0
 }
 
 function formatStat(value: number | string | null) {

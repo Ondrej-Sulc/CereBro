@@ -14,6 +14,7 @@ export type ChampionDetailsPayload = {
   slug: string | null
   gameId: string | null
   isPlayable?: boolean
+  hasQuestEncounters?: boolean
   class: ChampionClass
   images: unknown
   gameSynergies: ChampionSynergy[]

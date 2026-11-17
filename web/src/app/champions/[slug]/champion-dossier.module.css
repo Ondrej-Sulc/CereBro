@@ -217,6 +217,7 @@ button.kitEffectHeader:focus-visible { outline: 2px solid #94a3b8; outline-offse
     align-items: start;
     gap: 32px;
   }
+  .kitOverview[data-has-effects="false"], .kitOverview[data-has-sidebar="false"] { grid-template-columns: minmax(0, 1fr); }
   .kitEffects { order: 0; }
   .kitSidebar {
     display: flex;

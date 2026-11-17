@@ -47,6 +47,17 @@ function effectView(records: ChampionAbilityTextRecord[]): ChampionDetailsView {
   return { ...view, glossaryById, descriptionView: prepareChampionAbilityTextView({ records }) }
 }
 
+it("omits an empty reader and opens biography-only records directly", async () => {
+  const empty = { ...view, descriptionView: prepareChampionAbilityTextView({ records: [] }) }
+  await act(async () => root.render(<ChampionAbilityReader view={empty} chapter={null} onSelectChapter={() => {}} />))
+  expect(document.querySelector('[aria-label="Full ability descriptions"]')).toBeNull()
+  const biography = { ...view, secondaryUrl: "/assets/icons/Science.png", descriptionView: prepareChampionAbilityTextView({ records: [{ id: 50, group: "bio", title: null, template: { raw: "A forgotten defender." } }] }) }
+  await act(async () => root.render(<ChampionAbilityReader view={biography} chapter={null} onSelectChapter={() => {}} />))
+  expect(document.body.textContent).toContain("A forgotten defender.")
+  expect(document.body.textContent).not.toContain("Full descriptions are not available")
+  expect([...document.querySelectorAll('select[aria-label="Ability section"] option')].map(option => option.textContent)).toEqual(["Biography"])
+})
+
 it("uses the named effect as a decorative line marker and removes its repeated heading", async () => {
   const disorient = "Inflicts a Disorient Debuff for 12 seconds."
   const energize = "Cosmic Mode: Gain an Energize Buff, granting 25% increased Combat Power Rate."
