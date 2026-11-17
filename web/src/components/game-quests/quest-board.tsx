@@ -144,7 +144,7 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
           <defs>
             {map.encounters.map((e, i) => { const [x, y] = board.point(e.coordinate); const radius = e.final ? 31 : 25; return <clipPath key={e.id} id={`${uid}-portrait-${i}`}><circle cx={x} cy={y} r={radius} /></clipPath>; })}
           </defs>
-          <QuestMapPaths edges={board.edges} point={board.point} routeEdges={routeEdges} routePhases={routePhases} highlightRoute={highlightRoute} scale={scale}/>
+          <QuestMapPaths edges={board.edges} point={board.point} routeEdges={routeEdges} routePhases={routePhases} highlightRoute={highlightRoute}/>
           {spawnRegions&&<QuestSpawnRegionAreas map={map} layer={spawnRegions} point={board.point} selected={selectedRegion} hovered={hoveredRegion??undefined} pathIndex={pathIndex} highlightRoute={highlightRoute}/>}
           {map.tiles.map(tile=>{
             const key=coordinateKey(tile.coordinate),[x,y]=board.point(tile.coordinate);

@@ -61,3 +61,18 @@
 @media(max-width:600px){.routeControl{gap:0;flex:1}.routeControl>svg{display:none}.explorer .routeControl select{width:100%;font-size:11px;padding-inline:5px}.inspectorBody{padding:14px}}
 
 .connectedPoints>summary:focus-visible,.mapAbout>summary:focus-visible{outline:2px solid #7dd3fc;outline-offset:2px;border-radius:5px}
+
+/* Encounter inspector: a readable companion to the map, then an in-flow reader on phones. */
+.layout{grid-template-columns:minmax(0,1fr) clamp(350px,28%,390px);gap:20px}
+.inspector{background:linear-gradient(155deg,#102233 0%,#0c1827 30%,#0b1523 100%);border-color:#31495c;box-shadow:0 16px 48px #0002}
+.inspectorBody{max-height:none;overflow:visible;padding:22px}
+.inspectorEyebrow{margin:0 0 16px;color:#7b9bb0;font-size:10px;font-weight:550;letter-spacing:.14em;text-transform:uppercase}
+.inspectorHeader{margin-bottom:18px}
+.encounterIdentity{gap:13px}
+.encounterIdentity :is(h2,h3){font-size:22px;letter-spacing:-.025em;line-height:1.25}
+.encounterBuild{margin-top:13px;padding-top:12px;border-top:1px solid #253b4d;gap:4px 12px;color:#9fb6c9}
+.modifierSection{margin-top:24px}
+.modifierSection>h3{margin-bottom:8px;color:#d2e6f3;font-size:14px}
+.modifierSection>h3>span{display:grid;place-items:center;min-width:20px;height:20px;padding:0 5px;border-radius:5px;background:#1a3041;color:#9fb8cc;font-size:10px}
+@media(max-width:1150px){.layout{grid-template-columns:1fr}.inspectorBody{padding:22px}.inspector{max-width:none}}
+@media(max-width:600px){.inspector{border-radius:16px}.inspectorBody{padding:18px}.inspectorEyebrow{margin-bottom:14px}.encounterIdentity :is(h2,h3){font-size:21px}.modifierSection{margin-top:22px}}

@@ -77,11 +77,10 @@ describe("quest map controls", () => {
     const tile=map.tiles.find(t=>t.coordinate.join(',')==='13,19')!;
     const application=tile.applications.find(a=>a.sourceType==='Global')!;
     const host=await render(<QuestMapExplorer map={map} initialNode="13,19"/>);
-    const scope=host.querySelector<HTMLDetailsElement>('[data-modifier-scope="Global"] > details')!;
-    expect(scope.open).toBe(false);
+    expect(host.querySelector<HTMLElement>('[data-modifier-scope="Global"]')!.hidden).toBe(true);
     const params=new URLSearchParams({node:'13,19',application:application.id,sourceHash:map.sourceHash});
     await act(async()=>{window.history.replaceState(null,'',`/quests/${map.questId}?${params}`);window.dispatchEvent(new PopStateEvent('popstate'));});
-    expect(scope.open).toBe(true);
+    expect(host.querySelector<HTMLElement>('[data-modifier-scope="Global"]')!.hidden).toBe(false);
     expect(host.querySelector<HTMLDetailsElement>(`[data-quest-application="${application.id}"]`)?.open).toBe(true);
     expect(host.querySelectorAll('[data-quest-application]')).toHaveLength(14);
   });
@@ -95,8 +94,8 @@ describe("quest map controls", () => {
     const global = inspector.querySelector('[data-modifier-scope="Global"]')!;
     expect(linked).not.toBeNull();
     expect(global).not.toBeNull();
-    expect(linked.querySelector('h4')?.textContent).toBe('Linked6');
-    expect(global.querySelector('h4')?.textContent).toBe('Global8');
+    expect(inspector.querySelector('[data-modifier-tab="Link"]')?.textContent).toBe('Linked6');
+    expect(inspector.querySelector('[data-modifier-tab="Global"]')?.textContent).toBe('Global8');
     expect(linked.querySelectorAll('[data-quest-application]')).toHaveLength(6);
     expect(global.querySelectorAll('[data-quest-application]')).toHaveLength(8);
     expect([...inspector.querySelectorAll('[data-quest-application]')].map(row => row.getAttribute('data-quest-application'))).toEqual(tile.applications.map(a => a.id));
@@ -109,10 +108,9 @@ describe("quest map controls", () => {
     const highlighted = inspector.querySelector('[data-highlighted]')!;
     expect(highlighted.getAttribute('data-quest-application')).toBe(tile.applications[3].id);
     expect((highlighted as HTMLDetailsElement).open).toBe(true);
-    expect(inspector.querySelector<HTMLDetailsElement>('[data-modifier-scope="Global"] > details')?.open).toBe(false);
-    const share = highlighted.querySelector<HTMLAnchorElement>('a[aria-label^="Link to "]')!;
-    expect(new URL(share.href).searchParams.get('application')).toBe(tile.applications[3].id);
-    expect(new URL(share.href).searchParams.get('sourceHash')).toBe(map.sourceHash);
+    expect(inspector.querySelector<HTMLElement>('[data-modifier-scope="Global"]')?.hidden).toBe(true);
+    expect(highlighted.id).toBe(`application-${tile.applications[3].id}`);
+    expect(highlighted.querySelector('a[aria-label^="Link to "]')).toBeNull();
     expect(JSON.stringify(tile.applications)).toBe(before);
     await act(async () => context.querySelector('summary')!.click());
     expect(context.open).toBe(true);
@@ -157,7 +155,7 @@ describe("quest map controls", () => {
     expect(modifier.open).toBe(false);
     await act(async () => modifier.querySelector("summary")!.click());
     expect(modifier.open).toBe(true);
-    expect(modifier.querySelector('a[aria-label="Link to Contagion modifier"]')).not.toBeNull();
+    expect(modifier.querySelector('a[aria-label="Link to Contagion modifier"]')).toBeNull();
     await act(async () => root!.render(<QuestApplicationDetails application={{...application,definitionHref:null}} questId={map.questId} sourceHash={map.sourceHash} shareUrl="/quests/me_mausoleum_ch01_q02" choose={() => {}}/>));
     expect(host.querySelector('a[href^="/nodes/"]')).toBeNull();
     expect(host.textContent).toContain("Contagion");
@@ -180,7 +178,7 @@ describe("quest map controls", () => {
     expect(modifiers.at(-1)!.compareDocumentPosition(connections) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it("hides routine modifier metadata while retaining linked sources, attacker labels and sharing", async () => {
+  it("hides routine modifier metadata while retaining linked sources, attacker labels and incoming anchors", async () => {
     const map = (await loadQuestMap("a05_ch01_q01"))!;
     const application = map.tiles.flatMap(t => t.applications)[0];
     const choose = vi.fn();
@@ -195,9 +193,8 @@ describe("quest map controls", () => {
     const source = [...host.querySelectorAll('button')].find(b=>b.textContent?.includes("Source location"))!;
     await act(async()=>source.click());
     expect(choose).toHaveBeenCalledWith(application.sourceCoordinate,true);
-    const share = host.querySelector<HTMLAnchorElement>('a[aria-label^="Link to "]')!;
-    expect(new URL(share.href).searchParams.get('application')).toBe(application.id);
-    expect(new URL(share.href).searchParams.get('sourceHash')).toBe(map.sourceHash);
+    expect(host.querySelector('[data-quest-application]')?.id).toBe(`application-${application.id}`);
+    expect(host.querySelector('a[aria-label^="Link to "]')).toBeNull();
     expect(host.textContent).not.toContain(map.sourceHash);
     await act(async () => root!.render(<QuestApplicationDetails application={{...application,sourceType:"Global",target:"defender"}} questId={map.questId} sourceHash={map.sourceHash} shareUrl="/quests/a05_ch01_q01?path=0" choose={choose}/>));
     expect(host.querySelector('summary')?.textContent).toContain("Global");

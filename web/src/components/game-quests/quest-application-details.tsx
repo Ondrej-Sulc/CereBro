@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { ArrowUpRight, ChevronDown, Link2 } from "lucide-react";
+import { ArrowUpRight, ChevronDown } from "lucide-react";
 import { QuestNodeModifierIcon } from "./quest-node-modifier-icon";
 import { gameText, type QuestApplication, type Coordinate } from "@cerebro/core/domain/game-quests";
 import styles from "./quest-application-details.module.css";
@@ -18,20 +18,36 @@ export function QuestApplicationContext({ application:a, sharedCount, choose, po
   </details>;
 }
 
-export function QuestApplicationDetails({ application:a, sourceHash, shareUrl, initialOpen = false, highlighted = false, showSourceType = true, showContext = true, choose, positionLabel }: ApplicationNavigation & {
+type ApplicationProps = ApplicationNavigation & {
   application:QuestApplication;questId:string;sourceHash:string;shareUrl:string;initialOpen?:boolean;highlighted?:boolean;showSourceType?:boolean;showContext?:boolean;
-}) {
-  const anchor=`application-${a.id}`;
-  const href=`${shareUrl}${shareUrl.includes("?")?"&":"?"}${new URLSearchParams({application:a.id,sourceHash})}#${encodeURIComponent(anchor)}`;
+};
+
+function ApplicationContent({application:a,showContext=true,choose,positionLabel}:ApplicationProps) {
   const name=gameText(a.name)||"Node modifier";
-  const sourceLabel=!showSourceType||a.sourceType==="Local"?null:a.sourceType==="Link"?"Linked":a.sourceType;
-  return <details className={styles.modifier} id={anchor} open={initialOpen||highlighted} data-quest-application={a.id} data-highlighted={highlighted||undefined}>
-    <summary className={styles.heading}><span className={styles.icon}><QuestNodeModifierIcon iconKey={a.iconKey} size={19}/></span><span className={styles.name}>{name}</span>{(sourceLabel||a.target==="attacker")&&<span className={styles.badges}>{sourceLabel&&<small>{sourceLabel}</small>}{a.target==="attacker"&&<small>Attacker</small>}</span>}<ChevronDown size={14} className={styles.chevron} aria-hidden="true"/></summary>
+  return <>
     <p className={styles.description}>{gameText(a.description)||"Description unavailable for this saved application."}</p>
     {showContext&&<QuestApplicationContext application={a} choose={choose} positionLabel={positionLabel}/>}
-    <div className={styles.actions}>
-      {a.definitionHref&&<Link prefetch={false} href={a.definitionHref} aria-label={`View ${name} node modifier`}>View modifier<ArrowUpRight size={13} aria-hidden="true"/></Link>}
-      <Link prefetch={false} href={href} aria-label={`Link to ${name} modifier`}><Link2 size={13} aria-hidden="true"/>Link to modifier</Link>
+    {a.definitionHref&&<div className={styles.actions}><Link prefetch={false} href={a.definitionHref} aria-label={`View ${name} node modifier`}>View modifier<ArrowUpRight size={13} aria-hidden="true"/></Link></div>}
+  </>;
+}
+
+export function QuestApplicationReader({application:a,highlighted=false,hidden,readerId,labelledBy,...props}:ApplicationProps&{hidden:boolean;readerId:string;labelledBy:string}) {
+  return <article className={styles.reader} id={`application-${a.id}`} hidden={hidden} data-quest-application={a.id} data-highlighted={highlighted||undefined}>
+    <div role="tabpanel" id={readerId} aria-labelledby={labelledBy} tabIndex={0}>
+      <h4 className={styles.readerHeading}><QuestNodeModifierIcon iconKey={a.iconKey} size={22}/><span className={styles.readerTitle}>{gameText(a.name)||"Node modifier"}</span>{a.target==="attacker"&&<small>Attacker</small>}</h4>
+      <ApplicationContent application={a} {...props}/>
     </div>
+  </article>;
+}
+
+export function QuestApplicationDetails({ application:a, initialOpen = false, highlighted = false, showSourceType = true, open, onExpandedChange, flat=false, ...props }: ApplicationProps & {
+  open?:boolean;onExpandedChange?:(expanded:boolean)=>void;flat?:boolean;
+}) {
+  const anchor=`application-${a.id}`;
+  const name=gameText(a.name)||"Node modifier";
+  const sourceLabel=!showSourceType||a.sourceType==="Local"?null:a.sourceType==="Link"?"Linked":a.sourceType;
+  return <details className={`${styles.modifier}${flat?` ${styles.flat}`:""}`} id={anchor} open={open??(initialOpen||highlighted)} onToggle={onExpandedChange?event=>onExpandedChange(event.currentTarget.open):undefined} data-quest-application={a.id} data-highlighted={highlighted||undefined}>
+    <summary className={styles.heading}><span className={styles.icon}><QuestNodeModifierIcon iconKey={a.iconKey} size={19}/></span><span className={styles.name}>{name}</span>{(sourceLabel||a.target==="attacker")&&<span className={styles.badges}>{sourceLabel&&<small>{sourceLabel}</small>}{a.target==="attacker"&&<small>Attacker</small>}</span>}<ChevronDown size={14} className={styles.chevron} aria-hidden="true"/></summary>
+    <ApplicationContent application={a} {...props}/>
   </details>;
 }

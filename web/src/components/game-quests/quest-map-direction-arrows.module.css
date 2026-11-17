@@ -1,7 +1,0 @@
-.directions{pointer-events:none}
-.resting{display:none}
-.resting[data-small=true]{display:inline}
-@media(prefers-reduced-motion:reduce){
-  .moving{display:none}
-  .resting{display:inline}
-}

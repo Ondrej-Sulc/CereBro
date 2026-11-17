@@ -1,7 +1,6 @@
-import { useId, type CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import { coordinateKey, type Coordinate } from "@cerebro/core/domain/game-quests";
 import styles from "./quest-map-paths.module.css";
-import {QuestMapDirectionArrows} from './quest-map-direction-arrows';
 
 type MapEdge = { from: Coordinate; to: Coordinate; portal: boolean };
 type Props = {
@@ -10,12 +9,10 @@ type Props = {
   routeEdges: ReadonlySet<string>;
   routePhases: ReadonlyMap<string, number>;
   highlightRoute: boolean;
-  scale?: number;
 };
 
 /** Presentation only: each captured directed edge retains its original endpoints. */
-export function QuestMapPaths({ edges, point, routeEdges, routePhases, highlightRoute, scale = 1 }: Props) {
-  const portalArrowId = `${useId().replace(/:/g, "")}-portal-direction`;
+export function QuestMapPaths({ edges, point, routeEdges, routePhases, highlightRoute }: Props) {
   const portals = new Map<string, { coordinate: Coordinate; active: boolean }>();
   for (const edge of edges) {
     if (!edge.portal) continue;
@@ -27,9 +24,6 @@ export function QuestMapPaths({ edges, point, routeEdges, routePhases, highlight
   }
 
   return <g className={styles.paths} aria-hidden="true" data-map-paths>
-    <defs><marker id={portalArrowId} viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto">
-      <path d="M1 1 8 5 1 9" fill="none" stroke="#ead5ff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </marker></defs>
     {edges.map((edge, index) => {
       const from = coordinateKey(edge.from), to = coordinateKey(edge.to), key = `${from}>${to}`;
       const [x1, y1] = point(edge.from), [x2, y2] = point(edge.to);
@@ -39,27 +33,36 @@ export function QuestMapPaths({ edges, point, routeEdges, routePhases, highlight
         ? { d: `M${x1},${y1} Q${(x1 + x2) / 2 + (y2 - y1) * .12},${(y1 + y2) / 2 - (x2 - x1) * .12} ${x2},${y2}`, fill: "none" }
         : { x1, y1, x2, y2 };
       const color = edge.portal ? "#d2a4ff" : "#8dd9ff";
+      const phase=routePhases.get(key)??0;
+      // Offset each dash by its length: all three layers share a leading end.
+      // Decreasing this positive source-distance phase moves light from → to.
+      const pulseStyle=(length:number)=>({"--route-phase":`${phase+length}px`} as CSSProperties);
       return <g key={`${key}:${edge.portal}:${index}`}
         data-route-edge data-from={from} data-to={to} data-route-selected={active}
         data-route-portal={edge.portal || undefined} data-route-muted={quiet || undefined}>
         <Connection {...geometry} data-route-casing stroke="#020912" strokeWidth={active ? 8 : 6}
           strokeOpacity={quiet ? .65 : .9} strokeLinecap="round" vectorEffect="non-scaling-stroke"/>
         <Connection {...geometry} data-route-glow className={styles.glow} stroke={color}
-          strokeWidth={active ? 8.5 : 5} strokeOpacity={active ? .24 : quiet ? .055 : .14}
+          strokeWidth={active ? 5.5 : 3.5} strokeOpacity={active ? .16 : quiet ? .035 : .09}
           strokeLinecap="round" vectorEffect="non-scaling-stroke"/>
-        {active && <Connection {...geometry} className={styles.sheath} stroke={color}
-          strokeWidth="3.2" strokeOpacity=".32" strokeLinecap="round" vectorEffect="non-scaling-stroke"/>}
         <Connection {...geometry} data-route-line className={styles.core}
-          stroke={active ? edge.portal ? "#f2e3ff" : "#e2f7ff" : edge.portal ? "#c6a2e5" : "#a9d7ec"}
-          strokeWidth={active ? 1.5 : 1.15} strokeOpacity={quiet ? .46 : .92}
-          strokeLinecap="round" vectorEffect="non-scaling-stroke" markerEnd={edge.portal ? `url(#${portalArrowId})` : undefined}/>
+          stroke={active ? edge.portal ? "#dfc6f2" : "#b9e6fa" : edge.portal ? "#ab86c6" : "#82adc5"}
+          strokeWidth={active ? 1.35 : 1.05} strokeOpacity={active ? .8 : quiet ? .28 : .65}
+          strokeLinecap="round" vectorEffect="non-scaling-stroke"/>
+        <Connection {...geometry} data-route-pulse-trail className={styles.pulseTrail}
+          style={pulseStyle(26)} strokeDashoffset={phase+26}
+          stroke={color} strokeOpacity={active ? .28 : quiet ? .09 : .18} strokeWidth="4.6" strokeDasharray="26 34"
+          strokeLinecap="round" vectorEffect="non-scaling-stroke"/>
+        <Connection {...geometry} data-route-pulse-body className={styles.pulseBody}
+          style={pulseStyle(13)} strokeDashoffset={phase+13}
+          stroke={edge.portal ? "#d5b6fa" : "#9fe5ff"} strokeOpacity={active ? .7 : quiet ? .32 : .55} strokeWidth="3" strokeDasharray="13 47"
+          strokeLinecap="round" vectorEffect="non-scaling-stroke"/>
         <Connection {...geometry} data-route-pulse className={styles.pulse}
-          style={{ "--route-phase": `${routePhases.get(key) ?? 0}px` } as CSSProperties}
-          stroke={edge.portal ? "#fff6ff" : "#f3fdff"} strokeOpacity={active ? 1 : quiet ? .35 : .65} strokeWidth="2.8" strokeDasharray="16 44"
+          style={pulseStyle(4)} strokeDashoffset={phase+4}
+          stroke={edge.portal ? "#fff4ff" : "#f4ffff"} strokeOpacity={active ? 1 : quiet ? .72 : .98} strokeWidth="1.8" strokeDasharray="4 56"
           strokeLinecap="round" vectorEffect="non-scaling-stroke"/>
       </g>;
     })}
-    <QuestMapDirectionArrows edges={edges} point={point} routeEdges={routeEdges} highlightRoute={highlightRoute} scale={scale}/>
     {[...portals].map(([key, portal]) => {
       const [x, y] = point(portal.coordinate);
       return <g key={key} data-portal-beacon={key} className={styles.portalBeacon} opacity={portal.active ? 1 : .5}>

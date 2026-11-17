@@ -85,6 +85,7 @@ export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}
       </section>
       <section className={styles.inspector} aria-labelledby="coordinate-heading" aria-live="polite">
         <div className={styles.inspectorBody}>
+          <p className={styles.inspectorEyebrow}>{selectedRegion ? "Encounter region" : selectedEncounters.length ? "Encounter details" : "Map location"}</p>
           {selectedRegion?<QuestSpawnRegionInspector map={map} region={selectedRegion} shareUrl={shareUrl} inspectTile={()=>choose(selectedRegion.anchor,true)}/>:<>
           <div className={styles.inspectorHeader}>
             {selectedEncounters.length===1 ? (()=>{const e=selectedEncounters[0],portrait=questEncounterPortrait(e,portraits);return <QuestEncounterSummary headingId="coordinate-heading" name={portrait?.name??e.champion?.name??e.name} portrait={portrait} href={e.champion?portrait?.href??`/champions/${e.champion.slug}`:null} rarity={e.rarity} rank={e.rank} level={e.level} signature={e.signature} ascension={e.ascension} npc={!e.champion}/>;})() : <h2 id="coordinate-heading">{questPositionLabel(map,selectedTile.coordinate)}</h2>}
@@ -97,7 +98,7 @@ export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}
             {e.candidates.length > 1 && <p>Recorded alternatives: {e.candidates.map(c => c.name).join(", ")}</p>}
           </div>; })}
           {!selectedEncounters.length && <p className={styles.muted}>No placed defender recorded here.</p>}
-          <div className={styles.modifierSection}><h3>Node modifiers <span>{selectedTile.applications.length}</span></h3>{!selectedTile.applications.length && <p className={styles.muted}>No node modifiers recorded here.</p>}<QuestModifierGroups applications={selectedTile.applications} questId={map.questId} sourceHash={map.sourceHash} shareUrl={shareUrl} selectedApplication={selectedApplication} positionLabel={c=>questPositionLabel(map,c)} choose={choose}/></div>
+          <div className={styles.modifierSection}><h3>Node modifiers <span>{selectedTile.applications.length}</span></h3>{!selectedTile.applications.length && <p className={styles.muted}>No node modifiers recorded here.</p>}<QuestModifierGroups key={`${selected}:${map.sourceHash}:${selectedApplication??""}`} applications={selectedTile.applications} questId={map.questId} sourceHash={map.sourceHash} shareUrl={shareUrl} selectedApplication={selectedApplication} positionLabel={c=>questPositionLabel(map,c)} choose={choose}/></div>
           <QuestMapConnections key={selected} map={map} tile={selectedTile} choose={choose}/>
           </>}
         </div>
