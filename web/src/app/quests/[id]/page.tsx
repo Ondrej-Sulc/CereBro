@@ -31,7 +31,7 @@ export default async function QuestPage({ params, searchParams }: Props) {
   const headerPortraits=needsBossPortraits?{...portraits,...await loadBossPortraits([q])}:portraits;
   const artwork = getQuestArtwork(q.id);
   const rewards = map ? projectQuestRewards(map, portraits) : rewardRecord?projectRewardRecord(rewardRecord,portraits):[];
-  return <div className="mx-auto max-w-7xl px-4 py-5 sm:px-8 sm:py-7">
+  return <div className="w-full min-w-0 px-4 py-5 sm:px-8 sm:py-7">
     <QuestPageHeader quest={q} portraits={headerPortraits} map={map} />
     {(unplaced||parentRewards.length>0)&&<nav aria-label="Quest rewards context" className="mb-4 flex flex-wrap items-center gap-x-4 text-xs text-sky-300">
       {unplaced&&<a href="#unplaced-defender-previews" className="inline-flex min-h-11 items-center">Additional defender previews →</a>}

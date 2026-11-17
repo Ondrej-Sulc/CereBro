@@ -6,11 +6,11 @@ import { Link2, Route } from "lucide-react";
 import { coordinateKey, routeEncounters, type Coordinate, type QuestMap } from "@cerebro/core/domain/game-quests";
 import { QuestModifierGroups } from "./quest-modifier-groups";
 import { QuestBoard } from "./quest-board";
-import { QuestPortrait, questEncounterPortrait } from "./quest-portrait";
+import { questEncounterPortrait } from "./quest-portrait";
 import type { QuestPortrait as Portrait } from "@/lib/game-quests/presentation";
 import { questPositionLabel } from "@cerebro/core/domain/game-quests/navigation";
 import type { QuestSpawnRegionLayer } from "@cerebro/core/domain/game-quests/spawn-regions";
-import { entryCoordinate, mapDefenders, regionPortrait } from "./quest-spawn-region-presentation";
+import { entryCoordinate, mapDefenders } from "./quest-spawn-region-presentation";
 import { QuestSpawnRegionInspector } from "./quest-spawn-region-inspector";
 import { QuestEncounterSummary } from "./quest-encounter-summary";
 import { QuestMapConnections } from "./quest-map-connections";
@@ -28,13 +28,9 @@ export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}
   const [selected, setSelected] = useState(initialRegionChoice?coordinateKey(initialRegionChoice.anchor):initialNode && map.tiles.some(t => coordinateKey(t.coordinate) === initialNode) ? initialNode : coordinateKey(firstEntry?entryCoordinate(firstEntry):initial.coordinates[0]));
   const [selectedRegionId,setSelectedRegionId]=useState<string|undefined>(initialRegionChoice?.id);
   const latestSelection=useRef<{route:number;key:string;region?:string;highlight:boolean}>({route:initial.index,key:selected,region:initialRegionChoice?.id,highlight:Boolean(explicitInitialPath)});
-  const [allEncounters, setAllEncounters] = useState(false);
   const [selectedApplication,setSelectedApplication]=useState(initialApplication);
   const scrollRef = useRef<HTMLDivElement>(null);
   const selectedTile = map.tiles.find(t => coordinateKey(t.coordinate) === selected)!;
-  const fights = routeEncounters(map, pathIndex);
-  const displayAll = !highlightRoute || allEncounters;
-  const displayed = mapDefenders(map,layer,displayAll?undefined:pathIndex);
   const selectedRegion=layer?.regions.find(r=>r.id===selectedRegionId);
   const selectedEncounters = map.encounters.filter(e => coordinateKey(e.coordinate) === selected);
   function commit(c:Coordinate,center:boolean,route:number,region?:string,highlight=latestSelection.current.highlight){
@@ -59,7 +55,6 @@ export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}
   function chooseRegion(id:string,center=false,route=latestSelection.current.route){const region=layer?.regions.find(r=>r.id===id);if(region)commit(region.anchor,center,region.pathIndices.includes(route)?route:region.pathIndices[0]??route,id);}
   function chooseRoute(index:number|null){
     if(index!==null&&!map.paths.some(path=>path.index===index))return;
-    setAllEncounters(false);
     if(index===null){const current=latestSelection.current;const tile=map.tiles.find(t=>coordinateKey(t.coordinate)===current.key)!;commit(tile.coordinate,false,current.route,current.region,false);return;}
     const first=mapDefenders(map,layer,index)[0];
     commit(first?entryCoordinate(first):map.paths.find(path=>path.index===index)!.coordinates[0],false,index,first?.kind==='region'?first.region.id:undefined,true);
@@ -109,24 +104,5 @@ export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}
       </section>
     </div>
     <details className={styles.mapAbout}><summary>About this map</summary><div className={styles.summary}><span><strong>{map.paths.length}</strong> recorded routes</span><span><strong>{map.encounters.length}</strong> placed {map.encounters.length===1?'opponent':'opponents'}</span>{layer&&<span className={styles.regionSummary}><strong>{layer.regions.length}</strong> {layer.regions.length===1?'encounter region':'encounter regions'}</span>}{map.modifierCoverage?.definitionCapturedAt&&<span data-modifier-definition-date>Modifier descriptions recorded <time dateTime={map.modifierCoverage.definitionCapturedAt}>{new Intl.DateTimeFormat('en-GB',{dateStyle:'medium',timeZone:'UTC'}).format(new Date(map.modifierCoverage.definitionCapturedAt))}</time></span>}</div></details>
-    <section className={styles.encounters}>
-      <div className={styles.sectionHeading}><div><h2>{displayAll?(layer?'All opponents':'All placed opponents'):`Route ${pathIndex+1} · Encounter order`}</h2>
-        <p>{layer?(displayAll?`${map.encounters.length} fixed ${map.encounters.length===1?'position':'positions'} · ${layer.regions.length} encounter regions`:`${displayed.length} ${displayed.length===1?'defender':'defenders'} on this recorded route`):displayAll?`${map.encounters.length} unique ${map.encounters.length===1?'placement':'placements'} across this map`:`${fights.length} ${fights.length===1?'fight':'fights'} on this recorded route`}</p>
-      </div>{highlightRoute&&<button onClick={()=>setAllEncounters(v=>!v)}>{allEncounters?'Selected route':layer?'All opponents':'All placements'}</button>}</div>
-      <ol className={styles.fightList}>{displayed.map((entry,i)=>{
-        const region=entry.kind==='region'?entry.region:undefined,e=entry.kind==='fixed'?entry.encounter:undefined;
-        const name=region?.defender.name??e?.champion?.name??e?.name,rarity=region?.defender.rarity??e!.rarity;
-        const paths=region?.pathIndices??e!.pathIndices,portrait=region?regionPortrait(region):questEncounterPortrait(e!,portraits);
-        const pressed=region?selectedRegion?.id===region.id:!selectedRegion&&selected===coordinateKey(e!.coordinate);
-        return <li key={region?`region:${region.id}`:e!.id} data-region-list-entry={region?.id}>
-          <button aria-pressed={pressed} onClick={()=>region?chooseRegion(region.id,true):choose(e!.coordinate,true)}>
-            <span className={region?`${styles.ordinal} ${styles.regionOrdinal}`:styles.ordinal}>{displayAll?(region?'∼':'·'):i+1}</span><QuestPortrait portrait={portrait}/>
-            <span className={styles.fightText}><strong>{name}</strong><small>{rarity}★{region?' · Encounter region':<>{e?.champion&&portraits[e.gameId]?` · ${portraits[e.gameId].className}`:''}{e?.final?' · Final':''}{!e?.champion?' · NPC / legacy':''}</>}</small></span>
-            <span className={styles.pathCount}>{paths.length>1?`${paths.length} routes`:''} ↗</span>
-          </button>
-        </li>;
-      })}</ol>
-    </section>
-
   </div>;
 }

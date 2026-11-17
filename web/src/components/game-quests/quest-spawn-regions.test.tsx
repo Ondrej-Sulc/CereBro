@@ -55,20 +55,25 @@ describe("spawn-region map presentation",()=>{
     expect(host.querySelector('[data-region-inspector]')).not.toBeNull();
     expect(marker.getAttribute('aria-pressed')).toBe("true");
   });
-  it("counts a region once, filters it by route, and preserves selection while zooming",async()=>{
+  it("keeps regions selectable on the map across route changes without a duplicate opponent list",async()=>{
     const {host}=await setup("fixture-region");
     const scale=Number(host.querySelector('[data-zoom]')?.getAttribute('data-zoom'));
     await act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="Zoom in"]')!.click());
     expect(Number(host.querySelector('[data-zoom]')?.getAttribute('data-zoom'))).toBeGreaterThan(scale);
     expect(host.querySelector('[data-region-inspector]')).not.toBeNull();
-    expect(host.querySelectorAll('[data-region-list-entry]')).toHaveLength(1);
+    expect(host.querySelectorAll('[data-spawn-region="fixture-region"]')).toHaveLength(1);
+    expect(host.querySelector('ol')).toBeNull();
     const route=host.querySelector<HTMLSelectElement>('[aria-label="Recorded routes"]')!;
     await act(async()=>{route.value='1';route.dispatchEvent(new Event('change',{bubbles:true}));});
-    expect(host.querySelectorAll('[data-region-list-entry]')).toHaveLength(0);
+    expect(host.querySelectorAll('[data-spawn-region="fixture-region"]')).toHaveLength(1);
     expect(host.querySelector('[data-region-inspector]')).toBeNull();
-    const all=[...host.querySelectorAll('button')].find(b=>b.textContent==='All opponents')!;
-    await act(async()=>all.click());
-    expect(host.querySelectorAll('[data-region-list-entry]')).toHaveLength(1);
+    await act(async()=>{route.value='';route.dispatchEvent(new Event('change',{bubbles:true}));});
+    const marker=host.querySelector('[data-spawn-region="fixture-region"]')!;
+    await act(async()=>marker.dispatchEvent(new KeyboardEvent('keydown',{key:' ',bubbles:true})));
+    expect(host.querySelector('[data-region-inspector]')).not.toBeNull();
+    expect(marker.getAttribute('aria-pressed')).toBe('true');
+    expect(new URL(window.location.href).searchParams.get('region')).toBe('fixture-region');
+    expect(new URL(window.location.href).searchParams.has('path')).toBe(false);
     expect([...host.querySelectorAll('title,[aria-label]')].every(e=>!(/\b\d+,\s*\d+\b/.test(e.getAttribute('aria-label')??e.textContent??'')))).toBe(true);
   });
   it("renders all real Abyss regions while preserving native fixed placements and exact NPC portraits",async()=>{
