@@ -12,6 +12,24 @@ export function isChampionImages(obj: unknown): obj is Record<string, unknown> {
 // 1x1 transparent GIF base64
 const FALLBACK_IMAGE_URL = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 
+export type ChampionBannerArtwork =
+  | { kind: "hero"; key: "hero"; url: string }
+  | { kind: "secondary" | "portrait"; key: string; url: string; maxSize: number }
+  | { kind: "none"; key: null; url: null };
+
+/** Banner-sized artwork and small character images need different layouts. */
+export function getChampionBannerArtwork(images: unknown): ChampionBannerArtwork {
+  if (!isChampionImages(images)) return { kind: "none", key: null, url: null };
+  if (isImageUrl(images.hero)) return { kind: "hero", key: "hero", url: images.hero.trim() };
+  for (const [kind, keys] of [["secondary", SECONDARY_IMAGE_KEYS], ["portrait", PRIMARY_IMAGE_KEYS]] as const) {
+    const key = keys.find(key => isImageUrl(images[key]));
+    if (!key) continue;
+    const size = key.startsWith("full_") ? 256 : Number(key.split("_")[1]);
+    return { kind, key, url: (images[key] as string).trim(), maxSize: size };
+  }
+  return { kind: "none", key: null, url: null };
+}
+
 export function getChampionImageUrl(
   images: unknown,
   size: "32" | "64" | "128" | "full" = "full",

@@ -6,6 +6,7 @@ import type { KitResistance } from "@/lib/champion-kit"
 import type { ChampionCrystalAvailability } from "@cerebro/core/domain/champion-crystals"
 import type { ChampionAscensionRules } from "@cerebro/core/domain/champion-ascension"
 import type { ChampionAcquisition } from "@cerebro/core/domain/champion-acquisition"
+import type { ChampionBannerArtwork } from "@/lib/championHelper"
 
 export type ChampionDetailsPayload = {
   id: number
@@ -119,6 +120,7 @@ export type ChampionDetailsView = {
   champion: ChampionDetailsPayload
   portraitUrl: string
   heroUrl: string
+  bannerArtwork?: ChampionBannerArtwork
   secondaryUrl: string
   accent: string
   selectedStat: ChampionStatRow | undefined

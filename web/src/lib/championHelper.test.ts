@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getChampionImageUrl, getChampionImageUrlOrPlaceholder, isChampionImages } from "./championHelper";
+import { getChampionBannerArtwork, getChampionImageUrl, getChampionImageUrlOrPlaceholder, isChampionImages } from "./championHelper";
 
 // Summoned Symbiote's live record has all portrait sizes, but no hero key.
 const portraits = {
@@ -9,6 +9,19 @@ const portraits = {
 };
 
 describe("champion image selection", () => {
+  it("distinguishes true banner art from smaller fallback images without changing the selected URL", () => {
+    expect(getChampionBannerArtwork({ ...portraits, hero: " /hero.png " })).toEqual({ kind: "hero", key: "hero", url: "/hero.png" });
+    expect(getChampionBannerArtwork(portraits)).toEqual({ kind: "secondary", key: "full_secondary", url: portraits.full_secondary, maxSize: 256 });
+    expect(getChampionBannerArtwork({ s_128: portraits.s_128, p_128: portraits.p_128 })).toEqual({ kind: "secondary", key: "s_128", url: portraits.s_128, maxSize: 128 });
+    expect(getChampionBannerArtwork({ p_64: portraits.p_64 })).toEqual({ kind: "portrait", key: "p_64", url: portraits.p_64, maxSize: 64 });
+  });
+
+  it("keeps tiny fallback sources bounded and leaves missing banner art neutral", () => {
+    expect(getChampionBannerArtwork({ s_32: "/tiny.png", full_secondary: " ", hero: false })).toEqual({ kind: "secondary", key: "s_32", url: "/tiny.png", maxSize: 32 });
+    for (const images of [null, {}, { hero: " ", p_128: 12 }, []]) {
+      expect(getChampionBannerArtwork(images)).toEqual({ kind: "none", key: null, url: null });
+    }
+  });
   it("keeps valid portraits visible when hero artwork is absent", () => {
     expect(isChampionImages(portraits)).toBe(true);
     for (const size of ["32", "64", "128", "full"] as const) {

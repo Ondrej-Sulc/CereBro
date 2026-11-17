@@ -40,6 +40,40 @@
   background: linear-gradient(90deg, #080b10, rgb(8 11 16 / .97) 22%, rgb(8 11 16 / .72) 46%, rgb(8 11 16 / .18) 72%, rgb(8 11 16 / .55));
 }
 
+.heroWithFallback {
+  background: radial-gradient(ellipse at 82% 50%, color-mix(in srgb, var(--champion-accent) 10%, transparent), transparent 52%), linear-gradient(115deg, #0b111b, #101b26);
+}
+.heroWithFallback .heroShade { background: linear-gradient(90deg, #080b104d, transparent 75%); }
+.heroFallbackArt {
+  position: absolute;
+  top: 50%;
+  right: clamp(28px, 5vw, 88px);
+  display: grid;
+  place-items: center;
+  width: min(30%, var(--champion-art-limit));
+  aspect-ratio: 1;
+  transform: translateY(-50%);
+  isolation: isolate;
+}
+.heroFallbackArt::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  z-index: -1;
+  background: radial-gradient(circle, color-mix(in srgb, var(--champion-accent) 17%, transparent), transparent 66%);
+}
+/* Intrinsic image dimensions win below the cap; neither the source nor its
+   optimized response may be enlarged to fill an oversized banner container. */
+.heroFallbackImage {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 16px rgb(0 0 0 / .3));
+}
+
 .dossierSections { position: relative; }
 .tabsBar { position: sticky; top: var(--champion-header-height); z-index: 40; padding-inline: var(--champion-frame-gutter); scroll-margin-top: var(--champion-header-height); }
 /* Only paint changes at the docking edge; controls keep their layout and focus.
@@ -250,6 +284,9 @@ button.kitEffectHeader:focus-visible { outline: 2px solid #94a3b8; outline-offse
   .heroArt { inset: 0; width: 100%; mask-image: none; }
   .heroArt img { object-position: 60% 20%; opacity: .8; }
   .heroShade { background: linear-gradient(180deg, rgb(8 11 16 / .65), rgb(8 11 16 / .2) 30%, rgb(8 11 16 / .45) 65%, #080b10), linear-gradient(90deg, rgb(8 11 16 / .3), transparent); }
+  .heroFallbackArt { top: 20px; right: 24px; width: min(22%, 104px, var(--champion-art-limit)); transform: none; }
+  .heroWithFallback .heroContent > div:first-child { padding-right: min(24vw, 112px); }
+  .heroWithFallback[data-banner-art="none"] .heroContent > div:first-child { padding-right: 0; }
 }
 
 @media (max-width: 639px) {

@@ -11,7 +11,7 @@ import * as Dialog from "@radix-ui/react-dialog"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { getChampionClassColors } from "@/lib/championClassHelper"
-import { getChampionImageUrlOrPlaceholder, isChampionImages } from "@/lib/championHelper"
+import { getChampionBannerArtwork, getChampionImageUrlOrPlaceholder, isChampionImages } from "@/lib/championHelper"
 import { applyAscensionToStatValue, maxAscensionLevelForRarity, maxSigForRarity, projectMcocPrestige } from "@/lib/mcoc-prestige"
 import { getAscensionEffects } from "@cerebro/core/domain/champion-ascension"
 import { prepareChampionAbilityTextView } from "@/lib/champion-ability-text"
@@ -80,6 +80,7 @@ export function ChampionDetailsClient(props: ChampionDetailsProps) {
     champion,
     portraitUrl: getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "full"),
     heroUrl: getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "full", "hero"),
+    bannerArtwork: getChampionBannerArtwork(champion.images),
     secondaryUrl: getChampionImageUrlOrPlaceholder(champion.images as ChampionImages, "full", "secondary"),
     accent,
     selectedStat,
@@ -147,6 +148,7 @@ function ChampionDossier({ view, pageState, updatePageState, availability }: {
   updatePageState: (patch: Partial<ChampionPageState>, push?: boolean) => void
 }) {
   const tabs = availability.sections.map(section => ({ ...DOSSIER_TABS.find(tab => tab.value === section.value)!, label: section.label }))
+  const bannerArtwork = view.bannerArtwork ?? getChampionBannerArtwork(view.champion.images)
   const showToolbar = tabs.length > 1 || !!view.selectedStat
   const hasSection = (value: ChampionPageState["tab"]) => tabs.some(tab => tab.value === value)
   const singleSectionLabel = tabs.length === 1 ? { "aria-label": tabs[0].label, "aria-labelledby": undefined } : {}
@@ -209,10 +211,13 @@ function ChampionDossier({ view, pageState, updatePageState, availability }: {
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[900px] bg-[radial-gradient(circle_at_76%_22%,rgba(255,255,255,.05),transparent_42%)]" />
       <Tabs value={pageState.tab} onValueChange={selectSection} className={styles.dossierSections}>
         <div className={styles.heroFrame}>
-          <section ref={heroRef} className={styles.hero} aria-label={`${view.champion.name} banner`}>
-            <div className={styles.heroArt}>
-              <Image src={view.heroUrl} alt="" fill priority sizes="(max-width: 1024px) 100vw, 78vw" className="object-cover object-center" />
-            </div>
+          <section ref={heroRef} className={cn(styles.hero, bannerArtwork.kind !== "hero" && styles.heroWithFallback)} data-banner-art={bannerArtwork.kind} aria-label={`${view.champion.name} banner`}>
+            {bannerArtwork.kind === "hero" && <div className={styles.heroArt} data-champion-banner-art="hero">
+              <Image src={bannerArtwork.url} alt="" fill priority sizes="(max-width: 1024px) 100vw, 78vw" className="object-cover object-center" />
+            </div>}
+            {(bannerArtwork.kind === "secondary" || bannerArtwork.kind === "portrait") && <div className={styles.heroFallbackArt} data-champion-banner-art={bannerArtwork.kind} data-artwork-key={bannerArtwork.key} style={{ "--champion-art-limit": `${bannerArtwork.maxSize}px` } as CSSProperties} aria-hidden="true">
+              <Image src={bannerArtwork.url} alt="" width={bannerArtwork.maxSize} height={bannerArtwork.maxSize} unoptimized className={styles.heroFallbackImage} />
+            </div>}
             <div className={styles.heroShade} />
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-64 bg-gradient-to-t from-[#080b10] via-[#080b10]/70 to-transparent" />
             <div className="pointer-events-none absolute inset-0 opacity-[.045] [background-image:linear-gradient(rgba(255,255,255,.5)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.5)_1px,transparent_1px)] [background-size:88px_88px]" />

@@ -19,7 +19,7 @@ vi.mock("next/navigation", async () => {
   }
   return { useSearchParams: () => new URLSearchParams(useSyncExternalStore(subscribe, () => window.location.search, () => "")) }
 })
-vi.mock("next/image", () => ({ default: () => null }))
+vi.mock("next/image", () => ({ default: ({ src, alt, fill, unoptimized, width, height, sizes, className }: { src: string; alt: string; fill?: boolean; unoptimized?: boolean; width?: number; height?: number; sizes?: string; className?: string }) => <img src={src} alt={alt} width={width} height={height} sizes={sizes} className={className} data-image-layout={fill ? "fill" : "intrinsic"} data-image-unoptimized={unoptimized ? "true" : undefined} /> }))
 vi.mock("./champion-kit-overview", () => ({ ChampionKitOverview: ({ onViewSynergies, sideContent }: { onViewSynergies: (id: string) => void; sideContent?:ReactNode }) => <><button onClick={() => onViewSynergies("catalog_alias")}>Read synergy source</button>{sideContent}</> }))
 vi.mock("@/app/profile/roster/prestige-curve-chart", () => ({ PrestigeCurveChart: ({ data, currentSig }: { data: Array<{ sig: number; prestige: number }>; currentSig: number }) => <output aria-label="Prestige chart data">{data.find(point => point.sig === currentSig)?.prestige}</output> }))
 vi.mock("./champion-synergies-panel", () => ({ ChampionSynergiesPanel: ({ targetSynergyId, onClearTarget }: { targetSynergyId: string | null; onClearTarget: () => void }) => <div data-synergy-probe={targetSynergyId ?? ""}><button onClick={onClearTarget}>Clear linked source</button></div> }))
@@ -116,6 +116,31 @@ it("identifies NPC champions and keeps a dossier with no collectible tiers viewa
   expect(document.querySelectorAll('[role="tab"]')).toHaveLength(0)
   expect(document.body.textContent).toContain("Additional details have not been recorded")
   expect(document.body.textContent).not.toContain("Build stats are not available")
+})
+
+it("keeps true hero art full bleed and uses a contained intrinsic image for secondary fallback art", async () => {
+  const banner = () => document.querySelector('section[aria-label="Current banner"]')!
+  await act(async () => root.render(<ChampionDetailsClient {...props} champion={{ ...props.champion, images: { hero: "/hero.png", s_128: "/secondary.png" } }} />))
+  expect(banner().getAttribute("data-banner-art")).toBe("hero")
+  expect(banner().querySelector('[data-champion-banner-art="hero"] img')?.getAttribute("data-image-layout")).toBe("fill")
+  await act(async () => root.render(<ChampionDetailsClient {...props} champion={{ ...props.champion, images: { s_128: "/secondary.png" } }} />))
+  expect(banner().getAttribute("data-banner-art")).toBe("secondary")
+  const secondary = banner().querySelector('[data-champion-banner-art="secondary"] img')!
+  expect(secondary.getAttribute("src")).toBe("/secondary.png")
+  expect(secondary.getAttribute("data-image-layout")).toBe("intrinsic")
+  expect(secondary.getAttribute("data-image-unoptimized")).toBe("true")
+  expect(secondary.getAttribute("width")).toBe("128")
+})
+
+it("uses a bounded portrait for portrait-only records and neutral background when all artwork is missing", async () => {
+  const banner = () => document.querySelector('section[aria-label="Current banner"]')!
+  await act(async () => root.render(<ChampionDetailsClient {...props} champion={{ ...props.champion, images: { p_64: "/portrait.png" } }} />))
+  const portrait = banner().querySelector('[data-champion-banner-art="portrait"] img')!
+  expect(portrait.getAttribute("width")).toBe("64")
+  expect(portrait.getAttribute("data-image-layout")).toBe("intrinsic")
+  await act(async () => root.render(<ChampionDetailsClient {...props} champion={{ ...props.champion, images: {} }} />))
+  expect(banner().getAttribute("data-banner-art")).toBe("none")
+  expect(banner().querySelector('[data-champion-banner-art]')).toBeNull()
 })
 
 it("shows duel targets without recommending the first active player and preserves copying and status", async()=>{
