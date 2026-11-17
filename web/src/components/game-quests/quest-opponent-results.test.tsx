@@ -1,11 +1,15 @@
 // @vitest-environment jsdom
 import { renderToStaticMarkup } from "react-dom/server";
-import type { AnchorHTMLAttributes } from "react";
+import { act, type AnchorHTMLAttributes } from "react";
+import { createRoot } from "react-dom/client";
 import { expect,it,vi } from "vitest";
 import { loadQuestOpponentMatches } from "@cerebro/core/data/game-quests/opponent-lookup";
 import { findQuest } from "@cerebro/core/data/game-quests";
 import { getGroupMenuArtwork } from "@cerebro/core/data/game-quests/menu-art";
 import { QuestOpponentResults } from "./quest-opponent-results";
+import { QuestOpponentSort } from "./quest-opponent-sort";
+const navigation=vi.hoisted(()=>({push:vi.fn<(href:string)=>void>()}));
+vi.mock("next/navigation",()=>({useRouter:()=>navigation}));
 
 vi.mock("next/link",()=>({default:({prefetch,...props}:AnchorHTMLAttributes<HTMLAnchorElement>&{prefetch?:boolean})=>{void prefetch;return <a {...props}/>;}}));
 const render=async(filters={})=>{const host=document.createElement('div');host.innerHTML=renderToStaticMarkup(<QuestOpponentResults gameId="absorbingman" matches={await loadQuestOpponentMatches("absorbingman")} filters={filters}/>);return host;};
@@ -29,7 +33,8 @@ it("preserves active filters in category links and form controls",async()=>{
   expect(form.querySelector<HTMLInputElement>('[name="q"]')?.value).toBe('pain');
   const story=host.querySelector<HTMLAnchorElement>('nav a[href*="category=Story"]')!;
   expect(new URL(story.href).searchParams.get('q')).toBe('pain');expect(new URL(story.href).searchParams.get('rarity')).toBe('7');
-  expect(host.querySelector('details[open]')).not.toBeNull();
+  expect(form.querySelector<HTMLInputElement>('[name="rarity"]')?.value).toBe('7');
+  expect(host.querySelector('nav[aria-label="Filter by star level"] a[aria-current="page"]')?.textContent).toContain('7★');
 });
 
 it("provides filter recovery without implying a champion is unavailable in the game",async()=>{
@@ -87,4 +92,68 @@ it.each(["missing quest","mismatched act"])("keeps the group and map link when a
   expect(host.querySelector('[data-quest-opponent-group-art]')).toBeNull();
   expect(host.querySelector('[data-quest-opponent-result] a')?.getAttribute('href')).toBe(match.href);
   expect(host.textContent).toContain(quest.name);
+});
+
+it("shows contextual quest counts beside quick filters and preserves search, category and sorting",async()=>{
+  const host=await render({query:'pain',rarity:'6',section:'Special',sort:'rarity'});
+  const rarity=host.querySelector<HTMLElement>('nav[aria-label="Filter by star level"]')!;
+  expect(rarity).not.toBeNull();
+  const seven=[...rarity.querySelectorAll<HTMLAnchorElement>('a')].find(link=>link.textContent?.startsWith('7★'))!;
+  expect(seven.textContent).toMatch(/7★\s*2/);
+  const six=[...rarity.querySelectorAll<HTMLAnchorElement>('a')].find(link=>link.textContent?.startsWith('6★'))!;
+  expect(six.textContent).toMatch(/6★\s*0/);
+  expect(six.getAttribute('aria-current')).toBe('page');
+  const change=new URL(seven.href);
+  expect(change.searchParams.get('q')).toBe('pain');expect(change.searchParams.get('category')).toBe('Special');
+  expect(change.searchParams.get('rarity')).toBe('7');expect(change.searchParams.get('sort')).toBe('rarity');expect(change.searchParams.has('page')).toBe(false);
+  const boss=host.querySelector<HTMLAnchorElement>('[data-boss-filter]')!;
+  expect(boss.textContent).toMatch(/Bosses only\s*0/);
+  expect(new URL(boss.href).searchParams.get('sort')).toBe('rarity');
+  const select=host.querySelector<HTMLSelectElement>('select[name="sort"]')!;
+  expect(select.value).toBe('rarity');expect(select.getAttribute('form')).toBe(host.querySelector('form')?.id);
+  expect(host.querySelector('a[href*="category=Story"]')?.getAttribute('href')).toContain('sort=rarity');
+});
+
+it("keeps active zero-count filters clearable and shows truthful collapsible group counts",async()=>{
+  const empty=await render({bossOnly:true,sort:'boss'});
+  const toggle=empty.querySelector<HTMLAnchorElement>('[data-boss-filter]')!;
+  expect(toggle.getAttribute('aria-current')).toBe('page');expect(toggle.textContent).toMatch(/0/);
+  expect(new URL(toggle.href).searchParams.get('role')).toBe('');expect(new URL(toggle.href).searchParams.get('sort')).toBe('boss');
+  const host=await render();
+  const story=host.querySelector('section[aria-label="Act 9"]')!;
+  const disclosure=story.querySelector('details')!;
+  expect(disclosure.hasAttribute('open')).toBe(true);
+  expect(disclosure.querySelector('summary')?.textContent).toMatch(/3\s+quests/);
+  disclosure.open=false;
+  expect(disclosure.hasAttribute('open')).toBe(false);
+  expect(disclosure.querySelectorAll('[data-quest-opponent-result] a')).toHaveLength(3);
+  const source=(await loadQuestOpponentMatches('absorbingman'))[0];
+  const many=Array.from({length:49},(_,index)=>({...source,key:`paged:${index}`,href:`/quests/quest-${index}?node=1%2C1`,quest:{...source.quest,id:`quest-${index}`,questIndex:index+1}}));
+  const paged=document.createElement('div');paged.innerHTML=renderToStaticMarkup(<QuestOpponentResults gameId="absorbingman" matches={many} filters={{page:'2'}}/>);
+  expect(paged.querySelector('section[aria-label="Act 9"] summary')?.textContent).toMatch(/24 of 49\s+quests/);
+  expect(paged.querySelectorAll('[data-quest-opponent-result]')).toHaveLength(24);
+});
+
+it("shows recorded rank/level after stars and leaves unavailable builds absent",async()=>{
+  const first=(await loadQuestOpponentMatches("absorbingman"))[0];
+  const matches=[{...first,key:'known',rank:3,level:45},{...first,key:'unknown',rank:undefined,level:undefined},{...first,key:'invalid',rank:0,level:45}];
+  const host=document.createElement('div');host.innerHTML=renderToStaticMarkup(<QuestOpponentResults gameId="absorbingman" matches={matches} filters={{}}/>);
+  const badges=[...host.querySelectorAll('[data-encounter-build]')];
+  expect(badges).toHaveLength(1);expect(badges[0].textContent).toBe('R3/L45');
+  expect(badges[0].parentElement?.textContent).toMatch(/7★\s*R3\/L45/);
+  expect(host.textContent).not.toContain('R0');expect(host.textContent).not.toContain('undefined');
+});
+
+it("applies sorting immediately with the edited query and resets pagination",async()=>{
+  vi.stubGlobal('IS_REACT_ACT_ENVIRONMENT',true);navigation.push.mockClear();
+  const host=document.createElement('div');document.body.append(host);const root=createRoot(host);
+  try{
+    await act(async()=>root.render(<><form id="sort-test-form"><input name="q" defaultValue="original"/></form><QuestOpponentSort value="quest" formId="sort-test-form" options={[{value:'quest',label:'Quest order',href:'/quests/encounters?gameId=absorbingman&category=Story&rarity=7&role=boss&page=2&sort=quest'},{value:'rarity',label:'Lowest star level',href:'/quests/encounters?gameId=absorbingman&category=Story&rarity=7&role=boss&page=2&sort=rarity'}]}/></>));
+    host.querySelector<HTMLInputElement>('[name=q]')!.value='new query';
+    const select=host.querySelector<HTMLSelectElement>('select')!;select.value='rarity';
+    await act(async()=>select.dispatchEvent(new Event('change',{bubbles:true})));
+    const target=new URL(navigation.push.mock.calls[0][0],'https://cerebro.test');
+    expect(target.searchParams.get('sort')).toBe('rarity');expect(target.searchParams.get('q')).toBe('new query');expect(target.searchParams.has('page')).toBe(false);
+    expect(target.searchParams.get('category')).toBe('Story');expect(target.searchParams.get('rarity')).toBe('7');expect(target.searchParams.get('role')).toBe('boss');
+  }finally{await act(async()=>root.unmount());host.remove();vi.unstubAllGlobals();}
 });
