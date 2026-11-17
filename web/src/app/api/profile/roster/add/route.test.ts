@@ -16,12 +16,38 @@ beforeEach(() => {
   vi.resetAllMocks()
   mocks.player.mockResolvedValue({ id: "owner", allianceId: null })
   mocks.target.mockResolvedValue({ id: "target", allianceId: "alliance" })
-  mocks.champion.mockResolvedValue({ id: 1, gameId: "gwenom" })
+  mocks.champion.mockResolvedValue({ id: 1, gameId: "gwenom", isPlayable: true })
   mocks.existing.mockResolvedValue(null)
   mocks.upsert.mockResolvedValue({ id: "roster", isAscended: true, ascensionLevel: 1, champion: { gameId: "gwenom" } })
   mocks.rule.mockReturnValue({ maxLevel: 2 })
 })
 const request = (changes: Record<string, unknown> = {}) => new Request("http://localhost/api/profile/roster/add", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ championId: 1, stars: 7, rank: 3, ...changes }) })
+
+it.each([
+  { actor: "owner", player: { id: "owner", allianceId: null }, targetPlayerId: undefined },
+  { actor: "officer", player: { id: "owner", allianceId: "alliance", isOfficer: true }, targetPlayerId: "target" },
+  { actor: "admin", player: { id: "owner", allianceId: null, isBotAdmin: true }, targetPlayerId: "target" },
+])("rejects NPC and legacy champions for an $actor before inspecting or writing a roster", async ({ player, targetPlayerId }) => {
+  mocks.player.mockResolvedValue(player)
+  for (const obtainable of [[], ["6", "7"]]) {
+    mocks.champion.mockResolvedValue({ id: 1, gameId: "npc", isPlayable: false, obtainable })
+    const response = await POST(request({ targetPlayerId, isPlayable: true, ascensionLevel: 1 }))
+    expect(response.status).toBe(400)
+    expect(await response.json()).toEqual({ error: "Only playable champions can be added to a roster" })
+  }
+  expect(mocks.champion).toHaveBeenCalledWith({ where: { id: 1 }, select: { gameId: true, isPlayable: true } })
+  expect(mocks.existing).not.toHaveBeenCalled()
+  expect(mocks.upsert).not.toHaveBeenCalled()
+  expect(mocks.rule).not.toHaveBeenCalled()
+})
+
+it("keeps a missing champion distinct from an ineligible champion", async () => {
+  mocks.champion.mockResolvedValue(null)
+  const response = await POST(request())
+  expect(response.status).toBe(404)
+  expect(await response.json()).toEqual({ error: "Champion not found" })
+  expect(mocks.upsert).not.toHaveBeenCalled()
+})
 
 it("normalizes legacy and level-only input into consistent stored state", async () => {
   expect((await POST(request({ stars: 6, isAscended: true, ascensionLevel: 0 }))).status).toBe(200)

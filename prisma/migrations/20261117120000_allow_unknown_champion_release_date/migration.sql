@@ -1,0 +1,1 @@
+ALTER TABLE "Champion" ALTER COLUMN "releaseDate" DROP NOT NULL;
