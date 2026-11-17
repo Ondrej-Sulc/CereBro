@@ -29,7 +29,12 @@ export type QuestEncounter = GameIdentity & {
   id: string; coordinate: Coordinate; bossKey: string; rank: number; level: number;
   signature: number; ascension: number; final: boolean; candidates: GameIdentity[]; pathIndices: number[];
 };
+export type QuestBossFlags = {
+  tileIsFinalBoss:boolean;tileShouldDisplayFinalBossIcon:boolean;
+  bossIsFinalBoss:boolean;bossMetadataFinalBoss:boolean;
+};
 export type QuestMap = {
+  nativeBossFlags?:Record<string,QuestBossFlags>;
   modifierCoverage?: { applications: number; resolvedDefinitions: number; verifiedIcons: number; definitionCapturedAt?:string };
   version: number; questId: string; mapId: string; sourceHash: string; capturedAt: string; sourceFile: string;
   gridDimension: number; adaptive: boolean; tiles: QuestTile[]; paths: { index: number; coordinates: Coordinate[] }[];

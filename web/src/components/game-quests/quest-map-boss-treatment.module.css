@@ -1,0 +1,7 @@
+.outerAura{opacity:.09}
+.innerAura{opacity:.13}
+.embers{fill-opacity:.26;stroke-opacity:.5}
+.corona[data-selected=true] .outerAura{opacity:.16}
+.corona[data-selected=true] .innerAura{opacity:.23}
+.corona[data-selected=true] .embers{fill-opacity:.4;stroke-opacity:.9}
+.emblem{isolation:isolate}

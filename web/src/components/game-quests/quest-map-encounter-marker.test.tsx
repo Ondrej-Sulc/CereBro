@@ -64,6 +64,55 @@ describe("quest encounter map marker", () => {
     expect(marker.querySelector('[data-map-boss-emblem]')?.getAttribute('aria-hidden')).toBe('true');
     expect(marker.querySelector('[data-map-portal-target]')).not.toBeNull();
     expect(marker.querySelector('[data-map-shared-routes]')?.textContent).toBe('3');
+    expect(marker.querySelector('[data-map-boss-treatment]')).not.toBeNull();
+    expect(marker.querySelector('[data-map-boss-bezel]')?.getAttribute('stroke-dasharray')).toBeTruthy();
+    expect(marker.querySelector('filter, animate, animateTransform')).toBeNull();
+  });
+
+  it("applies the fiery treatment only to the native final flag, never a boss-like name or identity", async () => {
+    const props = base();
+    const host = await render(<QuestMapEncounterMarker {...props} encounter={{ ...encounter, final: false, name: 'Final boss', bossKey: 'finalBoss' }} />);
+    expect(host.querySelector('[data-map-boss-treatment], [data-map-boss-emblem]')).toBeNull();
+  });
+
+  it("honors an explicit native boss flag without changing a non-final portrait radius or claiming final status", async () => {
+    const props = base(), nativeBoss = { ...encounter, final: false };
+    const host = await render(<QuestMapEncounterMarker {...props} encounter={nativeBoss} boss portrait={{ name: 'Recorded boss', imageUrl: '/native.webp', color: '#23b7d8', href: null, className: 'Cosmic' }} />);
+    const marker = host.querySelector('[data-map-encounter]')!;
+    expect(marker.querySelector('[data-map-boss-treatment]')).not.toBeNull();
+    expect(marker.querySelector('[data-map-boss-emblem]')).not.toBeNull();
+    expect(marker.getAttribute('aria-label')).toContain(', boss');
+    expect(marker.getAttribute('aria-label')).not.toContain('final boss');
+    expect(marker.getAttribute('data-final-boss')).toBe('false');
+    expect(marker.querySelector('image')?.getAttribute('width')).toBe('50');
+    expect(marker.querySelector('[data-map-hit-target]')?.getAttribute('r')).toBe('34');
+  });
+
+  it("lets an explicit negative native boss flag override a legacy final/finish flag", async () => {
+    const props = base();
+    const host = await render(<QuestMapEncounterMarker {...props} encounter={{ ...encounter, final: true }} boss={false} />);
+    const marker = host.querySelector('[data-map-encounter]')!;
+    expect(marker.querySelector('[data-map-boss-treatment], [data-map-boss-emblem]')).toBeNull();
+    expect(marker.getAttribute('aria-label')).not.toContain('boss');
+    expect(marker.querySelector('title')?.textContent).not.toContain('boss');
+    expect(marker.getAttribute('data-map-boss')).toBe('false');
+    expect(marker.querySelector('[data-map-hit-target]')?.getAttribute('r')).toBe('40');
+  });
+
+  it("keeps the boss badge legible at fitted scale and bounded when zoomed in without moving the portrait or hit target", async () => {
+    const props = base(), boss = { ...encounter, final: true };
+    const host = await render(<>
+      <QuestMapEncounterMarker {...props} encounter={boss} labelUnit={1 / .3} />
+      <QuestMapEncounterMarker {...props} encounter={boss} labelUnit={1 / 2.5} />
+    </>);
+    const badges = [...host.querySelectorAll('[data-map-boss-emblem]')];
+    expect(Number(badges[0].getAttribute('data-radius')) * .3).toBeGreaterThanOrEqual(7);
+    expect(Number(badges[1].getAttribute('data-radius')) * 2.5).toBeLessThanOrEqual(15);
+    for (const marker of host.querySelectorAll('[data-map-encounter]')) {
+      const hit = marker.querySelector('[data-map-hit-target]')!;
+      expect(['cx', 'cy', 'r'].map(key => Number(hit.getAttribute(key)))).toEqual([100, 120, 40]);
+      expect(marker.querySelector('[data-map-portrait-fallback]')).not.toBeNull();
+    }
   });
 
   it("keeps a one-star NPC portrait unresolved and its actual star count visible", async () => {

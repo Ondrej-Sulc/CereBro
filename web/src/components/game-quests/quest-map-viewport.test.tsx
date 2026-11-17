@@ -77,17 +77,42 @@ function touchPointer(target: Element, type: string, x: number, y: number, point
 }
 
 describe("quest map viewport controls", () => {
-  it("keeps the existing map actions together in one accessible view-control dock", async () => {
+  it("keeps zoom, fitting and full screen together without a global Names toggle", async () => {
     const host=await renderBoard();
     const dock=host.querySelector('[role="group"][aria-label="Map view controls"]');
     expect(Boolean(dock)).toBe(true);
-    expect(dock!.querySelectorAll('button')).toHaveLength(5);
+    expect(dock!.querySelectorAll('button')).toHaveLength(4);
     expect(dock!.querySelector('[aria-label="Map zoom"]')).not.toBeNull();
     expect(dock!.contains(button(host,'Zoom out'))).toBe(true);
     expect(dock!.contains(button(host,'Zoom in'))).toBe(true);
     expect(dock!.contains(button(host,'Fit map'))).toBe(true);
-    expect(dock!.contains(button(host,'Names'))).toBe(true);
+    expect([...host.querySelectorAll('button')].some(control=>/names/i.test(`${control.getAttribute('aria-label')??''} ${control.getAttribute('title')??''} ${control.textContent??''}`))).toBe(false);
     expect(dock!.contains(button(host,'Enter full screen'))).toBe(true);
+  });
+
+  it("shows names only for selected, hovered or keyboard-focused encounters while keeping every native accessible label", async () => {
+    const host=await renderBoard();
+    const selected=map.encounters[0];
+    const target=map.encounters.find(encounter=>encounter.coordinate.join(',')!==selected.coordinate.join(','))!;
+    const selectedMarker=host.querySelector(`[data-map-encounter="${selected.id}"]`)!;
+    const marker=host.querySelector(`[data-map-encounter="${target.id}"]`)!;
+    expect(selectedMarker.querySelector('[data-map-nameplate]')).not.toBeNull();
+    expect(marker.querySelector('[data-map-nameplate]')).toBeNull();
+    for(const encounter of map.encounters){
+      const node=host.querySelector(`[data-map-encounter="${encounter.id}"]`)!;
+      const name=encounter.champion?.name??encounter.name;
+      expect(node.getAttribute('aria-label')).toContain(name);
+      expect(node.querySelector('title')?.textContent).toContain(name);
+    }
+    await act(async()=>marker.dispatchEvent(new MouseEvent('mouseover',{bubbles:true})));
+    expect(marker.querySelector('[data-map-nameplate]')).not.toBeNull();
+    await act(async()=>marker.dispatchEvent(new MouseEvent('mouseout',{bubbles:true})));
+    expect(marker.querySelector('[data-map-nameplate]')).toBeNull();
+    await act(async()=>marker.dispatchEvent(new FocusEvent('focusin',{bubbles:true})));
+    expect(marker.querySelector('[data-map-nameplate]')).not.toBeNull();
+    await act(async()=>marker.dispatchEvent(new FocusEvent('focusout',{bubbles:true})));
+    expect(marker.querySelector('[data-map-nameplate]')).toBeNull();
+    expect(selectedMarker.querySelector('[data-map-nameplate]')).not.toBeNull();
   });
 
   it("makes the recorded quest start keyboard selectable without making every transit tile a tab stop", async () => {

@@ -9,6 +9,7 @@ import { QuestBoard } from "./quest-board";
 import { questEncounterPortrait } from "./quest-portrait";
 import type { QuestPortrait as Portrait } from "@/lib/game-quests/presentation";
 import { questPositionLabel } from "@cerebro/core/domain/game-quests/navigation";
+import { questEncounterIsBoss } from "@cerebro/core/domain/game-quests/boss-display";
 import type { QuestSpawnRegionLayer } from "@cerebro/core/domain/game-quests/spawn-regions";
 import { entryCoordinate, mapDefenders } from "./quest-spawn-region-presentation";
 import { QuestSpawnRegionInspector } from "./quest-spawn-region-inspector";
@@ -33,6 +34,7 @@ export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}
   const selectedTile = map.tiles.find(t => coordinateKey(t.coordinate) === selected)!;
   const selectedRegion=layer?.regions.find(r=>r.id===selectedRegionId);
   const selectedEncounters = map.encounters.filter(e => coordinateKey(e.coordinate) === selected);
+  const selectedBoss = selectedEncounters.some(encounter=>questEncounterIsBoss(map,encounter));
   function commit(c:Coordinate,center:boolean,route:number,region?:string,highlight=latestSelection.current.highlight){
     const key = coordinateKey(c);
     latestSelection.current={route,key,region,highlight};
@@ -91,7 +93,7 @@ export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}
             {selectedEncounters.length===1 ? (()=>{const e=selectedEncounters[0],portrait=questEncounterPortrait(e,portraits);return <QuestEncounterSummary headingId="coordinate-heading" name={portrait?.name??e.champion?.name??e.name} portrait={portrait} href={e.champion?portrait?.href??`/champions/${e.champion.slug}`:null} rarity={e.rarity} rank={e.rank} level={e.level} signature={e.signature} ascension={e.ascension} npc={!e.champion}/>;})() : <h2 id="coordinate-heading">{questPositionLabel(map,selectedTile.coordinate)}</h2>}
             <Link href={shareUrl} className={styles.inspectorShare} aria-label="Link to this location" title="Link to this location"><Link2 size={15} aria-hidden="true"/><span>Link</span></Link>
           </div>
-          {selectedTile.start && <p className={styles.tag}>Quest start</p>}{selectedTile.final && <p className={styles.tag}>Final boss</p>}
+          {selectedTile.start && <p className={styles.tag}>Quest start</p>}{(selectedBoss||selectedTile.final) && <p className={styles.tag}>{selectedBoss?selectedTile.final?"Final boss":"Boss":"Quest finish"}</p>}
           {selectedEncounters.map(e => { const portrait = questEncounterPortrait(e,portraits); return <div key={e.id} className={styles.encounterNotes}>
             {selectedEncounters.length>1&&<QuestEncounterSummary name={portrait?.name??e.champion?.name??e.name} portrait={portrait} href={e.champion?portrait?.href??`/champions/${e.champion.slug}`:null} rarity={e.rarity} rank={e.rank} level={e.level} signature={e.signature} ascension={e.ascension} npc={!e.champion}/>}
             {map.adaptive&&<p className={styles.muted}>Adaptive build</p>}

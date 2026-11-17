@@ -20,6 +20,15 @@ async function render(element: React.ReactNode) {
   return host;
 }
 describe("quest map controls", () => {
+  it('labels a recorded boss separately from an empty quest finish',async()=>{
+    const map=(await loadQuestMap('a09_ch03_q02'))!;
+    const host=await render(<QuestMapExplorer map={map} initialNode="40,10"/>);
+    const inspector=()=>host.querySelector('section[aria-labelledby="coordinate-heading"]')!;
+    expect([...inspector().querySelectorAll('p')].some(p=>p.textContent==='Quest finish')).toBe(true);
+    expect([...inspector().querySelectorAll('p')].some(p=>p.textContent==='Final boss')).toBe(false);
+    await act(async()=>host.querySelector('[data-map-encounter][data-coordinate="37,7"]')!.dispatchEvent(new MouseEvent('click',{bubbles:true})));
+    expect([...inspector().querySelectorAll('p')].some(p=>p.textContent==='Boss')).toBe(true);
+  });
   it('starts with all paths and treats route highlighting as optional shareable state', async () => {
     const map=(await loadQuestMap('a05_ch01_q01'))!;
     const before=JSON.stringify(map);
