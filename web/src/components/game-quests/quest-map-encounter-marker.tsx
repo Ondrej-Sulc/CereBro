@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import type { QuestMap } from "@cerebro/core/domain/game-quests";
 import type { QuestMapLabelBox } from "@cerebro/core/domain/game-quests/board";
 import type { QuestPortrait } from "@/lib/game-quests/presentation";
@@ -11,10 +11,11 @@ type Props = {
   x: number; y: number; uid: string; index: number; selected: boolean; active: boolean;
   showLabel: boolean; labelBox?: QuestMapLabelBox; labelUnit: number; portalTarget?: boolean; boss?: boolean;
   onChoose: () => void; onHover: (hovered: boolean) => void;
+  featureBadge?: ReactNode; featureLabel?: string;
 };
 
 /** A captured placement; all coordinates and identity remain owned by the map. */
-export function QuestMapEncounterMarker({ encounter: e, portrait, x, y, uid, index, selected, active, showLabel, labelBox, labelUnit, portalTarget, boss, onChoose, onHover }: Props) {
+export function QuestMapEncounterMarker({ encounter: e, portrait, x, y, uid, index, selected, active, showLabel, labelBox, labelUnit, portalTarget, boss, onChoose, onHover, featureBadge, featureLabel }: Props) {
   const label = portrait?.name ?? e.champion?.name ?? e.name;
   const isBoss = boss ?? e.final;
   const radius = e.final ? 33 : 27, portraitRadius = e.final ? 31 : 25;
@@ -26,7 +27,7 @@ export function QuestMapEncounterMarker({ encounter: e, portrait, x, y, uid, ind
   const bossBadgeRadius = Math.min(26, Math.max(5.5, 8 * bossUnit));
   const bossBadgeOffset = (radius + Math.min(bossBadgeRadius * .3, 5)) / Math.SQRT2;
   return <g role="button" tabIndex={0} aria-pressed={selected}
-    aria-label={`${label}, ${e.rarity} stars${isBoss ? e.final ? ", final boss" : ", boss" : ""}${e.pathIndices.length > 1 ? `, shared by ${e.pathIndices.length} recorded routes` : ""}`}
+    aria-label={`${label}, ${e.rarity} stars${isBoss ? e.final ? ", final boss" : ", boss" : ""}${e.pathIndices.length > 1 ? `, shared by ${e.pathIndices.length} recorded routes` : ""}${featureLabel?`, ${featureLabel}`:""}`}
     data-coordinate={coordinate} data-map-coordinate={coordinate} data-map-encounter={e.id}
     data-selected={selected} data-active={active} data-final-boss={e.final} data-map-boss={isBoss}
     className={styles.marker} style={style}
@@ -69,6 +70,7 @@ export function QuestMapEncounterMarker({ encounter: e, portrait, x, y, uid, ind
         <text y="3" textAnchor="middle" fill="#d4eafa" fontSize="8" fontWeight="650">{e.pathIndices.length}</text>
       </g>}
       {showLabel && labelBox && <QuestMapNameplate box={labelBox} name={label} accent={accent} selected={selected} unit={labelUnit} />}
+      {featureBadge}
     </g>
   </g>;
 }

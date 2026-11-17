@@ -4,19 +4,30 @@ import { coordinateKey, type Coordinate, type QuestMap } from "./index";
 export function questBoardGeometry(map: QuestMap) {
   const padding = 76;
   let pitch = 22;
-  // A uniform presentation scale prevents new closely spaced portraits colliding.
-  // The coordinate transform stays linear; existing maps retain their reviewed pitch.
-  for (let i=0;i<map.encounters.length;i++) for (const other of map.encounters.slice(i+1)) {
-    const a=map.encounters[i];
+  // Keep native geometry linear while leaving room for distinct map objects.
+  const anchors = new Map(map.encounters.map(encounter => [coordinateKey(encounter.coordinate), { coordinate: encounter.coordinate, radius: encounter.final ? 33 : 27 }]));
+  for (const feature of [...(map.features?.gates ?? []), ...(map.features?.pathRewards ?? [])]) {
+    const key = coordinateKey(feature.coordinate);
+    if (!anchors.has(key)) anchors.set(key, { coordinate: feature.coordinate, radius: 27 });
+  }
+  const markers = [...anchors.values()];
+  for (let i=0;i<markers.length;i++) for (const other of markers.slice(i+1)) {
+    const a=markers[i];
     const distance=Math.hypot(a.coordinate[0]-other.coordinate[0],a.coordinate[1]-other.coordinate[1]);
-    const radii=(a.final?33:27)+(other.final?33:27);
+    const radii=a.radius+other.radius;
     if (distance>0 && distance*22<=radii) pitch=Math.max(pitch,Math.ceil((radii+10)/distance));
   }
-  const minX = Math.min(...map.tiles.map(t => t.coordinate[0]));
-  const minY = Math.min(...map.tiles.map(t => t.coordinate[1]));
-  const maxX = Math.max(...map.tiles.map(t => t.coordinate[0]));
-  const maxY = Math.max(...map.tiles.map(t => t.coordinate[1]));
-  const point = (c: Coordinate): Coordinate => [padding + (c[0] - minX) * pitch, padding + (c[1] - minY) * pitch];
+  // Screen coordinates increase downwards, so this is a clockwise 45-degree rotation.
+  const rotate = (c: Coordinate): Coordinate => [(c[0] - c[1]) * Math.SQRT1_2, (c[0] + c[1]) * Math.SQRT1_2];
+  const projectedTiles = map.tiles.map(t => rotate(t.coordinate));
+  const minX = Math.min(...projectedTiles.map(c => c[0]));
+  const minY = Math.min(...projectedTiles.map(c => c[1]));
+  const maxX = Math.max(...projectedTiles.map(c => c[0]));
+  const maxY = Math.max(...projectedTiles.map(c => c[1]));
+  const point = (c: Coordinate): Coordinate => {
+    const [x, y] = rotate(c);
+    return [padding + (x - minX) * pitch, padding + (y - minY) * pitch];
+  };
   const encounters = new Map(map.tiles.map(t => [coordinateKey(t.coordinate), map.encounters.filter(e => coordinateKey(e.coordinate) === coordinateKey(t.coordinate))]));
   const edges = map.tiles.flatMap(t => [...t.links.map(target => ({ from: t.coordinate, to: target, portal: false })), ...t.portals.map(p => ({ from: t.coordinate, to: p.target, portal: true }))]);
   return { pitch, width: (maxX - minX) * pitch + padding * 2, height: (maxY - minY) * pitch + padding * 2, point, encounters, edges };

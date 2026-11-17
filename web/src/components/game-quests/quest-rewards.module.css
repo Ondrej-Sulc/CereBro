@@ -38,3 +38,4 @@
 @media(min-width:640px){.container{padding:20px}.grid{grid-template-columns:repeat(auto-fill,minmax(76px,1fr))}.name{font-size:11px}}
 @media(min-width:900px){.scopes{grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}}
 @media(prefers-reduced-motion:reduce){.toggle{transition:none}}
+.context{display:block;max-width:100%;font-size:10px;line-height:1.4;font-weight:600;color:#c8a867;text-align:center;overflow-wrap:anywhere}

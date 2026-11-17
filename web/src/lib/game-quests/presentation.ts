@@ -48,7 +48,7 @@ export function projectQuestPortraits(map: IdentitySource, rows: PublicChampionR
       championBinding: { id: row.id, gameId: row.gameId! } }];
   }));
 }
-export type QuestRewardView = { key: string; scope: string; token: string; name: string; quantity: number; type: "champion" | "crystal" | "item"; imageUrl: string | null; href: string | null; rarity?: number; itemRarity?: number; signaturePoints?: number; rankChange?: RewardRankChange; sourceType?:string;amount?:string;recordedOutcome?:boolean;placeholder?:boolean };
+export type QuestRewardView = { key: string; scope: string; token: string; name: string; quantity: number; type: "champion" | "crystal" | "item"; imageUrl: string | null; href: string | null; rarity?: number; itemRarity?: number; signaturePoints?: number; rankChange?: RewardRankChange; sourceType?:string;amount?:string;recordedOutcome?:boolean;placeholder?:boolean;contextLabel?:string;mapHref?:string;description?:string };
 const openingsByToken = new Map<string, ReturnType<typeof listCrystalOpenings>[number][]>();
 for (const opening of listCrystalOpenings()) {
   const token = opening.sourceMetadata.token;

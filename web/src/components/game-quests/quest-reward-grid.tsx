@@ -47,23 +47,26 @@ export function RewardTile({reward:r,showName,showSources=true}:{reward:QuestRew
   const fallback=failed||!r.imageUrl||r.placeholder;
   return <li data-quest-reward={r.key} className={styles.item}>
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger asChild><button type="button" className={styles.tile} aria-label={`Reward details: ${title}${quantity?` · ${quantity}`:""}${possible?" · Possible outcome; not guaranteed":""}`} title={`${title}${quantity?` · ${quantity}`:""}`}>
+      <PopoverTrigger asChild><button type="button" className={styles.tile} aria-label={`Reward details: ${title}${quantity?` · ${quantity}`:""}${r.contextLabel?` · ${r.contextLabel}`:""}${possible?" · Possible outcome; not guaranteed":""}`} title={`${title}${quantity?` · ${quantity}`:""}${r.contextLabel?` · ${r.contextLabel}`:""}`}>
         <span className={styles.artwork}>{!failed&&r.imageUrl?<Image src={r.imageUrl} width={64} height={64} sizes="64px" alt="" className={styles.image} onError={()=>setFailed(true)}/>:<Gem aria-hidden="true"/>}<RewardItemOverlay rank={r.rankChange} signaturePoints={r.signaturePoints} rarity={r.itemRarity}/>{r.rarity&&<small className={styles.rarity} aria-hidden="true">{r.rarity}★</small>}</span>
         {quantity&&<span className={styles.quantity}>{quantity}</span>}
         {(showName||fallback)&&<span data-reward-name className={styles.name}>{title}</span>}
+        {r.contextLabel&&<span className={styles.context}>{r.contextLabel}</span>}
       </button></PopoverTrigger>
       <PopoverContent className={styles.detail} aria-label={`Reward details: ${title}`}>
         <div className={styles.detailHeading}><h4>{title}</h4><button type="button" onClick={()=>setOpen(false)} aria-label="Close reward details"><X size={18} aria-hidden="true"/></button></div>
         <p>{r.scope==="Entry cost"&&"Entry cost · "}{kind(r)}{quantity&&` · ${quantity}`}</p>
+        {r.contextLabel&&<p>{r.contextLabel}</p>}
+        {r.description&&<p>{r.description}</p>}
         {r.placeholder&&<p>Native definition contains a placeholder.</p>}
         {possible&&<p>Possible outcome; not guaranteed</p>}
-        <div className={styles.actions}>{r.href&&<Link href={r.href} prefetch={false}>View {r.type==="champion"?"champion":r.type==="crystal"?"crystal":"reward"}<ArrowUpRight size={14} aria-hidden="true"/></Link>}{showSources&&<RewardSourceLink type={r.sourceType} token={r.token}/>}</div>
+        <div className={styles.actions}>{r.mapHref&&<Link href={r.mapHref} prefetch={false}>Show on map<ArrowUpRight size={14} aria-hidden="true"/></Link>}{r.href&&<Link href={r.href} prefetch={false}>View {r.type==="champion"?"champion":r.type==="crystal"?"crystal":"reward"}<ArrowUpRight size={14} aria-hidden="true"/></Link>}{showSources&&<RewardSourceLink type={r.sourceType} token={r.token}/>}</div>
       </PopoverContent>
     </Popover>
   </li>;
 }
 
-export function QuestRewardGrid({title,id,groups}:{title:string;id:string;groups:{scope:string;label:string;rewards:QuestRewardView[]}[]}) {
+export function QuestRewardGrid({title,id,groups,showSources=true}:{title:string;id:string;groups:{scope:string;label:string;rewards:QuestRewardView[]}[];showSources?:boolean}) {
   const [showNames,setShowNames] = useRewardNames();
   return <>
     <header className={styles.header}><h2 id={`${id}-title`}>{title}</h2>{groups.length>0&&<RewardNamesToggle showNames={showNames} onChange={setShowNames}/>}</header>
@@ -71,7 +74,7 @@ export function QuestRewardGrid({title,id,groups}:{title:string;id:string;groups
     <div className={styles.scopes}>{groups.map(group=><section key={group.scope} id={`${id}-${group.scope}`} data-quest-reward-scope={group.scope} aria-labelledby={`${id}-${group.scope}-title`}>
       <h3 id={`${id}-${group.scope}-title`}>{group.label}</h3>
       {group.scope==="potentialCompletionRewards"&&<p className={styles.possible}>Possible outcomes; not guaranteed</p>}
-      <ul className={styles.grid}>{group.rewards.map(r=><RewardTile key={r.key} reward={r} showName={showNames}/>)}</ul>
+      <ul className={styles.grid}>{group.rewards.map(r=><RewardTile key={r.key} reward={r} showName={showNames} showSources={showSources}/>)}</ul>
     </section>)}</div>
   </>;
 }

@@ -1,7 +1,42 @@
 import { expect, it } from "vitest";
 import { loadQuestMap, questCatalog } from "../../data/game-quests";
-import { coordinateKey } from "../../domain/game-quests";
+import { coordinateKey, type Coordinate, type QuestMap } from "../../domain/game-quests";
 import { questBoardGeometry, questBoardLabels } from "../../domain/game-quests/board";
+
+it("rotates the presentation 45 degrees clockwise and pads the rotated tile bounds", () => {
+  const coordinates: Coordinate[] = [[3, 7], [7, 7], [3, 9]];
+  const map: QuestMap = {
+    version: 1, questId: "rotation", mapId: "rotation", sourceHash: "source", capturedAt: "", sourceFile: "",
+    gridDimension: 10, adaptive: false, encounters: [], paths: [{ index: 0, coordinates }],
+    rewards: { fixedChampions: [], possibleCrystals: [] },
+    tiles: coordinates.map((coordinate, index) => ({
+      coordinate, nodeNumber: index, start: index === 0, final: false, hidden: false,
+      links: index === 0 ? [coordinates[1]] : [],
+      portals: index === 1 ? [{ target: coordinates[2], label: "Portal", randomChance: 1, tags: [] }] : [],
+      randomPortal: false, barrier: "", applications: [],
+    })),
+  };
+  const before = JSON.stringify(map), board = questBoardGeometry(map);
+  const diagonalPitch = board.pitch / Math.sqrt(2);
+  const origin = board.point(coordinates[0]);
+  const east = board.point(coordinates[1]), south = board.point(coordinates[2]);
+  expect(east[0] - origin[0]).toBeCloseTo(4 * diagonalPitch);
+  expect(east[1] - origin[1]).toBeCloseTo(4 * diagonalPitch);
+  expect(south[0] - origin[0]).toBeCloseTo(-2 * diagonalPitch);
+  expect(south[1] - origin[1]).toBeCloseTo(2 * diagonalPitch);
+  const points = coordinates.map(board.point);
+  expect(Math.min(...points.map(point => point[0]))).toBeCloseTo(76);
+  expect(Math.min(...points.map(point => point[1]))).toBeCloseTo(76);
+  expect(Math.max(...points.map(point => point[0]))).toBeCloseTo(board.width - 76);
+  expect(Math.max(...points.map(point => point[1]))).toBeCloseTo(board.height - 76);
+  expect(board.width).toBeCloseTo(152 + 6 * diagonalPitch);
+  expect(board.height).toBeCloseTo(152 + 4 * diagonalPitch);
+  expect(board.edges).toEqual([
+    { from: coordinates[0], to: coordinates[1], portal: false },
+    { from: coordinates[1], to: coordinates[2], portal: true },
+  ]);
+  expect(JSON.stringify(map)).toBe(before);
+});
 
 it("renders every placement once at its source coordinate, preserving directed links and portals", async () => {
   for (const q of questCatalog.filter(q => q.coverage === "full-map")) {
@@ -15,8 +50,9 @@ it("renders every placement once at its source coordinate, preserving directed l
       const source = sourceTiles.get(coordinateKey(edge.from))!;
       expect((edge.portal ? source.portals.map(p => p.target) : source.links).some(c => coordinateKey(c) === coordinateKey(edge.to))).toBe(true);
       const a = board.point(edge.from), b = board.point(edge.to);
-      expect(b[0] - a[0]).toBe((edge.to[0] - edge.from[0]) * board.pitch);
-      expect(b[1] - a[1]).toBe((edge.to[1] - edge.from[1]) * board.pitch);
+      const dx = edge.to[0] - edge.from[0], dy = edge.to[1] - edge.from[1];
+      expect(b[0] - a[0]).toBeCloseTo((dx - dy) * board.pitch / Math.sqrt(2));
+      expect(b[1] - a[1]).toBeCloseTo((dx + dy) * board.pitch / Math.sqrt(2));
     }
     for (let i=0;i<map.encounters.length;i++)for(const other of map.encounters.slice(i+1)){
       const encounter=map.encounters[i],a=board.point(encounter.coordinate),b=board.point(other.coordinate);

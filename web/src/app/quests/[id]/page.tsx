@@ -13,6 +13,8 @@ import { QuestMapExplorer } from "@/components/game-quests/quest-map-explorer";
 import { loadUnplacedQuestDefenders } from "@cerebro/core/data/game-quests/unplaced-defenders";
 import { QuestUnplacedDefenders } from "@/components/game-quests/quest-unplaced-defenders";
 import { loadQuestSpawnRegions } from "@cerebro/core/data/game-quests/spawn-regions";
+import { projectQuestMapFeatures } from "@/lib/game-quests/map-features";
+import { QuestPathRewards } from "@/components/game-quests/quest-path-rewards";
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ path?: string; node?: string; region?: string; application?: string; sourceHash?:string }> };
 export async function generateMetadata({ params }: Props) { const q = findQuest((await params).id); return { title: `${q?.name ?? "Quest not found"} | CereBro` }; }
 export default async function QuestPage({ params, searchParams }: Props) {
@@ -31,6 +33,7 @@ export default async function QuestPage({ params, searchParams }: Props) {
   const headerPortraits=needsBossPortraits?{...portraits,...await loadBossPortraits([q])}:portraits;
   const artwork = getQuestArtwork(q.id);
   const rewards = map ? projectQuestRewards(map, portraits) : rewardRecord?projectRewardRecord(rewardRecord,portraits):[];
+  const features = map ? projectQuestMapFeatures(map, portraits) : [];
   return <div className="w-full min-w-0 px-4 py-5 sm:px-8 sm:py-7">
     <QuestPageHeader quest={q} portraits={headerPortraits} map={map} />
     {(unplaced||parentRewards.length>0)&&<nav aria-label="Quest rewards context" className="mb-4 flex flex-wrap items-center gap-x-4 text-xs text-sky-300">
@@ -39,8 +42,9 @@ export default async function QuestPage({ params, searchParams }: Props) {
     </nav>}
     {map && selection.sourceHash && selection.sourceHash!==map.sourceHash && <p className="mb-5 text-sm text-amber-200">This application link refers to another saved source version. The current recorded map is shown.</p>}
     {(q.scalingCurve || (map?.adaptive)) && <p className="mb-5 rounded-lg border border-amber-900/60 bg-amber-950/20 p-4 text-sm leading-6 text-amber-200">Opponents and rewards scale with progression.{q.minProgressionRank !== null && ` Shown for progression rank ${q.minProgressionRank}${q.maxProgressionRank !== q.minProgressionRank ? `–${q.maxProgressionRank}` : ""}.`} Recorded builds may differ for another profile.</p>}
-    {map ? <QuestMapExplorer key={`${map.questId}:${map.sourceHash}:${selection.path ?? ""}:${selection.node ?? ""}:${selection.region ?? ""}:${selection.application ?? ""}`} map={map} artwork={artwork} portraits={portraits} spawnRegions={spawnRegions} initialRegion={selection.region} initialPath={selection.path} initialNode={selection.node} initialApplication={selection.sourceHash && selection.sourceHash!==map.sourceHash ? undefined : selection.application} /> : <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 sm:p-9"><span className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300">Summary only</span><h2 className="mt-5 text-2xl font-semibold">This map has not been captured</h2><p className="mt-3 max-w-2xl leading-7 text-slate-400">The quest definition is browseable. Its routes, geometry, placed opponents and node applications are unavailable in this snapshot.</p><Link href="/quests" className="mt-6 inline-flex min-h-11 items-center text-sm text-sky-300">Explore captured layouts →</Link></section>}
+    {map ? <QuestMapExplorer key={`${map.questId}:${map.sourceHash}:${selection.path ?? ""}:${selection.node ?? ""}:${selection.region ?? ""}:${selection.application ?? ""}`} map={map} artwork={artwork} portraits={portraits} spawnRegions={spawnRegions} featureLocations={features} initialRegion={selection.region} initialPath={selection.path} initialNode={selection.node} initialApplication={selection.sourceHash && selection.sourceHash!==map.sourceHash ? undefined : selection.application} /> : <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 sm:p-9"><span className="rounded-full bg-slate-800 px-3 py-1 text-xs text-slate-300">Summary only</span><h2 className="mt-5 text-2xl font-semibold">This map has not been captured</h2><p className="mt-3 max-w-2xl leading-7 text-slate-400">The quest definition is browseable. Its routes, geometry, placed opponents and node applications are unavailable in this snapshot.</p><Link href="/quests" className="mt-6 inline-flex min-h-11 items-center text-sm text-sky-300">Explore captured layouts →</Link></section>}
     <QuestRewards rewards={rewards} />
+    <QuestPathRewards questId={q.id} pickups={features.flatMap(location => location.pickups)} coverage={map?.features?.coverage.pathRewards} />
     {unplaced && <div id="unplaced-defender-previews" className="scroll-mt-24"><QuestUnplacedDefenders data={unplaced} /></div>}
   </div>;
 }

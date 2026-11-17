@@ -1,5 +1,5 @@
 "use client";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import type { Coordinate, QuestMap } from "@cerebro/core/domain/game-quests";
 import type { QuestSpawnRegionLayer } from "@cerebro/core/domain/game-quests/spawn-regions";
 import { regionCorridors, type RegionLabelBox } from "./quest-spawn-region-presentation";
@@ -18,14 +18,17 @@ export function QuestSpawnRegionAreas({map,layer,point,selected,hovered,pathInde
   })}</g>;
 }
 
-export function QuestSpawnRegionMarkers({layer,point,selected,hovered,pathIndex,highlightRoute=true,onChoose,onHover,uid,labels,labelScale=1}:RegionProps&{
+export function QuestSpawnRegionMarkers({layer,point,selected,hovered,pathIndex,highlightRoute=true,onChoose,onHover,uid,labels,labelScale=1,featureBadge,featureLabel}:RegionProps&{
   onChoose:(id:string)=>void;onHover:(id:string|null)=>void;uid:string;labels:Map<string,RegionLabelBox>;labelScale?:number;
+  featureBadge?:(coordinate:Coordinate,x:number,y:number,selected:boolean,active:boolean)=>ReactNode;
+  featureLabel?:(coordinate:Coordinate)=>string|undefined;
 }){
   const [failed,setFailed]=useState<Set<string>>(new Set());
   return <g>{layer.regions.map((region,index)=>{
     const [x,y]=point(region.anchor),active=!highlightRoute||region.pathIndices.includes(pathIndex),isSelected=selected===region.id,label=isSelected||hovered===region.id?labels.get(region.id):undefined;
+    const locationFeatureLabel=featureLabel?.(region.anchor);
     return <g key={region.id} role="button" tabIndex={0} aria-pressed={isSelected}
-      aria-label={`${region.defender.name}, encounter region, ${region.coordinates.length} possible map ${region.coordinates.length===1?'position':'positions'}, ${region.defender.rarity} stars`}
+      aria-label={`${region.defender.name}, encounter region, ${region.coordinates.length} possible map ${region.coordinates.length===1?'position':'positions'}, ${region.defender.rarity} stars${locationFeatureLabel?`, ${locationFeatureLabel}`:""}`}
       data-spawn-region={region.id} data-coordinate={region.anchor.join(',')} className={styles.regionMarker}
       onClick={()=>onChoose(region.id)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();onChoose(region.id);}}}
       onMouseEnter={()=>onHover(region.id)} onMouseLeave={()=>onHover(null)} onFocus={()=>onHover(region.id)} onBlur={()=>onHover(null)}>
@@ -40,6 +43,7 @@ export function QuestSpawnRegionMarkers({layer,point,selected,hovered,pathIndex,
       <rect x={x-17} y={y+20} width="34" height="16" rx="5" fill="#092820" stroke="#64c9b2"/>
       <text x={x} y={y+31} textAnchor="middle" fill="#baf8e8" fontSize="10" fontWeight="600">{region.defender.rarity}★ ∼</text>
       {label&&<QuestMapNameplate box={label} name={region.defender.name} selected={isSelected} accent="#70e2c9" unit={labelScale}/>}
+      {featureBadge?.(region.anchor,x,y,isSelected,active)}
     </g>;
   })}</g>;
 }
