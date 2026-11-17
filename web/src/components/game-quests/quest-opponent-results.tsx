@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight, BookOpen, ChevronDown, Compass, MapPin, Search, Skull, SlidersHorizontal } from "lucide-react";
-import { opponentResults, type OpponentFilters, type QuestOpponentMatch } from "@cerebro/core/domain/game-quests/opponent-lookup";
+import { OPPONENT_PAGE_SIZE, opponentResults, type OpponentFilters, type QuestOpponentMatch } from "@cerebro/core/domain/game-quests/opponent-lookup";
 import type { QuestSummary } from "@cerebro/core/domain/game-quests";
 import { findQuest } from "@cerebro/core/data/game-quests";
 import { getGroupMenuArtwork } from "@cerebro/core/data/game-quests/menu-art";
@@ -70,7 +70,7 @@ export function QuestOpponentResults({ gameId, matches, filters }: { gameId: str
   const url = (changes: Record<string, string>) => `/quests/encounters?${new URLSearchParams({ gameId, q: filters.query ?? "", category: filters.section ?? "", rarity: filters.rarity ?? "", role: filters.bossOnly ? "boss" : "", ...changes })}`;
   const questLabel = (quest: QuestOpponentMatch["quest"]) => quest.section === "Story" ? `${quest.number} ${quest.name}` : `${quest.collection}: ${quest.name}`;
   const collections = resultCollections(view.groups);
-  const first = (view.page - 1) * 12 + 1;
+  const first = (view.page - 1) * OPPONENT_PAGE_SIZE + 1;
 
   return <section className={styles.results} aria-label="Champion quest results">
     <div className={styles.searchWorkspace}>

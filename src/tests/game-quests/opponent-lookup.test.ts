@@ -49,9 +49,11 @@ it("combines name, category, rarity and boss filters without losing the result c
 });
 
 it("bounds page size and restores valid pagination after filters reduce the results",()=>{
-  const rows=Array.from({length:25},(_,i)=>row(i+1));
+  const rows=Array.from({length:49},(_,i)=>row(i+1));
   const view=opponentResults(rows,{page:"2"});
-  expect(view.groups).toHaveLength(12);expect(view.totalQuests).toBe(25);expect(view.totalPages).toBe(3);expect(view.page).toBe(2);
-  expect(opponentResults(rows,{query:"Quest 25",page:"999"}).page).toBe(1);
+  expect(view.groups).toHaveLength(24);expect(view.totalQuests).toBe(49);expect(view.totalPages).toBe(3);expect(view.page).toBe(2);
+  expect(view.groups[0].quest.id).toBe("quest-25");expect(view.groups.at(-1)?.quest.id).toBe("quest-48");
+  expect(opponentResults(rows,{page:"999"}).groups.map(group=>group.quest.id)).toEqual(["quest-49"]);
+  expect(opponentResults(rows,{query:"Quest 49",page:"999"}).page).toBe(1);
   expect(opponentResults(rows,{page:"nonsense"}).page).toBe(1);
 });

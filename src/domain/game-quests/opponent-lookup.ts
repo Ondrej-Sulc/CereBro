@@ -5,6 +5,7 @@ export type QuestOpponentMatch = {
   quest: { id: string; number: string; name: string; section: "Story" | "Special"; collection: string; difficulty: string; actIndex: number; chapterIndex: number; questIndex: number };
 };
 export type OpponentFilters = { query?: string; section?: string; rarity?: string; bossOnly?: boolean; page?: string };
+export const OPPONENT_PAGE_SIZE = 24;
 
 export function opponentQuest(quest: QuestSummary, collection = ""): QuestOpponentMatch["quest"] {
   return {id:quest.id,number:hierarchyLabel(quest),name:quest.name,section:quest.section==="Special"?"Special":"Story",collection,difficulty:quest.difficulty,actIndex:quest.actIndex,chapterIndex:quest.chapterIndex,questIndex:quest.questIndex};
@@ -29,8 +30,8 @@ export function opponentResults(matches: QuestOpponentMatch[], filters: Opponent
   });
   const counts={all:groups.length,Story:groups.filter(g=>g.quest.section==="Story").length,Special:groups.filter(g=>g.quest.section==="Special").length};
   const selected=groups.filter(g=>!filters.section||g.quest.section===filters.section);
-  const totalPages=Math.max(1,Math.ceil(selected.length/12));
+  const totalPages=Math.max(1,Math.ceil(selected.length/OPPONENT_PAGE_SIZE));
   const parsed=Number(filters.page);
   const page=Math.min(totalPages,Number.isSafeInteger(parsed)&&parsed>0?parsed:1);
-  return {groups:selected.slice((page-1)*12,page*12),totalQuests:selected.length,totalMatches:selected.reduce((n,g)=>n+g.matches.length,0),counts,page,totalPages,hasRegions:selected.some(g=>g.matches.some(m=>m.kind==="region"))};
+  return {groups:selected.slice((page-1)*OPPONENT_PAGE_SIZE,page*OPPONENT_PAGE_SIZE),totalQuests:selected.length,totalMatches:selected.reduce((n,g)=>n+g.matches.length,0),counts,page,totalPages,hasRegions:selected.some(g=>g.matches.some(m=>m.kind==="region"))};
 }
