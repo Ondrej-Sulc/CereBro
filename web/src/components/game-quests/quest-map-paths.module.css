@@ -12,7 +12,7 @@
 }
 
 .pulse {
-  animation: routeEnergyFlow 3s linear infinite;
+  animation: routeEnergyFlow 2.4s linear infinite;
 }
 
 @keyframes routeEnergyFlow {

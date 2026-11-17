@@ -1,6 +1,7 @@
 import { useId, type CSSProperties } from "react";
 import { coordinateKey, type Coordinate } from "@cerebro/core/domain/game-quests";
 import styles from "./quest-map-paths.module.css";
+import {QuestMapDirectionArrows} from './quest-map-direction-arrows';
 
 type MapEdge = { from: Coordinate; to: Coordinate; portal: boolean };
 type Props = {
@@ -9,10 +10,11 @@ type Props = {
   routeEdges: ReadonlySet<string>;
   routePhases: ReadonlyMap<string, number>;
   highlightRoute: boolean;
+  scale?: number;
 };
 
 /** Presentation only: each captured directed edge retains its original endpoints. */
-export function QuestMapPaths({ edges, point, routeEdges, routePhases, highlightRoute }: Props) {
+export function QuestMapPaths({ edges, point, routeEdges, routePhases, highlightRoute, scale = 1 }: Props) {
   const portalArrowId = `${useId().replace(/:/g, "")}-portal-direction`;
   const portals = new Map<string, { coordinate: Coordinate; active: boolean }>();
   for (const edge of edges) {
@@ -53,10 +55,11 @@ export function QuestMapPaths({ edges, point, routeEdges, routePhases, highlight
           strokeLinecap="round" vectorEffect="non-scaling-stroke" markerEnd={edge.portal ? `url(#${portalArrowId})` : undefined}/>
         <Connection {...geometry} data-route-pulse className={styles.pulse}
           style={{ "--route-phase": `${routePhases.get(key) ?? 0}px` } as CSSProperties}
-          stroke={edge.portal ? "#fff6ff" : "#f3fdff"} strokeOpacity={active ? .85 : quiet ? .12 : .26} strokeWidth="2.2" strokeDasharray="9 51"
+          stroke={edge.portal ? "#fff6ff" : "#f3fdff"} strokeOpacity={active ? 1 : quiet ? .35 : .65} strokeWidth="2.8" strokeDasharray="16 44"
           strokeLinecap="round" vectorEffect="non-scaling-stroke"/>
       </g>;
     })}
+    <QuestMapDirectionArrows edges={edges} point={point} routeEdges={routeEdges} highlightRoute={highlightRoute} scale={scale}/>
     {[...portals].map(([key, portal]) => {
       const [x, y] = point(portal.coordinate);
       return <g key={key} data-portal-beacon={key} className={styles.portalBeacon} opacity={portal.active ? 1 : .5}>

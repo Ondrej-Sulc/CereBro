@@ -54,13 +54,14 @@ describe("quest map energy paths", () => {
     for (const edge of host.querySelectorAll("[data-route-edge]")) {
       const pulse=edge.querySelector('[data-route-pulse]')!;
       expect(pulse).not.toBeNull();
-      expect(Number(pulse.getAttribute('stroke-opacity'))).toBe(edge.getAttribute('data-route-selected')==='true' ? .85 : .12);
+      expect(Number(pulse.getAttribute('stroke-opacity'))).toBe(edge.getAttribute('data-route-selected')==='true' ? 1 : .35);
+      expect(Number(pulse.getAttribute('stroke-width'))).toBe(2.8);
       expect(pulse.getAttribute('vector-effect')).toBe('non-scaling-stroke');
     }
     expect(render(false).querySelectorAll('[data-route-selected="true"]')).toHaveLength(0);
     const all=render(false).querySelectorAll('[data-route-pulse]');
     expect(all).toHaveLength(edges.length);
-    expect([...all].every(pulse=>Number(pulse.getAttribute('stroke-opacity'))===.26)).toBe(true);
+    expect([...all].every(pulse=>Number(pulse.getAttribute('stroke-opacity'))===.65)).toBe(true);
     expect(host.textContent).not.toMatch(/explored|progress|completed/i);
   });
 
