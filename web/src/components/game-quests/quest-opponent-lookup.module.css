@@ -44,6 +44,15 @@
 .collectionHeading h2{min-width:0;font-size:14px;font-weight:550;line-height:1.5;color:#c7dce9;overflow-wrap:anywhere;letter-spacing:-.01em}
 .collectionHeading>span{flex-shrink:0;font-size:9px;color:#718ea5;letter-spacing:.07em;text-transform:uppercase}
 .collectionHeading>svg{flex-shrink:0}.collectionHeading>i{flex:1;height:1px;margin-left:5px;background:linear-gradient(90deg,#8baec12b,transparent)}
+.collectionHeading[data-has-art]{position:relative;isolation:isolate;overflow:hidden;min-height:92px;margin-bottom:0;padding:20px 18px;border:1px solid #2a4359;border-bottom:0;border-radius:11px 11px 0 0;background:linear-gradient(115deg,#142a3e,#0c1929)}
+.collectionHeading[data-has-art]::after{position:absolute;z-index:0;inset:0;pointer-events:none;background:linear-gradient(90deg,#102236f2 15%,#102236b8 48%,#10223624 82%),linear-gradient(0deg,#112438 0%,transparent 40%);content:''}
+.collectionHeading[data-has-art]>:not(.collectionArtwork){position:relative;z-index:1}
+.collectionHeading[data-has-art] h2{font-size:18px;font-weight:600;color:#e2edf5}
+.collectionHeading[data-has-art]>span:not(.collectionArtwork){color:#9fbdd0}
+.collectionHeading[data-has-art]>i{display:none}
+.collectionArtwork{position:absolute;inset:0 0 0 auto;width:190px;pointer-events:none;user-select:none;mask-image:linear-gradient(90deg,transparent,#000 35%,#000 88%,transparent)}
+.collectionArtwork img{position:absolute;top:-18px;right:12px;display:block;width:auto;height:196px;max-width:160px;object-fit:contain;object-position:top;opacity:.85;mask-image:linear-gradient(90deg,transparent,#000 22%,#000 85%,transparent),linear-gradient(180deg,#000 55%,transparent 80%);mask-composite:intersect}
+.collection:has(>.collectionHeading[data-has-art])>.grid{border-radius:0 0 11px 11px}
 .grid{display:grid;grid-template-columns:minmax(0,1fr);overflow:hidden;border:1px solid #2a4359;border-radius:11px;background:linear-gradient(125deg,#112438,#0b1828 86%)}
 .resultCard{position:relative;min-width:0;overflow:hidden;border-bottom:1px solid #789ab51c;transition:background .15s}
 .resultCard:last-child{border-bottom:0}
@@ -88,4 +97,5 @@
   .searchWorkspace{padding:14px 13px 0;margin-bottom:18px;border-radius:12px}.searchRow{grid-template-columns:minmax(0,1fr) auto;gap:9px}.query{grid-column:1/-1}.query input{font-size:16px}.searchButton{grid-column:1;justify-self:start;min-width:100px;min-height:44px}.filters>summary{top:79.5px;min-height:44px;padding:0 11px;font-size:11px}.filterPanel{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:13px 11px;padding-top:13px}.filterPanel select{font-size:16px}.applyButton{grid-column:1/-1;justify-self:end;min-height:44px}.filterPanel .checkbox{font-size:11px}.checkbox small{font-size:9px}.tabs{gap:0;margin-top:12px;padding-top:5px}.tabs a{padding:8px 11px 10px;min-height:44px;font-size:11px;gap:6px}.tabs a>span{min-width:20px;font-size:9px}.resultSummary{margin-bottom:16px}.resultCount{font-size:11px}.pageRange{font-size:9px}.collections{gap:20px}.collectionHeading{margin-bottom:9px}.collectionHeading h2{font-size:13px}.collectionHeading>span{font-size:8px}.resultLink{padding:13px 14px;min-height:74px;gap:12px}.cardFooter{gap:8px}.mapAction{font-size:0;gap:0}.mapAction>svg:first-child{display:none}.mapAction>svg:last-child{width:16px;height:16px}.number{min-width:63px;font-size:18px}.questHeading{gap:11px}.questHeading h3{font-size:14px}.mapAction{font-size:0}.multiHeading{padding:14px 14px 10px}.matchList{padding:0 14px 5px}.matchList a{gap:8px}.matchAction{font-size:9px}.pagination{font-size:10px;gap:7px}.pagination>a{padding:0 10px;min-height:44px}.empty{padding:27px 18px}.empty h2{font-size:16px}
 }
 @media(max-width:360px){.tabs a{padding-left:8px;padding-right:8px}.matchAction{font-size:0;gap:0}.matchAction>svg{width:15px;height:15px}.matchInfo{gap:5px}.region{font-size:8px}}
+@media(max-width:540px){.collectionHeading[data-has-art]{min-height:82px;padding:17px 14px}.collectionHeading[data-has-art] h2{font-size:16px}.collectionArtwork{width:155px}.collectionArtwork img{right:8px;height:150px;max-width:125px;top:-17px}}
 @media(prefers-reduced-motion:reduce){.results *{transition:none!important}}

@@ -3,6 +3,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { AnchorHTMLAttributes } from "react";
 import { expect,it,vi } from "vitest";
 import { loadQuestOpponentMatches } from "@cerebro/core/data/game-quests/opponent-lookup";
+import { findQuest } from "@cerebro/core/data/game-quests";
+import { getGroupMenuArtwork } from "@cerebro/core/data/game-quests/menu-art";
 import { QuestOpponentResults } from "./quest-opponent-results";
 
 vi.mock("next/link",()=>({default:({prefetch,...props}:AnchorHTMLAttributes<HTMLAnchorElement>&{prefetch?:boolean})=>{void prefetch;return <a {...props}/>;}}));
@@ -54,4 +56,35 @@ it("retains distinct matches in one quest and labels only the actual final boss"
   expect(host.querySelectorAll('[data-quest-opponent-result] a')).toHaveLength(2);
   expect(host.textContent).toContain("Match 1");expect(host.textContent).toContain("Match 2");
   expect([...host.querySelectorAll('[data-quest-opponent-result] a')].filter(a=>a.textContent?.includes('Boss'))).toHaveLength(1);
+});
+
+it("uses the exact parent Act artwork for Story and Special encounter groups",async()=>{
+  const matches=await loadQuestOpponentMatches("absorbingman");
+  const host=await render();
+  const story=findQuest("a09_ch02_q04")!;
+  const special=matches.filter(match=>match.quest.section==="Special").map(match=>findQuest(match.quest.id)!);
+  const expected=[
+    ["Act 9",getGroupMenuArtwork([story],{kind:"act",id:story.hierarchy[0].actId})],
+    ["The Epoch of Pain",getGroupMenuArtwork(special)],
+  ] as const;
+  for(const [title,art] of expected){
+    expect(art?.role).toBe("act");
+    const group=host.querySelector(`section[aria-label="${title}"]`)!;
+    const decorative=group.querySelector('[data-quest-opponent-group-art]')!;
+    expect(decorative?.getAttribute('aria-hidden')).toBe('true');
+    const image=decorative?.querySelector('img');
+    expect(image?.getAttribute('alt')).toBe('');
+    const source=image?.getAttribute('src')??'';
+    expect(new URL(source,'https://cerebro.test').searchParams.get('url')??source).toBe(art?.url);
+  }
+});
+
+it.each(["missing quest","mismatched act"])("keeps the group and map link when artwork cannot bind: %s",async reason=>{
+  const match=(await loadQuestOpponentMatches("absorbingman"))[0];
+  const quest={...match.quest,...(reason==="missing quest"?{id:"unbound-quest"}:{actIndex:99})};
+  const host=document.createElement('div');
+  host.innerHTML=renderToStaticMarkup(<QuestOpponentResults gameId="absorbingman" matches={[{...match,quest}]} filters={{}}/>);
+  expect(host.querySelector('[data-quest-opponent-group-art]')).toBeNull();
+  expect(host.querySelector('[data-quest-opponent-result] a')?.getAttribute('href')).toBe(match.href);
+  expect(host.textContent).toContain(quest.name);
 });

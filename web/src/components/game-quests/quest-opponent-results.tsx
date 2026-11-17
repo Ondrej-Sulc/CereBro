@@ -1,6 +1,10 @@
 import Link from "next/link";
+import Image from "next/image";
 import { ArrowRight, BookOpen, ChevronDown, Compass, MapPin, Search, Skull, SlidersHorizontal } from "lucide-react";
 import { opponentResults, type OpponentFilters, type QuestOpponentMatch } from "@cerebro/core/domain/game-quests/opponent-lookup";
+import type { QuestSummary } from "@cerebro/core/domain/game-quests";
+import { findQuest } from "@cerebro/core/data/game-quests";
+import { getGroupMenuArtwork } from "@cerebro/core/data/game-quests/menu-art";
 import styles from "./quest-opponent-lookup.module.css";
 
 type QuestGroup = ReturnType<typeof opponentResults>["groups"][number];
@@ -17,6 +21,30 @@ function resultCollections(groups: QuestGroup[]) {
     else collections.push({ key, title: quest.section === "Story" ? quest.actIndex > 0 ? `Act ${quest.actIndex}` : "Story quests" : quest.collection || "Special quests", section: quest.section, groups: [group] });
   }
   return collections;
+}
+
+function collectionArtwork(collection: ResultCollection) {
+  const quests = collection.groups.map(group => findQuest(group.quest.id))
+    .filter((quest): quest is QuestSummary => quest !== undefined);
+  if (quests.length !== collection.groups.length || quests.some(quest => quest.section !== collection.section)) return null;
+  if (collection.section === "Story") {
+    if (quests.some((quest, index) => quest.actIndex !== collection.groups[index].quest.actIndex)) return null;
+    const parents = [...new Set(quests.flatMap(quest => quest.hierarchy.map(parent => parent.actId)))];
+    return parents.length === 1 ? getGroupMenuArtwork(quests, { kind: "act", id: parents[0] }) : null;
+  }
+  const art = getGroupMenuArtwork(quests);
+  return art?.role === "act" ? art : null;
+}
+
+function CollectionHeading({ collection }: { collection: ResultCollection }) {
+  const art = collectionArtwork(collection);
+  return <div className={styles.collectionHeading} data-has-art={art ? true : undefined}>
+    {art && <span className={styles.collectionArtwork} data-quest-opponent-group-art data-art-owner={art.ownerId} data-art-role={art.role} aria-hidden="true">
+      <Image src={art.url} alt="" width={art.width} height={art.height} sizes="140px" />
+    </span>}
+    {collection.section === "Story" ? <BookOpen size={15} aria-hidden="true" /> : <Compass size={15} aria-hidden="true" />}
+    <h2>{collection.title}</h2><span>{collection.section}</span><i aria-hidden="true" />
+  </div>;
 }
 
 function MatchInfo({ match }: { match: QuestOpponentMatch }) {
@@ -71,7 +99,7 @@ export function QuestOpponentResults({ gameId, matches, filters }: { gameId: str
     </div>
 
     <div className={styles.collections}>{collections.map(collection => <section key={collection.key} className={styles.collection} aria-label={collection.title}>
-      <div className={styles.collectionHeading}>{collection.section === "Story" ? <BookOpen size={15} aria-hidden="true" /> : <Compass size={15} aria-hidden="true" />}<h2>{collection.title}</h2><span>{collection.section}</span><i aria-hidden="true" /></div>
+      <CollectionHeading collection={collection} />
       <div className={styles.grid}>{collection.groups.map(group => <article className={styles.resultCard} key={group.quest.id} data-quest-opponent-result>
         {group.matches.length === 1 ? <Link prefetch={false} className={styles.resultLink} href={group.matches[0].href} aria-label={`View ${questLabel(group.quest)} ${group.matches[0].kind === "region" ? "encounter region" : "encounter"}`}>
           <QuestHeading quest={group.quest} />
