@@ -15,7 +15,7 @@ vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
 HTMLElement.prototype.scrollBy = vi.fn();
 HTMLElement.prototype.scrollTo = vi.fn();
 let root: Root | undefined;
-afterEach(async () => { if (root) await act(async () => root?.unmount()); document.body.innerHTML = ""; window.history.replaceState(null,"","/"); });
+afterEach(async () => { if (root) await act(async () => root?.unmount()); document.body.innerHTML = ""; window.history.replaceState(null,"","/"); vi.restoreAllMocks(); });
 async function setup(initialRegion?: string) {
   const map=(await loadQuestMap("realm3"))!;
   const coordinates=map.paths[0].coordinates.slice(2,5);
@@ -56,11 +56,15 @@ describe("spawn-region map presentation",()=>{
     expect(marker.getAttribute('aria-pressed')).toBe("true");
   });
   it("keeps regions selectable on the map across route changes without a duplicate opponent list",async()=>{
+    vi.spyOn(HTMLElement.prototype,'clientWidth','get').mockReturnValue(390);
+    vi.spyOn(HTMLElement.prototype,'clientHeight','get').mockReturnValue(560);
     const {host}=await setup("fixture-region");
     const scale=Number(host.querySelector('[data-zoom]')?.getAttribute('data-zoom'));
     await act(async()=>host.querySelector<HTMLButtonElement>('[aria-label="Zoom in"]')!.click());
     expect(Number(host.querySelector('[data-zoom]')?.getAttribute('data-zoom'))).toBeGreaterThan(scale);
     expect(host.querySelector('[data-region-inspector]')).not.toBeNull();
+    expect(host.querySelectorAll('[aria-label="Map overview"] [data-overview-region]')).toHaveLength(1);
+    expect(host.querySelector('[aria-label="Map overview"] [data-overview-selection]')).not.toBeNull();
     expect(host.querySelectorAll('[data-spawn-region="fixture-region"]')).toHaveLength(1);
     expect(host.querySelector('ol')).toBeNull();
     const route=host.querySelector<HTMLSelectElement>('[aria-label="Recorded routes"]')!;

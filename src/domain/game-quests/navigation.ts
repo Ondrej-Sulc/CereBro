@@ -12,9 +12,11 @@ export function questPositionLabel(map: QuestMap, coordinate: Coordinate): strin
   return tile&&tile.links.length>1?"Junction":"Map location";
 }
 
-export function questZoom(input:{scale:number;next:number;min:number;max?:number;left:number;top:number;anchorX:number;anchorY:number;width:number;boardWidth:number}) {
+export function questZoom(input:{scale:number;next:number;min:number;max?:number;left:number;top:number;anchorX:number;anchorY:number;width:number;boardWidth:number;height?:number;boardHeight?:number}) {
   const scale=Math.min(Math.max(input.max??2.5,input.min),Math.max(input.min,input.next));
   const oldOffset=Math.max(0,(input.width-input.boardWidth*input.scale)/2);
   const offset=Math.max(0,(input.width-input.boardWidth*scale)/2);
-  return {scale,left:(input.left+input.anchorX-oldOffset)/input.scale*scale+offset-input.anchorX,top:(input.top+input.anchorY)/input.scale*scale-input.anchorY};
+  const oldVerticalOffset=Math.max(0,((input.height??0)-(input.boardHeight??0)*input.scale)/2);
+  const verticalOffset=Math.max(0,((input.height??0)-(input.boardHeight??0)*scale)/2);
+  return {scale,left:(input.left+input.anchorX-oldOffset)/input.scale*scale+offset-input.anchorX,top:(input.top+input.anchorY-oldVerticalOffset)/input.scale*scale+verticalOffset-input.anchorY};
 }

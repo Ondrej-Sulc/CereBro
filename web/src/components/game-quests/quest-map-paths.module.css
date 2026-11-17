@@ -1,0 +1,28 @@
+.paths {
+  pointer-events: none;
+  isolation: isolate;
+}
+
+.core,
+.glow,
+.sheath,
+.portalBeacon {
+  transition: stroke-opacity 180ms ease, opacity 180ms ease;
+}
+
+.pulse {
+  animation: routeEnergyFlow 3s linear infinite;
+}
+
+@keyframes routeEnergyFlow {
+  from { stroke-dashoffset: var(--route-phase, 0px); }
+  to { stroke-dashoffset: calc(var(--route-phase, 0px) - 60px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulse { animation: none; display: none; }
+  .core,
+  .glow,
+  .sheath,
+  .portalBeacon { transition: none; }
+}

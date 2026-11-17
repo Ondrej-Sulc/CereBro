@@ -77,6 +77,20 @@ function touchPointer(target: Element, type: string, x: number, y: number, point
 }
 
 describe("quest map viewport controls", () => {
+  it("makes the recorded quest start keyboard selectable without making every transit tile a tab stop", async () => {
+    const choose=vi.fn();
+    const host=await renderBoard(choose);
+    const start=map.tiles.find(tile=>tile.start&&!map.encounters.some(encounter=>encounter.coordinate.join(',')===tile.coordinate.join(',')))!;
+    const marker=host.querySelector(`[data-map-waypoint="start"][data-coordinate="${start.coordinate.join(',')}"]`)!;
+    expect(Boolean(marker)).toBe(true);
+    expect(marker.getAttribute('role')).toBe('button');
+    expect(marker.getAttribute('tabindex')).toBe('0');
+    expect(marker.getAttribute('aria-label')).toContain('Quest start');
+    await act(async()=>marker.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true})));
+    expect(choose).toHaveBeenCalledWith(start.coordinate);
+    expect([...host.querySelectorAll('[data-map-waypoint="junction"]')].every(point=>!point.hasAttribute('tabindex'))).toBe(true);
+  });
+
   it("keeps a one-finger drag active when capture transfers from an SVG child to the viewport", async () => {
     const capture = vi.fn();
     define(Element.prototype, "setPointerCapture", { value: capture });

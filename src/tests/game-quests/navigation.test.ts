@@ -7,6 +7,16 @@ it("anchors zoom at the pointer and clamps without losing the current world poin
  expect(questZoom({...x,next:100}).scale).toBe(2.5);expect(questZoom({...x,next:0}).scale).toBe(.5);
  const fit=questZoom({...x,scale:.5,next:1,left:0,anchorX:400});expect(fit.left).toBe(200);
 });
+it("keeps the same world point anchored when a vertically centered map grows beyond the viewport",()=>{
+ const input={scale:1,next:1.5,min:.5,left:0,top:0,anchorX:400,anchorY:450,width:800,height:900,boardWidth:400,boardHeight:800};
+ const result=questZoom(input);
+ expect(result.left).toBe(0);
+ expect(result.top).toBe(150);
+ const oldVerticalOffset=(input.height-input.boardHeight*input.scale)/2;
+ expect((result.top+input.anchorY)/result.scale).toBe((input.top+input.anchorY-oldVerticalOffset)/input.scale);
+ const restored=questZoom({...input,scale:result.scale,next:1,top:result.top});
+ expect(restored.top).toBe(0);
+});
 it("labels real defenders, start and portals without exposing source coordinates",async()=>{
  const m=(await loadQuestMap("a05_ch01_q01"))!;
  expect(questPositionLabel(m,[10,21])).toBe("Gambit");

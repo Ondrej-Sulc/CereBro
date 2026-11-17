@@ -1,0 +1,12 @@
+.marker{cursor:pointer;outline:none;-webkit-tap-highlight-color:transparent}
+.portraitRing{transition:stroke-opacity .18s,opacity .18s}
+.halo{fill:var(--marker-accent);stroke:var(--marker-accent);transition:fill-opacity .18s,stroke-opacity .18s}
+.marker[data-active=false]:not([data-selected=true]) .portraitRing{opacity:.6}
+.marker:hover .halo,.marker:focus-visible .halo{fill-opacity:.17;stroke-opacity:.75}
+.marker:hover .portraitRing,.marker:focus-visible .portraitRing{stroke-opacity:1;opacity:1}
+.focusRing{opacity:0;transition:opacity .15s}
+.marker:focus-visible .focusRing{opacity:1}
+.selection{animation:revealSelection .24s ease-out both}
+.rarity text{font-family:var(--font-geist-sans),Arial,sans-serif;font-variant-numeric:tabular-nums;letter-spacing:.1px}
+@keyframes revealSelection{from{opacity:0}to{opacity:1}}
+@media(prefers-reduced-motion:reduce){.marker *{animation:none!important;transition:none!important}}
