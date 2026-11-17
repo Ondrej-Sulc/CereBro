@@ -14,7 +14,6 @@ import type { QuestSpawnRegionLayer } from "@cerebro/core/domain/game-quests/spa
 import { entryCoordinate, mapDefenders } from "./quest-spawn-region-presentation";
 import { QuestSpawnRegionInspector } from "./quest-spawn-region-inspector";
 import { QuestEncounterSummary } from "./quest-encounter-summary";
-import { QuestMapConnections } from "./quest-map-connections";
 import styles from "./quest-map-explorer.module.css";
 
 export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}, artwork, initialApplication, spawnRegions, initialRegion }: { map: QuestMap; initialPath?: string; initialNode?: string; initialApplication?:string; portraits?: Record<string, Portrait>; artwork?: { url: string; theme: string } | null; spawnRegions?:QuestSpawnRegionLayer; initialRegion?:string }) {
@@ -101,7 +100,6 @@ export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}
           </div>; })}
           {!selectedEncounters.length && <p className={styles.muted}>No placed defender recorded here.</p>}
           <div className={styles.modifierSection}><h3>Node modifiers <span>{selectedTile.applications.length}</span></h3>{!selectedTile.applications.length && <p className={styles.muted}>No node modifiers recorded here.</p>}<QuestModifierGroups key={`${selected}:${map.sourceHash}:${selectedApplication??""}`} applications={selectedTile.applications} questId={map.questId} sourceHash={map.sourceHash} shareUrl={shareUrl} selectedApplication={selectedApplication} positionLabel={c=>questPositionLabel(map,c)} choose={choose}/></div>
-          <QuestMapConnections key={selected} map={map} tile={selectedTile} choose={choose}/>
           </>}
         </div>
       </section>

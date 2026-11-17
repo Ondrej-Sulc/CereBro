@@ -52,17 +52,14 @@ describe("quest map controls", () => {
     expect(JSON.stringify(map)).toBe(before);
   });
 
-  it('explains connected points and selects the exact adjacent target without anonymous Map location buttons', async()=>{
+  it('keeps location selection on the map without a Connected points section in the inspector', async()=>{
     const map=(await loadQuestMap('me_crucible_ch01_q01'))!;
     const tile=map.tiles.find(t=>t.coordinate.join(',')==='27,18')!;
     const host=await render(<QuestMapExplorer map={map} initialNode="27,18"/>);
-    const connections=host.querySelector<HTMLDetailsElement>('[data-map-connections]')!;
-    expect(connections.querySelector('summary')?.textContent).toContain('Connected points');
-    expect(connections.textContent).toContain('Inspect adjacent positions');
-    expect(connections.open).toBe(false);
-    expect([...connections.querySelectorAll('button')].some(button=>button.textContent?.includes('Map location'))).toBe(false);
-    await act(async()=>connections.querySelector('summary')!.click());
-    await act(async()=>connections.querySelector('button')!.click());
+    const inspector=host.querySelector('section[aria-labelledby="coordinate-heading"]')!;
+    expect(inspector.querySelector('[data-map-connections]')).toBeNull();
+    expect(inspector.textContent).not.toContain('Connected points');
+    await act(async()=>host.querySelector(`[data-quest-board] [data-coordinate="${tile.links[0].join(',')}"]`)!.dispatchEvent(new MouseEvent('click',{bubbles:true})));
     expect(new URL(window.location.href).searchParams.get('node')).toBe(tile.links[0].join(','));
   });
   it('keeps the single optional route control inside full screen and preserves selection on exit', async()=>{
@@ -182,9 +179,7 @@ describe("quest map controls", () => {
     expect([...inspector.querySelectorAll('h2,h3')].filter(h => h.textContent?.includes("Crossbones"))).toHaveLength(1);
     expect(inspector.textContent).not.toMatch(/Selected location|Recorded build|Defender data|Local · defender/);
     expect(inspector.textContent).toContain("Node modifiers");
-    const connections = inspector.querySelector<HTMLDetailsElement>('[data-map-connections]')!;
-    expect(connections.open).toBe(false);
-    expect(modifiers.at(-1)!.compareDocumentPosition(connections) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(inspector.querySelector('[data-map-connections]')).toBeNull();
   });
 
   it("hides routine modifier metadata while retaining linked sources, attacker labels and incoming anchors", async () => {
