@@ -5,6 +5,7 @@ import { useEffect,useLayoutEffect, useId, useMemo, useRef, useState, type CSSPr
 import { ChevronDown, Expand, Minus, Plus, Scan, Shrink, Signpost } from "lucide-react";
 import { coordinateKey, type Coordinate, type QuestMap } from "@cerebro/core/domain/game-quests";
 import { questBoardLabels } from "@cerebro/core/domain/game-quests/board";
+import { questPathFlowDistances } from "@cerebro/core/domain/game-quests/path-flow";
 import { questPositionLabel, questZoom } from "@cerebro/core/domain/game-quests/navigation";
 import type { QuestSpawnRegionLayer } from "@cerebro/core/domain/game-quests/spawn-regions";
 import { QuestSpawnRegionAreas, QuestSpawnRegionMarkers } from "./quest-spawn-region-layer";
@@ -91,18 +92,8 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
   const path = map.paths.find(p => p.index === pathIndex)!;
   const routeKeys = new Set(highlightRoute ? path.coordinates.map(coordinateKey) : []);
   const routeEdges = new Set(highlightRoute ? path.coordinates.slice(1).map((c, i) => `${coordinateKey(path.coordinates[i])}>${coordinateKey(c)}`) : []);
-  // Keep a travelling highlight continuous across the route's short SVG edges.
-  const routePhases = useMemo(() => {
-    const phases = new Map<string,number>();
-    let distance = 0;
-    for (let i=1;i<path.coordinates.length;i++) {
-      const from=path.coordinates[i-1],to=path.coordinates[i],a=board.point(from),b=board.point(to);
-      const key=`${coordinateKey(from)}>${coordinateKey(to)}`;
-      if(!phases.has(key))phases.set(key,(distance*scale)%60);
-      distance+=Math.hypot(b[0]-a[0],b[1]-a[1]);
-    }
-    return phases;
-  }, [path,board,scale]);
+  const flowDistances=useMemo(()=>questPathFlowDistances({edges:board.edges,point:board.point,starts:map.tiles.filter(tile=>tile.start).map(tile=>tile.coordinate),selectedPath:highlightRoute?path.coordinates:[]}),[board,map,highlightRoute,path]);
+  const routePhases=useMemo(()=>new Map([...flowDistances].map(([key,distance])=>[key,(distance*scale)%60])),[flowDistances,scale]);
   const labelScale = 1 / scale;
   const labels = useMemo(() => {const prioritized=[selectedRegion,hoveredRegion,...map.encounters.filter(e=>coordinateKey(e.coordinate)===selected||e.id===hover).map(e=>e.id)].filter((id):id is string=>typeof id==='string');return spawnRegions?regionBoardLabels(map,spawnRegions,board,prioritized,labelScale):questBoardLabels(map,prioritized,labelScale);}, [map,spawnRegions,board,selected,hover,selectedRegion,hoveredRegion,labelScale]);
   const portalTargets = new Set(board.edges.filter(e=>e.portal).map(e=>coordinateKey(e.to)));
@@ -126,9 +117,11 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
     tabIndex={fullscreen.windowMode ? -1 : undefined}>
     <div className={styles.controls}>
       {routeControl}
-      <div className={styles.zoom}><button aria-label="Zoom out" title="Zoom out" disabled={scale <= fitScale + .001} onClick={() => zoom(scaleRef.current / 1.35)}><Minus size={15} /></button><output aria-label="Map zoom">{Math.round(scale * 100)}%</output><button aria-label="Zoom in" title="Zoom in" disabled={scale >= Math.max(2.5,fitScale*2.5)} onClick={() => zoom(scaleRef.current * 1.35)}><Plus size={15} /></button><button aria-pressed={fitting} disabled={!ready} title="Show the whole map" onClick={fitMap}><Scan size={15} /><span>Fit map</span></button></div>
-      <button className={styles.namesToggle} aria-pressed={names} title={names ? "Hide defender names" : "Show defender names"} onClick={() => setNames(v => !v)}><Signpost size={15} /><span>Names</span></button>
-      <div className={styles.controlActions}><button data-map-fullscreen-toggle aria-label={fullscreen.fullscreen ? "Exit full screen" : "Enter full screen"} title={fullscreen.fullscreen ? "Exit full screen (Esc)" : "View map in full screen"} aria-pressed={fullscreen.fullscreen} disabled={fullscreen.busy} onClick={() => void fullscreen.toggle()}>{fullscreen.fullscreen ? <Shrink size={16} /> : <Expand size={16} />}<span>{fullscreen.fullscreen ? "Exit full screen" : "Full screen"}</span></button></div>
+      <div className={styles.viewTools} role="group" aria-label="Map view controls">
+        <div className={styles.zoom}><button aria-label="Zoom out" title="Zoom out" disabled={scale <= fitScale + .001} onClick={() => zoom(scaleRef.current / 1.35)}><Minus size={15} /></button><output aria-label="Map zoom">{Math.round(scale * 100)}%</output><button aria-label="Zoom in" title="Zoom in" disabled={scale >= Math.max(2.5,fitScale*2.5)} onClick={() => zoom(scaleRef.current * 1.35)}><Plus size={15} /></button><button aria-pressed={fitting} disabled={!ready} title="Show the whole map" onClick={fitMap}><Scan size={15} /><span>Fit map</span></button></div>
+        <button className={styles.namesToggle} aria-pressed={names} title={names ? "Hide defender names" : "Show defender names"} onClick={() => setNames(v => !v)}><Signpost size={15} /><span>Names</span></button>
+        <div className={styles.controlActions}><button data-map-fullscreen-toggle aria-label={fullscreen.fullscreen ? "Exit full screen" : "Enter full screen"} title={fullscreen.fullscreen ? "Exit full screen (Esc)" : "View map in full screen"} aria-pressed={fullscreen.fullscreen} disabled={fullscreen.busy} onClick={() => void fullscreen.toggle()}>{fullscreen.fullscreen ? <Shrink size={16} /> : <Expand size={16} />}<span>{fullscreen.fullscreen ? "Exit full screen" : "Full screen"}</span></button></div>
+      </div>
     </div>
     {fullscreen.fullscreen && <div className={styles.fullscreenContext}>{!routeControl && onChooseRoute && <label>Route<select aria-label="Full screen recorded route" value={pathIndex} onChange={e => onChooseRoute(Number(e.target.value))}>{map.paths.map(route => <option key={route.index} value={route.index}>Route {route.index + 1}</option>)}</select></label>}<span aria-live="polite">{spawnRegions?.regions.find(region => region.id === selectedRegion)?.defender.name ?? positionNames.get(selected)}</span></div>}
     <div className={styles.canvasWrap} style={artwork ? { backgroundImage: `linear-gradient(180deg,rgba(5,12,24,.76),rgba(4,10,20,.86)),url("${artwork.url}")` } : undefined}>

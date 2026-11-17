@@ -77,6 +77,19 @@ function touchPointer(target: Element, type: string, x: number, y: number, point
 }
 
 describe("quest map viewport controls", () => {
+  it("keeps the existing map actions together in one accessible view-control dock", async () => {
+    const host=await renderBoard();
+    const dock=host.querySelector('[role="group"][aria-label="Map view controls"]');
+    expect(Boolean(dock)).toBe(true);
+    expect(dock!.querySelectorAll('button')).toHaveLength(5);
+    expect(dock!.querySelector('[aria-label="Map zoom"]')).not.toBeNull();
+    expect(dock!.contains(button(host,'Zoom out'))).toBe(true);
+    expect(dock!.contains(button(host,'Zoom in'))).toBe(true);
+    expect(dock!.contains(button(host,'Fit map'))).toBe(true);
+    expect(dock!.contains(button(host,'Names'))).toBe(true);
+    expect(dock!.contains(button(host,'Enter full screen'))).toBe(true);
+  });
+
   it("makes the recorded quest start keyboard selectable without making every transit tile a tab stop", async () => {
     const choose=vi.fn();
     const host=await renderBoard(choose);
@@ -230,7 +243,7 @@ describe("quest map viewport controls", () => {
       expect(Number(line.getAttribute('stroke-width'))).toBeLessThanOrEqual(1.5);
       expect(line.hasAttribute('stroke-dasharray')).toBe(false);
       const pulse = edge.querySelector('[data-route-pulse]');
-      expect(Boolean(pulse)).toBe(edge.getAttribute('data-route-selected') === 'true');
+      expect(pulse).not.toBeNull();
       if (pulse) {
         expect(pulse.getAttribute('vector-effect')).toBe('non-scaling-stroke');
         expect(pulse.getAttribute('style')).toContain('--route-phase:');

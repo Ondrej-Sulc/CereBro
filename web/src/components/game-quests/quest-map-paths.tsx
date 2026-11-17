@@ -51,18 +51,16 @@ export function QuestMapPaths({ edges, point, routeEdges, routePhases, highlight
           stroke={active ? edge.portal ? "#f2e3ff" : "#e2f7ff" : edge.portal ? "#c6a2e5" : "#a9d7ec"}
           strokeWidth={active ? 1.5 : 1.15} strokeOpacity={quiet ? .46 : .92}
           strokeLinecap="round" vectorEffect="non-scaling-stroke" markerEnd={edge.portal ? `url(#${portalArrowId})` : undefined}/>
-        {active && <Connection {...geometry} data-route-pulse className={styles.pulse}
+        <Connection {...geometry} data-route-pulse className={styles.pulse}
           style={{ "--route-phase": `${routePhases.get(key) ?? 0}px` } as CSSProperties}
-          stroke={edge.portal ? "#fff6ff" : "#f3fdff"} strokeWidth="2.2" strokeDasharray="9 51"
-          strokeLinecap="round" vectorEffect="non-scaling-stroke"/>}
+          stroke={edge.portal ? "#fff6ff" : "#f3fdff"} strokeOpacity={active ? .85 : quiet ? .12 : .26} strokeWidth="2.2" strokeDasharray="9 51"
+          strokeLinecap="round" vectorEffect="non-scaling-stroke"/>
       </g>;
     })}
     {[...portals].map(([key, portal]) => {
       const [x, y] = point(portal.coordinate);
       return <g key={key} data-portal-beacon={key} className={styles.portalBeacon} opacity={portal.active ? 1 : .5}>
-        <circle cx={x} cy={y} r="21" fill="#a977ef" fillOpacity=".055"/>
-        <circle cx={x} cy={y} r="19" fill="none" stroke="#b88feb" strokeWidth="1" strokeOpacity=".35" vectorEffect="non-scaling-stroke"/>
-        <circle cx={x} cy={y} r="16" fill="none" stroke="#ead5ff" strokeWidth="1.1" strokeDasharray="3 7" vectorEffect="non-scaling-stroke"/>
+        <circle cx={x} cy={y} r="21" fill="#a977ef" fillOpacity=".045"/>
       </g>;
     })}
   </g>;

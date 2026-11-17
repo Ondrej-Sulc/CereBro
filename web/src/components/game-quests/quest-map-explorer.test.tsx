@@ -27,7 +27,7 @@ describe("quest map controls", () => {
     const host=await render(<QuestMapExplorer map={map}/>);
     const route=host.querySelector<HTMLSelectElement>('[aria-label="Recorded routes"]')!;
     expect(route.value).toBe('');
-    expect(host.querySelectorAll('[data-route-pulse]')).toHaveLength(0);
+    expect(host.querySelectorAll('[data-route-pulse]')).toHaveLength(host.querySelectorAll('[data-route-edge]').length);
     expect(host.querySelector('ol')).toBeNull();
     expect(host.textContent).not.toContain('All placed opponents');
     expect(host.querySelector('a[aria-label="Link to this location"]')?.getAttribute('href')).not.toContain('path=');
@@ -37,7 +37,7 @@ describe("quest map controls", () => {
     const explicit=window.location.href;
     await act(async()=>{route.value='';route.dispatchEvent(new Event('change',{bubbles:true}));});
     expect(new URL(window.location.href).searchParams.has('path')).toBe(false);
-    expect(host.querySelectorAll('[data-route-pulse]')).toHaveLength(0);
+    expect(host.querySelectorAll('[data-route-pulse]')).toHaveLength(host.querySelectorAll('[data-route-edge]').length);
     await act(async()=>{window.history.replaceState(null,'',explicit);window.dispatchEvent(new PopStateEvent('popstate'));});
     expect(route.value).toBe('2');
     expect(JSON.stringify(map)).toBe(before);

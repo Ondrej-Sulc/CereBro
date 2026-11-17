@@ -15,11 +15,11 @@ export function QuestMapWaypoint({tile,x,y,label,active,selected,portalTarget,on
     <title>{name}</title>
     {interactive&&<circle cx={x} cy={y} r="20" fill="transparent" pointerEvents="all"/>}
     <g aria-hidden="true" pointerEvents="none" opacity={active||selected?1:.55}>
-      {selected&&<><circle cx={x} cy={y} r={interactive?24:12} fill="#97e9ff" fillOpacity=".06" stroke="#a3edff" strokeOpacity=".7" strokeWidth="1" vectorEffect="non-scaling-stroke"/><circle cx={x} cy={y} r={interactive?29:17} fill="none" stroke="#a3edff" strokeOpacity=".22" strokeWidth="1" strokeDasharray="2 5" vectorEffect="non-scaling-stroke"/></>}
+      {selected&&(portal?<ellipse cx={x} cy={y} rx="18" ry="22" fill="#d6b6ff" fillOpacity=".05" stroke="#dfc8ff" strokeOpacity=".5" strokeWidth="1" vectorEffect="non-scaling-stroke"/>:<><circle cx={x} cy={y} r={interactive?24:12} fill="#97e9ff" fillOpacity=".06" stroke="#a3edff" strokeOpacity=".7" strokeWidth="1" vectorEffect="non-scaling-stroke"/><circle cx={x} cy={y} r={interactive?29:17} fill="none" stroke="#a3edff" strokeOpacity=".22" strokeWidth="1" strokeDasharray="2 5" vectorEffect="non-scaling-stroke"/></>)}
       {portal?<>
-        <circle cx={x} cy={y} r="14" fill="#110d22" stroke="#c69bef" strokeWidth="1.2" className={styles.waypointRing} vectorEffect="non-scaling-stroke"/>
-        <ellipse cx={x} cy={y} rx="8" ry="11" fill="#c2a1fa" fillOpacity=".12" stroke="#e3ccff" strokeWidth="1" vectorEffect="non-scaling-stroke"/>
-        <path d={`M${x-3} ${y-6}l6 6-6 6M${x+4} ${y-9}l-3 3m-5 12-3 3`} fill="none" stroke="#f0e2ff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke"/>
+        <ellipse cx={x} cy={y} rx="12" ry="16" fill="#120e22" fillOpacity=".97" stroke="#d5b0f6" strokeWidth="1.2" className={styles.waypointRing} vectorEffect="non-scaling-stroke"/>
+        <path d={`M${x-6} ${y-12}a12 16 0 0 0 0 24M${x+6} ${y-12}a12 16 0 0 1 0 24`} fill="none" stroke="#e7d4ff" strokeOpacity=".4" strokeWidth="2.5" strokeLinecap="round" vectorEffect="non-scaling-stroke"/>
+        <path d={`M${x-3} ${y-6}l6 6-6 6`} fill="none" stroke="#f0e2ff" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke"/>
       </>:tile.start?<>
         <circle cx={x} cy={y} r="20" fill="#68e5c0" fillOpacity=".07"/>
         <circle cx={x} cy={y} r="14" fill="#072a2a" stroke="#72e9c5" strokeWidth="1.4" className={styles.waypointRing} vectorEffect="non-scaling-stroke"/>

@@ -46,16 +46,21 @@ describe("quest map energy paths", () => {
     });
   });
 
-  it("flows only the highlighted route and preserves its continuous edge phases", () => {
+  it("flows every directed edge and emphasizes the highlighted route without removing other flow", () => {
     const host = render();
     const pulses = [...host.querySelectorAll("[data-route-pulse]")];
-    expect(pulses).toHaveLength(2);
-    expect(pulses.map(node => node.getAttribute("style"))).toEqual(["--route-phase:13px", "--route-phase:27px"]);
+    expect(pulses).toHaveLength(edges.length);
+    expect(pulses.map(node => node.getAttribute("style"))).toEqual(["--route-phase:13px", "--route-phase:0px", "--route-phase:27px", "--route-phase:0px"]);
     for (const edge of host.querySelectorAll("[data-route-edge]")) {
-      expect(Boolean(edge.querySelector("[data-route-pulse]"))).toBe(edge.getAttribute("data-route-selected") === "true");
+      const pulse=edge.querySelector('[data-route-pulse]')!;
+      expect(pulse).not.toBeNull();
+      expect(Number(pulse.getAttribute('stroke-opacity'))).toBe(edge.getAttribute('data-route-selected')==='true' ? .85 : .12);
+      expect(pulse.getAttribute('vector-effect')).toBe('non-scaling-stroke');
     }
     expect(render(false).querySelectorAll('[data-route-selected="true"]')).toHaveLength(0);
-    expect(render(false).querySelectorAll("[data-route-pulse]")).toHaveLength(0);
+    const all=render(false).querySelectorAll('[data-route-pulse]');
+    expect(all).toHaveLength(edges.length);
+    expect([...all].every(pulse=>Number(pulse.getAttribute('stroke-opacity'))===.26)).toBe(true);
     expect(host.textContent).not.toMatch(/explored|progress|completed/i);
   });
 
