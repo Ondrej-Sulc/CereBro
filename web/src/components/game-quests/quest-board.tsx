@@ -15,6 +15,7 @@ import type { QuestPortrait } from "@/lib/game-quests/presentation";
 import { useQuestMapFullscreen } from "./use-quest-map-fullscreen";
 import { useQuestMapZoom } from "./use-quest-map-zoom";
 import { QuestMapPaths } from "./quest-map-paths";
+import { QuestPathPulses } from "./quest-path-pulses";
 import { QuestMapEncounterMarker } from "./quest-map-encounter-marker";
 import { QuestMapWaypoint } from "./quest-map-waypoint";
 import { questMapMarkerLayout } from "./quest-map-marker-layout";
@@ -51,8 +52,8 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
   const pinch=useRef<{distance:number;x:number;y:number}|null>(null);
   const suppressClick=useRef(false);
   const path = map.paths.find(p => p.index === pathIndex)!;
-  const routeKeys = new Set(highlightRoute ? path.coordinates.map(coordinateKey) : []);
-  const routeEdges = new Set(highlightRoute ? path.coordinates.slice(1).map((c, i) => `${coordinateKey(path.coordinates[i])}>${coordinateKey(c)}`) : []);
+  const routeKeys = useMemo(() => new Set(highlightRoute ? path.coordinates.map(coordinateKey) : []), [highlightRoute, path]);
+  const routeEdges = useMemo(() => new Set(highlightRoute ? path.coordinates.slice(1).map((c, i) => `${coordinateKey(path.coordinates[i])}>${coordinateKey(c)}`) : []), [highlightRoute, path]);
   const flowDistances=useMemo(()=>questPathFlowDistances({edges:board.edges,point:board.point,starts:map.tiles.filter(tile=>tile.start).map(tile=>tile.coordinate),selectedPath:highlightRoute?path.coordinates:[]}),[board,map,highlightRoute,path]);
   const routePhases=useMemo(()=>new Map([...flowDistances].map(([key,distance])=>[key,(distance*scale)%60])),[flowDistances,scale]);
   const markerLayout = useMemo(() => questMapMarkerLayout(map, board, featureLocations, scale, spawnRegions), [map, board, featureLocations, scale, spawnRegions]);
@@ -100,6 +101,8 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
             {map.encounters.map((e, i) => { const [x, y] = board.point(e.coordinate); const radius = e.final ? 31 : 25; return <clipPath key={e.id} id={`${uid}-portrait-${i}`}><circle cx={x} cy={y} r={radius} /></clipPath>; })}
           </defs>
           <QuestMapPaths edges={board.edges} point={board.point} routeEdges={routeEdges} routePhases={routePhases} highlightRoute={highlightRoute}/>
+          <QuestPathPulses edges={board.edges} point={board.point} distances={flowDistances} selectedEdges={routeEdges} highlightRoute={highlightRoute}
+            width={board.width} height={board.height} viewportRef={viewportRef} sceneRef={sceneRef}/>
           {spawnRegions&&<QuestSpawnRegionAreas map={map} layer={spawnRegions} point={board.point} selected={selectedRegion} hovered={hoveredRegion??undefined} pathIndex={pathIndex} highlightRoute={highlightRoute}/>}
           {map.tiles.map(tile=>{
             const key=coordinateKey(tile.coordinate),[x,y]=board.point(tile.coordinate);
