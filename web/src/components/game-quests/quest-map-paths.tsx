@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import { memo, type CSSProperties } from "react";
 import { coordinateKey, type Coordinate } from "@cerebro/core/domain/game-quests";
 import styles from "./quest-map-paths.module.css";
 
@@ -9,10 +9,11 @@ type Props = {
   routeEdges: ReadonlySet<string>;
   routePhases: ReadonlyMap<string, number>;
   highlightRoute: boolean;
+  renderPulses?: boolean;
 };
 
 /** Presentation only: each captured directed edge retains its original endpoints. */
-export function QuestMapPaths({ edges, point, routeEdges, routePhases, highlightRoute }: Props) {
+export const QuestMapPaths = memo(function QuestMapPaths({ edges, point, routeEdges, routePhases, highlightRoute, renderPulses = true }: Props) {
   const portals = new Map<string, { coordinate: Coordinate; active: boolean }>();
   for (const edge of edges) {
     if (!edge.portal) continue;
@@ -49,7 +50,7 @@ export function QuestMapPaths({ edges, point, routeEdges, routePhases, highlight
           stroke={active ? edge.portal ? "#dfc6f2" : "#b9e6fa" : edge.portal ? "#ab86c6" : "#82adc5"}
           strokeWidth={active ? 1.35 : 1.05} strokeOpacity={active ? .8 : quiet ? .28 : .65}
           strokeLinecap="round" vectorEffect="non-scaling-stroke"/>
-        <Connection {...geometry} data-route-pulse-trail className={styles.pulseTrail}
+        {renderPulses && <><Connection {...geometry} data-route-pulse-trail className={styles.pulseTrail}
           style={pulseStyle(26)} strokeDashoffset={phase+26}
           stroke={color} strokeOpacity={active ? .28 : quiet ? .09 : .18} strokeWidth="4.6" strokeDasharray="26 34"
           strokeLinecap="round" vectorEffect="non-scaling-stroke"/>
@@ -60,7 +61,7 @@ export function QuestMapPaths({ edges, point, routeEdges, routePhases, highlight
         <Connection {...geometry} data-route-pulse className={styles.pulse}
           style={pulseStyle(4)} strokeDashoffset={phase+4}
           stroke={edge.portal ? "#fff4ff" : "#f4ffff"} strokeOpacity={active ? 1 : quiet ? .72 : .98} strokeWidth="1.8" strokeDasharray="4 56"
-          strokeLinecap="round" vectorEffect="non-scaling-stroke"/>
+          strokeLinecap="round" vectorEffect="non-scaling-stroke"/></>}
       </g>;
     })}
     {[...portals].map(([key, portal]) => {
@@ -70,4 +71,4 @@ export function QuestMapPaths({ edges, point, routeEdges, routePhases, highlight
       </g>;
     })}
   </g>;
-}
+});

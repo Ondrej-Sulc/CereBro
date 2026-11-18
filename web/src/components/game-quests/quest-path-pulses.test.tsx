@@ -35,16 +35,19 @@ afterEach(async () => {
   if (root) await act(async () => root!.unmount()); root = undefined;
   document.body.innerHTML = ""; vi.restoreAllMocks(); vi.unstubAllGlobals();
 });
-async function render() {
+async function render(onRendererChange?: (renderer: "canvas" | "svg") => void) {
   const host = document.createElement("div"); document.body.append(host); root = createRoot(host);
   const viewportRef = createRef<HTMLDivElement>(), sceneRef = createRef<SVGSVGElement>();
-  await act(async () => root!.render(<div ref={viewportRef}><svg ref={sceneRef} data-zoom=".5">
+  const renderScene = (callback = onRendererChange) => root!.render(<div ref={viewportRef}><svg ref={sceneRef} data-zoom=".5">
     <g data-route-edge><line x1="0" y1="50" x2="400" y2="50" data-route-pulse/></g>
     <QuestPathPulses edges={edges} point={point} distances={new Map()} selectedEdges={new Set()} highlightRoute={false}
-      width={2500} height={400} viewportRef={viewportRef} sceneRef={sceneRef}/>
+      width={2500} height={400} viewportRef={viewportRef} sceneRef={sceneRef} onRendererChange={callback}/>
     <g data-defender-marker/>
-  </svg></div>));
-  return { host, viewport: viewportRef.current!, scene: sceneRef.current! };
+  </svg></div>);
+  await act(async () => renderScene());
+  return { host, viewport: viewportRef.current!, scene: sceneRef.current!, rerender: async (callback = onRendererChange) => {
+    await act(async () => renderScene(callback));
+  } };
 }
 async function frame(time = 1000) {
   const callbacks = [...pending.values()]; pending.clear();
@@ -107,6 +110,40 @@ it("animates light without mutating the static SVG between idle frames", async (
   expect(context.stroke).toHaveBeenCalled(); expect(changed).not.toHaveBeenCalled();
 });
 
+it("reports canvas only after a successful draw and does not churn renderer state on idle frames or parent renders", async () => {
+  const onRendererChange = vi.fn(), nextRendererChange = vi.fn();
+  const { rerender } = await render(onRendererChange);
+  expect(onRendererChange).not.toHaveBeenCalled();
+  await frame(); await frame(1100);
+  expect(onRendererChange.mock.calls).toEqual([["canvas"]]);
+  await rerender(nextRendererChange); await frame(1200);
+  expect(nextRendererChange).not.toHaveBeenCalled();
+  await act(async () => root!.unmount()); root = undefined;
+  expect(onRendererChange.mock.calls).toEqual([["canvas"]]);
+  expect(nextRendererChange).not.toHaveBeenCalled();
+  expect(pending.size).toBe(0);
+});
+
+it("does not schedule another frame if the renderer callback unmounts the surface", async () => {
+  const onRendererChange = vi.fn(() => { root!.unmount(); root = undefined; });
+  await render(onRendererChange); await frame();
+  expect(onRendererChange.mock.calls).toEqual([["canvas"]]);
+  expect(pending.size).toBe(0);
+});
+
+it.each(["constructor", "matchMedia", "null context", "throwing context"])("reports SVG fallback when canvas capability is unavailable: %s", async failure => {
+  if (failure === "constructor") vi.stubGlobal("CanvasRenderingContext2D", undefined);
+  else if (failure === "matchMedia") vi.stubGlobal("matchMedia", undefined);
+  else if (failure === "null context") vi.mocked(HTMLCanvasElement.prototype.getContext).mockReturnValue(null);
+  else vi.mocked(HTMLCanvasElement.prototype.getContext).mockImplementation(() => { throw new Error("unavailable"); });
+  const onRendererChange = vi.fn();
+  const { host, scene } = await render(onRendererChange); await frame();
+  expect(onRendererChange.mock.calls).toEqual([["svg"]]);
+  expect(scene.hasAttribute("data-pulse-renderer")).toBe(false);
+  expect(host.querySelector("[data-route-pulse]")).not.toBeNull();
+  expect(pending.size).toBe(0);
+});
+
 it("leaves the existing SVG fallback available if a canvas context cannot be created", async () => {
   vi.mocked(HTMLCanvasElement.prototype.getContext).mockReturnValue(null);
   const { host, scene } = await render(); await frame();
@@ -117,25 +154,59 @@ it("leaves the existing SVG fallback available if a canvas context cannot be cre
 
 it("respects reduced motion and resumes drawing after the preference changes", async () => {
   motion.matches = true;
-  const { scene } = await render();
+  const onRendererChange = vi.fn();
+  const { scene } = await render(onRendererChange);
   expect(pending.size).toBe(0); expect(context.stroke).not.toHaveBeenCalled();
+  expect(onRendererChange).not.toHaveBeenCalled();
   motion.matches = false;
   const change = motion.addEventListener.mock.calls.find(call => call[0] === 'change')?.[1] as EventListener;
   await act(async () => change(new Event('change'))); await frame();
   expect(scene.getAttribute('data-pulse-renderer')).toBe('canvas'); expect(context.stroke).toHaveBeenCalled();
   motion.matches = true; await act(async () => change(new Event('change')));
   expect(pending.size).toBe(0);
+  expect(onRendererChange.mock.calls).toEqual([["canvas"]]);
+  motion.matches = false; await act(async () => change(new Event('change'))); await frame(1100);
+  expect(onRendererChange.mock.calls).toEqual([["canvas"]]);
 });
 
 it("restores fallback after context loss and releases animation resources on unmount", async () => {
-  const { host, scene } = await render(); await frame();
+  const onRendererChange = vi.fn(), nextRendererChange = vi.fn();
+  const { host, scene, rerender } = await render(onRendererChange); await frame();
+  expect(onRendererChange.mock.calls).toEqual([["canvas"]]);
+  await rerender(nextRendererChange);
   const canvas = host.querySelector('canvas')!;
   await act(async () => canvas.dispatchEvent(new Event('contextlost', { cancelable: true })));
   expect(scene.hasAttribute('data-pulse-renderer')).toBe(false); expect(pending.size).toBe(0);
-  await act(async () => canvas.dispatchEvent(new Event('contextrestored'))); await frame();
+  await act(async () => canvas.dispatchEvent(new Event('contextlost', { cancelable: true })));
+  expect(nextRendererChange.mock.calls).toEqual([["svg"]]);
+  await act(async () => canvas.dispatchEvent(new Event('contextrestored')));
+  expect(nextRendererChange.mock.calls).toEqual([["svg"]]);
+  await frame();
   expect(scene.getAttribute('data-pulse-renderer')).toBe('canvas');
+  expect(nextRendererChange.mock.calls).toEqual([["svg"], ["canvas"]]);
   await act(async () => root!.unmount()); root = undefined;
   expect(pending.size).toBe(0); expect(motion.removeEventListener).toHaveBeenCalled();
+  expect(nextRendererChange.mock.calls).toEqual([["svg"], ["canvas"]]);
+});
+
+it("reports paint failure once and returns to canvas only after a restored context draws successfully", async () => {
+  const onRendererChange = vi.fn();
+  const { host, scene } = await render(onRendererChange); await frame();
+  context.stroke.mockImplementationOnce(() => { throw new Error("paint failed"); });
+  await frame(1100); await frame(1200);
+  expect(scene.hasAttribute("data-pulse-renderer")).toBe(false);
+  expect(onRendererChange.mock.calls).toEqual([["canvas"], ["svg"]]);
+  expect(pending.size).toBe(0);
+  const canvas = host.querySelector("canvas")!;
+  vi.mocked(HTMLCanvasElement.prototype.getContext).mockReturnValueOnce(null);
+  await act(async () => canvas.dispatchEvent(new Event("contextrestored")));
+  expect(onRendererChange.mock.calls).toEqual([["canvas"], ["svg"]]);
+  expect(pending.size).toBe(0);
+  await act(async () => canvas.dispatchEvent(new Event("contextrestored")));
+  expect(onRendererChange.mock.calls).toEqual([["canvas"], ["svg"]]);
+  await frame(1300);
+  expect(scene.getAttribute("data-pulse-renderer")).toBe("canvas");
+  expect(onRendererChange.mock.calls).toEqual([["canvas"], ["svg"], ["canvas"]]);
 });
 
 it("stops work while the document is hidden and resumes visible flow", async () => {

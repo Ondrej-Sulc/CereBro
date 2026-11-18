@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { act, createRef } from "react";
+import { act, createRef, Profiler, type ProfilerOnRenderCallback } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { loadQuestMap } from "@cerebro/core/data/game-quests";
@@ -53,12 +53,12 @@ afterEach(async () => {
   vi.restoreAllMocks(); vi.unstubAllGlobals();
 });
 
-async function renderBoard(onChoose: (coordinate: Coordinate) => void = () => {}) {
+async function renderBoard(onChoose: (coordinate: Coordinate) => void = () => {}, onRender: ProfilerOnRenderCallback = () => {}) {
   const host = document.createElement("div"); document.body.append(host);
   root = createRoot(host);
   const selected = map.encounters[0].coordinate.join(",");
-  await act(async () => root!.render(<QuestBoard map={map} portraits={{}} selected={selected} pathIndex={0}
-    onChoose={onChoose} viewportRef={createRef<HTMLDivElement>()} />));
+  await act(async () => root!.render(<Profiler id="quest-board" onRender={onRender}><QuestBoard map={map} portraits={{}} selected={selected} pathIndex={0}
+    onChoose={onChoose} viewportRef={createRef<HTMLDivElement>()} /></Profiler>));
   return host;
 }
 const scale = (host: HTMLElement) => Number(host.querySelector("[data-zoom]")?.getAttribute("data-zoom"));
@@ -96,6 +96,47 @@ function animationClock(reducedMotion = false) {
 }
 
 describe("quest map viewport controls", () => {
+  it("moves the overview camera during repeated pans without rendering the map again", async () => {
+    const onRender = vi.fn<ProfilerOnRenderCallback>();
+    const host = await renderBoard(() => {}, onRender);
+    await zoomToDetail(host);
+    expect(onRender).toHaveBeenCalled();
+    onRender.mockClear();
+    const viewport = host.querySelector<HTMLElement>('[aria-label="Scrollable quest map"]')!;
+    const camera = host.querySelector('[data-overview-viewport]')!;
+    const board = questBoardGeometry(map);
+    for (const [left, top] of [[20, 30], [80, 90], [140, 150]]) {
+      await act(async () => {
+        viewport.scrollTo({ left, top });
+        viewport.dispatchEvent(new Event("scroll"));
+      });
+      expect(Number(camera.getAttribute("x"))).toBeCloseTo(left / scale(host));
+      expect(Number(camera.getAttribute("y"))).toBeCloseTo(top / scale(host));
+      expect(Number(camera.getAttribute("width"))).toBeCloseTo(Math.min(board.width, size.width / scale(host)));
+      expect(Number(camera.getAttribute("height"))).toBeCloseTo(Math.min(board.height, size.height / scale(host)));
+    }
+    expect(onRender).not.toHaveBeenCalled();
+  });
+
+  it("starts a drag and handles keyboard panning without rendering an unchanged map", async () => {
+    const onRender = vi.fn<ProfilerOnRenderCallback>();
+    const host = await renderBoard(() => {}, onRender); await zoomToDetail(host);
+    const viewport = host.querySelector<HTMLElement>('[aria-label="Scrollable quest map"]')!;
+    Object.defineProperty(viewport, 'scrollBy', { value: (options: ScrollToOptions) => {
+      viewport.scrollTo({ left: viewport.scrollLeft + (options.left ?? 0), top: viewport.scrollTop + (options.top ?? 0) });
+      viewport.dispatchEvent(new Event('scroll'));
+    } });
+    onRender.mockClear();
+    await act(async () => touchPointer(viewport, 'pointerdown', 200, 200));
+    expect(onRender).not.toHaveBeenCalled();
+    await act(async () => touchPointer(viewport, 'pointerup', 200, 200));
+    const top = viewport.scrollTop;
+    await act(async () => viewport.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true, cancelable: true })));
+    expect(viewport.scrollTop).toBe(top + 100);
+    expect(Number(host.querySelector('[data-overview-viewport]')!.getAttribute('y'))).toBeCloseTo((top + 100) / scale(host));
+    expect(onRender).not.toHaveBeenCalled();
+  });
+
   it("smoothly accumulates zoom-button presses without redrawing marker geometry every frame", async () => {
     const host = await renderBoard(), initial = scale(host), clock = animationClock();
     const marker = host.querySelector('[data-map-marker-visual]')!;

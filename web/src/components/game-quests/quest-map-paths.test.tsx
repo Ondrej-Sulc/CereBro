@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
+import { act } from "react";
+import { createRoot } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { coordinateKey, type Coordinate } from "@cerebro/core/domain/game-quests";
 import { QuestMapPaths } from "./quest-map-paths";
 
@@ -11,16 +13,41 @@ const edges = [
   { from: [4, 3], to: [1, 1], portal: true },
 ] satisfies { from: Coordinate; to: Coordinate; portal: boolean }[];
 const point = ([x, y]: Coordinate): Coordinate => [76 + x * 22, 76 + y * 22];
+Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 
-function render(highlightRoute = true) {
+function render(highlightRoute = true, renderPulses = true) {
   const host = document.createElement("div");
   host.innerHTML = renderToStaticMarkup(<svg><QuestMapPaths edges={edges} point={point}
     routeEdges={new Set(["0,0>1,0", "1,1>4,3"])} routePhases={new Map([["0,0>1,0", 13], ["1,1>4,3", 27]])}
-    highlightRoute={highlightRoute}/></svg>);
+    highlightRoute={highlightRoute} renderPulses={renderPulses}/></svg>);
   return host;
 }
 
 describe("quest map energy paths", () => {
+  it("reuses unchanged static path markup across parent UI updates", async () => {
+    const host = document.createElement("div"), root = createRoot(host), transform = vi.fn(point);
+    const props = { edges, point: transform, routeEdges: new Set<string>(), routePhases: new Map<string, number>(), highlightRoute: false, renderPulses: false };
+    try {
+      await act(async () => root.render(<svg data-ui-update="0"><QuestMapPaths {...props}/></svg>));
+      expect(transform).toHaveBeenCalled(); transform.mockClear();
+      await act(async () => root.render(<svg data-ui-update="1"><QuestMapPaths {...props}/></svg>));
+      expect(transform).not.toHaveBeenCalled();
+      expect(host.querySelectorAll("[data-route-edge]")).toHaveLength(edges.length);
+    } finally { await act(async () => root.unmount()); }
+  });
+
+  it("omits only pulse strokes when the canvas renderer owns the moving light", () => {
+    const fallback = render(), staticOnly = render(true, false);
+    expect(staticOnly.querySelectorAll("[data-route-edge]")).toHaveLength(edges.length);
+    expect(staticOnly.querySelector("[data-route-pulse],[data-route-pulse-body],[data-route-pulse-trail]")).toBeNull();
+    for (const selector of ["[data-route-casing]", "[data-route-glow]", "[data-route-line]"]) {
+      expect(staticOnly.querySelectorAll(selector)).toHaveLength(edges.length);
+    }
+    fallback.querySelectorAll("[data-route-pulse],[data-route-pulse-body],[data-route-pulse-trail]").forEach(pulse => pulse.remove());
+    expect(staticOnly.innerHTML).toBe(fallback.innerHTML);
+    expect(staticOnly.querySelectorAll("[data-portal-beacon]")).toHaveLength(2);
+  });
+
   it("preserves every directed source edge and its exact transformed endpoints", () => {
     const host = render();
     const layers = [...host.querySelectorAll("[data-route-edge]")];

@@ -12,6 +12,7 @@ export type QuestPathPulsesProps = {
   width: number; height: number;
   viewportRef: RefObject<HTMLDivElement | null>;
   sceneRef: RefObject<SVGSVGElement | null>;
+  onRendererChange?: (renderer: "canvas" | "svg") => void;
 };
 
 const categories = ["normal-active", "normal-quiet", "portal-active", "portal-quiet"] as const;
@@ -49,24 +50,34 @@ function paint(context: CanvasRenderingContext2D, geometry: readonly QuestPathPu
 }
 
 /** Only moving light is rasterized. The SVG owns all map geometry and hit targets. */
-export const QuestPathPulses = memo(function QuestPathPulses({ edges, point, distances, selectedEdges, highlightRoute, width, height, viewportRef, sceneRef }: QuestPathPulsesProps) {
+export const QuestPathPulses = memo(function QuestPathPulses({ edges, point, distances, selectedEdges, highlightRoute, width, height, viewportRef, sceneRef, onRendererChange }: QuestPathPulsesProps) {
   const surfaceRef = useRef<SVGForeignObjectElement>(null), canvasRef = useRef<HTMLCanvasElement>(null);
   const geometry = useMemo(() => createQuestPathPulseGeometry({ edges, point, distances, selectedEdges, highlightRoute }), [edges, point, distances, selectedEdges, highlightRoute]);
-  const latest = useRef({ geometry, highlightRoute });
-  useLayoutEffect(() => { latest.current = { geometry, highlightRoute }; }, [geometry, highlightRoute]);
+  const latest = useRef({ geometry, highlightRoute, onRendererChange });
+  const reportedRenderer = useRef<"canvas" | "svg" | null>(null);
+  useLayoutEffect(() => { latest.current = { geometry, highlightRoute, onRendererChange }; }, [geometry, highlightRoute, onRendererChange]);
 
   useEffect(() => {
+    let disposed = false;
+    const reportRenderer = (renderer: "canvas" | "svg") => {
+      if (disposed || reportedRenderer.current === renderer) return;
+      reportedRenderer.current = renderer;
+      latest.current.onRendererChange?.(renderer);
+    };
     const canvas = canvasRef.current, surface = surfaceRef.current, viewport = viewportRef.current, scene = sceneRef.current;
-    if (!canvas || !surface || !viewport || !scene || typeof CanvasRenderingContext2D !== "function" || typeof window.matchMedia !== "function") return;
+    if (!canvas || !surface || !viewport || !scene || typeof CanvasRenderingContext2D !== "function" || typeof window.matchMedia !== "function") {
+      reportRenderer("svg"); return;
+    }
     let context: CanvasRenderingContext2D | null;
-    try { context = canvas.getContext("2d"); } catch { return; }
-    if (!context) return;
-    const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    let motion: MediaQueryList;
+    try { context = canvas.getContext("2d"); motion = window.matchMedia("(prefers-reduced-motion: reduce)"); } catch { reportRenderer("svg"); return; }
+    if (!context) { reportRenderer("svg"); return; }
     let frame: number | null = null, visible = true, lost = false;
     let clock: (QuestPathPulseMotion & { time: number }) | null = null;
     const stop = () => { if (frame !== null) cancelAnimationFrame(frame); frame = null; };
-    const fallback = () => { stop(); surface.style.visibility = "hidden"; scene.removeAttribute("data-pulse-renderer"); };
-    const allowed = () => !lost && visible && !document.hidden && !motion.matches && viewport.clientWidth > 0 && viewport.clientHeight > 0;
+    const hide = () => { surface.style.visibility = "hidden"; scene.removeAttribute("data-pulse-renderer"); };
+    const fallback = () => { stop(); hide(); reportRenderer("svg"); };
+    const allowed = () => !disposed && !lost && visible && !document.hidden && !motion.matches && viewport.clientWidth > 0 && viewport.clientHeight > 0;
     const attribute = (name: string, value: number) => { const text = String(value); if (surface.getAttribute(name) !== text) surface.setAttribute(name, text); };
     const draw = (time: number) => {
       frame = null;
@@ -91,16 +102,18 @@ export const QuestPathPulses = memo(function QuestPathPulses({ edges, point, dis
         paint(context, latest.current.geometry, latest.current.highlightRoute, { left, top, width: w / scale, height: h / scale, scale, ratio }, clock);
         if (surface.style.visibility !== "visible") surface.style.visibility = "visible";
         if (scene.getAttribute("data-pulse-renderer") !== "canvas") scene.setAttribute("data-pulse-renderer", "canvas");
-        frame = requestAnimationFrame(draw);
-      } catch { lost = true; fallback(); }
+      } catch { lost = true; fallback(); return; }
+      reportRenderer("canvas");
+      if (!disposed) frame = requestAnimationFrame(draw);
     };
     const update = () => {
+      if (disposed) return;
       if (motion.matches) { surface.style.visibility = "hidden"; scene.removeAttribute("data-pulse-renderer"); }
       if (allowed()) { if (frame === null) frame = requestAnimationFrame(draw); }
       else stop();
     };
     const onLost = (event: Event) => { event.preventDefault(); lost = true; fallback(); };
-    const onRestored = () => { try { context = canvas.getContext("2d"); lost = !context; } catch { lost = true; } update(); };
+    const onRestored = () => { try { context = canvas.getContext("2d"); lost = !context; } catch { lost = true; } if (lost) fallback(); else update(); };
     const resize = new ResizeObserver(update); resize.observe(viewport);
     const intersection = typeof IntersectionObserver === "function" ? new IntersectionObserver(entries => {
       visible = entries.some(entry => entry.isIntersecting); update();
@@ -109,7 +122,7 @@ export const QuestPathPulses = memo(function QuestPathPulses({ edges, point, dis
     canvas.addEventListener("contextlost", onLost); canvas.addEventListener("contextrestored", onRestored);
     motion.addEventListener("change", update); document.addEventListener("visibilitychange", update); update();
     return () => {
-      fallback(); resize.disconnect(); intersection?.disconnect();
+      disposed = true; stop(); hide(); resize.disconnect(); intersection?.disconnect();
       canvas.removeEventListener("contextlost", onLost); canvas.removeEventListener("contextrestored", onRestored);
       motion.removeEventListener("change", update); document.removeEventListener("visibilitychange", update);
     };

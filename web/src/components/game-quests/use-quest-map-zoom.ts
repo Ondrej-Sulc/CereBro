@@ -33,10 +33,24 @@ export function useQuestMapZoom({ width, height, viewportRef, frameRef, sceneRef
     setControls(previous => previous.canZoomIn === canZoomIn && previous.canZoomOut === canZoomOut ? previous : { canZoomIn, canZoomOut });
   }, []);
 
+  const syncOverview = useCallback(() => {
+    const e = viewportRef.current, overview = overviewRef.current;
+    if (!e || !overview) return;
+    const zoom = scaleRef.current;
+    const attribute = (name: string, value: number) => {
+      const text = String(value);
+      if (overview.getAttribute(name) !== text) overview.setAttribute(name, text);
+    };
+    attribute("x", e.scrollLeft / zoom); attribute("y", e.scrollTop / zoom);
+    attribute("width", Math.min(width, e.clientWidth / zoom));
+    attribute("height", Math.min(height, e.clientHeight / zoom));
+  }, [width, height, viewportRef, overviewRef]);
+
   const publishViewport = useCallback(() => {
+    syncOverview();
     const e = viewportRef.current;
     if (e) onViewportChange({ x: e.scrollLeft, y: e.scrollTop, width: e.clientWidth, height: e.clientHeight });
-  }, [viewportRef, onViewportChange]);
+  }, [viewportRef, onViewportChange, syncOverview]);
 
   const syncView = useCallback((zoom: number) => {
     const canvas = frameRef.current, scene = sceneRef.current;
@@ -67,15 +81,10 @@ export function useQuestMapZoom({ width, height, viewportRef, frameRef, sceneRef
       top: Math.max(0, Math.min(height * result.scale - newHeight, result.top + offsetY + y - (at?.nextY ?? y))),
     };
     e.scrollTo({ ...precisePan.current, behavior: "instant" });
-    const overview = overviewRef.current;
-    if (overview) {
-      overview.setAttribute("x", String(e.scrollLeft / result.scale)); overview.setAttribute("y", String(e.scrollTop / result.scale));
-      overview.setAttribute("width", String(Math.min(width, e.clientWidth / result.scale)));
-      overview.setAttribute("height", String(Math.min(height, e.clientHeight / result.scale)));
-    }
+    syncOverview();
     const output = e.closest('[data-quest-board]')?.querySelector('output[aria-label="Map zoom"]');
     if (output) output.textContent = `${Math.round(result.scale * 100)}%`;
-  }, [width, height, viewportRef, overviewRef, syncView]);
+  }, [width, height, viewportRef, syncOverview, syncView]);
 
   const cancelFrame = useCallback(() => {
     if (frame.current !== null) cancelAnimationFrame(frame.current);
@@ -83,10 +92,14 @@ export function useQuestMapZoom({ width, height, viewportRef, frameRef, sceneRef
     if (sceneRef.current) { sceneRef.current.style.willChange = ""; sceneRef.current.removeAttribute("data-camera-moving"); }
   }, [sceneRef]);
   const interruptZoom = useCallback(() => {
+    const active = zoomingRef.current || frame.current !== null || scaleRef.current !== renderedScale.current;
     cancelFrame(); precisePan.current = null; target.current = scaleRef.current;
+    // A normal grab/key press has no camera animation to commit. Keep it on
+    // the same imperative path as panning instead of reconciling the map.
+    if (!active) { syncOverview(); return; }
     fittingRef.current = Math.abs(scaleRef.current - fitRef.current) < .0001;
     setFitting(fittingRef.current); updateControls(scaleRef.current); setScale(scaleRef.current); publishViewport();
-  }, [cancelFrame, publishViewport, updateControls]);
+  }, [cancelFrame, publishViewport, updateControls, syncOverview]);
   const onScroll = useCallback(() => {
     const e = viewportRef.current; if (!e) return;
     if (zoomingRef.current) {
@@ -96,8 +109,10 @@ export function useQuestMapZoom({ width, height, viewportRef, frameRef, sceneRef
       if (!pan || (Math.abs(e.scrollLeft - pan.left) <= 1 && Math.abs(e.scrollTop - pan.top) <= 1)) return;
       interruptZoom(); return;
     }
-    publishViewport();
-  }, [viewportRef, interruptZoom, publishViewport]);
+    // Panning only moves this camera rectangle; publishing React state would
+    // reconcile the entire map for every native scroll event.
+    syncOverview();
+  }, [viewportRef, interruptZoom, syncOverview]);
 
   const animate = useCallback(function advance(time: number) {
     frame.current = null;
