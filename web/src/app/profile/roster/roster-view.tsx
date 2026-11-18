@@ -6,6 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { ascensionEligibilityHref } from "@/lib/roster-ascension-filter";
 import { useAscensionEligibilityFilter } from "@/hooks/use-ascension-eligibility-filter";
 import { useChampionScopeFilter } from "@/hooks/use-champion-scope-filter";
+import { useQuestChampionFilter } from "@/hooks/use-quest-champion-filter";
+import { describeQuestGateChampionFilter } from "@/lib/game-quests/gate-champion-filter";
 import { championScopeHref, matchesChampionScope } from "@/lib/champion-catalog-scope";
 import { useRouter } from "next/navigation";
 import { VirtuosoGrid } from "react-virtuoso";
@@ -232,8 +234,6 @@ export function RosterView({
 
   // Filter States
   const [viewMode, setViewMode] = useCollectionState<'view' | 'edit'>('editMode', 'view');
-  const [tagFilter, setTagFilter] = useCollectionState<string[]>('tags', []);
-  const [tagLogic, setTagLogic] = useCollectionState<'AND' | 'OR'>('tagLogic', 'AND');
   const [abilityCategoryFilter, setAbilityCategoryFilter] = useCollectionState<string[]>('categories', []);
   const [abilityCategoryLogic, setAbilityCategoryLogic] = useCollectionState<'AND' | 'OR'>('categoryLogic', 'OR');
   const [abilityFilter, setAbilityFilter] = useCollectionState<string[]>('abilities', []);
@@ -244,6 +244,20 @@ export function RosterView({
   const [includeResistances, setIncludeResistances] = useCollectionState('resistances', true);
   const [immunityLogic, setImmunityLogic] = useCollectionState<'AND' | 'OR'>('immunityLogic', 'AND');
   const [minResistancePotency, setMinResistancePotency] = useCollectionState<number | null>('minPotency', null);
+  const resetForQuestGate = useCallback((unowned: boolean | undefined) => {
+    setSearch(""); setFilterClasses([]); setFilterStars([]); setFilterRanks([]); setFilterAscensionLevels([]);
+    setAscensionEligible(false); setChampionScope("playable");
+    setAbilityCategoryFilter([]); setAbilityCategoryLogic("OR"); setAbilityFilter([]); setAbilityLogic("AND");
+    setEffectForms([]); setEffectDirections([]); setImmunityFilter([]); setImmunityLogic("AND");
+    setIncludeResistances(true); setMinResistancePotency(null); setShowInsights(false);
+    // Guests requesting a personal view see catalog candidates plus the sign-in
+    // prompt; the preserved personal URL still requests owned entries after login.
+    if (unowned !== undefined) setShowUnowned(isChampionsCatalog || unowned);
+  }, [setSearch, setFilterClasses, setFilterStars, setFilterRanks, setFilterAscensionLevels, setAscensionEligible, setChampionScope,
+    setAbilityCategoryFilter, setAbilityCategoryLogic, setAbilityFilter, setAbilityLogic, setEffectForms, setEffectDirections,
+    setImmunityFilter, setImmunityLogic, setIncludeResistances, setMinResistancePotency, setShowUnowned, isChampionsCatalog]);
+  const questChampionFilter = useQuestChampionFilter(initialTags, resetForQuestGate);
+  const { tags: tagFilter, setTags: setTagFilter, tagLogic, setTagLogic, questGate } = questChampionFilter;
 
   // Stabilize initial values to avoid unnecessary re-renders/effects
   const memoizedPrestigeMap = useDeepMemo(initialPrestigeMap);
@@ -496,10 +510,10 @@ export function RosterView({
   const filterIndex = useMemo(() => createRosterFilterIndex(roster, allChampions), [roster, allChampions]);
   const { entries: matchingRoster, counts: facetCounts } = useMemo(() => filterRosterWithFacets(filterIndex, {
     search, classes: filterClasses, stars: filterStars, ranks: filterRanks, ascension: filterAscensionLevels, ascensionEligible, eligibilityIncludesUnowned: isChampionsCatalog,
-    tags: tagFilter, tagLogic, abilities: abilityFilter, categories: abilityCategoryFilter,
+    tags: tagFilter, tagLogic, questGate, abilities: abilityFilter, categories: abilityCategoryFilter,
     immunities: immunityFilter, includeResistances, abilityLogic, categoryLogic: abilityCategoryLogic,
     immunityLogic, effectForms, effectDirections, minResistancePotency, showUnowned, championScope,
-  }), [filterIndex, isChampionsCatalog, search, filterClasses, filterStars, filterRanks, filterAscensionLevels, ascensionEligible, tagFilter, tagLogic,
+  }), [filterIndex, isChampionsCatalog, search, filterClasses, filterStars, filterRanks, filterAscensionLevels, ascensionEligible, tagFilter, tagLogic, questGate,
     abilityFilter, abilityCategoryFilter, immunityFilter, includeResistances, abilityLogic, abilityCategoryLogic,
     immunityLogic, effectForms, effectDirections, minResistancePotency, showUnowned, championScope]);
 
@@ -735,6 +749,8 @@ export function RosterView({
             ascensionEligible={ascensionEligible} onAscensionEligibleChange={setAscensionEligible}
             catalogEligibility={isChampionsCatalog}
             tagFilter={tagFilter} onTagFilterChange={setTagFilter} tagLogic={tagLogic} onTagLogicChange={setTagLogic}
+            additionalRules={questGate ? [{ id: "quest-gate", label: describeQuestGateChampionFilter(questGate), remove: questChampionFilter.clearQuestGate }] : []}
+            onClearAdditionalFilters={questChampionFilter.clear}
             abilityCategoryFilter={abilityCategoryFilter} onAbilityCategoryFilterChange={setAbilityCategoryFilter} abilityCategoryLogic={abilityCategoryLogic} onAbilityCategoryLogicChange={setAbilityCategoryLogic}
             abilityFilter={abilityFilter} onAbilityFilterChange={setAbilityFilter} abilityLogic={abilityLogic} onAbilityLogicChange={setAbilityLogic}
             effectForms={effectForms} onEffectFormsChange={setEffectForms} effectDirections={effectDirections} onEffectDirectionsChange={setEffectDirections}

@@ -11,6 +11,7 @@ import { getChampionClassColors } from "@/lib/championClassHelper";
 import { getChampionImageUrl } from "@/lib/championHelper";
 import { isExactQuestChampionBinding } from "./champion-binding";
 import { projectRewardRow, type PublicChampionRow, type QuestPortrait } from "./presentation";
+import type { QuestGateChampionFilterGroups } from "./gate-champion-filter";
 
 export type QuestGateVisual = {
   kind: "champion" | "class" | "rarity" | "tags" | "resource" | "switch" | "unknown";
@@ -21,6 +22,7 @@ export type QuestGateVisual = {
   countLabel?: string;
   caption?: string;
   tagGroups?: QuestGateTagGroups;
+  filterGroups?: QuestGateChampionFilterGroups;
 };
 
 type GateCharacter = { gameId: string; name: string; sourcePointer: string };
@@ -98,12 +100,16 @@ export function projectQuestGateVisual(gate: QuestGateDefinition, portraits: Rec
     const groups = constraints.tags.map(group => group.trim().toLowerCase().split(":"));
     if (groups.some(terms => terms.some(term => !data.tagNames[term.startsWith("!") ? term.slice(1) : term]))) return unknown;
     const tagGroups = groups.map(terms => terms.map(term => ({ label: data.tagNames[term.startsWith("!") ? term.slice(1) : term], negated: term.startsWith("!") })));
+    const filterGroups: QuestGateChampionFilterGroups = groups.map(terms => terms.map(term => {
+      const token = term.startsWith("!") ? term.slice(1) : term;
+      return classes[token] ? { kind: "class", value: classes[token], negated: term.startsWith("!") } : { kind: "tag", value: data.tagNames[token], negated: term.startsWith("!") };
+    }));
     const captions = tagGroups.map(terms => terms.map(term => `${term.negated ? "not " : ""}#${term.label}`).join(" and "));
     const caption = captions.map((caption, i) => groups.length > 1 && groups[i].length > 1 ? `(${caption})` : caption).join(" or ");
     // Only a complete group that is one exact positive class term gets a class glyph.
     const simpleClasses = groups.every(terms => terms.length === 1 && classes[terms[0]]) ? [...new Set(groups.map(terms => classes[terms[0]]))] : [];
     return { kind: "tags", images: simpleClasses.map(championClass => ({ src: CLASS_ICONS[championClass], label: classLabel(championClass) })),
-      ...(countLabel ? { countLabel } : {}), ...(!simpleClasses.length ? { tagGroups } : {}), caption };
+      ...(countLabel ? { countLabel } : {}), ...(!simpleClasses.length ? { tagGroups } : {}), filterGroups, caption };
   }
   if (gate.kind === "resource") {
     if (!constraints.costs?.length) return unknown;

@@ -34,6 +34,48 @@ const pickupLocation = (rows: QuestRewardView[] = [reward()]): QuestMapFeatureLo
   pickups: [{ id: "internal-pickup", coordinate: [7, 12], pathIndices: [0, 2, 4], rewards: rows }],
 });
 
+it("shows gate requirements as full hashtag labels with explicit exclusions", async () => {
+  const location = gateLocation();
+  location.gates[0] = { ...location.gates[0], kind: "tags", label: "At least 3 champions: Hero and Flying and not Defensive: Guard",
+    requirements: ["At least 3 champions: Hero and Flying and not Defensive: Guard"],
+    visual: { kind: "tags", images: [], countLabel: "≥3", caption: "#Hero and #Flying and not #Defensive: Guard",
+      tagGroups: [[{ label: "Hero", negated: false }, { label: "Flying", negated: false }, { label: "Defensive: Guard", negated: true }]] } };
+  const host = await render(<QuestMapFeatureDetails location={location}/>, false);
+  const section = host.querySelector('[aria-label="Gate requirements"]')!;
+  expect([...section.querySelectorAll('[data-gate-tag]')].map(tag => tag.textContent)).toEqual(["#Hero", "#Flying", "not #Defensive: Guard"]);
+  expect(section.textContent).toContain("Champions required");
+  expect(section.textContent).toContain("≥3");
+  expect(section.textContent).not.toContain("…");
+});
+
+it("separates alternative tag groups without flattening their AND requirements", async () => {
+  const location = gateLocation();
+  location.gates[0] = { ...location.gates[0], kind: "tags", visual: { kind: "tags", images: [], caption: "(#Mystic and #X-Magica) or (#Mystic and #Provocateur)",
+    tagGroups: [[{ label: "Mystic", negated: false }, { label: "X-Magica", negated: false }], [{ label: "Mystic", negated: false }, { label: "Provocateur", negated: false }]] } };
+  const host = await render(<QuestMapFeatureDetails location={location}/>, false);
+  const groups = [...host.querySelectorAll('[data-gate-tag-group]')];
+  expect(groups.map(group => [...group.querySelectorAll('[data-gate-tag]')].map(tag => tag.textContent))).toEqual([["#Mystic", "#X-Magica"], ["#Mystic", "#Provocateur"]]);
+  expect(host.querySelector('[data-gate-tag-or]')?.textContent).toBe("or");
+});
+
+it("links a tag gate to matching catalog champions and the owned roster with its exact AND tags", async () => {
+  const location = gateLocation();
+  location.gates[0] = { ...location.gates[0], kind: "tags", visual: { kind: "tags", images: [], caption: "#Hero and #Stark Tech",
+    tagGroups: [[{ label: "Hero", negated: false }, { label: "Stark Tech", negated: false }]],
+    filterGroups: [[{ kind: "tag", value: "Hero", negated: false }, { kind: "tag", value: "Stark Tech", negated: false }]] } };
+  const host = await render(<QuestMapFeatureDetails location={location}/>, false);
+  const links = [...host.querySelectorAll<HTMLAnchorElement>('a')];
+  expect(links.map(link => link.textContent)).toEqual(["Matching champions", "My roster"]);
+  for (const link of links) {
+    const url = new URL(link.href);
+    expect(JSON.parse(url.searchParams.get('tags')!)).toEqual(["Hero", "Stark Tech"]);
+    expect(url.searchParams.get('tagLogic')).toBe('AND');
+  }
+  expect(new URL(links[0].href).pathname).toBe('/champions');
+  expect(new URL(links[1].href).pathname).toBe('/profile/roster');
+  expect(new URL(links[1].href).searchParams.get('unowned')).toBe('false');
+});
+
 it("makes a visible gate selectable by pointer and keyboard using its human name", async () => {
   const onChoose = vi.fn();
   const host = await render(<QuestMapFeatureMarker location={gateLocation()} x={100} y={120} selected active onChoose={onChoose}/>);

@@ -11,7 +11,7 @@ import {
   type ReactNode,
 } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Gem, LibraryBig, Loader2, LogIn, ShieldCheck } from "lucide-react";
 import {
   collectionHref,
@@ -59,7 +59,8 @@ export function CollectionScreen({
   useEffect(() => {
     if (!memory) return;
     const key = collectionStateKey(section, profileId, view, "scroll");
-    const position = memory.get(key, 0);
+    const freshGate = section === "champions" && new URLSearchParams(window.location.search).get("questGate") === "1";
+    const position = freshGate ? 0 : memory.get(key, 0);
     leaving.current = false;
     let restoring = true;
     let frame = 0;
@@ -149,11 +150,20 @@ function CollectionViewSwitch() {
   const screen = useContext(Screen);
   const memory = useContext(Memory);
   const router = useRouter();
+  const params = useSearchParams();
   const [pending, startTransition] = useTransition();
   const [prompt, setPrompt] = useState(false);
   const [pendingView, setPendingView] = useState<CollectionView | null>(null);
   if (!screen) return null; // Shared player rosters retain their existing, explicit context.
   const { section, view, profileId, canUsePersonal, signedIn } = screen;
+  const gateContext = section === "champions" && params.get("questGate") === "1";
+  const incomingPersonal = gateContext && params.get("view") === "personal" && !canUsePersonal;
+  const gateSearch = (target: CollectionView) => {
+    const query = new URLSearchParams(params.toString());
+    query.set("unowned", target === "catalog" ? "true" : "false");
+    return query.toString();
+  };
+  const personalHref = collectionHref(section, "personal", gateContext ? gateSearch("personal") : "");
   const labels = section === "champions"
     ? { catalog: "All Champions", personal: "My Roster" }
     : { catalog: "All Relics", personal: "My Relics" };
@@ -170,7 +180,7 @@ function CollectionViewSwitch() {
           return (
             <Link
               key={target}
-              href={collectionHref(section, target)}
+              href={collectionHref(section, target, gateContext ? gateSearch(target) : "")}
               prefetch={false}
               aria-current={target === view ? "page" : undefined}
               data-pending={isPending ? "true" : undefined}
@@ -194,8 +204,7 @@ function CollectionViewSwitch() {
                   collectionStateKey(section, profileId, view, "url"),
                   window.location.search,
                 );
-                const search =
-                  memory?.get(
+                const search = gateContext ? gateSearch(target) : memory?.get(
                     collectionStateKey(section, profileId, target, "url"),
                     "",
                   ) ?? "";
@@ -203,7 +212,7 @@ function CollectionViewSwitch() {
                 setPendingView(target);
                 startTransition(() =>
                   router.push(collectionHref(section, target, search), {
-                    scroll: false,
+                    scroll: gateContext,
                   }),
                 );
               }}
@@ -221,7 +230,7 @@ function CollectionViewSwitch() {
           );
         })}
       </nav>
-      {prompt && (
+      {(prompt || incomingPersonal) && (
         <div className={styles.signin} role="status">
           <span>
             {signedIn
@@ -232,7 +241,7 @@ function CollectionViewSwitch() {
             href={
               signedIn
                 ? "/profile"
-                : `/auth/signin?callbackUrl=${encodeURIComponent(collectionHref(section, "personal"))}`
+                : `/auth/signin?callbackUrl=${encodeURIComponent(personalHref)}`
             }
           >
             <LogIn size={15} />

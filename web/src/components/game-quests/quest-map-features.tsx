@@ -1,7 +1,12 @@
 "use client";
 
+import { Fragment } from "react";
+import Link from "next/link";
+import { ArrowUpRight } from "lucide-react";
+import type { QuestGateTagGroups } from "@cerebro/core/domain/game-quests/gate-tag-layout";
 import type { QuestMapFeatureLocation } from "@/lib/game-quests/map-features";
 import type { QuestRewardView } from "@/lib/game-quests/presentation";
+import { questGateChampionLinks } from "@/lib/game-quests/gate-champion-filter";
 import { RewardTile } from "./quest-reward-grid";
 import { QuestGateMarker, questGateMarkerHeight, questGateMarkerWidth } from "./quest-gate-marker";
 import styles from "./quest-map-features.module.css";
@@ -68,16 +73,36 @@ export function QuestMapFeatureMarker({ location, x, y, selected, active, onChoo
   </g>;
 }
 
+function GateRequirementTags({ groups, countLabel }: { groups: QuestGateTagGroups; countLabel?: string }) {
+  return <>
+    <h4 className={styles.gateRequirementHeading}><span>Champions required</span>{countLabel && <strong>{countLabel}</strong>}</h4>
+    <div className={styles.gateTagGroups}>{groups.map((group, groupIndex) => <Fragment key={groupIndex}>
+      {groupIndex > 0 && <div className={styles.gateTagOr} data-gate-tag-or><span>or</span></div>}
+      <div className={styles.gateTagGroup} data-gate-tag-group>{group.map((term, termIndex) => <Fragment key={termIndex}>
+        {termIndex > 0 && <span className={styles.gateTagAnd}>and</span>}
+        <span className={styles.gateTag} data-gate-tag data-excluded={term.negated || undefined}>{term.negated && "not "}<span className={styles.gateTagHash}>#</span>{term.label}</span>
+      </Fragment>)}</div>
+    </Fragment>)}</div>
+  </>;
+}
+
 export function QuestMapFeatureDetails({ location }: { location: QuestMapFeatureLocation }) {
   return <div className={styles.details}>
     {location.gates.length > 0 && <section aria-label="Gate requirements">
       <h3>Gate requirements</h3>
-      {location.gates.map(gate => <div key={gate.id} className={styles.gateDetails}>
-        <h4>{gate.resolved ? gate.label : "Gate"}</h4>
+      {location.gates.map(gate => {
+        const links = gate.resolved && gate.kind === "tags" && gate.visual ? questGateChampionLinks(gate.visual) : undefined;
+        return <div key={gate.id} className={styles.gateDetails}>
+        {gate.resolved && gate.visual?.tagGroups?.length ? <GateRequirementTags groups={gate.visual.tagGroups} countLabel={gate.visual.countLabel}/> : <h4>{gate.resolved ? gate.label : "Gate"}</h4>}
         {gate.requirements.some(requirement=>requirement!==gate.label)&&<ul className={styles.requirements}>{gate.requirements.filter(requirement=>requirement!==gate.label).map((requirement, index) => <li key={index}>{requirement}</li>)}</ul>}
         {!gate.requirements.length&&<p className={styles.note}>Requirements not specified in the recorded definition.</p>}
         {!gate.resolved && gate.requirements.length > 0 && <p className={styles.note}>Complete requirements are not specified in the recorded definition.</p>}
-      </div>)}
+        {links && <div className={styles.gateActions}>
+          <Link prefetch={false} href={links.champions}>Matching champions<ArrowUpRight size={13} aria-hidden="true"/></Link>
+          <Link prefetch={false} href={links.roster}>My roster<ArrowUpRight size={13} aria-hidden="true"/></Link>
+        </div>}
+      </div>;
+      })}
     </section>}
     {location.pickups.length > 0 && <section aria-label="Path pickups">
       <h3>Path pickups</h3>

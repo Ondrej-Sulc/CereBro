@@ -6,6 +6,7 @@ import { getObtainableStarLevels, isChampionObtainableAs } from "./champion-obta
 import { getRosterAscensionLevel } from "./roster-ascension-filter";
 import { prepareRosterKit, matchesPreparedRosterKitFilters, type RosterKitFilters, type RosterKitLink } from "./roster-kit";
 import { matchesChampionScope, type ChampionScope } from "./champion-catalog-scope";
+import { matchesQuestGateChampionFilter, type QuestGateChampionFilter } from "./game-quests/gate-champion-filter";
 
 export type FacetCounts = Readonly<Record<string, number>>;
 export type RosterFacetCounts = Record<"stars" | "ranks" | "ascension" | "classes" | "tags" | "abilities" | "categories" | "immunities" | "forms" | "directions", FacetCounts>;
@@ -23,6 +24,7 @@ export type RosterFiltersState = RosterKitFilters & {
   tagLogic: "AND" | "OR";
   showUnowned: boolean;
   championScope?: ChampionScope;
+  questGate?: QuestGateChampionFilter;
 };
 
 export type FilterableRosterEntry = Pick<ProfileRosterEntry, "id" | "championId" | "stars" | "rank" | "isAscended" | "ascensionLevel" | "isUnowned"> & {
@@ -90,6 +92,7 @@ type BasicFacet = "classes" | "stars" | "ranks" | "ascension";
 function matchesBasic(item: IndexedEntry, filters: RosterFiltersState, search: string, omit?: BasicFacet) {
   const entry = item.entry;
   return item.searchName.includes(search)
+    && matchesQuestGateChampionFilter(entry.champion, filters.questGate)
     && matchesChampionScope(entry.champion, filters.championScope)
     && (!filters.ascensionEligible || !entry.isUnowned || filters.eligibilityIncludesUnowned)
     && (!filters.ascensionEligible || (entry.isUnowned

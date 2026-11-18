@@ -16,6 +16,23 @@
 .gateDetails{padding:12px 14px;border:1px solid #69502e;border-radius:9px;background:#33241155}
 .gateDetails+.gateDetails{margin-top:9px}
 .gateDetails h4{color:#edd29b}
+.gateDetails:has(.gateTagGroups){padding:14px;border-color:#a88c5359;background:linear-gradient(135deg,#172a365c,#0b1826)}
+.gateDetails .gateRequirementHeading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 13px;font-size:11px;font-weight:500;color:#9fb7c8}
+.gateRequirementHeading strong{padding:2px 7px;border-radius:5px;background:#a3864526;color:#ecd19a;font-size:12px;font-weight:650;font-variant-numeric:tabular-nums}
+.gateTagGroups{display:grid;gap:10px}
+.gateTagGroup{display:flex;flex-wrap:wrap;align-items:center;gap:7px}
+.gateTag{display:inline-block;max-width:100%;padding:5px 8px;border-radius:6px;background:#35536a38;color:#dcecf5;font-size:12px;font-weight:550;line-height:1.5;overflow-wrap:anywhere}
+.gateTagHash{color:#a8c8db;margin-right:1px}
+.gateTag[data-excluded=true]{background:#934d3826;color:#edb9b0}
+.gateTag[data-excluded=true] .gateTagHash{color:#cd9288}
+.gateTagAnd{font-size:10px;color:#8da5b7}
+.gateTagOr{display:flex;align-items:center;gap:9px;color:#a58e63;font-size:10px}
+.gateTagOr::before,.gateTagOr::after{content:"";height:1px;flex:1;background:#9882592b}
+.gateActions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px;padding-top:12px;border-top:1px solid #89a8ba1a}
+.gateActions a{display:inline-flex;align-items:center;justify-content:space-between;gap:7px;min-height:44px;padding:7px 9px;border:1px solid #6b91a63b;border-radius:6px;background:#26465833;color:#b8ddec;font-size:11px;line-height:1.5;transition:background .15s,border-color .15s}
+.gateActions a:hover{background:#335e744d;border-color:#80bfd480;color:#e0f4fc}
+.gateActions a:focus-visible{outline:2px solid #a9e4f6;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){.gateActions a{transition:none}}
 .requirements{margin:0;padding-left:17px;color:#c6d6e3;font-size:12px;line-height:1.8}
 .note{margin:0;color:#93aabd;font-size:12px;line-height:1.7}
 .placements{display:grid;gap:14px}
