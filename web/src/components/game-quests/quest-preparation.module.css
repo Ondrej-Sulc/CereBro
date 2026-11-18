@@ -44,6 +44,14 @@
   color: #80bacc;
 }
 
+.energyIcon {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  margin: -5px -6px;
+  object-fit: contain;
+}
+
 .metric dd {
   margin: 5px 0 0 19px;
   color: #d5e8f2;

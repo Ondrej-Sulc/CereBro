@@ -16,6 +16,19 @@ function metric(host: HTMLElement, label: string) {
   return [...host.querySelectorAll("dt")].find(term => term.textContent === label)?.parentElement;
 }
 
+it.each([0, 3])("uses the original game energy artwork for an energy cost of %i", energyPerTile => {
+  const host = render({ source, energyPerTile });
+  const energy = metric(host, "Energy per tile");
+  const icon = energy?.querySelector("dt img");
+  expect(icon?.getAttribute("src")).toBe("/game-quests/reward-artwork/full/30d269d059a4641d12373b731bab807b8098ea9ca2e39cfc5a872f1408287829.webp");
+  expect(icon?.getAttribute("alt")).toBe("");
+  expect(icon?.getAttribute("aria-hidden")).toBe("true");
+  expect(icon?.getAttribute("width")).toBe("26");
+  expect(icon?.getAttribute("height")).toBe("26");
+  expect(energy?.querySelector("dt svg")).toBeNull();
+  expect(energy?.querySelector("dd")?.textContent).toBe(String(energyPerTile));
+});
+
 it("shows a recorded zero energy cost without filling in unknown preparation fields", () => {
   const host = render({ source, energyPerTile: 0 });
   expect(metric(host, "Energy per tile")?.querySelector("dd")?.textContent).toBe("0");

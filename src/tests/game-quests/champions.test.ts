@@ -7,7 +7,20 @@ import { loadQuestPortraits, loadRewardPortraits, loadBossPortraits } from "../.
 import { findQuest } from "../../data/game-quests";
 import { getBossPreview } from "../../data/game-quests/permanent";
 import type { QuestRewardRecord } from "../../data/game-quests/rewards";
+import { questGateChampionGameIds } from "../../../web/src/lib/game-quests/gate-presentation";
 beforeEach(() => { findMany.mockReset(); findMany.mockResolvedValue([]); });
+
+it("loads exact gate champions in the existing one-query batch without inventing encounters", async () => {
+  const map = (await loadQuestMap("me_mausoleum_ch01_q02"))!, before = JSON.stringify(map);
+  const gateIds = questGateChampionGameIds(map);
+  expect(gateIds).toEqual(["groot_king_deathless", "guillotine_nameless", "shehulk_deathless", "vision_deathless"]);
+  findMany.mockResolvedValue([{ id: 50, gameId: "guillotine_nameless", name: "Deathless Guillotine", slug: "deathless-guillotine", class: "MYSTIC", images: { p_128: "/deathless-guillotine.png" } }]);
+  const portraits = await loadQuestPortraits(map);
+  expect(findMany).toHaveBeenCalledTimes(1);
+  expect(findMany.mock.calls[0][0].where).toEqual({ gameId: { in: [...new Set([...map.encounters, ...map.rewards.fixedChampions].map(identity => identity.gameId).concat(gateIds))].sort() } });
+  expect(portraits.guillotine_nameless).toMatchObject({ imageUrl: "/deathless-guillotine.png", championBinding: { id: 50, gameId: "guillotine_nameless" } });
+  expect(JSON.stringify(map)).toBe(before);
+});
 
 it("requests exact map IDs including NPCs while retaining unbound native artwork", async () => {
   const map = (await loadQuestMap("a04_ch04_q06"))!;

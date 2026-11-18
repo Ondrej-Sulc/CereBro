@@ -27,13 +27,18 @@ it("opens a Mausoleum gate and its original path pickup without multiplying shar
   await act(async () => gate.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })));
   const inspector = () => host.querySelector('section[aria-labelledby="coordinate-heading"]')!;
   expect(inspector().textContent).toContain("GUILLOTINE (DEATHLESS) required");
+  expect(inspector().textContent).not.toContain("Node modifiers");
   const pickup = host.querySelector<SVGGElement>('[data-map-feature][data-coordinate="4,15"]')!;
   expect(pickup.getAttribute("aria-label")).toContain("7-Star DEATHLESS SIGNATURE STONE");
   await act(async () => pickup.dispatchEvent(new MouseEvent("click", { bubbles: true })));
   expect(new URL(window.location.href).searchParams.get("node")).toBe("4,15");
   expect(inspector().textContent).toContain("×10");
+  expect(inspector().textContent).not.toContain("Node modifiers");
   expect(inspector().textContent).not.toMatch(/collected|owned/i);
   expect(host.querySelectorAll('#quest-path-rewards [data-quest-reward]')).toHaveLength(4);
+  const defender=host.querySelector<SVGGElement>('[data-map-encounter]')!;
+  await act(async()=>defender.dispatchEvent(new MouseEvent("click",{bubbles:true})));
+  expect(inspector().textContent).toContain("Node modifiers");
   await act(async () => host.querySelector<HTMLButtonElement>('#quest-path-rewards [data-quest-reward] button')!.click());
   const link = document.querySelector<HTMLAnchorElement>('[role="dialog"] a[href*="node=4%2C15"]');
   expect(link?.textContent).toContain("Show on map");

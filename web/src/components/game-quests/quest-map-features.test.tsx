@@ -81,7 +81,7 @@ it("keeps compact encounter badges decorative with one parent selection target",
   expect(badge.getAttribute("aria-hidden")).toBe("true");
   expect(badge.getAttribute("pointer-events")).toBe("none");
   expect(badge.querySelector("image")?.getAttribute("href")).toBe("/exact-revive.webp");
-  expect(badge.querySelector("text")?.textContent).toBe("×7");
+  expect(badge.querySelector("[data-pickup-amount] text")?.textContent).toBe("×7");
   await act(async () => {
     badge.dispatchEvent(new MouseEvent("click", { bubbles: true }));
     badge.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }));

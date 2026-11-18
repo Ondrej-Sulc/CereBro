@@ -14,6 +14,12 @@ const layer: QuestMapFeatureLayer = { questId: "q", mapId: "m", sourceHash: map.
   coverage: { gates: "complete", pathRewards: "captured", unresolvedGateCount: 0 } };
 
 describe("public quest map feature binding", () => {
+  it("keeps neighboring tag gate captions from covering each other", () => {
+    const gate = { ...layer.gates[0], kind: "tags" as const, constraints: { nativeType:"hasTags", champions:[], count:3, countOperator:"gte", tags:["tg_vill:tg_gam"], tagLogic:"any-group-all-terms" as const } };
+    const displayMap: QuestMap = { ...map, features: { ...layer, gates: [gate, { ...gate, id:"tag-gate-2", coordinate:[2,0] }] } };
+    const board=questBoardGeometry(displayMap), a=board.point(gate.coordinate), b=board.point([2,0]);
+    expect(Math.abs(a[0]-b[0]) > 136 || Math.abs(a[1]-b[1]) > 78).toBe(true);
+  });
   it("leaves room for adjacent gate markers without moving their native coordinates", () => {
     const displayMap: QuestMap = { ...map, features: { ...layer, gates: [layer.gates[0], { ...layer.gates[0], id: "gate:2", coordinate: [2,0] }] } };
     const before = JSON.stringify(displayMap), board = questBoardGeometry(displayMap);

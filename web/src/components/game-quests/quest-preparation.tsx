@@ -1,6 +1,10 @@
-import { Gauge, ShieldCheck, UsersRound, Zap } from "lucide-react";
+import { Gauge, ShieldCheck, UsersRound } from "lucide-react";
+import Image from "next/image";
 import type { QuestPreparation } from "@cerebro/core/domain/game-quests/quest-details";
+import { getQuestRewardArtwork } from "@cerebro/core/data/game-quests/reward-artwork";
 import styles from "./quest-preparation.module.css";
+
+const energyArtwork = getQuestRewardArtwork("res", "pve-energy");
 
 function teamSizeLabel(minimum?: number, maximum?: number): string | undefined {
   const min = minimum !== undefined && minimum > 0 ? minimum : undefined;
@@ -25,7 +29,7 @@ export function QuestPreparationSummary({ preparation }: { preparation?: QuestPr
   return <section className={styles.summary} aria-label="Quest preparation" data-quest-preparation>
     {hasMetrics && <dl className={styles.metrics}>
       {energyPerTile !== undefined && <div className={styles.metric}>
-        <dt><Zap size={13} aria-hidden="true" />Energy per tile</dt>
+        <dt>{energyArtwork && <Image className={styles.energyIcon} src={energyArtwork.url} width={26} height={26} alt="" aria-hidden="true" unoptimized/>}Energy per tile</dt>
         <dd className={styles.energy}>{energyPerTile}</dd>
       </div>}
       {recommendedTeamRating !== undefined && <div className={styles.metric}>

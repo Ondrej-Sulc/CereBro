@@ -3,10 +3,11 @@ import { projectRewardRow, type QuestRewardView, type QuestPortrait } from "./pr
 import rawPresentation from "@cerebro/core/data/game-quests/path-reward-presentation.json";
 import { nativeRewardName, type NativeRewardPresentation } from "@cerebro/core/data/game-reward-presentation";
 import { getQuestChestArtwork } from "@cerebro/core/data/game-quests/chest-artwork";
+import { projectQuestGateVisual, type QuestGateVisual } from "./gate-presentation";
 
 const presentation = rawPresentation.rewards as Record<string, NativeRewardPresentation & { imageUrl?: string; description?: string }>;
 
-export type QuestGateView = { id: string; coordinate: Coordinate; pathIndices: number[]; label: string; kind: string; requirements: string[]; resolved: boolean };
+export type QuestGateView = { id: string; coordinate: Coordinate; pathIndices: number[]; label: string; kind: string; requirements: string[]; resolved: boolean; visual?: QuestGateVisual };
 export type QuestPathRewardView = { id: string; coordinate: Coordinate; pathIndices: number[]; rewards: QuestRewardView[] };
 export type QuestChestView = { id: string; coordinate: Coordinate; pathIndices: number[]; imageUrl?: string };
 export type QuestMapFeatureLocation = { coordinate: Coordinate; gates: QuestGateView[]; pickups: QuestPathRewardView[]; chests?: QuestChestView[] };
@@ -19,7 +20,7 @@ export function projectQuestMapFeatures(map: QuestMap, portraits: Record<string,
     return locations.get(key)!;
   };
   for (const gate of map.features?.gates ?? []) at(gate.coordinate).gates.push({ id: gate.id, coordinate: gate.coordinate, pathIndices: gate.pathIndices,
-    kind: gate.kind, label: gate.label, requirements: gate.requirements, resolved: gate.resolved });
+    kind: gate.kind, label: gate.label, requirements: gate.requirements, resolved: gate.resolved, visual: projectQuestGateVisual(gate, portraits) });
   for (const pickup of map.features?.pathRewards ?? []) at(pickup.coordinate).pickups.push({ id: pickup.id, coordinate: pickup.coordinate, pathIndices: pickup.pathIndices,
     rewards: pickup.rewards.map(reward => {
       const view = projectRewardRow(reward, "pathRewards", `${map.questId}:path:${pickup.id}:${reward.sourceIndex}`, portraits);

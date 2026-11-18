@@ -107,7 +107,7 @@ export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}
           {!selectedEncounters.length&&!selectedFeatures && <p className={styles.muted}>No placed defender recorded here.</p>}
           {selectedFeatures&&<QuestMapFeatureDetails location={selectedFeatures}/>}
           <QuestPortalDetails tile={selectedTile} choose={choose} positionLabel={c=>questPositionLabel(map,c)}/>
-          <div className={styles.modifierSection}><h3>Node modifiers <span>{selectedTile.applications.length}</span></h3>{!selectedTile.applications.length && <p className={styles.muted}>No node modifiers recorded here.</p>}<QuestModifierGroups key={`${selected}:${map.sourceHash}:${selectedApplication??""}`} applications={selectedTile.applications} questId={map.questId} sourceHash={map.sourceHash} shareUrl={shareUrl} selectedApplication={selectedApplication} positionLabel={c=>questPositionLabel(map,c)} choose={choose}/></div>
+          {(!selectedFeatures || selectedEncounters.length > 0) && <div className={styles.modifierSection}><h3>Node modifiers <span>{selectedTile.applications.length}</span></h3>{!selectedTile.applications.length && <p className={styles.muted}>No node modifiers recorded here.</p>}<QuestModifierGroups key={`${selected}:${map.sourceHash}:${selectedApplication??""}`} applications={selectedTile.applications} questId={map.questId} sourceHash={map.sourceHash} shareUrl={shareUrl} selectedApplication={selectedApplication} positionLabel={c=>questPositionLabel(map,c)} choose={choose}/></div>}
           </>}
         </div>
       </section>

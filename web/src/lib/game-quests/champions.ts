@@ -4,6 +4,7 @@ import type { QuestMap, QuestSummary } from "@cerebro/core/domain/game-quests";
 import { getBossPreview, permanentData } from "@cerebro/core/data/game-quests/permanent";
 import { projectQuestPortraits, questChampionGameIds, type QuestPortrait } from "./presentation";
 import type { QuestRewardRecord } from "@cerebro/core/data/game-quests/rewards";
+import { questGateChampionGameIds, projectQuestGatePortraits } from "./gate-presentation";
 export async function loadRewardPortraits(record:QuestRewardRecord){
  const identities=Object.values(record.scopes).flatMap(rows=>rows.flatMap(r=>r.identity?[r.identity]:[]));
  const gameIds=questChampionGameIds({encounters:[],rewards:{fixedChampions:identities}});
@@ -12,7 +13,7 @@ export async function loadRewardPortraits(record:QuestRewardRecord){
 }
 
 export async function loadQuestPortraits(map: QuestMap) {
-  const gameIds = questChampionGameIds(map);
+  const gameIds = [...new Set([...questChampionGameIds(map), ...questGateChampionGameIds(map)])].sort();
   const native:Record<string,QuestPortrait>={};
   for(const encounter of map.encounters) {
     const art=permanentData.nativePortraits[encounter.gameId];
@@ -23,7 +24,7 @@ export async function loadQuestPortraits(map: QuestMap) {
     where: { gameId: { in: gameIds } },
     select: { id: true, gameId: true, name: true, slug: true, images: true, class: true },
   })) : [];
-  for (const [gameId, portrait] of Object.entries(projectQuestPortraits(map, rows))) native[gameId] = { ...portrait, imageUrl: portrait.imageUrl ?? native[gameId]?.imageUrl ?? null };
+  for (const [gameId, portrait] of Object.entries({ ...projectQuestPortraits(map, rows), ...projectQuestGatePortraits(map, rows) })) native[gameId] = { ...portrait, imageUrl: portrait.imageUrl ?? native[gameId]?.imageUrl ?? null };
   return native;
 }
 

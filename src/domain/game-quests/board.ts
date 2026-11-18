@@ -6,7 +6,15 @@ export function questBoardGeometry(map: QuestMap) {
   let pitch = 22;
   // Keep native geometry linear while leaving room for distinct map objects.
   const anchors = new Map(map.encounters.map(encounter => [coordinateKey(encounter.coordinate), { coordinate: encounter.coordinate, radius: encounter.final ? 33 : 27 }]));
-  for (const feature of [...(map.features?.gates ?? []), ...(map.features?.pathRewards ?? []), ...(map.details?.chests ?? [])]) {
+  const classIds = new Set(["chemical", "trained", "mystic", "cosmic", "tech", "mutant", "superior"]);
+  for (const gate of map.features?.gates ?? []) {
+    const tags = gate.constraints?.tags ?? [];
+    const simpleClasses = gate.kind === "tags" && tags.length > 0 && tags.every(tag => classIds.has(tag));
+    const radius = gate.kind === "tags" ? simpleClasses ? 50 : 78 : gate.kind === "resource" || gate.kind === "switch" || gate.kind === "unknown" ? 78 : 33;
+    const key = coordinateKey(gate.coordinate), previous = anchors.get(key);
+    anchors.set(key, { coordinate: gate.coordinate, radius: Math.max(radius, previous?.radius ?? 0) });
+  }
+  for (const feature of [...(map.features?.pathRewards ?? []), ...(map.details?.chests ?? [])]) {
     const key = coordinateKey(feature.coordinate);
     if (!anchors.has(key)) anchors.set(key, { coordinate: feature.coordinate, radius: 27 });
   }

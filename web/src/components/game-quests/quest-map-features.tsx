@@ -3,6 +3,7 @@
 import type { QuestMapFeatureLocation } from "@/lib/game-quests/map-features";
 import type { QuestRewardView } from "@/lib/game-quests/presentation";
 import { RewardTile } from "./quest-reward-grid";
+import { QuestGateMarker, questGateMarkerWidth } from "./quest-gate-marker";
 import styles from "./quest-map-features.module.css";
 
 type MarkerProps = {
@@ -32,6 +33,7 @@ export function QuestMapFeatureMarker({ location, x, y, selected, active, onChoo
   const slotX = (slot: string) => (slots.indexOf(slot) - (slots.length - 1) / 2) * 50;
   const quantity = firstReward ? rewardAmount(firstReward) : "";
   const amountWidth = Math.max(28, Math.min(80, quantity.length * 5.5 + 12));
+  const hitWidth = location.gates.length ? questGateMarkerWidth(location.gates[0]) + 8 : 56;
   return <g className={compact ? styles.compact : styles.marker} transform={compact ? `translate(${x + 37} ${y + 35}) scale(.65)` : `translate(${x} ${y})`} role={compact ? undefined : "button"} tabIndex={compact ? undefined : 0}
     aria-label={compact ? undefined : label} aria-pressed={compact ? undefined : selected} aria-hidden={compact || undefined} pointerEvents={compact ? "none" : undefined} data-coordinate={location.coordinate.join(",")}
     data-map-feature data-selected={selected} data-active={active}
@@ -41,19 +43,17 @@ export function QuestMapFeatureMarker({ location, x, y, selected, active, onChoo
       }
     }}>
     {!compact && <title>{label}</title>}
-    {!compact && <rect x={-28 - (slots.length - 1) * 25} y="-30" width={56 + (slots.length - 1) * 50} height="64" fill="transparent" pointerEvents="all"/>}
+    {!compact && <rect x={-hitWidth / 2 - (slots.length - 1) * 25} y="-38" width={hitWidth + (slots.length - 1) * 50} height="78" rx="10" fill="transparent" pointerEvents="all"/>}
     <g aria-hidden="true" pointerEvents="none">
       {location.gates.length > 0 && <g transform={`translate(${slotX("gate")} 0)`}>
-        <path className={styles.gateFrame} d="M-22-17 0-26 22-17V18L0 27-22 18Z"/>
-        <path className={styles.gateBars} d="M-12 14V-6a12 12 0 0 1 24 0v20M-16 14h32M-5-15v29M5-15v29M-12-2h24"/>
-        <path className={styles.focusRing} d="M-27-20 0-31 27-20V21L0 32-27 21Z"/>
+        <QuestGateMarker gate={location.gates[0]}/>
       </g>}
       {firstReward && <g transform={`translate(${slotX("reward")} 0)`}>
         <rect className={styles.pickupFrame} x="-23" y="-24" width="46" height="48" rx="10"/>
         {firstReward.imageUrl ? <image href={firstReward.imageUrl} x="-19" y="-21" width="38" height="38" preserveAspectRatio="xMidYMid meet"/> :
           <path className={styles.pickupFallback} d="M0-14 13-4 0 10-13-4ZM-13-4h26M0-14-5-4 0 10 5-4Z"/>}
         {firstReward.itemRarity&&<text x="0" y="12" textAnchor="middle" fill="#efc76b" stroke="#06101a" strokeWidth="2" paintOrder="stroke" fontSize="8" fontWeight="700">{firstReward.itemRarity}★</text>}
-        {quantity && <g className={styles.amount}>
+        {quantity && <g className={styles.amount} data-pickup-amount>
           <rect x={-amountWidth / 2} y="16" width={amountWidth} height="17" rx="5"/>
           <text y="28" textAnchor="middle">{quantity}</text>
         </g>}
@@ -81,7 +81,7 @@ export function QuestMapFeatureDetails({ location }: { location: QuestMapFeature
     {location.pickups.length > 0 && <section aria-label="Path pickups">
       <h3>Path pickups</h3>
       <div className={styles.placements}>{location.pickups.map((pickup, index) => <div key={pickup.id} data-path-pickup={pickup.id} className={styles.pickupDetails}>
-        <h4>Recorded pickup{location.pickups.length > 1 ? ` ${index + 1}` : ""}</h4>
+        {location.pickups.length > 1 && <h4>Pickup {index + 1}</h4>}
         {pickup.pathIndices.length > 0 && <p className={styles.routes}>{pickup.pathIndices.map(index => `Route ${index + 1}`).join(" · ")}</p>}
         <ul className={styles.rewards}>{pickup.rewards.map(reward => <RewardTile key={reward.key} reward={reward} showName showSources={false}/>)}</ul>
       </div>)}</div>
