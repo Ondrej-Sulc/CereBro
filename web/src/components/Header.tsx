@@ -12,7 +12,6 @@ import {
   Diamond,
   Gem,
   Heart,
-  Image as ImageIcon,
   Info,
   LayoutGrid,
   Map,
@@ -20,7 +19,6 @@ import {
   Search,
   Shield,
   Swords,
-  Tags,
   Trophy,
   Users,
   X,
@@ -59,8 +57,6 @@ const explore: Destination[] = [
   { label: "Quest Planner", href: "/planning/quests", icon: Map },
   { label: "Quest explorer", href: "/quests", icon: Map },
   { label: "Effect glossary", href: "/glossary", icon: BookOpen },
-  { label: "Node modifiers", href: "/nodes", icon: Tags },
-  { label: "Game assets", href: "/assets", icon: ImageIcon },
 ];
 const alliance: Destination[] = [
   { label: "Attack Planning", href: "/planning", icon: Swords },

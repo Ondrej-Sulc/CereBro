@@ -153,7 +153,7 @@ const hrefs = (parent: ParentNode = document) =>
   );
 const dialog = () => document.querySelector<HTMLElement>('[role="dialog"]')!;
 
-it("keeps Champions first and Alliance second while retaining every public destination", async () => {
+it("keeps Champions first and Alliance second and leaves direct-only pages out of the menu", async () => {
   await render();
   await open("Menu");
   const links = hrefs(dialog());
@@ -165,8 +165,6 @@ it("keeps Champions first and Alliance second while retaining every public desti
     "/planning/quests",
     "/quests",
     "/glossary",
-    "/nodes",
-    "/assets",
     "/war-videos",
     "https://discord.gg/eRv7fkMHmU",
     "/support",
@@ -178,7 +176,7 @@ it("keeps Champions first and Alliance second while retaining every public desti
   expect(discord.getAttribute("rel")).toContain("noopener");
   expect(hrefs(dialog())).not.toContain("/admin");
   expect(hrefs(dialog().querySelector('[aria-label="Explore"]')!)).toEqual([
-    "/crystals", "/relics", "/planning/quests", "/quests", "/glossary", "/nodes", "/assets",
+    "/crystals", "/relics", "/planning/quests", "/quests", "/glossary",
   ]);
 });
 
@@ -230,8 +228,6 @@ it("retains all alliance destinations in the panel using the real membership pro
     "/planning/quests",
     "/quests",
     "/glossary",
-    "/nodes",
-    "/assets",
     "/war-videos",
     "https://discord.gg/eRv7fkMHmU",
     "/support",
@@ -315,9 +311,6 @@ it.each([
   ["/glossary/706", "/glossary"],
   ["/quests", "/quests"],
   ["/quests/towers/class_skill", "/quests"],
-  ["/nodes", "/nodes"],
-  ["/nodes/pve_disarray", "/nodes"],
-  ["/assets", "/assets"],
   ["/planning/quests/shared/plan-id", "/planning/quests"],
   ["/planning/defense/plan-id", "/planning/defense"],
   ["/planning/cuid-war-id", "/planning"],
@@ -350,12 +343,6 @@ it.each([
   ["/quests", "/quests", "Quest explorer", true],
   ["/quests/towers/class_skill", "/quests", "Quest explorer", true],
   ["/quests-other", "/quests", "Quest explorer", false],
-  ["/nodes", "/nodes", "Node modifiers", true],
-  ["/nodes/pve_disarray", "/nodes", "Node modifiers", true],
-  ["/nodes-other", "/nodes", "Node modifiers", false],
-  ["/assets", "/assets", "Game assets", true],
-  ["/assets/exact-asset", "/assets", "Game assets", true],
-  ["/assets-other", "/assets", "Game assets", false],
 ] as const)(
   "groups discovery in Explore and marks its exact route family at %s",
   async (path, href, label, current) => {
@@ -366,7 +353,7 @@ it.each([
     expect(button("Explore").hasAttribute("data-active")).toBe(current);
     expect(button("More").hasAttribute("data-active")).toBe(false);
     await open("Explore");
-    expect(hrefs(document.querySelector('[role="menu"]')!)).toEqual(["/crystals", "/relics", "/planning/quests", "/quests", "/glossary", "/nodes", "/assets"]);
+    expect(hrefs(document.querySelector('[role="menu"]')!)).toEqual(["/crystals", "/relics", "/planning/quests", "/quests", "/glossary"]);
     const link = document.querySelector<HTMLAnchorElement>(`[role="menu"] a[href="${href}"]`)!;
     expect(link?.textContent).toBe(label);
     expect(link.getAttribute("aria-current")).toBe(current ? "page" : null);
@@ -376,7 +363,7 @@ it.each([
     expect(push).not.toHaveBeenCalled(); // ordinary public links never redirect to a personal view
     await open("Menu");
     const panel = dialog();
-    expect(hrefs(panel.querySelector('[aria-label="Explore"]')!)).toEqual(["/crystals", "/relics", "/planning/quests", "/quests", "/glossary", "/nodes", "/assets"]);
+    expect(hrefs(panel.querySelector('[aria-label="Explore"]')!)).toEqual(["/crystals", "/relics", "/planning/quests", "/quests", "/glossary"]);
     await act(async () => panel.querySelector<HTMLAnchorElement>(`a[href="${href}"]`)!.click());
     expect(dialog()).toBeNull();
     expect(signInAction).not.toHaveBeenCalled();
