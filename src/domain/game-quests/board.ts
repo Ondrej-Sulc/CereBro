@@ -20,6 +20,7 @@ export function questBoardGeometry(map: QuestMap) {
     const key = coordinateKey(feature.coordinate);
     if (!anchors.has(key)) anchors.set(key, { coordinate: feature.coordinate, radius: 27 });
   }
+  for(const swap of map.swapPoints?.points??[]){const key=coordinateKey(swap.coordinate);anchors.set(key,{coordinate:swap.coordinate,radius:Math.max(40,anchors.get(key)?.radius??0)});}
   const markers = [...anchors.values()];
   for (let i=0;i<markers.length;i++) for (const other of markers.slice(i+1)) {
     const a=markers[i];

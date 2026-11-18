@@ -38,3 +38,22 @@ python -X utf8 -B -m unittest discover -s scripts/game-quests -p test_build_path
 ```
 
 The extraction uses frozen public definitions and pinned native consumer semantics. No new game session or process capture is required.
+
+## Champion swap points
+
+`swap-points.json` is an independent overlay for the same 234 map/source versions. It establishes 154 swap locations in 96 quests. Each point retains its exact coordinate, route membership, public definition source, swap limit and provenance for absent native defaults. The native factory recognizes `teamswap`, `swapteamselect` and `swapteamselect_alt1`; a generic choice-node flag is insufficient. Healing, reviving and skip choices do not become swap markers.
+
+The overlay uses 112 sanitized public quest-detail previews, checked against exact quest and map identities, the definition's recorded set ID, all walkable coordinates and connection endpoints. Request-container set IDs remain distinct from returned definition-set IDs. Numeric-string portal coordinates and empty wire-grid padding are normalized without changing positions. Ordinary links that also encode the same portal connection are compared as the same graph, with portal targets checked separately. Original map exports remain unchanged.
+
+One public geometry diagnostic was rebound offline after its original guard rejected duplicate portal-link encoding. Its original failed receipt remains unchanged; the derived source records its response hash, diagnostic hash and the corrected graph proof. Other retained public field projections were also validated offline before entering the overlay. Capture transport, session material, progress, disabled/used state and swap history are absent from the published data.
+
+Eight Special maps retain unknown swap coverage: the four Crucible maps, Acceptance, and the three Wheel of Fate maps. Their 287 generic choice locations are not labelled as swaps. The About this map disclosure identifies incomplete coverage.
+
+Swap markers use a cyan people-and-arrows symbol with a short Swap caption. Selecting one shows its routes and positive swap limit. Fourteen points share a portal position; both features remain visible and the exact portal destinations stay selectable. Feature-only swaps omit combat modifiers. Co-located defenders and other features retain their existing selection targets, while the overview, map key, spacing and adaptive marker sizing include the new points.
+
+Offline reproduction with the frozen evidence package available:
+
+```powershell
+python -X utf8 -B scripts/game-quests/build_swap_points.py --verify
+python -X utf8 -B -m unittest discover -s scripts/game-quests -p test_swap_projection.py -v
+```

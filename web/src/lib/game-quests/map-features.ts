@@ -4,13 +4,14 @@ import rawPresentation from "@cerebro/core/data/game-quests/path-reward-presenta
 import { nativeRewardName, type NativeRewardPresentation } from "@cerebro/core/data/game-reward-presentation";
 import { getQuestChestArtwork } from "@cerebro/core/data/game-quests/chest-artwork";
 import { projectQuestGateVisual, type QuestGateVisual } from "./gate-presentation";
+import type { QuestSwapPoint } from "@cerebro/core/domain/game-quests/swap-points";
 
 const presentation = rawPresentation.rewards as Record<string, NativeRewardPresentation & { imageUrl?: string; description?: string }>;
 
 export type QuestGateView = { id: string; coordinate: Coordinate; pathIndices: number[]; label: string; kind: string; requirements: string[]; resolved: boolean; visual?: QuestGateVisual };
 export type QuestPathRewardView = { id: string; coordinate: Coordinate; pathIndices: number[]; rewards: QuestRewardView[] };
 export type QuestChestView = { id: string; coordinate: Coordinate; pathIndices: number[]; imageUrl?: string };
-export type QuestMapFeatureLocation = { coordinate: Coordinate; gates: QuestGateView[]; pickups: QuestPathRewardView[]; chests?: QuestChestView[] };
+export type QuestMapFeatureLocation = { coordinate: Coordinate; gates: QuestGateView[]; pickups: QuestPathRewardView[]; chests?: QuestChestView[]; swaps?: QuestSwapPoint[] };
 
 export function projectQuestMapFeatures(map: QuestMap, portraits: Record<string, QuestPortrait> = {}): QuestMapFeatureLocation[] {
   const locations = new Map<string, QuestMapFeatureLocation>();
@@ -33,6 +34,10 @@ export function projectQuestMapFeatures(map: QuestMap, portraits: Record<string,
     const artwork = getQuestChestArtwork(chest.asset);
     at(chest.coordinate).chests!.push({ id: chest.id, coordinate: chest.coordinate, pathIndices: chest.pathIndices,
       ...(artwork ? { imageUrl: artwork.imageUrl } : {}) });
+  }
+  for (const swap of map.swapPoints?.points ?? []) {
+    const location = at(swap.coordinate);
+    (location.swaps ??= []).push(swap);
   }
   return [...locations.values()];
 }

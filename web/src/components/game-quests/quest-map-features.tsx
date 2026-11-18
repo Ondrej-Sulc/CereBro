@@ -8,7 +8,9 @@ import type { QuestMapFeatureLocation } from "@/lib/game-quests/map-features";
 import type { QuestRewardView } from "@/lib/game-quests/presentation";
 import { questGateChampionLinks } from "@/lib/game-quests/gate-champion-filter";
 import { RewardTile } from "./quest-reward-grid";
-import { QuestGateMarker, questGateMarkerHeight, questGateMarkerWidth } from "./quest-gate-marker";
+import { QuestGateMarker } from "./quest-gate-marker";
+import { questMapFeatureDimensions } from "./quest-map-marker-layout";
+import { QuestPortalVisual } from "./quest-portal-visual";
 import styles from "./quest-map-features.module.css";
 
 type MarkerProps = {
@@ -20,6 +22,7 @@ type MarkerProps = {
   onChoose: () => void;
   compact?: boolean;
   markerScale?: number;
+  portal?: boolean;
 };
 
 const rewardAmount = (reward: QuestRewardView) => reward.placeholder ? "" : reward.amount ?? `×${reward.quantity.toLocaleString("en")}`;
@@ -31,16 +34,28 @@ function ChestGraphic({ imageUrl }: { imageUrl?: string }) {
   </g>;
 }
 
-export function QuestMapFeatureMarker({ location, x, y, selected, active, onChoose, compact = false, markerScale = 1 }: MarkerProps) {
+function SwapGraphic() {
+  return <g data-champion-swap>
+    <rect className={styles.swapFrame} x="-23" y="-24" width="46" height="56" rx="11"/>
+    <g className={styles.swapPeople}>
+      <circle cx="-8" cy="-13" r="4"/><circle cx="8" cy="-13" r="4"/>
+      <path d="M-16 1v-3a8 8 0 0 1 16 0v3M0 1v-3a8 8 0 0 1 16 0v3"/>
+    </g>
+    <path className={styles.swapArrows} d="M-13 7h25m-4-4 4 4-4 4M13 15h-25m4-4-4 4 4 4"/>
+    <text className={styles.swapCaption} y="28" textAnchor="middle">Swap</text>
+    <rect className={styles.focusRing} x="-28" y="-29" width="56" height="66" rx="14"/>
+  </g>;
+}
+
+export function QuestMapFeatureMarker({ location, x, y, selected, active, onChoose, compact = false, markerScale = 1, portal = false }: MarkerProps) {
   const rewards = location.pickups.flatMap(pickup => pickup.rewards), firstReward = rewards[0];
   const chests = location.chests ?? [], firstChest = chests[0];
-  const label = [...location.gates.map(gate => gate.resolved ? gate.label : "Gate"), ...rewards.map(reward => `Path pickup: ${reward.name}${rewardAmount(reward) ? ` · ${rewardAmount(reward)}` : ""}`), ...(firstChest ? [chests.length > 1 ? "Chests" : "Chest"] : [])].join("; ");
-  const slots = [location.gates.length ? "gate" : "", firstReward ? "reward" : "", firstChest ? "chest" : ""].filter(Boolean);
-  const slotX = (slot: string) => (slots.indexOf(slot) - (slots.length - 1) / 2) * 50;
+  const swaps = location.swaps ?? [];
+  const label = [...location.gates.map(gate => gate.resolved ? gate.label : "Gate"), ...rewards.map(reward => `Path pickup: ${reward.name}${rewardAmount(reward) ? ` · ${rewardAmount(reward)}` : ""}`), ...(firstChest ? [chests.length > 1 ? "Chests" : "Chest"] : []), ...(swaps.length ? ["Champion swap"] : []), ...(portal ? ["Portal"] : [])].join("; ");
+  const dimensions = questMapFeatureDimensions(location);
+  const slotX = (slot: string) => dimensions.positions.get(slot) ?? 0;
   const quantity = firstReward ? rewardAmount(firstReward) : "";
   const amountWidth = Math.max(28, Math.min(80, quantity.length * 5.5 + 12));
-  const hitWidth = location.gates.length ? questGateMarkerWidth(location.gates[0]) + 8 : 56;
-  const hitHeight = location.gates.length ? Math.max(58, questGateMarkerHeight(location.gates[0])) + 20 : 78;
   return <g className={compact ? styles.compact : styles.marker} transform={compact ? `translate(${x + 37} ${y + 35}) scale(.65)` : `translate(${x} ${y}) scale(${markerScale})`} role={compact ? undefined : "button"} tabIndex={compact ? undefined : 0}
     aria-label={compact ? undefined : label} aria-pressed={compact ? undefined : selected} aria-hidden={compact || undefined} pointerEvents={compact ? "none" : undefined} data-coordinate={location.coordinate.join(",")}
     data-map-feature data-selected={selected} data-active={active} data-marker-scale={markerScale}
@@ -50,8 +65,9 @@ export function QuestMapFeatureMarker({ location, x, y, selected, active, onChoo
       }
     }}>
     {!compact && <title>{label}</title>}
-    {!compact && <rect x={-hitWidth / 2 - (slots.length - 1) * 25} y={-hitHeight / 2 + 1} width={hitWidth + (slots.length - 1) * 50} height={hitHeight} rx="10" fill="transparent" pointerEvents="all"/>}
+    {!compact && <rect x={-dimensions.width / 2} y={-dimensions.height / 2 + 1} width={dimensions.width} height={dimensions.height} rx="10" fill="transparent" pointerEvents="all"/>}
     <g aria-hidden="true" pointerEvents="none">
+      {portal && <QuestPortalVisual x={0} y={0} radius={40} selected={selected}/>}
       {location.gates.length > 0 && <g transform={`translate(${slotX("gate")} 0)`}>
         <QuestGateMarker gate={location.gates[0]}/>
       </g>}
@@ -70,6 +86,7 @@ export function QuestMapFeatureMarker({ location, x, y, selected, active, onChoo
         <ChestGraphic imageUrl={firstChest.imageUrl}/>
         <rect className={styles.focusRing} x="-29" y="-29" width="58" height="58" rx="11"/>
       </g>}
+      {swaps.length > 0 && <g transform={`translate(${slotX("swap")} 0)`}><SwapGraphic/></g>}
     </g>
   </g>;
 }
@@ -89,6 +106,19 @@ function GateRequirementTags({ groups, countLabel }: { groups: QuestGateTagGroup
 
 export function QuestMapFeatureDetails({ location }: { location: QuestMapFeatureLocation }) {
   return <div className={styles.details}>
+    {Boolean(location.swaps?.length) && <section aria-label="Champion swaps">
+      <h3>Champion swaps</h3>
+      {location.swaps!.map(swap => {
+        const limits = [...new Set(swap.options.map(option => option.swapCount).filter(count => count > 0))];
+        return <div key={swap.id} className={styles.swapDetails} data-swap-point>
+          <svg viewBox="-30 -30 60 70" width="46" height="54" aria-hidden="true"><SwapGraphic/></svg>
+          <div><h4>Champion swap point</h4>
+            {swap.pathIndices.length > 0 && <p className={styles.routes}>{swap.pathIndices.map(index => `Route ${index + 1}`).join(" · ")}</p>}
+            {limits.map(count => <p key={count} className={styles.swapLimit}>Up to {count} {count === 1 ? "champion" : "champions"}</p>)}
+          </div>
+        </div>;
+      })}
+    </section>}
     {location.gates.length > 0 && <section aria-label="Gate requirements">
       <h3>Gate requirements</h3>
       {location.gates.map(gate => {

@@ -6,13 +6,24 @@ import type { QuestMapFeatureLocation } from "@/lib/game-quests/map-features";
 import { questGateMarkerHeight, questGateMarkerWidth } from "./quest-gate-marker";
 import type { regionBoardGeometry } from "./quest-spawn-region-presentation";
 
-/** Complete visual and hit area, including quantity labels and combined slots. */
-function featureRadius(location: QuestMapFeatureLocation): number {
-  const slots = Number(Boolean(location.gates.length)) + Number(location.pickups.some(p=>p.rewards.length)) + Number(Boolean(location.chests?.length));
+/** Share actual slot extents between drawing, hit targets and collision sizing. */
+export function questMapFeatureDimensions(location: QuestMapFeatureLocation) {
   const gate = location.gates[0];
-  const width = gate ? questGateMarkerWidth(gate) + 8 : 56;
+  const slots: [string, number][] = [];
+  if (gate) slots.push(["gate", questGateMarkerWidth(gate) + 10]);
+  // Quantity labels may extend to 80 units even when the artwork is narrower.
+  if (location.pickups.some(pickup => pickup.rewards.length)) slots.push(["reward", 80]);
+  if (location.chests?.length) slots.push(["chest", 58]);
+  if (location.swaps?.length) slots.push(["swap", 56]);
+  const width = Math.max(56, slots.reduce((sum, [,width]) => sum + width, 0) + Math.max(0, slots.length - 1) * 6);
   const height = gate ? Math.max(58, questGateMarkerHeight(gate)) + 20 : 78;
-  return Math.hypot(width / 2 + Math.max(0, slots - 1) * 25, height / 2 + 1);
+  const positions = new Map<string, number>();
+  let left = -width / 2;
+  for (const [slot, slotWidth] of slots) {
+    positions.set(slot, left + slotWidth / 2);
+    left += slotWidth + 6;
+  }
+  return { width, height, positions, radius: Math.hypot(width / 2, height / 2 + 1) };
 }
 
 /** One footprint per native location: co-located badges grow with their portrait. */
@@ -34,7 +45,8 @@ export function questMapMarkerLayout(map: QuestMap, board: ReturnType<typeof reg
   for (const location of locations) {
     const key = coordinateKey(location.coordinate), [x,y] = board.point(location.coordinate);
     // Compact badges are offset (37,35), scaled .65, and share the parent's transform.
-    const radius = footprints.has(key) ? Math.hypot(37,35) + featureRadius(location) * .65 : featureRadius(location);
+    const featureRadius = questMapFeatureDimensions(location).radius;
+    const radius = footprints.has(key) ? Math.hypot(37,35) + featureRadius * .65 : featureRadius;
     put(key, x, y, radius);
   }
   const destinations = new Set(board.edges.filter(edge=>edge.portal).map(edge=>coordinateKey(edge.to)));
