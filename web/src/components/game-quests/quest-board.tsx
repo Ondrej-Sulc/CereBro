@@ -30,7 +30,7 @@ const portalSymbol = getQuestPortalArtwork("small");
 const noPulsePhases: ReadonlyMap<string, number> = new Map();
 const emptyFeatureLocations: QuestMapFeatureLocation[] = [];
 
-export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, viewportRef, artwork, spawnRegions, selectedRegion, onChooseRegion, onChooseRoute, highlightRoute = true, routeControl, featureLocations = emptyFeatureLocations }: {
+export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, viewportRef, artwork, spawnRegions, selectedRegion, onChooseRegion, onChooseRoute, highlightRoute = true, routeControl, featureLocations = emptyFeatureLocations, className, mapClassName, inspector }: {
   map: QuestMap; portraits: Record<string, QuestPortrait>; selected: string; pathIndex: number;
   onChoose: (c: Coordinate, center?: boolean) => void; viewportRef: RefObject<HTMLDivElement | null>;
   artwork?: { url: string; theme: string } | null;
@@ -38,6 +38,9 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
   onChooseRoute?: (index: number) => void;
   highlightRoute?: boolean; routeControl?: ReactNode;
   featureLocations?: QuestMapFeatureLocation[];
+  className?: string;
+  mapClassName?: string;
+  inspector?: ReactNode;
 }) {
   const board = useMemo(() => regionBoardGeometry(map,spawnRegions), [map,spawnRegions]);
   const featuresByKey = useMemo(() => new Map(featureLocations.map(location => [coordinateKey(location.coordinate), location])), [featureLocations]);
@@ -82,7 +85,7 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
   const selectedTile = map.tiles.find(tile => coordinateKey(tile.coordinate) === selected);
   const selectedPosition = selectedSpawn?.anchor ?? selectedTile?.coordinate;
   const selectedFeature = featuresByKey.get(selected);
-  const selectedLabel = fullscreen.fullscreen
+  const selectedLabel = fullscreen.fullscreen && !inspector
     ? selectedSpawn?.defender.name ?? (selectedTile && (selectedFeature
       ? questFeatureLocationLabel(selectedFeature)
       : questPositionLabel(map, selectedTile.coordinate)))
@@ -96,10 +99,12 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
     return <QuestMapWaypoint key={key} markerScale={markerLayout.scales.get(key)??1} tile={tile} x={x} y={y} label={questPositionLabel(map, tile.coordinate)}
       active={!highlightRoute||routeKeys.has(key)} selected={!selectedRegion&&selected===key} portalTarget={portalTargets.has(key)} onChoose={()=>onChoose(tile.coordinate)}/>;
   }), [map, board, waypointTiles, selectedJunction, markerLayout, highlightRoute, routeKeys, selectedRegion, selected, portalTargets, onChoose]);
-  return <div ref={boardRef} className={styles.board} style={{'--map-aspect':board.height/board.width} as CSSProperties} data-quest-board data-fullscreen={fullscreen.fullscreen}
+  return <div ref={boardRef} className={`${styles.shell} ${className ?? ''}`} data-quest-board data-fullscreen={fullscreen.fullscreen}
+    data-map-inspector={inspector ? true : undefined}
     data-window-fullscreen={fullscreen.windowMode || undefined} role={fullscreen.windowMode ? "dialog" : undefined}
     aria-modal={fullscreen.windowMode || undefined} aria-label={fullscreen.windowMode ? "Quest map full screen" : undefined}
     tabIndex={fullscreen.windowMode ? -1 : undefined}>
+    <section id="quest-map" className={`${styles.board} ${mapClassName ?? ''}`} style={{'--map-aspect':board.height/board.width} as CSSProperties} aria-label="Map and paths">
     <div className={styles.controls}>
       {routeControl}
       <div className={styles.viewTools} role="group" aria-label="Map view controls">
@@ -107,7 +112,7 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
         <div className={styles.controlActions}><button data-map-fullscreen-toggle aria-label={fullscreen.fullscreen ? "Exit full screen" : "Enter full screen"} title={fullscreen.fullscreen ? "Exit full screen (Esc)" : "View map in full screen"} aria-pressed={fullscreen.fullscreen} disabled={fullscreen.busy} onClick={() => void fullscreen.toggle()}>{fullscreen.fullscreen ? <Shrink size={16} /> : <Expand size={16} />}<span>{fullscreen.fullscreen ? "Exit full screen" : "Full screen"}</span></button></div>
       </div>
     </div>
-    {fullscreen.fullscreen && <div className={styles.fullscreenContext}>{!routeControl && onChooseRoute && <label>Route<select aria-label="Full screen recorded route" value={pathIndex} onChange={e => onChooseRoute(Number(e.target.value))}>{map.paths.map(route => <option key={route.index} value={route.index}>Route {route.index + 1}</option>)}</select></label>}<span aria-live="polite">{selectedLabel}</span></div>}
+    {fullscreen.fullscreen && !inspector && <div className={styles.fullscreenContext}>{!routeControl && onChooseRoute && <label>Route<select aria-label="Full screen recorded route" value={pathIndex} onChange={e => onChooseRoute(Number(e.target.value))}>{map.paths.map(route => <option key={route.index} value={route.index}>Route {route.index + 1}</option>)}</select></label>}<span aria-live="polite">{selectedLabel}</span></div>}
     <div className={styles.canvasWrap} style={artwork ? { backgroundImage: `linear-gradient(180deg,rgba(5,12,24,.76),rgba(4,10,20,.86)),url("${artwork.url}")` } : undefined}>
       <div ref={viewportRef} className={styles.viewport} role="region" aria-label="Scrollable quest map" aria-busy={!ready} tabIndex={0}
         onScroll={onScroll}
@@ -170,5 +175,7 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
       </svg></div>}
     </div>
     <details className={styles.mapKey}><summary>Map key<ChevronDown size={13} aria-hidden="true"/></summary><div className={styles.legend}>{highlightRoute?<><span><i className={styles.selectedRoute}/>Selected route</span><span><i className={styles.alternative}/>Other routes</span></>:<span><i className={styles.alternative}/>Paths</span>}<span><i className={styles.portal}/>Portal link</span>{portalSymbol&&<span><svg className={styles.portalLegend} width="14" height="14" aria-hidden="true"><image href={portalSymbol.url} width="14" height="14"/></svg>Portal</span>}<span><i className={styles.boss}/>Boss</span>{featureLocations.some(location=>location.gates.length>0)&&<span><LockKeyhole size={12} aria-hidden="true"/>Gate</span>}{featureLocations.some(location=>location.pickups.length>0)&&<span><Gift size={12} aria-hidden="true"/>Path reward</span>}{featureLocations.some(location=>Boolean(location.chests?.length))&&<span><PackageOpen size={12} aria-hidden="true"/>Chest</span>}{featureLocations.some(location=>Boolean(location.swaps?.length))&&<span><UsersRound size={12} color="#78ebe2" aria-hidden="true"/>Champion swap</span>}{spawnRegions&&<span><i className={styles.regionKey}/>Encounter region · ∼</span>}<span>Badge = shared routes</span><p>Drag to pan · Pinch or scroll to zoom</p></div></details>
+    </section>
+    {inspector}
   </div>;
 }

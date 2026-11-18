@@ -75,12 +75,31 @@
 .fullscreenContext label{display:flex;align-items:center;gap:8px}
 .fullscreenContext select{min-height:40px;padding:0 8px;border:1px solid #31475d;border-radius:6px;background:#101f30;color:#e2edf5}
 .fullscreenContext>span{min-width:0;overflow-wrap:anywhere}
-.board[data-fullscreen=true]{display:flex;flex-direction:column;width:100%;height:100%;max-width:none;overflow:hidden}
-.board[data-fullscreen=true] .canvasWrap{flex:1;min-height:0}
-.board[data-fullscreen=true] .viewport{height:100%;max-height:none}
-.board[data-fullscreen=true] .mapKey{flex-shrink:0}
-.board[data-window-fullscreen=true]{position:fixed;inset:0;z-index:1000;width:100vw;height:100dvh}
+.shell[data-fullscreen=true] {
+  display:grid;
+  grid-template:minmax(0,1fr) / minmax(0,1fr);
+  align-items:stretch;
+  gap:0;
+  width:100%;
+  height:100%;
+  max-width:none;
+  overflow:hidden;
+  background:#07111e;
+}
+.shell[data-fullscreen=true][data-map-inspector=true] {
+  grid-template-columns:minmax(0,1fr) clamp(300px,30vw,390px);
+}
+.shell[data-fullscreen=true] .board{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.shell[data-fullscreen=true] .canvasWrap{flex:1;min-height:0}
+.shell[data-fullscreen=true] .viewport{height:100%;max-height:none}
+.shell[data-fullscreen=true] .mapKey{flex-shrink:0}
+.shell[data-window-fullscreen=true]{position:fixed;inset:0;z-index:1000;width:100%;height:100dvh}
+@media (max-width:720px) {
+  .shell[data-fullscreen=true][data-map-inspector=true] {
+    grid-template:minmax(0,1fr) min(36%,280px) / minmax(0,1fr);
+  }
+}
 @media(min-width:1450px){.viewport{height:800px}}
 @container(max-width:800px){.controls{top:10px;left:10px;right:10px;gap:6px}.controls button>span{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.controls button{width:44px;min-width:44px;padding:0}.zoom output{min-width:32px;font-size:10px}.controls .zoom button:last-child{margin-left:0}.controls>label{padding-inline:6px}.viewport{height:620px}}
-@container(max-width:600px){.controls{flex-wrap:wrap;align-items:start;gap:8px}.controls>label{width:fit-content;max-width:100%;min-height:44px}.controls>label select{width:190px!important;min-height:36px!important}.viewTools{flex-basis:100%;justify-content:space-between;margin-left:0}.controlActions{margin-left:0}.controlActions::before{left:-3px}.viewport{height:clamp(360px,calc(100cqw * var(--map-aspect)),560px)}.navigator{width:112px;right:10px;bottom:12px;padding:8px}.navigator>span{font-size:7px;letter-spacing:.1em}.navigator svg{max-height:116px}.fullscreenContext{left:10px;max-width:calc(100% - 148px);font-size:10px;padding:7px 9px}.legend{gap:10px 15px}.board[data-fullscreen=true] .controls{top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left))}.board[data-fullscreen=true] .mapKey{padding-bottom:env(safe-area-inset-bottom)}}
+@container(max-width:600px){.controls{flex-wrap:wrap;align-items:start;gap:8px}.controls>label{width:fit-content;max-width:100%;min-height:44px}.controls>label select{width:190px!important;min-height:36px!important}.viewTools{flex-basis:100%;justify-content:space-between;margin-left:0}.controlActions{margin-left:0}.controlActions::before{left:-3px}.viewport{height:clamp(360px,calc(100cqw * var(--map-aspect)),560px)}.navigator{width:112px;right:10px;bottom:12px;padding:8px}.navigator>span{font-size:7px;letter-spacing:.1em}.navigator svg{max-height:116px}.fullscreenContext{left:10px;max-width:calc(100% - 148px);font-size:10px;padding:7px 9px}.legend{gap:10px 15px}.shell[data-fullscreen=true] .controls{top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left))}.shell[data-fullscreen=true]:not([data-map-inspector]) .mapKey{padding-bottom:env(safe-area-inset-bottom)}}
 @media(prefers-reduced-motion:reduce){.controls button,.regionArea,.waypointRing,.portalOrbit,.portalSelection,.board [data-map-marker-visual],.board [data-map-feature]:not([aria-hidden]),.waypoint>g{transition:none}.portalOrbit,.portalSelection{animation:none}}

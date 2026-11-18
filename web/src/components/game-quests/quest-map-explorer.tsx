@@ -33,6 +33,10 @@ export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}
   const latestSelection=useRef<{route:number;key:string;region?:string;highlight:boolean}>({route:initial.index,key:selected,region:initialRegionChoice?.id,highlight:Boolean(explicitInitialPath)});
   const [selectedApplication,setSelectedApplication]=useState(initialApplication);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inspectorRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    if (inspectorRef.current) inspectorRef.current.scrollTop = 0;
+  }, [selected, selectedRegionId]);
   const selectedTile = map.tiles.find(t => coordinateKey(t.coordinate) === selected)!;
   const selectedRegion=layer?.regions.find(r=>r.id===selectedRegionId);
   const selectedEncounters = map.encounters.filter(e => coordinateKey(e.coordinate) === selected);
@@ -85,13 +89,10 @@ export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}
   return <div className={styles.explorer}>
     {map.modifierCoverage && map.modifierCoverage.applications > map.modifierCoverage.resolvedDefinitions && <p className={styles.coverageNote} data-modifier-coverage>All {map.modifierCoverage.applications} recorded modifier assignments are preserved. Their complete definitions and native icons were not captured.</p>}
     {!layer&&map.encounters.length===1&&map.encounters[0].final&&map.paths.length>1&&<p className={styles.coverageNote} data-encounter-coverage>This saved preview records only the final-boss placement. Other defenders are not established by this capture.</p>}
-    <div className={styles.layout}>
-      <section id="quest-map" className={styles.mapPanel} aria-label="Map and paths">
-        <QuestBoard map={map} portraits={portraits} selected={selected} pathIndex={pathIndex} highlightRoute={highlightRoute} onChoose={choose} viewportRef={scrollRef} artwork={artwork} spawnRegions={layer} selectedRegion={selectedRegion?.id} onChooseRegion={chooseRegion} featureLocations={featureLocations} routeControl={
+    <QuestBoard className={styles.layout} mapClassName={styles.mapPanel} map={map} portraits={portraits} selected={selected} pathIndex={pathIndex} highlightRoute={highlightRoute} onChoose={choose} viewportRef={scrollRef} artwork={artwork} spawnRegions={layer} selectedRegion={selectedRegion?.id} onChooseRegion={chooseRegion} featureLocations={featureLocations} routeControl={
           <label className={styles.routeControl} title="Highlight a recorded route"><Route size={16} aria-hidden="true"/><span className={styles.routeLabel}>Highlight route</span><select aria-label="Recorded routes" value={highlightRoute?pathIndex:""} onChange={e=>chooseRoute(e.target.value===""?null:Number(e.target.value))}><option value="">All paths</option>{map.paths.map(p=>{const count=layer?mapDefenders(map,layer,p.index).length:routeEncounters(map,p.index).length;return <option key={p.index} value={p.index}>Route {p.index+1} · {count} {layer?(count===1?'defender':'defenders'):(count===1?'fight':'fights')}</option>;})}</select></label>
-        }/>
-      </section>
-      <section className={styles.inspector} aria-labelledby="coordinate-heading" aria-live="polite">
+    } inspector={
+      <section ref={inspectorRef} className={styles.inspector} aria-labelledby="coordinate-heading" aria-live="polite">
         <div className={styles.inspectorBody}>
           <p className={styles.inspectorEyebrow}>{selectedRegion ? "Encounter region" : selectedEncounters.length ? "Encounter details" : "Map location"}</p>
           {selectedRegion?<><QuestSpawnRegionInspector map={map} region={selectedRegion} shareUrl={shareUrl} inspectTile={()=>choose(selectedRegion.anchor,true)}/>{selectedFeatures&&<QuestMapFeatureDetails location={selectedFeatures}/>}</>:<>
@@ -112,7 +113,7 @@ export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}
           </>}
         </div>
       </section>
-    </div>
+    }/>
     {otherGates.length>0&&<details className={styles.additionalGates}><summary>Additional gate requirements <span>{otherGates.length}</span></summary><p>These gates are defined for this quest; their map locations were not recorded.</p><ul>{otherGates.map(gate=><li key={gate.barrierId}><h3>{gate.label}</h3>{gate.requirements.filter(line=>line!==gate.label).map((line,index)=><p key={index}>{line}</p>)}{!gate.resolved&&<p>Full gate requirements were not captured.</p>}</li>)}</ul></details>}
     <details className={styles.mapAbout}><summary>About this map</summary><div className={styles.summary}><span><strong>{map.paths.length}</strong> recorded routes</span><span><strong>{map.encounters.length}</strong> placed {map.encounters.length===1?'opponent':'opponents'}</span>{layer&&<span className={styles.regionSummary}><strong>{layer.regions.length}</strong> {layer.regions.length===1?'encounter region':'encounter regions'}</span>}{map.details?.chestCoverage==="uncaptured"&&<span>Chest locations not recorded</span>}{map.swapPoints&&map.swapPoints.coverage!=="captured"&&<span>Champion swap locations not fully recorded</span>}{map.modifierCoverage?.definitionCapturedAt&&<span data-modifier-definition-date>Modifier descriptions recorded <time dateTime={map.modifierCoverage.definitionCapturedAt}>{new Intl.DateTimeFormat('en-GB',{dateStyle:'medium',timeZone:'UTC'}).format(new Date(map.modifierCoverage.definitionCapturedAt))}</time></span>}</div></details>
   </div>;

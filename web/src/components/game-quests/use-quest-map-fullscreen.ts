@@ -42,7 +42,7 @@ export function useQuestMapFullscreen(ref: RefObject<HTMLDivElement | null>) {
         event.preventDefault(); setWindowMode(false); return;
       }
       if (event.key !== "Tab") return;
-      const items = [...element.querySelectorAll<HTMLElement>('button:not(:disabled),a[href],select:not(:disabled),[tabindex="0"]')]
+      const items = [...element.querySelectorAll<HTMLElement>('button:not(:disabled),a[href],select:not(:disabled),summary,[tabindex="0"]')]
         .filter(item => item.getClientRects().length > 0);
       const first = items[0], last = items[items.length - 1];
       const outside = !element.contains(document.activeElement);

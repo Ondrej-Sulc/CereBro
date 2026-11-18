@@ -90,6 +90,52 @@ describe("quest map controls", () => {
     expect(route.value).toBe('2');
     expect(host.querySelector('[aria-label="Link to this location"]')?.getAttribute('href')).toContain('path=2');
   });
+  it.each(['native', 'fallback'] as const)('updates the same location inspector inside %s full screen', async mode => {
+    const map = (await loadQuestMap('a05_ch01_q01'))!;
+    const [first, next] = map.encounters;
+    let active: Element | null = null;
+    const properties = [[document, 'fullscreenElement'], [document, 'exitFullscreen'], [Element.prototype, 'requestFullscreen']] as const;
+    const original = properties.map(([target, name]) => Object.getOwnPropertyDescriptor(target, name));
+    const setFullscreen = (element: Element | null) => {
+      active = element;
+      document.dispatchEvent(new Event('fullscreenchange'));
+    };
+    Object.defineProperty(document, 'fullscreenElement', { configurable: true, get: () => active });
+    Object.defineProperty(document, 'exitFullscreen', { configurable: true, value: async () => setFullscreen(null) });
+    Object.defineProperty(Element.prototype, 'requestFullscreen', {
+      configurable: true,
+      value: async function (this: Element) {
+        if (mode === 'fallback') throw new Error('Fullscreen unavailable');
+        setFullscreen(this);
+      },
+    });
+    try {
+      const host = await render(<QuestMapExplorer map={map} initialNode={first.coordinate.join(',')}/>);
+      const inspector = host.querySelector('section[aria-labelledby="coordinate-heading"]')!;
+      await act(async () => host.querySelector<HTMLButtonElement>('[aria-label="Enter full screen"]')!.click());
+      const fullscreen = mode === 'native' ? document.fullscreenElement : host.querySelector('[role="dialog"][aria-modal="true"]');
+      expect(fullscreen?.contains(inspector)).toBe(true);
+      expect(fullscreen?.querySelector('[aria-label="Recorded routes"]')).not.toBeNull();
+
+      await act(async () => fullscreen!.querySelector(`[data-map-encounter="${next.id}"]`)!.dispatchEvent(new MouseEvent('click', { bubbles: true })));
+      expect(inspector.querySelector('[aria-label="Link to this location"]')?.getAttribute('href')).toBe(
+        `/quests/${map.questId}?${new URLSearchParams({ node: next.coordinate.join(',') })}`,
+      );
+      const heading = inspector.querySelector('#coordinate-heading')!.textContent;
+      expect(heading).toContain(next.champion?.name ?? next.name);
+
+      await act(async () => fullscreen!.querySelector<HTMLButtonElement>('[aria-label="Exit full screen"]')!.click());
+      expect(host.querySelector('section[aria-labelledby="coordinate-heading"]')).toBe(inspector);
+      expect(inspector.querySelector('#coordinate-heading')!.textContent).toBe(heading);
+    } finally {
+      if (active) await act(async () => setFullscreen(null));
+      properties.forEach(([target, name], index) => {
+        if (original[index]) Object.defineProperty(target, name, original[index]);
+        else Reflect.deleteProperty(target, name);
+      });
+    }
+  });
+
   it('opens a global modifier and its scope when restoring an exact source-bound link',async()=>{
     const map=(await loadQuestMap('a09_ch03_q02'))!;
     const tile=map.tiles.find(t=>t.coordinate.join(',')==='13,19')!;
