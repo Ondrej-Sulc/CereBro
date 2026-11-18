@@ -29,7 +29,7 @@ it("prompts a guest arriving at their roster and retains the gate filters throug
   expect(callback.searchParams.get('unowned')).toBe('false');
 });
 
-it("carries the gate filter when switching from matching catalog champions to the owned roster", async () => {
+it("carries the gate filter and includes unowned champions when switching to the personal roster", async () => {
   window.history.replaceState(null, "", `/champions?view=catalog&questGate=1&unowned=true&tags=${encodeURIComponent('["Hero"]')}`);
   await act(async () => root.render(<CollectionMemoryProvider><CollectionScreen section="champions" view="catalog" profileId="player" signedIn canUsePersonal><CollectionHeading/></CollectionScreen></CollectionMemoryProvider>));
   const personal = [...document.querySelectorAll<HTMLAnchorElement>('a')].find(link => link.textContent === 'My Roster')!;
@@ -37,5 +37,5 @@ it("carries the gate filter when switching from matching catalog champions to th
   const target = new URL(push.mock.calls[0][0], window.location.origin);
   expect(target.searchParams.get('view')).toBe('personal');
   expect(JSON.parse(target.searchParams.get('tags')!)).toEqual(['Hero']);
-  expect(target.searchParams.get('unowned')).toBe('false');
+  expect(target.searchParams.get('unowned')).toBe('true');
 });

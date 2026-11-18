@@ -58,7 +58,7 @@ it("separates alternative tag groups without flattening their AND requirements",
   expect(host.querySelector('[data-gate-tag-or]')?.textContent).toBe("or");
 });
 
-it("links a tag gate to matching catalog champions and the owned roster with its exact AND tags", async () => {
+it("links a tag gate to matching catalog champions and the roster with its exact AND tags", async () => {
   const location = gateLocation();
   location.gates[0] = { ...location.gates[0], kind: "tags", visual: { kind: "tags", images: [], caption: "#Hero and #Stark Tech",
     tagGroups: [[{ label: "Hero", negated: false }, { label: "Stark Tech", negated: false }]],
@@ -73,7 +73,7 @@ it("links a tag gate to matching catalog champions and the owned roster with its
   }
   expect(new URL(links[0].href).pathname).toBe('/champions');
   expect(new URL(links[1].href).pathname).toBe('/profile/roster');
-  expect(new URL(links[1].href).searchParams.get('unowned')).toBe('false');
+  expect(new URL(links[1].href).searchParams.get('unowned')).toBe('true');
 });
 
 it("makes a visible gate selectable by pointer and keyboard using its human name", async () => {

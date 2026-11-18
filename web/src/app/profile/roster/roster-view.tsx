@@ -211,7 +211,7 @@ export function RosterView({
   const [ascensionEligible, setAscensionEligible] = useAscensionEligibilityFilter();
   const [sortBy, setSortBy] = useCollectionState<RosterSortField>("sort", enablePrestigeInsights ? "PRESTIGE" : "NAME");
   const [sortDirection, setSortDirection] = useCollectionState<SortDirection>("direction", enablePrestigeInsights ? "DESC" : "ASC");
-  const [showUnowned, setShowUnowned] = useCollectionState("unowned", isChampionsCatalog || !isCollectionScreen);
+  const [showUnowned, setShowUnowned] = useCollectionState("unowned", true);
   const [championScope, setChampionScope] = useChampionScopeFilter();
   const playableChampions = useMemo(() => allChampions.filter(champion => matchesChampionScope(champion)), [allChampions]);
   const [editingItem, setEditingItem] = useState<ProfileRosterEntry | null>(null);
@@ -251,7 +251,7 @@ export function RosterView({
     setEffectForms([]); setEffectDirections([]); setImmunityFilter([]); setImmunityLogic("AND");
     setIncludeResistances(true); setMinResistancePotency(null); setShowInsights(false);
     // Guests requesting a personal view see catalog candidates plus the sign-in
-    // prompt; the preserved personal URL still requests owned entries after login.
+    // prompt; the preserved personal URL retains its ownership choice after login.
     if (unowned !== undefined) setShowUnowned(isChampionsCatalog || unowned);
   }, [setSearch, setFilterClasses, setFilterStars, setFilterRanks, setFilterAscensionLevels, setAscensionEligible, setChampionScope,
     setAbilityCategoryFilter, setAbilityCategoryLogic, setAbilityFilter, setAbilityLogic, setEffectForms, setEffectDirections,

@@ -87,6 +87,6 @@ export function questGateChampionLinks(visual: QuestGateVisual): { champions: st
   const search = new URL(questGateFilterHref("/champions", state), "https://cerebro.invalid").searchParams;
   search.set("questGate", "1");
   const catalog = new URLSearchParams(search); catalog.set("view", "catalog"); catalog.set("unowned", "true");
-  const roster = new URLSearchParams(search); roster.set("unowned", "false");
+  const roster = new URLSearchParams(search); roster.set("unowned", "true");
   return { champions: `/champions?${catalog}`, roster: `/profile/roster?${roster}` };
 }

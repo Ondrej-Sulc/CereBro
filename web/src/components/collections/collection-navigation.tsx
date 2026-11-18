@@ -160,7 +160,7 @@ function CollectionViewSwitch() {
   const incomingPersonal = gateContext && params.get("view") === "personal" && !canUsePersonal;
   const gateSearch = (target: CollectionView) => {
     const query = new URLSearchParams(params.toString());
-    query.set("unowned", target === "catalog" ? "true" : "false");
+    query.set("unowned", target === "personal" && params.get("unowned") === "false" ? "false" : "true");
     return query.toString();
   };
   const personalHref = collectionHref(section, "personal", gateContext ? gateSearch("personal") : "");

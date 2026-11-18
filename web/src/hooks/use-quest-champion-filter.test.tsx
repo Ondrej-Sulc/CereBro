@@ -29,14 +29,14 @@ async function show(view: "catalog" | "personal" = "catalog", query = "", profil
   await act(async () => root.render(<CollectionMemoryProvider><CollectionScreen key={view + profileId} section="champions" view={view} profileId={profileId} signedIn canUsePersonal><Harness /></CollectionScreen></CollectionMemoryProvider>));
 }
 
-it("explicit links override saved tags, resolve exact optional # names, and request a fresh owned view", async () => {
+it("explicit links override saved tags, resolve exact optional # names, and include unowned champions", async () => {
   await show(); await click("Gamma");
   await show("personal"); await show(); expect(state().tags).toEqual(["Gamma"]);
   const link = questGateChampionLinks({ kind: "tags", images: [], filterGroups: [[{ kind: "tag", value: "Hero", negated: false }]] })!.roster;
   const query = new URL(link, "https://cerebro.test").search;
   await show("personal", `&${query.slice(1)}`);
   expect(state()).toEqual({ tags: ["#Hero"], logic: "AND", gate: null });
-  expect(reset).toHaveBeenCalledWith(false);
+  expect(reset).toHaveBeenCalledWith(true);
 });
 
 it("keeps invalid constraints visible and removable, including while Next's query snapshot lags", async () => {

@@ -11,7 +11,7 @@ const champion = (tags: string[], championClass: "SCIENCE" | "TECH" = "SCIENCE")
 const defaults: RosterFiltersState = { search: "", classes: [], stars: [], ranks: [], ascension: [], tags: [], tagLogic: "AND", showUnowned: false, abilities: [], categories: [], immunities: [], includeResistances: true };
 
 describe("quest gate champion links", () => {
-  it("activates positive tag AND and OR with explicit catalog and owned roster destinations", () => {
+  it("activates positive tag AND and OR with catalog and personal views including unowned champions", () => {
     const cases: { groups: QuestGateChampionFilterGroups; logic: "AND" | "OR" }[] = [
       { groups: [[tag("Hero"), tag("Gamma")]], logic: "AND" },
       { groups: [[tag("Hero")], [tag("Gamma")]], logic: "OR" },
@@ -21,7 +21,7 @@ describe("quest gate champion links", () => {
       const catalog = new URL(links.champions, "https://cerebro.test");
       const roster = new URL(links.roster, catalog);
       expect(catalog.pathname).toBe("/champions"); expect(catalog.searchParams.get("view")).toBe("catalog");
-      expect(roster.pathname).toBe("/profile/roster"); expect(roster.searchParams.get("unowned")).toBe("false");
+      expect(roster.pathname).toBe("/profile/roster"); expect(roster.searchParams.get("unowned")).toBe("true");
       expect(catalog.searchParams.get("questTags")).toBeNull();
       expect(parseQuestChampionFilterParams(catalog.searchParams)).toMatchObject({ tags: ["Hero", "Gamma"], tagLogic: logic, questGate: null });
     }
