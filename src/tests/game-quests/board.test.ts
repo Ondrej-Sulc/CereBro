@@ -44,7 +44,7 @@ it("renders every placement once at its source coordinate, preserving directed l
     const board = questBoardGeometry(map);
     const sourceTiles = new Map(map.tiles.map(tile => [coordinateKey(tile.coordinate), tile]));
     // The feature overlay may widen spacing for gates and pickups while retaining the source geometry.
-    const originalBoard = questBoardGeometry({ ...map, features: undefined });
+    const originalBoard = questBoardGeometry({ ...map, features: undefined, details: undefined });
     if (!q.mapSourceHash) expect(originalBoard.pitch).toBe(22);
     expect(board.pitch).toBeGreaterThanOrEqual(originalBoard.pitch);
     expect([...board.encounters.values()].flat().map(e => e.id).sort()).toEqual(map.encounters.map(e => e.id).sort());

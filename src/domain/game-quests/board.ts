@@ -6,7 +6,7 @@ export function questBoardGeometry(map: QuestMap) {
   let pitch = 22;
   // Keep native geometry linear while leaving room for distinct map objects.
   const anchors = new Map(map.encounters.map(encounter => [coordinateKey(encounter.coordinate), { coordinate: encounter.coordinate, radius: encounter.final ? 33 : 27 }]));
-  for (const feature of [...(map.features?.gates ?? []), ...(map.features?.pathRewards ?? [])]) {
+  for (const feature of [...(map.features?.gates ?? []), ...(map.features?.pathRewards ?? []), ...(map.details?.chests ?? [])]) {
     const key = coordinateKey(feature.coordinate);
     if (!anchors.has(key)) anchors.set(key, { coordinate: feature.coordinate, radius: 27 });
   }

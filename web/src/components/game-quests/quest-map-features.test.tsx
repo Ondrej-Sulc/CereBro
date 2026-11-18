@@ -121,3 +121,19 @@ it("uses a neutral public gate label when its recorded definition is unresolved"
   expect(host.textContent).not.toContain("internal_barrier_token");
   expect(host.textContent).toContain("Requirements not specified in the recorded definition.");
 });
+
+it("shows selectable chest artwork and its location without inventing reward contents", async () => {
+  const location: QuestMapFeatureLocation = { ...gateLocation(), gates: [],
+    chests: [{ id: "native-chest", coordinate: [7,12], pathIndices: [0,2], imageUrl: "/exact-chest.webp" }] };
+  const choose=vi.fn();
+  const host=await render(<><svg><QuestMapFeatureMarker location={location} x={100} y={120} selected active onChoose={choose}/></svg><QuestMapFeatureDetails location={location}/></>,false);
+  const marker=host.querySelector('[role="button"]')!;
+  expect(marker.getAttribute("aria-label")).toBe("Chest");
+  expect(marker.querySelector("image")?.getAttribute("href")).toBe("/exact-chest.webp");
+  expect(marker.querySelector("text")).toBeNull();
+  expect(host.textContent).toContain("Contents not specified.");
+  expect(host.textContent).toContain("Route 1");expect(host.textContent).toContain("Route 3");
+  expect(host.textContent).not.toMatch(/native-chest|gold|guaranteed|collected|×1|7,12/i);
+  await act(async()=>marker.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true})));
+  expect(choose).toHaveBeenCalledOnce();
+});

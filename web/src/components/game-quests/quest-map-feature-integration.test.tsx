@@ -6,6 +6,7 @@ import { loadQuestMap } from "@cerebro/core/data/game-quests";
 import { projectQuestMapFeatures } from "@/lib/game-quests/map-features";
 import { QuestMapExplorer } from "./quest-map-explorer";
 import { QuestPathRewards } from "./quest-path-rewards";
+import { QuestPreparationSummary } from "./quest-preparation";
 
 vi.mock("next/image", () => ({ default: ({ alt = "", ...props }: ImgHTMLAttributes<HTMLImageElement>) => createElement("img", { ...props, alt }) }));
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
@@ -46,3 +47,35 @@ it("keeps uncaptured path rewards distinct from a known empty list", async () =>
   await act(async () => root!.render(<QuestPathRewards questId="q" pickups={[]} coverage="captured"/>));
   expect(host.textContent).toBe("");
 });
+
+it("shows a real path chest while preserving the source map", async () => {
+  const map=(await loadQuestMap("a04_ch01_q01"))!;
+  const chest=map.details!.chests.find(chest=>chest.coordinate.join(',')==='3,5')!;
+  expect(chest.asset).toBe("object_chest_level03");
+  const before=JSON.stringify(map);
+  window.history.replaceState(null,"",`/quests/${map.questId}`);
+  const host=document.createElement("div");document.body.append(host);root=createRoot(host);
+  await act(async()=>root!.render(<><QuestPreparationSummary preparation={map.details?.preparation}/><QuestMapExplorer map={map} featureLocations={projectQuestMapFeatures(map)}/></>));
+  const preparation=host.querySelector('[data-quest-preparation]')!;
+  expect(preparation.textContent).toContain("Energy per tile2");
+  expect(preparation.textContent).toContain("12,062");
+  const inspector=()=>host.querySelector('section[aria-labelledby="coordinate-heading"]')!;
+  const marker=host.querySelector<SVGGElement>('[data-map-feature][data-coordinate="3,5"]')!;
+  expect(marker.querySelector("image")?.getAttribute("href")).toMatch(/^\/game-quests\/chest-art\//);
+  await act(async()=>marker.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true})));
+  expect(inspector().querySelector('[data-path-chest]')).not.toBeNull();
+  expect(inspector().textContent).toContain("Contents not specified.");
+  expect(JSON.stringify(map)).toBe(before);
+},60000);
+
+it("selects an exact recorded Mausoleum portal destination",async()=>{
+  const map=(await loadQuestMap("me_mausoleum_ch01_q02"))!;
+  const portal=map.tiles.find(tile=>tile.portals.length>0)!;
+  window.history.replaceState(null,"",`/quests/${map.questId}`);
+  const host=document.createElement("div");document.body.append(host);root=createRoot(host);
+  await act(async()=>root!.render(<QuestMapExplorer map={map} initialNode={portal.coordinate.join(',')} featureLocations={projectQuestMapFeatures(map)}/>));
+  const destination=host.querySelector<HTMLButtonElement>('section[aria-label="Portal destinations"] button')!;
+  expect(destination).not.toBeNull();
+  await act(async()=>destination.click());
+  expect(new URL(window.location.href).searchParams.get("node")).toBe(portal.portals[0].target.join(','));
+},60000);

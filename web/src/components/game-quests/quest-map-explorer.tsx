@@ -17,6 +17,7 @@ import { QuestEncounterSummary } from "./quest-encounter-summary";
 import styles from "./quest-map-explorer.module.css";
 import type { QuestMapFeatureLocation } from "@/lib/game-quests/map-features";
 import { QuestMapFeatureDetails } from "./quest-map-features";
+import { QuestPortalDetails } from "./quest-portal-details";
 
 export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}, artwork, initialApplication, spawnRegions, initialRegion, featureLocations = [] }: { map: QuestMap; initialPath?: string; initialNode?: string; initialApplication?:string; portraits?: Record<string, Portrait>; artwork?: { url: string; theme: string } | null; spawnRegions?:QuestSpawnRegionLayer; initialRegion?:string; featureLocations?:QuestMapFeatureLocation[] }) {
   const layer=spawnRegions?.regions.length?spawnRegions:undefined;
@@ -37,6 +38,7 @@ export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}
   const selectedEncounters = map.encounters.filter(e => coordinateKey(e.coordinate) === selected);
   const selectedBoss = selectedEncounters.some(encounter=>questEncounterIsBoss(map,encounter));
   const selectedFeatures = featureLocations.find(location => coordinateKey(location.coordinate) === selected);
+  const featureHeading = selectedFeatures?.chests?.length ? selectedFeatures.gates.length || selectedFeatures.pickups.length ? "Path features" : "Chest" : selectedFeatures?.gates.length ? selectedFeatures.pickups.length ? "Gate & path reward" : "Gate" : "Path reward";
   const otherGates = [...new Map((map.features?.unplacedGateDefinitions ?? []).map(gate => [JSON.stringify([gate.kind,gate.label,gate.requirements]),gate])).values()];
   function commit(c:Coordinate,center:boolean,route:number,region?:string,highlight=latestSelection.current.highlight){
     const key = coordinateKey(c);
@@ -93,7 +95,7 @@ export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}
           <p className={styles.inspectorEyebrow}>{selectedRegion ? "Encounter region" : selectedEncounters.length ? "Encounter details" : "Map location"}</p>
           {selectedRegion?<><QuestSpawnRegionInspector map={map} region={selectedRegion} shareUrl={shareUrl} inspectTile={()=>choose(selectedRegion.anchor,true)}/>{selectedFeatures&&<QuestMapFeatureDetails location={selectedFeatures}/>}</>:<>
           <div className={styles.inspectorHeader}>
-            {selectedEncounters.length===1 ? (()=>{const e=selectedEncounters[0],portrait=questEncounterPortrait(e,portraits);return <QuestEncounterSummary headingId="coordinate-heading" name={portrait?.name??e.champion?.name??e.name} portrait={portrait} href={portrait?.href??(e.champion?`/champions/${e.champion.slug}`:null)} rarity={e.rarity} rank={e.rank} level={e.level} signature={e.signature} ascension={e.ascension} npc={!e.champion}/>;})() : <h2 id="coordinate-heading">{selectedFeatures?selectedFeatures.gates.length?selectedFeatures.pickups.length?"Gate & path reward":"Gate":"Path reward":questPositionLabel(map,selectedTile.coordinate)}</h2>}
+            {selectedEncounters.length===1 ? (()=>{const e=selectedEncounters[0],portrait=questEncounterPortrait(e,portraits);return <QuestEncounterSummary headingId="coordinate-heading" name={portrait?.name??e.champion?.name??e.name} portrait={portrait} href={portrait?.href??(e.champion?`/champions/${e.champion.slug}`:null)} rarity={e.rarity} rank={e.rank} level={e.level} signature={e.signature} ascension={e.ascension} npc={!e.champion}/>;})() : <h2 id="coordinate-heading">{selectedFeatures?featureHeading:questPositionLabel(map,selectedTile.coordinate)}</h2>}
             <Link href={shareUrl} className={styles.inspectorShare} aria-label="Link to this location" title="Link to this location"><Link2 size={15} aria-hidden="true"/><span>Link</span></Link>
           </div>
           {selectedTile.start && <p className={styles.tag}>Quest start</p>}{(selectedBoss||selectedTile.final) && <p className={styles.tag}>{selectedBoss?selectedTile.final?"Final boss":"Boss":"Quest finish"}</p>}
@@ -104,12 +106,13 @@ export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}
           </div>; })}
           {!selectedEncounters.length&&!selectedFeatures && <p className={styles.muted}>No placed defender recorded here.</p>}
           {selectedFeatures&&<QuestMapFeatureDetails location={selectedFeatures}/>}
+          <QuestPortalDetails tile={selectedTile} choose={choose} positionLabel={c=>questPositionLabel(map,c)}/>
           <div className={styles.modifierSection}><h3>Node modifiers <span>{selectedTile.applications.length}</span></h3>{!selectedTile.applications.length && <p className={styles.muted}>No node modifiers recorded here.</p>}<QuestModifierGroups key={`${selected}:${map.sourceHash}:${selectedApplication??""}`} applications={selectedTile.applications} questId={map.questId} sourceHash={map.sourceHash} shareUrl={shareUrl} selectedApplication={selectedApplication} positionLabel={c=>questPositionLabel(map,c)} choose={choose}/></div>
           </>}
         </div>
       </section>
     </div>
     {otherGates.length>0&&<details className={styles.additionalGates}><summary>Additional gate requirements <span>{otherGates.length}</span></summary><p>These gates are defined for this quest; their map locations were not recorded.</p><ul>{otherGates.map(gate=><li key={gate.barrierId}><h3>{gate.label}</h3>{gate.requirements.filter(line=>line!==gate.label).map((line,index)=><p key={index}>{line}</p>)}{!gate.resolved&&<p>Full gate requirements were not captured.</p>}</li>)}</ul></details>}
-    <details className={styles.mapAbout}><summary>About this map</summary><div className={styles.summary}><span><strong>{map.paths.length}</strong> recorded routes</span><span><strong>{map.encounters.length}</strong> placed {map.encounters.length===1?'opponent':'opponents'}</span>{layer&&<span className={styles.regionSummary}><strong>{layer.regions.length}</strong> {layer.regions.length===1?'encounter region':'encounter regions'}</span>}{map.modifierCoverage?.definitionCapturedAt&&<span data-modifier-definition-date>Modifier descriptions recorded <time dateTime={map.modifierCoverage.definitionCapturedAt}>{new Intl.DateTimeFormat('en-GB',{dateStyle:'medium',timeZone:'UTC'}).format(new Date(map.modifierCoverage.definitionCapturedAt))}</time></span>}</div></details>
+    <details className={styles.mapAbout}><summary>About this map</summary><div className={styles.summary}><span><strong>{map.paths.length}</strong> recorded routes</span><span><strong>{map.encounters.length}</strong> placed {map.encounters.length===1?'opponent':'opponents'}</span>{layer&&<span className={styles.regionSummary}><strong>{layer.regions.length}</strong> {layer.regions.length===1?'encounter region':'encounter regions'}</span>}{map.details?.chestCoverage==="uncaptured"&&<span>Chest locations not recorded</span>}{map.modifierCoverage?.definitionCapturedAt&&<span data-modifier-definition-date>Modifier descriptions recorded <time dateTime={map.modifierCoverage.definitionCapturedAt}>{new Intl.DateTimeFormat('en-GB',{dateStyle:'medium',timeZone:'UTC'}).format(new Date(map.modifierCoverage.definitionCapturedAt))}</time></span>}</div></details>
   </div>;
 }

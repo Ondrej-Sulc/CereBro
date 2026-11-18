@@ -15,6 +15,7 @@ import { QuestUnplacedDefenders } from "@/components/game-quests/quest-unplaced-
 import { loadQuestSpawnRegions } from "@cerebro/core/data/game-quests/spawn-regions";
 import { projectQuestMapFeatures } from "@/lib/game-quests/map-features";
 import { QuestPathRewards } from "@/components/game-quests/quest-path-rewards";
+import { QuestPreparationSummary } from "@/components/game-quests/quest-preparation";
 type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ path?: string; node?: string; region?: string; application?: string; sourceHash?:string }> };
 export async function generateMetadata({ params }: Props) { const q = findQuest((await params).id); return { title: `${q?.name ?? "Quest not found"} | CereBro` }; }
 export default async function QuestPage({ params, searchParams }: Props) {
@@ -36,6 +37,7 @@ export default async function QuestPage({ params, searchParams }: Props) {
   const features = map ? projectQuestMapFeatures(map, portraits) : [];
   return <div className="w-full min-w-0 px-4 py-5 sm:px-8 sm:py-7">
     <QuestPageHeader quest={q} portraits={headerPortraits} map={map} />
+    <QuestPreparationSummary preparation={map?.details?.preparation}/>
     {(unplaced||parentRewards.length>0)&&<nav aria-label="Quest rewards context" className="mb-4 flex flex-wrap items-center gap-x-4 text-xs text-sky-300">
       {unplaced&&<a href="#unplaced-defender-previews" className="inline-flex min-h-11 items-center">Additional defender previews →</a>}
       {parentRewards.map(({h,act,chapter})=><Fragment key={h.actId+h.chapterId}>{act&&<Link className="inline-flex min-h-11 items-center" href={`/quests?${new URLSearchParams(q.section==="Special"?{category:"Special",collection:q.containerSetName}:{category:"Story",act:h.actId})}#act-rewards`}>{questParentRewardTitle([q],"act")}</Link>}{chapter&&<Link className="inline-flex min-h-11 items-center" href={`/quests?${new URLSearchParams({category:q.section??q.category,...(q.section==="Special"?{collection:q.containerSetName}:{act:h.actId}),chapter:h.chapterId})}#chapter-rewards`}>Chapter rewards</Link>}</Fragment>)}

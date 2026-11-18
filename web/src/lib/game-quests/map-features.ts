@@ -2,18 +2,20 @@ import { coordinateKey, type Coordinate, type QuestMap } from "@cerebro/core/dom
 import { projectRewardRow, type QuestRewardView, type QuestPortrait } from "./presentation";
 import rawPresentation from "@cerebro/core/data/game-quests/path-reward-presentation.json";
 import { nativeRewardName, type NativeRewardPresentation } from "@cerebro/core/data/game-reward-presentation";
+import { getQuestChestArtwork } from "@cerebro/core/data/game-quests/chest-artwork";
 
 const presentation = rawPresentation.rewards as Record<string, NativeRewardPresentation & { imageUrl?: string; description?: string }>;
 
 export type QuestGateView = { id: string; coordinate: Coordinate; pathIndices: number[]; label: string; kind: string; requirements: string[]; resolved: boolean };
 export type QuestPathRewardView = { id: string; coordinate: Coordinate; pathIndices: number[]; rewards: QuestRewardView[] };
-export type QuestMapFeatureLocation = { coordinate: Coordinate; gates: QuestGateView[]; pickups: QuestPathRewardView[] };
+export type QuestChestView = { id: string; coordinate: Coordinate; pathIndices: number[]; imageUrl?: string };
+export type QuestMapFeatureLocation = { coordinate: Coordinate; gates: QuestGateView[]; pickups: QuestPathRewardView[]; chests?: QuestChestView[] };
 
 export function projectQuestMapFeatures(map: QuestMap, portraits: Record<string, QuestPortrait> = {}): QuestMapFeatureLocation[] {
   const locations = new Map<string, QuestMapFeatureLocation>();
   const at = (coordinate: Coordinate) => {
     const key = coordinateKey(coordinate);
-    if (!locations.has(key)) locations.set(key, { coordinate, gates: [], pickups: [] });
+    if (!locations.has(key)) locations.set(key, { coordinate, gates: [], pickups: [], chests: [] });
     return locations.get(key)!;
   };
   for (const gate of map.features?.gates ?? []) at(gate.coordinate).gates.push({ id: gate.id, coordinate: gate.coordinate, pathIndices: gate.pathIndices,
@@ -26,5 +28,10 @@ export function projectQuestMapFeatures(map: QuestMap, portraits: Record<string,
         itemRarity: supplement.rarity ?? view.itemRarity, signaturePoints: supplement.signaturePoints ?? view.signaturePoints,
         description: supplement.description } : view;
     }) });
+  for (const chest of map.details?.chests ?? []) {
+    const artwork = getQuestChestArtwork(chest.asset);
+    at(chest.coordinate).chests!.push({ id: chest.id, coordinate: chest.coordinate, pathIndices: chest.pathIndices,
+      ...(artwork ? { imageUrl: artwork.imageUrl } : {}) });
+  }
   return [...locations.values()];
 }

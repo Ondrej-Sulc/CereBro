@@ -11,6 +11,7 @@ import { withApplicationIcons } from "./application-icons";
 import { withAct10Modifiers } from "./act10-modifiers";
 import { withQuestBossDisplay } from "./boss-display";
 import { withQuestMapFeatures } from "./map-features";
+import { withQuestDetails } from "./quest-details";
 import type { QuestSummary, QuestMap, EncounterOccurrence } from "../../domain/game-quests";
 
 const publicIds = new Set(permanentData.publicQuestIds);
@@ -38,16 +39,16 @@ export async function loadQuestMap(id: string): Promise<QuestMap | undefined> {
   if (Object.hasOwn(act10MapLoaders,id)) {
     const map = (await act10MapLoaders[id]()).default as unknown as QuestMap;
     if (map.questId !== id || map.mapId !== quest.mapId || map.sourceHash !== quest.mapSourceHash) throw new Error("Act 10 source mismatch");
-    return withQuestMapFeatures(withQuestBossDisplay(withAct10Modifiers(withApplicationIcons(map))));
+    return withQuestDetails(withQuestMapFeatures(withQuestBossDisplay(withAct10Modifiers(withApplicationIcons(map)))));
   }
   if (Object.hasOwn(progressedMapLoaders,id)) {
     const map = (await progressedMapLoaders[id as keyof typeof progressedMapLoaders]()).default as unknown as QuestMap;
     if (map.questId !== id || map.mapId !== quest.mapId || map.sourceHash !== quest.mapSourceHash) throw new Error("Quest map source mismatch");
-    return withQuestMapFeatures(withQuestBossDisplay(withApplicationIcons(map)));
+    return withQuestDetails(withQuestMapFeatures(withQuestBossDisplay(withApplicationIcons(map))));
   }
-  if (Object.hasOwn(permanentMapLoaders,id)) return withQuestMapFeatures(withQuestBossDisplay(withApplicationIcons((await permanentMapLoaders[id as keyof typeof permanentMapLoaders]()).default as unknown as QuestMap)));
+  if (Object.hasOwn(permanentMapLoaders,id)) return withQuestDetails(withQuestMapFeatures(withQuestBossDisplay(withApplicationIcons((await permanentMapLoaders[id as keyof typeof permanentMapLoaders]()).default as unknown as QuestMap))));
   if (!Object.hasOwn(mapLoaders, id)) return undefined;
-  return withQuestMapFeatures(withQuestBossDisplay(withApplicationIcons((await mapLoaders[id as keyof typeof mapLoaders]()).default as unknown as QuestMap)));
+  return withQuestDetails(withQuestMapFeatures(withQuestBossDisplay(withApplicationIcons((await mapLoaders[id as keyof typeof mapLoaders]()).default as unknown as QuestMap))));
 }
 export function findChampionEncounters(gameId: string): EncounterOccurrence[] {
   return [...encounters as EncounterOccurrence[], ...permanentData.encounters].filter(e => e.gameId === gameId && publicIds.has(e.questId));

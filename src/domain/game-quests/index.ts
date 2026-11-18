@@ -1,4 +1,5 @@
 import type { QuestMapFeatureLayer } from "./map-features";
+import type { QuestDetailsLayer } from "./quest-details";
 export type Coordinate = [number, number];
 export type ChampionIdentity = { id: number; slug: string; name: string };
 export type GameIdentity = { tierId: string; gameId: string; rarity: number; name: string; champion: ChampionIdentity | null };
@@ -35,6 +36,7 @@ export type QuestBossFlags = {
   bossIsFinalBoss:boolean;bossMetadataFinalBoss:boolean;
 };
 export type QuestMap = {
+  details?: QuestDetailsLayer;
   features?: QuestMapFeatureLayer;
   nativeBossFlags?:Record<string,QuestBossFlags>;
   modifierCoverage?: { applications: number; resolvedDefinitions: number; verifiedIcons: number; definitionCapturedAt?:string };

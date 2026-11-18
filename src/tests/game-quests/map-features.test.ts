@@ -45,7 +45,7 @@ describe("public quest map feature binding", () => {
       const actual = await loadQuestMap(quest.id);
       if (actual?.features) observed++;
     }
-    expect(observed).toBeGreaterThan(200);
+    expect(observed).toBe(questCatalog.filter(quest => quest.coverage === "full-map").length);
     const mausoleum = await loadQuestMap("me_mausoleum_ch01_q02");
     expect(mausoleum?.features?.pathRewards).toHaveLength(4);
     expect(mausoleum?.features?.pathRewards.map(pickup => pickup.rewards[0])).toEqual(Array.from({ length: 4 }, () => ({ sourceIndex: 0, type: "inv", data: "deathless_signature_stone_t7", quantity: 10, minQuantity: 10, maxQuantity: 10 })));

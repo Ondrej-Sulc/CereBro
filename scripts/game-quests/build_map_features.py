@@ -242,7 +242,9 @@ def build(public_root, original_root, supplement_root, schema_path):
     require(hashes['schema.json'] == baseline['labelEvidence']['schemaSha256'], 'Published label schema drift')
     require(hashes[baseline['labelEvidence']['file']] == baseline['labelEvidence']['sha256'], 'Published label BCG drift')
     require(hashes['current-blueprints.json'] == baseline['inputs']['current-blueprints.json'], 'Published blueprint drift')
-    public_ids = set(read(public_root / 'permanent.json')['publicQuestIds'])
+    # The runtime replaces the earlier permanent public-ID list with this merged catalog.
+    public_ids = set(read(public_root / 'progressed.json')['publicQuestIds'])
+    hashes['progressed.json'] = sha(public_root / 'progressed.json')
     catalog = read(public_root / 'catalog.json') + read(public_root / 'progressed-catalog.json')
     catalog_ids = {q['id'] for q in catalog if q['id'] in public_ids}
     maps, counts, proof = {}, Counter(), []
@@ -351,7 +353,7 @@ def main():
     parser.add_argument('--supplement-root', type=Path, default=DEFAULT_SUPPLEMENT)
     parser.add_argument('--schema', type=Path, default=REPO / 'temp/crystals/schema.json')
     parser.add_argument('--output', type=Path, default=REPO / 'src/data/game-quests/map-features.json')
-    parser.add_argument('--audit', type=Path, default=REPO / 'temp/quest-map-features-20261118/source-audit.json')
+    parser.add_argument('--audit', type=Path, default=REPO / 'temp/quest-map-features-20261118/expanded-source-audit.json')
     parser.add_argument('--verify', action='store_true')
     args = parser.parse_args()
     result, audit = build(args.public_root, args.original_root, args.supplement_root, args.schema)

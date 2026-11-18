@@ -1,0 +1,10 @@
+.section{margin-top:22px}
+.section h3{display:flex;align-items:center;gap:8px;margin:0 0 11px;color:#d4c3ec;font-size:13px;font-weight:600}
+.destinations{display:grid;gap:8px}
+.destination{display:flex;align-items:center;justify-content:space-between;gap:14px;min-height:48px;min-width:0;width:100%;padding:10px 12px;border:1px solid #65557c66;border-radius:9px;background:#271d393d;color:#cfc3e3;text-align:left;cursor:pointer;transition:background .15s,border-color .15s}
+.destination:hover{background:#4030545c;border-color:#b598d1}
+.destination:focus-visible{outline:2px solid #cfb0ef;outline-offset:3px}
+.destination span{min-width:0;overflow-wrap:anywhere}
+.destination small{display:block;margin-bottom:3px;color:#a896c3;font-size:10px;font-weight:500}
+.destination strong{font-size:12px;font-weight:550;line-height:1.5}
+.destination svg{flex-shrink:0}
