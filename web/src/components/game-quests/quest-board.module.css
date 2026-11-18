@@ -48,7 +48,7 @@
 .navigator rect{pointer-events:none}
 .navigator svg:focus-visible{outline:2px solid #b8edff;outline-offset:4px;border-radius:3px}
 .regionMarker{cursor:pointer;outline:none}
-.regionMarker:focus-visible>circle{stroke:#effffb;stroke-width:3}
+.regionMarker:focus-visible [data-map-marker-visual]>circle{stroke:#effffb;stroke-width:3}
 .regionArea{transition:opacity .15s}
 .mapKey{border-top:1px solid #40597066;background:#081522;color:#88a8bc;font-size:10px}
 .mapKey>summary{display:flex;align-items:center;justify-content:space-between;min-height:44px;padding:0 16px;list-style:none;cursor:pointer}

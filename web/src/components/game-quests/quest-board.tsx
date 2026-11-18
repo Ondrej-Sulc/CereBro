@@ -16,6 +16,7 @@ import { useQuestMapFullscreen } from "./use-quest-map-fullscreen";
 import { QuestMapPaths } from "./quest-map-paths";
 import { QuestMapEncounterMarker } from "./quest-map-encounter-marker";
 import { QuestMapWaypoint } from "./quest-map-waypoint";
+import { questMapMarkerLayout } from "./quest-map-marker-layout";
 import styles from "./quest-board.module.css";
 import type { QuestMapFeatureLocation } from "@/lib/game-quests/map-features";
 import { questFeatureLocationLabel } from "@/lib/game-quests/feature-label";
@@ -102,8 +103,9 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
   const routeEdges = new Set(highlightRoute ? path.coordinates.slice(1).map((c, i) => `${coordinateKey(path.coordinates[i])}>${coordinateKey(c)}`) : []);
   const flowDistances=useMemo(()=>questPathFlowDistances({edges:board.edges,point:board.point,starts:map.tiles.filter(tile=>tile.start).map(tile=>tile.coordinate),selectedPath:highlightRoute?path.coordinates:[]}),[board,map,highlightRoute,path]);
   const routePhases=useMemo(()=>new Map([...flowDistances].map(([key,distance])=>[key,(distance*scale)%60])),[flowDistances,scale]);
+  const markerLayout = useMemo(() => questMapMarkerLayout(map, board, featureLocations, scale, spawnRegions), [map, board, featureLocations, scale, spawnRegions]);
   const labelScale = 1 / scale;
-  const labels = useMemo(() => {const prioritized=[selectedRegion,hoveredRegion,...map.encounters.filter(e=>coordinateKey(e.coordinate)===selected||e.id===hover).map(e=>e.id)].filter((id):id is string=>typeof id==='string');return spawnRegions?regionBoardLabels(map,spawnRegions,board,prioritized,labelScale):questBoardLabels(map,prioritized,labelScale);}, [map,spawnRegions,board,selected,hover,selectedRegion,hoveredRegion,labelScale]);
+  const labels = useMemo(() => {const prioritized=[selectedRegion,hoveredRegion,...map.encounters.filter(e=>coordinateKey(e.coordinate)===selected||e.id===hover).map(e=>e.id)].filter((id):id is string=>typeof id==='string');return spawnRegions?regionBoardLabels(map,spawnRegions,board,prioritized,labelScale,markerLayout):questBoardLabels(map,prioritized,labelScale,markerLayout);}, [map,spawnRegions,board,selected,hover,selectedRegion,hoveredRegion,labelScale,markerLayout]);
   const portalTargets = new Set(board.edges.filter(e=>e.portal).map(e=>coordinateKey(e.to)));
   const positionNames=useMemo(()=>new Map(map.tiles.map(t=>{const feature=featuresByKey.get(coordinateKey(t.coordinate));return [coordinateKey(t.coordinate),feature?questFeatureLocationLabel(feature):questPositionLabel(map,t.coordinate)];})),[map,featuresByKey]);
   const zoom = (next: number) => {
@@ -157,19 +159,19 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
           {map.tiles.map(tile=>{
             const key=coordinateKey(tile.coordinate),[x,y]=board.point(tile.coordinate);
             if(board.encounters.get(key)?.length||featuresByKey.has(key))return null;
-            return <QuestMapWaypoint key={key} tile={tile} x={x} y={y} label={positionNames.get(key)!} active={!highlightRoute||routeKeys.has(key)} selected={!selectedRegion&&selected===key} portalTarget={portalTargets.has(key)} onChoose={()=>onChoose(tile.coordinate)}/>;
+            return <QuestMapWaypoint key={key} markerScale={markerLayout.scales.get(key)??1} tile={tile} x={x} y={y} label={positionNames.get(key)!} active={!highlightRoute||routeKeys.has(key)} selected={!selectedRegion&&selected===key} portalTarget={portalTargets.has(key)} onChoose={()=>onChoose(tile.coordinate)}/>;
           })}
           {map.encounters.map((encounter,index)=>{
             const key=coordinateKey(encounter.coordinate),[x,y]=board.point(encounter.coordinate),isSelected=!selectedRegion&&selected===key;
             return <QuestMapEncounterMarker key={encounter.id} encounter={encounter} portrait={questEncounterPortrait(encounter,portraits)} x={x} y={y} uid={uid} index={index}
-              boss={questEncounterIsBoss(map,encounter)}
+              boss={questEncounterIsBoss(map,encounter)} markerScale={markerLayout.scales.get(key)??1}
               selected={isSelected} active={!highlightRoute||routeKeys.has(key)} showLabel={isSelected||hover===encounter.id}
               labelBox={labels.get(encounter.id)} labelUnit={labelScale} portalTarget={portalTargets.has(key)} onChoose={()=>onChoose(encounter.coordinate)} onHover={hovered=>setHover(hovered?encounter.id:null)}
               featureBadge={featuresByKey.has(key)?<QuestMapFeatureMarker location={featuresByKey.get(key)!} x={x} y={y} compact selected={isSelected} active={!highlightRoute||routeKeys.has(key)} onChoose={()=>onChoose(encounter.coordinate)}/>:undefined}
               featureLabel={featuresByKey.has(key)?questFeatureLocationLabel(featuresByKey.get(key)!):undefined}/>;
           })}
-          {featureLocations.filter(location=>!board.encounters.get(coordinateKey(location.coordinate))?.length&&!spawnRegions?.regions.some(region=>coordinateKey(region.anchor)===coordinateKey(location.coordinate))).map(location=>{const key=coordinateKey(location.coordinate),[x,y]=board.point(location.coordinate);return <QuestMapFeatureMarker key={key} location={location} x={x} y={y} selected={!selectedRegion&&selected===key} active={!highlightRoute||routeKeys.has(key)} onChoose={()=>onChoose(location.coordinate)}/>;})}
-          {spawnRegions&&onChooseRegion&&<QuestSpawnRegionMarkers map={map} layer={spawnRegions} point={board.point} selected={selectedRegion} hovered={hoveredRegion??undefined} pathIndex={pathIndex} highlightRoute={highlightRoute} onChoose={onChooseRegion} onHover={setHoveredRegion} uid={uid} labels={labels} labelScale={labelScale}
+          {featureLocations.filter(location=>!board.encounters.get(coordinateKey(location.coordinate))?.length&&!spawnRegions?.regions.some(region=>coordinateKey(region.anchor)===coordinateKey(location.coordinate))).map(location=>{const key=coordinateKey(location.coordinate),[x,y]=board.point(location.coordinate);return <QuestMapFeatureMarker key={key} markerScale={markerLayout.scales.get(key)??1} location={location} x={x} y={y} selected={!selectedRegion&&selected===key} active={!highlightRoute||routeKeys.has(key)} onChoose={()=>onChoose(location.coordinate)}/>;})}
+          {spawnRegions&&onChooseRegion&&<QuestSpawnRegionMarkers map={map} layer={spawnRegions} point={board.point} selected={selectedRegion} hovered={hoveredRegion??undefined} pathIndex={pathIndex} highlightRoute={highlightRoute} onChoose={onChooseRegion} onHover={setHoveredRegion} uid={uid} labels={labels} labelScale={labelScale} markerScales={markerLayout.scales}
             featureLabel={coordinate=>{const feature=featuresByKey.get(coordinateKey(coordinate));return feature?questFeatureLocationLabel(feature):undefined;}}
             featureBadge={(coordinate,x,y,isSelected,active)=>{const feature=featuresByKey.get(coordinateKey(coordinate));return feature?<QuestMapFeatureMarker location={feature} x={x} y={y} compact selected={isSelected} active={active} onChoose={()=>onChoose(coordinate)}/>:null;}}/>}
         </svg>

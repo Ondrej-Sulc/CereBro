@@ -19,6 +19,7 @@ type MarkerProps = {
   active: boolean;
   onChoose: () => void;
   compact?: boolean;
+  markerScale?: number;
 };
 
 const rewardAmount = (reward: QuestRewardView) => reward.placeholder ? "" : reward.amount ?? `×${reward.quantity.toLocaleString("en")}`;
@@ -30,7 +31,7 @@ function ChestGraphic({ imageUrl }: { imageUrl?: string }) {
   </g>;
 }
 
-export function QuestMapFeatureMarker({ location, x, y, selected, active, onChoose, compact = false }: MarkerProps) {
+export function QuestMapFeatureMarker({ location, x, y, selected, active, onChoose, compact = false, markerScale = 1 }: MarkerProps) {
   const rewards = location.pickups.flatMap(pickup => pickup.rewards), firstReward = rewards[0];
   const chests = location.chests ?? [], firstChest = chests[0];
   const label = [...location.gates.map(gate => gate.resolved ? gate.label : "Gate"), ...rewards.map(reward => `Path pickup: ${reward.name}${rewardAmount(reward) ? ` · ${rewardAmount(reward)}` : ""}`), ...(firstChest ? [chests.length > 1 ? "Chests" : "Chest"] : [])].join("; ");
@@ -40,9 +41,9 @@ export function QuestMapFeatureMarker({ location, x, y, selected, active, onChoo
   const amountWidth = Math.max(28, Math.min(80, quantity.length * 5.5 + 12));
   const hitWidth = location.gates.length ? questGateMarkerWidth(location.gates[0]) + 8 : 56;
   const hitHeight = location.gates.length ? Math.max(58, questGateMarkerHeight(location.gates[0])) + 20 : 78;
-  return <g className={compact ? styles.compact : styles.marker} transform={compact ? `translate(${x + 37} ${y + 35}) scale(.65)` : `translate(${x} ${y})`} role={compact ? undefined : "button"} tabIndex={compact ? undefined : 0}
+  return <g className={compact ? styles.compact : styles.marker} transform={compact ? `translate(${x + 37} ${y + 35}) scale(.65)` : `translate(${x} ${y}) scale(${markerScale})`} role={compact ? undefined : "button"} tabIndex={compact ? undefined : 0}
     aria-label={compact ? undefined : label} aria-pressed={compact ? undefined : selected} aria-hidden={compact || undefined} pointerEvents={compact ? "none" : undefined} data-coordinate={location.coordinate.join(",")}
-    data-map-feature data-selected={selected} data-active={active}
+    data-map-feature data-selected={selected} data-active={active} data-marker-scale={markerScale}
     onClick={compact ? undefined : onChoose} onKeyDown={compact ? undefined : event => {
       if (event.key === "Enter" || event.key === " ") {
         event.preventDefault(); event.stopPropagation(); onChoose();

@@ -173,4 +173,10 @@ The map starts in Fit map mode on every screen size after its viewport has measu
 
 Full screen requests the browser's native Fullscreen API and follows `fullscreenchange`, including browser-managed exits. Escape also exits when delivered to the page. Unsupported or rejected requests use a full-window dialog with trapped keyboard focus, Escape exit and restoration of page scrolling/focus. The route picker and current selection remain available inside either full-screen view.
 
-The crosshair is labelled Focus: it zooms to a readable view and centers the selected defender, encounter-region marker or map location within map bounds, after the resized SVG commits. Overview is a labelled toggle for the working minimap. Toolbar targets are at least 44px high, including the visible phone Fit map and Full screen actions. The controls change presentation only; source coordinates, graphs, definitions and encounter identities remain unchanged.
+Zoom, Fit map and Full screen float above the map. The minimap appears automatically above fitted zoom; there are no Focus, Overview or Names toolbar buttons. Toolbar targets are at least 44px high. The controls change presentation only; source coordinates, graphs, definitions and encounter identities remain unchanged.
+
+## Adaptive map markers — November 18
+
+Defenders, encounter-region portraits, gates, pickups, chests, portals and starts scale independently from the terrain at overview zoom. Sparse placements approach a 44px portrait width; nearby important markers and map edges limit growth. Blank transit points do not constrain this sizing. The scale changes continuously with zoom, returns to the ordinary size at detail zoom, and is capped at six times the base map size for very large phone overviews.
+
+One footprint represents each native location, including any co-located feature badge. Visuals and hit targets share the same center and scale. Selected and focused nameplates keep their screen-sized text and avoid enlarged footprints. Boss decoration, native portrait clipping, route endpoints, reward quantities, identities and source data remain intact. The overview minimap retains its separate sizing.

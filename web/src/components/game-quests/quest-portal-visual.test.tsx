@@ -43,3 +43,8 @@ it("keeps start and transit waypoints free of portal art",async()=>{
  const host=await render(<QuestMapWaypoint tile={{...tile,portals:[],start:true}} x={80} y={90} label="Start" active selected={false} portalTarget={false} onChoose={vi.fn()}/>);
  expect(host.querySelector('[data-portal-artwork]')).toBeNull();expect(host.querySelector('[data-map-waypoint="start"]')).not.toBeNull();
 });
+it("keeps a blank transit dot small when an enlarged region shares its native position",async()=>{
+ const host=await render(<QuestMapWaypoint tile={{...tile,portals:[]}} x={80} y={90} label="Map location" active selected={false} portalTarget={false} markerScale={3} onChoose={vi.fn()}/>);
+ expect(host.querySelector('[data-map-waypoint="junction"]')?.getAttribute('data-marker-scale')).toBe('1');
+ expect(host.querySelector('[role="button"], [tabindex]')).toBeNull();
+});

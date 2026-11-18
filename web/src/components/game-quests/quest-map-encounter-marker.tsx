@@ -12,11 +12,11 @@ type Props = {
   x: number; y: number; uid: string; index: number; selected: boolean; active: boolean;
   showLabel: boolean; labelBox?: QuestMapLabelBox; labelUnit: number; portalTarget?: boolean; boss?: boolean;
   onChoose: () => void; onHover: (hovered: boolean) => void;
-  featureBadge?: ReactNode; featureLabel?: string;
+  featureBadge?: ReactNode; featureLabel?: string; markerScale?: number;
 };
 
 /** A captured placement; all coordinates and identity remain owned by the map. */
-export function QuestMapEncounterMarker({ encounter: e, portrait, x, y, uid, index, selected, active, showLabel, labelBox, labelUnit, portalTarget, boss, onChoose, onHover, featureBadge, featureLabel }: Props) {
+export function QuestMapEncounterMarker({ encounter: e, portrait, x, y, uid, index, selected, active, showLabel, labelBox, labelUnit, portalTarget, boss, onChoose, onHover, featureBadge, featureLabel, markerScale = 1 }: Props) {
   const label = portrait?.name ?? e.champion?.name ?? e.name;
   const isBoss = boss ?? e.final;
   const radius = e.final ? 33 : 27, portraitRadius = e.final ? 31 : 25;
@@ -24,17 +24,18 @@ export function QuestMapEncounterMarker({ encounter: e, portrait, x, y, uid, ind
   const style = { "--marker-accent": accent } as CSSProperties;
   const coordinate = e.coordinate.join(",");
   const orbitalRadius = radius + 7;
-  const bossUnit = Number.isFinite(labelUnit) && labelUnit > 0 ? labelUnit : 1;
+  const bossUnit = (Number.isFinite(labelUnit) && labelUnit > 0 ? labelUnit : 1) / markerScale;
   const bossBadgeRadius = Math.min(26, Math.max(5.5, 8 * bossUnit));
   const bossBadgeOffset = (radius + Math.min(bossBadgeRadius * .3, 5)) / Math.SQRT2;
   return <g role="button" tabIndex={0} aria-pressed={selected}
     aria-label={`${label}, ${e.rarity} stars${isBoss ? e.final ? ", final boss" : ", boss" : ""}${e.pathIndices.length > 1 ? `, shared by ${e.pathIndices.length} recorded routes` : ""}${portalTarget?", portal destination":""}${featureLabel?`, ${featureLabel}`:""}`}
     data-coordinate={coordinate} data-map-coordinate={coordinate} data-map-encounter={e.id}
-    data-selected={selected} data-active={active} data-final-boss={e.final} data-map-boss={isBoss}
+    data-selected={selected} data-active={active} data-final-boss={e.final} data-map-boss={isBoss} data-marker-scale={markerScale}
     className={styles.marker} style={style}
     onMouseEnter={() => onHover(true)} onMouseLeave={() => onHover(false)} onFocus={() => onHover(true)} onBlur={() => onHover(false)}
     onClick={onChoose} onKeyDown={event => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); onChoose(); } }}>
     <title>{`${label} · ${e.rarity}★${isBoss ? e.final ? " · Final boss" : " · Boss" : ""}`}</title>
+    <g data-map-marker-visual transform={`translate(${x} ${y}) scale(${markerScale}) translate(${-x} ${-y})`}>
     <circle data-map-hit-target aria-hidden="true" pointerEvents="all" cx={x} cy={y} r={radius + 7} fill="transparent" />
     <g aria-hidden="true" pointerEvents="none">
       <circle cx={x} cy={y + 2} r={radius + 2} fill="#010710" opacity=".92" />
@@ -65,13 +66,14 @@ export function QuestMapEncounterMarker({ encounter: e, portrait, x, y, uid, ind
         <path d={`M${x - 9} ${y + radius - 4}h18`} stroke={e.final ? "#fff0c4" : "#c5ebff"} strokeOpacity=".22" strokeWidth=".6" />
         <text data-map-rarity x={x} y={y + radius + 4} textAnchor="middle" fill={e.final ? "#30200b" : "#e0f1fc"} fontSize="9" fontWeight="700">{e.rarity}★</text>
       </g>
-      {isBoss && <QuestMapBossEmblem x={x - bossBadgeOffset} y={y - bossBadgeOffset} labelUnit={labelUnit} />}
+      {isBoss && <QuestMapBossEmblem x={x - bossBadgeOffset} y={y - bossBadgeOffset} labelUnit={bossUnit} />}
       {e.pathIndices.length > 1 && <g data-map-shared-routes transform={`translate(${x + radius - 2} ${y - radius + 3})`}>
         <circle r="8" fill="#0a2032" stroke="#6488a1" strokeWidth=".9" />
         <text y="3" textAnchor="middle" fill="#d4eafa" fontSize="8" fontWeight="650">{e.pathIndices.length}</text>
       </g>}
-      {showLabel && labelBox && <QuestMapNameplate box={labelBox} name={label} accent={accent} selected={selected} unit={labelUnit} />}
       {featureBadge}
     </g>
+    </g>
+    {showLabel && labelBox && <QuestMapNameplate box={labelBox} name={label} accent={accent} selected={selected} unit={labelUnit} />}
   </g>;
 }

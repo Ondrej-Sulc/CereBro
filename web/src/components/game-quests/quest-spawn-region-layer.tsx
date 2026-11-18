@@ -18,22 +18,25 @@ export function QuestSpawnRegionAreas({map,layer,point,selected,hovered,pathInde
   })}</g>;
 }
 
-export function QuestSpawnRegionMarkers({layer,point,selected,hovered,pathIndex,highlightRoute=true,onChoose,onHover,uid,labels,labelScale=1,featureBadge,featureLabel}:RegionProps&{
+export function QuestSpawnRegionMarkers({layer,point,selected,hovered,pathIndex,highlightRoute=true,onChoose,onHover,uid,labels,labelScale=1,featureBadge,featureLabel,markerScales}:RegionProps&{
   onChoose:(id:string)=>void;onHover:(id:string|null)=>void;uid:string;labels:Map<string,RegionLabelBox>;labelScale?:number;
   featureBadge?:(coordinate:Coordinate,x:number,y:number,selected:boolean,active:boolean)=>ReactNode;
   featureLabel?:(coordinate:Coordinate)=>string|undefined;
+  markerScales?:ReadonlyMap<string,number>;
 }){
   const [failed,setFailed]=useState<Set<string>>(new Set());
   return <g>{layer.regions.map((region,index)=>{
     const [x,y]=point(region.anchor),active=!highlightRoute||region.pathIndices.includes(pathIndex),isSelected=selected===region.id,label=isSelected||hovered===region.id?labels.get(region.id):undefined;
     const locationFeatureLabel=featureLabel?.(region.anchor);
+    const markerScale=markerScales?.get(region.anchor.join(','))??1;
     return <g key={region.id} role="button" tabIndex={0} aria-pressed={isSelected}
       aria-label={`${region.defender.name}, encounter region, ${region.coordinates.length} possible map ${region.coordinates.length===1?'position':'positions'}, ${region.defender.rarity} stars${locationFeatureLabel?`, ${locationFeatureLabel}`:""}`}
-      data-spawn-region={region.id} data-coordinate={region.anchor.join(',')} className={styles.regionMarker}
+      data-spawn-region={region.id} data-coordinate={region.anchor.join(',')} data-marker-scale={markerScale} className={styles.regionMarker}
       onClick={()=>onChoose(region.id)} onKeyDown={e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.stopPropagation();onChoose(region.id);}}}
       onMouseEnter={()=>onHover(region.id)} onMouseLeave={()=>onHover(null)} onFocus={()=>onHover(region.id)} onBlur={()=>onHover(null)}>
       <title>{`${region.defender.name} · Encounter region · Exact trigger tile varies`}</title>
       <defs><clipPath id={`${uid}-region-${index}`}><circle cx={x} cy={y} r="22"/></clipPath></defs>
+      <g data-map-marker-visual transform={`translate(${x} ${y}) scale(${markerScale}) translate(${-x} ${-y})`}>
       {isSelected&&<circle cx={x} cy={y} r="35" fill="none" stroke="#e0fff8" strokeWidth="2"/>}
       <circle cx={x} cy={y+2} r="29" fill="#020b13" opacity=".9"/>
       <circle cx={x} cy={y} r="28" fill="#102a2d" stroke="#70e2c9" strokeWidth={isSelected?2.5:1.8} strokeDasharray="4 3" opacity={active||isSelected?1:.7}/>
@@ -42,8 +45,9 @@ export function QuestSpawnRegionMarkers({layer,point,selected,hovered,pathIndex,
       {!failed.has(region.id)&&<image data-region-portrait={region.defender.gameId} href={region.defender.imageUrl} x={x-22} y={y-22} width="44" height="44" clipPath={`url(#${uid}-region-${index})`} opacity={active||isSelected?1:.8} onError={()=>setFailed(current=>new Set([...current,region.id]))}/>}
       <rect x={x-17} y={y+20} width="34" height="16" rx="5" fill="#092820" stroke="#64c9b2"/>
       <text x={x} y={y+31} textAnchor="middle" fill="#baf8e8" fontSize="10" fontWeight="600">{region.defender.rarity}★ ∼</text>
-      {label&&<QuestMapNameplate box={label} name={region.defender.name} selected={isSelected} accent="#70e2c9" unit={labelScale}/>}
       {featureBadge?.(region.anchor,x,y,isSelected,active)}
+      </g>
+      {label&&<QuestMapNameplate box={label} name={region.defender.name} selected={isSelected} accent="#70e2c9" unit={labelScale}/>}
     </g>;
   })}</g>;
 }

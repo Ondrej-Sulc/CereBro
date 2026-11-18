@@ -44,6 +44,10 @@ export function questBoardGeometry(map: QuestMap) {
 }
 
 export type QuestMapLabelBox = { x: number; y: number; width: number; height: number };
+export type QuestMapLabelObstacles = {
+  radii: ReadonlyMap<string, number>;
+  obstacles: readonly { x: number; y: number; radius: number }[];
+};
 type LabelBox = QuestMapLabelBox;
 const overlaps = (a: LabelBox, b: LabelBox) => a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
 /** Scale labels independently of the terrain so their text remains readable. */
@@ -57,14 +61,14 @@ export function questLabelCandidates(x:number,y:number,radius:number,name:string
   return bounds ? candidates.map(box=>({...box,x:Math.max(4*unit,Math.min(bounds.width-box.width-4*unit,box.x)),y:Math.max(4*unit,Math.min(bounds.height-box.height-4*unit,box.y))})) : candidates;
 }
 /** Place labels in spare space without moving any placement or covering another portrait. */
-export function questBoardLabels(map: QuestMap, prioritized: string[] = [], unit=1) {
+export function questBoardLabels(map: QuestMap, prioritized: string[] = [], unit=1, markers?: QuestMapLabelObstacles) {
   const board = questBoardGeometry(map), result = new Map<string, LabelBox>();
-  const portraits = map.encounters.map(e => { const [x,y] = board.point(e.coordinate); const radius=e.final?41:35; return { x:x-radius,y:y-radius,width:radius*2,height:radius*2 }; });
+  const portraits = markers ? markers.obstacles.map(({x,y,radius})=>({x:x-radius,y:y-radius,width:radius*2,height:radius*2})) : map.encounters.map(e => { const [x,y] = board.point(e.coordinate); const radius=e.final?41:35; return { x:x-radius,y:y-radius,width:radius*2,height:radius*2 }; });
   const order = [...map.encounters].sort((a,b) => {
     const x=prioritized.indexOf(a.id),y=prioritized.indexOf(b.id);return (x<0?999:x)-(y<0?999:y);
   });
   for (const e of order) {
-    const [x,y] = board.point(e.coordinate), radius=e.final?33:27;
+    const [x,y] = board.point(e.coordinate), radius=markers?.radii.get(coordinateKey(e.coordinate))??(e.final?33:27);
     const candidates = questLabelCandidates(x,y,radius,e.name,unit,board);
     const box = candidates.find(c => c.x>=0&&c.y>=0&&c.x+c.width<=board.width&&c.y+c.height<=board.height
       && !portraits.some(p=>overlaps(c,p)) && ![...result.values()].some(p=>overlaps(c,p)));
