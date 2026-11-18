@@ -42,8 +42,9 @@ Defenders at recorded portal destinations use the same ring treatment around
 their unchanged portrait. The automatic overview and map key use `PortalSmall`;
 overview markers are derived only from recorded source/target tiles. Connections,
 destinations, route membership and keyboard selection remain owned by quest data.
-Portal-only sources, random entrances and destinations omit combat modifiers in
-the location details. A defender sharing that location retains its modifiers.
+Location details show combat modifiers for placed defenders and recorded
+encounter-region tiles. Empty starts, finishes, transit points and portal-only
+locations omit them. A defender sharing a path feature retains its modifiers.
 
 Reproduce from the existing offline artwork library and installed static assets:
 

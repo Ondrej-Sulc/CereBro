@@ -38,7 +38,7 @@ export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}
   const selectedEncounters = map.encounters.filter(e => coordinateKey(e.coordinate) === selected);
   const selectedBoss = selectedEncounters.some(encounter=>questEncounterIsBoss(map,encounter));
   const selectedFeatures = featureLocations.find(location => coordinateKey(location.coordinate) === selected);
-  const selectedPortal = selectedTile.randomPortal || selectedTile.portals.length > 0 || map.tiles.some(tile => tile.portals.some(portal => coordinateKey(portal.target) === selected));
+  const selectedRegionTile = layer?.regions.some(region => region.coordinates.some(coordinate => coordinateKey(coordinate) === selected)) ?? false;
   const featureHeading = selectedFeatures?.swaps?.length ? selectedFeatures.gates.length || selectedFeatures.pickups.length || selectedFeatures.chests?.length ? "Path features" : "Champion swap" : selectedFeatures?.chests?.length ? selectedFeatures.gates.length || selectedFeatures.pickups.length ? "Path features" : "Chest" : selectedFeatures?.gates.length ? selectedFeatures.pickups.length ? "Gate & path reward" : "Gate" : "Path reward";
   const otherGates = [...new Map((map.features?.unplacedGateDefinitions ?? []).map(gate => [JSON.stringify([gate.kind,gate.label,gate.requirements]),gate])).values()];
   function commit(c:Coordinate,center:boolean,route:number,region?:string,highlight=latestSelection.current.highlight){
@@ -108,7 +108,7 @@ export function QuestMapExplorer({ map, initialPath, initialNode, portraits = {}
           {!selectedEncounters.length&&!selectedFeatures && <p className={styles.muted}>No placed defender recorded here.</p>}
           {selectedFeatures&&<QuestMapFeatureDetails location={selectedFeatures}/>}
           <QuestPortalDetails tile={selectedTile} choose={choose} positionLabel={c=>questPositionLabel(map,c)}/>
-          {((!selectedFeatures && !selectedPortal) || selectedEncounters.length > 0) && <div className={styles.modifierSection}><h3>Node modifiers <span>{selectedTile.applications.length}</span></h3>{!selectedTile.applications.length && <p className={styles.muted}>No node modifiers recorded here.</p>}<QuestModifierGroups key={`${selected}:${map.sourceHash}:${selectedApplication??""}`} applications={selectedTile.applications} questId={map.questId} sourceHash={map.sourceHash} shareUrl={shareUrl} selectedApplication={selectedApplication} positionLabel={c=>questPositionLabel(map,c)} choose={choose}/></div>}
+          {(selectedEncounters.length > 0 || (!selectedFeatures && selectedRegionTile)) && <div className={styles.modifierSection}><h3>Node modifiers <span>{selectedTile.applications.length}</span></h3>{!selectedTile.applications.length && <p className={styles.muted}>No node modifiers recorded here.</p>}<QuestModifierGroups key={`${selected}:${map.sourceHash}:${selectedApplication??""}`} applications={selectedTile.applications} questId={map.questId} sourceHash={map.sourceHash} shareUrl={shareUrl} selectedApplication={selectedApplication} positionLabel={c=>questPositionLabel(map,c)} choose={choose}/></div>}
           </>}
         </div>
       </section>

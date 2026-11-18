@@ -55,6 +55,17 @@ describe("spawn-region map presentation",()=>{
     expect(host.querySelector('[data-region-inspector]')).not.toBeNull();
     expect(marker.getAttribute('aria-pressed')).toBe("true");
   });
+  it("retains tile modifiers when inspecting a possible regional fight position",async()=>{
+    const {host,map,layer}=await setup("fixture-region");
+    const before=JSON.stringify(map),coordinate=layer.regions[0].anchor;
+    expect(map.encounters.some(encounter=>encounter.coordinate.join(',')===coordinate.join(','))).toBe(false);
+    expect(map.tiles.find(tile=>tile.coordinate.join(',')===coordinate.join(','))!.applications.length).toBeGreaterThan(0);
+    await act(async()=>host.querySelector<HTMLButtonElement>('[data-region-inspector] button')!.click());
+    expect(host.querySelector('[data-region-inspector]')).toBeNull();
+    expect(host.querySelector('section[aria-labelledby="coordinate-heading"]')?.textContent).toContain("Node modifiers");
+    expect(new URL(window.location.href).searchParams.get('node')).toBe(coordinate.join(','));
+    expect(JSON.stringify(map)).toBe(before);
+  });
   it("keeps regions selectable on the map across route changes without a duplicate opponent list",async()=>{
     vi.spyOn(HTMLElement.prototype,'clientWidth','get').mockReturnValue(390);
     vi.spyOn(HTMLElement.prototype,'clientHeight','get').mockReturnValue(560);

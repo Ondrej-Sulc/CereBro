@@ -46,8 +46,14 @@ it.each([
   expect(JSON.stringify(map)).toBe(before);
 });
 
-it.each(["0,0", "4,0"])("retains combat details for a defender sharing portal position %s", async coordinate => {
+it.each([
+  ["portal source", "0,0", false],
+  ["portal destination", "4,0", false],
+  ["start", "8,0", true],
+  ["ordinary tile", "8,0", false],
+] as const)("retains combat details for a defender on a %s", async (_kind, coordinate, start) => {
   const map = portalMap(), tile = map.tiles.find(tile => tile.coordinate.join(",") === coordinate)!;
+  tile.start = start;
   map.encounters.push({ id: "defender", coordinate: tile.coordinate, bossKey: "defender", tierId: "tier", gameId: "champion", rarity: 7,
     name: "Recorded defender", champion: null, rank: 1, level: 1, signature: 0, ascension: 0, final: false, candidates: [], pathIndices: [0] });
   const inspector = await inspect(map, coordinate);
@@ -55,6 +61,16 @@ it.each(["0,0", "4,0"])("retains combat details for a defender sharing portal po
   expect(inspector.textContent).toContain("Node modifiers");
 });
 
-it("retains the existing modifier view on ordinary transit locations", async () => {
-  expect((await inspect(portalMap(), "8,0")).textContent).toContain("Node modifiers");
+it.each([
+  ["transit", false, false],
+  ["start", true, false],
+  ["finish", false, true],
+] as const)("hides combat modifiers on empty %s locations", async (_kind, start, final) => {
+  const map = portalMap();
+  Object.assign(map.tiles[2], { start, final });
+  const before = JSON.stringify(map), inspector = await inspect(map, "8,0");
+  expect(inspector.textContent).not.toContain("Node modifiers");
+  if (start) expect(inspector.textContent).toContain("Quest start");
+  if (final) expect(inspector.textContent).toContain("Quest finish");
+  expect(JSON.stringify(map)).toBe(before);
 });

@@ -53,6 +53,20 @@ it("keeps uncaptured path rewards distinct from a known empty list", async () =>
   expect(host.textContent).toBe("");
 });
 
+it("omits inherited combat modifiers at a recorded quest start", async () => {
+  const map = (await loadQuestMap("me_mausoleum_ch01_q02"))!;
+  const start = map.tiles.find(tile => tile.start)!;
+  expect(start.applications.length).toBeGreaterThan(0);
+  const before = JSON.stringify(map);
+  window.history.replaceState(null, "", `/quests/${map.questId}`);
+  const host = document.createElement("div"); document.body.append(host); root = createRoot(host);
+  await act(async () => root!.render(<QuestMapExplorer map={map} initialNode={start.coordinate.join(",")} featureLocations={projectQuestMapFeatures(map)}/>));
+  const inspector = host.querySelector('section[aria-labelledby="coordinate-heading"]')!;
+  expect(inspector.textContent).toContain("Quest start");
+  expect(inspector.textContent).not.toContain("Node modifiers");
+  expect(JSON.stringify(map)).toBe(before);
+}, 60000);
+
 it("shows a real path chest while preserving the source map", async () => {
   const map=(await loadQuestMap("a04_ch01_q01"))!;
   const chest=map.details!.chests.find(chest=>chest.coordinate.join(',')==='3,5')!;
