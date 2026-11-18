@@ -28,6 +28,13 @@ describe("champion sections follow recorded content", () => {
     expect(getChampionSectionAvailability({ ...view, champion: { ...view.champion, hasQuestEncounters: true } }).sections).toEqual([{ value: "overview", label: "Overview" }])
     expect(getChampionSectionAvailability({ ...view, champion: { ...view.champion, tags: [{ id: 1, name: "Boss", category: null }] } }).sections).toEqual([{ value: "overview", label: "Overview" }])
   })
+  it("prefers full abilities over an overview containing only tags or quest links", () => {
+    const descriptions = prepareChampionAbilityTextView({ records: [{ id: 2, group: "base", title: "Abilities", template: { raw: "Gain Fury." } }] })
+    const sparse = getChampionSectionAvailability({ ...view, descriptionView: descriptions, champion: { ...view.champion, hasQuestEncounters: true, tags: [{ id: 1, name: "Boss", category: null }] } })
+    expect(sparse.sections.map(section => section.value)).toEqual(["overview", "abilities"])
+    expect(sparse.defaultSection).toBe("abilities")
+    expect(getChampionSectionAvailability(view).defaultSection).toBe("overview")
+  })
   it("distinguishes attacks-only data from empty move shells", () => {
     const attack = { id: 1, type: "L1" as const, hits: [{ id: 1, properties: [] }] }
     expect(getChampionSectionAvailability({ ...view, champion: { ...view.champion, attacks: [attack] } }).sections).toEqual([{ value: "stats", label: "Attacks" }])

@@ -17,9 +17,10 @@ export type ChampionPageState = {
 export const CHAMPION_SYNERGY_HASH_PREFIX = "#champion-synergy-"
 
 /** Preserve build/filter context when an old link points to an unrecorded section. */
-export function resolveChampionPageSection(state: ChampionPageState, available: readonly ChampionSection[]): ChampionPageState {
+export function resolveChampionPageSection(state: ChampionPageState, available: readonly ChampionSection[], defaultSection?: ChampionSection): ChampionPageState {
   if (available.includes(state.tab)) return state
-  return { ...state, tab: available[0] ?? "overview", ability: null, chapter: null, synergy: null }
+  const fallback = defaultSection && available.includes(defaultSection) ? defaultSection : available[0] ?? "overview"
+  return { ...state, tab: fallback, ability: null, chapter: null, synergy: null }
 }
 
 function validSynergyId(value: string | null) {
@@ -34,12 +35,12 @@ export function readChampionSynergyHash(hash: string) {
 
 type StatTier = { rarity: number | null; rank: number }
 
-export function readChampionPageState(params: Pick<URLSearchParams, "get">, stats: StatTier[], ascensionRules?: ReadonlyArray<Pick<ChampionAscensionRules, "rarity" | "maxLevel">>): ChampionPageState {
+export function readChampionPageState(params: Pick<URLSearchParams, "get">, stats: StatTier[], ascensionRules?: ReadonlyArray<Pick<ChampionAscensionRules, "rarity" | "maxLevel">>, defaultSection: ChampionSection = "overview"): ChampionPageState {
   const rarities = [...new Set(stats.flatMap(stat => stat.rarity ? [stat.rarity] : []))].sort((a, b) => b - a)
   const rarity = rarities.find(value => String(value) === params.get("rarity")) ?? rarities[0]
   const ranks = [...new Set(stats.filter(stat => stat.rarity === rarity).map(stat => stat.rank))].sort((a, b) => b - a)
   const rank = ranks.find(value => String(value) === params.get("rank")) ?? ranks[0]
-  const tab = CHAMPION_SECTIONS.find(value => value === params.get("tab")) ?? "overview"
+  const tab = CHAMPION_SECTIONS.find(value => value === params.get("tab")) ?? defaultSection
   const integer = (key: string, fallback: number) => {
     const value = params.get(key)
     return value && /^-?\d+$/.test(value) && Number.isSafeInteger(Number(value)) ? Number(value) : fallback

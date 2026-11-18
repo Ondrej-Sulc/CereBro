@@ -38,5 +38,6 @@ export function getChampionSectionAvailability(view: Pick<ChampionDetailsView, "
   if (hasSynergies) sections.push({ value: "synergies", label: "Synergies" })
   if (hasStats || hasAttacks) sections.push({ value: "stats", label: hasStats && hasAttacks ? "Stats & attacks" : hasStats ? "Stats" : "Attacks" })
   if (hasAcquisition) sections.push({ value: "crystals", label: "How to obtain" })
-  return { sections, hasKit, hasStats, hasAttacks }
+  const defaultSection: ChampionSection = !hasKit && hasAbilityPanels ? "abilities" : sections[0]?.value ?? "overview"
+  return { sections, defaultSection, hasKit, hasStats, hasAttacks }
 }

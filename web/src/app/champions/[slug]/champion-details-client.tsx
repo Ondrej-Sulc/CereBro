@@ -41,8 +41,8 @@ export function ChampionDetailsClient(props: ChampionDetailsProps) {
   const rankByRarity = useRef<Record<string, string>>({})
   const updatePageState = (patch: Partial<ChampionPageState>, push = false) => {
     const url = new URL(window.location.href)
-    const current = readChampionPageState(url.searchParams, stats, champion.ascensionRules)
-    const next = resolveChampionPageSection(readChampionPageState(championPageSearchParams(url.search, { ...current, ...patch }), stats, champion.ascensionRules), availableSections)
+    const current = readChampionPageState(url.searchParams, stats, champion.ascensionRules, availability.defaultSection)
+    const next = resolveChampionPageSection(readChampionPageState(championPageSearchParams(url.search, { ...current, ...patch }), stats, champion.ascensionRules, availability.defaultSection), availableSections, availability.defaultSection)
     const changesDestination = patch.tab !== undefined || patch.ability !== undefined || patch.chapter !== undefined || patch.synergy !== undefined
     const href = championPageHref(url.href, next, changesDestination)
     if (push) window.history.pushState(null, "", href)
@@ -119,17 +119,17 @@ export function ChampionDetailsClient(props: ChampionDetailsProps) {
 
   const availability = getChampionSectionAvailability({ champion, descriptionView, glossaryById })
   const availableSections = availability.sections.map(section => section.value)
-  const visiblePageState = resolveChampionPageSection(pageState, availableSections)
+  const visiblePageState = resolveChampionPageSection(readChampionPageState(searchParams, stats, champion.ascensionRules, availability.defaultSection), availableSections, availability.defaultSection)
   const sectionKey = availableSections.join(",")
   const requestedTab = searchParams.get("tab")
   useEffect(() => {
     if (!requestedTab || sectionKey.split(",").includes(requestedTab)) return
     const url = new URL(window.location.href)
-    const current = readChampionPageState(url.searchParams, stats, champion.ascensionRules)
-    const next = resolveChampionPageSection(current, sectionKey ? sectionKey.split(",") as ChampionPageState["tab"][] : [])
+    const current = readChampionPageState(url.searchParams, stats, champion.ascensionRules, availability.defaultSection)
+    const next = resolveChampionPageSection(current, sectionKey ? sectionKey.split(",") as ChampionPageState["tab"][] : [], availability.defaultSection)
     const href = championPageHref(url.href, next)
     if (href !== `${url.pathname}${url.search}${url.hash}`) window.history.replaceState(null, "", href)
-  }, [requestedTab, sectionKey, stats, champion.ascensionRules])
+  }, [requestedTab, sectionKey, stats, champion.ascensionRules, availability.defaultSection])
   return <TooltipProvider><ChampionDossier key={champion.id} view={view} availability={availability} pageState={visiblePageState} updatePageState={updatePageState} /></TooltipProvider>
 }
 

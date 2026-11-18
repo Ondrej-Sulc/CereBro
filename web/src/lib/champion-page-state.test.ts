@@ -5,6 +5,15 @@ const stats = [{ rarity: 6, rank: 4 }, { rarity: 7, rank: 6 }, { rarity: 7, rank
 const read = (query: string) => readChampionPageState(new URLSearchParams(query), stats)
 
 describe("shared champion page state", () => {
+  it("uses a content-aware default while preserving explicit section links and build state", () => {
+    const readSparse = (query: string) => readChampionPageState(new URLSearchParams(query), stats, undefined, "abilities")
+    expect(readSparse("rarity=7&rank=5&sig=75")).toMatchObject({tab:"abilities",rarity:"7",rank:"5",sig:75})
+    expect(readSparse("tab=overview").tab).toBe("overview")
+    expect(readSparse("tab=stats").tab).toBe("stats")
+    expect(readSparse("tab=unknown").tab).toBe("abilities")
+    expect(resolveChampionPageSection(readSparse("tab=synergies&synergy=old"), ["overview","abilities"], "abilities")).toMatchObject({tab:"abilities",synergy:null})
+    expect(resolveChampionPageSection(readSparse("tab=stats"), ["overview"], "abilities").tab).toBe("overview")
+  })
   it("redirects unavailable sections without losing build or unrelated URL context", () => {
     const state = read("tab=synergies&synergy=old&rarity=7&rank=5&sig=75")
     const fallback = resolveChampionPageSection(state, ["abilities"])

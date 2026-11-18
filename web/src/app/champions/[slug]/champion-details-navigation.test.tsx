@@ -581,13 +581,26 @@ it("uses the header edge for docking identity and initializes restored scroll be
 })
 
 
+it("opens full abilities without curated kit effects and still honors explicit overview links", async () => {
+  const sparse: ChampionDetailsProps = { ...props, champion: { ...props.champion, isPlayable: false, stats: [], attacks: [], abilities: [], gameSynergies: [], hasQuestEncounters: true } }
+  window.history.replaceState(null, "", "/champions/current")
+  await act(async () => root.render(<ChampionDetailsClient {...sparse} />))
+  expect(document.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toBe("Full abilities")
+  expect(document.querySelector('[aria-label="Full ability descriptions"]')).not.toBeNull()
+  expect(window.location.search).toBe("")
+  await act(async () => window.history.replaceState(null, "", "/champions/current?tab=overview"))
+  expect(document.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toBe("Overview")
+  await click("Full abilities")
+  expect(new URLSearchParams(window.location.search).get("tab")).toBe("abilities")
+})
+
 it("hides unavailable sections in desktop and mobile navigation and replaces a stale tab link", async () => {
   const sparse: ChampionDetailsProps = { ...props, champion: { ...props.champion, isPlayable: false, stats: [], attacks: [], abilities: [], gameSynergies: [], hasQuestEncounters: true } }
   window.history.replaceState(null, "", "/champions/current?tab=synergies&synergy=old&ref=kept#champion-synergy-old")
   await act(async () => root.render(<ChampionDetailsClient {...sparse} />))
   const tabs = [...document.querySelectorAll('[role="tab"]')].map(tab => tab.textContent)
   expect(tabs).toEqual(["Overview", "Full abilities"])
-  expect(new URLSearchParams(window.location.search).get("tab")).toBe("overview")
+  expect(new URLSearchParams(window.location.search).get("tab")).toBe("abilities")
   expect(window.location.search).toContain("ref=kept")
   expect(window.location.hash).toBe("")
   const dialog = await openSectionPicker()
