@@ -20,6 +20,12 @@ const nativeRows = (value: unknown) => Array.isArray(value) ? value.filter((r): 
 const namesById = portraitNames.bindings as Record<string, { public?: { name?: string } | null }>;
 const defenderName = (id: string, fallback: string) => portraitNames.bcgSha256 === nodeIndex.profile.bcgSha256 ? namesById[id]?.public?.name ?? fallback : fallback;
 
+// Key traversal assigns the packed location IDs, so use the same order on every host.
+function compareKeys([left]: [string, unknown], [right]: [string, unknown]) {
+  if (left < right) return -1;
+  return left === right ? 0 : 1;
+}
+
 export async function buildDiscovery(): Promise<GameDiscovery> {
   const result: GameDiscovery = { version: 1, nodeCatalogHash: nodeIndex.catalogHash, coverage: { quests: 0, towerBlocks: 0 }, nodes: {}, rewards: {} };
   const nodeDestinations = new Map<string, Set<string>>();
@@ -132,7 +138,7 @@ export async function buildDiscovery(): Promise<GameDiscovery> {
       addTowerRewards(f.sourceData.rewards, "Floor rewards", context, `floor-${f.floorNumber}`, f.floorNumber);
     }
   }
-  result.nodes = Object.fromEntries(Object.entries(result.nodes).sort(([a], [b]) => a.localeCompare(b)));
-  result.rewards = Object.fromEntries(Object.entries(result.rewards).sort(([a], [b]) => a.localeCompare(b)));
+  result.nodes = Object.fromEntries(Object.entries(result.nodes).sort(compareKeys));
+  result.rewards = Object.fromEntries(Object.entries(result.rewards).sort(compareKeys));
   return result;
 }
