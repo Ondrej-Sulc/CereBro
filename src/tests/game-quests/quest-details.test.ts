@@ -39,9 +39,12 @@ describe("quest preparation and chest definitions", () => {
   });
 
   it("rejects account state, invented contents, machine paths and zero-sized teams at the strict boundary", () => {
-    expect(() => applyQuestDetails(map, { ...layer, preparation: { ...layer.preparation, eligible: true } })).toThrow();
-    expect(() => applyQuestDetails(map, { ...layer, chests: [{ ...layer.chests[0], collected: true }] })).toThrow();
-    expect(() => applyQuestDetails(map, { ...layer, chests: [{ ...layer.chests[0], contents: [{ type: "inv", data: "gold", quantity: 3 }] }] })).toThrow();
+    const preparationWithAccountState = { ...layer.preparation, eligible: true };
+    const collectedChest = { ...layer.chests[0], collected: true };
+    const chestWithContents = { ...layer.chests[0], contents: [{ type: "inv", data: "gold", quantity: 3 }] };
+    expect(() => applyQuestDetails(map, { ...layer, preparation: preparationWithAccountState })).toThrow();
+    expect(() => applyQuestDetails(map, { ...layer, chests: [collectedChest] })).toThrow();
+    expect(() => applyQuestDetails(map, { ...layer, chests: [chestWithContents] })).toThrow();
     expect(() => applyQuestDetails(map, { ...layer, preparation: { ...layer.preparation, maxTeamSize: 0 } })).toThrow();
     expect(() => applyQuestDetails(map, { ...layer, preparation: { ...layer.preparation, minTeamSize: 6 } })).toThrow(/team size range/);
     expect(() => applyQuestDetails(map, { ...layer, preparation: { ...layer.preparation, source: { ...source, file: "C:/private/map.json" } } })).toThrow();
