@@ -5,6 +5,7 @@ import features from "../../data/game-quests/map-features.json";
 import { projectQuestMapFeatures } from "../../../web/src/lib/game-quests/map-features";
 import { questGateChampionGameIds, projectQuestGatePortraits } from "../../../web/src/lib/game-quests/gate-presentation";
 import type { QuestPortrait } from "../../../web/src/lib/game-quests/presentation";
+import { questTagGateLayout, QUEST_TAG_GATE_PADDING, QUEST_TAG_GATE_RADIUS } from "../../domain/game-quests/gate-tag-layout";
 
 const layers = Object.values(features.maps) as unknown as QuestMapFeatureLayer[];
 const gates = layers.flatMap(layer => layer.gates);
@@ -52,11 +53,26 @@ describe("source-bound quest gate visuals", () => {
   it("preserves OR groups, AND terms, and negation in tag captions", () => {
     const sample = gates.find(gate => gate.kind === "tags")!;
     const tagged = (tags: string[]) => ({ ...sample, constraints: { ...sample.constraints!, tags } });
-    expect(visual(tagged(["chemical", "tech"]))).toMatchObject({ kind: "tags", images: [{ src: "/assets/icons/Science.png", label: "Science" }, { src: "/assets/icons/Tech.png", label: "Tech" }], caption: "Science or Tech" });
-    expect(visual(tagged(["tg_vill:tg_gam"]))).toMatchObject({ kind: "tags", images: [], caption: "Villain and Gamma" });
-    expect(visual(tagged(["tg_2015:!tg_met"])).caption).toBe("2015 and not Metal");
+    expect(visual(tagged(["chemical", "tech"]))).toMatchObject({ kind: "tags", images: [{ src: "/assets/icons/Science.png", label: "Science" }, { src: "/assets/icons/Tech.png", label: "Tech" }], caption: "#Science or #Tech" });
+    expect(visual(tagged(["tg_vill:tg_gam"]))).toMatchObject({ kind: "tags", images: [], caption: "#Villain and #Gamma", tagGroups: [[{ label: "Villain", negated: false }, { label: "Gamma", negated: false }]] });
+    expect(visual(tagged(["tg_2015:!tg_met"])).caption).toBe("#2015 and not #Metal");
     expect(visual(tagged(["cosmic:tg_hero:typ_def_uti"])).images).toEqual([]);
     expect(visual(tagged(["unknown_tech_tag"])).kind).toBe("unknown");
+  });
+
+  it("retains complete tag groups, exclusions and labels inside the reserved map footprint", () => {
+    for (const gate of gates.filter(gate => gate.kind === "tags")) {
+      const actual = visual(gate);
+      if (actual.images.length) { expect(actual.tagGroups).toBeUndefined(); continue; }
+      expect(actual.tagGroups!.map(group => group.length)).toEqual(gate.constraints!.tags!.map(group => group.split(":").length));
+      const layout = questTagGateLayout(actual.tagGroups!);
+      const content = layout.rows.map(row => row.text).join(" ");
+      for (const group of actual.tagGroups!) for (const term of group) expect(content).toContain(`${term.negated ? "not " : ""}#${term.label}`);
+      expect(content).not.toContain("…");
+      expect(Math.hypot(layout.width / 2 + 5, layout.height / 2 + 5), gate.id).toBeLessThanOrEqual(QUEST_TAG_GATE_RADIUS);
+      expect(layout.width / 2 + 10).toBeLessThanOrEqual(QUEST_TAG_GATE_PADDING);
+      expect(layout.height / 2 + 10).toBeLessThanOrEqual(QUEST_TAG_GATE_PADDING);
+    }
   });
 
   it("shows exact resource names, quantities, and available native artwork", () => {

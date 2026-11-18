@@ -3,6 +3,8 @@
 import { useId, useState, type CSSProperties } from "react";
 import { KeyRound, Tags, UserRound, Waypoints } from "lucide-react";
 import type { QuestGateView } from "@/lib/game-quests/map-features";
+import { questTagGateLayout } from "@cerebro/core/domain/game-quests/gate-tag-layout";
+import { QuestTagGate } from "./quest-tag-gate";
 import styles from "./quest-map-features.module.css";
 
 function captionLines(caption: string): string[] {
@@ -30,6 +32,7 @@ export function QuestGateMarker({ gate }: { gate: QuestGateView }) {
   const lines = captionLines(caption);
   const Fallback = kind === "champion" ? UserRound : kind === "resource" ? KeyRound : kind === "switch" ? Waypoints : Tags;
   const imageSize = images.length === 1 ? 44 : images.length === 2 ? 30 : 23;
+  if (kind === "tags" && visual?.tagGroups?.length) return <QuestTagGate groups={visual.tagGroups} caption={caption} countLabel={visual.countLabel}/>;
   return <g data-gate-kind={kind} aria-hidden="true" style={{ "--gate-accent": color } as CSSProperties}>
     <desc>{caption}</desc>
     <defs><clipPath id={`gate-face-${id}`}><path d={frame}/></clipPath></defs>
@@ -52,6 +55,11 @@ export function QuestGateMarker({ gate }: { gate: QuestGateView }) {
 }
 
 export function questGateMarkerWidth(gate: QuestGateView, imageCount = gate.visual?.images.length ?? 0): number {
+  if (gate.resolved && gate.visual?.tagGroups?.length) return questTagGateLayout(gate.visual.tagGroups).width;
   if (!gate.resolved || !imageCount && gate.visual?.kind !== "rarity") return 136;
   return imageCount > 1 ? 88 : 54;
+}
+
+export function questGateMarkerHeight(gate: QuestGateView): number {
+  return gate.resolved && gate.visual?.tagGroups?.length ? questTagGateLayout(gate.visual.tagGroups).height : 58;
 }

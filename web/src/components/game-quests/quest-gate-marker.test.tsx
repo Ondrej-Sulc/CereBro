@@ -55,6 +55,21 @@ it("preserves alternative-class wording on the marker itself",async()=>{
  const host=await render({...gate,kind:"tags",visual:{kind:"tags",images:[{src:"/cosmic.png",label:"Cosmic"},{src:"/mystic.png",label:"Mystic"}],countLabel:"≥2",caption:"Cosmic or Mystic"}});
  expect(host.querySelectorAll('image')).toHaveLength(2);expect(host.textContent).toContain('Cosmic or Mystic');
 });
+it("shows full hashtag labels and explicit exclusions in readable tag rows",async()=>{
+ const host=await render({...gate,kind:"tags",visual:{kind:"tags",images:[],countLabel:"≥3",caption:"#Hero and #Flying and not #Defensive: Guard",tagGroups:[[{label:"Hero",negated:false},{label:"Flying",negated:false},{label:"Defensive: Guard",negated:true}]]}});
+ const rows=[...host.querySelectorAll('[data-gate-tag-row]')];
+ expect(rows.map(row=>row.textContent).join(' ')).toBe('#Hero and #Flying and not #Defensive: Guard');
+ expect(host.textContent).toContain('≥3 champions');
+ expect(host.textContent).not.toContain('…');
+ expect(host.querySelector('[data-tag-gate]')).not.toBeNull();
+ const alpha=await raster(host.querySelector('[data-tag-gate] > path')!.outerHTML);
+ expect(alpha(-55,35)).toBe(255);expect(alpha(55,35)).toBe(255);
+});
+it("keeps AND groups visibly separate when they are OR alternatives",async()=>{
+ const host=await render({...gate,kind:"tags",visual:{kind:"tags",images:[],countLabel:"≥3",caption:"(#Mystic and #X-Magica) or (#Mystic and #Provocateur)",tagGroups:[[{label:"Mystic",negated:false},{label:"X-Magica",negated:false}],[{label:"Mystic",negated:false},{label:"Provocateur",negated:false}]]}});
+ const rows=[...host.querySelectorAll('[data-gate-tag-row]')].map(row=>row.textContent);
+ expect(rows).toEqual(['#Mystic','and #X-Magica','or','#Mystic','and #Provocateur']);
+});
 it("shows the actual resource and amount and falls back safely when an image fails",async()=>{
  const host=await render({...gate,kind:"resource",visual:{kind:"resource",images:[{src:"/temporal-shard.png",label:"Temporal Shard"}],countLabel:"×5",caption:"Temporal Shard"}});
  expect(host.textContent).toContain('×5');expect(host.textContent).toContain('Temporal Shard');

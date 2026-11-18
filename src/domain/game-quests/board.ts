@@ -1,8 +1,9 @@
 import { coordinateKey, type Coordinate, type QuestMap } from "./index";
+import { QUEST_TAG_GATE_PADDING, QUEST_TAG_GATE_RADIUS } from "./gate-tag-layout";
 
 /** Presentation transform only: all endpoints retain the captured coordinate. */
 export function questBoardGeometry(map: QuestMap) {
-  const padding = 76;
+  let padding = 76;
   let pitch = 22;
   // Keep native geometry linear while leaving room for distinct map objects.
   const anchors = new Map(map.encounters.map(encounter => [coordinateKey(encounter.coordinate), { coordinate: encounter.coordinate, radius: encounter.final ? 33 : 27 }]));
@@ -10,7 +11,8 @@ export function questBoardGeometry(map: QuestMap) {
   for (const gate of map.features?.gates ?? []) {
     const tags = gate.constraints?.tags ?? [];
     const simpleClasses = gate.kind === "tags" && tags.length > 0 && tags.every(tag => classIds.has(tag));
-    const radius = gate.kind === "tags" ? simpleClasses ? 50 : 78 : gate.kind === "resource" || gate.kind === "switch" || gate.kind === "unknown" ? 78 : 33;
+    const radius = gate.kind === "tags" ? simpleClasses ? 50 : QUEST_TAG_GATE_RADIUS : gate.kind === "resource" || gate.kind === "switch" || gate.kind === "unknown" ? 78 : 33;
+    if (gate.kind === "tags" && !simpleClasses) padding = Math.max(padding, QUEST_TAG_GATE_PADDING);
     const key = coordinateKey(gate.coordinate), previous = anchors.get(key);
     anchors.set(key, { coordinate: gate.coordinate, radius: Math.max(radius, previous?.radius ?? 0) });
   }

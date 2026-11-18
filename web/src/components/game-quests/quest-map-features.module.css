@@ -37,3 +37,10 @@
 .gateLock circle{fill:#181c20;stroke:#e0bc7a;stroke-width:1.2}
 .gateLock path{fill:none;stroke:#f1d69d;stroke-width:1.3;stroke-linecap:round;stroke-linejoin:round}
 .gateAlternative{fill:#b8c8d9;font-size:8px;font-weight:600;font-family:var(--font-geist-sans),Arial,sans-serif}
+.tagGateLock{color:#d3af71;stroke-width:1.6}
+.tagGateHeading{fill:#d3b982;font-size:9px;font-weight:600;font-family:var(--font-geist-sans),Arial,sans-serif;letter-spacing:.02em}
+.tagGateDivider{fill:none;stroke:#bfa26a;stroke-opacity:.24;stroke-width:.8}
+.tagGateLabel,.tagGateExcluded{fill:#e0edf5;font-size:11.5px;font-weight:600;font-family:var(--font-geist-sans),Arial,sans-serif}
+.tagGateExcluded{fill:#edb6ad}
+.tagGateConnector{fill:#8fa8bc;font-size:9.5px;font-family:var(--font-geist-sans),Arial,sans-serif}
+.tagGateBracket{fill:none;stroke:#a38d69;stroke-opacity:.5;stroke-width:1.2}

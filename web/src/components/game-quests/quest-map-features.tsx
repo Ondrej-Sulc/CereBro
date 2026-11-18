@@ -3,7 +3,7 @@
 import type { QuestMapFeatureLocation } from "@/lib/game-quests/map-features";
 import type { QuestRewardView } from "@/lib/game-quests/presentation";
 import { RewardTile } from "./quest-reward-grid";
-import { QuestGateMarker, questGateMarkerWidth } from "./quest-gate-marker";
+import { QuestGateMarker, questGateMarkerHeight, questGateMarkerWidth } from "./quest-gate-marker";
 import styles from "./quest-map-features.module.css";
 
 type MarkerProps = {
@@ -34,6 +34,7 @@ export function QuestMapFeatureMarker({ location, x, y, selected, active, onChoo
   const quantity = firstReward ? rewardAmount(firstReward) : "";
   const amountWidth = Math.max(28, Math.min(80, quantity.length * 5.5 + 12));
   const hitWidth = location.gates.length ? questGateMarkerWidth(location.gates[0]) + 8 : 56;
+  const hitHeight = location.gates.length ? Math.max(58, questGateMarkerHeight(location.gates[0])) + 20 : 78;
   return <g className={compact ? styles.compact : styles.marker} transform={compact ? `translate(${x + 37} ${y + 35}) scale(.65)` : `translate(${x} ${y})`} role={compact ? undefined : "button"} tabIndex={compact ? undefined : 0}
     aria-label={compact ? undefined : label} aria-pressed={compact ? undefined : selected} aria-hidden={compact || undefined} pointerEvents={compact ? "none" : undefined} data-coordinate={location.coordinate.join(",")}
     data-map-feature data-selected={selected} data-active={active}
@@ -43,7 +44,7 @@ export function QuestMapFeatureMarker({ location, x, y, selected, active, onChoo
       }
     }}>
     {!compact && <title>{label}</title>}
-    {!compact && <rect x={-hitWidth / 2 - (slots.length - 1) * 25} y="-38" width={hitWidth + (slots.length - 1) * 50} height="78" rx="10" fill="transparent" pointerEvents="all"/>}
+    {!compact && <rect x={-hitWidth / 2 - (slots.length - 1) * 25} y={-hitHeight / 2 + 1} width={hitWidth + (slots.length - 1) * 50} height={hitHeight} rx="10" fill="transparent" pointerEvents="all"/>}
     <g aria-hidden="true" pointerEvents="none">
       {location.gates.length > 0 && <g transform={`translate(${slotX("gate")} 0)`}>
         <QuestGateMarker gate={location.gates[0]}/>

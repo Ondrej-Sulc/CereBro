@@ -1,6 +1,7 @@
 import type { ChampionClass } from "@prisma/client";
 import type { QuestMap } from "@cerebro/core/domain/game-quests";
 import type { QuestGateDefinition } from "@cerebro/core/domain/game-quests/map-features";
+import type { QuestGateTagGroups } from "@cerebro/core/domain/game-quests/gate-tag-layout";
 import raw from "@cerebro/core/data/game-quests/gate-presentation.json";
 import rawRewards from "@cerebro/core/data/game-quests/path-reward-presentation.json";
 import { permanentData } from "@cerebro/core/data/game-quests/permanent";
@@ -19,6 +20,7 @@ export type QuestGateVisual = {
   rarity?: number;
   countLabel?: string;
   caption?: string;
+  tagGroups?: QuestGateTagGroups;
 };
 
 type GateCharacter = { gameId: string; name: string; sourcePointer: string };
@@ -95,12 +97,13 @@ export function projectQuestGateVisual(gate: QuestGateDefinition, portraits: Rec
     if (constraints.tagLogic !== "any-group-all-terms" || !constraints.tags?.length) return unknown;
     const groups = constraints.tags.map(group => group.trim().toLowerCase().split(":"));
     if (groups.some(terms => terms.some(term => !data.tagNames[term.startsWith("!") ? term.slice(1) : term]))) return unknown;
-    const captions = groups.map(terms => terms.map(term => `${term.startsWith("!") ? "not " : ""}${data.tagNames[term.startsWith("!") ? term.slice(1) : term]}`).join(" and "));
+    const tagGroups = groups.map(terms => terms.map(term => ({ label: data.tagNames[term.startsWith("!") ? term.slice(1) : term], negated: term.startsWith("!") })));
+    const captions = tagGroups.map(terms => terms.map(term => `${term.negated ? "not " : ""}#${term.label}`).join(" and "));
     const caption = captions.map((caption, i) => groups.length > 1 && groups[i].length > 1 ? `(${caption})` : caption).join(" or ");
     // Only a complete group that is one exact positive class term gets a class glyph.
     const simpleClasses = groups.every(terms => terms.length === 1 && classes[terms[0]]) ? [...new Set(groups.map(terms => classes[terms[0]]))] : [];
     return { kind: "tags", images: simpleClasses.map(championClass => ({ src: CLASS_ICONS[championClass], label: classLabel(championClass) })),
-      ...(countLabel ? { countLabel } : {}), caption };
+      ...(countLabel ? { countLabel } : {}), ...(!simpleClasses.length ? { tagGroups } : {}), caption };
   }
   if (gate.kind === "resource") {
     if (!constraints.costs?.length) return unknown;
