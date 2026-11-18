@@ -1,4 +1,7 @@
 import type {ChampionClass} from '@prisma/client';
+import reviewedNames from '../data/game-champions/native-special-display-names.json';
+
+const displayNames = new Map(Object.entries(reviewedNames));
 
 export type NativeSpecialImportRow={id:number;name:string;slug:string|null;gameId:string|null;isPlayable:boolean;class:ChampionClass};
 export type NativeSpecialIdentityEvidence={rows:number;orderedRecordsSha256:string};
@@ -19,7 +22,12 @@ export function planNativeSpecialChampions<Row extends NativeSpecialImportRow>(s
  const inserts:NativeSpecialChampionInsert[]=[],verifiedExisting:number[]=[];
  for(const source of candidates){
   if(!source.gameId||!source.name.trim()||!source.nativeName.trim()||!source.slug||source.releaseDate!==null)throw new Error('Invalid native special identity');
-  const nameKey=normalize(source.name),slugKey=normalize(source.slug);
+  // The original import plan is source evidence. Apply the reviewed name only
+  // to the exact published identity that received the generated suffix.
+  const hasImportedSuffix = !source.existingChampion && source.name === `${source.nativeName} [${source.gameId}]`
+    && source.slug === `npc-${source.gameId.replaceAll('_', '-')}`;
+  const name = (hasImportedSuffix ? displayNames.get(source.gameId) : undefined) ?? source.name;
+  const nameKey=normalize(name),slugKey=normalize(source.slug);
   if(seenIds.has(source.gameId)||seenNames.has(nameKey)||seenSlugs.has(slugKey))throw new Error('Duplicate native special identity');
   seenIds.add(source.gameId);seenNames.add(nameKey);seenSlugs.add(slugKey);
   const reviewed=source.existingChampion;
@@ -28,7 +36,9 @@ export function planNativeSpecialChampions<Row extends NativeSpecialImportRow>(s
   if(current){
    if(current.gameId!==null&&current.gameId!==source.gameId)throw new Error('Existing game identity conflict');
    if(byGameId.has(source.gameId)&&byGameId.get(source.gameId)!.id!==current.id)throw new Error('Native game identity already claimed');
-   if(current.name!==source.name||current.slug!==source.slug||current.class!==source.class)throw new Error('Reviewed champion metadata changed');
+   if((current.name!==source.name && current.name!==name)||current.slug!==source.slug||current.class!==source.class)throw new Error('Reviewed champion metadata changed');
+   const owner = names.get(nameKey);
+   if (owner !== undefined && owner !== current.id) throw new Error('Native special name already claimed');
    if(reviewed&&(current.name!==reviewed.name||current.slug!==reviewed.slug))throw new Error('Reviewed champion identity changed');
    if(!reviewed&&current.isPlayable)throw new Error('Cannot reclassify an unreviewed playable champion');
    if(current.gameId!==source.gameId||current.isPlayable){
@@ -41,7 +51,7 @@ export function planNativeSpecialChampions<Row extends NativeSpecialImportRow>(s
   if(names.has(nameKey)||slugs.has(slugKey))throw new Error('Native special name or slug already claimed');
   const portrait=source.portrait;
   if(portrait&&(!/^\/(?:game-champions\/native-art|game-quests\/(?:permanent-art|progressed-art))\/[a-f0-9]{64}\.webp$/.test(portrait.url)||!portrait.url.endsWith(`${portrait.sha256}.webp`)))throw new Error('Unverified native portrait reference');
-  inserts.push({name:source.name,slug:source.slug,shortName:source.nativeName,gameId:source.gameId,class:source.class,releaseDate:null,obtainable:[],images:portrait?{p_128:portrait.url}: {},fullAbilities:{},isPlayable:false});
+  inserts.push({name,slug:source.slug,shortName:source.nativeName,gameId:source.gameId,class:source.class,releaseDate:null,obtainable:[],images:portrait?{p_128:portrait.url}: {},fullAbilities:{},isPlayable:false});
  }
  return {repairs,inserts,verifiedExisting};
 }

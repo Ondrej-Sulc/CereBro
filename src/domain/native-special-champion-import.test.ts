@@ -16,6 +16,15 @@ describe('native special champion import plan',()=>{
   expect(insert).toMatchObject({name:fresh.name,gameId:'thor_legacy',class:'COSMIC',slug:'npc-thor-legacy',isPlayable:false,releaseDate:null,obtainable:[],fullAbilities:{},images:{p_128:fresh.portrait!.url}});
   expect(insert).not.toHaveProperty('id');
  });
+ it('uses the reviewed display name on import and recognizes an already renamed NPC by exact identity',()=>{
+  const vision:NativeSpecialImportCandidate={...fresh,gameId:'vision_blackorder',nativeName:'NAMELESS',name:'NAMELESS [vision_blackorder]',slug:'npc-vision-blackorder',class:'SUPERIOR'};
+  expect(planNativeSpecialChampions([],[vision]).inserts[0]).toMatchObject({
+   name:'Nameless Vision',shortName:'NAMELESS',gameId:vision.gameId,slug:vision.slug,
+  });
+  const renamed:NativeSpecialImportRow={id:50,gameId:vision.gameId,name:'Nameless Vision',slug:vision.slug,class:vision.class,isPlayable:false};
+  expect(planNativeSpecialChampions([renamed],[vision])).toEqual({repairs:[],inserts:[],verifiedExisting:[50]});
+  expect(()=>planNativeSpecialChampions([{...renamed,name:'Custom Vision'}],[vision])).toThrow(/metadata/);
+ });
  it('corrects a source-proven NPC playable flag and makes repeated planning idempotent',()=>{
   const wrong={...existing,gameId:'ares',isPlayable:true},reviewed={...candidate,existingChampion:{...candidate.existingChampion!,gameId:'ares',isPlayable:true}};
   expect(planNativeSpecialChampions([wrong],[reviewed]).repairs[0].after).toEqual({gameId:'ares',isPlayable:false});
