@@ -16,6 +16,20 @@ export type ChampionPageState = {
 
 export const CHAMPION_SYNERGY_HASH_PREFIX = "#champion-synergy-"
 
+type RosterChampionBuild = { stars: number; rank: number; sigLevel: number; isAwakened: boolean; ascensionLevel: number }
+
+export function rosterChampionPageParams(build?: RosterChampionBuild, tab?: ChampionSection): URLSearchParams {
+  const params = new URLSearchParams()
+  if (tab) params.set("tab", tab)
+  if (build) {
+    params.set("rarity", String(build.stars))
+    params.set("rank", String(build.rank))
+    params.set("sig", String(build.isAwakened ? build.sigLevel : 0))
+    params.set("ascension", String(build.ascensionLevel || 0))
+  }
+  return params
+}
+
 /** Preserve build/filter context when an old link points to an unrecorded section. */
 export function resolveChampionPageSection(state: ChampionPageState, available: readonly ChampionSection[], defaultSection?: ChampionSection): ChampionPageState {
   if (available.includes(state.tab)) return state

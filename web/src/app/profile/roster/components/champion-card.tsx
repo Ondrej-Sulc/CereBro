@@ -2,6 +2,7 @@
 
 import { memo } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
@@ -9,6 +10,8 @@ import { Trophy, Edit2, Swords, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getStarBorderClass, getChampionImageUrlOrPlaceholder, isChampionImages } from '@/lib/championHelper';
 import { getChampionClassColors } from "@/lib/championClassHelper";
+import { rosterChampionPageParams } from "@/lib/champion-page-state";
+import { hasRosterKitOverview } from "@/lib/roster-kit";
 import { ChampionImages } from "@/types/champion";
 import { ProfileRosterEntry } from "../types";
 import { CLASS_ICONS } from "../constants";
@@ -29,6 +32,13 @@ export const ChampionCard = memo(({ item, prestige, onClick, onQuickView, mode, 
     const nonPlayable = item.champion.isPlayable === false;
     const editing = mode === 'edit' && !nonPlayable;
     const showUnownedState = !!item.isUnowned && !catalogMode && !nonPlayable;
+    const label = `${editing ? 'Edit' : 'View'} ${item.champion.name}`;
+    let detailsHref: string | undefined;
+    if (!editing && item.champion.slug && !hasRosterKitOverview(item.champion.abilities, item.stars || undefined)) {
+        const build = !catalogMode && !item.isUnowned && !nonPlayable ? item : undefined;
+        const query = rosterChampionPageParams(build).toString();
+        detailsHref = `/champions/${encodeURIComponent(item.champion.slug)}${query ? `?${query}` : ''}`;
+    }
 
     const borderClass = showUnownedState
         ? 'border-slate-700 border-dashed'
@@ -51,13 +61,13 @@ export const ChampionCard = memo(({ item, prestige, onClick, onQuickView, mode, 
                 borderClass,
                 showUnownedState && "grayscale-[0.45] saturate-[0.7] brightness-[0.9] opacity-75 hover:grayscale-[0.25] hover:saturate-[0.85] hover:brightness-[0.95] hover:opacity-90 transition-all duration-300"
             )}
-            role="button"
-            tabIndex={0}
+            role={detailsHref ? undefined : "button"}
+            tabIndex={detailsHref ? undefined : 0}
             data-roster-entry-id={item.id}
-            aria-label={`${editing ? 'Edit' : 'View'} ${item.champion.name}`}
-            aria-haspopup="dialog"
-            onClick={activateCard}
-            onKeyDown={event => {
+            aria-label={detailsHref ? undefined : label}
+            aria-haspopup={detailsHref ? undefined : "dialog"}
+            onClick={detailsHref ? undefined : activateCard}
+            onKeyDown={detailsHref ? undefined : event => {
                 if (event.target !== event.currentTarget) return;
                 if (event.key === 'Enter' || event.key === ' ') {
                     event.preventDefault();
@@ -65,6 +75,8 @@ export const ChampionCard = memo(({ item, prestige, onClick, onQuickView, mode, 
                 }
             }}
         >
+            {detailsHref && <Link href={detailsHref} aria-label={label} prefetch={false}
+                className="absolute inset-0 z-20 rounded-[inherit] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-sky-400" />}
             <Image
                 src={getChampionImageUrlOrPlaceholder(item.champion.images as unknown as ChampionImages, 'full')}
                 alt={item.champion.name}
@@ -92,7 +104,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, onQuickView, mode, 
                 )}
             </div>
 
-            <div className="absolute top-1 right-1 flex flex-col items-end gap-1 z-10">
+            <div className={cn("absolute top-1 right-1 flex flex-col items-end gap-1", detailsHref ? "pointer-events-none z-30" : "z-10")}>
                 {!nonPlayable && !item.isUnowned && item.isAscended && (
                     <div className="bg-yellow-900/80 p-1 rounded border border-yellow-500/30 shadow-sm" title="Ascended">
                         <Trophy className="w-3 h-3 text-yellow-400" />
@@ -108,7 +120,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, onQuickView, mode, 
                                     variant="ghost"
                                     size="icon"
                                     className={cn(
-                                        "h-6 w-6 rounded-full border bg-black/80 p-0 shadow-sm",
+                                        "pointer-events-auto h-6 w-6 rounded-full border bg-black/80 p-0 shadow-sm",
                                         item.reservedForAttack
                                             ? "border-amber-400/60 text-amber-300 hover:bg-amber-950/80 hover:text-amber-200"
                                             : "border-white/10 text-slate-500 hover:bg-slate-900 hover:text-slate-200"

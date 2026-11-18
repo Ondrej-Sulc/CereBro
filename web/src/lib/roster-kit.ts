@@ -71,12 +71,19 @@ export function matchesPreparedRosterKitFilters(kit: PreparedRosterKit, filters:
     && matchesSelection(filters.immunities, new Set(protections.map(entry => entry.name)), filters.immunityLogic ?? "AND")
 }
 
+function isRosterKitOverviewLink(entry: RosterKitLink): entry is RosterKitLink & { type: "ABILITY" | "IMMUNITY" } {
+  return entry.type === "ABILITY" || entry.type === "IMMUNITY"
+}
+
+export function hasRosterKitOverview(entries: RosterKitLink[] = [], rarity?: number): boolean {
+  return entries.some(entry => isRosterKitOverviewLink(entry) && isChampionKitSourceAvailableAtRarity(entry.source, rarity))
+}
+
 export function buildRosterKitSections(entries: RosterKitLink[], filters: RosterKitFilters, rarity?: number): RosterKitSection[] {
-  const links = entries.flatMap(entry => entry.type === "ABILITY" || entry.type === "IMMUNITY" ? [{
+  const links = entries.filter(isRosterKitOverviewLink).map(entry => ({
     ...entry,
-    type: entry.type as "ABILITY" | "IMMUNITY",
     synergyChampions: entry.synergyChampions.map(({ champion }) => ({ champion: { ...champion, slug: champion.slug ?? null } })),
-  }] : [])
+  }))
   const glossary = new Map(links.map(link => [link.ability.gameGlossaryTermId ?? link.ability.name.toLowerCase().replace(/[^a-z0-9]+/g, "_"), {
     description: link.ability.description, raw: link.ability.gameGlossaryTerm?.raw, iconUrl: link.ability.iconUrl,
   }]))

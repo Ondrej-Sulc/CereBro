@@ -11,6 +11,7 @@ import { EffectSources } from "@/components/champions/effect-sources"
 import { getChampionClassColors } from "@/lib/championClassHelper"
 import { getChampionImageUrlOrPlaceholder, isChampionImages } from "@/lib/championHelper"
 import { buildRosterKitSections, matchingRosterKitSourceGroups, type RosterKitEffect } from "@/lib/roster-kit"
+import { rosterChampionPageParams } from "@/lib/champion-page-state"
 import type { RosterKitDetails } from "@/lib/roster-kit-details"
 import type { ChampionKitSourceGroup, ChampionKitAbilityTarget } from "@/lib/champion-kit"
 import type { FilterState, ProfileRosterEntry } from "../types"
@@ -61,13 +62,7 @@ export function QuickChampionDialog({ item, prestige, open, onOpenChange, filter
   const matchingTagsOnly = filters.tags.length > 0
   const highlightedTags = matchingTagsOnly ? item.champion.tags.filter(tag => filters.tags.includes(tag.name)) : item.champion.tags.slice(0, 12)
   const owned = !item.isUnowned
-  const detailsParams = new URLSearchParams({ tab: "overview" })
-  if (owned) {
-    detailsParams.set("rarity", String(item.stars))
-    detailsParams.set("rank", String(item.rank))
-    detailsParams.set("sig", String(item.isAwakened ? item.sigLevel : 0))
-    detailsParams.set("ascension", String(item.ascensionLevel || 0))
-  }
+  const detailsParams = rosterChampionPageParams(owned ? item : undefined, "overview")
   const detailsHref = `/champions/${item.champion.slug}?${detailsParams}`
   const abilityHref = (target: ChampionKitAbilityTarget) => {
     const params = new URLSearchParams(detailsParams)
