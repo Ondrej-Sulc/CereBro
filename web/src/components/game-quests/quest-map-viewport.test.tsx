@@ -102,6 +102,7 @@ describe("quest map viewport controls", () => {
     const markerTransform = marker.getAttribute('transform');
     await act(async () => button(host, "Zoom in").click());
     expect(scale(host)).toBe(initial);
+    expect(host.querySelector('svg[data-camera-moving]')).not.toBeNull();
     await clock.frame();
     expect(scale(host)).toBeGreaterThan(initial);
     expect(scale(host)).toBeLessThan(initial * 1.35);
@@ -115,6 +116,7 @@ describe("quest map viewport controls", () => {
     }
     expect(scale(host)).toBeCloseTo(initial * 1.35 ** 2);
     expect(host.querySelector<SVGSVGElement>('svg[data-zoom]')!.style.transform).toBe('');
+    expect(host.querySelector('svg[data-camera-moving]')).toBeNull();
   });
 
   it("smooths rapid wheel input while preserving the world point under the cursor", async () => {
@@ -208,6 +210,7 @@ describe("quest map viewport controls", () => {
     const viewport = host.querySelector<HTMLElement>('[aria-label="Scrollable quest map"]')!;
     await act(async () => touchPointer(viewport, 'pointerdown', 150, 200));
     expect(clock.pending.size).toBe(0);
+    expect(host.querySelector('svg[data-camera-moving]')).toBeNull();
     await clock.frame(); expect(scale(host)).toBe(intermediate);
     await act(async () => touchPointer(viewport, 'pointerup', 150, 200));
     await act(async () => button(host, "Zoom in").click());

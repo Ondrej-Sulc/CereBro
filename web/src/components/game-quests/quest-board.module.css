@@ -27,6 +27,8 @@
 .viewport:active{cursor:grabbing}
 .sceneFrame{position:relative;flex:none;margin:auto;overflow:hidden}
 .scene{display:block;position:absolute;left:0;top:0;max-width:none;background:none;transform-origin:0 0}
+/* Keep the composited map stable while the camera moves; resume its effects at rest. */
+.scene[data-camera-moving] *{animation-play-state:paused!important}
 .board [data-map-marker-visual],.board [data-map-feature]:not([aria-hidden]),.waypoint>g{transition:transform .14s ease-out}
 .scene[data-board-ready=false]{visibility:hidden}
 .tile{cursor:pointer}

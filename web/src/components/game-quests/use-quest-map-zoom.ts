@@ -80,7 +80,7 @@ export function useQuestMapZoom({ width, height, viewportRef, frameRef, sceneRef
   const cancelFrame = useCallback(() => {
     if (frame.current !== null) cancelAnimationFrame(frame.current);
     frame.current = null; lastTime.current = null; zoomingRef.current = false;
-    if (sceneRef.current) sceneRef.current.style.willChange = "";
+    if (sceneRef.current) { sceneRef.current.style.willChange = ""; sceneRef.current.removeAttribute("data-camera-moving"); }
   }, [sceneRef]);
   const interruptZoom = useCallback(() => {
     cancelFrame(); precisePan.current = null; target.current = scaleRef.current;
@@ -104,7 +104,7 @@ export function useQuestMapZoom({ width, height, viewportRef, frameRef, sceneRef
     const elapsed = lastTime.current === null ? 16 : time - lastTime.current;
     lastTime.current = time;
     const distance = Math.log(target.current / scaleRef.current);
-    const finished = Math.abs(distance) < .0005 || reducedMotion() || elapsed > 250;
+    const finished = Math.abs(distance) < .0005 || reducedMotion() || document.hidden;
     const next = finished ? target.current : scaleRef.current * Math.exp(distance * (1 - Math.exp(-Math.max(1, Math.min(64, elapsed)) / 45)));
     renderZoom(next, anchor.current);
     if (finished) interruptZoom();
@@ -123,7 +123,7 @@ export function useQuestMapZoom({ width, height, viewportRef, frameRef, sceneRef
       cancelFrame(); renderZoom(target.current, at); interruptZoom(); return;
     }
     zoomingRef.current = true;
-    if (sceneRef.current) sceneRef.current.style.willChange = "transform";
+    if (sceneRef.current) { sceneRef.current.style.willChange = "transform"; sceneRef.current.setAttribute("data-camera-moving", ""); }
     if (frame.current === null) frame.current = requestAnimationFrame(animate);
   }, [animate, cancelFrame, interruptZoom, renderZoom, sceneRef, updateControls, viewportRef]);
   const zoomBy = useCallback((factor: number, at?: Anchor) => zoomTo(target.current * factor, at), [zoomTo]);
@@ -131,7 +131,7 @@ export function useQuestMapZoom({ width, height, viewportRef, frameRef, sceneRef
   // Pinch has no easing or delayed tail: the map stays directly under fingers.
   const pinchZoom = useCallback((next: number, at: Anchor) => {
     cancelFrame(); zoomingRef.current = true; renderZoom(next, at); target.current = scaleRef.current; updateControls(scaleRef.current);
-    if (sceneRef.current) sceneRef.current.style.willChange = "transform";
+    if (sceneRef.current) { sceneRef.current.style.willChange = "transform"; sceneRef.current.setAttribute("data-camera-moving", ""); }
     fittingRef.current = Math.abs(scaleRef.current - fitRef.current) < .0001; setFitting(fittingRef.current);
   }, [cancelFrame, renderZoom, sceneRef, updateControls]);
 
