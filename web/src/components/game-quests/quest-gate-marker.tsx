@@ -26,7 +26,7 @@ export function QuestGateMarker({ gate }: { gate: QuestGateView }) {
   const showCaption = !images.length && kind !== "rarity";
   const width = questGateMarkerWidth(gate, images.length);
   const half = width / 2, color = visual?.color ?? "#e3bb75";
-  const frame = `M${-half + 12}-29H${half - 12}L${half}-17V17L${half - 12}29H${-half + 12}L${-half}17V-17Z`;
+  const frame = `M ${-half + 12} -29 H ${half - 12} L ${half} -17 V 17 L ${half - 12} 29 H ${-half + 12} L ${-half} 17 V -17 Z`;
   const lines = captionLines(caption);
   const Fallback = kind === "champion" ? UserRound : kind === "resource" ? KeyRound : kind === "switch" ? Waypoints : Tags;
   const imageSize = images.length === 1 ? 44 : images.length === 2 ? 30 : 23;
@@ -47,7 +47,7 @@ export function QuestGateMarker({ gate }: { gate: QuestGateView }) {
     {visual?.rarity && kind !== "rarity" ? <g className={styles.gateRarity}><rect x="-16" y="-35" width="32" height="16" rx="5"/><text x="0" y="-23" textAnchor="middle">{visual.rarity}★</text></g> : null}
     {visual?.countLabel && <g className={styles.gateCount}><rect x={-half + 4} y="18" width={Math.max(27, visual.countLabel.length * 7 + 12)} height="18" rx="5"/><text x={-half + 10} y="31">{visual.countLabel}</text></g>}
     <g data-gate-lock transform={`translate(${half - 10} 14)`} className={styles.gateLock}><circle r="8"/><path d="M-3-1v-3a3 3 0 0 1 6 0v3M-5-1h10v7H-5ZM0 1v3"/></g>
-    <path className={styles.focusRing} d={`M${-half + 4}-34H${half - 4}L${half + 5}-25V25L${half - 4}34H${-half + 4}L${-half - 5}25V-25Z`}/>
+    <path className={styles.focusRing} d={`M ${-half + 4} -34 H ${half - 4} L ${half + 5} -25 V 25 L ${half - 4} 34 H ${-half + 4} L ${-half - 5} 25 V -25 Z`}/>
   </g>;
 }
 
