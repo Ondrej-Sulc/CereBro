@@ -43,7 +43,10 @@ it("renders every placement once at its source coordinate, preserving directed l
     const map = (await loadQuestMap(q.id))!;
     const board = questBoardGeometry(map);
     const sourceTiles = new Map(map.tiles.map(tile => [coordinateKey(tile.coordinate), tile]));
-    if (!q.mapSourceHash) expect(board.pitch).toBe(22); // Reviewed original maps keep their transform.
+    // The feature overlay may widen spacing for gates and pickups while retaining the source geometry.
+    const originalBoard = questBoardGeometry({ ...map, features: undefined });
+    if (!q.mapSourceHash) expect(originalBoard.pitch).toBe(22);
+    expect(board.pitch).toBeGreaterThanOrEqual(originalBoard.pitch);
     expect([...board.encounters.values()].flat().map(e => e.id).sort()).toEqual(map.encounters.map(e => e.id).sort());
     expect(board.edges.length).toBe(map.tiles.reduce((n, t) => n + t.links.length + t.portals.length, 0));
     for (const edge of board.edges) {
