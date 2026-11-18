@@ -3,7 +3,7 @@ import { questEncounterPortrait } from "./quest-portrait";
 
 import { useId, useMemo, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from "react";
 import { ChevronDown, Expand, Gift, LockKeyhole, Minus, PackageOpen, Plus, Scan, Shrink, UsersRound } from "lucide-react";
-import { coordinateKey, type Coordinate, type QuestMap } from "@cerebro/core/domain/game-quests";
+import { coordinateKey, type Coordinate, type QuestMap, type QuestTile } from "@cerebro/core/domain/game-quests";
 import { questBoardLabels } from "@cerebro/core/domain/game-quests/board";
 import { questPathFlowDistances } from "@cerebro/core/domain/game-quests/path-flow";
 import { questEncounterIsBoss } from "@cerebro/core/domain/game-quests/boss-display";
@@ -17,7 +17,7 @@ import { useQuestMapZoom } from "./use-quest-map-zoom";
 import { QuestMapPaths } from "./quest-map-paths";
 import { QuestPathPulses } from "./quest-path-pulses";
 import { QuestMapEncounterMarker } from "./quest-map-encounter-marker";
-import { QuestMapWaypoint } from "./quest-map-waypoint";
+import { QuestMapJunctions, QuestMapWaypoint } from "./quest-map-waypoint";
 import { questMapMarkerLayout } from "./quest-map-marker-layout";
 import styles from "./quest-board.module.css";
 import type { QuestMapFeatureLocation } from "@/lib/game-quests/map-features";
@@ -65,19 +65,37 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
   const labels = useMemo(() => {const prioritized=[selectedRegion,hoveredRegion,...map.encounters.filter(e=>coordinateKey(e.coordinate)===selected||e.id===hover).map(e=>e.id)].filter((id):id is string=>typeof id==='string');return spawnRegions?regionBoardLabels(map,spawnRegions,board,prioritized,labelScale,markerLayout):questBoardLabels(map,prioritized,labelScale,markerLayout);}, [map,spawnRegions,board,selected,hover,selectedRegion,hoveredRegion,labelScale,markerLayout]);
   const portalTargets = useMemo(() => new Set(board.edges.filter(e=>e.portal).map(e=>coordinateKey(e.to))), [board]);
   const portalKeys = useMemo(() => new Set([...portalTargets, ...map.tiles.filter(tile=>tile.portals.length||tile.randomPortal).map(tile=>coordinateKey(tile.coordinate))]), [map, portalTargets]);
-  const positionNames=useMemo(()=>new Map(map.tiles.map(t=>{const feature=featuresByKey.get(coordinateKey(t.coordinate));return [coordinateKey(t.coordinate),feature?questFeatureLocationLabel(feature):questPositionLabel(map,t.coordinate)];})),[map,featuresByKey]);
+  const waypointTiles = useMemo(() => {
+    const junctions = new Map<string, QuestTile>();
+    const landmarks: QuestTile[] = [];
+    for (const tile of map.tiles) {
+      const key = coordinateKey(tile.coordinate);
+      if (board.encounters.get(key)?.length || featuresByKey.has(key)) continue;
+      if (tile.start || portalKeys.has(key)) landmarks.push(tile);
+      else junctions.set(key, tile);
+    }
+    return { junctions, landmarks };
+  }, [map, board, featuresByKey, portalKeys]);
+  const selectedJunction = selectedRegion ? undefined : waypointTiles.junctions.get(selected);
   const endPointer=(id:number,cancel=false)=>{if(!pointers.current.has(id))return;if(pointers.current.size===2)interruptZoom();pointers.current.delete(id);pinch.current=null;if(cancel){pointers.current.clear();suppressClick.current=true;}const remaining=[...pointers.current.values()][0],e=viewportRef.current;drag.current=remaining&&e?{x:remaining.x,y:remaining.y,left:e.scrollLeft,top:e.scrollTop,moved:false}:null;};
-  const selectedPosition=spawnRegions?.regions.find(region=>region.id===selectedRegion)?.anchor??map.tiles.find(tile=>coordinateKey(tile.coordinate)===selected)?.coordinate;
+  const selectedSpawn = spawnRegions?.regions.find(region => region.id === selectedRegion);
+  const selectedTile = map.tiles.find(tile => coordinateKey(tile.coordinate) === selected);
+  const selectedPosition = selectedSpawn?.anchor ?? selectedTile?.coordinate;
+  const selectedFeature = featuresByKey.get(selected);
+  const selectedLabel = fullscreen.fullscreen
+    ? selectedSpawn?.defender.name ?? (selectedTile && (selectedFeature
+      ? questFeatureLocationLabel(selectedFeature)
+      : questPositionLabel(map, selectedTile.coordinate)))
+    : undefined;
   const miniSelected=selectedPosition?board.point(selectedPosition):undefined;
   const miniScale = Math.min(136/board.width,150/board.height), miniWidth=board.width*miniScale, miniHeight=board.height*miniScale;
   const miniPortalSize = Math.max(18,Math.min(80,6/miniScale));
   const miniPaths = useMemo(() => questMapOverviewPaths(board.edges, board.point), [board]);
-  const waypoints = useMemo(() => map.tiles.map(tile => {
+  const waypoints = useMemo(() => (selectedJunction ? [...waypointTiles.landmarks, selectedJunction] : waypointTiles.landmarks).map(tile => {
     const key = coordinateKey(tile.coordinate), [x, y] = board.point(tile.coordinate);
-    if (board.encounters.get(key)?.length || featuresByKey.has(key)) return null;
-    return <QuestMapWaypoint key={key} markerScale={markerLayout.scales.get(key)??1} tile={tile} x={x} y={y} label={positionNames.get(key)!}
+    return <QuestMapWaypoint key={key} markerScale={markerLayout.scales.get(key)??1} tile={tile} x={x} y={y} label={questPositionLabel(map, tile.coordinate)}
       active={!highlightRoute||routeKeys.has(key)} selected={!selectedRegion&&selected===key} portalTarget={portalTargets.has(key)} onChoose={()=>onChoose(tile.coordinate)}/>;
-  }), [map, board, featuresByKey, markerLayout, positionNames, highlightRoute, routeKeys, selectedRegion, selected, portalTargets, onChoose]);
+  }), [map, board, waypointTiles, selectedJunction, markerLayout, highlightRoute, routeKeys, selectedRegion, selected, portalTargets, onChoose]);
   return <div ref={boardRef} className={styles.board} style={{'--map-aspect':board.height/board.width} as CSSProperties} data-quest-board data-fullscreen={fullscreen.fullscreen}
     data-window-fullscreen={fullscreen.windowMode || undefined} role={fullscreen.windowMode ? "dialog" : undefined}
     aria-modal={fullscreen.windowMode || undefined} aria-label={fullscreen.windowMode ? "Quest map full screen" : undefined}
@@ -89,7 +107,7 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
         <div className={styles.controlActions}><button data-map-fullscreen-toggle aria-label={fullscreen.fullscreen ? "Exit full screen" : "Enter full screen"} title={fullscreen.fullscreen ? "Exit full screen (Esc)" : "View map in full screen"} aria-pressed={fullscreen.fullscreen} disabled={fullscreen.busy} onClick={() => void fullscreen.toggle()}>{fullscreen.fullscreen ? <Shrink size={16} /> : <Expand size={16} />}<span>{fullscreen.fullscreen ? "Exit full screen" : "Full screen"}</span></button></div>
       </div>
     </div>
-    {fullscreen.fullscreen && <div className={styles.fullscreenContext}>{!routeControl && onChooseRoute && <label>Route<select aria-label="Full screen recorded route" value={pathIndex} onChange={e => onChooseRoute(Number(e.target.value))}>{map.paths.map(route => <option key={route.index} value={route.index}>Route {route.index + 1}</option>)}</select></label>}<span aria-live="polite">{spawnRegions?.regions.find(region => region.id === selectedRegion)?.defender.name ?? positionNames.get(selected)}</span></div>}
+    {fullscreen.fullscreen && <div className={styles.fullscreenContext}>{!routeControl && onChooseRoute && <label>Route<select aria-label="Full screen recorded route" value={pathIndex} onChange={e => onChooseRoute(Number(e.target.value))}>{map.paths.map(route => <option key={route.index} value={route.index}>Route {route.index + 1}</option>)}</select></label>}<span aria-live="polite">{selectedLabel}</span></div>}
     <div className={styles.canvasWrap} style={artwork ? { backgroundImage: `linear-gradient(180deg,rgba(5,12,24,.76),rgba(4,10,20,.86)),url("${artwork.url}")` } : undefined}>
       <div ref={viewportRef} className={styles.viewport} role="region" aria-label="Scrollable quest map" aria-busy={!ready} tabIndex={0}
         onScroll={onScroll}
@@ -115,6 +133,8 @@ export function QuestBoard({ map, portraits, selected, pathIndex, onChoose, view
           <QuestPathPulses edges={board.edges} point={board.point} distances={flowDistances} selectedEdges={routeEdges} highlightRoute={highlightRoute}
             width={board.width} height={board.height} viewportRef={viewportRef} sceneRef={sceneRef} onRendererChange={setPulseRenderer}/>
           {spawnRegions&&<QuestSpawnRegionAreas map={map} layer={spawnRegions} point={board.point} selected={selectedRegion} hovered={hoveredRegion??undefined} pathIndex={pathIndex} highlightRoute={highlightRoute}/>}
+          <QuestMapJunctions tiles={waypointTiles.junctions} point={board.point} routeKeys={highlightRoute ? routeKeys : undefined}
+            selected={selectedJunction ? selected : undefined} onChoose={onChoose}/>
           {waypoints}
           {map.encounters.map((encounter,index)=>{
             const key=coordinateKey(encounter.coordinate),[x,y]=board.point(encounter.coordinate),isSelected=!selectedRegion&&selected===key;

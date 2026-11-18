@@ -41,12 +41,16 @@ it("enlarges sparse-map portraits and features at fit, preserving centers, label
   expect(Number(pickup.getAttribute("data-marker-scale"))).toBeGreaterThan(1);
   await act(async () => pickup.dispatchEvent(new KeyboardEvent("keydown", {key:"Enter", bubbles:true})));
   expect(choose).toHaveBeenLastCalledWith([4,15]);
-  expect([...host.querySelectorAll('[data-map-waypoint="junction"]')].every(node=>node.getAttribute("data-marker-scale")==="1")).toBe(true);
+  const transitPath = host.querySelector('[data-map-junctions] path')!;
+  const transitGeometry = transitPath.getAttribute('d');
+  expect(transitGeometry).toBeTruthy();
   const plus = host.querySelector<HTMLButtonElement>('[aria-label="Zoom in"]')!;
   for (let step=0; zoom()<1 && step<10; step++) await act(async () => plus.click());
   expect(zoom()).toBeGreaterThanOrEqual(1);
   expect(marker.getAttribute("data-marker-scale")).toBe("1");
   expect(pickup.getAttribute("data-marker-scale")).toBe("1");
+  expect(host.querySelector('[data-map-junctions] path')).toBe(transitPath);
+  expect(transitPath.getAttribute('d')).toBe(transitGeometry);
   expect(host.querySelectorAll("[data-map-encounter]")).toHaveLength(map.encounters.length);
   expect(JSON.stringify(map)).toBe(original);
 }, 60000);

@@ -37,7 +37,7 @@ afterEach(async () => {
   if (originalScrollTo) Object.defineProperty(HTMLElement.prototype, 'scrollTo', originalScrollTo);
   else Reflect.deleteProperty(HTMLElement.prototype, 'scrollTo');
 });
-const board = () => <QuestBoard map={map} portraits={{}} selected="0,0" pathIndex={0} onChoose={()=>{}} viewportRef={createRef<HTMLDivElement>()}/>;
+const board = (selected = "0,0", questMap = map) => <QuestBoard map={questMap} portraits={{}} selected={selected} pathIndex={0} onChoose={()=>{}} viewportRef={createRef<HTMLDivElement>()}/>;
 async function render() {
   const host = document.createElement('div'); document.body.append(host); root = createRoot(host);
   await act(async () => root!.render(board())); return host;
@@ -52,6 +52,30 @@ it('ships static source connections without thousands of speculative fallback st
   expect(host.querySelectorAll('[data-route-edge]')).toHaveLength(2);
   expect(host.querySelectorAll('[data-route-casing],[data-route-glow],[data-route-line]')).toHaveLength(6);
   expect(host.querySelector('[data-route-pulse],[data-route-pulse-body],[data-route-pulse-trail]')).toBeNull();
+});
+
+it('batches ordinary transit dots by route emphasis while retaining a selected transit marker', () => {
+  const questMap = { ...map, paths: [{ index: 0, coordinates: coordinates.slice(0, 2) }] };
+  const host = document.createElement('div');
+  const dots = (kind: string) => [...host.querySelectorAll(`[data-map-junctions="${kind}"] path`)].map(path => path.getAttribute('d')!.match(/M/g)?.length);
+
+  host.innerHTML = renderToString(board());
+  expect(dots('active')).toEqual([2, 2]);
+  expect(host.querySelectorAll('[data-map-junction-hit]')).toHaveLength(2);
+  expect(host.querySelector('[data-map-junction-hit][tabindex]')).toBeNull();
+
+  host.innerHTML = renderToString(board('0,0', questMap));
+  expect(dots('active')).toEqual([1, 1]);
+  expect(dots('muted')).toEqual([1, 1]);
+  expect(host.querySelector('[data-map-waypoint="junction"]')).toBeNull();
+
+  host.innerHTML = renderToString(board('4,0', questMap));
+  expect(dots('active')).toEqual([]);
+  expect(dots('muted')).toEqual([1, 1]);
+  expect(host.querySelector('[data-map-junction-hit][data-coordinate="4,0"]')).toBeNull();
+  const selected = host.querySelector('[data-map-waypoint="junction"][data-coordinate="4,0"]');
+  expect(selected?.querySelectorAll('circle')).toHaveLength(4);
+  expect(host.querySelector('[data-map-waypoint="start"][role="button"]')).not.toBeNull();
 });
 
 it('keeps canvas maps lean and restores the exact SVG fallback after context loss', async () => {
