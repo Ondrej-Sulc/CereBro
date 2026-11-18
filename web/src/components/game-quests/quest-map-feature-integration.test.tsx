@@ -81,6 +81,7 @@ it("selects an exact recorded Mausoleum portal destination",async()=>{
   await act(async()=>root!.render(<QuestMapExplorer map={map} initialNode={portal.coordinate.join(',')} featureLocations={projectQuestMapFeatures(map)}/>));
   const destination=host.querySelector<HTMLButtonElement>('section[aria-label="Portal destinations"] button')!;
   expect(destination).not.toBeNull();
+  expect(host.querySelector('section[aria-labelledby="coordinate-heading"]')?.textContent).not.toContain("Node modifiers");
   await act(async()=>destination.click());
   expect(new URL(window.location.href).searchParams.get("node")).toBe(portal.portals[0].target.join(','));
 },60000);

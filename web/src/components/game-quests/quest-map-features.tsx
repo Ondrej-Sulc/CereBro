@@ -67,7 +67,7 @@ export function QuestMapFeatureMarker({ location, x, y, selected, active, onChoo
     {!compact && <title>{label}</title>}
     {!compact && <rect x={-dimensions.width / 2} y={-dimensions.height / 2 + 1} width={dimensions.width} height={dimensions.height} rx="10" fill="transparent" pointerEvents="all"/>}
     <g aria-hidden="true" pointerEvents="none">
-      {portal && <QuestPortalVisual x={0} y={0} radius={40} selected={selected}/>}
+      {portal && <QuestPortalVisual x={0} y={0} radius={40} selected={selected} showCenter={false}/>}
       {location.gates.length > 0 && <g transform={`translate(${slotX("gate")} 0)`}>
         <QuestGateMarker gate={location.gates[0]}/>
       </g>}

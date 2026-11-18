@@ -41,7 +41,7 @@ export function QuestMapEncounterMarker({ encounter: e, portrait, x, y, uid, ind
       <circle cx={x} cy={y + 2} r={radius + 2} fill="#010710" opacity=".92" />
       {isBoss && <QuestMapBossCorona x={x} y={y} radius={radius} selected={selected} />}
       <circle className={styles.halo} cx={x} cy={y} r={radius + 3} fill={accent} fillOpacity={selected ? .15 : .055} stroke={accent} strokeOpacity={selected ? .65 : .2} strokeWidth="1" />
-      {portalTarget && <g data-map-portal-target><QuestPortalVisual x={x} y={y} radius={radius+10} selected={selected}/></g>}
+      {portalTarget && <g data-map-portal-target><QuestPortalVisual x={x} y={y} radius={radius+10} selected={selected} showCenter={false}/></g>}
       <circle cx={x} cy={y} r={radius} fill="#0b1a29" stroke={accent} strokeWidth={e.final ? 3 : 2} className={styles.portraitRing} />
       {portrait?.imageUrl ? <image className={styles.portrait} data-map-portrait={e.gameId} href={portrait.imageUrl}
         x={x - portraitRadius} y={y - portraitRadius} width={portraitRadius * 2} height={portraitRadius * 2}

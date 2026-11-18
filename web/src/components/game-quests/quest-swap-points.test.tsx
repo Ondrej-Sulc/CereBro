@@ -154,6 +154,7 @@ it("keeps portal artwork and destinations when a swap shares the same tile", asy
   const host=await render(<QuestMapExplorer map={map} initialNode="4,0" featureLocations={projectQuestMapFeatures(map)}/>);
   const marker=host.querySelector('[data-map-feature][data-coordinate="4,0"]')!;
   expect(marker.querySelector('[data-portal-artwork]')).not.toBeNull();
+  expect(marker.querySelector('[data-portal-layer="center"]')).toBeNull();
   expect(marker.getAttribute('aria-label')).toContain('Portal');
   expect(host.querySelector('section[aria-label="Portal destinations"]')).not.toBeNull();
   expect(marker.querySelectorAll('[role="button"]')).toHaveLength(0);

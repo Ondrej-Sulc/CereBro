@@ -35,11 +35,15 @@ small ring is already complete and centered at `(48,48)`.
 
 The map composes the cyan half-ring around an existing portal coordinate and
 adds a quiet rotating cyan quarter-ring. White quarters provide the selection
-and keyboard-focus halo. Rotation stops when reduced motion is requested.
+and keyboard-focus halo. The stationary `PortalSmall` glyph fills the center of
+standalone portals; portraits and path features keep their own center when they
+share a portal location. Rotation stops when reduced motion is requested.
 Defenders at recorded portal destinations use the same ring treatment around
 their unchanged portrait. The automatic overview and map key use `PortalSmall`;
 overview markers are derived only from recorded source/target tiles. Connections,
 destinations, route membership and keyboard selection remain owned by quest data.
+Portal-only sources, random entrances and destinations omit combat modifiers in
+the location details. A defender sharing that location retains its modifiers.
 
 Reproduce from the existing offline artwork library and installed static assets:
 

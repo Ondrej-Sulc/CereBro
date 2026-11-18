@@ -34,10 +34,26 @@ it("retains one keyboard and pointer target without changing portal connections"
  await act(async()=>{target.dispatchEvent(new MouseEvent('click',{bubbles:true}));target.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true}));target.dispatchEvent(new KeyboardEvent('keydown',{key:' ',bubbles:true}));});
  expect(choose).toHaveBeenCalledTimes(3);expect(tile).toEqual(before);
 });
+it("centers the native PortalSmall glyph inside the rings without rotating it",async()=>{
+ const host=await render(<QuestPortalVisual x={100} y={120} selected={false} radius={30}/>);
+ const glyph=host.querySelector('[data-portal-layer="center"] image')!;
+ expect(glyph).not.toBeNull();
+ expect(glyph.getAttribute('href')).toBe(getQuestPortalArtwork('small')?.url);
+ expect(glyph.getAttribute('x')).toBe('-18');expect(glyph.getAttribute('y')).toBe('-18');
+ expect(glyph.getAttribute('width')).toBe('36');expect(glyph.getAttribute('height')).toBe('36');
+ expect(glyph.closest('[data-portal-layer="summoning"], [data-portal-layer="selection"]')).toBeNull();
+ expect(glyph.closest('[data-portal-artwork]')?.getAttribute('aria-hidden')).toBe('true');
+});
 it("uses the same native treatment for a destination-only tile",async()=>{
  const host=await render(<QuestMapWaypoint tile={{...tile,portals:[]}} x={80} y={90} label="Map location" active selected portalTarget onChoose={vi.fn()}/>);
  expect(host.querySelector('[role="button"]')?.getAttribute('aria-label')).toBe('Portal destination');
  expect(host.querySelector('[data-portal-artwork]')?.getAttribute('data-selected')).toBe('true');
+ expect(host.querySelector('[data-portal-layer="center"] image')?.getAttribute('href')).toBe(getQuestPortalArtwork('small')?.url);
+});
+it("leaves the portal center available for a co-located portrait or feature",async()=>{
+ const host=await render(<QuestPortalVisual x={100} y={120} selected showCenter={false}/>);
+ expect(host.querySelector('[data-portal-layer="center"]')).toBeNull();
+ expect(host.querySelectorAll('[data-portal-layer="entrance"] image')).toHaveLength(2);
 });
 it("keeps start and transit waypoints free of portal art",async()=>{
  const host=await render(<QuestMapWaypoint tile={{...tile,portals:[],start:true}} x={80} y={90} label="Start" active selected={false} portalTarget={false} onChoose={vi.fn()}/>);
