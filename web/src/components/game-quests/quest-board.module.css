@@ -31,6 +31,16 @@
 .waypoint{outline:none}
 .waypoint:focus-visible .waypointRing{stroke:#f3fbff;stroke-width:2}
 .waypointRing{transition:stroke-opacity .18s,fill-opacity .18s;pointer-events:none}
+.portalArtwork{pointer-events:none}
+.portalBase{opacity:.92}
+.portalOrbit,.portalSelection{transform-box:fill-box;transform-origin:center;pointer-events:none}
+.portalOrbit{opacity:.27;animation:portal-orbit 52s linear infinite;transition:opacity .2s}
+.portalSelection{opacity:0;animation:portal-orbit 76s linear infinite reverse;transition:opacity .18s}
+.portalArtwork[data-selected=true] .portalSelection,.waypoint:focus-visible .portalSelection{opacity:.72}
+.portalArtwork[data-selected=true] .portalOrbit{opacity:.38}
+.waypoint:hover .portalOrbit{opacity:.62}
+.portalLegend{display:block;flex-shrink:0;opacity:.85}
+@keyframes portal-orbit{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 .navigator{position:absolute;right:18px;bottom:18px;z-index:3;width:146px;padding:10px;border:1px solid #80b8d448;border-radius:12px;background:#061321e8;box-shadow:0 8px 30px #0007,inset 0 1px #bdeeff0b;backdrop-filter:blur(14px)}
 .navigator>span{display:flex;align-items:center;gap:6px;margin-bottom:7px;color:#9fc2d6;font-size:8px;letter-spacing:.18em;text-transform:uppercase}
 .navigator>span::before{content:'';height:4px;width:4px;border-radius:50%;background:#9ae9fc;box-shadow:0 0 7px #65ceea80}
@@ -66,4 +76,4 @@
 @media(min-width:1450px){.viewport{height:800px}}
 @container(max-width:800px){.controls{top:10px;left:10px;right:10px;gap:6px}.controls button>span{position:absolute;width:1px;height:1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}.controls button{width:44px;min-width:44px;padding:0}.zoom output{min-width:32px;font-size:10px}.controls .zoom button:last-child{margin-left:0}.controls>label{padding-inline:6px}.viewport{height:620px}}
 @container(max-width:600px){.controls{flex-wrap:wrap;align-items:start;gap:8px}.controls>label{width:fit-content;max-width:100%;min-height:44px}.controls>label select{width:190px!important;min-height:36px!important}.viewTools{flex-basis:100%;justify-content:space-between;margin-left:0}.controlActions{margin-left:0}.controlActions::before{left:-3px}.viewport{height:clamp(360px,calc(100cqw * var(--map-aspect)),560px)}.navigator{width:112px;right:10px;bottom:12px;padding:8px}.navigator>span{font-size:7px;letter-spacing:.1em}.navigator svg{max-height:116px}.fullscreenContext{left:10px;max-width:calc(100% - 148px);font-size:10px;padding:7px 9px}.legend{gap:10px 15px}.board[data-fullscreen=true] .controls{top:max(10px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left))}.board[data-fullscreen=true] .mapKey{padding-bottom:env(safe-area-inset-bottom)}}
-@media(prefers-reduced-motion:reduce){.controls button,.regionArea,.waypointRing{transition:none}}
+@media(prefers-reduced-motion:reduce){.controls button,.regionArea,.waypointRing,.portalOrbit,.portalSelection{transition:none}.portalOrbit,.portalSelection{animation:none}}

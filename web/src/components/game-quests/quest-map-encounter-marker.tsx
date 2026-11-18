@@ -4,6 +4,7 @@ import type { QuestMapLabelBox } from "@cerebro/core/domain/game-quests/board";
 import type { QuestPortrait } from "@/lib/game-quests/presentation";
 import { QuestMapNameplate } from "./quest-map-nameplate";
 import { QuestMapBossCorona, QuestMapBossEmblem } from "./quest-map-boss-treatment";
+import { QuestPortalVisual } from "./quest-portal-visual";
 import styles from "./quest-map-encounter-marker.module.css";
 
 type Props = {
@@ -27,7 +28,7 @@ export function QuestMapEncounterMarker({ encounter: e, portrait, x, y, uid, ind
   const bossBadgeRadius = Math.min(26, Math.max(5.5, 8 * bossUnit));
   const bossBadgeOffset = (radius + Math.min(bossBadgeRadius * .3, 5)) / Math.SQRT2;
   return <g role="button" tabIndex={0} aria-pressed={selected}
-    aria-label={`${label}, ${e.rarity} stars${isBoss ? e.final ? ", final boss" : ", boss" : ""}${e.pathIndices.length > 1 ? `, shared by ${e.pathIndices.length} recorded routes` : ""}${featureLabel?`, ${featureLabel}`:""}`}
+    aria-label={`${label}, ${e.rarity} stars${isBoss ? e.final ? ", final boss" : ", boss" : ""}${e.pathIndices.length > 1 ? `, shared by ${e.pathIndices.length} recorded routes` : ""}${portalTarget?", portal destination":""}${featureLabel?`, ${featureLabel}`:""}`}
     data-coordinate={coordinate} data-map-coordinate={coordinate} data-map-encounter={e.id}
     data-selected={selected} data-active={active} data-final-boss={e.final} data-map-boss={isBoss}
     className={styles.marker} style={style}
@@ -39,7 +40,7 @@ export function QuestMapEncounterMarker({ encounter: e, portrait, x, y, uid, ind
       <circle cx={x} cy={y + 2} r={radius + 2} fill="#010710" opacity=".92" />
       {isBoss && <QuestMapBossCorona x={x} y={y} radius={radius} selected={selected} />}
       <circle className={styles.halo} cx={x} cy={y} r={radius + 3} fill={accent} fillOpacity={selected ? .15 : .055} stroke={accent} strokeOpacity={selected ? .65 : .2} strokeWidth="1" />
-      {portalTarget && <circle data-map-portal-target cx={x} cy={y} r={radius + 10} fill="none" stroke="#cfa9f8" strokeWidth="1.1" strokeDasharray="4 5" opacity=".8" />}
+      {portalTarget && <g data-map-portal-target><QuestPortalVisual x={x} y={y} radius={radius+10} selected={selected}/></g>}
       <circle cx={x} cy={y} r={radius} fill="#0b1a29" stroke={accent} strokeWidth={e.final ? 3 : 2} className={styles.portraitRing} />
       {portrait?.imageUrl ? <image className={styles.portrait} data-map-portrait={e.gameId} href={portrait.imageUrl}
         x={x - portraitRadius} y={y - portraitRadius} width={portraitRadius * 2} height={portraitRadius * 2}

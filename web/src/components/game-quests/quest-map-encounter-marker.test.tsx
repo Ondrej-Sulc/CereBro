@@ -63,6 +63,8 @@ describe("quest encounter map marker", () => {
     expect(marker.querySelector('[data-map-selection]')).not.toBeNull();
     expect(marker.querySelector('[data-map-boss-emblem]')?.getAttribute('aria-hidden')).toBe('true');
     expect(marker.querySelector('[data-map-portal-target]')).not.toBeNull();
+    expect(marker.querySelector('[data-map-portal-target] [data-portal-artwork]')).not.toBeNull();
+    expect(marker.getAttribute('aria-label')).toContain('portal destination');
     expect(marker.querySelector('[data-map-shared-routes]')?.textContent).toBe('3');
     expect(marker.querySelector('[data-map-boss-treatment]')).not.toBeNull();
     expect(marker.querySelector('[data-map-boss-bezel]')?.getAttribute('stroke-dasharray')).toBeTruthy();

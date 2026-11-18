@@ -8,7 +8,7 @@ import { QuestMapExplorer } from "./quest-map-explorer";
 import { QuestPathRewards } from "./quest-path-rewards";
 import { QuestPreparationSummary } from "./quest-preparation";
 
-vi.mock("next/image", () => ({ default: ({ alt = "", ...props }: ImgHTMLAttributes<HTMLImageElement>) => createElement("img", { ...props, alt }) }));
+vi.mock("next/image", () => ({ default: ({ alt = "", unoptimized, ...props }: ImgHTMLAttributes<HTMLImageElement> & { unoptimized?:boolean }) => { void unoptimized; return createElement("img", { ...props, alt }); } }));
 Object.assign(globalThis, { IS_REACT_ACT_ENVIRONMENT: true });
 vi.stubGlobal("ResizeObserver", class { observe() {} disconnect() {} });
 HTMLElement.prototype.scrollBy = vi.fn();
