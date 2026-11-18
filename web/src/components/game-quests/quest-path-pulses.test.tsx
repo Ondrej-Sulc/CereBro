@@ -81,6 +81,24 @@ it("repositions the viewport-sized surface in world space during zoom and pan", 
   expect(context.setTransform).toHaveBeenCalledWith(1.5, 0, 0, 1.5, -60, -30);
 });
 
+it("keeps pulse heads at their world positions when zoom changes, then advances only by elapsed time", async () => {
+  const heads: number[][] = [];
+  let endpoints: number[] = [];
+  context.beginPath.mockImplementation(() => { endpoints = []; });
+  context.lineTo.mockImplementation((x: number) => { endpoints.push(x); });
+  context.stroke.mockImplementation(() => { if (context.strokeStyle === '#f4ffff') heads.push([...endpoints]); });
+  const { scene } = await render(); await frame(1000);
+  const before = heads.at(-1)!;
+  expect(before.length).toBeGreaterThan(0);
+  scene.setAttribute('data-zoom', '.75'); await frame(1000);
+  expect(heads.at(-1)).toEqual(before);
+  await frame(1100);
+  const advanced = heads.at(-1)!;
+  expect((advanced[0] - before[0]) * .75).toBeCloseTo(2.5);
+  scene.setAttribute('data-zoom', '.25'); await frame(1100);
+  expect(heads.at(-1)!.slice(0, advanced.length)).toEqual(advanced);
+});
+
 it("animates light without mutating the static SVG between idle frames", async () => {
   const { scene } = await render(); await frame();
   const changed = vi.fn(), observer = new MutationObserver(changed);

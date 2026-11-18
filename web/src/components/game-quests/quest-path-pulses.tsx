@@ -1,7 +1,7 @@
 "use client";
 import { memo, useEffect, useLayoutEffect, useMemo, useRef, type RefObject } from "react";
 import type { Coordinate } from "@cerebro/core/domain/game-quests";
-import { createQuestPathPulseGeometry, questPathPulseSubcurve, visitQuestPathPulseIntervals, type QuestPathPulseGeometry } from "./quest-path-pulse-geometry";
+import { createQuestPathPulseGeometry, questPathPulseSubcurve, visitQuestPathPulseIntervals, type QuestPathPulseGeometry, type QuestPathPulseMotion } from "./quest-path-pulse-geometry";
 import styles from "./quest-board.module.css";
 
 export type QuestPathPulsesProps = {
@@ -18,7 +18,7 @@ const categories = ["normal-active", "normal-quiet", "portal-active", "portal-qu
 const layers = [{ length: 26, width: 4.6 }, { length: 13, width: 3 }, { length: 4, width: 1.8 }] as const;
 
 function paint(context: CanvasRenderingContext2D, geometry: readonly QuestPathPulseGeometry[], highlight: boolean,
-  view: { left: number; top: number; width: number; height: number; scale: number; ratio: number }, seconds: number) {
+  view: { left: number; top: number; width: number; height: number; scale: number; ratio: number }, motion: QuestPathPulseMotion) {
   const { left, top, width, height, scale, ratio } = view, margin = 5 / scale;
   const visible = geometry.filter(edge => edge.bounds.maxX >= left - margin && edge.bounds.minX <= left + width + margin &&
     edge.bounds.maxY >= top - margin && edge.bounds.minY <= top + height + margin);
@@ -31,7 +31,7 @@ function paint(context: CanvasRenderingContext2D, geometry: readonly QuestPathPu
       let drawn = false; context.beginPath();
       for (const edge of visible) {
         if (edge.category !== category) continue;
-        visitQuestPathPulseIntervals(edge, seconds, scale, layer.length, (start, end) => {
+        visitQuestPathPulseIntervals(edge, motion, scale, layer.length, (start, end) => {
           const segment = questPathPulseSubcurve(edge, start, end);
           context.moveTo(...segment.from);
           if (segment.control) context.quadraticCurveTo(...segment.control, ...segment.to);
@@ -63,6 +63,7 @@ export const QuestPathPulses = memo(function QuestPathPulses({ edges, point, dis
     if (!context) return;
     const motion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let frame: number | null = null, visible = true, lost = false;
+    let clock: (QuestPathPulseMotion & { time: number }) | null = null;
     const stop = () => { if (frame !== null) cancelAnimationFrame(frame); frame = null; };
     const fallback = () => { stop(); surface.style.visibility = "hidden"; scene.removeAttribute("data-pulse-renderer"); };
     const allowed = () => !lost && visible && !document.hidden && !motion.matches && viewport.clientWidth > 0 && viewport.clientHeight > 0;
@@ -72,6 +73,13 @@ export const QuestPathPulses = memo(function QuestPathPulses({ edges, point, dis
       if (!allowed() || !context) return;
       const scale = Number(scene.getAttribute("data-zoom")), w = viewport.clientWidth, h = viewport.clientHeight;
       if (!(scale > 0) || !Number.isFinite(scale)) return;
+      // Anchor spacing to the map once. Integrate only the new frame's travel:
+      // dividing the entire timeline by each new zoom retimes every pulse.
+      clock = {
+        time,
+        period: clock?.period ?? 60 / scale,
+        distance: clock ? clock.distance + Math.max(0, time - clock.time) * .025 / scale : time * .025 / scale,
+      };
       const ratio = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
       const left = (viewport.scrollLeft - Math.max(0, (w - width * scale) / 2)) / scale;
       const top = (viewport.scrollTop - Math.max(0, (h - height * scale) / 2)) / scale;
@@ -80,7 +88,7 @@ export const QuestPathPulses = memo(function QuestPathPulses({ edges, point, dis
       if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) { canvas.width = pixelWidth; canvas.height = pixelHeight; }
       try {
         context.setTransform(1, 0, 0, 1, 0, 0); context.clearRect(0, 0, pixelWidth, pixelHeight);
-        paint(context, latest.current.geometry, latest.current.highlightRoute, { left, top, width: w / scale, height: h / scale, scale, ratio }, time / 1000);
+        paint(context, latest.current.geometry, latest.current.highlightRoute, { left, top, width: w / scale, height: h / scale, scale, ratio }, clock);
         if (surface.style.visibility !== "visible") surface.style.visibility = "visible";
         if (scene.getAttribute("data-pulse-renderer") !== "canvas") scene.setAttribute("data-pulse-renderer", "canvas");
         frame = requestAnimationFrame(draw);

@@ -12,16 +12,28 @@ const geometry=(edges:ReturnType<typeof edge>[],distances=new Map<string,number>
   createQuestPathPulseGeometry({edges,point,distances,selectedEdges:new Set(),highlightRoute:false});
 function intervals(connection:QuestPathPulseGeometry,seconds:number,scale=1,length=4){
   const result:[number,number][]=[];
-  visitQuestPathPulseIntervals(connection,seconds,scale,length,(from,to)=>result.push([from,to]));
+  visitQuestPathPulseIntervals(connection,{distance:seconds*25,period:60},scale,length,(from,to)=>result.push([from,to]));
   return result;
 }
 
 describe('quest path pulse geometry',()=>{
-  it('moves the leading end from the captured source toward its target at 25 screen pixels per second',()=>{
+  it('keeps the leading end in world space across zoom while preserving screen-space pulse length',()=>{
     const [connection]=geometry([edge([0,0],[100,0])]);
     expect(questPathPulseSubcurve(connection,...intervals(connection,.4)[0])).toMatchObject({from:[6,0],to:[10,0],control:null});
     expect(questPathPulseSubcurve(connection,...intervals(connection,.8)[0])).toMatchObject({from:[16,0],to:[20,0]});
-    expect(questPathPulseSubcurve(connection,...intervals(connection,.8,2)[0])).toMatchObject({from:[8,0],to:[10,0]});
+    expect(questPathPulseSubcurve(connection,...intervals(connection,.8,2)[0])).toMatchObject({from:[18,0],to:[20,0]});
+  });
+  it('anchors source phase and pulse spacing independently of zoom',()=>{
+    const [connection]=geometry([edge([0,0],[250,0])],new Map([['0,0>250,0',13]]));
+    for(const zoom of [.25,.5,1,2])for(const length of [4,13,26]){
+      const tips:number[]=[];
+      visitQuestPathPulseIntervals(connection,{distance:78,period:120},zoom,length,(_from,to)=>{if(to<connection.length)tips.push(to);});
+      expect(tips).toEqual([65,185]);
+    }
+    for(const period of [0,-1,NaN,Infinity]){
+      const visit=()=>{throw new Error('Invalid period must not emit a pulse');};
+      visitQuestPathPulseIntervals(connection,{distance:0,period},1,4,visit);
+    }
   });
   it('retains the visible portal curve and exact endpoints when clipping a quadratic stroke',()=>{
     const [portal]=geometry([edge([0,0],[100,0],true)]);

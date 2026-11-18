@@ -6,6 +6,7 @@ export type QuestPathPulseGeometry=QuestPathPulseStroke&Readonly<{
   key:string;bounds:Readonly<{minX:number;minY:number;maxX:number;maxY:number}>;
   length:number;phase:number;category:'normal-active'|'normal-quiet'|'portal-active'|'portal-quiet';samples:readonly number[];
 }>;
+export type QuestPathPulseMotion=Readonly<{distance:number;period:number}>;
 type Edge=Readonly<{from:Coordinate;to:Coordinate;portal:boolean}>;
 const freezePoint=(x:number,y:number):QuestPathPulsePoint=>Object.freeze([x,y] as const);
 function pointAt(edge:QuestPathPulseStroke,t:number):QuestPathPulsePoint{
@@ -39,16 +40,17 @@ export function createQuestPathPulseGeometry({edges,point,distances,selectedEdge
   }));
 }
 
-/** Emit clipped world-distance intervals; each leading end advances from source to target. */
-export function visitQuestPathPulseIntervals(edge:QuestPathPulseGeometry,elapsedSeconds:number,scale:number,lengthPx:number,
+/** World-space fronts and spacing stay fixed across zoom; only tail length uses screen pixels. */
+export function visitQuestPathPulseIntervals(edge:QuestPathPulseGeometry,motion:QuestPathPulseMotion,scale:number,lengthPx:number,
   visit:(fromDistance:number,toDistance:number)=>void):void{
-  if(!Number.isFinite(elapsedSeconds)||!Number.isFinite(scale)||scale<=0||!Number.isFinite(lengthPx)||lengthPx<=0)return;
-  const screenLength=edge.length*scale;
-  if(!Number.isFinite(screenLength)||screenLength<=0)return;
-  const tip=((elapsedSeconds*25-edge.phase*scale)%60+60)%60;
-  for(let end=tip;end<screenLength+lengthPx;end+=60){
-    const from=Math.max(0,end-lengthPx),to=Math.min(screenLength,end);
-    if(to>from)visit(from/scale,to/scale);
+  if(!Number.isFinite(motion.distance)||!Number.isFinite(motion.period)||motion.period<=0||
+    !Number.isFinite(scale)||scale<=0||!Number.isFinite(lengthPx)||lengthPx<=0)return;
+  const length=lengthPx/scale;
+  if(!Number.isFinite(length)||length<=0)return;
+  const tip=((motion.distance-edge.phase)%motion.period+motion.period)%motion.period;
+  for(let end=tip;end<edge.length+length;end+=motion.period){
+    const from=Math.max(0,end-length),to=Math.min(edge.length,end);
+    if(to>from)visit(from,to);
   }
 }
 
