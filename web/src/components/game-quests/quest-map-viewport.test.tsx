@@ -76,7 +76,145 @@ function touchPointer(target: Element, type: string, x: number, y: number, point
   target.dispatchEvent(event);
 }
 
+function animationClock(reducedMotion = false) {
+  let time = 0, nextId = 0;
+  const pending = new Map<number, FrameRequestCallback>();
+  vi.stubGlobal("matchMedia", vi.fn(() => ({ matches: reducedMotion })));
+  vi.stubGlobal("requestAnimationFrame", (callback: FrameRequestCallback) => {
+    pending.set(++nextId, callback); return nextId;
+  });
+  vi.stubGlobal("cancelAnimationFrame", (id: number) => pending.delete(id));
+  const frame = async () => {
+    time += 16;
+    const callbacks = [...pending.values()]; pending.clear();
+    await act(async () => callbacks.forEach(callback => callback(time)));
+  };
+  return { pending, frame, finish: async () => {
+    for (let step = 0; pending.size && step < 80; step++) await frame();
+    expect(pending.size).toBe(0);
+  } };
+}
+
 describe("quest map viewport controls", () => {
+  it("smoothly accumulates zoom-button presses without redrawing marker geometry every frame", async () => {
+    const host = await renderBoard(), initial = scale(host), clock = animationClock();
+    const marker = host.querySelector('[data-map-marker-visual]')!;
+    const markerTransform = marker.getAttribute('transform');
+    await act(async () => button(host, "Zoom in").click());
+    expect(scale(host)).toBe(initial);
+    await clock.frame();
+    expect(scale(host)).toBeGreaterThan(initial);
+    expect(scale(host)).toBeLessThan(initial * 1.35);
+    expect(marker.getAttribute('transform')).toBe(markerTransform);
+    await act(async () => button(host, "Zoom in").click());
+    let previous = scale(host);
+    while (clock.pending.size) {
+      await clock.frame();
+      expect(scale(host)).toBeGreaterThanOrEqual(previous);
+      previous = scale(host);
+    }
+    expect(scale(host)).toBeCloseTo(initial * 1.35 ** 2);
+    expect(host.querySelector<SVGSVGElement>('svg[data-zoom]')!.style.transform).toBe('');
+  });
+
+  it("smooths rapid wheel input while preserving the world point under the cursor", async () => {
+    const host = await renderBoard(); await zoomToDetail(host);
+    const viewport = host.querySelector<HTMLElement>('[aria-label="Scrollable quest map"]')!;
+    const initial = scale(host), board = questBoardGeometry(map), clock = animationClock();
+    viewport.scrollTo({ left: 20, top: 30 });
+    const world = () => [
+      (viewport.scrollLeft + 150 - Math.max(0, (size.width - board.width * scale(host)) / 2)) / scale(host),
+      (viewport.scrollTop + 200 - Math.max(0, (size.height - board.height * scale(host)) / 2)) / scale(host),
+    ];
+    const anchor = world();
+    await act(async () => {
+      for (let index = 0; index < 4; index++) viewport.dispatchEvent(new WheelEvent('wheel', { deltaY: -25, clientX: 150, clientY: 200, bubbles: true, cancelable: true }));
+    });
+    expect(scale(host)).toBe(initial);
+    await clock.frame();
+    expect(scale(host)).toBeGreaterThan(initial);
+    expect(scale(host)).toBeLessThan(initial * Math.exp(.2));
+    await clock.finish();
+    expect(scale(host)).toBeCloseTo(initial * Math.exp(.2));
+    expect(world()[0]).toBeCloseTo(anchor[0]); expect(world()[1]).toBeCloseTo(anchor[1]);
+  });
+
+  it("honors reduced motion without queueing a zoom animation", async () => {
+    const host = await renderBoard(), initial = scale(host), clock = animationClock(true);
+    await act(async () => button(host, "Zoom in").click());
+    expect(scale(host)).toBeCloseTo(initial * 1.35);
+    expect(clock.pending.size).toBe(0);
+  });
+
+  it("reverses an unfinished zoom and animates Fit map back to its exact fitted bounds", async () => {
+    const host = await renderBoard(), initial = scale(host), clock = animationClock();
+    await act(async () => button(host, "Zoom in").click()); await clock.frame();
+    const intermediate = scale(host);
+    expect(button(host, "Zoom out").disabled).toBe(false);
+    await act(async () => button(host, "Zoom out").click()); await clock.frame();
+    expect(scale(host)).toBeLessThan(intermediate);
+    await clock.finish(); expect(scale(host)).toBe(initial);
+    await act(async () => button(host, "Zoom in").click()); await clock.finish();
+    const detail = scale(host);
+    await act(async () => button(host, "Fit map").click());
+    expect(scale(host)).toBe(detail);
+    await clock.frame(); expect(scale(host)).toBeLessThan(detail);
+    await clock.finish();
+    const viewport = host.querySelector<HTMLElement>('[aria-label="Scrollable quest map"]')!;
+    expect(scale(host)).toBe(initial);
+    expect([viewport.scrollLeft, viewport.scrollTop]).toEqual([0, 0]);
+    expect(host.querySelector('svg[aria-label="Map overview"]')).toBeNull();
+  });
+
+  it("cancels an in-flight zoom on resize without applying stale animation frames", async () => {
+    const host = await renderBoard(), clock = animationClock();
+    await act(async () => button(host, "Zoom in").click()); await clock.frame();
+    const intermediate = scale(host);
+    size = { width: 320, height: 500 };
+    await act(async () => resize!());
+    expect(clock.pending.size).toBe(0); expect(scale(host)).toBe(intermediate);
+    await clock.frame(); expect(scale(host)).toBe(intermediate);
+  });
+
+  it("finishes zoom when scrollbars change the content box without resizing the viewport", async () => {
+    vi.spyOn(HTMLElement.prototype, "offsetWidth", "get").mockReturnValue(390);
+    vi.spyOn(HTMLElement.prototype, "offsetHeight", "get").mockReturnValue(560);
+    const host = await renderBoard(), initial = scale(host), clock = animationClock();
+    await act(async () => button(host, "Zoom in").click()); await clock.frame();
+    size = { width: 380, height: 550 };
+    await act(async () => resize!());
+    expect(clock.pending.size).toBe(1);
+    await clock.finish(); expect(scale(host)).toBeCloseTo(initial * 1.35);
+    await act(async () => button(host, "Fit map").click()); await clock.frame();
+    size = { width: 390, height: 560 };
+    await act(async () => resize!()); await clock.finish();
+    expect(scale(host)).toBeCloseTo(initial);
+  });
+
+  it("lets location navigation take over an unfinished zoom without a later camera snap", async () => {
+    const host = await renderBoard(), clock = animationClock();
+    await act(async () => button(host, "Zoom in").click()); await clock.frame();
+    const viewport = host.querySelector<HTMLElement>('[aria-label="Scrollable quest map"]')!;
+    await act(async () => { viewport.scrollTo({ left: 120, top: 150 }); viewport.dispatchEvent(new Event('scroll')); });
+    expect(clock.pending.size).toBe(0);
+    await clock.frame(); expect([viewport.scrollLeft, viewport.scrollTop]).toEqual([120, 150]);
+  });
+
+  it("interrupts zoom immediately when a drag begins and cancels frames on unmount", async () => {
+    const host = await renderBoard(), clock = animationClock();
+    await act(async () => button(host, "Zoom in").click());
+    await clock.frame();
+    const intermediate = scale(host);
+    const viewport = host.querySelector<HTMLElement>('[aria-label="Scrollable quest map"]')!;
+    await act(async () => touchPointer(viewport, 'pointerdown', 150, 200));
+    expect(clock.pending.size).toBe(0);
+    await clock.frame(); expect(scale(host)).toBe(intermediate);
+    await act(async () => touchPointer(viewport, 'pointerup', 150, 200));
+    await act(async () => button(host, "Zoom in").click());
+    expect(clock.pending.size).toBe(1);
+    await act(async () => root!.unmount()); root = undefined;
+    expect(clock.pending.size).toBe(0);
+  });
   it("keeps zoom, fitting and full screen together without a global Names toggle", async () => {
     const host=await renderBoard();
     const dock=host.querySelector('[role="group"][aria-label="Map view controls"]');
@@ -175,6 +313,7 @@ describe("quest map viewport controls", () => {
     define(Element.prototype, "setPointerCapture", { value: vi.fn() });
     const host = await renderBoard();
     await zoomToDetail(host);
+    const clock = animationClock();
     const viewport = host.querySelector<HTMLElement>('[aria-label="Scrollable quest map"]')!;
     const scene = host.querySelector("svg[data-zoom]")!;
     viewport.scrollTo({ left: 200, top: 200 });
@@ -186,6 +325,7 @@ describe("quest map viewport controls", () => {
       touchPointer(viewport, "pointermove", 320, 300, 2);
     });
     expect(scale(host)).toBeCloseTo(before * 1.2);
+    expect(clock.pending.size).toBe(0);
     await act(async () => {
       touchPointer(scene, "pointerup", 200, 300);
       touchPointer(scene, "lostpointercapture", 200, 300);
