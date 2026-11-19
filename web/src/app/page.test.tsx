@@ -73,14 +73,14 @@ it.each([
   const sections = [...document.querySelectorAll("main > div > section")];
   expect(sections.findIndex(section => section.id === "web-platform")).toBeLessThan(sections.findIndex(section => section.id === "explore"));
   const hero = sections[0];
-  expect(hero.querySelector("h1")?.textContent).toMatch(/Alliance War planning\s*& MCOC game tools/);
+  expect(hero.querySelector("h1")?.textContent).toMatch(/The Ultimate MCOC\s*Tactical Advantage/);
   expect(hero.textContent).toContain("Plan Alliance Wars");
   expect(hero.textContent).toContain("assignments in Discord");
   expect(hero.textContent).toContain("Free to use");
   expect(hero.querySelector("a")?.getAttribute("href")).toBe(canPlan ? "/planning" : "#setup");
   expect(hero.querySelector("a")?.textContent).toContain(canPlan ? "Open War Planner" : "Set up your alliance");
   const exploreAction = [...hero.querySelectorAll("a")].find(link => link.textContent?.trim() === "Explore game tools");
-  expect(exploreAction?.getAttribute("href")).toBe("#game-tools");
+  expect(exploreAction?.getAttribute("href")).toBe("#explore");
   expect(hero.querySelector('a[href^="https://discord.com/oauth2/authorize"]')).toBeNull();
   expect(document.body.textContent).toContain("Kit overview");
   expect(document.body.textContent).toContain("How to obtain");
@@ -108,19 +108,22 @@ it("places live community counters directly below the hero and preserves exact c
   expect([...updated.querySelectorAll('section[aria-labelledby="community-stats-title"] dd')].map(counter => counter.textContent)).toEqual(["0", "9,999", "10K+", "999K+"]);
 });
 
-it("puts the public quest, effect and reward tools before the alliance and catalog sections", async () => {
+it("puts the quest and effect tools directly after the catalogs and offers rewards within the quest card", async () => {
   const document = await renderHome();
-  const sections = [...document.querySelectorAll("main > div > section")];
   const tools = document.querySelector("#game-tools");
   expect(tools?.getAttribute("aria-labelledby")).toBe("game-tools-title");
-  expect(sections[2]).toBe(tools);
+  expect(document.querySelector("#explore")?.nextElementSibling?.id).toBe("game-tools");
   expect([...tools!.querySelectorAll("h3")].map(heading => heading.textContent)).toEqual([
-    "Quest Explorer", "Effect Glossary", "Find a Reward",
+    "Quest Explorer", "Effect Glossary",
   ]);
-  for (const destination of ["/quests", "/glossary", "/rewards"]) {
+  for (const destination of ["/quests", "/glossary"]) {
     const link = tools!.querySelector(`a[href="${destination}"]`);
     expect(link?.textContent?.trim().length, destination).toBeGreaterThan(5);
   }
+  const rewards = [...document.querySelectorAll('main a[href="/rewards"]')];
+  expect(rewards).toHaveLength(1);
+  expect(rewards[0].textContent?.trim()).toBe("Find a reward");
+  expect(rewards[0].closest("article")?.querySelector("h3")?.textContent).toBe("Quest Explorer");
   expect(tools!.textContent).toMatch(/Act 10.*Towers/);
   expect(document.querySelector('main a[href="/nodes"], main a[href="/assets"]')).toBeNull();
   expect(metadata.description).toMatch(/quest maps.*effects.*rewards/i);

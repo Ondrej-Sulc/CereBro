@@ -1,21 +1,18 @@
 .container { width: 100%; max-width: 1280px; margin: 0 auto; padding: 0 24px; }
-.explore { position: relative; padding: 40px 0 64px; background: radial-gradient(ellipse at 12% 30%, #0ea5e909, transparent 60%), radial-gradient(ellipse at 90% 55%, #8b5cf60c, transparent 65%); }
+.explore { position: relative; padding: 40px 0 34px; background: radial-gradient(ellipse at 12% 30%, #0ea5e909, transparent 60%), radial-gradient(ellipse at 90% 55%, #8b5cf60c, transparent 65%); }
 .sectionBadge { display: inline-flex; align-items: center; gap: 7px; width: fit-content; border: 1px solid #38bdf833; border-radius: 7px; background: #0c4a6e26; padding: 6px 9px; color: #7dd3fc; font-size: 11px; font-weight: 600; line-height: 1.3; letter-spacing: .035em; }
 .sectionBadge svg { width: 14px; height: 14px; flex-shrink: 0; }
 .sectionHeading { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; margin-bottom: 28px; }
 .sectionHeading h2 { margin-top: 10px; color: white; font-size: clamp(28px, 3vw, 40px); line-height: 1.18; font-weight: 700; letter-spacing: -.035em; }
 .sectionHeading > p { max-width: 390px; color: #94a3b8; font-size: 15px; line-height: 1.7; }
-.gameTools { padding: 16px 0 44px; }
-.gameToolsHeading { display: flex; align-items: baseline; justify-content: space-between; flex-wrap: wrap; gap: 8px 20px; margin-bottom: 18px; }
-.gameToolsHeading h2 { color: white; font-size: clamp(26px, 3vw, 36px); line-height: 1.18; font-weight: 700; letter-spacing: -.035em; }
-.gameToolsHeading p { color: #a9b8cb; font-size: 13px; }
+.gameTools { padding: 0 0 44px; }
+.gameToolsHeading { margin-bottom: 18px; color: white; font-size: clamp(26px, 3vw, 36px); line-height: 1.18; font-weight: 700; letter-spacing: -.035em; }
 .gameToolsGrid { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 14px; }
 .gameTool { position: relative; isolation: isolate; overflow: hidden; min-width: 0; border: 1px solid #33465e; border-radius: 20px; }
 .gameTool:focus-within { border-color: #7dd3fc; }
 .gameTool h3 { color: #f5f8ff; font-weight: 700; line-height: 1.16; letter-spacing: -.025em; }
 .gameTool p { color: #c1cde0; font-size: 14px; line-height: 1.65; }
 .questTool {
-  grid-row: span 2;
   display: flex;
   align-items: center;
   padding: clamp(22px, 3vw, 38px);
@@ -36,7 +33,9 @@
 .gameToolIcon svg { width: 22px; height: 22px; }
 .questTool h3 { font-size: clamp(30px, 3.4vw, 45px); }
 .questTool p { margin: 12px 0 20px; }
+.questToolActions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 14px; }
 .questTool .primaryLink { min-height: 44px; gap: 10px; }
+.questTool .sampleLink { display: inline-flex; align-items: center; min-height: 44px; margin-top: 0; }
 .questPosters {
   position: absolute;
   inset: 0 0 0 37%;
@@ -61,17 +60,19 @@
 }
 .questPosters img:first-child { translate: 0 16px; opacity: .78; }
 .questPosters img:last-child { translate: 0 -16px; opacity: .86; }
-.glossaryTool, .rewardTool { display: flex; align-items: center; min-height: 170px; padding: 22px 24px; }
+.glossaryTool, .crystalFeature { display: flex; align-items: center; min-height: 170px; padding: 22px 24px; }
 .glossaryTool { background: radial-gradient(ellipse at 100% 28%, #52356c66, transparent 68%), #171a2f; border-color: #51476b; }
-.rewardTool { background: radial-gradient(ellipse at 100% 56%, #7d513955, transparent 68%), #211c2b; border-color: #574653; }
+.crystalFeature { background: radial-gradient(ellipse at 100% 56%, #7d513955, transparent 68%), #211c2b; border-color: #574653; }
+.crystalFeature:is(:focus-within, :has(a:hover)) { border-color: #fed7aa80; }
+.crystalFeature .smallToolCopy { width: calc(100% - 114px); max-width: 34ch; }
 .smallToolCopy { position: relative; max-width: 29ch; width: calc(100% - 85px); }
 .smallToolCopy h3 { display: flex; align-items: center; gap: 8px; font-size: clamp(20px, 2vw, 25px); }
 .smallToolCopy h3 svg { width: 18px; height: 18px; flex: none; color: #d8b4fe; }
-.rewardTool h3 svg, .rewardTool .textLink { color: #fed7aa; }
+.crystalFeature h3 svg, .crystalFeature .textLink { color: #fed7aa; }
 .glossaryTool .textLink { color: #e2c7fc; }
 .smallToolCopy p { margin-top: 8px; }
 .smallToolCopy .textLink { min-height: 44px; width: fit-content; }
-.effectArtwork, .rewardArtwork {
+.effectArtwork, .crystalArtwork {
   position: absolute;
   right: clamp(10px, 2vw, 23px);
   top: 50%;
@@ -80,14 +81,15 @@
   height: 88px;
   pointer-events: none;
 }
-.effectArtwork img, .rewardArtwork img { position: absolute; object-fit: contain; }
+.effectArtwork img, .crystalArtwork img { position: absolute; object-fit: contain; }
 .effectArtwork img { display: block; padding: 6px; width: 40px; height: 40px; border: 1px solid #d8b4fe3d; border-radius: 12px; background: #281c3b; box-shadow: 0 7px 16px #100a2170; }
 .effectArtwork img:first-child { inset: 3px auto auto 8px; transform: rotate(-13deg); }
 .effectArtwork img:nth-child(2) { inset: 26px 0 auto auto; transform: rotate(10deg); }
 .effectArtwork img:last-child { inset: auto auto 0 5px; transform: rotate(-7deg); }
-.rewardArtwork img { width: 60px; height: 60px; filter: drop-shadow(0 6px 9px #0f0916d9); }
-.rewardArtwork img:first-child { inset: 1px 0 auto auto; transform: rotate(10deg); }
-.rewardArtwork img:last-child { inset: auto auto 1px 0; transform: rotate(-8deg); }
+.crystalArtwork { width: 112px; height: 118px; }
+.crystalArtwork img { width: 86px; height: 86px; filter: drop-shadow(0 6px 9px #0f0916d9); }
+.crystalArtwork img:first-child { inset: 1px 0 auto auto; transform: rotate(10deg); }
+.crystalArtwork img:last-child { inset: auto auto 1px 0; transform: rotate(-8deg); }
 .discoveryGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 .championFeature, .catalogFeature, .finderFeature { position: relative; overflow: hidden; border: 1px solid #33415580; border-radius: 20px; background: #0b1425; transition: border-color .18s, box-shadow .18s; }
 .championFeature:is(:focus-within, :has(a:hover)), .finderFeature:is(:focus-within, :has(a:hover)) { border-color: #38bdf866; }
@@ -127,7 +129,6 @@ a.topicItem:hover { background: #162239; border-color: #7dd3fc80; }
 .sampleLink { display: flex; justify-content: flex-start; width: fit-content; margin-top: 13px; color: #cbd5e1; font-size: 12px; }
 .primaryLink svg, .textLink svg, .sampleLink svg { height: 15px; width: 15px; flex-shrink: 0; }
 .catalogFeature { display: grid; grid-template-columns: 124px 1fr; align-items: center; gap: 16px; padding: 24px; }
-.catalogArt { width: 100%; height: auto; object-fit: contain; filter: drop-shadow(0 10px 20px #0008); }
 .catalogFeature h3 { display: flex; align-items: center; gap: 8px; color: white; font-size: 22px; line-height: 1.25; font-weight: 600; letter-spacing: -.02em; margin-bottom: 12px; }
 .catalogFeature h3 svg { width: 20px; height: 20px; flex-shrink: 0; color: #c4b5fd; }
 .relicFeature h3 svg { color: #fcd34d; }
@@ -138,10 +139,6 @@ a.topicItem:hover { background: #162239; border-color: #7dd3fc80; }
 .relicArtwork a:is(:hover, :focus-visible) { border-color: #fcd34d66; background: #78350f26; }
 .relicArtwork img { width: 84px; height: 84px; object-fit: contain; filter: drop-shadow(0 6px 14px #0008) drop-shadow(0 0 12px #f59e0b26); }
 .catalogFeature p { color: #94a3b8; font-size: 14px; line-height: 1.75; margin-bottom: 16px; }
-.crystalFeature { border-color: #a78bfa4d; background: radial-gradient(ellipse at 0 50%, #4c1d9533, transparent 75%), #0b1425; }
-.crystalFeature .catalogArt { filter: drop-shadow(0 10px 20px #0008) drop-shadow(0 0 18px #8b5cf63d); }
-.crystalFeature:is(:focus-within, :has(a:hover)) { border-color: #c4b5fd80; }
-.crystalFeature .textLink { color: #c4b5fd; }
 .relicFeature { border-color: #d9a4414d; background: radial-gradient(ellipse at 0 50%, #78350f2b, transparent 75%), #0b1425; }
 .relicFeature:is(:focus-within, :has(a:hover)) { border-color: #fcd34d80; }
 .relicFeature .textLink { color: #fcd34d; }
@@ -257,6 +254,9 @@ a.topicItem:hover { background: #162239; border-color: #7dd3fc80; }
 .faqItem[open] summary svg { transform: rotate(180deg); }
 .faqItem > p { padding: 0 24px 24px; max-width: 1000px; color: #94a3b8; font-size: 14px; line-height: 1.8; }
 
+@media (min-width: 1024px) {
+  .effectArtwork { transform: scale(1.24); transform-origin: right center; }
+}
 @media (max-width: 1023px) {
   .heroGrid { grid-template-columns: 1fr; gap: 36px; }
   .heroCopy h1 { font-size: clamp(38px, 6.5vw, 58px); }
@@ -272,8 +272,7 @@ a.topicItem:hover { background: #162239; border-color: #7dd3fc80; }
   .communityStats dt { font-size: 12px; }
   .sectionHeading { align-items: flex-start; flex-direction: column; gap: 16px; }
   .sectionHeading > p { max-width: 600px; }
-  .gameToolsGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .questTool { grid-column: 1 / -1; grid-row: auto; min-height: 290px; }
+  .gameToolsGrid { grid-template-columns: minmax(0, 1fr); }
   .discoveryGrid { grid-template-columns: 1fr; }
   .championFeature { grid-row: auto; min-height: 420px; }
   .featureChampionArt { max-width: 44%; height: 350px !important; top: 120px !important; }
@@ -283,15 +282,15 @@ a.topicItem:hover { background: #162239; border-color: #7dd3fc80; }
   .heroGrid { gap: 30px; }
   .heroCopy h1 { font-size: clamp(32px, 8.6vw, 46px); }
   .heroDescription { font-size: 15px; }
-  .gameTools { padding: 16px 0 32px; }
-  .gameToolsGrid { grid-template-columns: minmax(0, 1fr); gap: 12px; }
-  .questTool { min-height: 0; }
+  .gameTools { padding-bottom: 32px; }
+  .gameToolsGrid { gap: 12px; }
   .questToolCopy { width: 78%; }
   .questPosters { inset-inline-start: 59%; mask-image: linear-gradient(90deg, transparent 10%, #0006 48%, #000c); }
   .questPosters img { min-width: 72px; height: 85%; }
-  .glossaryTool, .rewardTool { min-height: 0; padding: 18px 20px 14px; }
+  .glossaryTool, .crystalFeature { min-height: 0; padding: 18px 20px 14px; }
   .smallToolCopy { width: calc(100% - 67px); }
-  .effectArtwork, .rewardArtwork { transform: scale(.78); transform-origin: right center; }
+  .crystalFeature .smallToolCopy { width: calc(100% - 90px); }
+  .effectArtwork, .crystalArtwork { transform: scale(.78); transform-origin: right center; }
   .heroActions { flex-direction: column; }
   .heroActions a { width: 100%; }
   .heroAccount { font-size: 12px; }
@@ -332,14 +331,13 @@ a.topicItem:hover { background: #162239; border-color: #7dd3fc80; }
   .faqItem summary { padding: 18px 20px; font-size: 13px; }
   .faqItem > p { padding: 0 20px 20px; }
   .container { padding: 0 16px; }
-  .explore { padding: 24px 0 48px; }
+  .explore { padding: 24px 0 28px; }
   .championFeature { min-height: 470px; padding: 24px; }
   .championFeature > p { max-width: 250px; }
   .featureChampionArt { max-width: 58%; height: 300px !important; top: 172px !important; opacity: .62; }
   .featuredChampions a { flex-direction: column; text-align: center; padding: 10px 5px; }
   .catalogFeature { padding: 22px; grid-template-columns: 82px 1fr; gap: 14px; }
   .catalogFeature h3 { font-size: 20px; }
-  .catalogArt { align-self: start; margin-top: 28px; }
   .relicArtwork img { width: 64px; height: 64px; }
   .finderFeature { padding: 24px; flex-wrap: wrap; gap: 14px; }
   .finderIcon { width: 40px; height: 40px; }
