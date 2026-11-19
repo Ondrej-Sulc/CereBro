@@ -60,34 +60,65 @@
 }
 .questPosters img:first-child { translate: 0 16px; opacity: .78; }
 .questPosters img:last-child { translate: 0 -16px; opacity: .86; }
-.glossaryTool, .crystalFeature { display: flex; align-items: center; min-height: 170px; padding: 22px 24px; }
-.glossaryTool { background: radial-gradient(ellipse at 100% 28%, #52356c66, transparent 68%), #171a2f; border-color: #51476b; }
-.crystalFeature { background: radial-gradient(ellipse at 100% 56%, #7d513955, transparent 68%), #211c2b; border-color: #574653; }
+.glossaryTool {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: clamp(22px, 2.6vw, 34px);
+  border-color: #665080;
+  background: radial-gradient(ellipse at 95% 2%, #584080a6, transparent 68%), #1b172e;
+}
+.glossaryTool:focus-within { border-color: #d8b4fe; }
+.glossaryTool .gameToolIcon { margin-bottom: 12px; color: #e2c7fc; border-color: #d8b4fe50; background: #33254d; }
+.glossaryTool h3 { font-size: clamp(27px, 3vw, 38px); }
+.glossaryTool p { max-width: 37ch; margin: 8px 0 16px; }
+.effectShortcuts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; width: 100%; max-width: 420px; margin-bottom: 8px; }
+.effectShortcut {
+  --shortcut-color: #d8b4fe;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 100%;
+  min-height: 68px;
+  padding: 8px 4px;
+  border: 1px solid color-mix(in srgb, var(--shortcut-color) 35%, transparent);
+  border-radius: 12px;
+  background: linear-gradient(165deg, color-mix(in srgb, var(--shortcut-color) 14%, #1c172d), #211a33);
+  color: #f4ecff;
+  font-size: clamp(11px, 1.1vw, 13px);
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  transition: border-color .18s, background-color .18s;
+}
+.effectShortcut span { overflow-wrap: anywhere; }
+.effectShortcut[data-effect="bleed"] { --shortcut-color: #fda4af; }
+.effectShortcut[data-effect="armor_up"] { --shortcut-color: #7dd3fc; }
+.effectShortcut[data-effect="regeneration"] { --shortcut-color: #86efac; }
+.effectShortcut img { width: 28px; height: 28px; object-fit: contain; filter: drop-shadow(0 0 9px var(--shortcut-color)); }
+.effectShortcut:is(:hover, :focus-visible) { border-color: var(--shortcut-color); }
+.glossaryTool .textLink { width: fit-content; min-height: 44px; margin-top: auto; color: #e2c7fc; }
+.crystalFeature { display: flex; align-items: center; min-height: 170px; padding: 22px 24px; background: radial-gradient(ellipse at 100% 56%, #7d513955, transparent 68%), #211c2b; border-color: #574653; }
 .crystalFeature:is(:focus-within, :has(a:hover)) { border-color: #fed7aa80; }
 .crystalFeature .smallToolCopy { width: calc(100% - 114px); max-width: 34ch; }
 .smallToolCopy { position: relative; max-width: 29ch; width: calc(100% - 85px); }
 .smallToolCopy h3 { display: flex; align-items: center; gap: 8px; font-size: clamp(20px, 2vw, 25px); }
 .smallToolCopy h3 svg { width: 18px; height: 18px; flex: none; color: #d8b4fe; }
 .crystalFeature h3 svg, .crystalFeature .textLink { color: #fed7aa; }
-.glossaryTool .textLink { color: #e2c7fc; }
 .smallToolCopy p { margin-top: 8px; }
 .smallToolCopy .textLink { min-height: 44px; width: fit-content; }
-.effectArtwork, .crystalArtwork {
+.crystalArtwork {
   position: absolute;
   right: clamp(10px, 2vw, 23px);
   top: 50%;
   translate: 0 -50%;
-  width: 84px;
-  height: 88px;
+  width: 112px;
+  height: 118px;
   pointer-events: none;
 }
-.effectArtwork img, .crystalArtwork img { position: absolute; object-fit: contain; }
-.effectArtwork img { display: block; padding: 6px; width: 40px; height: 40px; border: 1px solid #d8b4fe3d; border-radius: 12px; background: #281c3b; box-shadow: 0 7px 16px #100a2170; }
-.effectArtwork img:first-child { inset: 3px auto auto 8px; transform: rotate(-13deg); }
-.effectArtwork img:nth-child(2) { inset: 26px 0 auto auto; transform: rotate(10deg); }
-.effectArtwork img:last-child { inset: auto auto 0 5px; transform: rotate(-7deg); }
-.crystalArtwork { width: 112px; height: 118px; }
-.crystalArtwork img { width: 86px; height: 86px; filter: drop-shadow(0 6px 9px #0f0916d9); }
+.crystalArtwork img { position: absolute; width: 86px; height: 86px; object-fit: contain; filter: drop-shadow(0 6px 9px #0f0916d9); }
 .crystalArtwork img:first-child { inset: 1px 0 auto auto; transform: rotate(10deg); }
 .crystalArtwork img:last-child { inset: auto auto 1px 0; transform: rotate(-8deg); }
 .discoveryGrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -254,9 +285,6 @@ a.topicItem:hover { background: #162239; border-color: #7dd3fc80; }
 .faqItem[open] summary svg { transform: rotate(180deg); }
 .faqItem > p { padding: 0 24px 24px; max-width: 1000px; color: #94a3b8; font-size: 14px; line-height: 1.8; }
 
-@media (min-width: 1024px) {
-  .effectArtwork { transform: scale(1.24); transform-origin: right center; }
-}
 @media (max-width: 1023px) {
   .heroGrid { grid-template-columns: 1fr; gap: 36px; }
   .heroCopy h1 { font-size: clamp(38px, 6.5vw, 58px); }
@@ -287,10 +315,10 @@ a.topicItem:hover { background: #162239; border-color: #7dd3fc80; }
   .questToolCopy { width: 78%; }
   .questPosters { inset-inline-start: 59%; mask-image: linear-gradient(90deg, transparent 10%, #0006 48%, #000c); }
   .questPosters img { min-width: 72px; height: 85%; }
-  .glossaryTool, .crystalFeature { min-height: 0; padding: 18px 20px 14px; }
+  .crystalFeature { min-height: 0; padding: 18px 20px 14px; }
   .smallToolCopy { width: calc(100% - 67px); }
   .crystalFeature .smallToolCopy { width: calc(100% - 90px); }
-  .effectArtwork, .crystalArtwork { transform: scale(.78); transform-origin: right center; }
+  .crystalArtwork { transform: scale(.78); transform-origin: right center; }
   .heroActions { flex-direction: column; }
   .heroActions a { width: 100%; }
   .heroAccount { font-size: 12px; }
@@ -348,6 +376,9 @@ a.topicItem:hover { background: #162239; border-color: #7dd3fc80; }
   .finderLinks .textLink { min-height: 44px; }
 }
 @media (max-width: 359px) {
+  .glossaryTool { padding-inline: 18px; }
+  .effectShortcuts { gap: 6px; }
+  .effectShortcut { padding-inline: 3px; }
   .featuredChampions > div { grid-template-columns: 1fr; }
   .featuredChampions a { flex-direction: row; text-align: left; padding: 8px 10px; }
   .featuredChampions a > svg { display: block; width: 14px; height: 14px; margin-left: auto; flex-shrink: 0; }

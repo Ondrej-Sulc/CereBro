@@ -146,6 +146,22 @@ it("uses functional headings and keeps the catalog usable when featured champion
   expect(document.querySelectorAll('#explore a[href^="/relics/"]')).toHaveLength(0);
 });
 
+it("links the glossary card to the full catalog and prefilled searches for each featured effect", async () => {
+  const document = await renderHome();
+  const card = [...document.querySelectorAll("#game-tools article")].find(article =>
+    article.querySelector("h3")?.textContent === "Effect Glossary"
+  );
+  expect(card?.querySelector('a[href="/glossary"]')?.textContent?.trim()).toBe("Browse all effects");
+  const shortcuts = [...card!.querySelectorAll<HTMLAnchorElement>('ul[aria-label="Effect searches"] a')];
+  expect(shortcuts.map(link => link.textContent?.trim())).toEqual(["Bleed", "Armor Up", "Regeneration"]);
+  for (const link of shortcuts) {
+    const destination = new URL(link.getAttribute("href")!, "https://cerebro-bot.com");
+    expect(destination.pathname).toBe("/glossary");
+    expect(destination.searchParams.get("q")).toBe(link.textContent?.trim());
+    expect(destination.hash).toBe("#effects-results");
+  }
+});
+
 it("links champion topics to the first featured champion's real tabs and shows both relic types", async () => {
   const document = await renderHome();
   const topicLinks = [...document.querySelectorAll<HTMLAnchorElement>('ul[aria-label="Ghost Rider (Robbie Reyes) detail sections"] a')];
