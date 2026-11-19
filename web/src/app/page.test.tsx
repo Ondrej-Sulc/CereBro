@@ -73,8 +73,7 @@ it.each([
   const sections = [...document.querySelectorAll("main > div > section")];
   const hero = sections[0];
   expect(hero.querySelector("h1")?.textContent).toMatch(/The Ultimate MCOC\s*Tactical Advantage/);
-  expect(hero.textContent).toContain("Plan Alliance Wars");
-  expect(hero.textContent).toContain("assignments in Discord");
+  expect(hero.textContent).toContain("See who’s waiting on your quest path and find a counter before you pick your team. Plan Alliance War on the map and send each player their assignments in Discord.");
   expect(hero.textContent).toContain("Free to use");
   expect(hero.querySelector("a")?.getAttribute("href")).toBe(canPlan ? "/planning" : "#setup");
   expect(hero.querySelector("a")?.textContent).toContain(canPlan ? "Open War Planner" : "Set up your alliance");
