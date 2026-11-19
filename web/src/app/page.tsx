@@ -59,7 +59,7 @@ export default async function Home() {
             <div className={styles.heroCopy}>
               <p className={styles.sectionBadge}><Shield aria-hidden="true" /> Alliance War &amp; Discord</p>
               <h1 id="home-title">The Ultimate MCOC<br /><span className="gradient-text">Tactical Advantage</span></h1>
-              <p className={styles.heroDescription}>Plan Alliance Wars and share maps and player assignments in Discord. Scout quest maps, find champion counters and look up where to earn rewards.</p>
+              <p className={styles.heroDescription}>See who’s waiting on your quest path and find a counter before you pick your team. Plan Alliance War on the map and send each player their assignments in Discord.</p>
               <div className={styles.heroActions}>
                 <Link href={canOpenWarPlanner ? "/planning" : "#setup"} prefetch={false} className={styles.primaryLink}>{canOpenWarPlanner ? "Open War Planner" : "Set up your alliance"} <ChevronRight aria-hidden="true" /></Link>
                 <Link href="#explore" className={styles.secondaryLink}><BookOpen aria-hidden="true" /> Explore game tools</Link>
