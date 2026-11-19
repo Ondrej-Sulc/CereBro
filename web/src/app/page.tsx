@@ -69,7 +69,7 @@ export default async function Home() {
                 {!isSignedIn ? <form action={signInAction}><button type="submit"><LogIn aria-hidden="true" /> Sign in with Discord</button></form> : <Link href="/profile/roster">Open your roster <ChevronRight aria-hidden="true" /></Link>}
               </div>
               <nav aria-label="On this page" className={styles.heroNavigation}>
-                <Link href="#web-platform">Alliance tools</Link><Link href="#game-tools">Quests &amp; effects</Link><Link href="#setup">Get started</Link>
+                <Link href="#game-tools">Quests &amp; effects</Link><Link href="#web-platform">Alliance tools</Link><Link href="#setup">Get started</Link>
               </nav>
             </div>
             <HomeWarVisual />
@@ -83,9 +83,9 @@ export default async function Home() {
           </div>
         </section>
 
-        <HomeOperations />
         <HomeDiscovery featuredChampions={featuredChampions} featuredRelics={featuredRelics} />
         <HomeGameTools />
+        <HomeOperations />
         <HomeOnboarding />
 
         <section aria-label="CereBro community" className={styles.community}>
