@@ -15,10 +15,11 @@ vi.mock("@/lib/prisma", () => ({ prisma: {
   champion: { findMany: boundary.champions },
   gameRelic: { findMany: boundary.relics },
 } }));
-vi.mock("next/image", () => ({ default: (props: ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean; priority?: boolean }) => {
+vi.mock("next/image", () => ({ default: (props: ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean; priority?: boolean; unoptimized?: boolean }) => {
   const imageProps = { ...props };
   delete imageProps.fill;
   delete imageProps.priority;
+  delete imageProps.unoptimized;
   return createElement("img", { alt: "", ...imageProps });
 } }));
 vi.mock("@/app/actions/auth", () => ({ signInAction: vi.fn() }));
@@ -72,14 +73,14 @@ it.each([
   const sections = [...document.querySelectorAll("main > div > section")];
   expect(sections.findIndex(section => section.id === "web-platform")).toBeLessThan(sections.findIndex(section => section.id === "explore"));
   const hero = sections[0];
-  expect(hero.querySelector("h1")?.textContent).toBe("The Ultimate MCOCTactical Advantage");
+  expect(hero.querySelector("h1")?.textContent).toMatch(/Alliance War planning\s*& MCOC game tools/);
   expect(hero.textContent).toContain("Plan Alliance Wars");
   expect(hero.textContent).toContain("assignments in Discord");
   expect(hero.textContent).toContain("Free to use");
   expect(hero.querySelector("a")?.getAttribute("href")).toBe(canPlan ? "/planning" : "#setup");
   expect(hero.querySelector("a")?.textContent).toContain(canPlan ? "Open War Planner" : "Set up your alliance");
   const exploreAction = [...hero.querySelectorAll("a")].find(link => link.textContent?.trim() === "Explore game tools");
-  expect(exploreAction?.getAttribute("href")).toBe("#explore");
+  expect(exploreAction?.getAttribute("href")).toBe("#game-tools");
   expect(hero.querySelector('a[href^="https://discord.com/oauth2/authorize"]')).toBeNull();
   expect(document.body.textContent).toContain("Kit overview");
   expect(document.body.textContent).toContain("How to obtain");
@@ -105,6 +106,24 @@ it("places live community counters directly below the hero and preserves exact c
   Object.assign(boundary.counts, { players: 0, alliances: 9999, rosters: 10000, videos: 999999 });
   const updated = await renderHome();
   expect([...updated.querySelectorAll('section[aria-labelledby="community-stats-title"] dd')].map(counter => counter.textContent)).toEqual(["0", "9,999", "10K+", "999K+"]);
+});
+
+it("puts the public quest, effect and reward tools before the alliance and catalog sections", async () => {
+  const document = await renderHome();
+  const sections = [...document.querySelectorAll("main > div > section")];
+  const tools = document.querySelector("#game-tools");
+  expect(tools?.getAttribute("aria-labelledby")).toBe("game-tools-title");
+  expect(sections[2]).toBe(tools);
+  expect([...tools!.querySelectorAll("h3")].map(heading => heading.textContent)).toEqual([
+    "Quest Explorer", "Effect Glossary", "Find a Reward",
+  ]);
+  for (const destination of ["/quests", "/glossary", "/rewards"]) {
+    const link = tools!.querySelector(`a[href="${destination}"]`);
+    expect(link?.textContent?.trim().length, destination).toBeGreaterThan(5);
+  }
+  expect(tools!.textContent).toMatch(/Act 10.*Towers/);
+  expect(document.querySelector('main a[href="/nodes"], main a[href="/assets"]')).toBeNull();
+  expect(metadata.description).toMatch(/quest maps.*effects.*rewards/i);
 });
 
 it("uses functional headings and keeps the catalog usable when featured champions are unavailable", async () => {

@@ -33,7 +33,7 @@ export function HomeDiscovery({ featuredChampions, featuredRelics }: { featuredC
         <div className={styles.discoveryGrid}>
           <article className={styles.championFeature}>
             <h3><BookOpen aria-hidden="true" />Champion pages</h3>
-            <p>Filter the catalog by abilities and immunities, then open a champion to explore their kit and build.</p>
+            <p>Filter by abilities and immunities, or browse NPC and legacy characters. Open a champion to read their kit.</p>
             <HomeChampionSearch />
             {primaryChampion && <p className={styles.topicContext}>Inside {primaryChampion.name}</p>}
             <ul className={styles.championTopics} aria-label={primaryChampion ? `${primaryChampion.name} detail sections` : "Champion page sections"}>
