@@ -10,6 +10,12 @@ const questPosters = [
   "/game-quests/menu-art/ebc6ae8828d497b7f58c182cb648578f1ba5789150c15622baaadd12346402ab.webp",
 ];
 
+const effectSearches = [
+  { icon: "bleed", name: "Bleed" },
+  { icon: "armor_up", name: "Armor Up" },
+  { icon: "regeneration", name: "Regeneration" },
+];
+
 export function HomeGameTools() {
   return (
     <section id="game-tools" aria-labelledby="game-tools-title" className={styles.gameTools}>
@@ -35,19 +41,24 @@ export function HomeGameTools() {
             </div>
           </article>
           <article className={`${styles.gameTool} ${styles.glossaryTool}`}>
-            <div className={styles.effectArtwork} aria-hidden="true">
-              {["armor_up", "bleed", "regeneration"].map(effect => (
-                <Image key={effect} src={`https://storage.googleapis.com/champion-images/mcoc/glossary-icons/${effect}.svg`}
-                  alt="" width={32} height={32} unoptimized />
+            <span className={styles.gameToolIcon}><BookOpen aria-hidden="true" /></span>
+            <h3>Effect Glossary</h3>
+            <p>Find champions who apply an effect, resist it or are immune to it.</p>
+            <ul aria-label="Effect searches" className={styles.effectShortcuts}>
+              {effectSearches.map(({ icon, name }) => (
+                <li key={icon}>
+                  <Link href={`/glossary?${new URLSearchParams({ q: name })}#effects-results`}
+                    prefetch={false} data-effect={icon} className={styles.effectShortcut}>
+                    <Image src={`https://storage.googleapis.com/champion-images/mcoc/glossary-icons/${icon}.svg`}
+                      alt="" width={28} height={28} unoptimized />
+                    <span>{name}</span>
+                  </Link>
+                </li>
               ))}
-            </div>
-            <div className={styles.smallToolCopy}>
-              <h3><BookOpen aria-hidden="true" />Effect Glossary</h3>
-              <p>Look up an effect to find champions who apply it, resist it or are immune to it.</p>
-              <Link href="/glossary" prefetch={false} className={styles.textLink}>
-                Find effects and counters <ArrowRight aria-hidden="true" />
-              </Link>
-            </div>
+            </ul>
+            <Link href="/glossary" prefetch={false} className={styles.textLink}>
+              Browse all effects <ArrowRight aria-hidden="true" />
+            </Link>
           </article>
         </div>
       </div>
