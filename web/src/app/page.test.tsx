@@ -15,10 +15,11 @@ vi.mock("@/lib/prisma", () => ({ prisma: {
   champion: { findMany: boundary.champions },
   gameRelic: { findMany: boundary.relics },
 } }));
-vi.mock("next/image", () => ({ default: (props: ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean; priority?: boolean }) => {
+vi.mock("next/image", () => ({ default: (props: ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean; priority?: boolean; unoptimized?: boolean }) => {
   const imageProps = { ...props };
   delete imageProps.fill;
   delete imageProps.priority;
+  delete imageProps.unoptimized;
   return createElement("img", { alt: "", ...imageProps });
 } }));
 vi.mock("@/app/actions/auth", () => ({ signInAction: vi.fn() }));
@@ -70,11 +71,9 @@ it.each([
   expect(document.querySelector('a[href="/champions"]')).toBeNull();
   expect(document.querySelector('a[href="/relics"]')).toBeNull();
   const sections = [...document.querySelectorAll("main > div > section")];
-  expect(sections.findIndex(section => section.id === "web-platform")).toBeLessThan(sections.findIndex(section => section.id === "explore"));
   const hero = sections[0];
-  expect(hero.querySelector("h1")?.textContent).toBe("The Ultimate MCOCTactical Advantage");
-  expect(hero.textContent).toContain("Plan Alliance Wars");
-  expect(hero.textContent).toContain("assignments in Discord");
+  expect(hero.querySelector("h1")?.textContent).toMatch(/The Ultimate MCOC\s*Tactical Advantage/);
+  expect(hero.textContent).toContain("See who’s waiting on your quest path and find a counter before you pick your team. Plan Alliance War on the map and send each player their assignments in Discord.");
   expect(hero.textContent).toContain("Free to use");
   expect(hero.querySelector("a")?.getAttribute("href")).toBe(canPlan ? "/planning" : "#setup");
   expect(hero.querySelector("a")?.textContent).toContain(canPlan ? "Open War Planner" : "Set up your alliance");
@@ -107,6 +106,30 @@ it("places live community counters directly below the hero and preserves exact c
   expect([...updated.querySelectorAll('section[aria-labelledby="community-stats-title"] dd')].map(counter => counter.textContent)).toEqual(["0", "9,999", "10K+", "999K+"]);
 });
 
+it("orders catalogs, quest and effect tools, and alliance tools, with rewards within the quest card", async () => {
+  const document = await renderHome();
+  const tools = document.querySelector("#game-tools");
+  expect(tools?.getAttribute("aria-labelledby")).toBe("game-tools-title");
+  expect(document.querySelector("#explore")?.nextElementSibling?.id).toBe("game-tools");
+  expect(tools?.nextElementSibling?.id).toBe("web-platform");
+  expect([...document.querySelectorAll('nav[aria-label="On this page"] a')].map(link => link.getAttribute("href")))
+    .toEqual(["#game-tools", "#web-platform", "#setup"]);
+  expect([...tools!.querySelectorAll("h3")].map(heading => heading.textContent)).toEqual([
+    "Quest Explorer", "Effect Glossary",
+  ]);
+  for (const destination of ["/quests", "/glossary"]) {
+    const link = tools!.querySelector(`a[href="${destination}"]`);
+    expect(link?.textContent?.trim().length, destination).toBeGreaterThan(5);
+  }
+  const rewards = [...document.querySelectorAll('main a[href="/rewards"]')];
+  expect(rewards).toHaveLength(1);
+  expect(rewards[0].textContent?.trim()).toBe("Find a reward");
+  expect(rewards[0].closest("article")?.querySelector("h3")?.textContent).toBe("Quest Explorer");
+  expect(tools!.textContent).toMatch(/Act 10.*Towers/);
+  expect(document.querySelector('main a[href="/nodes"], main a[href="/assets"]')).toBeNull();
+  expect(metadata.description).toMatch(/quest maps.*effects.*rewards/i);
+});
+
 it("uses functional headings and keeps the catalog usable when featured champions are unavailable", async () => {
   boundary.champions.mockResolvedValue([]);
   boundary.relics.mockResolvedValue([]);
@@ -122,6 +145,22 @@ it("uses functional headings and keeps the catalog usable when featured champion
   expect(document.querySelector('ul[aria-label="Champion page sections"] a')).toBeNull();
   expect(document.querySelector('#explore a[href="/relics?view=catalog"]')).not.toBeNull();
   expect(document.querySelectorAll('#explore a[href^="/relics/"]')).toHaveLength(0);
+});
+
+it("links the glossary card to the full catalog and prefilled searches for each featured effect", async () => {
+  const document = await renderHome();
+  const card = [...document.querySelectorAll("#game-tools article")].find(article =>
+    article.querySelector("h3")?.textContent === "Effect Glossary"
+  );
+  expect(card?.querySelector('a[href="/glossary"]')?.textContent?.trim()).toBe("Browse all effects");
+  const shortcuts = [...card!.querySelectorAll<HTMLAnchorElement>('ul[aria-label="Effect searches"] a')];
+  expect(shortcuts.map(link => link.textContent?.trim())).toEqual(["Bleed", "Armor Up", "Regeneration"]);
+  for (const link of shortcuts) {
+    const destination = new URL(link.getAttribute("href")!, "https://cerebro-bot.com");
+    expect(destination.pathname).toBe("/glossary");
+    expect(destination.searchParams.get("q")).toBe(link.textContent?.trim());
+    expect(destination.hash).toBe("#effects-results");
+  }
 });
 
 it("links champion topics to the first featured champion's real tabs and shows both relic types", async () => {

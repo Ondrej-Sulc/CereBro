@@ -6,6 +6,7 @@ import { auth } from "@/auth";
 import { signInAction } from "@/app/actions/auth";
 import { Faq } from "@/components/Faq";
 import { HomeDiscovery } from "@/components/home/HomeDiscovery";
+import { HomeGameTools } from "@/components/home/HomeGameTools";
 import { HomeOnboarding, HomeOperations, HomeWarVisual } from "@/components/home/HomeOperations";
 import styles from "@/components/home/home-discovery.module.css";
 import PageBackground from "@/components/PageBackground";
@@ -17,7 +18,7 @@ import { getHomeFeaturedRelics } from "@/lib/data/home-featured-relics";
 
 export const metadata: Metadata = {
   title: "Alliance War Planning, Discord Bot & MCOC Reference Tools - CereBro",
-  description: "Plan Alliance Wars and share assignments in Discord with CereBro. Manage rosters, plan quests, and explore MCOC champion pages, crystals and relics.",
+  description: "Plan Alliance Wars and share assignments in Discord. Scout MCOC quest maps, look up effects and rewards, and explore champions, crystals and relics.",
 };
 
 const getHomeHeroStats = unstable_cache(
@@ -58,7 +59,7 @@ export default async function Home() {
             <div className={styles.heroCopy}>
               <p className={styles.sectionBadge}><Shield aria-hidden="true" /> Alliance War &amp; Discord</p>
               <h1 id="home-title">The Ultimate MCOC<br /><span className="gradient-text">Tactical Advantage</span></h1>
-              <p className={styles.heroDescription}>Plan Alliance Wars and share maps and player assignments in Discord. Manage rosters, plan quests and explore champion, crystal and relic catalogs.</p>
+              <p className={styles.heroDescription}>See who’s waiting on your quest path and find a counter before you pick your team. Plan Alliance War on the map and send each player their assignments in Discord.</p>
               <div className={styles.heroActions}>
                 <Link href={canOpenWarPlanner ? "/planning" : "#setup"} prefetch={false} className={styles.primaryLink}>{canOpenWarPlanner ? "Open War Planner" : "Set up your alliance"} <ChevronRight aria-hidden="true" /></Link>
                 <Link href="#explore" className={styles.secondaryLink}><BookOpen aria-hidden="true" /> Explore game tools</Link>
@@ -68,7 +69,7 @@ export default async function Home() {
                 {!isSignedIn ? <form action={signInAction}><button type="submit"><LogIn aria-hidden="true" /> Sign in with Discord</button></form> : <Link href="/profile/roster">Open your roster <ChevronRight aria-hidden="true" /></Link>}
               </div>
               <nav aria-label="On this page" className={styles.heroNavigation}>
-                <Link href="#web-platform">Alliance tools</Link><Link href="#explore">Explore the game</Link><Link href="#setup">Get started</Link>
+                <Link href="#game-tools">Quests &amp; effects</Link><Link href="#web-platform">Alliance tools</Link><Link href="#setup">Get started</Link>
               </nav>
             </div>
             <HomeWarVisual />
@@ -82,8 +83,9 @@ export default async function Home() {
           </div>
         </section>
 
-        <HomeOperations />
         <HomeDiscovery featuredChampions={featuredChampions} featuredRelics={featuredRelics} />
+        <HomeGameTools />
+        <HomeOperations />
         <HomeOnboarding />
 
         <section aria-label="CereBro community" className={styles.community}>
