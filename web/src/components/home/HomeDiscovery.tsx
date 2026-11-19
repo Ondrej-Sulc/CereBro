@@ -7,11 +7,11 @@ import { getChampionClassColors } from "@/lib/championClassHelper";
 import { HomeChampionSearch } from "./HomeChampionSearch";
 import styles from "./home-discovery.module.css";
 
-// Published game artwork, verified against the canonical catalog. Keep this small
-// editorial selection independent of the full catalog and its client payloads.
-const artwork = {
-  crystal: "https://storage.googleapis.com/champion-images/crystals/primary/69c6268cae87e327d40024f589d94fa25d4fc507ae4bf8c2c0145c84ef7d85ca.webp",
-};
+// The Greater Empowered Crystal and 7-Star Hero Crystal from the published artwork manifest.
+const crystalArtwork = [
+  "https://storage.googleapis.com/champion-images/crystals/primary/2b3e527f16d02c0d784e2558d937947e1c30c80e9651ca914dd816c27e9e1592.webp",
+  "https://storage.googleapis.com/champion-images/crystals/primary/69c6268cae87e327d40024f589d94fa25d4fc507ae4bf8c2c0145c84ef7d85ca.webp",
+];
 
 const championTopics = [
   { label: "Kit overview", tab: "overview", icon: LayoutGrid },
@@ -46,9 +46,11 @@ export function HomeDiscovery({ featuredChampions, featuredRelics }: { featuredC
             })}</div></div>}
             {primaryChampion && <Image src={primaryChampion.artworkUrl} alt="" fill sizes="(min-width: 1024px) 24vw, (min-width: 640px) 42vw, 55vw" className={styles.featureChampionArt} />}
           </article>
-          <article className={`${styles.catalogFeature} ${styles.crystalFeature}`}>
-            <Image src={artwork.crystal} alt="" width={152} height={152} className={styles.catalogArt} sizes="(min-width: 640px) 124px, 82px" />
-            <div><h3><Gem aria-hidden="true" />Crystal catalog</h3>
+          <article className={`${styles.gameTool} ${styles.crystalFeature}`}>
+            <div className={styles.crystalArtwork} aria-hidden="true">
+              {crystalArtwork.map(src => <Image key={src} src={src} alt="" width={86} height={86} />)}
+            </div>
+            <div className={styles.smallToolCopy}><h3><Gem aria-hidden="true" />Crystal catalog</h3>
               <p>Explore champion pools, materials and mixed rewards. Filter the catalog and inspect recorded category rates where captured.</p>
               <Link href="/crystals" prefetch={false} className={styles.textLink}>Browse crystals <ArrowUpRight aria-hidden="true" className={styles.directionArrow} /></Link>
             </div>

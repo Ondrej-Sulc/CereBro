@@ -58,18 +58,18 @@ export default async function Home() {
           <div className={`${styles.container} ${styles.heroGrid}`}>
             <div className={styles.heroCopy}>
               <p className={styles.sectionBadge}><Shield aria-hidden="true" /> Alliance War &amp; Discord</p>
-              <h1 id="home-title">Alliance War planning<br /><span className="gradient-text">&amp; MCOC game tools</span></h1>
+              <h1 id="home-title">The Ultimate MCOC<br /><span className="gradient-text">Tactical Advantage</span></h1>
               <p className={styles.heroDescription}>Plan Alliance Wars and share maps and player assignments in Discord. Scout quest maps, find champion counters and look up where to earn rewards.</p>
               <div className={styles.heroActions}>
                 <Link href={canOpenWarPlanner ? "/planning" : "#setup"} prefetch={false} className={styles.primaryLink}>{canOpenWarPlanner ? "Open War Planner" : "Set up your alliance"} <ChevronRight aria-hidden="true" /></Link>
-                <Link href="#game-tools" className={styles.secondaryLink}><BookOpen aria-hidden="true" /> Explore game tools</Link>
+                <Link href="#explore" className={styles.secondaryLink}><BookOpen aria-hidden="true" /> Explore game tools</Link>
               </div>
               <p className={styles.heroReassurance}>Free to use</p>
               <div className={styles.heroAccount}>
                 {!isSignedIn ? <form action={signInAction}><button type="submit"><LogIn aria-hidden="true" /> Sign in with Discord</button></form> : <Link href="/profile/roster">Open your roster <ChevronRight aria-hidden="true" /></Link>}
               </div>
               <nav aria-label="On this page" className={styles.heroNavigation}>
-                <Link href="#web-platform">Alliance tools</Link><Link href="#explore">Champion &amp; item catalogs</Link><Link href="#setup">Get started</Link>
+                <Link href="#web-platform">Alliance tools</Link><Link href="#game-tools">Quests &amp; effects</Link><Link href="#setup">Get started</Link>
               </nav>
             </div>
             <HomeWarVisual />
@@ -83,9 +83,9 @@ export default async function Home() {
           </div>
         </section>
 
-        <HomeGameTools />
         <HomeOperations />
         <HomeDiscovery featuredChampions={featuredChampions} featuredRelics={featuredRelics} />
+        <HomeGameTools />
         <HomeOnboarding />
 
         <section aria-label="CereBro community" className={styles.community}>

@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, BookOpen, Compass, Gift } from "lucide-react";
+import { ArrowRight, BookOpen, Compass } from "lucide-react";
 import styles from "./home-discovery.module.css";
 
 // Existing Act 6, Crucible, and Act 8 posters from the public quest artwork manifest.
@@ -10,19 +10,11 @@ const questPosters = [
   "/game-quests/menu-art/ebc6ae8828d497b7f58c182cb648578f1ba5789150c15622baaadd12346402ab.webp",
 ];
 
-const rewardArtwork = [
-  "/game-rewards/resource-definitions/d05f985572790b26df7965d8c1d66715ead3e889ef010d9a411f96e72e4f4f61.png",
-  "/game-rewards/resource-definitions/85de8eea25c67848a32f3b781df3da50dd561979191f09a5729cd761c7455ab3.png",
-];
-
 export function HomeGameTools() {
   return (
     <section id="game-tools" aria-labelledby="game-tools-title" className={styles.gameTools}>
       <div className={styles.container}>
-        <div className={styles.gameToolsHeading}>
-          <h2 id="game-tools-title">Explore the Battlerealm</h2>
-          <p>No sign-in needed</p>
-        </div>
+        <h2 id="game-tools-title" className={styles.gameToolsHeading}>Explore the Battlerealm</h2>
         <div className={styles.gameToolsGrid}>
           <article className={`${styles.gameTool} ${styles.questTool}`}>
             <div className={styles.questPosters} aria-hidden="true">
@@ -34,9 +26,12 @@ export function HomeGameTools() {
               <span className={styles.gameToolIcon}><Compass aria-hidden="true" /></span>
               <h3>Quest Explorer</h3>
               <p>Scout Story and Special quest maps, including Act 10. Check defenders, modifiers, gates and path rewards. Browse Class, Challenge and Event Towers.</p>
-              <Link href="/quests" prefetch={false} className={styles.primaryLink}>
-                Explore quests <ArrowRight aria-hidden="true" />
-              </Link>
+              <div className={styles.questToolActions}>
+                <Link href="/quests" prefetch={false} className={styles.primaryLink}>
+                  Explore quests <ArrowRight aria-hidden="true" />
+                </Link>
+                <Link href="/rewards" prefetch={false} className={styles.sampleLink}>Find a reward</Link>
+              </div>
             </div>
           </article>
           <article className={`${styles.gameTool} ${styles.glossaryTool}`}>
@@ -51,18 +46,6 @@ export function HomeGameTools() {
               <p>Look up an effect to find champions who apply it, resist it or are immune to it.</p>
               <Link href="/glossary" prefetch={false} className={styles.textLink}>
                 Find effects and counters <ArrowRight aria-hidden="true" />
-              </Link>
-            </div>
-          </article>
-          <article className={`${styles.gameTool} ${styles.rewardTool}`}>
-            <div className={styles.rewardArtwork} aria-hidden="true">
-              {rewardArtwork.map(src => <Image key={src} src={src} alt="" width={60} height={60} />)}
-            </div>
-            <div className={styles.smallToolCopy}>
-              <h3><Gift aria-hidden="true" />Find a Reward</h3>
-              <p>Search for a catalyst, crystal or rank-up gem to see which quests and Towers offer it.</p>
-              <Link href="/rewards" prefetch={false} className={styles.textLink}>
-                Search rewards <ArrowRight aria-hidden="true" />
               </Link>
             </div>
           </article>
