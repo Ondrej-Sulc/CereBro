@@ -71,7 +71,6 @@ it.each([
   expect(document.querySelector('a[href="/champions"]')).toBeNull();
   expect(document.querySelector('a[href="/relics"]')).toBeNull();
   const sections = [...document.querySelectorAll("main > div > section")];
-  expect(sections.findIndex(section => section.id === "web-platform")).toBeLessThan(sections.findIndex(section => section.id === "explore"));
   const hero = sections[0];
   expect(hero.querySelector("h1")?.textContent).toMatch(/The Ultimate MCOC\s*Tactical Advantage/);
   expect(hero.textContent).toContain("Plan Alliance Wars");
@@ -108,11 +107,14 @@ it("places live community counters directly below the hero and preserves exact c
   expect([...updated.querySelectorAll('section[aria-labelledby="community-stats-title"] dd')].map(counter => counter.textContent)).toEqual(["0", "9,999", "10K+", "999K+"]);
 });
 
-it("puts the quest and effect tools directly after the catalogs and offers rewards within the quest card", async () => {
+it("orders catalogs, quest and effect tools, and alliance tools, with rewards within the quest card", async () => {
   const document = await renderHome();
   const tools = document.querySelector("#game-tools");
   expect(tools?.getAttribute("aria-labelledby")).toBe("game-tools-title");
   expect(document.querySelector("#explore")?.nextElementSibling?.id).toBe("game-tools");
+  expect(tools?.nextElementSibling?.id).toBe("web-platform");
+  expect([...document.querySelectorAll('nav[aria-label="On this page"] a')].map(link => link.getAttribute("href")))
+    .toEqual(["#game-tools", "#web-platform", "#setup"]);
   expect([...tools!.querySelectorAll("h3")].map(heading => heading.textContent)).toEqual([
     "Quest Explorer", "Effect Glossary",
   ]);
