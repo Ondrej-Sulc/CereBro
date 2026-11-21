@@ -7,8 +7,8 @@ import logger from "@/lib/logger";
 import { getAllianceScreenshotUnlockStatus, listSupporterPlayerIds } from "@/lib/support-status";
 
 export const metadata: Metadata = {
-  title: "Alliance Management - CereBro",
-  description: "Manage your alliance roster and battlegroups.",
+  title: "Alliance Overview - CereBro",
+  description: "View your alliance members, battlegroups, and roster coverage.",
 };
 
 export default async function AlliancePage() {

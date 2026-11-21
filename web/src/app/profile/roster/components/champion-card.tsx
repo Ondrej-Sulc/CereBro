@@ -59,6 +59,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, onQuickView, mode, 
                 "group relative aspect-[3/4] rounded-lg overflow-hidden border cursor-pointer bg-slate-900 shadow-lg transition-all duration-200 hover:-translate-y-1 hover:shadow-2xl hover:shadow-black/40 hover:border-white/20",
                 classColors.bg,
                 borderClass,
+                !catalogMode && "aspect-[4/5] rounded-xl shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300",
                 showUnownedState && "grayscale-[0.45] saturate-[0.7] brightness-[0.9] opacity-75 hover:grayscale-[0.25] hover:saturate-[0.85] hover:brightness-[0.95] hover:opacity-90 transition-all duration-300"
             )}
             role={detailsHref ? undefined : "button"}
@@ -81,7 +82,9 @@ export const ChampionCard = memo(({ item, prestige, onClick, onQuickView, mode, 
                 src={getChampionImageUrlOrPlaceholder(item.champion.images as unknown as ChampionImages, 'full')}
                 alt={item.champion.name}
                 fill
-                sizes="(min-width: 1536px) 120px, (min-width: 1280px) 8.34vw, (min-width: 1024px) 10vw, (min-width: 768px) 12.5vw, (min-width: 640px) 16.67vw, 20vw"
+                sizes={catalogMode
+                    ? "(min-width: 1536px) 120px, (min-width: 1280px) 8.34vw, (min-width: 1024px) 10vw, (min-width: 768px) 12.5vw, (min-width: 640px) 16.67vw, 20vw"
+                    : "(min-width: 1440px) 135px, (min-width: 1280px) 10vw, (min-width: 1024px) 12.5vw, (min-width: 768px) 16.67vw, (min-width: 640px) 20vw, (min-width: 420px) 25vw, 33vw"}
                 className="object-cover p-1 transition-transform duration-300 group-hover:scale-[1.07]"
             />
             {!isChampionImages(item.champion.images) && <div aria-hidden="true" className="absolute inset-0 flex items-center justify-center text-slate-600"><UserRound className="h-14 w-14" strokeWidth={1} /></div>}
@@ -119,6 +122,8 @@ export const ChampionCard = memo(({ item, prestige, onClick, onQuickView, mode, 
                                     type="button"
                                     variant="ghost"
                                     size="icon"
+                                    aria-label={item.reservedForAttack ? "Remove attack reservation" : "Reserve for attack"}
+                                    aria-pressed={item.reservedForAttack}
                                     className={cn(
                                         "pointer-events-auto h-6 w-6 rounded-full border bg-black/80 p-0 shadow-sm",
                                         item.reservedForAttack
@@ -156,7 +161,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, onQuickView, mode, 
                 </div>
             </div>
 
-            <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/95 via-black/70 to-transparent">
+            <div className={cn("absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/95 via-black/70 to-transparent p-1.5", !catalogMode && "px-2 pb-2 pt-4")}>
                 {!nonPlayable && !item.isUnowned && prestige && (
                     <div className="flex justify-end mb-0.5">
                         <span className="text-[9px] font-mono font-bold text-slate-300 bg-black/60 px-1 rounded border border-white/5">
@@ -164,7 +169,7 @@ export const ChampionCard = memo(({ item, prestige, onClick, onQuickView, mode, 
                         </span>
                     </div>
                 )}
-                <p className="text-[10px] sm:text-xs font-bold text-white leading-tight truncate text-center sm:text-left drop-shadow-sm">{item.champion.name}</p>
+                <p className={cn("text-center text-[10px] font-bold leading-tight text-white drop-shadow-sm sm:text-left sm:text-xs", catalogMode ? "truncate" : "line-clamp-2 break-words text-xs")} title={item.champion.name}>{item.champion.name}</p>
             </div>
 
             {editing && !item.isUnowned && (

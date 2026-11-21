@@ -1,27 +1,24 @@
 import type { Metadata } from "next";
 import { prisma } from "@/lib/prisma";
-import { getRoster, RosterWithChampion } from "@cerebro/core/services/rosterService";
+import { getRoster, type RosterWithChampion } from "@cerebro/core/services/rosterService";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Image from "next/image";
-import { ChampionClass } from "@prisma/client"; // Import ChampionClass
-import { getChampionClassColors } from "@/lib/championClassHelper"; // Import class colors helper
-import { cn } from "@/lib/utils"; // Import cn
+import type { ChampionClass } from "@prisma/client";
+import { getChampionClassColors } from "@/lib/championClassHelper";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { PrestigeHistoryChart } from "./prestige-chart";
-import { Upload, LayoutGrid } from "lucide-react";
+import { ArrowUpRight, ChevronDown, Globe, Heart, LayoutGrid, MapPin, Star, TrendingUp, Upload } from "lucide-react";
 import logger from "@/lib/logger";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { ProfileManager } from "./components/profile-manager";
 import { RelicPrestigeEditor } from "./components/relic-prestige-editor";
 import { ManageSubscriptionButton } from "./components/manage-subscription-button";
-import { Heart, Sparkles } from "lucide-react";
 import { isPlayerSupporter } from "@/lib/support-status";
+import { cn } from "@/lib/utils";
+import { PlayerProfileMetric, PlayerProfileSectionHeading, profileActionClass, profilePrimaryActionClass } from "@/components/player-profile-ui";
 
 export const metadata: Metadata = {
   title: "My Profile - CereBro",
@@ -37,6 +34,7 @@ const CLASS_ICONS: Record<Exclude<ChampionClass, 'SUPERIOR'>, string> = {
     TECH: "/assets/icons/Tech.png",
     MUTANT: "/assets/icons/Mutant.png",
 };
+const CLASS_ORDER = ["SCIENCE", "SKILL", "MUTANT", "TECH", "COSMIC", "MYSTIC"] as const;
 
 export default async function ProfilePage() {
     const player = await getUserPlayerWithAlliance();
@@ -89,288 +87,168 @@ export default async function ProfilePage() {
     const starLevels = Object.keys(byStar)
         .map(Number)
         .sort((a, b) => b - a);
+    const latestSnapshot = prestigeHistory.at(-1);
 
     return (
-        <div className="container mx-auto p-4 sm:p-8 max-w-5xl space-y-8">
-            {/* Profile Header */}
-            <div className="flex flex-col md:flex-row gap-6 md:items-center">
-                <Link href={`/player/${player.id}`}>
-                    <Avatar className="h-20 w-20 border-2 border-slate-700 shadow-xl hover:ring-4 hover:ring-sky-500/20 transition-all">
-                        <AvatarImage src={player.avatar || undefined} alt={player.ingameName} />
-                        <AvatarFallback className="text-2xl bg-slate-800 font-bold">
-                            {player.ingameName.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
+        <div className="mx-auto max-w-[1240px] space-y-6 px-4 pb-12 pt-5 sm:space-y-8 sm:px-6 sm:pt-7 lg:px-8">
+            <header className="flex flex-col gap-4 border-b border-slate-800 pb-5 md:flex-row md:items-center md:justify-between">
+                <div className="flex min-w-0 items-center gap-3.5 sm:gap-4">
+                    <Avatar className="size-12 shrink-0 rounded-xl border border-indigo-300/25 bg-indigo-400/10 text-indigo-100 sm:size-14 sm:rounded-2xl">
+                        <AvatarImage src={player.avatar || undefined} alt="" />
+                        <AvatarFallback className="rounded-xl bg-indigo-400/15 font-semibold sm:rounded-2xl sm:text-lg">{player.ingameName.slice(0, 2).toUpperCase()}</AvatarFallback>
                     </Avatar>
-                </Link>
-
-                <div className="flex-1 flex flex-col gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold text-white tracking-tight flex items-center gap-3">
-                            <Link href={`/player/${player.id}`} className="hover:text-sky-400 transition-colors">
-                                {player.ingameName}
-                            </Link>
-                            {player.isActive && <Badge variant="secondary" className="text-xs">Active</Badge>}
-                        </h1>
-                        <p className="text-slate-400 mt-1">
-                            {player.alliance ? `Alliance: ${player.alliance.name}` : "No Alliance"} • Timezone: {player.timezone || "Not set"}
-                        </p>
-                    </div>
-
-                    {/* Profile Manager */}
-                    <ProfileManager profiles={allProfiles} activeProfileId={player.id} />
-                </div>
-            </div>
-
-            <Separator className="bg-slate-800" />
-
-            {/* Supporter Section */}
-            {supporter && (
-                <>
-                    <style>{`
-                        @keyframes supporter-glow {
-                            0%, 100% { box-shadow: 0 0 0 1px rgba(251,191,36,0.25), 0 0 18px rgba(251,191,36,0.06); }
-                            50%       { box-shadow: 0 0 0 1px rgba(251,191,36,0.5),  0 0 28px rgba(251,191,36,0.14); }
-                        }
-                        @keyframes supporter-scan {
-                            0%   { transform: translateX(-100%) skewX(-20deg); }
-                            100% { transform: translateX(1400%) skewX(-20deg); }
-                        }
-                        @keyframes supporter-pulse-dot {
-                            0%, 100% { opacity: 1; transform: scale(1); }
-                            50%       { opacity: 0.5; transform: scale(0.8); }
-                        }
-                    `}</style>
-                    <div
-                        className="relative rounded-xl overflow-hidden"
-                        style={{ animation: "supporter-glow 3s ease-in-out infinite" }}
-                    >
-                        {/* Background */}
-                        <div className="absolute inset-0 bg-gradient-to-br from-amber-950/40 via-slate-900/80 to-slate-900/90" />
-                        <div className="absolute inset-0 bg-gradient-to-r from-amber-500/5 via-transparent to-sky-500/5" />
-                        {/* Shimmer sweep */}
-                        <div
-                            className="absolute inset-y-0 w-24 bg-gradient-to-r from-transparent via-amber-200/8 to-transparent pointer-events-none"
-                            style={{ animation: "supporter-scan 4s linear infinite" }}
-                        />
-                        {/* Border */}
-                        <div className="absolute inset-0 rounded-xl border border-amber-500/30 pointer-events-none" />
-
-                        <div className="relative flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4">
-                            <div className="flex items-center gap-4">
-                                {/* Icon cluster */}
-                                <div className="relative shrink-0">
-                                    <div className="p-2.5 rounded-xl bg-amber-500/10 border border-amber-500/25">
-                                        <Heart className="w-5 h-5 text-amber-400 fill-amber-500/50" />
-                                    </div>
-                                    <Sparkles className="absolute -top-1.5 -right-1.5 w-3 h-3 text-amber-300/80" />
-                                </div>
-
-                                <div>
-                                    <div className="flex items-center gap-2 flex-wrap">
-                                        <p className="text-amber-200 font-bold text-sm tracking-wide">CereBro Supporter</p>
-                                        {supporterDonation?.stripeSubscriptionId && (
-                                            <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/25 text-[10px] text-emerald-400 font-semibold uppercase tracking-wider">
-                                                <span
-                                                    className="w-1.5 h-1.5 rounded-full bg-emerald-400"
-                                                    style={{ animation: "supporter-pulse-dot 2s ease-in-out infinite" }}
-                                                />
-                                                Active
-                                            </span>
-                                        )}
-                                    </div>
-                                    <p className="text-slate-400 text-xs mt-0.5">
-                                        {supporterDonation?.stripeSubscriptionId
-                                            ? "Thank you for your monthly support — it keeps CereBro running!"
-                                            : "Thank you for your one-time contribution!"}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center gap-2 shrink-0">
-                                {supporterDonation?.stripeSubscriptionId && <ManageSubscriptionButton />}
-                                <Link href="/support">
-                                    <Button variant="ghost" className="text-amber-400/70 hover:text-amber-300 hover:bg-amber-500/10 text-sm">
-                                        Support again
-                                    </Button>
+                    <div className="min-w-0">
+                        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-indigo-200">My profile</p>
+                            {player.isActive && <span className="text-xs font-medium text-emerald-200">Active</span>}
+                        </div>
+                        <h1 className="mt-0.5 break-words text-[1.65rem] font-bold leading-tight tracking-tight text-white sm:text-4xl">{player.ingameName}</h1>
+                        <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-slate-400">
+                            {player.alliance ? (
+                                <Link href={"/alliance/" + player.alliance.id} className="inline-flex min-w-0 items-center gap-1 rounded-sm font-medium text-indigo-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300">
+                                    <MapPin className="size-3 shrink-0" aria-hidden="true" /> <span className="break-words">{player.alliance.name}</span>
                                 </Link>
-                            </div>
+                            ) : <span>No alliance</span>}
+                            <span className="inline-flex min-w-0 items-center gap-1.5">
+                                <Globe className="size-3 shrink-0" aria-hidden="true" /> <span className="break-words">{player.timezone || "Timezone not set"}</span>
+                            </span>
                         </div>
                     </div>
-                </>
-            )}
-
-            {/* Prestige Section */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                {/* Stats Cards */}
-                <div className="lg:col-span-1 grid grid-cols-1 gap-4">
-                    <Card className="bg-slate-900/50 border-slate-800">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-slate-400">Summoner Prestige</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{player.summonerPrestige?.toLocaleString("en-US") ?? "N/A"}</div>
-                        </CardContent>
-                    </Card>
-                    <Card className="bg-slate-900/50 border-slate-800">
-                        <CardHeader className="pb-2">
-                            <CardTitle className="text-sm font-medium text-slate-400">Champion Prestige</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{player.championPrestige?.toLocaleString("en-US") ?? "N/A"}</div>
-                        </CardContent>
-                    </Card>
-                    <RelicPrestigeEditor profileId={player.id} initialValue={player.relicPrestige} automatic={player.relicPrestigeFromInventory} />
                 </div>
+                <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    <Link href="/profile/update" className={profilePrimaryActionClass}><Upload className="size-4" aria-hidden="true" /> Update roster</Link>
+                    <Link href={"/player/" + player.id} className={profileActionClass}>Public profile <ArrowUpRight className="size-4" aria-hidden="true" /></Link>
+                </div>
+            </header>
 
-                {/* History Chart */}
-                <div className="lg:col-span-2">
-                    {prestigeHistory.length >= 3 ? (
-                        <PrestigeHistoryChart data={prestigeHistory} />
-                    ) : (
-                        <Card className="bg-slate-900/30 border-slate-800 border-dashed h-full flex items-center justify-center p-8 text-center">
-                            <div className="space-y-2">
-                                <p className="text-slate-500 text-sm">Prestige history will appear here once you have at least three data points.</p>
-                                <p className="text-slate-600 text-xs italic">Updates are recorded when you sync your roster.</p>
+            <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(19rem,0.46fr)] lg:gap-7">
+                <section aria-labelledby="profile-prestige-heading" className="min-w-0 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/45 lg:col-start-1 lg:row-start-1">
+                    <div className="flex flex-wrap items-center justify-between gap-2 px-3.5 py-3.5 sm:px-5 sm:py-4">
+                        <div className="flex items-center gap-2.5">
+                            <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-indigo-400/20 bg-indigo-400/10 text-indigo-200"><TrendingUp className="size-4" aria-hidden="true" /></span>
+                            <div>
+                                <h2 id="profile-prestige-heading" className="text-base font-semibold text-white sm:text-lg">Prestige</h2>
+                                <p className="mt-0.5 text-xs text-slate-400">Current values and history</p>
                             </div>
-                        </Card>
-                    )}
-                </div>
-            </div>
-
-            {/* Roster Summary */}
-            <div className="space-y-6">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <h2 className="text-2xl font-semibold tracking-tight">Roster Summary</h2>
-                    <div className="flex flex-wrap gap-3">
-                        <Link href="/profile/roster">
-                            <Button variant="outline" className="text-slate-200 border-slate-700 hover:bg-slate-800 flex items-center gap-2">
-                                <LayoutGrid className="w-4 h-4" />
-                                View Full Roster
-                            </Button>
-                        </Link>
-                        <Link href="/profile/update">
-                            <Button className="bg-sky-600 hover:bg-sky-700 shadow-lg shadow-sky-900/20 flex items-center gap-2">
-                                <Upload className="w-4 h-4" />
-                                Update Roster
-                            </Button>
-                        </Link>
+                        </div>
+                        {latestSnapshot && (
+                            <p className="text-xs text-slate-400">Last recorded{" "}
+                                <time dateTime={latestSnapshot.createdAt.toISOString()} className="font-medium text-slate-200">
+                                    {latestSnapshot.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })}
+                                </time>
+                            </p>
+                        )}
                     </div>
-                </div>
+                    <dl className="grid grid-cols-3 gap-px border-y border-slate-800 bg-slate-800/75">
+                        <PlayerProfileMetric label="Summoner prestige" value={player.summonerPrestige?.toLocaleString("en-US") ?? "—"} />
+                        <PlayerProfileMetric label="Champion prestige" value={player.championPrestige?.toLocaleString("en-US") ?? "—"} />
+                        <RelicPrestigeEditor key={player.id} profileId={player.id} initialValue={player.relicPrestige} automatic={player.relicPrestigeFromInventory} />
+                    </dl>
+                    {prestigeHistory.length >= 3 ? (
+                        <PrestigeHistoryChart data={prestigeHistory} embedded className="border-0 bg-transparent shadow-none" />
+                    ) : (
+                        <div className="px-4 py-5 sm:px-5">
+                            <p className="text-sm font-medium text-slate-200">Prestige history needs at least three recorded updates.</p>
+                            <p className="mt-1 text-xs text-slate-400">Sync your roster to record your progress.</p>
+                        </div>
+                    )}
+                </section>
 
-                {roster.length === 0 ? (
-                    <Card className="bg-slate-900/30 border-slate-800 border-dashed p-8 text-center">
-                        <p className="text-slate-400 mb-4">No champions found in your roster.</p>
-                        <Link href="/profile/update">
-                            <Button variant="outline">Upload Screenshots</Button>
-                        </Link>
-                    </Card>
-                ) : (
-                    starLevels.map((stars) => {
-                        const allChampionsOfStar = byStar[stars];
-                        // Filter out SUPERIOR class as it's not in classOrder
-                        const champions = allChampionsOfStar.filter(c => c.champion.class !== 'SUPERIOR');
-                        
-                        // Group by Rank then Class
-                        const statsByRank = champions.reduce((acc, c) => {
-                            if (!acc[c.rank]) acc[c.rank] = { total: 0 } as Record<ChampionClass | 'total', number>;
-                            acc[c.rank][c.champion.class] = (acc[c.rank][c.champion.class] || 0) + 1;
-                            acc[c.rank].total += 1;
-                            return acc;
-                        }, {} as Record<number, Record<ChampionClass | 'total', number>>);
+                <section aria-labelledby="profile-roster-breakdown" className="min-w-0 lg:col-start-1 lg:row-start-2">
+                    <PlayerProfileSectionHeading
+                        title="Roster breakdown"
+                        detail={roster.length ? roster.length.toLocaleString("en-US") + " builds" : undefined}
+                        id="profile-roster-breakdown"
+                        action={<Link href="/profile/roster" className={cn(profileActionClass, "min-h-9 px-2.5 text-xs sm:min-h-10 sm:px-3.5 sm:text-sm")}><LayoutGrid className="size-4" aria-hidden="true" /> Full roster</Link>}
+                    />
 
-                        const ranks = Object.keys(statsByRank).map(Number).sort((a, b) => b - a);
-                        const classOrder: Exclude<ChampionClass, 'SUPERIOR'>[] = ["SCIENCE", "SKILL", "MUTANT", "TECH", "COSMIC", "MYSTIC"];
+                    {roster.length === 0 ? (
+                        <div className="rounded-2xl border border-dashed border-slate-800 bg-slate-900/40 p-5">
+                            <p className="text-sm text-slate-300">Your roster is empty. Upload screenshots to add your champions.</p>
+                            <Link href="/profile/update" className="mt-3 inline-flex items-center gap-1.5 rounded-sm text-sm font-medium text-indigo-300 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300">
+                                Upload screenshots <ArrowUpRight className="size-3.5" aria-hidden="true" />
+                            </Link>
+                        </div>
+                    ) : (
+                        <div className="space-y-2.5">
+                            {starLevels.map(stars => {
+                                const champions = byStar[stars].filter(entry => entry.champion.class !== "SUPERIOR");
+                                const countsByRank = new Map<number, Map<ChampionClass, number>>();
+                                const classTotals = new Map<ChampionClass, number>();
+                                for (const { rank, champion } of champions) {
+                                    const counts = countsByRank.get(rank) ?? new Map<ChampionClass, number>();
+                                    counts.set(champion.class, (counts.get(champion.class) ?? 0) + 1);
+                                    countsByRank.set(rank, counts);
+                                    classTotals.set(champion.class, (classTotals.get(champion.class) ?? 0) + 1);
+                                }
 
-                        // Calculate Class Totals for this Star Level
-                        const classTotals = champions.reduce((acc, c) => {
-                            acc[c.champion.class] = (acc[c.champion.class] || 0) + 1;
-                            return acc;
-                        }, {} as Record<ChampionClass, number>);
-
-                        return (
-                            <Card key={stars} className="bg-slate-900/50 border-slate-800 overflow-hidden">
-                                <CardHeader className="bg-slate-900/80 border-b border-slate-800 pb-3">
-                                    <div className="flex justify-between items-center">
-                                        <CardTitle className="flex items-center gap-2 text-lg">
-                                            <span className="text-yellow-500">{"★".repeat(stars)}</span>
-                                            <span>{stars}-Star Champions</span>
-                                            <Badge variant="outline" className="ml-2 bg-slate-800">{champions.length}</Badge>
-                                        </CardTitle>
-                                    </div>
-                                </CardHeader>
-                                <CardContent className="p-0">
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm text-left">
-                                            <thead className="text-xs uppercase bg-slate-950/50 text-slate-400">
+                                return (
+                                    <details key={stars} open={stars === starLevels[0]} className="group overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/45">
+                                        <summary className="flex cursor-pointer list-none items-center gap-2.5 px-3.5 py-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-400 sm:px-4 [&::-webkit-details-marker]:hidden">
+                                            <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-amber-400/20 bg-amber-400/10 text-amber-200"><Star className="size-4" aria-hidden="true" /></span>
+                                            <span className="min-w-0 flex-1 text-sm font-semibold text-slate-100">{stars}-star champions</span>
+                                            <span className="shrink-0 text-xs tabular-nums text-slate-400">{champions.length.toLocaleString("en-US")}</span>
+                                            <ChevronDown className="size-4 shrink-0 text-slate-400 motion-safe:transition-transform group-open:rotate-180" aria-hidden="true" />
+                                        </summary>
+                                        <table aria-label={stars + "-star champions by rank and class"} className="w-full table-fixed border-t border-slate-800 text-center text-xs tabular-nums sm:text-sm">
+                                            <thead className="bg-slate-950/45 text-slate-400">
                                                 <tr>
-                                                    <th className="px-4 py-3 font-medium">Rank</th>
-                                                    {classOrder.map(cls => (
-                                                        <th key={cls} className="px-4 py-3 text-center">
-                                                            <div className="flex justify-center items-center" title={cls}>
-                                                                <div className="relative w-5 h-5 opacity-80">
-                                                                    <Image src={CLASS_ICONS[cls]} alt={cls} fill className="object-contain" />
-                                                                </div>
-                                                            </div>
+                                                    <th scope="col" className="px-1 py-2.5 font-medium">Rank</th>
+                                                    {CLASS_ORDER.map(cls => (
+                                                        <th key={cls} scope="col" className="px-1 py-2.5">
+                                                            <Image src={CLASS_ICONS[cls]} alt={cls.toLowerCase()} title={cls.toLowerCase()} width={18} height={18} className="mx-auto size-4 sm:size-[18px]" />
                                                         </th>
                                                     ))}
-                                                    <th className="px-4 py-3 text-center font-medium">Total</th>
+                                                    <th scope="col" className="px-1 py-2.5 font-medium">Total</th>
                                                 </tr>
                                             </thead>
-                                            <tbody className="divide-y divide-slate-800/50">
-                                                {ranks.map(rank => {
-                                                    const rowStats = statsByRank[rank];
-                                                    return (
-                                                        <tr key={rank} className="hover:bg-slate-800/20 transition-colors">
-                                                            <td className="px-4 py-3 font-medium text-slate-200">
-                                                                <Badge variant="secondary" className="bg-slate-800 text-slate-300 border-slate-700">R{rank}</Badge>
-                                                            </td>
-                                                            {classOrder.map(cls => {
-                                                                const count = rowStats[cls] || 0;
-                                                                const classColors = getChampionClassColors(cls);
-                                                                return (
-                                                                    <td key={cls} className="px-4 py-3 text-center">
-                                                                        {count > 0 ? (
-                                                                            <span className={cn("font-medium", classColors.text)}>{count}</span>
-                                                                        ) : (
-                                                                            <span className="text-slate-700">-</span>
-                                                                        )}
-                                                                    </td>
-                                                                );
-                                                            })}
-                                                            <td className="px-4 py-3 text-center font-bold text-slate-200">
-                                                                {rowStats.total}
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                                {/* Total Row */}
-                                                <tr className="bg-slate-950/30 font-bold border-t-2 border-slate-800">
-                                                    <td className="px-4 py-3 text-slate-400 uppercase text-xs tracking-wider">Total</td>
-                                                    {classOrder.map(cls => {
-                                                        const count = classTotals[cls] || 0;
-                                                        const classColors = getChampionClassColors(cls);
-                                                        return (
-                                                            <td key={cls} className="px-4 py-3 text-center">
-                                                                {count > 0 ? (
-                                                                    <span className={cn(classColors.text)}>{count}</span>
-                                                                ) : (
-                                                                    <span className="text-slate-700">-</span>
-                                                                )}
-                                                            </td>
-                                                        );
-                                                    })}
-                                                    <td className="px-4 py-3 text-center text-white">
-                                                        {champions.length}
-                                                    </td>
-                                                </tr>
+                                            <tbody className="divide-y divide-slate-800/75">
+                                                {[...countsByRank.entries()].sort(([a], [b]) => b - a).map(([rank, counts]) => (
+                                                    <tr key={rank}>
+                                                        <th scope="row" className="py-2.5 font-medium text-slate-300">R{rank}</th>
+                                                        {CLASS_ORDER.map(cls => (
+                                                            <td key={cls} className={counts.has(cls) ? getChampionClassColors(cls).text : "text-slate-600"}>{counts.get(cls) ?? "—"}</td>
+                                                        ))}
+                                                        <td className="font-semibold text-slate-200">{[...counts.values()].reduce((total, count) => total + count, 0)}</td>
+                                                    </tr>
+                                                ))}
                                             </tbody>
+                                            <tfoot className="border-t border-slate-800 bg-slate-950/35 font-semibold">
+                                                <tr>
+                                                    <th scope="row" className="py-2.5 font-medium text-slate-400">Total</th>
+                                                    {CLASS_ORDER.map(cls => (
+                                                        <td key={cls} className={classTotals.has(cls) ? getChampionClassColors(cls).text : "text-slate-600"}>{classTotals.get(cls) ?? "—"}</td>
+                                                    ))}
+                                                    <td className="text-slate-100">{champions.length}</td>
+                                                </tr>
+                                            </tfoot>
                                         </table>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        );
-                    })
-                )}
+                                    </details>
+                                );
+                            })}
+                        </div>
+                    )}
+                </section>
+
+                <aside aria-label="Profile management and support" className="min-w-0 space-y-4 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+                    <ProfileManager profiles={allProfiles} activeProfileId={player.id} />
+
+                    {supporter && (
+                        <section aria-labelledby="profile-supporter" className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-400/20 bg-amber-400/[0.06] p-4">
+                            <div className="flex items-start gap-3">
+                                <Heart className="mt-0.5 size-5 shrink-0 text-amber-300" aria-hidden="true" />
+                                <div>
+                                    <h2 id="profile-supporter" className="text-sm font-semibold text-amber-100">CereBro supporter</h2>
+                                    <p className="mt-0.5 text-xs text-slate-400">{supporterDonation?.stripeSubscriptionId ? "Thank you for supporting CereBro every month." : "Thank you for your contribution."}</p>
+                                </div>
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2">
+                                {supporterDonation?.stripeSubscriptionId && <ManageSubscriptionButton />}
+                                <Button asChild variant="ghost" className="text-amber-200 hover:bg-amber-400/10 hover:text-amber-100"><Link href="/support">Support again</Link></Button>
+                            </div>
+                        </section>
+                    )}
+                </aside>
             </div>
         </div>
     );

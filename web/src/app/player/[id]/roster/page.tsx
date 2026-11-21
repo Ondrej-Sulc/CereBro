@@ -1,15 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { headers } from "next/headers";
-import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { getCachedAllChampions } from "@/lib/data/champions";
 import { attachResistances, getResistanceIndex } from "@/lib/data/champion-resistances";
 import { rosterKitOptions } from "@/lib/roster-kit-options";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { RosterView } from "@/app/profile/roster/roster-view";
-import { Button } from "@/components/ui/button";
 import { ChampionImages } from "@/types/champion";
 import { PrestigeInsightTab, ProfileRosterEntry } from "@/app/profile/roster/types";
 import { UploadSection } from "./upload-section";
@@ -175,33 +172,7 @@ export default async function PlayerRosterPage({ params, searchParams }: PlayerR
         : null;
 
     return (
-        <div className="w-full p-4 sm:p-8 space-y-6">
-            {/* Back navigation */}
-            <div className="flex items-center gap-3">
-                <Button asChild variant="ghost" size="sm" className="h-8 gap-1.5 text-slate-400 hover:text-slate-200 -ml-2">
-                    <Link href={`/player/${targetPlayer.id}`}>
-                        <ArrowLeft className="w-4 h-4" />
-                        Back to Profile
-                    </Link>
-                </Button>
-            </div>
-
-            {/* Officer/admin upload section */}
-            {canEdit && targetPlayerId && (
-                <UploadSection
-                    targetPlayerId={targetPlayerId}
-                    playerName={targetPlayer.ingameName}
-                    quota={quota ? {
-                        limit: quota.limit,
-                        used: quota.used,
-                        remaining: quota.remaining,
-                        resetAt: quota.resetAt,
-                        supportUrl: quota.supportUrl,
-                        unlimitedReason: quota.unlimitedReason,
-                    } : null}
-                />
-            )}
-
+        <div className="mx-auto max-w-[1440px] px-4 pb-12 pt-5 sm:px-6 sm:pt-7 lg:px-8">
             <RosterView
                 key={targetPlayer.id}
                 initialRoster={typedRosterEntries}
@@ -229,6 +200,20 @@ export default async function PlayerRosterPage({ params, searchParams }: PlayerR
                 targetPlayerId={targetPlayerId}
                 shareUrl={shareUrl}
                 canManageAttackReservations={canManageAttackReservations}
+                profileTools={canEdit && targetPlayerId && (
+                    <UploadSection
+                        targetPlayerId={targetPlayerId}
+                        playerName={targetPlayer.ingameName}
+                        quota={quota ? {
+                            limit: quota.limit,
+                            used: quota.used,
+                            remaining: quota.remaining,
+                            resetAt: quota.resetAt,
+                            supportUrl: quota.supportUrl,
+                            unlimitedReason: quota.unlimitedReason,
+                        } : null}
+                    />
+                )}
             />
         </div>
     );

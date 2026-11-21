@@ -141,12 +141,12 @@ function remember(section: CollectionSection, view: CollectionView) {
 }
 
 /** The active view is the page heading. Shared rosters keep their own title. */
-export function CollectionHeading({ fallback }: { fallback?: ReactNode }) {
+export function CollectionHeading({ fallback, compact = false }: { fallback?: ReactNode; compact?: boolean }) {
   const screen = useContext(Screen);
-  return screen ? <CollectionViewSwitch /> : fallback;
+  return screen ? <CollectionViewSwitch compact={compact} /> : fallback;
 }
 
-function CollectionViewSwitch() {
+function CollectionViewSwitch({ compact }: { compact: boolean }) {
   const screen = useContext(Screen);
   const memory = useContext(Memory);
   const router = useRouter();
@@ -168,7 +168,7 @@ function CollectionViewSwitch() {
     ? { catalog: "All Champions", personal: "My Roster" }
     : { catalog: "All Relics", personal: "My Relics" };
   return (
-    <div className={styles.wrapper} data-section={section}>
+    <div className={styles.wrapper} data-section={section} data-compact={compact ? "true" : undefined}>
       <nav
         className={styles.switcher}
         aria-label={`${section === "champions" ? "Champion" : "Relic"} view`}
@@ -220,7 +220,7 @@ function CollectionViewSwitch() {
               <span className={styles.icon} aria-hidden="true">
                 {isPending ? <Loader2 className={styles.loading} /> : <Icon />}
               </span>
-              {target === view ? (
+              {target === view && !compact ? (
                 <h1 className={styles.label}>{labels[target]}</h1>
               ) : (
                 <span className={styles.label}>{labels[target]}</span>

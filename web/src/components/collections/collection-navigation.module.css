@@ -146,3 +146,31 @@
     animation: none;
   }
 }
+
+.wrapper[data-compact="true"] {
+  --collection-accent: #a5b4fc;
+  --collection-tint: #202846;
+}
+.wrapper[data-compact="true"] .switcher {
+  gap: 2px;
+  padding: 3px;
+  border-color: #28364c;
+  border-radius: 10px;
+  background: #0c1424;
+  box-shadow: none;
+}
+.wrapper[data-compact="true"] .switcher a {
+  gap: 6px;
+  min-height: 34px;
+  padding: 5px 9px;
+  border-radius: 7px;
+  font-size: 12px;
+  letter-spacing: 0;
+}
+.wrapper[data-compact="true"] .icon svg {
+  width: 14px;
+  height: 14px;
+}
+.wrapper[data-compact="true"] .activeDot {
+  display: none;
+}

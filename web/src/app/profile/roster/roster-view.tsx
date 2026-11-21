@@ -12,10 +12,7 @@ import { championScopeHref, matchesChampionScope } from "@/lib/champion-catalog-
 import { useRouter } from "next/navigation";
 import { VirtuosoGrid } from "react-virtuoso";
 import { Champion } from "@/types/champion";
-import Link from "next/link";
-import { Upload, TrendingUp, ChevronDown, Share2, Grid3X3, Swords } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { TrendingUp, Grid3X3, Swords } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Player, Alliance } from "@prisma/client";
 import { CollectionHeading, useCollectionState, useIsCollectionScreen } from "@/components/collections/collection-navigation";
@@ -32,6 +29,7 @@ import { ChampionCard } from "./components/champion-card";
 import { QuickChampionDialog } from "./components/quick-champion-dialog";
 import { RosterFilters } from "./components/roster-filters";
 import { RosterInsights } from "./components/roster-insights";
+import { RosterProfileHeader } from "./components/roster-profile-header";
 import { EditChampionModal } from "./components/modals/edit-champion-modal";
 import { AddChampionModal } from "./components/modals/add-champion-modal";
 import { PrestigeChartModal } from "./components/modals/prestige-chart-modal";
@@ -161,6 +159,7 @@ interface RosterViewProps {
   /** When set, shows a Share button that copies this URL to the clipboard */
   shareUrl?: string;
   canManageAttackReservations?: boolean;
+  profileTools?: ReactNode;
 }
 
 const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ style, children, ...props }, ref) => (
@@ -169,6 +168,13 @@ const GridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ s
   </div>
 ));
 GridList.displayName = "GridList";
+
+const RosterGridList = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(({ style, children, ...props }, ref) => (
+  <div ref={ref} {...props} style={style} className="grid grid-cols-3 min-[420px]:grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 xl:grid-cols-10 gap-2.5">
+    {children}
+  </div>
+));
+RosterGridList.displayName = "RosterGridList";
 
 interface ApiRosterResponse {
   prestigeMap: Record<string, number>;
@@ -192,6 +198,7 @@ export function RosterView({
   targetPlayerId,
   shareUrl,
   canManageAttackReservations = false,
+  profileTools,
 }: RosterViewProps) {
   const router = useRouter();
   const { toast } = useToast();
@@ -614,99 +621,54 @@ export function RosterView({
     );
   }, [filteredRoster, prestigeMap, viewMode, effectiveCanEdit, isChampionsCatalog, effectiveCanManageAttackReservations, showAttackReservationControls, handleToggleAttackReservation]);
 
+  const handleShareRoster = async () => {
+    if (!shareUrl) return;
+    try {
+      const scopedUrl = new URL(championScopeHref(shareUrl, championScope), shareUrl).toString();
+      await navigator.clipboard.writeText(ascensionEligibilityHref(scopedUrl, ascensionEligible));
+      toast({ title: "Roster link copied" });
+    } catch {
+      toast({ title: "Couldn’t copy roster link", description: "Your browser did not allow clipboard access.", variant: "destructive" });
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-2">
-        <div>
-          <div className="flex flex-wrap items-center gap-3">
-            <CollectionHeading fallback={
-              <h1 className="text-[28px] sm:text-3xl font-bold text-white tracking-tight">
-                {!isCollectionScreen && !isChampionsCatalog ? `${player?.ingameName ?? "Player"}'s Champions` : "Champions"}
-              </h1>
-            } />
-            {!isChampionsCatalog && !targetPlayerId && profiles.length > 1 && (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="h-8 gap-1 bg-slate-900 border-slate-700">
-                    Switch Profile
-                    <ChevronDown className="h-4 w-4 text-slate-400" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="start" className="w-48 bg-slate-900 border-slate-800 text-slate-200">
-                  {profiles.map((p) => (
-                    <DropdownMenuItem
-                      key={p.id}
-                      onClick={() => handleProfileSwitch(p.id)}
-                      className={cn("cursor-pointer focus:bg-slate-800", p.id === player?.id && "bg-slate-800/50")}
-                    >
-                      <div className="flex flex-col">
-                        <span className={cn("font-medium", p.id === player?.id ? "text-white" : "text-slate-300")}>
-                          {p.ingameName}
-                        </span>
-                        {p.alliance && (
-                          <span className="text-xs text-slate-500">[{p.alliance.name}]</span>
-                        )}
-                      </div>
-                    </DropdownMenuItem>
-                  ))}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            )}
-          </div>
-          <p className="text-slate-400 mt-3">
-            {isChampionsCatalog
-              ? "Browse all playable champions, filter by class, tags, abilities, and immunities."
-              : targetPlayerId
-                ? "View and manage this player's champions."
-                : `${player?.ingameName ?? "Your profile"}'s roster · Manage builds and track your progress.`}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3 w-full md:w-auto empty:hidden">
-          {enablePrestigeInsights && top30Average > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-950/20 border border-amber-900/40 rounded-lg shadow-inner h-10">
-              <span className="text-amber-500/80 text-[10px] font-bold uppercase tracking-wider">Top 30 Prestige</span>
-              <span className="text-amber-100 font-mono font-bold text-lg">{top30Average.toLocaleString('en-US')}</span>
-            </div>
-          )}
-
-          {!isChampionsCatalog && shareUrl && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                const scopedUrl = new URL(championScopeHref(shareUrl, championScope), shareUrl).toString();
-                navigator.clipboard.writeText(ascensionEligibilityHref(scopedUrl, ascensionEligible));
-                toast({ title: "Copied!", description: "Roster link copied to clipboard." });
-              }}
-              className="h-10 px-4 gap-2 border-slate-700 bg-slate-900 text-slate-400 hover:text-slate-200"
-            >
-              <Share2 className="w-4 h-4" />
-              <span>Share</span>
-            </Button>
-          )}
-
-          {!isChampionsCatalog && !targetPlayerId && (
-            <Button asChild className="w-full md:w-auto bg-sky-600 hover:bg-sky-700 text-white shadow-lg shadow-sky-900/20 flex items-center gap-2 h-10">
-              <Link href="/profile/update">
-                <Upload className="w-4 h-4" />
-                Update Roster
-              </Link>
-            </Button>
-          )}
-        </div>
-      </header>
+    <div className={enablePrestigeInsights ? "space-y-4 sm:space-y-5" : "space-y-6"}>
+      {enablePrestigeInsights && player ? (
+        <RosterProfileHeader
+          player={player}
+          personal={isCollectionScreen}
+          profiles={targetPlayerId ? [] : profiles}
+          showUpload={!targetPlayerId}
+          top30={top30Average}
+          owned={roster.length}
+          sevenStar={roster.filter(entry => entry.stars === 7).length}
+          onShare={shareUrl ? handleShareRoster : undefined}
+          onProfileSwitch={handleProfileSwitch}
+        />
+      ) : (
+        <header className="mb-2">
+          <CollectionHeading fallback={<h1 className="text-[28px] font-bold tracking-tight text-white sm:text-3xl">Champions</h1>} />
+          <p className="mt-3 text-slate-400">Browse all playable champions, filter by class, tags, abilities, and immunities.</p>
+        </header>
+      )}
+      {profileTools}
 
       {enablePrestigeInsights && (
         <>
-          <RosterModeSwitch
-            activeMode={showInsights ? "prestige" : "roster"}
-            onModeChange={(mode) => {
-              const nextShowInsights = mode === "prestige";
-              setShowInsights(nextShowInsights);
-              updateUrlParams({ insights: nextShowInsights ? "true" : null });
-            }}
-            rosterCount={filteredRoster.length}
-            prestigeCount={potentialRecommendations.length + recommendations.length + sigRecommendations.length}
-          />
+          <div className="flex flex-col items-start gap-2.5 sm:flex-row sm:items-center sm:justify-between">
+            <RosterModeSwitch
+              activeMode={showInsights ? "prestige" : "roster"}
+              onModeChange={(mode) => {
+                const nextShowInsights = mode === "prestige";
+                setShowInsights(nextShowInsights);
+                updateUrlParams({ insights: nextShowInsights ? "true" : null });
+              }}
+              rosterCount={filteredRoster.length}
+              prestigeCount={potentialRecommendations.length + recommendations.length + sigRecommendations.length}
+            />
+            {isCollectionScreen && <CollectionHeading compact />}
+          </div>
 
           <RosterInsights
             showInsights={showInsights}
@@ -782,7 +744,7 @@ export function RosterView({
               <p>No champions found matching your criteria.</p>
             </div>
           ) : (
-            <VirtuosoGrid useWindowScroll totalCount={filteredRoster.length} overscan={600} computeItemKey={(index) => filteredRoster[index]?.id} components={{ List: GridList }} itemContent={itemContent} />
+            <VirtuosoGrid useWindowScroll totalCount={filteredRoster.length} overscan={600} computeItemKey={(index) => filteredRoster[index]?.id} components={{ List: isChampionsCatalog ? GridList : RosterGridList }} itemContent={itemContent} />
           )}
         </>
       )}
@@ -807,23 +769,21 @@ function RosterModeSwitch({
   prestigeCount: number;
 }) {
   return (
-    <div className="rounded-3xl border border-slate-700 bg-slate-950/90 p-1.5 shadow-[0_12px_48px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.06)] md:rounded-full">
-      <div className="grid gap-1.5 md:grid-cols-2">
-        <ModeSwitchPill
-          active={activeMode === "roster"}
-          icon={<Grid3X3 className="h-4 w-4" />}
-          title="Champions"
-          count={rosterCount}
-          onClick={() => onModeChange("roster")}
-        />
-        <ModeSwitchPill
-          active={activeMode === "prestige"}
-          icon={<TrendingUp className="h-4 w-4" />}
-          title="Prestige Insights"
-          count={prestigeCount}
-          onClick={() => onModeChange("prestige")}
-        />
-      </div>
+    <div role="group" aria-label="Roster section" className="grid w-full grid-cols-2 gap-0.5 rounded-xl border border-slate-800 bg-slate-900/60 p-1 sm:w-auto">
+      <ModeSwitchPill
+        active={activeMode === "roster"}
+        icon={<Grid3X3 className="size-4 shrink-0" aria-hidden="true" />}
+        title="Champions"
+        count={rosterCount}
+        onClick={() => onModeChange("roster")}
+      />
+      <ModeSwitchPill
+        active={activeMode === "prestige"}
+        icon={<TrendingUp className="size-4 shrink-0" aria-hidden="true" />}
+        title="Prestige insights"
+        count={prestigeCount}
+        onClick={() => onModeChange("prestige")}
+      />
     </div>
   );
 }
@@ -845,18 +805,17 @@ function ModeSwitchPill({
     <button
       type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={cn(
-        "flex min-w-0 items-center justify-center gap-3 rounded-2xl px-4 py-3 text-sm font-black transition-all md:rounded-full md:px-5",
+        "flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 sm:gap-2 sm:px-3 sm:text-sm",
         active
-          ? "bg-sky-400 text-slate-950 shadow-[0_0_28px_rgba(56,189,248,0.25)]"
-          : "text-slate-400 hover:bg-slate-900 hover:text-slate-100"
+          ? "bg-indigo-400/15 text-indigo-100"
+          : "text-slate-300 hover:bg-slate-800 hover:text-white"
       )}
     >
       {icon}
-      <span className="truncate">{title}</span>
-      <span className={cn("rounded-full px-2 py-0.5 text-xs font-mono", active ? "bg-slate-950 text-sky-100" : "bg-slate-800 text-slate-300")}>
-        {count.toLocaleString("en-US")}
-      </span>
+      <span>{title}</span>
+      {count > 0 && <span aria-hidden="true" className="hidden rounded-md bg-slate-800/90 px-1.5 py-0.5 text-[11px] tabular-nums text-slate-300 sm:inline">{count.toLocaleString("en-US")}</span>}
     </button>
   );
 }
