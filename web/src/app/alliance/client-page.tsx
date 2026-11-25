@@ -24,7 +24,7 @@ import {
 } from "../actions/alliance";
 import { PALETTES, PALETTE_LABELS, PALETTE_DESCRIPTIONS, DEFAULT_PALETTE_STYLE, PlayerPaletteStyle } from "@/lib/player-colors";
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, ArrowUpRight, Bot, Check, ChevronDown, ClipboardList, Clock, Crown, Ellipsis, GripVertical, Heart, HelpCircle, LayoutGrid, Link as LinkIcon, List, LogOut, Palette, Pencil, Plus, RotateCcw, Settings, Shield, SlidersHorizontal, Sparkles, Trophy, Users } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, Bot, Check, ChevronDown, ClipboardList, Clock, Crown, Ellipsis, Heart, HelpCircle, LayoutGrid, Link as LinkIcon, List, LogOut, Palette, Pencil, Plus, RotateCcw, Settings, Shield, SlidersHorizontal, Sparkles, Trophy, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -193,9 +193,11 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
     const [sortBy, setSortBy] = useState<'name' | 'prestige'>('name');
     const [memberView, setMemberView] = useState<"board" | "list">("board");
     const [editBattlegroups, setEditBattlegroups] = useState(false);
-    const [draggedMember, setDraggedMember] = useState<Pick<PlayerWithRoster, "id" | "battlegroup"> | null>(null);
+    const [draggedMember, setDraggedMember] = useState<Pick<PlayerWithRoster, "id" | "ingameName" | "battlegroup"> | null>(null);
     const [dropGroup, setDropGroup] = useState<number | null>();
     const [pendingAssignment, setPendingAssignment] = useState<string | null>(null);
+    const blockedDragMember = useRef<string | null>(null);
+    const dragPreview = useRef<HTMLDivElement | null>(null);
     const assignmentInFlight = useRef(false);
     const isEditingBattlegroups = canManageAlliance && memberView === "board" && editBattlegroups;
     const [listSort, setListSort] = useState<MemberListSort>("name");
@@ -204,6 +206,8 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
     const [selectedGroup, setSelectedGroup] = useState<number | null | "all">("all");
     const memberSearchInput = useRef<HTMLInputElement>(null);
     const battlegroupFilters = useRef<HTMLDivElement>(null);
+
+    useEffect(() => () => dragPreview.current?.remove(), []);
 
     // General Settings
     const [generalName, setGeneralName] = useState(alliance.name);
@@ -481,29 +485,52 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
     };
 
     function clearDrag() {
+        dragPreview.current?.remove();
+        dragPreview.current = null;
+        blockedDragMember.current = null;
         setDraggedMember(null);
         setDropGroup(undefined);
     }
 
-    function startMemberDrag(event: DragEvent<HTMLSpanElement>, player: PlayerWithRoster) {
-        if (!isEditingBattlegroups || assignmentInFlight.current || loadingId === player.id) {
+    function startMemberDrag(event: DragEvent<HTMLLIElement>, player: PlayerWithRoster) {
+        if (!isEditingBattlegroups || assignmentInFlight.current || loadingId === player.id || blockedDragMember.current === player.id) {
             event.preventDefault();
             return;
         }
+        const battlegroup = player.battlegroup || null;
         event.dataTransfer.effectAllowed = "move";
         event.dataTransfer.setData(BATTLEGROUP_DRAG_TYPE, player.id);
-        const row = event.currentTarget.closest("li");
-        if (row) {
-            const bounds = row.getBoundingClientRect();
-            event.dataTransfer.setDragImage?.(row, event.clientX - bounds.left, event.clientY - bounds.top);
+
+        if (event.dataTransfer.setDragImage) {
+            const preview = document.createElement("div");
+            preview.className = styles.dragPreview;
+            preview.setAttribute("aria-hidden", "true");
+            preview.style.setProperty("--drag-group-color", groupColors.get(battlegroup) ?? "#94a3b8");
+            const avatar = event.currentTarget.querySelector(`.${styles.avatar}`);
+            if (avatar) preview.append(avatar.cloneNode(true));
+            const details = document.createElement("div");
+            const name = document.createElement("div");
+            name.className = styles.dragPreviewName;
+            name.textContent = player.ingameName;
+            const group = document.createElement("div");
+            group.textContent = battlegroup ? "Battlegroup " + battlegroup : "Unassigned";
+            details.append(name, group);
+            preview.append(details);
+            dragPreview.current?.remove();
+            document.body.append(preview);
+            dragPreview.current = preview;
+            event.dataTransfer.setDragImage(preview, 22, 24);
         }
-        setDraggedMember({ id: player.id, battlegroup: player.battlegroup || null });
+
+        setDraggedMember({ id: player.id, ingameName: player.ingameName, battlegroup });
     }
 
     function battlegroupDropProps(group: number | null) {
         if (!isEditingBattlegroups || !draggedMember || assignmentInFlight.current || draggedMember.battlegroup === group) return {};
         return {
+            "data-drop-state": dropGroup === group ? "active" : "available",
             onDragOver(event: DragEvent<HTMLElement>) {
+                if (!event.dataTransfer.types.includes(BATTLEGROUP_DRAG_TYPE)) return;
                 event.preventDefault();
                 event.dataTransfer.dropEffect = "move";
                 setDropGroup(group);
@@ -600,23 +627,39 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         const FreshnessIcon = needsAttention ? AlertTriangle : Clock;
         const playerColor = player.isSupporter ? "#fbbf24" : playerColorMap.get(player.id) ?? "#94a3b8";
         const isUpdating = loadingId === player.id || pendingAssignment === player.id;
+        const canDrag = isEditingBattlegroups && !isUpdating && pendingAssignment === null;
         const controls = isEditingBattlegroups ? "edit" : canManageAlliance ? "manage" : "read";
 
         return (
-            <li key={player.id} aria-busy={isUpdating || undefined} className={cn(
-                styles.memberRow, "flex min-h-[3.75rem] min-w-0 flex-col justify-center px-3 py-2.5 transition-colors hover:bg-slate-800/45",
-                (isUpdating || draggedMember?.id === player.id) && "opacity-50"
-            )}>
+            <li
+                key={player.id}
+                aria-busy={isUpdating || undefined}
+                draggable={canDrag || undefined}
+                data-drag-source={draggedMember?.id === player.id || undefined}
+                onPointerDownCapture={canDrag ? event => {
+                    const target = event.target;
+                    const isControl = target instanceof Element && (
+                        !event.currentTarget.contains(target) || target.closest("button, input, select, textarea, [contenteditable]")
+                    );
+                    blockedDragMember.current = event.pointerType === "touch" || isControl ? player.id : null;
+                } : undefined}
+                onDragStart={canDrag ? event => startMemberDrag(event, player) : undefined}
+                onDragEnd={clearDrag}
+                className={cn(
+                    styles.memberRow, "flex min-h-[3.75rem] min-w-0 flex-col justify-center px-3 py-2.5 transition-colors hover:bg-slate-800/45",
+                    isUpdating && "opacity-50"
+                )}
+            >
                 <div className={cn(styles.memberLayout, "items-center gap-x-2 gap-y-1.5")} data-controls={controls}>
                     <Avatar className={cn(styles.avatar, "size-8 shrink-0 rounded-lg border sm:size-9")} style={{ borderColor: playerColor + "66" }}>
-                        <AvatarImage src={player.avatar || undefined} />
+                        <AvatarImage src={player.avatar || undefined} alt="" draggable={isEditingBattlegroups ? false : undefined} />
                         <AvatarFallback className="rounded-xl bg-slate-800 text-xs font-semibold text-white" style={{ backgroundColor: playerColor + "24" }}>
                             {player.ingameName.substring(0, 2).toUpperCase()}
                         </AvatarFallback>
                     </Avatar>
                     <div className={cn(styles.details, "min-w-0")}>
                         <div className="flex min-w-0 items-center gap-1.5">
-                            <Link href={"/player/" + player.id} title={player.ingameName} className="truncate rounded-sm text-sm font-semibold text-slate-100 transition-colors hover:text-indigo-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
+                            <Link href={"/player/" + player.id} title={player.ingameName} draggable={isEditingBattlegroups ? false : undefined} className="truncate rounded-sm text-sm font-semibold text-slate-100 transition-colors hover:text-indigo-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
                                 {player.ingameName}
                             </Link>
                             {player.isOfficer && <Crown role="img" aria-label="Officer" className="h-3.5 w-3.5 shrink-0 text-amber-300" />}
@@ -639,16 +682,6 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                     </div>
                     {isEditingBattlegroups && (
                         <div className={cn(styles.editor, "flex items-center justify-end gap-1")}>
-                            <span
-                                draggable={!isUpdating && pendingAssignment === null}
-                                onDragStart={event => startMemberDrag(event, player)}
-                                onDragEnd={clearDrag}
-                                title={"Drag " + player.ingameName}
-                                aria-hidden="true"
-                                className={cn(styles.dragHandle, "size-7 cursor-grab items-center justify-center rounded-md text-slate-400 hover:bg-slate-800 hover:text-slate-100 active:cursor-grabbing", pendingAssignment && "cursor-default opacity-50")}
-                            >
-                                <GripVertical className="size-4" />
-                            </span>
                             <Select disabled={isUpdating || pendingAssignment !== null} onValueChange={value => handleBgChange(player.id, value === "unassigned" ? null : Number(value))} value={player.battlegroup?.toString() || "unassigned"}>
                                 <SelectTrigger aria-label={"Battlegroup for " + player.ingameName} className="h-8 w-auto gap-1 rounded-md border-slate-700/80 bg-slate-950/60 px-2 py-1 text-xs text-slate-300 [&_svg]:size-3">
                                     <SelectValue>{player.battlegroup ? "BG " + player.battlegroup : "Unassigned"}</SelectValue>
@@ -705,8 +738,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                 aria-labelledby={headingId}
                 {...battlegroupDropProps(group.id)}
                 className={cn(
-                    "relative min-w-0 scroll-mt-20 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50",
-                    dropGroup === group.id && "border-indigo-400 bg-indigo-950/30 ring-1 ring-indigo-400/60"
+                    styles.dropPanel, "relative min-w-0 scroll-mt-20 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50"
                 )}
             >
                 <div aria-hidden="true" className="absolute inset-x-0 top-0 h-0.5" style={{ backgroundColor: group.color }} />
@@ -716,8 +748,11 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                             <GroupIcon className="h-4 w-4" aria-hidden="true" />
                         </div>
                         <h3 id={headingId} className="min-w-0 text-base font-semibold tracking-tight text-white">{group.title}</h3>
-                        <span className="ml-auto shrink-0 rounded-full border border-slate-700/80 bg-slate-950/40 px-2.5 py-1 text-xs tabular-nums text-slate-300">
-                            {searchQuery && group.players.length !== group.total ? group.players.length + " / " : ""}{group.total} {group.total === 1 ? "member" : "members"}
+                        <span className={cn(
+                            "ml-auto shrink-0 rounded-full border px-2.5 py-1 text-xs tabular-nums",
+                            dropGroup === group.id ? "border-indigo-400/70 bg-indigo-400/20 font-medium text-indigo-100" : "border-slate-700/80 bg-slate-950/40 text-slate-300"
+                        )}>
+                            {dropGroup === group.id ? "Drop here" : <>{searchQuery && group.players.length !== group.total ? group.players.length + " / " : ""}{group.total} {group.total === 1 ? "member" : "members"}</>}
                         </span>
                     </div>
                     {(group.average !== null || group.supporterCount > 0 || (canManageAlliance && group.needsAttention > 0)) && (
@@ -1174,9 +1209,8 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                 onClick={() => setSelectedGroup(group.id)}
                                 {...(group.id === "all" ? {} : battlegroupDropProps(group.id))}
                                 className={cn(
-                                    "h-9 gap-1.5 rounded-lg px-2 text-xs focus-visible:ring-indigo-400",
-                                    activeGroup === group.id ? "bg-indigo-400/15 text-indigo-100 hover:bg-indigo-400/20" : "text-slate-300 hover:bg-slate-800 hover:text-white",
-                                    dropGroup === group.id && "bg-indigo-400/25 text-indigo-100 ring-1 ring-inset ring-indigo-400/70"
+                                    styles.dropChip, "h-9 gap-1.5 rounded-lg px-2 text-xs focus-visible:ring-indigo-400",
+                                    activeGroup === group.id ? "bg-indigo-400/15 text-indigo-100 hover:bg-indigo-400/20" : "text-slate-300 hover:bg-slate-800 hover:text-white"
                                 )}
                             >
                                 {group.color && <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full" style={{ backgroundColor: group.color }} />}
@@ -1217,7 +1251,11 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                 </div>
                 {isEditingBattlegroups && (
                     <p className="text-xs text-slate-400">
-                        <span className={styles.desktopHint}>Drag a member to a group or use the dropdowns.</span>
+                        <span className={styles.desktopHint}>
+                            {draggedMember
+                                ? <>Moving <strong className="font-semibold text-indigo-200">{draggedMember.ingameName}</strong>. Drop on a highlighted group.</>
+                                : "Drag any member row to a group or use the dropdowns."}
+                        </span>
                         <span className={styles.touchHint}>Use the dropdowns to move members between groups.</span>
                     </p>
                 )}
@@ -1278,8 +1316,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                         battlegroupFilters.current?.querySelector<HTMLButtonElement>('[data-battlegroup-filter="' + group.id + '"]')?.focus();
                                     }}
                                     className={cn(
-                                        "h-9 gap-1.5 rounded-lg border-slate-800 bg-slate-900/65 px-2.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white focus-visible:ring-indigo-400",
-                                        dropGroup === group.id && "border-indigo-400 bg-indigo-400/25 text-indigo-100"
+                                        styles.dropChip, "h-9 gap-1.5 rounded-lg border-slate-800 bg-slate-900/65 px-2.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white focus-visible:ring-indigo-400"
                                     )}
                                 >
                                     <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full" style={{ backgroundColor: group.color }} />
@@ -1292,8 +1329,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                     data-battlegroup-drop="unassigned"
                                     {...battlegroupDropProps(null)}
                                     className={cn(
-                                        "inline-flex h-9 items-center rounded-lg border border-dashed border-slate-700 px-2.5 text-xs text-slate-300",
-                                        dropGroup === null && "border-indigo-400 bg-indigo-400/25 text-indigo-100"
+                                        styles.dropChip, "inline-flex h-9 items-center rounded-lg border border-dashed border-slate-700 px-2.5 text-xs text-slate-300"
                                     )}
                                 >
                                     Unassigned

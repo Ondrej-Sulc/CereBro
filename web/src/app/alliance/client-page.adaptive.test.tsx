@@ -65,8 +65,8 @@ async function click(selector: string, container: ParentNode = host) {
 
 const editGroups = '[aria-label="Edit battlegroups"]';
 const solomonAssignment = '[role="combobox"][aria-label="Battlegroup for Solomon"]';
-const solomonDragHandle = '[draggable="true"][title="Drag Solomon"]';
 const memberMime = "application/x-cerebro-alliance-member";
+const memberDragRow = (id: string) => host.querySelector(`a[href="/player/${id}"]`)?.closest('li[draggable="true"]') ?? null;
 
 function dragData() {
     const data = new Map<string, string>();
@@ -78,7 +78,7 @@ function dragData() {
         },
         getData: (type: string) => data.get(type) ?? "",
         setData: (type: string, value: string) => data.set(type, value),
-        setDragImage() {},
+        setDragImage: vi.fn<(image: Element, x: number, y: number) => void>(),
     };
 }
 
@@ -90,10 +90,10 @@ async function dragEvent(type: string, target: Element, dataTransfer: ReturnType
 }
 
 async function startSolomonDrag() {
-    const handle = host.querySelector(solomonDragHandle);
-    expect(handle).not.toBeNull();
+    const row = memberDragRow("member-0");
+    expect(row).not.toBeNull();
     const data = dragData();
-    await dragEvent("dragstart", handle!, data);
+    await dragEvent("dragstart", row!, data);
     return data;
 }
 
@@ -137,22 +137,65 @@ it("keeps assignment controls off until an officer enables battlegroup editing",
     expect(toggle!.textContent).toContain("Edit groups");
     expect(toggle?.getAttribute("aria-pressed")).toBe("false");
     expect(host.querySelector(solomonAssignment)).toBeNull();
-    expect(host.querySelector(solomonDragHandle)).toBeNull();
+    expect(memberDragRow("member-0")).toBeNull();
 
     await click(editGroups);
     expect(toggle?.getAttribute("aria-pressed")).toBe("true");
     expect(host.querySelector(solomonAssignment)).not.toBeNull();
-    expect(host.querySelector(solomonDragHandle)).not.toBeNull();
+    expect(memberDragRow("member-0")).not.toBeNull();
 
     await click(editGroups);
     expect(toggle?.getAttribute("aria-pressed")).toBe("false");
     expect(host.querySelector(solomonAssignment)).toBeNull();
-    expect(host.querySelector(solomonDragHandle)).toBeNull();
+    expect(memberDragRow("member-0")).toBeNull();
 
     await render([2, null], false);
     expect(host.querySelector(editGroups)).toBeNull();
     expect(host.querySelector(solomonAssignment)).toBeNull();
-    expect(host.querySelector(solomonDragHandle)).toBeNull();
+    expect(memberDragRow("member-0")).toBeNull();
+});
+
+it("provides a member preview and highlights destinations until the drag ends", async () => {
+    await render([1, 2]);
+    await click(editGroups);
+    const row = memberDragRow("member-0")!;
+    const destination = results().querySelector("#battlegroup-2")!;
+    const data = await startSolomonDrag();
+    const preview = data.setDragImage.mock.calls[0]?.[0];
+
+    expect(preview?.textContent).toContain("Solomon");
+    expect(preview?.isConnected).toBe(true);
+    expect(row.getAttribute("data-drag-source")).toBe("true");
+    expect(row.closest("section")?.hasAttribute("data-drop-state")).toBe(false);
+    expect(destination.getAttribute("data-drop-state")).toBe("available");
+
+    await dragEvent("dragover", destination, data);
+    expect(destination.getAttribute("data-drop-state")).toBe("active");
+    expect(destination.textContent).toContain("Drop here");
+
+    await dragEvent("dragleave", destination, data);
+    expect(destination.getAttribute("data-drop-state")).toBe("available");
+    await dragEvent("dragend", row, data);
+    expect(row.hasAttribute("data-drag-source")).toBe(false);
+    expect(destination.hasAttribute("data-drop-state")).toBe(false);
+    expect(preview?.isConnected).toBe(false);
+    expect(updatePlayerRole).not.toHaveBeenCalled();
+});
+
+it("keeps an assignment control press from starting a row drag", async () => {
+    await render([1, 2]);
+    await click(editGroups);
+    const row = memberDragRow("member-0")!;
+    const assignment = row.querySelector(solomonAssignment)!;
+    assignment.addEventListener("pointerdown", event => event.stopPropagation(), { once: true });
+    await act(async () => assignment.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+
+    const data = dragData();
+    expect((await dragEvent("dragstart", row, data)).defaultPrevented).toBe(true);
+    expect(data.getData(memberMime)).toBe("");
+
+    await act(async () => row.dispatchEvent(new Event("pointerdown", { bubbles: true })));
+    expect((await startSolomonDrag()).getData(memberMime)).toBe("member-0");
 });
 
 it("moves a member to a battlegroup in the compact empty row", async () => {
@@ -182,7 +225,7 @@ it("accepts a drop on a populated group and pauses assignment controls while sav
 
     expect(updatePlayerRole).toHaveBeenCalledExactlyOnceWith("member-0", { battlegroup: 2 });
     expect(host.querySelector<HTMLButtonElement>(solomonAssignment)?.disabled).toBe(true);
-    expect(host.querySelector('[draggable="true"][title="Drag Orion"]')).toBeNull();
+    expect(memberDragRow("member-1")).toBeNull();
 
     await act(async () => finishMove?.());
     await render([2, 2]);
