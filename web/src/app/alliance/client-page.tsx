@@ -1,7 +1,7 @@
 'use client';
 
 import { Player } from "@prisma/client";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type DragEvent } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Link from "next/link";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -24,7 +24,7 @@ import {
 } from "../actions/alliance";
 import { PALETTES, PALETTE_LABELS, PALETTE_DESCRIPTIONS, DEFAULT_PALETTE_STYLE, PlayerPaletteStyle } from "@/lib/player-colors";
 import { useToast } from "@/hooks/use-toast";
-import { AlertTriangle, ArrowUpRight, Bot, Check, ChevronDown, ClipboardList, Clock, Crown, Ellipsis, Heart, HelpCircle, LayoutGrid, Link as LinkIcon, List, LogOut, Palette, Plus, RotateCcw, Settings, Shield, SlidersHorizontal, Sparkles, Trophy, Users } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, Bot, Check, ChevronDown, ClipboardList, Clock, Crown, Ellipsis, GripVertical, Heart, HelpCircle, LayoutGrid, Link as LinkIcon, List, LogOut, Palette, Pencil, Plus, RotateCcw, Settings, Shield, SlidersHorizontal, Sparkles, Trophy, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,6 +58,7 @@ import { AllianceMemberSearch } from "./member-search";
 import { AllianceMemberList, AllianceMemberListSort, type MemberListSort } from "./member-list";
 import { AllianceDialogContent, allianceDialogTabClass, allianceDialogTabsClass } from "./alliance-dialog";
 import { RecruitDialog } from "./recruit-dialog";
+import styles from "./member-board.module.css";
 
 interface MembershipRequest {
     id: string;
@@ -114,6 +115,10 @@ interface ClientPageProps {
 
 const STALE_ROSTER_DAYS = 30;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+const BATTLEGROUP_DRAG_TYPE = "application/x-cerebro-alliance-member";
+const mastheadActionClass = "h-11 min-w-0 gap-1 rounded-lg px-1 text-xs sm:h-10 sm:gap-2 sm:px-3 sm:text-sm [&_svg]:size-3.5 sm:[&_svg]:size-4";
+const mastheadMetricClass = "flex min-w-0 flex-col gap-0.5 px-2.5 py-2.5 sm:px-5 sm:py-3.5";
+const mastheadMetricValueClass = "order-first text-xl font-semibold leading-tight tracking-tight text-white tabular-nums sm:text-[25px]";
 
 function getDaysSince(date: Date | string | null): number | null {
     if (!date) return null;
@@ -187,11 +192,18 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
     );
     const [sortBy, setSortBy] = useState<'name' | 'prestige'>('name');
     const [memberView, setMemberView] = useState<"board" | "list">("board");
+    const [editBattlegroups, setEditBattlegroups] = useState(false);
+    const [draggedMember, setDraggedMember] = useState<Pick<PlayerWithRoster, "id" | "battlegroup"> | null>(null);
+    const [dropGroup, setDropGroup] = useState<number | null>();
+    const [pendingAssignment, setPendingAssignment] = useState<string | null>(null);
+    const assignmentInFlight = useRef(false);
+    const isEditingBattlegroups = canManageAlliance && memberView === "board" && editBattlegroups;
     const [listSort, setListSort] = useState<MemberListSort>("name");
     const [memberSearch, setMemberSearch] = useState("");
     const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
     const [selectedGroup, setSelectedGroup] = useState<number | null | "all">("all");
     const memberSearchInput = useRef<HTMLInputElement>(null);
+    const battlegroupFilters = useRef<HTMLDivElement>(null);
 
     // General Settings
     const [generalName, setGeneralName] = useState(alliance.name);
@@ -449,26 +461,72 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         }
     };
 
-    const handleBgChange = async (playerId: string, bg: string) => {
-        setLoadingId(playerId);
+    const handleBgChange = async (playerId: string, battlegroup: number | null) => {
+        const player = members.find(member => member.id === playerId);
+        if (!isEditingBattlegroups || assignmentInFlight.current || loadingId === playerId || !player ||
+            (player.battlegroup || null) === battlegroup || (battlegroup !== null && ![1, 2, 3].includes(battlegroup))) return;
+
+        assignmentInFlight.current = true;
+        setPendingAssignment(playerId);
         try {
-            const bgValue = bg === "unassigned" ? null : parseInt(bg);
-            // We pass undefined for isOfficer to only update battlegroup
-            await updatePlayerRole(playerId, { battlegroup: bgValue });
-            toast({ title: "Updated", description: "Player battlegroup updated." });
-        } catch (e: unknown) {
-            const error = e as Error;
-            toast({ title: "Error", description: error.message || "Failed to update player.", variant: "destructive" });
+            await updatePlayerRole(playerId, { battlegroup });
+            const destination = battlegroup === null ? "Unassigned" : "Battlegroup " + battlegroup;
+            toast({ title: "Member moved", description: player.ingameName + " moved to " + destination + "." });
+        } catch (error: unknown) {
+            toast({ title: "Couldn’t move member", description: getActionErrorMessage(error, "Failed to update the battlegroup."), variant: "destructive" });
         } finally {
-            setLoadingId(null);
+            assignmentInFlight.current = false;
+            setPendingAssignment(null);
         }
     };
+
+    function clearDrag() {
+        setDraggedMember(null);
+        setDropGroup(undefined);
+    }
+
+    function startMemberDrag(event: DragEvent<HTMLSpanElement>, player: PlayerWithRoster) {
+        if (!isEditingBattlegroups || assignmentInFlight.current || loadingId === player.id) {
+            event.preventDefault();
+            return;
+        }
+        event.dataTransfer.effectAllowed = "move";
+        event.dataTransfer.setData(BATTLEGROUP_DRAG_TYPE, player.id);
+        const row = event.currentTarget.closest("li");
+        if (row) {
+            const bounds = row.getBoundingClientRect();
+            event.dataTransfer.setDragImage?.(row, event.clientX - bounds.left, event.clientY - bounds.top);
+        }
+        setDraggedMember({ id: player.id, battlegroup: player.battlegroup || null });
+    }
+
+    function battlegroupDropProps(group: number | null) {
+        if (!isEditingBattlegroups || !draggedMember || assignmentInFlight.current || draggedMember.battlegroup === group) return {};
+        return {
+            onDragOver(event: DragEvent<HTMLElement>) {
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "move";
+                setDropGroup(group);
+            },
+            onDragLeave(event: DragEvent<HTMLElement>) {
+                if (event.relatedTarget instanceof Node && event.currentTarget.contains(event.relatedTarget)) return;
+                setDropGroup(current => current === group ? undefined : current);
+            },
+            onDrop(event: DragEvent<HTMLElement>) {
+                event.preventDefault();
+                const memberId = event.dataTransfer.getData(BATTLEGROUP_DRAG_TYPE);
+                clearDrag();
+                if (memberId === draggedMember.id) void handleBgChange(memberId, group);
+            },
+        };
+    }
 
     const searchQuery = memberSearch.trim().toLocaleLowerCase();
     const matchesMemberSearch = (member: PlayerWithRoster) => selectedMemberId === null
         ? member.ingameName.toLocaleLowerCase().includes(searchQuery)
         : member.id === selectedMemberId;
     const unassignedCount = members.filter(member => !member.battlegroup).length;
+    const showUnassignedDrop = isEditingBattlegroups && draggedMember !== null && unassignedCount === 0;
     const activeGroup = selectedGroup === null && unassignedCount === 0 ? "all" : selectedGroup;
     const rosterCount = members.filter(member => member._count.roster > 0).length;
     const alliancePrestige = averagePrestige(members);
@@ -507,7 +565,12 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
     )) : [];
     const filteredMembers = memberView === "list" ? listMembers : scopedGroups.flatMap(group => group.players);
     const matchingMembers = filteredMembers.length;
-    const visibleGroups = searchQuery ? scopedGroups.filter(group => group.players.length > 0) : scopedGroups;
+    const boardGroups = activeGroup !== "all" && !searchQuery
+        ? scopedGroups
+        : scopedGroups.filter(group => group.players.length > 0);
+    const emptyBattlegroups = activeGroup === "all" && !searchQuery
+        ? scopedGroups.filter(group => group.total === 0)
+        : [];
     const groupColors = new Map(battlegroups.map(group => [group.id, group.color]));
     const activeListSort = !canManageAlliance && listSort.startsWith("roster-") ? "name" : listSort;
     const memberSuggestions = searchQuery && selectedMemberId === null ? filteredMembers
@@ -536,74 +599,95 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         const needsAttention = needsRosterAttention(player.id);
         const FreshnessIcon = needsAttention ? AlertTriangle : Clock;
         const playerColor = player.isSupporter ? "#fbbf24" : playerColorMap.get(player.id) ?? "#94a3b8";
-        const isUpdating = loadingId === player.id;
+        const isUpdating = loadingId === player.id || pendingAssignment === player.id;
+        const controls = isEditingBattlegroups ? "edit" : canManageAlliance ? "manage" : "read";
 
         return (
-            <li key={player.id} className={cn("flex min-h-[3.75rem] min-w-0 items-center gap-2.5 px-3.5 py-2.5 transition-colors hover:bg-slate-800/45", isUpdating && "opacity-50")}>
-                <Avatar className="h-9 w-9 shrink-0 rounded-xl border" style={{ borderColor: playerColor + "66" }}>
-                    <AvatarImage src={player.avatar || undefined} />
-                    <AvatarFallback className="rounded-xl bg-slate-800 text-xs font-semibold text-white" style={{ backgroundColor: playerColor + "24" }}>
-                        {player.ingameName.substring(0, 2).toUpperCase()}
-                    </AvatarFallback>
-                </Avatar>
-                <div className="min-w-0 flex-1">
-                    <div className="flex min-w-0 items-center gap-1.5">
-                        <Link href={"/player/" + player.id} title={player.ingameName} className="truncate rounded-sm text-sm font-semibold text-slate-100 transition-colors hover:text-indigo-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
-                            {player.ingameName}
-                        </Link>
-                        {player.isOfficer && <Crown role="img" aria-label="Officer" className="h-3.5 w-3.5 shrink-0 text-amber-300" />}
-                        {player.isPlanner && <ClipboardList role="img" aria-label="Planner" className="h-3.5 w-3.5 shrink-0 text-sky-300" />}
-                        {player.isSupporter && <Heart role="img" aria-label="Supporter" className="h-3.5 w-3.5 shrink-0 fill-amber-300/25 text-amber-300" />}
+            <li key={player.id} aria-busy={isUpdating || undefined} className={cn(
+                styles.memberRow, "flex min-h-[3.75rem] min-w-0 flex-col justify-center px-3 py-2.5 transition-colors hover:bg-slate-800/45",
+                (isUpdating || draggedMember?.id === player.id) && "opacity-50"
+            )}>
+                <div className={cn(styles.memberLayout, "items-center gap-x-2 gap-y-1.5")} data-controls={controls}>
+                    <Avatar className={cn(styles.avatar, "size-8 shrink-0 rounded-lg border sm:size-9")} style={{ borderColor: playerColor + "66" }}>
+                        <AvatarImage src={player.avatar || undefined} />
+                        <AvatarFallback className="rounded-xl bg-slate-800 text-xs font-semibold text-white" style={{ backgroundColor: playerColor + "24" }}>
+                            {player.ingameName.substring(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                    </Avatar>
+                    <div className={cn(styles.details, "min-w-0")}>
+                        <div className="flex min-w-0 items-center gap-1.5">
+                            <Link href={"/player/" + player.id} title={player.ingameName} className="truncate rounded-sm text-sm font-semibold text-slate-100 transition-colors hover:text-indigo-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
+                                {player.ingameName}
+                            </Link>
+                            {player.isOfficer && <Crown role="img" aria-label="Officer" className="h-3.5 w-3.5 shrink-0 text-amber-300" />}
+                            {player.isPlanner && <ClipboardList role="img" aria-label="Planner" className="h-3.5 w-3.5 shrink-0 text-sky-300" />}
+                            {player.isSupporter && <Heart role="img" aria-label="Supporter" className="h-3.5 w-3.5 shrink-0 fill-amber-300/25 text-amber-300" />}
+                        </div>
+                        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs tabular-nums text-slate-400">
+                            <span className="whitespace-nowrap">{player._count.roster.toLocaleString("en-US")} champs</span>
+                            {canManageAlliance && freshness && (
+                                <span className={cn("inline-flex max-w-full items-center gap-1 text-[11px]", needsAttention ? "text-amber-300" : "text-slate-400")}>
+                                    <FreshnessIcon className="h-3 w-3 shrink-0" aria-hidden="true" />
+                                    {freshness.label}
+                                </span>
+                            )}
+                        </div>
                     </div>
-                    <div className="mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs tabular-nums text-slate-400">
-                        <span className="whitespace-nowrap">
-                            <span className="font-medium text-slate-300">{player.championPrestige?.toLocaleString("en-US") ?? "—"}</span> prestige
-                        </span>
-                        <span className="whitespace-nowrap">{player._count.roster.toLocaleString("en-US")} champs</span>
-                        {canManageAlliance && freshness && (
-                            <span className={cn("inline-flex items-center gap-1 whitespace-nowrap text-[11px]", needsAttention ? "text-amber-300" : "text-slate-400")}>
-                                <FreshnessIcon className="h-3 w-3 shrink-0" aria-hidden="true" />
-                                {freshness.label}
+                    <div className={cn(styles.prestige, "text-right leading-tight tabular-nums")}>
+                        <span className="text-sm font-semibold text-slate-100">{player.championPrestige?.toLocaleString("en-US") ?? "—"}</span>
+                        <span className="block text-[10px] text-slate-400">Prestige</span>
+                    </div>
+                    {isEditingBattlegroups && (
+                        <div className={cn(styles.editor, "flex items-center justify-end gap-1")}>
+                            <span
+                                draggable={!isUpdating && pendingAssignment === null}
+                                onDragStart={event => startMemberDrag(event, player)}
+                                onDragEnd={clearDrag}
+                                title={"Drag " + player.ingameName}
+                                aria-hidden="true"
+                                className={cn(styles.dragHandle, "size-7 cursor-grab items-center justify-center rounded-md text-slate-400 hover:bg-slate-800 hover:text-slate-100 active:cursor-grabbing", pendingAssignment && "cursor-default opacity-50")}
+                            >
+                                <GripVertical className="size-4" />
                             </span>
-                        )}
-                    </div>
+                            <Select disabled={isUpdating || pendingAssignment !== null} onValueChange={value => handleBgChange(player.id, value === "unassigned" ? null : Number(value))} value={player.battlegroup?.toString() || "unassigned"}>
+                                <SelectTrigger aria-label={"Battlegroup for " + player.ingameName} className="h-8 w-auto gap-1 rounded-md border-slate-700/80 bg-slate-950/60 px-2 py-1 text-xs text-slate-300 [&_svg]:size-3">
+                                    <SelectValue>{player.battlegroup ? "BG " + player.battlegroup : "Unassigned"}</SelectValue>
+                                </SelectTrigger>
+                                <SelectContent className="border-slate-700 bg-slate-900 text-slate-100">
+                                    <SelectItem value="unassigned">Unassigned</SelectItem>
+                                    <SelectItem value="1">BG 1</SelectItem>
+                                    <SelectItem value="2">BG 2</SelectItem>
+                                    <SelectItem value="3">BG 3</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                    )}
+                    {canManageAlliance && (
+                        <div className={cn(styles.more, "w-7")}>
+                            {player.id !== currentUser.id ? (
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="ghost" size="icon" disabled={isUpdating} aria-label={"Manage " + player.ingameName} className="h-9 w-7 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white">
+                                            <Ellipsis className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="border-slate-700 bg-slate-900 text-slate-100">
+                                        <DropdownMenuItem onSelect={() => handleToggleOfficer(player)}>
+                                            {player.isOfficer ? "Demote from Officer" : "Promote to Officer"}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => handleTogglePlanner(player)}>
+                                            {player.isPlanner ? "Remove Planner" : "Grant Planner"}
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator className="bg-slate-800" />
+                                        <DropdownMenuItem onSelect={() => handleKick(player.id)} className="text-red-300 focus:text-red-200">
+                                            Kick Member
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            ) : null}
+                        </div>
+                    )}
                 </div>
-                {canManageAlliance && (
-                    <div className="flex shrink-0 items-center gap-0.5">
-                        <Select disabled={isUpdating} onValueChange={value => handleBgChange(player.id, value)} value={player.battlegroup?.toString() || "unassigned"}>
-                            <SelectTrigger aria-label={"Battlegroup for " + player.ingameName} className="h-9 w-auto gap-1.5 rounded-lg border-slate-700/80 bg-slate-950/60 px-2 text-xs text-slate-300 [&_svg]:h-3 [&_svg]:w-3">
-                                <SelectValue>{player.battlegroup ? "BG " + player.battlegroup : "Unassigned"}</SelectValue>
-                            </SelectTrigger>
-                            <SelectContent className="border-slate-700 bg-slate-900 text-slate-100">
-                                <SelectItem value="unassigned">Unassigned</SelectItem>
-                                <SelectItem value="1">BG 1</SelectItem>
-                                <SelectItem value="2">BG 2</SelectItem>
-                                <SelectItem value="3">BG 3</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        {player.id !== currentUser.id ? (
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" disabled={isUpdating} aria-label={"Manage " + player.ingameName} className="h-9 w-8 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white">
-                                        <Ellipsis className="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="border-slate-700 bg-slate-900 text-slate-100">
-                                    <DropdownMenuItem onSelect={() => handleToggleOfficer(player)}>
-                                        {player.isOfficer ? "Demote from Officer" : "Promote to Officer"}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onSelect={() => handleTogglePlanner(player)}>
-                                        {player.isPlanner ? "Remove Planner" : "Grant Planner"}
-                                    </DropdownMenuItem>
-                                    <DropdownMenuSeparator className="bg-slate-800" />
-                                    <DropdownMenuItem onSelect={() => handleKick(player.id)} className="text-red-300 focus:text-red-200">
-                                        Kick Member
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        ) : <span aria-hidden="true" className="w-8" />}
-                    </div>
-                )}
             </li>
         );
     };
@@ -612,13 +696,19 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         const GroupIcon = group.id ? Shield : Users;
         const sectionId = group.id ? "battlegroup-" + group.id : "unassigned";
         const headingId = sectionId + "-title";
-        const wide = activeGroup !== "all" || group.id === null || visibleGroups.length === 1;
+        const wide = boardGroups.length === 1;
 
         return (
-            <section key={sectionId} id={sectionId} aria-labelledby={headingId} className={cn(
-                "relative min-w-0 scroll-mt-20 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50",
-                wide && "col-span-full"
-            )}>
+            <section
+                key={sectionId}
+                id={sectionId}
+                aria-labelledby={headingId}
+                {...battlegroupDropProps(group.id)}
+                className={cn(
+                    "relative min-w-0 scroll-mt-20 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50",
+                    dropGroup === group.id && "border-indigo-400 bg-indigo-950/30 ring-1 ring-indigo-400/60"
+                )}
+            >
                 <div aria-hidden="true" className="absolute inset-x-0 top-0 h-0.5" style={{ backgroundColor: group.color }} />
                 <div className="border-b border-slate-800/80 px-4 pb-3 pt-3.5" style={{ backgroundImage: "linear-gradient(145deg, " + group.color + "18, transparent 75%)" }}>
                     <div className="flex items-center gap-2.5">
@@ -659,18 +749,16 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
 
     return (
         <div className="mx-auto max-w-[1440px] space-y-5 px-4 pb-12 pt-5 sm:space-y-7 sm:px-6 sm:pt-7 lg:px-8">
-            <header className="overflow-hidden rounded-2xl border border-indigo-400/20 bg-[#0b1221] shadow-xl shadow-black/10 sm:rounded-3xl">
-                <div className="relative isolate flex flex-col gap-4 overflow-hidden px-4 py-4 sm:px-6 sm:py-5 xl:flex-row xl:items-center xl:justify-between">
-                    <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_0%_0%,rgba(99,102,241,0.24),transparent_68%)]" />
-                    <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 -z-10 w-2/3 bg-[repeating-linear-gradient(135deg,transparent_0_21px,rgba(129,140,248,0.07)_21px_22px)] [mask-image:linear-gradient(to_left,black,transparent)]" />
-                    <div className="flex min-w-0 items-start gap-3 sm:items-center sm:gap-4">
-                        <div aria-hidden="true" className="grid h-11 w-11 shrink-0 place-items-center rounded-xl border border-indigo-300/25 bg-indigo-400/15 text-indigo-100 shadow-inner shadow-indigo-300/10 sm:h-14 sm:w-14 sm:rounded-2xl">
-                            <Shield className="h-5 w-5 sm:h-7 sm:w-7" strokeWidth={1.6} />
+            <header className="space-y-3.5 sm:space-y-5">
+                <div className="flex flex-col gap-3.5 xl:flex-row xl:items-center xl:justify-between">
+                    <div className="flex min-w-0 items-center gap-2.5 sm:gap-3.5">
+                        <div aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-[10px] border border-indigo-300/20 bg-indigo-400/10 text-indigo-200 sm:size-12 sm:rounded-xl">
+                            <Shield className="size-5 sm:size-6" strokeWidth={1.6} />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-indigo-200">Alliance overview</p>
+                            <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-indigo-200/80">Alliance overview</p>
                             <div className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
-                                <h1 className="max-w-full break-words text-[1.6rem] font-bold leading-tight tracking-tight text-white sm:text-4xl">{alliance.name}</h1>
+                                <h1 className="max-w-full break-words text-[1.625rem] font-bold leading-tight tracking-[-0.038em] text-white sm:text-4xl">{alliance.name}</h1>
                                 {alliance.tag && <span className="rounded-md border border-indigo-300/20 bg-indigo-400/10 px-2 py-0.5 font-mono text-xs text-indigo-200">{alliance.tag}</span>}
                             </div>
                             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -682,8 +770,11 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                             </div>
                         </div>
                     </div>
-                    <div className="flex shrink-0 flex-wrap items-center gap-2">
-                        <Button asChild className="h-10 rounded-lg bg-indigo-500 px-3 text-white hover:bg-indigo-400 focus-visible:ring-indigo-300 sm:px-4">
+                    <div className={cn(
+                        "min-w-0 shrink-0 gap-1.5 sm:flex sm:flex-wrap sm:items-center sm:gap-2",
+                        canManageAlliance ? "grid grid-cols-[repeat(3,minmax(0,1fr))_2.75rem]" : "flex items-center"
+                    )}>
+                        <Button asChild className={cn(mastheadActionClass, "bg-indigo-500 text-white hover:bg-indigo-400 focus-visible:ring-indigo-300 sm:px-4")}>
                             <Link href="/alliance/roster">
                                 <span><span className="sr-only sm:not-sr-only">Alliance </span>Roster</span>
                                 <ArrowUpRight aria-hidden="true" />
@@ -723,9 +814,9 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                             {canManageAlliance && (
                                 <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
                                     <DialogTrigger asChild>
-                                        <Button variant="outline" aria-label="Alliance settings" className="h-10 rounded-lg border-slate-700/80 bg-slate-950/45 px-2.5 text-slate-200 hover:bg-slate-800 sm:px-3">
+                                        <Button variant="outline" aria-label="Alliance settings" className={cn(mastheadActionClass, "border-slate-800 bg-slate-900/65 text-slate-200 hover:bg-slate-800")}>
                                             <Settings aria-hidden="true" />
-                                            <span className="hidden sm:inline">Settings</span>
+                                            Settings
                                         </Button>
                                     </DialogTrigger>
                                     <AllianceDialogContent title="Alliance settings" description={alliance.name} icon={Settings}>
@@ -939,7 +1030,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                         )}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button ref={moreAllianceActions} variant="outline" size="icon" aria-label="More alliance actions" className="h-10 w-10 rounded-lg border-slate-700/80 bg-slate-950/45 text-slate-200 hover:bg-slate-800">
+                                <Button ref={moreAllianceActions} variant="outline" size="icon" aria-label="More alliance actions" className="size-11 rounded-lg border-slate-800 bg-slate-900/65 text-slate-200 hover:bg-slate-800 sm:size-10">
                                     <Ellipsis aria-hidden="true" />
                                 </Button>
                             </DropdownMenuTrigger>
@@ -958,14 +1049,14 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                     </div>
                 </div>
 
-                <div className="border-t border-slate-700/55 bg-slate-950/30 lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(17rem,29%)]">
+                <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/60 sm:rounded-2xl lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(17rem,27%)]">
                     <dl className="grid grid-cols-3 divide-x divide-slate-800/90">
-                        <div className="min-w-0 px-3 py-3 sm:px-5 sm:py-4">
-                            <dt className="flex items-center gap-1.5 text-xs font-medium text-slate-300">
+                        <div className={mastheadMetricClass}>
+                            <dt className="flex items-center gap-1.5 text-[11px] font-medium leading-snug text-slate-300 sm:text-xs">
                                 <Users className="hidden size-3.5 shrink-0 text-indigo-300 sm:block" aria-hidden="true" /> Members
                             </dt>
-                            <dd className="mt-1 text-xl font-semibold tracking-tight text-white tabular-nums sm:text-2xl">{members.length}</dd>
-                            <dd className="mt-0.5 text-[11px] text-slate-400 sm:text-xs">
+                            <dd className={mastheadMetricValueClass}>{members.length}</dd>
+                            <dd className="text-[11px] leading-snug text-slate-400">
                                 {unassignedCount > 0 ? (
                                     <a
                                         href="#alliance-battlegroups"
@@ -981,32 +1072,32 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                 ) : members.length > 0 ? "All assigned" : "No members yet"}
                             </dd>
                         </div>
-                        <div className="min-w-0 px-3 py-3 sm:px-5 sm:py-4">
-                            <dt className="flex items-center gap-1.5 text-xs font-medium text-slate-300">
+                        <div className={mastheadMetricClass}>
+                            <dt className="flex items-center gap-1.5 text-[11px] font-medium leading-snug text-slate-300 sm:text-xs">
                                 <Trophy className="hidden size-3.5 shrink-0 text-indigo-300 sm:block" aria-hidden="true" /> Avg. prestige
                             </dt>
-                            <dd className="mt-1 text-xl font-semibold tracking-tight text-white tabular-nums sm:text-2xl">{alliancePrestige?.toLocaleString("en-US") ?? "—"}</dd>
-                            <dd className="mt-0.5 text-[11px] text-slate-400 sm:text-xs">
+                            <dd className={mastheadMetricValueClass}>{alliancePrestige?.toLocaleString("en-US") ?? "—"}</dd>
+                            <dd className="text-[11px] leading-snug text-slate-400">
                                 {alliancePrestige === null ? "No prestige yet" : `${prestigeMemberCount} ${prestigeMemberCount === 1 ? "member" : "members"}`}
                             </dd>
                         </div>
-                        <div className="min-w-0 px-3 py-3 sm:px-5 sm:py-4">
-                            <dt className="flex items-center gap-1.5 text-xs font-medium text-slate-300">
-                                <ClipboardList className="hidden size-3.5 shrink-0 text-indigo-300 sm:block" aria-hidden="true" /> Rosters on file
+                        <div className={mastheadMetricClass}>
+                            <dt className="flex items-center gap-1.5 text-[11px] font-medium leading-snug text-slate-300 sm:text-xs">
+                                <ClipboardList className="hidden size-3.5 shrink-0 text-indigo-300 sm:block" aria-hidden="true" /> Roster coverage
                             </dt>
-                            <dd className="mt-1 text-xl font-semibold tracking-tight text-white tabular-nums sm:text-2xl">
+                            <dd className={mastheadMetricValueClass}>
                                 {rosterCount}<span className="text-xs font-medium tracking-normal text-slate-400 sm:text-sm"> / {members.length}</span>
                             </dd>
                             {canManageAlliance && membersNeedingAttention > 0 && (
-                                <dd className="mt-0.5 text-[11px] text-amber-300 sm:text-xs" title="Missing or last updated at least 30 days ago">
+                                <dd className="text-[11px] leading-snug text-amber-300" title="Missing or last updated at least 30 days ago">
                                     {membersNeedingAttention} {membersNeedingAttention === 1 ? "needs" : "need"} review
                                 </dd>
                             )}
                         </div>
                     </dl>
 
-                    <details className="group border-t border-slate-800/90 bg-slate-900/45 lg:border-l lg:border-t-0">
-                        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2.5 px-3 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-400 sm:px-5 lg:min-h-[6rem] lg:group-open:min-h-11 [&::-webkit-details-marker]:hidden">
+                    <details className="group border-t border-slate-800/90 bg-slate-950/20 lg:border-l lg:border-t-0">
+                        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-3 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-400 sm:px-4 lg:min-h-full lg:group-open:min-h-11 [&::-webkit-details-marker]:hidden">
                             <Sparkles className={cn("size-4 shrink-0", screenshotUnlock.unlocked ? "text-emerald-300" : "text-amber-300")} aria-hidden="true" />
                             <span className="flex-1 font-medium text-slate-200">Screenshot uploads</span>
                             <span className={cn("rounded-full border px-2 py-0.5 tabular-nums", screenshotUnlock.unlocked ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300" : "border-amber-400/20 bg-amber-400/10 text-amber-200")}>
@@ -1034,7 +1125,13 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                         <h2 id="alliance-battlegroups" className="scroll-mt-24 text-2xl font-bold tracking-tight text-white">{memberView === "board" ? "Battlegroups" : "Members"}</h2>
                         <div role="group" aria-label="Member view" className="flex shrink-0 items-center gap-0.5 rounded-lg border border-slate-700/80 bg-slate-900/65 p-0.5">
                             {([{ id: "board", label: "Board", icon: LayoutGrid }, { id: "list", label: "List", icon: List }] as const).map(({ id, label, icon: Icon }) => (
-                                <Button key={id} type="button" size="sm" variant="ghost" aria-pressed={memberView === id} aria-controls="alliance-battlegroup-results" onClick={() => setMemberView(id)} className={cn(
+                                <Button key={id} type="button" size="sm" variant="ghost" aria-pressed={memberView === id} aria-controls="alliance-battlegroup-results" onClick={() => {
+                                    setMemberView(id);
+                                    if (id === "list") {
+                                        setEditBattlegroups(false);
+                                        clearDrag();
+                                    }
+                                }} className={cn(
                                     "h-[34px] gap-1.5 rounded-md px-2.5 focus-visible:ring-indigo-400 [&_svg]:size-3.5",
                                     memberView === id ? "bg-indigo-400/15 text-indigo-100 hover:bg-indigo-400/20" : "text-slate-400 hover:bg-slate-800 hover:text-white"
                                 )}>
@@ -1042,8 +1139,28 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                 </Button>
                             ))}
                         </div>
+                        {canManageAlliance && memberView === "board" && (
+                            <Button
+                                type="button"
+                                size="sm"
+                                variant="outline"
+                                aria-label="Edit battlegroups"
+                                aria-pressed={isEditingBattlegroups}
+                                aria-controls="alliance-battlegroup-results"
+                                onClick={() => {
+                                    setEditBattlegroups(editing => !editing);
+                                    clearDrag();
+                                }}
+                                className={cn(
+                                    "h-9 gap-1.5 rounded-lg border-slate-700/80 bg-slate-900/65 px-2.5 text-slate-300 focus-visible:ring-indigo-400 [&_svg]:size-3.5",
+                                    isEditingBattlegroups && "border-indigo-400/45 bg-indigo-400/15 text-indigo-100 hover:bg-indigo-400/25"
+                                )}
+                            >
+                                <Pencil aria-hidden="true" /> <span>Edit<span className="hidden sm:inline"> groups</span></span>
+                            </Button>
+                        )}
                     </div>
-                    <div role="group" aria-label="Filter by battlegroup" className="flex w-fit flex-wrap gap-0.5 rounded-xl border border-slate-800 bg-slate-900/65 p-1">
+                    <div ref={battlegroupFilters} role="group" aria-label="Filter by battlegroup" className="flex w-fit flex-wrap gap-0.5 rounded-xl border border-slate-800 bg-slate-900/65 p-1">
                         {[{ id: "all" as const, title: "All battlegroups", color: null, total: members.length }, ...battlegroups].map(group => (
                             <Button
                                 key={group.id ?? "unassigned"}
@@ -1053,10 +1170,13 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                 aria-label={group.title + ", " + group.total + (group.total === 1 ? " member" : " members")}
                                 aria-pressed={activeGroup === group.id}
                                 aria-controls="alliance-battlegroup-results"
+                                data-battlegroup-filter={group.id ?? "unassigned"}
                                 onClick={() => setSelectedGroup(group.id)}
+                                {...(group.id === "all" ? {} : battlegroupDropProps(group.id))}
                                 className={cn(
                                     "h-9 gap-1.5 rounded-lg px-2 text-xs focus-visible:ring-indigo-400",
-                                    activeGroup === group.id ? "bg-indigo-400/15 text-indigo-100 hover:bg-indigo-400/20" : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                                    activeGroup === group.id ? "bg-indigo-400/15 text-indigo-100 hover:bg-indigo-400/20" : "text-slate-300 hover:bg-slate-800 hover:text-white",
+                                    dropGroup === group.id && "bg-indigo-400/25 text-indigo-100 ring-1 ring-inset ring-indigo-400/70"
                                 )}
                             >
                                 {group.color && <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full" style={{ backgroundColor: group.color }} />}
@@ -1095,6 +1215,12 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                         )}
                     </div>
                 </div>
+                {isEditingBattlegroups && (
+                    <p className="text-xs text-slate-400">
+                        <span className={styles.desktopHint}>Drag a member to a group or use the dropdowns.</span>
+                        <span className={styles.touchHint}>Use the dropdowns to move members between groups.</span>
+                    </p>
+                )}
                 <div id="alliance-battlegroup-results" className="space-y-4">
                     {searchQuery && (
                         <div className={cn("flex flex-wrap items-center gap-x-3 gap-y-1", matchingMembers === 0 && "rounded-xl border border-slate-800 bg-slate-900/50 px-4 py-3")}>
@@ -1119,10 +1245,61 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                             emptyMessage={activeGroup === "all" ? "No alliance members yet." : "No members assigned to this battlegroup yet."}
                         />
                     )}
-                    {memberView === "board" && visibleGroups.length > 0 && (
-                        <div className="grid items-start gap-4 md:grid-cols-2 lg:grid-cols-3">
-                            {visibleGroups.map(renderBattlegroup)}
+                    {memberView === "board" && boardGroups.length > 0 && (
+                        <div className={cn(
+                            "grid grid-cols-1 items-start gap-4",
+                            boardGroups.length > 1 && "md:grid-cols-2",
+                            boardGroups.length > 2 && "lg:grid-cols-3"
+                        )}>
+                            {boardGroups.map(renderBattlegroup)}
                         </div>
+                    )}
+                    {memberView === "board" && !searchQuery && boardGroups.length === 0 && (
+                        <p className="rounded-xl border border-slate-800 bg-slate-900/50 px-4 py-4 text-sm text-slate-400">
+                            No alliance members yet.
+                        </p>
+                    )}
+                    {memberView === "board" && (emptyBattlegroups.length > 0 || showUnassignedDrop) && (
+                        <section aria-labelledby="alliance-empty-battlegroups" className="flex flex-wrap items-center gap-2 rounded-xl border border-dashed border-slate-800 px-3 py-2.5">
+                            <h3 id="alliance-empty-battlegroups" className="w-full text-xs font-medium text-slate-400 sm:mr-1 sm:w-auto">
+                                {emptyBattlegroups.length > 0 ? "Empty battlegroups" : "Drop to unassign"}
+                            </h3>
+                            {emptyBattlegroups.map(group => (
+                                <Button
+                                    key={group.id}
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    aria-label={"View " + group.title + ", 0 members"}
+                                    aria-controls="alliance-battlegroup-results"
+                                    {...battlegroupDropProps(group.id)}
+                                    onClick={() => {
+                                        setSelectedGroup(group.id);
+                                        battlegroupFilters.current?.querySelector<HTMLButtonElement>('[data-battlegroup-filter="' + group.id + '"]')?.focus();
+                                    }}
+                                    className={cn(
+                                        "h-9 gap-1.5 rounded-lg border-slate-800 bg-slate-900/65 px-2.5 text-xs text-slate-300 hover:bg-slate-800 hover:text-white focus-visible:ring-indigo-400",
+                                        dropGroup === group.id && "border-indigo-400 bg-indigo-400/25 text-indigo-100"
+                                    )}
+                                >
+                                    <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full" style={{ backgroundColor: group.color }} />
+                                    {group.title}
+                                    <span aria-hidden="true" className="tabular-nums text-slate-400">0</span>
+                                </Button>
+                            ))}
+                            {showUnassignedDrop && (
+                                <span
+                                    data-battlegroup-drop="unassigned"
+                                    {...battlegroupDropProps(null)}
+                                    className={cn(
+                                        "inline-flex h-9 items-center rounded-lg border border-dashed border-slate-700 px-2.5 text-xs text-slate-300",
+                                        dropGroup === null && "border-indigo-400 bg-indigo-400/25 text-indigo-100"
+                                    )}
+                                >
+                                    Unassigned
+                                </span>
+                            )}
+                        </section>
                     )}
                 </div>
             </section>

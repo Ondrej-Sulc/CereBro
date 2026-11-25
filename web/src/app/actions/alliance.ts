@@ -280,23 +280,22 @@ export const updatePlayerRole = withActionContext('updatePlayerRole', async (tar
         throw new Error("Insufficient permissions");
     }
 
-    // Update Player
-    await prisma.player.update({
-        where: { id: targetPlayerId },
-        data: {
-            battlegroup: data.battlegroup,
-            isOfficer: data.isOfficer,
-            isPlanner: data.isPlanner
-        }
-    });
-
-    // Create Bot Job for Discord Sync
-    await prisma.botJob.create({
-        data: {
-            type: BotJobType.UPDATE_MEMBER_ROLES,
-            payload: { playerId: targetPlayerId },
-            status: 'PENDING'
-        }
+    await prisma.$transaction(async (tx) => {
+        await tx.player.update({
+            where: { id: targetPlayerId, allianceId: targetPlayer.allianceId },
+            data: {
+                battlegroup: data.battlegroup,
+                isOfficer: data.isOfficer,
+                isPlanner: data.isPlanner,
+            },
+        });
+        await tx.botJob.create({
+            data: {
+                type: BotJobType.UPDATE_MEMBER_ROLES,
+                payload: { playerId: targetPlayerId },
+                status: "PENDING",
+            },
+        });
     });
 
     clearCache(`alliance-members-${targetPlayer.allianceId}`);

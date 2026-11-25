@@ -1,0 +1,53 @@
+.memberRow {
+    container: alliance-member / inline-size;
+}
+
+.memberLayout {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "avatar details prestige";
+}
+
+.memberLayout[data-controls="manage"] {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "avatar details prestige more";
+}
+
+.memberLayout[data-controls="edit"] {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+        "avatar details prestige prestige"
+        "editor editor editor more";
+}
+
+@container alliance-member (min-width: 356px) {
+    .memberLayout[data-controls="edit"] {
+        grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+        grid-template-areas: "avatar details prestige editor more";
+    }
+}
+
+.avatar { grid-area: avatar; }
+.details { grid-area: details; }
+.prestige { grid-area: prestige; }
+.editor { grid-area: editor; }
+.more { grid-area: more; }
+
+.dragHandle,
+.desktopHint {
+    display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .dragHandle {
+        display: inline-flex;
+    }
+
+    .desktopHint {
+        display: inline;
+    }
+
+    .touchHint {
+        display: none;
+    }
+}
