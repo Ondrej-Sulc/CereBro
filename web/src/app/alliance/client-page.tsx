@@ -116,9 +116,10 @@ interface ClientPageProps {
 const STALE_ROSTER_DAYS = 30;
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
 const BATTLEGROUP_DRAG_TYPE = "application/x-cerebro-alliance-member";
-const mastheadActionClass = "h-11 min-w-0 gap-1 rounded-lg px-1 text-xs sm:h-10 sm:gap-2 sm:px-3 sm:text-sm [&_svg]:size-3.5 sm:[&_svg]:size-4";
-const mastheadMetricClass = "flex min-w-0 flex-col gap-0.5 px-2.5 py-2.5 sm:px-5 sm:py-3.5";
-const mastheadMetricValueClass = "order-first text-xl font-semibold leading-tight tracking-tight text-white tabular-nums sm:text-[25px]";
+const mastheadActionClass = "h-11 min-w-0 gap-1 rounded-lg px-2.5 text-xs focus-visible:ring-indigo-300 max-[360px]:px-1 sm:h-10 sm:gap-2 sm:px-3 sm:text-sm [&_svg]:size-3.5 sm:[&_svg]:size-4";
+const mastheadSecondaryActionClass = mastheadActionClass + " border-slate-700 bg-slate-900 text-slate-200 hover:border-slate-500 hover:bg-slate-800 hover:text-white";
+const mastheadMetricClass = "flex min-w-0 flex-col gap-0.5";
+const mastheadMetricValueClass = "order-first text-xl font-semibold leading-tight tracking-tight text-white tabular-nums sm:text-2xl";
 
 function getDaysSince(date: Date | string | null): number | null {
     if (!date) return null;
@@ -783,16 +784,15 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
     };
 
     return (
-        <div className="mx-auto max-w-[1440px] space-y-5 px-4 pb-12 pt-5 sm:space-y-7 sm:px-6 sm:pt-7 lg:px-8">
-            <header className="space-y-3.5 sm:space-y-5">
-                <div className="flex flex-col gap-3.5 xl:flex-row xl:items-center xl:justify-between">
+        <div className="mx-auto max-w-[1440px] space-y-4 px-4 pb-12 pt-5 sm:space-y-5 sm:px-6 sm:pt-7 lg:px-8">
+            <header className="space-y-4 border-b border-slate-800/90 pb-1 sm:space-y-5 sm:pb-4">
+                <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                     <div className="flex min-w-0 items-center gap-2.5 sm:gap-3.5">
-                        <div aria-hidden="true" className="grid size-10 shrink-0 place-items-center rounded-[10px] border border-indigo-300/20 bg-indigo-400/10 text-indigo-200 sm:size-12 sm:rounded-xl">
-                            <Shield className="size-5 sm:size-6" strokeWidth={1.6} />
+                        <div aria-hidden="true" className="grid size-9 shrink-0 place-items-center rounded-full bg-[radial-gradient(circle,rgba(129,140,248,0.22),transparent_72%)] text-indigo-200 sm:size-12">
+                            <Shield className="size-5 sm:size-7" strokeWidth={1.6} />
                         </div>
                         <div className="min-w-0">
-                            <p className="text-[10px] font-semibold uppercase tracking-[0.13em] text-indigo-200/80">Alliance overview</p>
-                            <div className="mt-0.5 flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
+                            <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5">
                                 <h1 className="max-w-full break-words text-[1.625rem] font-bold leading-tight tracking-[-0.038em] text-white sm:text-4xl">{alliance.name}</h1>
                                 {alliance.tag && <span className="rounded-md border border-indigo-300/20 bg-indigo-400/10 px-2 py-0.5 font-mono text-xs text-indigo-200">{alliance.tag}</span>}
                             </div>
@@ -806,10 +806,10 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                         </div>
                     </div>
                     <div className={cn(
-                        "min-w-0 shrink-0 gap-1.5 sm:flex sm:flex-wrap sm:items-center sm:gap-2",
-                        canManageAlliance ? "grid grid-cols-[repeat(3,minmax(0,1fr))_2.75rem]" : "flex items-center"
+                        "flex min-w-0 shrink-0 flex-wrap items-center gap-1.5 sm:gap-2",
+                        canManageAlliance && "max-[360px]:grid max-[360px]:grid-cols-[repeat(3,minmax(0,1fr))_2.75rem]"
                     )}>
-                        <Button asChild className={cn(mastheadActionClass, "bg-indigo-500 text-white hover:bg-indigo-400 focus-visible:ring-indigo-300 sm:px-4")}>
+                        <Button asChild className={cn(mastheadActionClass, "bg-indigo-500 text-white hover:bg-indigo-400 sm:px-4")}>
                             <Link href="/alliance/roster">
                                 <span><span className="sr-only sm:not-sr-only">Alliance </span>Roster</span>
                                 <ArrowUpRight aria-hidden="true" />
@@ -849,7 +849,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                             {canManageAlliance && (
                                 <Dialog open={isSettingsOpen} onOpenChange={setIsSettingsOpen}>
                                     <DialogTrigger asChild>
-                                        <Button variant="outline" aria-label="Alliance settings" className={cn(mastheadActionClass, "border-slate-800 bg-slate-900/65 text-slate-200 hover:bg-slate-800")}>
+                                        <Button variant="outline" aria-label="Alliance settings" className={mastheadSecondaryActionClass}>
                                             <Settings aria-hidden="true" />
                                             Settings
                                         </Button>
@@ -1061,11 +1061,11 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                 </Dialog>
                             )}
                         {canManageAlliance && (
-                            <RecruitDialog pendingRequests={pendingRequests} loadingId={loadingId} onInvite={handleInvite} onRespond={handleRespondToRequest} />
+                            <RecruitDialog triggerClassName={mastheadSecondaryActionClass} pendingRequests={pendingRequests} loadingId={loadingId} onInvite={handleInvite} onRespond={handleRespondToRequest} />
                         )}
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button ref={moreAllianceActions} variant="outline" size="icon" aria-label="More alliance actions" className="size-11 rounded-lg border-slate-800 bg-slate-900/65 text-slate-200 hover:bg-slate-800 sm:size-10">
+                                <Button ref={moreAllianceActions} variant="ghost" size="icon" aria-label="More alliance actions" className="size-11 shrink-0 rounded-lg text-slate-300 hover:bg-slate-800 hover:text-white focus-visible:ring-indigo-300 sm:size-10">
                                     <Ellipsis aria-hidden="true" />
                                 </Button>
                             </DropdownMenuTrigger>
@@ -1084,8 +1084,8 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                     </div>
                 </div>
 
-                <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/60 sm:rounded-2xl lg:grid lg:grid-cols-[minmax(0,1fr)_minmax(17rem,27%)]">
-                    <dl className="grid grid-cols-3 divide-x divide-slate-800/90">
+                <div className="grid gap-y-1.5 lg:grid-cols-[minmax(0,29rem)_auto] lg:items-start lg:justify-between lg:gap-x-6">
+                    <dl className="grid grid-cols-3 gap-x-2 sm:max-w-lg sm:gap-x-6">
                         <div className={mastheadMetricClass}>
                             <dt className="flex items-center gap-1.5 text-[11px] font-medium leading-snug text-slate-300 sm:text-xs">
                                 <Users className="hidden size-3.5 shrink-0 text-indigo-300 sm:block" aria-hidden="true" /> Members
@@ -1112,9 +1112,11 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                                 <Trophy className="hidden size-3.5 shrink-0 text-indigo-300 sm:block" aria-hidden="true" /> Avg. prestige
                             </dt>
                             <dd className={mastheadMetricValueClass}>{alliancePrestige?.toLocaleString("en-US") ?? "—"}</dd>
-                            <dd className="text-[11px] leading-snug text-slate-400">
-                                {alliancePrestige === null ? "No prestige yet" : `${prestigeMemberCount} ${prestigeMemberCount === 1 ? "member" : "members"}`}
-                            </dd>
+                            {(alliancePrestige === null || prestigeMemberCount < members.length) && (
+                                <dd className="text-[11px] leading-snug text-slate-400">
+                                    {alliancePrestige === null ? "No prestige yet" : `${prestigeMemberCount} of ${members.length} members`}
+                                </dd>
+                            )}
                         </div>
                         <div className={mastheadMetricClass}>
                             <dt className="flex items-center gap-1.5 text-[11px] font-medium leading-snug text-slate-300 sm:text-xs">
@@ -1131,16 +1133,16 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                         </div>
                     </dl>
 
-                    <details className="group border-t border-slate-800/90 bg-slate-950/20 lg:border-l lg:border-t-0">
-                        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 px-3 text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-400 sm:px-4 lg:min-h-full lg:group-open:min-h-11 [&::-webkit-details-marker]:hidden">
+                    <details className="group lg:mt-2 lg:w-72">
+                        <summary className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-md text-xs text-slate-300 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 [&::-webkit-details-marker]:hidden">
                             <Sparkles className={cn("size-4 shrink-0", screenshotUnlock.unlocked ? "text-emerald-300" : "text-amber-300")} aria-hidden="true" />
-                            <span className="flex-1 font-medium text-slate-200">Screenshot uploads</span>
-                            <span className={cn("rounded-full border px-2 py-0.5 tabular-nums", screenshotUnlock.unlocked ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-300" : "border-amber-400/20 bg-amber-400/10 text-amber-200")}>
+                            <span className="flex-1 font-medium">Screenshot uploads</span>
+                            <span className={cn("shrink-0 font-medium tabular-nums", screenshotUnlock.unlocked ? "text-emerald-300" : "text-amber-200")}>
                                 {screenshotUnlock.unlocked ? "Unlimited" : screenshotUnlockPercent + "% funded"}
                             </span>
                             <ChevronDown className="size-3.5 shrink-0 text-slate-400 transition-transform group-open:rotate-180" aria-hidden="true" />
                         </summary>
-                        <div className="space-y-2 px-3 pb-3 text-xs text-slate-400 sm:px-5">
+                        <div className="space-y-2 pb-2 text-xs text-slate-400">
                             <div role="progressbar" aria-label="Funding for unlimited roster screenshot uploads" aria-valuenow={screenshotUnlockPercent} className="h-1 overflow-hidden rounded-full bg-slate-800">
                                 <div className={cn("h-full rounded-full", screenshotUnlock.unlocked ? "bg-emerald-400" : "bg-amber-400")} style={{ width: screenshotUnlockPercent + "%" }} />
                             </div>

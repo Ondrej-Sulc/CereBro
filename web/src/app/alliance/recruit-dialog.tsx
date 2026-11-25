@@ -28,7 +28,8 @@ type PlayerSearch =
     | { state: "loading" | "error"; query: string }
     | { state: "ready"; query: string; players: SearchPlayer[] };
 
-export function RecruitDialog({ pendingRequests, loadingId, onInvite, onRespond }: {
+export function RecruitDialog({ triggerClassName, pendingRequests, loadingId, onInvite, onRespond }: {
+    triggerClassName: string;
     pendingRequests: PendingRequest[];
     loadingId: string | null;
     onInvite: (playerId: string) => Promise<void>;
@@ -56,7 +57,7 @@ export function RecruitDialog({ pendingRequests, loadingId, onInvite, onRespond 
     return (
         <Dialog>
             <DialogTrigger asChild>
-                <Button variant="outline" className="relative h-11 min-w-0 gap-1 rounded-lg border-slate-800 bg-slate-900/65 px-1 text-xs text-slate-200 hover:bg-slate-800 sm:h-10 sm:gap-2 sm:px-3 sm:text-sm [&_svg]:size-3.5 sm:[&_svg]:size-4">
+                <Button variant="outline" className={"relative " + triggerClassName}>
                     <UserPlus aria-hidden="true" />
                     Recruit<span className="sr-only"> members</span>
                     {pendingCount > 0 && (
