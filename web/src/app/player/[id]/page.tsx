@@ -29,6 +29,7 @@ import {
     normalizePlayerWarInsightScope,
 } from "@/lib/player-war-insights";
 import { PlayerWarInsightsSection } from "./player-war-insights-section";
+import { TopChampionsGallery } from "./top-champions-gallery";
 import { PlayerProfileMetric, PlayerProfileSectionHeading, profileActionClass, profilePrimaryActionClass } from "@/components/player-profile-ui";
 
 interface PlayerProfilePageProps {
@@ -332,11 +333,11 @@ export default async function PlayerProfilePage({ params, searchParams }: Player
                 </nav>
             )}
 
-            <div className={cn("grid items-start gap-6", recentFights.length > 0 && "lg:grid-cols-[minmax(0,1.9fr)_minmax(19rem,1fr)]")}>
+            <div className={cn("grid items-start gap-6", recentFights.length > 0 && "lg:grid-cols-[minmax(0,1.62fr)_minmax(21rem,1fr)] lg:gap-7")}>
                 <section aria-labelledby="top-champions" className="min-w-0">
                     <PlayerProfileSectionHeading title="Top champions" id="top-champions" />
                     {roster.length > 0 ? (
-                        <ul aria-label="Top champion cards" tabIndex={0} className={cn("grid auto-cols-[minmax(6.5rem,30%)] grid-flow-col snap-x snap-proximity gap-2.5 overflow-x-auto rounded-lg pb-2 [scrollbar-color:#475569_transparent] [scrollbar-width:thin] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 sm:auto-cols-auto sm:grid-flow-row sm:grid-cols-5 sm:pb-0", !recentFights.length && "lg:grid-cols-10")}>
+                        <TopChampionsGallery count={roster.length} className={!recentFights.length ? "lg:grid-cols-10" : undefined}>
                             {roster.map(r => {
                                 const prestige = projectMcocPrestige({
                                     prestigeData: r.champion.prestigeData,
@@ -345,7 +346,7 @@ export default async function PlayerProfilePage({ params, searchParams }: Player
                                     ascensionLevel: normalizeRosterAscensionState(r).ascensionLevel,
                                 });
                                 return (
-                                    <li key={r.id} className="flex min-w-0 snap-start flex-col gap-2 rounded-xl border border-slate-800 bg-[#0a131c] p-1.5 sm:p-2">
+                                    <li key={r.id} className="flex min-w-0 flex-col gap-1.5">
                                         <ChampionAvatar
                                             name={r.champion.name}
                                             images={r.champion.images as unknown as ChampionImages}
@@ -357,7 +358,7 @@ export default async function PlayerProfilePage({ params, searchParams }: Player
                                             ascensionLevel={r.ascensionLevel || undefined}
                                             sigLevel={r.sigLevel}
                                             size="lg"
-                                            className="aspect-square h-auto w-full rounded-lg"
+                                            className="aspect-square h-auto w-full rounded-lg border-white/15 shadow-none"
                                         />
                                         <div className="w-full px-0.5 pb-0.5 text-center">
                                             <p title={r.champion.name} className="line-clamp-2 break-words text-xs font-semibold leading-tight text-slate-100">{r.champion.name}</p>
@@ -368,7 +369,7 @@ export default async function PlayerProfilePage({ params, searchParams }: Player
                                     </li>
                                 );
                             })}
-                        </ul>
+                        </TopChampionsGallery>
                     ) : (
                         <div className="flex items-center gap-3 rounded-2xl border border-dashed border-slate-800 bg-slate-900/40 p-5">
                             <Layers className="size-5 text-indigo-300" aria-hidden="true" />
@@ -392,55 +393,57 @@ export default async function PlayerProfilePage({ params, searchParams }: Player
                                 id="recent-war-fights"
                                 action={<Link href={archiveHref} className={cn(profileActionClass, "min-h-9 px-2.5 text-xs")}>War archive <ArrowUpRight className="size-3" aria-hidden="true" /></Link>}
                             />
-                            <div className="space-y-3">
+                            <div className="space-y-2.5">
                                 {[...fightsByWar.values()].map(warFights => {
                                     const { war } = warFights[0];
                                     const deaths = warFights.reduce((count, fight) => count + fight.death, 0);
                                     return (
-                                        <section key={war.id} className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/45">
-                                            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 bg-slate-900/80 px-3 py-3 sm:px-4">
+                                        <section key={war.id}>
+                                            <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2 pt-1">
                                                 <div className="flex min-w-0 items-center gap-2.5">
-                                                    <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-cyan-300/20 bg-cyan-300/10 text-cyan-200">
-                                                        <Shield className="size-4" aria-hidden="true" />
-                                                    </span>
+                                                    <Shield className="ml-1.5 size-4 shrink-0 text-cyan-200/80" aria-hidden="true" />
                                                     <div className="min-w-0">
-                                                        <h3 className="break-words text-sm font-semibold text-slate-100">{war.alliance.name}</h3>
-                                                        <p className="text-xs text-slate-400">Season {war.season}{war.warNumber ? " · War " + war.warNumber : ""} · Tier {war.warTier}</p>
+                                                        <h3 className="break-words text-sm font-semibold leading-snug text-slate-100">{war.alliance.name}</h3>
+                                                        <p className="text-[11px] text-slate-400">Season {war.season}{war.warNumber ? " · War " + war.warNumber : ""} · Tier {war.warTier}</p>
                                                     </div>
                                                 </div>
-                                                <p className="ml-auto flex shrink-0 items-center gap-2 text-xs text-slate-300">
+                                                <p className="flex shrink-0 flex-wrap justify-end gap-x-2 text-right text-[11px] text-slate-400">
                                                     <span>{warFights.length} {warFights.length === 1 ? "fight" : "fights"}</span>
-                                                    <span className={deaths > 0 ? "text-amber-300" : "text-emerald-300"}>{deaths > 0 ? deaths + (deaths === 1 ? " death" : " deaths") : "All solo"}</span>
+                                                    {deaths > 0 && <span className="text-amber-300">{deaths} {deaths === 1 ? "death" : "deaths"}</span>}
                                                 </p>
                                             </div>
                                             <ul className="divide-y divide-slate-800/75">
                                                 {warFights.map(fight => (
-                                                    <li key={fight.id} className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-2.5 px-3 py-2.5 transition-colors hover:bg-slate-800/40">
-                                                        <div className="grid min-w-9 justify-items-center rounded-lg border border-slate-800 bg-slate-950/60 px-1.5 py-1 text-slate-400">
+                                                    <li key={fight.id} className="grid min-h-12 grid-cols-[1.875rem_minmax(0,1fr)_3.5rem] items-center gap-2 py-1.5 transition-colors hover:bg-slate-800/30">
+                                                        <div className="grid justify-items-center text-slate-400">
                                                             <span className="text-[9px] uppercase tracking-wide">Node</span>
                                                             <span className="text-sm font-semibold tabular-nums text-slate-200">{fight.node.nodeNumber}</span>
                                                         </div>
-                                                        <div className="grid min-w-0 gap-1.5">
+                                                        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1 sm:gap-1.5">
+                                                            <ArrowRight className="col-start-2 row-start-1 size-3 text-slate-500" aria-hidden="true" />
                                                             {([["Attacker", fight.attacker], ["Defender", fight.defender]] as const).map(([side, champion]) => (
-                                                                <div key={side} className="flex min-w-0 items-center gap-2">
-                                                                    <Avatar className="size-7 shrink-0 rounded-lg border border-slate-700">
+                                                                <div key={side} className={cn(
+                                                                    "row-start-1 flex min-w-0 items-center gap-1 sm:gap-1.5",
+                                                                    side === "Attacker" ? "col-start-1 font-semibold text-slate-100" : "col-start-3 font-medium text-slate-300"
+                                                                )}>
+                                                                    <Avatar className="size-5 shrink-0 rounded-md border border-slate-700 max-[359px]:size-4 sm:size-6">
                                                                         {champion && <AvatarImage src={getChampionImageUrlOrPlaceholder(champion.images, "64")} alt="" />}
-                                                                        <AvatarFallback className="rounded-lg text-[10px]">{champion?.name.slice(0, 2).toUpperCase() ?? "?"}</AvatarFallback>
+                                                                        <AvatarFallback className="rounded-md text-[9px]">{champion?.name.slice(0, 2).toUpperCase() ?? "?"}</AvatarFallback>
                                                                     </Avatar>
-                                                                    <span title={champion?.name} className="min-w-0 break-words text-xs font-medium text-slate-200 [overflow-wrap:anywhere]">
+                                                                    <span title={champion?.name} className="min-w-0 text-[11px] leading-tight [overflow-wrap:anywhere]">
                                                                         <span className="sr-only">{side}: </span>{champion?.name || "Unknown"}
                                                                     </span>
                                                                 </div>
                                                             ))}
                                                         </div>
-                                                        <div className="flex flex-col items-end gap-1.5">
-                                                            <span className={cn("inline-flex items-center gap-1 whitespace-nowrap text-xs font-medium", fight.death > 0 ? "text-amber-300" : "text-emerald-300")}>
-                                                                {fight.death > 0 ? <Skull className="size-3" aria-hidden="true" /> : <Trophy className="size-3" aria-hidden="true" />}
+                                                        <div className="flex flex-col items-end gap-1">
+                                                            <span className={cn("inline-flex items-center justify-end gap-1 text-right text-[11px] font-medium leading-none", fight.death > 0 ? "text-amber-300" : "text-emerald-300")}>
+                                                                {fight.death > 0 ? <Skull className="size-3 shrink-0" aria-hidden="true" /> : <Trophy className="size-3 shrink-0" aria-hidden="true" />}
                                                                 {fight.death > 0 ? fight.death + (fight.death === 1 ? " death" : " deaths") : "Solo"}
                                                             </span>
                                                             {fight.video ? (
-                                                                <Link href={"/war-videos/" + fight.video.id} aria-label={"Watch fight on node " + fight.node.nodeNumber} className="grid size-9 place-items-center rounded-lg border border-indigo-400/25 bg-indigo-400/10 text-indigo-200 transition-colors hover:bg-indigo-400/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300">
-                                                                    <Play className="size-4" aria-hidden="true" />
+                                                                <Link href={"/war-videos/" + fight.video.id} aria-label={"Watch fight on node " + fight.node.nodeNumber} className="grid size-8 place-items-center rounded-md bg-indigo-400/10 text-indigo-200 transition-colors hover:bg-indigo-400/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300">
+                                                                    <Play className="size-3.5" aria-hidden="true" />
                                                                 </Link>
                                                             ) : null}
                                                         </div>
