@@ -65,6 +65,7 @@ async function click(selector: string, container: ParentNode = host) {
 
 const editGroups = '[aria-label="Edit battlegroups"]';
 const solomonAssignment = '[role="combobox"][aria-label="Battlegroup for Solomon"]';
+const solomonAvatarLink = 'a[aria-label="View profile for Solomon"]';
 const memberMime = "application/x-cerebro-alliance-member";
 const memberDragRow = (id: string) => host.querySelector(`a[href="/player/${id}"]`)?.closest('li[draggable="true"]') ?? null;
 
@@ -130,6 +131,23 @@ it("handles full, empty, and newly populated battlegroups", async () => {
     expect(host.querySelector('[data-battlegroup-filter="unassigned"]')).toBeNull();
 });
 
+it("links member avatars and names to the same profile in board and list views", async () => {
+    await render([1, 2]);
+    const expectProfileLinks = () => {
+        const avatarLink = results().querySelector(solomonAvatarLink);
+        expect(avatarLink?.textContent).toBe("SO");
+        expect(avatarLink?.getAttribute("href")).toBe("/player/member-0");
+        expect(results().querySelector('a[title="Solomon"]')?.getAttribute("href")).toBe("/player/member-0");
+    };
+    expectProfileLinks();
+
+    const memberView = host.querySelector('[aria-label="Member view"]')!;
+    const list = [...memberView.querySelectorAll("button")].find(button => button.textContent?.trim() === "List")!;
+    await act(async () => list.click());
+    expect(results().querySelector("table")).not.toBeNull();
+    expectProfileLinks();
+});
+
 it("keeps assignment controls off until an officer enables battlegroup editing", async () => {
     await render([2, null]);
     const toggle = host.querySelector(editGroups);
@@ -160,10 +178,15 @@ it("provides a member preview and highlights destinations until the drag ends", 
     await click(editGroups);
     const row = memberDragRow("member-0")!;
     const destination = results().querySelector("#battlegroup-2")!;
+    const avatarLink = row.querySelector(solomonAvatarLink)!;
+    expect(avatarLink.getAttribute("draggable")).toBe("false");
+    await act(async () => avatarLink.dispatchEvent(new Event("pointerdown", { bubbles: true })));
     const data = await startSolomonDrag();
     const preview = data.setDragImage.mock.calls[0]?.[0];
 
     expect(preview?.textContent).toContain("Solomon");
+    expect(preview?.textContent).toContain("SO");
+    expect(preview?.querySelector("a")).toBeNull();
     expect(preview?.isConnected).toBe(true);
     expect(row.getAttribute("data-drag-source")).toBe("true");
     expect(row.closest("section")?.hasAttribute("data-drop-state")).toBe(false);

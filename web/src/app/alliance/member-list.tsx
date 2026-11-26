@@ -135,20 +135,23 @@ export function AllianceMemberList({ members, sort, playerColors, groupColors, r
                             </span>
                         );
                         const playerColor = member.isSupporter ? "#fbbf24" : playerColors?.get(member.id) ?? groupColors.get(group) ?? "#94a3b8";
+                        const profileHref = "/player/" + member.id;
 
                         return (
                             <TableRow key={member.id} className="border-slate-800/80 hover:bg-slate-800/45">
                                 <TableCell className="px-3 py-2 sm:px-4">
                                     <div className="flex min-w-0 items-center gap-2.5">
-                                        <Avatar className="size-8 shrink-0 rounded-lg border" style={{ borderColor: playerColor + "66" }}>
-                                            <AvatarImage src={member.avatar ?? undefined} />
-                                            <AvatarFallback className="rounded-lg text-xs font-semibold text-white" style={{ backgroundColor: playerColor + "24" }}>
-                                                {member.ingameName.slice(0, 2).toUpperCase()}
-                                            </AvatarFallback>
-                                        </Avatar>
+                                        <Link href={profileHref} aria-label={"View profile for " + member.ingameName} className="inline-flex shrink-0 rounded-lg transition-shadow hover:ring-1 hover:ring-indigo-300/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
+                                            <Avatar className="size-8 rounded-lg border" style={{ borderColor: playerColor + "66" }}>
+                                                <AvatarImage src={member.avatar ?? undefined} alt="" />
+                                                <AvatarFallback className="rounded-lg text-xs font-semibold text-white" style={{ backgroundColor: playerColor + "24" }}>
+                                                    {member.ingameName.slice(0, 2).toUpperCase()}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                        </Link>
                                         <div className="min-w-0">
                                             <div className="flex min-w-0 items-center gap-1.5">
-                                                <Link href={"/player/" + member.id} title={member.ingameName} className="truncate rounded-sm text-sm font-medium text-slate-100 hover:text-indigo-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
+                                                <Link href={profileHref} title={member.ingameName} className="truncate rounded-sm text-sm font-medium text-slate-100 hover:text-indigo-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
                                                     {member.ingameName}
                                                 </Link>
                                                 {member.isOfficer && <Crown role="img" aria-label="Officer" className="size-3 shrink-0 text-amber-300" />}

@@ -507,7 +507,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
             preview.className = styles.dragPreview;
             preview.setAttribute("aria-hidden", "true");
             preview.style.setProperty("--drag-group-color", groupColors.get(battlegroup) ?? "#94a3b8");
-            const avatar = event.currentTarget.querySelector(`.${styles.avatar}`);
+            const avatar = event.currentTarget.querySelector(`.${styles.avatar}`)?.firstElementChild;
             if (avatar) preview.append(avatar.cloneNode(true));
             const details = document.createElement("div");
             const name = document.createElement("div");
@@ -627,6 +627,7 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
         const needsAttention = needsRosterAttention(player.id);
         const FreshnessIcon = needsAttention ? AlertTriangle : Clock;
         const playerColor = player.isSupporter ? "#fbbf24" : playerColorMap.get(player.id) ?? "#94a3b8";
+        const profileHref = "/player/" + player.id;
         const isUpdating = loadingId === player.id || pendingAssignment === player.id;
         const canDrag = isEditingBattlegroups && !isUpdating && pendingAssignment === null;
         const controls = isEditingBattlegroups ? "edit" : canManageAlliance ? "manage" : "read";
@@ -652,15 +653,17 @@ export function AllianceManagementClient({ members, currentUser, alliance }: Cli
                 )}
             >
                 <div className={cn(styles.memberLayout, "items-center gap-x-2 gap-y-1.5")} data-controls={controls}>
-                    <Avatar className={cn(styles.avatar, "size-8 shrink-0 rounded-lg border sm:size-9")} style={{ borderColor: playerColor + "66" }}>
-                        <AvatarImage src={player.avatar || undefined} alt="" draggable={isEditingBattlegroups ? false : undefined} />
-                        <AvatarFallback className="rounded-xl bg-slate-800 text-xs font-semibold text-white" style={{ backgroundColor: playerColor + "24" }}>
-                            {player.ingameName.substring(0, 2).toUpperCase()}
-                        </AvatarFallback>
-                    </Avatar>
+                    <Link href={profileHref} aria-label={"View profile for " + player.ingameName} draggable={false} className={cn(styles.avatar, "inline-flex rounded-lg transition-shadow hover:ring-1 hover:ring-indigo-300/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400")}>
+                        <Avatar className="size-8 shrink-0 rounded-lg border sm:size-9" style={{ borderColor: playerColor + "66" }}>
+                            <AvatarImage src={player.avatar || undefined} alt="" draggable={false} />
+                            <AvatarFallback className="rounded-xl bg-slate-800 text-xs font-semibold text-white" style={{ backgroundColor: playerColor + "24" }}>
+                                {player.ingameName.substring(0, 2).toUpperCase()}
+                            </AvatarFallback>
+                        </Avatar>
+                    </Link>
                     <div className={cn(styles.details, "min-w-0")}>
                         <div className="flex min-w-0 items-center gap-1.5">
-                            <Link href={"/player/" + player.id} title={player.ingameName} draggable={isEditingBattlegroups ? false : undefined} className="truncate rounded-sm text-sm font-semibold text-slate-100 transition-colors hover:text-indigo-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
+                            <Link href={profileHref} title={player.ingameName} draggable={isEditingBattlegroups ? false : undefined} className="truncate rounded-sm text-sm font-semibold text-slate-100 transition-colors hover:text-indigo-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400">
                                 {player.ingameName}
                             </Link>
                             {player.isOfficer && <Crown role="img" aria-label="Officer" className="h-3.5 w-3.5 shrink-0 text-amber-300" />}
