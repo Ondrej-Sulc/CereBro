@@ -15,7 +15,7 @@ import { Champion } from "@/types/champion";
 import { TrendingUp, Grid3X3, Swords } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Player, Alliance } from "@prisma/client";
-import { CollectionHeading, useCollectionState, useIsCollectionScreen } from "@/components/collections/collection-navigation";
+import { ChampionCollectionHeader, useCollectionState, useIsCollectionScreen } from "@/components/collections/collection-navigation";
 
 // Local imports
 import { ProfileRosterEntry, Recommendation, SigRecommendation, PotentialRecommendation, PrestigePoint, PrestigeInsightTab, RosterSortField, SortDirection } from "./types";
@@ -634,6 +634,7 @@ export function RosterView({
 
   return (
     <div className={enablePrestigeInsights ? "space-y-4 sm:space-y-5" : "space-y-6"}>
+      {isCollectionScreen && <ChampionCollectionHeader />}
       {enablePrestigeInsights && player ? (
         <RosterProfileHeader
           player={player}
@@ -646,9 +647,9 @@ export function RosterView({
           onShare={shareUrl ? handleShareRoster : undefined}
           onProfileSwitch={handleProfileSwitch}
         />
-      ) : (
+      ) : !isCollectionScreen && (
         <header className="mb-2">
-          <CollectionHeading fallback={<h1 className="text-[28px] font-bold tracking-tight text-white sm:text-3xl">Champions</h1>} />
+          <h1 className="text-[28px] font-bold tracking-tight text-white sm:text-3xl">Champions</h1>
           <p className="mt-3 text-slate-400">Browse all playable champions, filter by class, tags, abilities, and immunities.</p>
         </header>
       )}
@@ -656,19 +657,17 @@ export function RosterView({
 
       {enablePrestigeInsights && (
         <>
-          <div className="flex flex-col items-start gap-2.5 sm:flex-row sm:items-center sm:justify-between">
-            <RosterModeSwitch
-              activeMode={showInsights ? "prestige" : "roster"}
-              onModeChange={(mode) => {
-                const nextShowInsights = mode === "prestige";
-                setShowInsights(nextShowInsights);
-                updateUrlParams({ insights: nextShowInsights ? "true" : null });
-              }}
-              rosterCount={filteredRoster.length}
-              prestigeCount={potentialRecommendations.length + recommendations.length + sigRecommendations.length}
-            />
-            {isCollectionScreen && <CollectionHeading compact />}
-          </div>
+          <RosterModeSwitch
+            activeMode={showInsights ? "prestige" : "roster"}
+            onModeChange={(mode) => {
+              const nextShowInsights = mode === "prestige";
+              setShowInsights(nextShowInsights);
+              updateUrlParams({ insights: nextShowInsights ? "true" : null });
+            }}
+            rosterCount={filteredRoster.length}
+            prestigeCount={potentialRecommendations.length + recommendations.length + sigRecommendations.length}
+            underline={isCollectionScreen}
+          />
 
           <RosterInsights
             showInsights={showInsights}
@@ -697,6 +696,7 @@ export function RosterView({
       {!showInsights && (
         <>
           <RosterFilters
+            flat={isCollectionScreen}
             championScope={championScope} onChampionScopeChange={setChampionScope}
             facetCounts={facetCounts}
             search={search} onSearchChange={setSearch} viewMode={viewMode} onViewModeChange={setViewMode}
@@ -762,19 +762,24 @@ function RosterModeSwitch({
   onModeChange,
   rosterCount,
   prestigeCount,
+  underline,
 }: {
   activeMode: "roster" | "prestige";
   onModeChange: (mode: "roster" | "prestige") => void;
   rosterCount: number;
   prestigeCount: number;
+  underline: boolean;
 }) {
   return (
-    <div role="group" aria-label="Roster section" className="grid w-full grid-cols-2 gap-0.5 rounded-xl border border-slate-800 bg-slate-900/60 p-1 sm:w-auto">
+    <div role="group" aria-label="Roster section" className={underline
+      ? "flex items-center gap-5 border-b border-slate-800"
+      : "grid w-full grid-cols-2 gap-0.5 rounded-xl border border-slate-800 bg-slate-900/60 p-1 sm:w-fit"}>
       <ModeSwitchPill
         active={activeMode === "roster"}
         icon={<Grid3X3 className="size-4 shrink-0" aria-hidden="true" />}
         title="Champions"
         count={rosterCount}
+        underline={underline}
         onClick={() => onModeChange("roster")}
       />
       <ModeSwitchPill
@@ -782,6 +787,7 @@ function RosterModeSwitch({
         icon={<TrendingUp className="size-4 shrink-0" aria-hidden="true" />}
         title="Prestige insights"
         count={prestigeCount}
+        underline={underline}
         onClick={() => onModeChange("prestige")}
       />
     </div>
@@ -793,12 +799,14 @@ function ModeSwitchPill({
   icon,
   title,
   count,
+  underline,
   onClick,
 }: {
   active: boolean;
   icon: ReactNode;
   title: string;
   count: number;
+  underline: boolean;
   onClick: () => void;
 }) {
   return (
@@ -807,15 +815,15 @@ function ModeSwitchPill({
       onClick={onClick}
       aria-pressed={active}
       className={cn(
-        "flex min-h-10 min-w-0 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 sm:gap-2 sm:px-3 sm:text-sm",
-        active
-          ? "bg-indigo-400/15 text-indigo-100"
-          : "text-slate-300 hover:bg-slate-800 hover:text-white"
+        "flex min-h-10 min-w-0 items-center justify-center gap-1.5 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 sm:gap-2 sm:text-sm",
+        underline
+          ? cn("-mb-px border-b-2 px-0.5", active ? "border-indigo-400 text-indigo-200" : "border-transparent text-slate-400 hover:text-white")
+          : cn("rounded-lg px-2 sm:px-3", active ? "bg-indigo-400/15 text-indigo-100" : "text-slate-300 hover:bg-slate-800 hover:text-white")
       )}
     >
       {icon}
       <span>{title}</span>
-      {count > 0 && <span aria-hidden="true" className="hidden rounded-md bg-slate-800/90 px-1.5 py-0.5 text-[11px] tabular-nums text-slate-300 sm:inline">{count.toLocaleString("en-US")}</span>}
+      {!underline && count > 0 && <span aria-hidden="true" className="hidden rounded-md bg-slate-800/90 px-1.5 py-0.5 text-[11px] tabular-nums text-slate-300 sm:inline">{count.toLocaleString("en-US")}</span>}
     </button>
   );
 }

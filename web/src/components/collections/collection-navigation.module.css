@@ -147,30 +147,48 @@
   }
 }
 
-.wrapper[data-compact="true"] {
-  --collection-accent: #a5b4fc;
-  --collection-tint: #202846;
+.destination {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 11px;
+  border: 1px solid #375775;
+  border-radius: 8px;
+  background: #12263b;
+  color: #bfe9fc;
+  font-size: 13px;
+  font-weight: 650;
+  white-space: nowrap;
 }
-.wrapper[data-compact="true"] .switcher {
-  gap: 2px;
-  padding: 3px;
-  border-color: #28364c;
-  border-radius: 10px;
-  background: #0c1424;
-  box-shadow: none;
+.destination[data-destination="personal"] {
+  border-color: #554b95;
+  background: #282454;
+  color: #ebe5ff;
 }
-.wrapper[data-compact="true"] .switcher a {
-  gap: 6px;
-  min-height: 34px;
-  padding: 5px 9px;
-  border-radius: 7px;
-  font-size: 12px;
-  letter-spacing: 0;
+.destination:hover,
+.destination[data-pending="true"] {
+  border-color: currentColor;
 }
-.wrapper[data-compact="true"] .icon svg {
-  width: 14px;
-  height: 14px;
+.destination:focus-visible {
+  outline: 2px solid #a5b4fc;
+  outline-offset: 3px;
 }
-.wrapper[data-compact="true"] .activeDot {
-  display: none;
+.destinationIcon {
+  display: flex;
+}
+.destinationIcon svg,
+.destinationArrow {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+.destinationArrow {
+  opacity: 0.75;
+}
+@media (max-width: 359px) {
+  .destinationArrow {
+    display: none;
+  }
 }

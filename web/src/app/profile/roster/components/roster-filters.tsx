@@ -19,6 +19,7 @@ import type { RosterFacetCounts } from "@/lib/roster-filtering";
 import type { ChampionScope } from "@/lib/champion-catalog-scope";
 
 export interface RosterFiltersProps {
+    flat?: boolean;
     facetCounts?: RosterFacetCounts;
     championScope?: ChampionScope;
     onChampionScopeChange?: (value: ChampionScope) => void;
@@ -138,9 +139,10 @@ export function RosterFilters(props: SharedRosterFiltersProps) {
     + (p.showRankFilter !== false ? p.filterRanks.length : 0)
     + (p.showAscensionFilter !== false ? p.filterAscensionLevels.length : 0)
     + Number(p.championScope !== undefined && p.championScope !== "playable");
+  const allOwnershipLabel = p.flat ? "Any ownership" : undefined;
 
   return <div className="space-y-3">
-    <section aria-label="Champion filters" className="space-y-2 rounded-xl bg-slate-900/40 p-3 sm:space-y-4 sm:p-4">
+    <section aria-label="Champion filters" className={p.flat ? "space-y-2" : "space-y-2 rounded-xl bg-slate-900/40 p-3 sm:space-y-4 sm:p-4"}>
       <div className="flex items-center gap-2 sm:flex-wrap sm:gap-3">
         <div className="relative min-w-0 flex-1 sm:min-w-[220px]">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
@@ -161,10 +163,10 @@ export function RosterFilters(props: SharedRosterFiltersProps) {
         <MobileClassFilter values={p.filterClasses} onChange={p.onFilterClassesChange} counts={p.facetCounts?.classes} />
         <MoreFiltersButton expanded={expanded} panelId={`${panelId}-mobile`} count={advancedCount} onToggle={() => setExpanded(!expanded)} compact buttonRef={mobileFilterButton} />
       </div>
-      {(p.onChampionScopeChange || p.catalogEligibility || p.showOwnershipFilter !== false || p.showSort !== false) && <div className={cn("grid items-center gap-1 border-t border-slate-800/60 pt-1 sm:hidden", (p.onChampionScopeChange || p.catalogEligibility || p.showOwnershipFilter !== false) && p.showSort !== false ? "grid-cols-2" : "grid-cols-[minmax(0,180px)]", !p.onChampionScopeChange && !p.catalogEligibility && p.showOwnershipFilter === false && "justify-end")}>
+      {(p.onChampionScopeChange || p.catalogEligibility || p.showOwnershipFilter !== false || p.showSort !== false) && <div className={cn("grid items-center sm:hidden", p.flat ? "gap-2" : "gap-1 border-t border-slate-800/60 pt-1", (p.onChampionScopeChange || p.catalogEligibility || p.showOwnershipFilter !== false) && p.showSort !== false ? "grid-cols-2" : "grid-cols-[minmax(0,180px)]", !p.onChampionScopeChange && !p.catalogEligibility && p.showOwnershipFilter === false && "justify-end")}>
         {p.onChampionScopeChange && <ChampionScopeFilter value={p.championScope ?? "playable"} onChange={p.onChampionScopeChange} />}
         {p.catalogEligibility && <div><AscensionEligibilityFilter value={p.ascensionEligible} onChange={p.onAscensionEligibleChange} /></div>}
-        {p.showOwnershipFilter !== false && <OwnershipFilter showUnowned={p.showUnowned} onChange={p.onShowUnownedChange} compact />}
+        {p.showOwnershipFilter !== false && <OwnershipFilter showUnowned={p.showUnowned} onChange={p.onShowUnownedChange} allLabel={allOwnershipLabel} compact />}
         {p.showSort !== false && <RosterSort p={p} compact />}
       </div>}
       {p.contextControls && <div className="grid grid-cols-2 items-end gap-3 border-t border-slate-800/60 pt-3 sm:hidden">{p.contextControls}</div>}
@@ -179,7 +181,7 @@ export function RosterFilters(props: SharedRosterFiltersProps) {
         </div>
         <ClassChoices values={p.filterClasses} onChange={p.onFilterClassesChange} counts={p.facetCounts?.classes} inline />
         {p.onChampionScopeChange && <ChampionScopeFilter value={p.championScope ?? "playable"} onChange={p.onChampionScopeChange} />}
-        {p.showOwnershipFilter !== false && <div className="ml-auto"><OwnershipFilter showUnowned={p.showUnowned} onChange={p.onShowUnownedChange} inline /></div>}
+        {p.showOwnershipFilter !== false && <div className="ml-auto"><OwnershipFilter showUnowned={p.showUnowned} onChange={p.onShowUnownedChange} allLabel={allOwnershipLabel} inline /></div>}
       </div>
 
       {rules.length > 0 && <div className="pt-1">
@@ -234,7 +236,7 @@ function MoreFiltersButton({ expanded, panelId, count, onToggle, compact = false
 function RosterSort({ p, compact = false }: { p: RosterFiltersProps; compact?: boolean }) {
   return <div className={cn("flex items-center gap-1", compact && "min-w-0 gap-0")}>
     <Select value={p.sortBy} onValueChange={value => p.onSortByChange(value as RosterSortField)}>
-      <SelectTrigger aria-label="Sort champions by" className={cn("h-10 w-[112px] border-0 bg-transparent text-xs text-slate-400 shadow-none hover:bg-slate-800/40", compact && "h-11 min-w-0 flex-1 gap-1 px-2 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:shrink-0")}>
+      <SelectTrigger aria-label="Sort champions by" className={cn("h-10 w-[112px] bg-transparent text-xs text-slate-400 shadow-none hover:bg-slate-800/40", p.flat ? "border-slate-800" : "border-0", compact && "h-11 min-w-0 flex-1 gap-1 px-2 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:shrink-0")}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

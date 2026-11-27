@@ -12,7 +12,7 @@ import {
 } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Gem, LibraryBig, Loader2, LogIn, ShieldCheck } from "lucide-react";
+import { ArrowRight, Gem, LibraryBig, Loader2, LogIn, ShieldCheck } from "lucide-react";
 import {
   collectionHref,
   collectionPreferenceCookie,
@@ -140,13 +140,18 @@ function remember(section: CollectionSection, view: CollectionView) {
   document.cookie = `${collectionPreferenceCookie(section)}=${view}; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
 }
 
-/** The active view is the page heading. Shared rosters keep their own title. */
-export function CollectionHeading({ fallback, compact = false }: { fallback?: ReactNode; compact?: boolean }) {
+/** Relics use the active collection link as their heading. */
+export function CollectionHeading({ fallback }: { fallback?: ReactNode }) {
   const screen = useContext(Screen);
-  return screen ? <CollectionViewSwitch compact={compact} /> : fallback;
+  return screen ? <CollectionViewNavigation /> : fallback;
 }
 
-function CollectionViewSwitch({ compact }: { compact: boolean }) {
+export function ChampionCollectionHeader() {
+  const screen = useContext(Screen);
+  return screen?.section === "champions" ? <CollectionViewNavigation pageLinks /> : null;
+}
+
+function CollectionViewNavigation({ pageLinks = false }: { pageLinks?: boolean }) {
   const screen = useContext(Screen);
   const memory = useContext(Memory);
   const router = useRouter();
@@ -167,69 +172,84 @@ function CollectionViewSwitch({ compact }: { compact: boolean }) {
   const labels = section === "champions"
     ? { catalog: "All Champions", personal: "My Roster" }
     : { catalog: "All Relics", personal: "My Relics" };
+  const views = ["catalog", "personal"] as const;
+  const targets = pageLinks ? views.filter(target => target !== view) : views;
+  const navigation = (
+    <nav
+      className={pageLinks ? undefined : styles.switcher}
+      aria-label={pageLinks ? "Champion pages" : `${section === "champions" ? "Champion" : "Relic"} view`}
+      aria-busy={pending}
+    >
+      {targets.map((target) => {
+        const Icon = target === "catalog" ? LibraryBig : section === "relics" ? Gem : ShieldCheck;
+        const isPending = pending && pendingView === target;
+        return (
+          <Link
+            key={target}
+            className={pageLinks ? styles.destination : undefined}
+            href={collectionHref(section, target, gateContext ? gateSearch(target) : "")}
+            prefetch={false}
+            data-destination={pageLinks ? target : undefined}
+            aria-current={target === view ? "page" : undefined}
+            data-pending={isPending ? "true" : undefined}
+            onClick={(event) => {
+              if (
+                event.metaKey ||
+                event.ctrlKey ||
+                event.shiftKey ||
+                event.altKey ||
+                event.button !== 0
+              )
+                return;
+              event.preventDefault();
+              if (target === "personal" && !canUsePersonal) {
+                setPrompt(true);
+                return;
+              }
+              if (target === view || pending) return;
+              screen.preserveScroll();
+              memory?.set(
+                collectionStateKey(section, profileId, view, "url"),
+                window.location.search,
+              );
+              const search = gateContext ? gateSearch(target) : memory?.get(
+                  collectionStateKey(section, profileId, target, "url"),
+                  "",
+                ) ?? "";
+              remember(section, target);
+              setPendingView(target);
+              startTransition(() =>
+                router.push(collectionHref(section, target, search), {
+                  scroll: gateContext,
+                }),
+              );
+            }}
+          >
+            <span className={pageLinks ? styles.destinationIcon : styles.icon} aria-hidden="true">
+              {isPending ? <Loader2 className={styles.loading} /> : <Icon />}
+            </span>
+            {target === view ? (
+              <h1 className={styles.label}>{labels[target]}</h1>
+            ) : (
+              <span className={styles.label}>{labels[target]}</span>
+            )}
+            {pageLinks ? <ArrowRight className={styles.destinationArrow} aria-hidden="true" /> : <span className={styles.activeDot} aria-hidden="true" />}
+          </Link>
+        );
+      })}
+    </nav>
+  );
   return (
-    <div className={styles.wrapper} data-section={section} data-compact={compact ? "true" : undefined}>
-      <nav
-        className={styles.switcher}
-        aria-label={`${section === "champions" ? "Champion" : "Relic"} view`}
-        aria-busy={pending}
-      >
-        {(["catalog", "personal"] as const).map((target) => {
-          const Icon = target === "catalog" ? LibraryBig : section === "relics" ? Gem : ShieldCheck;
-          const isPending = pending && pendingView === target;
-          return (
-            <Link
-              key={target}
-              href={collectionHref(section, target, gateContext ? gateSearch(target) : "")}
-              prefetch={false}
-              aria-current={target === view ? "page" : undefined}
-              data-pending={isPending ? "true" : undefined}
-              onClick={(event) => {
-                if (
-                  event.metaKey ||
-                  event.ctrlKey ||
-                  event.shiftKey ||
-                  event.altKey ||
-                  event.button !== 0
-                )
-                  return;
-                event.preventDefault();
-                if (target === "personal" && !canUsePersonal) {
-                  setPrompt(true);
-                  return;
-                }
-                if (target === view || pending) return;
-                screen.preserveScroll();
-                memory?.set(
-                  collectionStateKey(section, profileId, view, "url"),
-                  window.location.search,
-                );
-                const search = gateContext ? gateSearch(target) : memory?.get(
-                    collectionStateKey(section, profileId, target, "url"),
-                    "",
-                  ) ?? "";
-                remember(section, target);
-                setPendingView(target);
-                startTransition(() =>
-                  router.push(collectionHref(section, target, search), {
-                    scroll: gateContext,
-                  }),
-                );
-              }}
-            >
-              <span className={styles.icon} aria-hidden="true">
-                {isPending ? <Loader2 className={styles.loading} /> : <Icon />}
-              </span>
-              {target === view && !compact ? (
-                <h1 className={styles.label}>{labels[target]}</h1>
-              ) : (
-                <span className={styles.label}>{labels[target]}</span>
-              )}
-              <span className={styles.activeDot} aria-hidden="true" />
-            </Link>
-          );
-        })}
-      </nav>
+    <div className={styles.wrapper} data-section={section}>
+      {pageLinks ? (
+        <header>
+          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-2">
+            <h1 className="text-[22px] font-bold leading-tight tracking-tight text-white min-[375px]:text-[28px] sm:text-4xl">{labels[view]}</h1>
+            {navigation}
+          </div>
+          {view === "catalog" && <p className="mt-1.5 text-sm text-slate-400">Browse by class, tags, abilities, or immunities.</p>}
+        </header>
+      ) : navigation}
       {(prompt || incomingPersonal) && (
         <div className={styles.signin} role="status">
           <span>

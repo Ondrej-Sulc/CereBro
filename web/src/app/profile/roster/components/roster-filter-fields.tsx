@@ -118,13 +118,13 @@ export function MobileClassFilter({ values, onChange, counts }: { values: Champi
   </Popover>;
 }
 
-export function OwnershipFilter({ showUnowned, onChange, compact = false, inline = false }: { showUnowned: boolean; onChange: (value: boolean) => void; compact?: boolean; inline?: boolean }) {
+export function OwnershipFilter({ showUnowned, onChange, allLabel = "All champions", compact = false, inline = false }: { showUnowned: boolean; onChange: (value: boolean) => void; allLabel?: string; compact?: boolean; inline?: boolean }) {
   const select = <Select value={showUnowned ? "all" : "owned"} onValueChange={value => onChange(value === "all")}>
       <SelectTrigger aria-label="Ownership" className={cn("h-9 w-[150px] gap-3 whitespace-nowrap px-2 text-xs", filterControlClass, inline && "w-[132px] gap-1 text-[11px]", compact && "h-11 w-full min-w-0 gap-1")}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="all" className="min-h-11 sm:min-h-8">All champions</SelectItem>
+        <SelectItem value="all" className="min-h-11 sm:min-h-8">{allLabel}</SelectItem>
         <SelectItem value="owned" className="min-h-11 sm:min-h-8">Owned only</SelectItem>
       </SelectContent>
     </Select>;

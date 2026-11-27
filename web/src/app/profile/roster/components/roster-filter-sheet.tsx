@@ -57,7 +57,7 @@ export function RosterFilterSheet({ id, p, open, onOpenChange, onReset, onCloseF
           {p.onChampionScopeChange && <FilterField label="Champion availability"><ChampionScopeFilter value={p.championScope ?? "playable"} onChange={p.onChampionScopeChange} /></FilterField>}
           <FilterField label="Rarity"><ChoiceGroup label="Rarity" options={[7, 6, 5].map(value => ({ value, label: `${value}★` }))} values={p.filterStars} onChange={p.onFilterStarsChange} counts={p.facetCounts?.stars} showCounts compact /></FilterField>
           <ClassChoices values={p.filterClasses} onChange={p.onFilterClassesChange} counts={p.facetCounts?.classes} compact />
-          {p.showOwnershipFilter !== false && <OwnershipFilter showUnowned={p.showUnowned} onChange={p.onShowUnownedChange} compact />}
+          {p.showOwnershipFilter !== false && <OwnershipFilter showUnowned={p.showUnowned} onChange={p.onShowUnownedChange} allLabel={p.flat ? "Any ownership" : undefined} compact />}
 
           {p.showRankFilter !== false && <FilterField label="Rank"><ChoiceGroup label="Rank" options={[1, 2, 3, 4, 5, 6].map(value => ({ value, label: `${value}` }))} values={p.filterRanks} onChange={p.onFilterRanksChange} counts={p.facetCounts?.ranks} showCounts compact /></FilterField>}
           {p.showAscensionFilter !== false && <FilterField label="Ascension level"><ChoiceGroup label="Ascension" options={[0, 1, 2, 3, 4, 5].map(value => ({ value, label: `${value}` }))} values={p.filterAscensionLevels} onChange={p.onFilterAscensionLevelsChange} counts={p.facetCounts?.ascension} showCounts compact /></FilterField>}
