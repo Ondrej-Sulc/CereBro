@@ -27,25 +27,7 @@ export function RelicCatalogBrowser({ data }: { data: RelicCatalogData }) {
   );
   return (
     <div className={styles.page}>
-      <header className={styles.catalogHeader}>
-        <div>
-          <CollectionHeading />
-          <p>
-            Explore Battlecasts, Statcasts and the abilities behind every
-            pairing.
-          </p>
-        </div>
-        <dl className={styles.catalogNumbers}>
-          <div>
-            <dt>Relic families</dt>
-            <dd>{data.families.length}</dd>
-          </div>
-          <div>
-            <dt>Variants</dt>
-            <dd>{data.variants}</dd>
-          </div>
-        </dl>
-      </header>
+      <div className={styles.catalogHeader}><CollectionHeading /></div>
       <RelicCatalogFilters
         data={data}
         filters={filters}

@@ -3,8 +3,12 @@ import { useMemo, useState, useTransition, type CSSProperties } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Gem, Plus, Pencil, Trophy } from "lucide-react";
+import { ChevronDown, Gem, Plus, Pencil, Trophy } from "lucide-react";
 import { CollectionHeading, useCollectionState } from "@/components/collections/collection-navigation";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { profilePrimaryActionClass } from "@/components/player-profile-ui";
 import type { ChampionClass } from "@prisma/client";
 import type { RelicCatalogData } from "@/lib/data/relics";
 import { getChampionClassColors } from "@/lib/championClassHelper";
@@ -14,15 +18,17 @@ import {
   RelicCatalogFilters,
 } from "@/app/relics/relic-catalog-filters";
 import { switchProfile } from "../actions";
-import { RelicPrestigePanel } from "@/components/relics/relic-prestige-panel";
+import { RelicCollectionSummary } from "@/components/relics/relic-prestige-panel";
 import { RelicScreenshotImport } from "@/components/relics/relic-screenshot-import";
 import styles from "./player-relics.module.css";
 
 export function PlayerRelics({
   catalog,
+  avatar,
   profiles,
 }: {
   catalog: RelicCatalogData;
+  avatar?: string | null;
   profiles: { id: string; name: string }[];
 }) {
   const { profile, entries, prestige, openEditor } = useRelicInventory();
@@ -79,48 +85,50 @@ export function PlayerRelics({
     });
   return (
     <div className={styles.page}>
-      <header className={styles.header}>
-        <div>
-          <CollectionHeading />
-          <div className={styles.profile}>
-            {profiles.length > 1 ? (
-              <label>
-                Profile
-                <select
-                  aria-label="Game profile"
-                  value={profile!.id}
-                  disabled={switching}
-                  onChange={(event) => changeProfile(event.target.value)}
-                >
-                  {profiles.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : (
-              <p>{profile!.name}’s Battlecasts &amp; Statcasts</p>
-            )}
+      <CollectionHeading />
+      <RelicCollectionSummary
+        identity={profile && (
+          <div className="flex min-w-0 items-center gap-3">
+            <Avatar className="size-12 shrink-0 rounded-xl border border-indigo-300/30 bg-indigo-400/10 text-indigo-100 sm:size-14">
+              <AvatarImage src={avatar || undefined} alt="" />
+              <AvatarFallback className="rounded-xl bg-indigo-400/15 font-semibold">{profile.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <h2 className="break-words text-xl font-bold leading-tight tracking-tight text-white sm:text-2xl">{profile.name}</h2>
+              {profiles.length > 1 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button type="button" variant="ghost" size="sm" disabled={switching} className="h-8 gap-1 px-0 text-xs text-slate-300 hover:bg-transparent hover:text-white">
+                      Switch profile <ChevronDown className="size-3" aria-hidden="true" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-52 border-slate-700 bg-slate-900 text-slate-100">
+                    {profiles.map((option) => (
+                      <DropdownMenuItem key={option.id} onSelect={() => {
+                        if (option.id !== profile.id) changeProfile(option.id);
+                      }}>
+                        <span className="min-w-0 flex-1 break-words">{option.name}</span>
+                        {option.id === profile.id && <span className="text-xs text-indigo-200">Active</span>}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
           </div>
-        </div>
-        <div className={styles.headerActions}>
+        )}
+        actions={<>
           <RelicScreenshotImport disabled={switching} attributeIcons={catalog.attributeIcons} />
-          <button
-            className={styles.primary}
-            disabled={switching}
-            onClick={() => openEditor()}
-          >
-            <Plus size={17} /> Add relics
+          <button type="button" className={profilePrimaryActionClass} disabled={switching} onClick={() => openEditor()}>
+            <Plus size={17} aria-hidden="true" /> Add relics
           </button>
-        </div>
-      </header>
+        </>}
+      />
       {error && (
         <p role="alert" className={styles.error}>
           {error}
         </p>
       )}
-      <RelicPrestigePanel />
       {!!entries.length && (
         <>
           <RelicCatalogFilters
@@ -142,39 +150,27 @@ export function PlayerRelics({
                 relics
               </>
             }
+            controls={
+              <div className={styles.toolbar}>
+                <button type="button" className={styles.topFilter} aria-pressed={topOnly} onClick={() => setTopOnly(!topOnly)}>
+                  <Trophy size={14} aria-hidden /> Top 30 contributors
+                </button>
+                <select aria-label="Rarity" value={stars} onChange={(event) => setStars(event.target.value)}>
+                  <option value="all">All rarities</option>
+                  {[...new Set(entries.map((r) => r.stars))]
+                    .sort((a, b) => b - a)
+                    .map((n) => (
+                      <option key={n} value={n}>{n}★</option>
+                    ))}
+                </select>
+                <select aria-label="Sort by" value={sort} onChange={(event) => setSort(event.target.value)}>
+                  <option value="rarity">Rarity &amp; rank</option>
+                  <option value="prestige">Prestige</option>
+                  <option value="name">Name</option>
+                </select>
+              </div>
+            }
           />
-          <div className={styles.toolbar}>
-            <button className={styles.topFilter} aria-pressed={topOnly} onClick={() => setTopOnly(!topOnly)}>
-              <Trophy size={14} aria-hidden /> Top 30 contributors
-            </button>
-            <label>
-              Rarity
-              <select
-                value={stars}
-                onChange={(event) => setStars(event.target.value)}
-              >
-                <option value="all">All rarities</option>
-                {[...new Set(entries.map((r) => r.stars))]
-                  .sort((a, b) => b - a)
-                  .map((n) => (
-                    <option key={n} value={n}>
-                      {n}★
-                    </option>
-                  ))}
-              </select>
-            </label>
-            <label>
-              Sort by
-              <select
-                value={sort}
-                onChange={(event) => setSort(event.target.value)}
-              >
-                <option value="rarity">Rarity &amp; rank</option>
-                <option value="prestige">Prestige</option>
-                <option value="name">Name</option>
-              </select>
-            </label>
-          </div>
         </>
       )}
       {visible.length ? (

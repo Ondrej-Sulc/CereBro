@@ -3,7 +3,7 @@ import { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { CollectionView } from "@/lib/collection-view";
-import { ChampionCollectionHeader, CollectionHeading, CollectionMemoryProvider, CollectionScreen } from "./collection-navigation";
+import { CollectionHeading, CollectionMemoryProvider, CollectionScreen } from "./collection-navigation";
 
 const router = { push: vi.fn() };
 vi.mock("next/navigation", () => ({ useRouter: () => router, useSearchParams: () => new URLSearchParams(window.location.search) }));
@@ -28,7 +28,7 @@ async function renderChampions(view: CollectionView, signedIn = true, canUsePers
   await act(async () => root.render(
     <CollectionMemoryProvider>
       <CollectionScreen key={view} section="champions" view={view} profileId="one" signedIn={signedIn} canUsePersonal={canUsePersonal}>
-        <ChampionCollectionHeader />
+        <CollectionHeading />
       </CollectionScreen>
     </CollectionMemoryProvider>,
   ));
@@ -85,12 +85,20 @@ it("carries the quest filter across champion pages", async () => {
   expect(router.push).toHaveBeenLastCalledWith(next.pathname + next.search, { scroll: true });
 });
 
-it("keeps both collection links and the active title for relics", async () => {
+it.each([
+  ["catalog", "All Relics", "My Relics", "/relics?view=personal"],
+  ["personal", "My Relics", "All Relics", "/relics?view=catalog"],
+] as const)("renders the current relics title and only the other page link for %s", async (view, title, destination, href) => {
   await act(async () => root.render(
-    <CollectionScreen section="relics" view="catalog" profileId="one" signedIn canUsePersonal>
+    <CollectionScreen section="relics" view={view} profileId="one" signedIn canUsePersonal>
       <CollectionHeading />
     </CollectionScreen>,
   ));
-  expect(document.querySelector('a[aria-current="page"] h1')?.textContent).toBe("All Relics");
-  expect([...document.querySelectorAll("nav a")].map(link => link.textContent)).toEqual(["All Relics", "My Relics"]);
+  expect(document.querySelector("h1")?.textContent).toBe(title);
+  const links = document.querySelectorAll<HTMLAnchorElement>('nav[aria-label="Relic pages"] a');
+  expect(links).toHaveLength(1);
+  expect(links[0].textContent).toBe(destination);
+  expect(links[0].getAttribute("href")).toBe(href);
+  await act(async () => links[0].click());
+  expect(router.push).toHaveBeenLastCalledWith(href, { scroll: false });
 });

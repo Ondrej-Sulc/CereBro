@@ -15,7 +15,7 @@ import { Champion } from "@/types/champion";
 import { TrendingUp, Grid3X3, Swords } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Player, Alliance } from "@prisma/client";
-import { ChampionCollectionHeader, useCollectionState, useIsCollectionScreen } from "@/components/collections/collection-navigation";
+import { CollectionHeading, useCollectionState, useIsCollectionScreen } from "@/components/collections/collection-navigation";
 
 // Local imports
 import { ProfileRosterEntry, Recommendation, SigRecommendation, PotentialRecommendation, PrestigePoint, PrestigeInsightTab, RosterSortField, SortDirection } from "./types";
@@ -634,7 +634,7 @@ export function RosterView({
 
   return (
     <div className={enablePrestigeInsights ? "space-y-4 sm:space-y-5" : "space-y-6"}>
-      {isCollectionScreen && <ChampionCollectionHeader />}
+      {isCollectionScreen && <CollectionHeading />}
       {enablePrestigeInsights && player ? (
         <RosterProfileHeader
           player={player}

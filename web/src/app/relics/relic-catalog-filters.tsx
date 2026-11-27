@@ -47,7 +47,7 @@ const CLASSES = [
   "Mystic",
 ] as const;
 const TYPES = [
-  { key: "all", label: "All relics", Icon: Gem },
+  { key: "all", label: "All types", Icon: Gem },
   { key: "battlecast", label: "Battlecasts", Icon: Swords },
   { key: "statcast", label: "Statcasts", Icon: SlidersHorizontal },
 ] as const;
@@ -88,6 +88,7 @@ export function RelicCatalogFilters({
   visibleVariants,
   resultSummary,
   ownedTypeCounts,
+  controls,
 }: {
   data: RelicCatalogData;
   filters: RelicFilters;
@@ -95,6 +96,7 @@ export function RelicCatalogFilters({
   visibleFamilies: number;
   visibleVariants: number;
   resultSummary?: ReactNode;
+  controls?: ReactNode;
   ownedTypeCounts?: Record<RelicFilters["type"], number>;
 }) {
   const id = useId();
@@ -137,29 +139,8 @@ export function RelicCatalogFilters({
 
   return (
     <div className={styles.filters}>
-      <section className={styles.panel} aria-label="Relic filters">
+      <section aria-label="Relic filters">
         <div className={styles.primaryRow}>
-          <div className={styles.typeTabs} role="group" aria-label="Relic type">
-            {TYPES.map(({ key, label, Icon }) => (
-              <button
-                key={key}
-                type="button"
-                aria-label={`${label} (${typeCounts[key]} ${ownedTypeCounts ? "owned" : "families"})`}
-                aria-pressed={filters.type === key}
-                onClick={() =>
-                  onChange({
-                    ...filters,
-                    type: key,
-                    attribute: key === "battlecast" ? "all" : filters.attribute,
-                  })
-                }
-              >
-                <Icon size={15} aria-hidden="true" />
-                <span>{label}</span>
-                <span className={styles.typeCount}>{typeCounts[key]}</span>
-              </button>
-            ))}
-          </div>
           <div className={styles.searchRow}>
             <div className={styles.search} data-active={!!filters.query}>
               <Search size={18} aria-hidden="true" />
@@ -207,134 +188,160 @@ export function RelicCatalogFilters({
               )}
             </button>
           </div>
-        </div>
-        <div
-          id={`${id}-extra`}
-          className={styles.secondaryRow}
-          data-expanded={expanded}
-        >
-          <div
-            className={styles.classField}
-            role="group"
-            aria-label="Champion class"
-          >
-            <div className={styles.fieldHeading}>
-              <span>CHAMPION CLASS</span>
+          <div className={styles.typeTabs} role="group" aria-label="Relic type">
+            {TYPES.map(({ key, label, Icon }) => (
               <button
+                key={key}
                 type="button"
-                className={styles.allClasses}
-                aria-pressed={filters.className === "all"}
-                onClick={() => onChange({ ...filters, className: "all" })}
+                aria-label={`${label} (${typeCounts[key]} ${ownedTypeCounts ? "owned" : "families"})`}
+                aria-pressed={filters.type === key}
+                onClick={() =>
+                  onChange({
+                    ...filters,
+                    type: key,
+                    attribute: key === "battlecast" ? "all" : filters.attribute,
+                  })
+                }
               >
-                {filters.className === "all" && (
-                  <Check size={12} aria-hidden="true" />
-                )}
-                All classes
+                <Icon size={15} aria-hidden="true" />
+                <span>{label}</span>
+                <span className={styles.typeCount}>{typeCounts[key]}</span>
               </button>
-            </div>
-            <div className={styles.classOptions}>
-              {CLASSES.map((className) => (
-                <button
-                  key={className}
-                  type="button"
-                  style={classAccent(className)}
-                  aria-pressed={filters.className === className}
-                  onClick={() =>
-                    onChange({
-                      ...filters,
-                      className:
-                        filters.className === className ? "all" : className,
-                    })
-                  }
-                >
-                  <Image
-                    src={`/assets/icons/${className}.png`}
-                    alt=""
-                    width={20}
-                    height={20}
-                    unoptimized
-                  />
-                  <span>{className}</span>
-                  <Check
-                    className={styles.classCheck}
-                    size={13}
-                    aria-hidden="true"
-                  />
-                </button>
-              ))}
-            </div>
+            ))}
           </div>
+        </div>
+        <div className={styles.refinements}>
           <div
-            className={styles.attributeField}
-            data-disabled={attributeDisabled}
+            id={`${id}-extra`}
+            className={styles.secondaryRow}
+            data-expanded={expanded}
           >
-            <div className={styles.fieldHeading}>
-              <label htmlFor={`${id}-attribute`}>STATCAST ATTRIBUTE</label>
-            </div>
-            <Select
-              value={filters.attribute}
-              disabled={attributeDisabled}
-              onValueChange={(attribute) => onChange({ ...filters, attribute })}
+            <div
+              className={styles.classField}
+              role="group"
+              aria-label="Champion class"
             >
-              <SelectTrigger
-                id={`${id}-attribute`}
-                className={styles.attributeTrigger}
-                data-active={filters.attribute !== "all"}
-                aria-label="Statcast attribute"
-              >
-                <span className={styles.attributeValue}>
-                  <AttributeFilterIcon
-                    icon={
-                      attributeDisabled
-                        ? undefined
-                        : data.attributeIcons[filters.attribute]
-                    }
-                  />
-                  {attributeDisabled ? (
-                    <span>Statcasts only</span>
-                  ) : (
-                    <SelectValue placeholder="All attributes">
-                      {filters.attribute === "all"
-                        ? "All attributes"
-                        : filters.attribute}
-                    </SelectValue>
-                  )}
-                </span>
-              </SelectTrigger>
-              <SelectContent
-                className={styles.attributeMenu}
-                align="end"
-                collisionPadding={16}
-              >
-                <SelectItem
-                  className={styles.attributeOption}
-                  value="all"
-                  textValue="All attributes"
+              <div className={styles.fieldHeading}>
+                <span>CHAMPION CLASS</span>
+                <button
+                  type="button"
+                  className={styles.allClasses}
+                  aria-pressed={filters.className === "all"}
+                  onClick={() => onChange({ ...filters, className: "all" })}
                 >
-                  <span className={styles.attributeOptionLabel}>
-                    <AttributeFilterIcon />
-                    <span>All attributes</span>
+                  {filters.className === "all" && (
+                    <Check size={12} aria-hidden="true" />
+                  )}
+                  All classes
+                </button>
+              </div>
+              <div className={styles.classOptions}>
+                {CLASSES.map((className) => (
+                  <button
+                    key={className}
+                    aria-label={className}
+                    title={className}
+                    type="button"
+                    style={classAccent(className)}
+                    aria-pressed={filters.className === className}
+                    onClick={() =>
+                      onChange({
+                        ...filters,
+                        className:
+                          filters.className === className ? "all" : className,
+                      })
+                    }
+                  >
+                    <Image
+                      src={`/assets/icons/${className}.png`}
+                      alt=""
+                      width={20}
+                      height={20}
+                      unoptimized
+                    />
+                    <span>{className}</span>
+                    <Check
+                      className={styles.classCheck}
+                      size={13}
+                      aria-hidden="true"
+                    />
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div
+              className={styles.attributeField}
+              data-disabled={attributeDisabled}
+            >
+              <div className={styles.fieldHeading}>
+                <label htmlFor={`${id}-attribute`}>STATCAST ATTRIBUTE</label>
+              </div>
+              <Select
+                value={filters.attribute}
+                disabled={attributeDisabled}
+                onValueChange={(attribute) => onChange({ ...filters, attribute })}
+              >
+                <SelectTrigger
+                  id={`${id}-attribute`}
+                  className={styles.attributeTrigger}
+                  data-active={filters.attribute !== "all"}
+                  aria-label="Statcast attribute"
+                >
+                  <span className={styles.attributeValue}>
+                    <AttributeFilterIcon
+                      icon={
+                        attributeDisabled
+                          ? undefined
+                          : data.attributeIcons[filters.attribute]
+                      }
+                    />
+                    {attributeDisabled ? (
+                      <span>Statcasts only</span>
+                    ) : (
+                      <SelectValue placeholder="All attributes">
+                        {filters.attribute === "all"
+                          ? "All attributes"
+                          : filters.attribute}
+                      </SelectValue>
+                    )}
                   </span>
-                </SelectItem>
-                <SelectSeparator className={styles.menuSeparator} />
-                {attributes.map((attribute) => (
+                </SelectTrigger>
+                <SelectContent
+                  className={styles.attributeMenu}
+                  align="end"
+                  collisionPadding={16}
+                >
                   <SelectItem
                     className={styles.attributeOption}
-                    key={attribute}
-                    value={attribute}
-                    textValue={attribute}
+                    value="all"
+                    textValue="All attributes"
                   >
                     <span className={styles.attributeOptionLabel}>
-                      <AttributeFilterIcon
-                        icon={data.attributeIcons[attribute]}
-                      />
-                      <span>{attribute}</span>
+                      <AttributeFilterIcon />
+                      <span>All attributes</span>
                     </span>
                   </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+                  <SelectSeparator className={styles.menuSeparator} />
+                  {attributes.map((attribute) => (
+                    <SelectItem
+                      className={styles.attributeOption}
+                      key={attribute}
+                      value={attribute}
+                      textValue={attribute}
+                    >
+                      <span className={styles.attributeOptionLabel}>
+                        <AttributeFilterIcon
+                          icon={data.attributeIcons[attribute]}
+                        />
+                        <span>{attribute}</span>
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
+          {controls && <div className={styles.extraControls}>{controls}</div>}
         </div>
       </section>
       <div className={styles.resultRow}>
@@ -346,8 +353,10 @@ export function RelicCatalogFilters({
         >
           {resultSummary ?? (
             <>
-              <strong>{visibleFamilies}</strong> of {data.families.length}{" "}
-              families
+              <strong>{visibleFamilies}</strong>{" "}
+              {visibleFamilies === data.families.length
+                ? (visibleFamilies === 1 ? "relic family" : "relic families")
+                : `of ${data.families.length} relic families`}
               <span aria-hidden="true">·</span>
               {visibleVariants} {visibleVariants === 1 ? "variant" : "variants"}
             </>

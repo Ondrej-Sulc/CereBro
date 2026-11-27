@@ -64,6 +64,7 @@ export default async function RelicsPage({
       >
         <PlayerRelics
           catalog={data}
+          avatar={player?.avatar}
           profiles={profiles.map((profile) => ({
             id: profile.id,
             name: profile.ingameName,

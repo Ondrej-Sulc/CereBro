@@ -34,7 +34,8 @@ type ScreenConfig = {
   signedIn: boolean;
   canUsePersonal: boolean;
 };
-const Screen = createContext<(ScreenConfig & { preserveScroll: () => void }) | null>(null);
+type CollectionScreenContext = ScreenConfig & { preserveScroll: () => void };
+const Screen = createContext<CollectionScreenContext | null>(null);
 
 export function useIsCollectionScreen() {
   return useContext(Screen) !== null;
@@ -140,28 +141,20 @@ function remember(section: CollectionSection, view: CollectionView) {
   document.cookie = `${collectionPreferenceCookie(section)}=${view}; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
 }
 
-/** Relics use the active collection link as their heading. */
-export function CollectionHeading({ fallback }: { fallback?: ReactNode }) {
+export function CollectionHeading() {
   const screen = useContext(Screen);
-  return screen ? <CollectionViewNavigation /> : fallback;
+  return screen ? <CollectionPageHeader screen={screen} /> : null;
 }
 
-export function ChampionCollectionHeader() {
-  const screen = useContext(Screen);
-  return screen?.section === "champions" ? <CollectionViewNavigation pageLinks /> : null;
-}
-
-function CollectionViewNavigation({ pageLinks = false }: { pageLinks?: boolean }) {
-  const screen = useContext(Screen);
+function CollectionPageHeader({ screen }: { screen: CollectionScreenContext }) {
   const memory = useContext(Memory);
   const router = useRouter();
   const params = useSearchParams();
   const [pending, startTransition] = useTransition();
   const [prompt, setPrompt] = useState(false);
-  const [pendingView, setPendingView] = useState<CollectionView | null>(null);
-  if (!screen) return null; // Shared player rosters retain their existing, explicit context.
   const { section, view, profileId, canUsePersonal, signedIn } = screen;
-  const gateContext = section === "champions" && params.get("questGate") === "1";
+  const champions = section === "champions";
+  const gateContext = champions && params.get("questGate") === "1";
   const incomingPersonal = gateContext && params.get("view") === "personal" && !canUsePersonal;
   const gateSearch = (target: CollectionView) => {
     const query = new URLSearchParams(params.toString());
@@ -169,87 +162,68 @@ function CollectionViewNavigation({ pageLinks = false }: { pageLinks?: boolean }
     return query.toString();
   };
   const personalHref = collectionHref(section, "personal", gateContext ? gateSearch("personal") : "");
-  const labels = section === "champions"
+  const labels = champions
     ? { catalog: "All Champions", personal: "My Roster" }
     : { catalog: "All Relics", personal: "My Relics" };
-  const views = ["catalog", "personal"] as const;
-  const targets = pageLinks ? views.filter(target => target !== view) : views;
-  const navigation = (
-    <nav
-      className={pageLinks ? undefined : styles.switcher}
-      aria-label={pageLinks ? "Champion pages" : `${section === "champions" ? "Champion" : "Relic"} view`}
-      aria-busy={pending}
-    >
-      {targets.map((target) => {
-        const Icon = target === "catalog" ? LibraryBig : section === "relics" ? Gem : ShieldCheck;
-        const isPending = pending && pendingView === target;
-        return (
-          <Link
-            key={target}
-            className={pageLinks ? styles.destination : undefined}
-            href={collectionHref(section, target, gateContext ? gateSearch(target) : "")}
-            prefetch={false}
-            data-destination={pageLinks ? target : undefined}
-            aria-current={target === view ? "page" : undefined}
-            data-pending={isPending ? "true" : undefined}
-            onClick={(event) => {
-              if (
-                event.metaKey ||
-                event.ctrlKey ||
-                event.shiftKey ||
-                event.altKey ||
-                event.button !== 0
-              )
-                return;
-              event.preventDefault();
-              if (target === "personal" && !canUsePersonal) {
-                setPrompt(true);
-                return;
-              }
-              if (target === view || pending) return;
-              screen.preserveScroll();
-              memory?.set(
-                collectionStateKey(section, profileId, view, "url"),
-                window.location.search,
-              );
-              const search = gateContext ? gateSearch(target) : memory?.get(
-                  collectionStateKey(section, profileId, target, "url"),
-                  "",
-                ) ?? "";
-              remember(section, target);
-              setPendingView(target);
-              startTransition(() =>
-                router.push(collectionHref(section, target, search), {
-                  scroll: gateContext,
-                }),
-              );
-            }}
-          >
-            <span className={pageLinks ? styles.destinationIcon : styles.icon} aria-hidden="true">
-              {isPending ? <Loader2 className={styles.loading} /> : <Icon />}
-            </span>
-            {target === view ? (
-              <h1 className={styles.label}>{labels[target]}</h1>
-            ) : (
-              <span className={styles.label}>{labels[target]}</span>
-            )}
-            {pageLinks ? <ArrowRight className={styles.destinationArrow} aria-hidden="true" /> : <span className={styles.activeDot} aria-hidden="true" />}
-          </Link>
-        );
-      })}
-    </nav>
-  );
+  const target = view === "catalog" ? "personal" : "catalog";
+  const Icon = target === "catalog" ? LibraryBig : champions ? ShieldCheck : Gem;
   return (
-    <div className={styles.wrapper} data-section={section}>
-      {pageLinks ? (
-        <header>
-          <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-2">
-            <h1 className="text-[22px] font-bold leading-tight tracking-tight text-white min-[375px]:text-[28px] sm:text-4xl">{labels[view]}</h1>
-            {navigation}
-          </div>
-          {view === "catalog" && <p className="mt-1.5 text-sm text-slate-400">Browse by class, tags, abilities, or immunities.</p>}
-        </header>
-      ) : navigation}
+    <div>
+      <header>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h1 className="text-[22px] font-bold leading-tight tracking-tight text-white min-[375px]:text-[28px] sm:text-4xl">{labels[view]}</h1>
+          <nav aria-label={champions ? "Champion pages" : "Relic pages"} aria-busy={pending}>
+            <Link
+              className={styles.destination}
+              href={collectionHref(section, target, gateContext ? gateSearch(target) : "")}
+              prefetch={false}
+              data-destination={target}
+              data-pending={pending || undefined}
+              onClick={(event) => {
+                if (
+                  event.metaKey ||
+                  event.ctrlKey ||
+                  event.shiftKey ||
+                  event.altKey ||
+                  event.button !== 0
+                )
+                  return;
+                event.preventDefault();
+                if (target === "personal" && !canUsePersonal) {
+                  setPrompt(true);
+                  return;
+                }
+                if (pending) return;
+                screen.preserveScroll();
+                memory?.set(
+                  collectionStateKey(section, profileId, view, "url"),
+                  window.location.search,
+                );
+                const search = gateContext
+                  ? gateSearch(target)
+                  : memory?.get(collectionStateKey(section, profileId, target, "url"), "") ?? "";
+                remember(section, target);
+                startTransition(() =>
+                  router.push(collectionHref(section, target, search), {
+                    scroll: gateContext,
+                  }),
+                );
+              }}
+            >
+              <span className={styles.destinationIcon} aria-hidden="true">
+                {pending ? <Loader2 className={styles.loading} /> : <Icon />}
+              </span>
+              <span>{labels[target]}</span>
+              <ArrowRight className={styles.destinationArrow} aria-hidden="true" />
+            </Link>
+          </nav>
+        </div>
+        {view === "catalog" && (
+          <p className="mt-1.5 text-sm text-slate-400">
+            {champions ? "Browse by class, tags, abilities, or immunities." : "Browse Battlecasts and Statcasts by class or attribute."}
+          </p>
+        )}
+      </header>
       {(prompt || incomingPersonal) && (
         <div className={styles.signin} role="status">
           <span>
