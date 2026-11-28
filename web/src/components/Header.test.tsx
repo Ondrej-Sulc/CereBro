@@ -152,6 +152,22 @@ const hrefs = (parent: ParentNode = document) =>
     el.getAttribute("href"),
   );
 const dialog = () => document.querySelector<HTMLElement>('[role="dialog"]')!;
+const allianceSections = [
+  {
+    label: "Alliance",
+    links: [["Overview", "/alliance"], ["Roster", "/alliance/roster"]],
+  },
+  {
+    label: "Alliance Wars",
+    links: [
+      ["Attack Planning", "/planning"],
+      ["Defense Planning", "/planning/defense"],
+      ["Season Stats", "/analysis/season-overview"],
+    ],
+  },
+];
+const labeledLinks = (parent: ParentNode) =>
+  [...parent.querySelectorAll("a")].map((el) => [el.textContent, el.getAttribute("href")]);
 
 it("keeps Champions first and Alliance second and leaves direct-only pages out of the menu", async () => {
   await render();
@@ -181,25 +197,22 @@ it("keeps Champions first and Alliance second and leaves direct-only pages out o
 });
 
 it.each([false, true])(
-  "prioritizes desktop alliance routes for alliance=%s",
+  "groups desktop alliance routes for alliance=%s",
   async (alliance) => {
     await render({ user: member, alliance, profile: true });
     expect([...document.querySelector('nav[aria-label="Primary"]')!.children].map(child => child.textContent)).toEqual(["Champions", "Alliance", "Explore", "More"]);
     await open("Alliance");
     expect(button("Alliance").id).toBe("site-header-alliance-trigger");
     expect(document.querySelector('[role="menu"]')?.getAttribute("aria-labelledby")).toBe(button("Alliance").id);
-    const links = hrefs(document.querySelector('[role="menu"]')!);
-    expect(links).toEqual(
-      alliance
-        ? [
-            "/planning",
-            "/planning/defense",
-            "/alliance/roster",
-            "/alliance",
-            "/analysis/season-overview",
-          ]
-        : ["/alliance/onboarding"],
-    );
+    const menu = document.querySelector('[role="menu"]')!;
+    if (alliance) {
+      expect([...menu.querySelectorAll('[role="group"]')].map((group) => ({
+        label: document.getElementById(group.getAttribute("aria-labelledby")!)?.textContent,
+        links: labeledLinks(group),
+      }))).toEqual(allianceSections);
+    } else {
+      expect(hrefs(menu)).toEqual(["/alliance/onboarding"]);
+    }
     await key("Escape");
     await vi.waitFor(() => expect(document.activeElement).toBe(button("Alliance")));
     await open("More");
@@ -213,16 +226,12 @@ it.each([false, true])(
   },
 );
 
-it("retains all alliance destinations in the panel using the real membership prop", async () => {
+it("groups the same alliance destinations in the mobile panel", async () => {
   await render({ user: member, alliance: true, profile: true });
   await open("Menu");
   expect(hrefs(dialog())).toEqual([
     "/champions",
-    "/planning",
-    "/planning/defense",
-    "/alliance/roster",
-    "/alliance",
-    "/analysis/season-overview",
+    ...allianceSections.flatMap(({ links }) => links.map(([, href]) => href)),
     "/crystals",
     "/relics",
     "/planning/quests",
@@ -234,6 +243,11 @@ it("retains all alliance destinations in the panel using the real membership pro
     "/about",
     "/search",
   ]);
+  for (const { label, links } of allianceSections) {
+    const section = dialog().querySelector(`section[aria-label="${label}"]`)!;
+    expect(section.querySelector("h2")?.textContent).toBe(label);
+    expect(labeledLinks(section)).toEqual(links);
+  }
   expect(hrefs(dialog())).not.toContain("/alliance/onboarding");
 });
 

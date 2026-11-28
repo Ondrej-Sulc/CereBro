@@ -449,13 +449,23 @@ it("dismisses the section dialog with Escape without changing the URL", async ()
   window.history.replaceState(null, "", "/champions/current?tab=abilities&chapter=base&ability=123&rarity=7&rank=5&sig=75")
   await act(async () => root.render(<ChampionDetailsClient {...props} />))
   const href = window.location.href
-  const dialog = await openSectionPicker()
-  expect(document.activeElement?.textContent).toBe("Full abilities")
-  await act(async () => dialog.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })))
-  expect(document.querySelector('[role="dialog"]')).toBeNull()
-  expect(window.location.href).toBe(href)
-  // Radix restores focus after its dialog unmount cleanup.
-  await vi.waitFor(() => expect(document.activeElement === sectionPicker()).toBe(true))
+  const trigger = sectionPicker()
+  await openSectionPicker()
+  const focusedChoice = document.activeElement!
+  expect(focusedChoice.textContent).toBe("Full abilities")
+  vi.useFakeTimers({ toFake: ["setTimeout", "clearTimeout"] })
+  try {
+    await act(async () => {
+      focusedChoice.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }))
+    })
+    // Radix defers focus restoration until its dialog unmount cleanup.
+    await act(async () => { await vi.runOnlyPendingTimersAsync() })
+    expect(document.querySelector('[role="dialog"]')).toBeNull()
+    expect(window.location.href).toBe(href)
+    expect(document.activeElement).toBe(trigger)
+  } finally {
+    vi.useRealTimers()
+  }
 })
 
 it("uses the existing destination reset contract from the mobile picker", async () => {

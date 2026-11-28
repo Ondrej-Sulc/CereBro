@@ -5,6 +5,9 @@ const prismaFake = vi.hoisted(() => ({
   alliance: {
     findUnique: vi.fn(),
   },
+  player: {
+    findUnique: vi.fn(),
+  },
 }));
 
 const txFake = vi.hoisted(() => ({
@@ -12,7 +15,11 @@ const txFake = vi.hoisted(() => ({
     update: vi.fn(),
   },
   botJob: {
+    create: vi.fn(),
     upsert: vi.fn(),
+  },
+  player: {
+    update: vi.fn(),
   },
 }));
 
@@ -52,6 +59,7 @@ vi.mock("next/cache", () => cacheFake);
 import {
   getAllianceDiscordOptions,
   updateAllianceDiscordConfig,
+  updatePlayerRole,
   type AllianceDiscordConfig,
 } from "./alliance";
 
@@ -67,6 +75,44 @@ const emptyConfig: AllianceDiscordConfig = {
   battlegroup2ChannelId: null,
   battlegroup3ChannelId: null,
 };
+
+describe("alliance member assignments", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    authHelpersFake.getUserPlayerWithAlliance.mockResolvedValue({
+      id: "officer",
+      allianceId: "alliance_1",
+      isBotAdmin: false,
+      isOfficer: true,
+    });
+    permissionsFake.canManageAllianceMembers.mockReturnValue(true);
+    prismaFake.player.findUnique.mockResolvedValue({ allianceId: "alliance_1" });
+    prismaFake.$transaction.mockImplementation(async (callback) => callback(txFake));
+  });
+
+  it("saves the assignment and queues role sync in the same transaction", async () => {
+    await expect(updatePlayerRole("member", { battlegroup: 2 })).resolves.toEqual({ success: true });
+
+    expect(prismaFake.$transaction).toHaveBeenCalledTimes(1);
+    expect(txFake.player.update).toHaveBeenCalledWith({
+      where: { id: "member", allianceId: "alliance_1" },
+      data: { battlegroup: 2, isOfficer: undefined, isPlanner: undefined },
+    });
+    expect(txFake.botJob.create).toHaveBeenCalledWith({
+      data: { type: "UPDATE_MEMBER_ROLES", payload: { playerId: "member" }, status: "PENDING" },
+    });
+    expect(cacheFake.revalidatePath).toHaveBeenCalledWith("/alliance");
+  });
+
+  it("reports a queue failure before revalidating the board", async () => {
+    txFake.botJob.create.mockRejectedValueOnce(new Error("Queue unavailable"));
+
+    await expect(updatePlayerRole("member", { battlegroup: null })).rejects.toThrow("Queue unavailable");
+
+    expect(prismaFake.$transaction).toHaveBeenCalledTimes(1);
+    expect(cacheFake.revalidatePath).not.toHaveBeenCalled();
+  });
+});
 
 describe("alliance Discord configuration actions", () => {
   beforeEach(() => {

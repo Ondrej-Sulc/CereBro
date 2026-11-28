@@ -1,4 +1,4 @@
-.launch{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid #344762;border-radius:9px;background:#111d2c;color:#dceaff;padding:10px 15px;font-size:14px;font-weight:600;cursor:pointer}
+.launch{display:inline-flex;min-height:40px;align-items:center;justify-content:center;gap:8px;border:1px solid #344762;border-radius:9px;background:#111d2c;color:#dceaff;padding:0 12px;font-size:13px;font-weight:600;cursor:pointer}
 .launch:hover{background:#1b2b42}.launch:disabled{opacity:.5;cursor:default}
 .dialog{width:min(1100px,calc(100vw - 24px));max-width:1100px!important;max-height:92dvh;padding:0!important;gap:0!important;display:flex!important;flex-direction:column;background:#0c1420;border:1px solid #2a394d;border-radius:18px;overflow:hidden;color:#e6eefb}
 .header{padding:22px 26px 19px;border-bottom:1px solid #253347;background:linear-gradient(110deg,#14233a80,transparent)}

@@ -1,0 +1,126 @@
+.memberRow {
+    container: alliance-member / inline-size;
+}
+
+.memberLayout {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "avatar details prestige";
+}
+
+.memberLayout[data-controls="manage"] {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas: "avatar details prestige more";
+}
+
+.memberLayout[data-controls="edit"] {
+    grid-template-columns: auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+        "avatar details prestige prestige"
+        "editor editor editor more";
+}
+
+@container alliance-member (min-width: 356px) {
+    .memberLayout[data-controls="edit"] {
+        grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+        grid-template-areas: "avatar details prestige editor more";
+    }
+}
+
+.avatar { grid-area: avatar; }
+.details { grid-area: details; }
+.prestige { grid-area: prestige; }
+.editor { grid-area: editor; }
+.more { grid-area: more; }
+
+.desktopHint {
+    display: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .memberRow[draggable="true"] {
+        cursor: grab;
+        user-select: none;
+    }
+
+    .memberRow[draggable="true"]:hover {
+        background-color: rgb(99 102 241 / 12%);
+    }
+
+    .memberRow[draggable="true"] :is(a, button:not(:disabled)) {
+        cursor: pointer;
+    }
+
+    .desktopHint {
+        display: inline;
+    }
+
+    .touchHint {
+        display: none;
+    }
+}
+
+.memberRow[data-drag-source] {
+    background-color: rgb(99 102 241 / 10%);
+    box-shadow: inset 0 0 0 1px rgb(129 140 248 / 35%);
+}
+
+.memberRow[data-drag-source] .memberLayout {
+    opacity: 0.48;
+}
+
+.dropPanel[data-drop-state="available"] {
+    border-color: rgb(129 140 248 / 65%);
+    border-style: dashed;
+}
+
+.dropPanel[data-drop-state="active"] {
+    border-color: #a5b4fc;
+    background-color: #1c2343;
+    box-shadow: 0 0 0 2px rgb(129 140 248 / 28%);
+}
+
+.dropChip[data-drop-state="available"] {
+    outline: 1px dashed rgb(129 140 248 / 75%);
+    outline-offset: -1px;
+}
+
+.dropChip[data-drop-state="active"] {
+    background-color: #312e68;
+    color: #eef2ff;
+    outline: 1px solid #a5b4fc;
+    outline-offset: -1px;
+}
+
+.dragPreview {
+    position: fixed;
+    top: 0;
+    left: -10000px;
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-width: 11rem;
+    max-width: 17rem;
+    padding: 0.5rem 0.875rem;
+    border: 1px solid #818cf8;
+    border-left: 3px solid var(--drag-group-color, #a5b4fc);
+    border-radius: 0.75rem;
+    background: linear-gradient(125deg, #282952, #131a2c);
+    box-shadow: 0 10px 24px rgb(2 6 23 / 65%);
+    color: #c7d2fe;
+    font-size: 0.75rem;
+    pointer-events: none;
+}
+
+.dragPreview > div {
+    min-width: 0;
+}
+
+.dragPreviewName {
+    overflow: hidden;
+    color: #f8fafc;
+    font-size: 0.875rem;
+    font-weight: 600;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

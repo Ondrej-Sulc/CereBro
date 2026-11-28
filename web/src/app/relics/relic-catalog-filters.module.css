@@ -1,38 +1,26 @@
-.panel {
-  border: 1px solid #283447;
-  border-radius: 16px;
-  background: linear-gradient(125deg, #121b2a, #0c1521 70%);
-  padding: 20px;
-  box-shadow:
-    inset 0 1px 0 #ffffff04,
-    0 8px 30px #00000012;
-}
 .primaryRow {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 8px;
 }
 .typeTabs {
   display: flex;
   flex-shrink: 0;
-  padding: 4px;
-  gap: 3px;
-  border-radius: 11px;
-  border: 1px solid #ffffff09;
-  background: #080f1b;
+  gap: 5px;
 }
 .typeTabs button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 10px 13px;
-  min-height: 42px;
-  border: 1px solid transparent;
+  gap: 6px;
+  padding: 7px 10px;
+  min-height: 40px;
+  border: 1px solid #2b3750;
   border-radius: 8px;
-  color: #91a2b9;
-  font-size: 13px;
-  font-weight: 550;
+  background: #10192a;
+  color: #b8c6dd;
+  font-size: 12px;
+  font-weight: 600;
   transition:
     background 160ms,
     color 160ms,
@@ -40,15 +28,12 @@
 }
 .typeTabs button:hover {
   color: #e4ebf8;
-  background: #ffffff06;
+  background: #172237;
 }
 .typeTabs button[aria-pressed="true"] {
   color: #e6dcff;
-  border-color: #ae8af141;
-  background: #a78bfa1c;
-  box-shadow:
-    0 2px 6px #0003,
-    inset 0 1px 0 #ffffff0a;
+  border-color: #56538a;
+  background: #25234a;
 }
 .typeCount {
   font-size: 10px;
@@ -75,10 +60,10 @@
   gap: 11px;
   min-width: 0;
   padding: 0 4px 0 15px;
-  min-height: 50px;
-  border-radius: 10px;
-  border: 1px solid #2d3a4e;
-  background: #09111d;
+  min-height: 44px;
+  border-radius: 8px;
+  border: 1px solid #293650;
+  background: #0a1121;
   color: #8497b2;
   transition:
     border-color 160ms,
@@ -91,7 +76,7 @@
   min-width: 0;
   flex: 1;
   width: 100%;
-  padding: 13px 0;
+  padding: 9px 0;
   font-size: 14px;
   background: transparent;
   color: #e3ebf6;
@@ -123,13 +108,20 @@
 .mobileToggle {
   display: none;
 }
+.refinements {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  column-gap: 14px;
+}
+.extraControls {
+  margin: 8px 0 0 auto;
+}
 .secondaryRow {
   display: flex;
   align-items: end;
-  gap: 28px;
-  margin-top: 18px;
-  padding-top: 17px;
-  border-top: 1px solid #ffffff09;
+  gap: 12px;
+  margin-top: 8px;
 }
 .classField {
   flex: 1;
@@ -317,8 +309,7 @@
   justify-content: space-between;
   gap: 12px 24px;
   flex-wrap: wrap;
-  padding: 16px 1px;
-  min-height: 64px;
+  padding: 10px 1px 12px;
 }
 .resultCount {
   display: flex;
@@ -396,19 +387,6 @@
   outline-offset: 3px;
 }
 @media (max-width: 1100px) {
-  .primaryRow {
-    gap: 16px;
-  }
-  .typeTabs button {
-    padding: 10px;
-    gap: 6px;
-  }
-  .secondaryRow {
-    gap: 20px;
-  }
-  .attributeField {
-    flex-basis: 235px;
-  }
   .classOptions {
     gap: 6px;
   }
@@ -425,11 +403,23 @@
     width: 10px;
   }
 }
+@media (min-width: 951px) {
+  .classField { display: flex; align-items: center; gap: 6px; }
+  .classField .fieldHeading { margin: 0; }
+  .classField .fieldHeading > span, .classOptions button > span,
+  .classOptions button[aria-pressed="true"] .classCheck, .attributeField .fieldHeading {
+    display: none;
+  }
+  .classOptions { grid-template-columns: repeat(6, 35px); gap: 5px; }
+  .classOptions button { min-height: 36px; padding: 4px; }
+  .attributeField { flex: 0 1 175px; width: 175px; }
+  .attributeTrigger.attributeTrigger { height: 36px; }
+}
 @media (max-width: 950px) {
   .primaryRow {
     flex-direction: column;
     align-items: stretch;
-    gap: 14px;
+    gap: 8px;
   }
   .typeTabs {
     align-self: flex-start;
@@ -437,7 +427,8 @@
   .secondaryRow {
     flex-direction: column;
     align-items: stretch;
-    gap: 15px;
+    gap: 10px;
+    width: 100%;
   }
   .attributeField {
     flex-basis: auto;
@@ -445,12 +436,9 @@
   .classOptions button {
     font-size: 12px;
   }
+  .extraControls { margin-left: 0; }
 }
 @media (max-width: 700px) {
-  .panel {
-    padding: 14px;
-    border-radius: 13px;
-  }
   .typeTabs {
     align-self: stretch;
   }
@@ -510,9 +498,9 @@
     display: none;
   }
   .secondaryRow {
-    margin-top: 14px;
-    padding-top: 10px;
-    gap: 15px;
+    margin-top: 9px;
+    padding-top: 8px;
+    border-top: 1px solid #263147;
   }
   .classOptions {
     grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -539,8 +527,7 @@
     align-items: flex-start;
     flex-direction: column;
     gap: 11px;
-    min-height: 58px;
-    padding: 17px 0;
+    padding: 10px 0 12px;
   }
   .activeFilters {
     gap: 7px;
@@ -554,12 +541,8 @@
   }
 }
 @media (max-width: 380px) {
-  .panel {
-    padding: 10px;
-  }
   .typeTabs {
-    gap: 0;
-    padding: 3px;
+    gap: 4px;
   }
   .typeTabs button {
     font-size: 11px;

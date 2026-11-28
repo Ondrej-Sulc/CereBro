@@ -53,7 +53,7 @@ export default function AboutPage() {
                         </div>
                         <h2 className="text-3xl font-bold text-white mb-4">Join our Discord Server</h2>
                         <p className="text-slate-300 text-lg leading-relaxed">
-                            Need help with setup? Want to see the latest updates or try out new bot commands before they go live? Our community server is the place to be.
+                            Join over 3,500 members to get help with setup, follow project updates, and try new bot commands before they go live.
                         </p>
                     </div>
                     
@@ -102,21 +102,21 @@ export default function AboutPage() {
                     </div>
                     
                     <p className="text-slate-300 text-lg leading-relaxed mb-6">
-                      I&apos;m a developer from Czechia and a passionate MCOC player since 2018. I&apos;ve been a member of my alliance <strong className="text-white">Night Guardians</strong> from the start of my journey. The last few years we have been competing in <strong className="text-white">Tier 1</strong> Alliance Wars.
+                      I&apos;m a developer from Czechia. I started playing Marvel Contest of Champions in 2018 with the <strong className="text-white">Night Guardians</strong>, and we went on to compete in Tier 1 Alliance Wars.
                     </p>
                     
+                    <p className="text-slate-400 leading-relaxed mb-4">
+                      I built spreadsheets for our alliance to plan wars, coordinate Alliance Quest, and track rosters. Updating those rosters by hand got tedious, so I built a Discord bot that could read game screenshots. That bot grew into CereBro.
+                    </p>
+
                     <p className="text-slate-400 leading-relaxed">
-                      I&apos;ve been creating spreadsheets for our alliance since the beginning — for defense planning, Alliance Quest, war attack planning, and roster tracking. Manual roster updates became tedious, so I built a Discord bot to parse game screenshots. What started as a small internal tool for the Night Guardians grew into a full-featured bot and, eventually, the platform you see today: CereBro. It&apos;s the result of years spent collecting champion data and building tools to make alliance management less of a chore and more of a tactical advantage.
+                      I stopped playing shortly after releasing CereBro, and I still catch up with the Night Guardians from time to time. These days, I&apos;m focused on the community that&apos;s grown around CereBro, and I plan to keep working on the project. Thanks to everyone who&apos;s shared feedback or helped someone out on Discord.
                     </p>
 
                     <div className="mt-8 flex flex-wrap justify-center md:justify-start gap-6 opacity-60 italic text-sm">
                       <div className="flex items-center gap-2">
                         <Code className="w-4 h-4 text-indigo-400" />
                         Full-stack Developer
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Gamepad2 className="w-4 h-4 text-indigo-400" />
-                        Summoner since 2018
                       </div>
                       <Link 
                         href="https://github.com/Ondrej-Sulc/CereBro" 

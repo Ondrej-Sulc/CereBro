@@ -5,6 +5,8 @@ import {
   buildNonGlobalAllianceWhere,
   buildPlayerSearchOrderBy,
   buildPlayerSearchWhere,
+  directorySearchHref,
+  getDirectorySearchView,
   normalizeAllianceSearch,
   normalizeDirectoryTab,
   normalizePlayerSearch,
@@ -14,6 +16,25 @@ import {
 } from "./directory-search";
 
 describe("directory search", () => {
+  it("opens the landing on a bare link, grouped results on a new query, and scoped results on legacy links", () => {
+    expect(getDirectorySearchView({})).toBe("landing");
+    expect(getDirectorySearchView({ tab: "all", q: " " })).toBe("landing");
+    expect(getDirectorySearchView({ q: "Nova" })).toBe("all");
+    expect(getDirectorySearchView({ tab: "players" })).toBe("players");
+    expect(getDirectorySearchView({ playerRoster: "with" })).toBe("players");
+    expect(getDirectorySearchView({ tab: "alliances", allianceQuery: "Nova" })).toBe("alliances");
+    expect(getDirectorySearchView({ allianceQuery: "Nova" })).toBe("alliances");
+  });
+
+  it("carries a shared term to focused results while honoring explicit sort and legacy queries", () => {
+    expect(directorySearchHref("  Nova & Co  ")).toBe("/search?q=Nova+%26+Co");
+    expect(directorySearchHref("Nova", "alliances")).toBe("/search?q=Nova&tab=alliances");
+    expect(directorySearchHref("", "players")).toBe("/search?tab=players");
+    expect(normalizePlayerSearch({ q: "Nova", playerQuery: "Doom" })).toMatchObject({ query: "Nova", sort: "match" });
+    expect(normalizePlayerSearch({ q: "Nova", playerSort: "prestige", playerOrder: "desc" })).toMatchObject({ query: "Nova", sort: "prestige", order: "desc" });
+    expect(normalizeAllianceSearch({ allianceQuery: "NOVA" })).toMatchObject({ query: "NOVA", sort: "match" });
+  });
+
   it("normalizes invalid params to defaults", () => {
     expect(normalizeDirectoryTab({ tab: "bad" })).toBe("players");
 

@@ -4,19 +4,16 @@ import { notFound } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getPlayerQuestPlansForProfile } from "@/app/actions/quest-plan-sharing";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
-import { MapPin, ScrollText, Play, Skull, Trophy, Video, Swords, Shield, TrendingUp, Layers, Clock, ChevronRight, CheckCircle2, Users, Repeat2, Map as MapIcon, ArrowRight, Image as ImageIcon, Star } from "lucide-react";
+import { MapPin, Play, Skull, Trophy, Shield, Layers, Clock, ChevronRight, Map as MapIcon, ArrowRight, Star, Heart, ArrowUpRight } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { ChampionAvatar } from "@/components/champion-avatar";
 import { ChampionImages } from "@/types/champion";
-import { getChampionImageUrlOrPlaceholder } from "@/lib/championHelper";
-import { getChampionClassColors } from "@/lib/championClassHelper";
+import { getChampionImageUrlOrPlaceholder, isChampionImages } from "@/lib/championHelper";
 import { projectMcocPrestige } from "@/lib/mcoc-prestige";
 import { normalizeRosterAscensionState } from "@cerebro/core/domain/roster-ascension-state";
 import { cn } from "@/lib/utils";
-import { ChampionClass, Prisma } from "@prisma/client";
+import type { Prisma } from "@prisma/client";
 import { getUserPlayerWithAlliance } from "@/lib/auth-helpers";
 import { cache } from "react";
 import { getYoutubeVideoId } from "@/lib/youtube";
@@ -30,6 +27,8 @@ import {
     normalizePlayerWarInsightScope,
 } from "@/lib/player-war-insights";
 import { PlayerWarInsightsSection } from "./player-war-insights-section";
+import { TopChampionsGallery } from "./top-champions-gallery";
+import { PlayerProfileMetric, PlayerProfileSectionHeading, profileActionClass, profilePrimaryActionClass } from "@/components/player-profile-ui";
 
 interface PlayerProfilePageProps {
     params: Promise<{ id: string }>;
@@ -37,6 +36,10 @@ interface PlayerProfilePageProps {
         warSeason?: string | string[];
     }>;
 }
+
+const profileCollectionRowClass = "group grid min-h-[4.625rem] grid-cols-[4.875rem_minmax(0,1fr)] items-center gap-2.5 rounded-lg px-1 py-2.5 transition-colors hover:bg-slate-900/75 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-cyan-300 sm:min-h-20 sm:grid-cols-[6rem_minmax(0,1fr)] sm:gap-3";
+const profileCollectionThumbnailClass = "relative grid h-[3.1875rem] place-items-center overflow-hidden rounded-lg bg-slate-900 text-slate-400 sm:h-14";
+const profileCollectionTitleClass = "break-words text-sm font-semibold leading-snug text-slate-100 transition-colors group-hover:text-cyan-200";
 
 const getPlayerProfile = cache(async (id: string) => {
     return prisma.player.findUnique({
@@ -114,7 +117,7 @@ export default async function PlayerProfilePage({ params, searchParams }: Player
         },
     } satisfies Prisma.WarFightWhereInput;
 
-    const [questPlans, roster, rawRecentVideos, rawRecentFights, rosterTotal, rosterByStars, rosterAscendedCount, videoTotal, fightAggregate, uniqueWarIds, supporter, pendingInvite, warInsights] = await Promise.all([
+    const [questPlans, roster, rawRecentVideos, rawRecentFights, rosterTotal, rosterByStars, videoTotal, fightAggregate, uniqueWarIds, supporter, pendingInvite, warInsights] = await Promise.all([
         getPlayerQuestPlansForProfile(id),
         prisma.roster.findMany({
             where: { playerId: id },
@@ -176,7 +179,6 @@ export default async function PlayerProfilePage({ params, searchParams }: Player
             _count: { id: true },
             orderBy: { stars: 'desc' }
         }),
-        prisma.roster.count({ where: { playerId: id, isAscended: true } }),
         prisma.warVideo.count({ where: { submittedById: id, status: 'PUBLISHED' } }),
         prisma.warFight.aggregate({
             where: eligibleWarFightWhere,
@@ -227,611 +229,373 @@ export default async function PlayerProfilePage({ params, searchParams }: Player
         return `Active ${Math.floor(months / 12)}y ago`;
     };
 
+    const stats = [
+        ...(player.championPrestige != null ? [{
+            label: "Champion prestige",
+            value: player.championPrestige.toLocaleString("en-US"),
+            description: "Top 30 average",
+        }] : []),
+        {
+            label: "Champions",
+            value: rosterTotal.toLocaleString("en-US"),
+            description: stars6PlusCount > 0 ? (stars7Count > 0 ? stars7Count + " seven-star · " : "") + stars6PlusCount + " six-star or higher" : undefined,
+        },
+        ...(totalFights > 0 ? [{
+            label: "War solo rate",
+            value: soloRate + "%",
+            description: totalWars + " wars · " + totalFights + " fights" + (totalDeaths ? " · " + totalDeaths + (totalDeaths === 1 ? " death" : " deaths") : ""),
+        }] : []),
+        ...(videoTotal > 0 ? [{
+            label: "War videos",
+            value: videoTotal.toLocaleString("en-US"),
+            description: "Published recordings",
+        }] : []),
+    ];
+    const archiveHref = "/war-videos?player=" + encodeURIComponent(player.ingameName);
+    const featuredChampion = roster.find(entry => isChampionImages(entry.champion.images))?.champion;
+    const profileSections = [
+        { label: "Champions", href: "#top-champions" },
+        ...(recentFights.length || recentVideos.length ? [{ label: "War activity", href: recentFights.length ? "#recent-war-fights" : "#recent-war-videos" }] : []),
+        ...(questPlans.length ? [{ label: "Quest plans", href: "#shared-quest-plans" }] : []),
+    ];
+
     return (
-        <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-8">
-            {/* Profile Header */}
-            <div className="relative bg-slate-900/50 border border-slate-800/60 rounded-2xl overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 via-transparent to-transparent pointer-events-none" />
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-indigo-500/40 via-purple-500/20 to-transparent" />
-                <div className="relative p-5 md:p-7 flex flex-col sm:flex-row items-start sm:items-center gap-5">
-                    <Avatar className="h-20 w-20 md:h-24 md:w-24 border-2 border-slate-700 ring-4 ring-slate-900 shadow-2xl shrink-0">
-                        <AvatarImage src={player.avatar || undefined} />
-                        <AvatarFallback className="text-2xl bg-slate-800 font-black">{player.ingameName.substring(0, 2).toUpperCase()}</AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                        <h1 className="text-3xl md:text-5xl font-black text-white tracking-tight leading-none">{player.ingameName}</h1>
-                        <div className="flex flex-wrap items-center gap-2.5 mt-3">
+        <div className="mx-auto max-w-[1240px] space-y-6 px-4 pb-12 pt-5 sm:space-y-8 sm:px-6 sm:pt-7 lg:px-8">
+            <header className="overflow-hidden rounded-2xl border border-slate-800 bg-[#0a131c] sm:rounded-3xl">
+                <div className="relative isolate flex min-h-[13rem] items-center overflow-hidden bg-[radial-gradient(ellipse_at_88%_40%,#18424a,transparent_62%),linear-gradient(120deg,#0a1922,#061119)] px-4 py-5 sm:min-h-[15.5rem] sm:px-8 sm:py-7">
+                    {featuredChampion && (
+                        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 -right-12 -z-10 w-[80%] [mask-image:linear-gradient(to_right,transparent,black_28%)] sm:-right-8 sm:w-[58%]">
+                            <Image
+                                src={getChampionImageUrlOrPlaceholder(featuredChampion.images, "full", "hero")}
+                                alt=""
+                                fill
+                                sizes="(min-width: 1024px) 650px, (min-width: 640px) 60vw, 80vw"
+                                className="object-cover object-[55%_28%] opacity-75 sm:object-[65%_10%] sm:opacity-90"
+                                loading="eager"
+                            />
+                        </div>
+                    )}
+                    <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(6,17,25,0.98)_0%,rgba(6,17,25,0.9)_35%,rgba(6,17,25,0.27)_73%,rgba(6,17,25,0.04)_100%),linear-gradient(0deg,rgba(6,17,25,0.75),transparent_70%)]" />
+                    <div className="min-w-0 max-w-lg flex-1 space-y-4">
+                        <div className="flex min-w-0 items-center gap-3.5 sm:gap-4">
+                            <Avatar className="size-12 shrink-0 rounded-xl border border-cyan-200/25 bg-cyan-300/10 text-cyan-100 sm:size-16 sm:rounded-2xl">
+                                <AvatarImage src={player.avatar || undefined} alt="" />
+                                <AvatarFallback className="rounded-xl bg-cyan-300/10 text-base font-semibold sm:rounded-2xl sm:text-xl">{player.ingameName.slice(0, 2).toUpperCase()}</AvatarFallback>
+                            </Avatar>
+                            <div className="min-w-0">
+                                <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-cyan-200">Player profile</p>
+                                <h1 className="mt-0.5 break-words text-[1.75rem] font-bold leading-tight tracking-tight text-white sm:text-5xl">{player.ingameName}</h1>
+                            </div>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-x-2.5 gap-y-1.5 text-xs text-slate-300 sm:text-sm">
                             {player.alliance && (
-                                <Link href={`/alliance/${player.alliance.id}`} className="flex items-center gap-1.5 text-sm text-slate-300 hover:text-sky-400 transition-colors font-semibold">
-                                    <MapPin className="w-3.5 h-3.5" />
-                                    {player.alliance.name}
+                                <Link href={"/alliance/" + player.alliance.id} className="inline-flex min-w-0 items-center gap-1.5 rounded-sm font-medium text-cyan-100 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
+                                    <MapPin className="size-3.5 shrink-0" aria-hidden="true" />
+                                    <span className="break-words">{player.alliance.name}</span>
                                 </Link>
                             )}
-                            {player.isOfficer && (
-                                <Badge className="bg-amber-950/50 border border-amber-700/50 text-amber-400 text-[10px] font-black uppercase tracking-wide px-2">
-                                    Officer
-                                </Badge>
-                            )}
-                            {supporter && (
-                                <Badge className="bg-amber-500/10 border border-amber-500/30 text-amber-300 text-[10px] font-black uppercase tracking-wide px-2">
-                                    Supporter
-                                </Badge>
-                            )}
-                            {player.battlegroup && (
-                                <Badge variant="outline" className="border-slate-700 text-slate-400 text-[10px] font-black uppercase">
-                                    BG {player.battlegroup}
-                                </Badge>
-                            )}
-                            {lastActiveDate && (
-                                <span className="flex items-center gap-1 text-[11px] text-slate-500">
-                                    <Clock className="w-3 h-3" />
-                                    {formatRelativeDate(lastActiveDate)}
-                                </span>
-                            )}
+                            {player.battlegroup ? <span className="rounded-md border border-white/15 bg-slate-950/45 px-1.5 py-0.5 text-xs font-medium">BG {player.battlegroup}</span> : null}
+                            {player.isOfficer && <span className="text-xs font-medium text-amber-200">Officer</span>}
+                            {supporter && <span className="inline-flex items-center gap-1 text-xs font-medium text-amber-200"><Heart className="size-3" aria-hidden="true" /> Supporter</span>}
+                            {lastActiveDate && <span className="inline-flex items-center gap-1 whitespace-nowrap text-xs text-slate-300"><Clock className="size-3" aria-hidden="true" /> {formatRelativeDate(lastActiveDate)}</span>}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <Link href={"/player/" + id + "/roster"} className={cn(profilePrimaryActionClass, "bg-cyan-300 text-slate-950 hover:bg-cyan-200 focus-visible:ring-cyan-200")}>
+                                <Layers className="size-4" aria-hidden="true" /> Full roster
+                            </Link>
+                            {canInvitePlayer && <InvitePlayerButton playerId={player.id} initialPending={Boolean(pendingInvite)} />}
                         </div>
                     </div>
-                    {canInvitePlayer && (
-                        <div className="w-full sm:w-auto">
-                            <InvitePlayerButton playerId={player.id} initialPending={Boolean(pendingInvite)} />
-                        </div>
+                    {featuredChampion && (
+                        <p className="absolute bottom-4 right-5 hidden items-center gap-2 rounded-full border border-white/15 bg-slate-950/65 px-3 py-1.5 text-xs text-slate-200 backdrop-blur-sm sm:inline-flex">
+                            <Star className="size-3 text-cyan-200" aria-hidden="true" /> {featuredChampion.name}
+                        </p>
                     )}
                 </div>
-            </div>
+                <dl className="grid grid-cols-2 gap-px border-t border-slate-800 bg-slate-800 sm:grid-flow-col sm:auto-cols-fr sm:grid-cols-none">
+                    {stats.map(({ label, value, description }, index) => (
+                        <PlayerProfileMetric
+                            key={label}
+                            label={label}
+                            value={value}
+                            description={description}
+                            className={cn("bg-[#0a131c] sm:px-6", index === stats.length - 1 && stats.length % 2 === 1 && "col-span-2 sm:col-span-1")}
+                        />
+                    ))}
+                </dl>
+            </header>
 
-            {/* Stats Grid */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
-                {/* Prestige */}
-                {player.championPrestige && (
-                    <div className="col-span-2 sm:col-span-1 bg-amber-950/20 border border-amber-900/30 rounded-xl p-4 flex flex-col gap-2">
-                        <div className="flex items-center gap-1.5 text-amber-500/70">
-                            <TrendingUp className="w-3.5 h-3.5" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Prestige</span>
-                        </div>
-                        <div className="text-3xl font-black font-mono text-amber-100 leading-none">{player.championPrestige.toLocaleString('en-US')}</div>
-                        <div className="text-[10px] text-amber-700 font-semibold">Top 30 avg</div>
-                    </div>
-                )}
-
-                {/* Roster */}
-                <div className="bg-purple-950/20 border border-purple-900/30 rounded-xl p-4 flex flex-col gap-2">
-                    <div className="flex items-center gap-1.5 text-purple-400/70">
-                        <Layers className="w-3.5 h-3.5" />
-                        <span className="text-[10px] font-black uppercase tracking-widest">Roster</span>
-                    </div>
-                    <div className="text-3xl font-black font-mono text-purple-100 leading-none">{rosterTotal.toLocaleString()}</div>
-                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-auto">
-                        {stars7Count > 0 && (
-                            <span className="text-[10px] font-bold text-purple-400">{stars7Count} × 7★</span>
-                        )}
-                        <span className="text-[10px] font-bold text-yellow-500/80">{stars6PlusCount} × 6★+</span>
-                    </div>
-                </div>
-
-                {/* Wars */}
-                {totalWars > 0 && (
-                    <div className="bg-slate-900/40 border border-slate-800/60 rounded-xl p-4 flex flex-col gap-2">
-                        <div className="flex items-center gap-1.5 text-amber-400/70">
-                            <Shield className="w-3.5 h-3.5" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Wars</span>
-                        </div>
-                        <div className="text-3xl font-black font-mono text-slate-200 leading-none">{totalWars}</div>
-                        <div className="text-[10px] text-slate-500 font-semibold">{totalFights} total fights</div>
-                    </div>
-                )}
-
-                {/* Solo Rate */}
-                {totalFights > 0 && (
-                    <div className={cn(
-                        "border rounded-xl p-4 flex flex-col gap-2",
-                        soloRate >= 80 ? "bg-emerald-950/20 border-emerald-900/30" :
-                        soloRate >= 60 ? "bg-amber-950/20 border-amber-900/30" :
-                                         "bg-red-950/20 border-red-900/30"
-                    )}>
-                        <div className={cn(
-                            "flex items-center gap-1.5",
-                            soloRate >= 80 ? "text-emerald-500/70" :
-                            soloRate >= 60 ? "text-amber-500/70" : "text-red-500/70"
-                        )}>
-                            <Swords className="w-3.5 h-3.5" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Solo Rate</span>
-                        </div>
-                        <div className={cn(
-                            "text-3xl font-black font-mono leading-none",
-                            soloRate >= 80 ? "text-emerald-400" :
-                            soloRate >= 60 ? "text-amber-400" : "text-red-400"
-                        )}>{soloRate}%</div>
-                        {totalDeaths > 0 && (
-                            <div className="flex items-center gap-1 text-[10px] text-red-400/80 font-semibold">
-                                <Skull className="w-3 h-3" /> {totalDeaths} death{totalDeaths > 1 ? 's' : ''}
-                            </div>
-                        )}
-                    </div>
-                )}
-
-                {/* Videos */}
-                {videoTotal > 0 && (
-                    <div className="bg-red-950/10 border border-red-900/20 rounded-xl p-4 flex flex-col gap-2">
-                        <div className="flex items-center gap-1.5 text-red-400/70">
-                            <Video className="w-3.5 h-3.5" />
-                            <span className="text-[10px] font-black uppercase tracking-widest">Videos</span>
-                        </div>
-                        <div className="text-3xl font-black font-mono text-red-100 leading-none">{videoTotal}</div>
-                        <div className="text-[10px] text-red-900/80 font-semibold">submitted</div>
-                    </div>
-                )}
-            </div>
-
-            {warInsights && (
-                <PlayerWarInsightsSection
-                    playerName={player.ingameName}
-                    insights={warInsights}
-                />
+            {profileSections.length > 1 && (
+                <nav aria-label="Profile sections" className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-slate-800 px-1 sm:gap-x-6">
+                    {profileSections.map(({ label, href }) => (
+                        <a key={href} href={href} className="inline-flex min-h-10 items-center gap-1.5 rounded-sm text-xs font-medium text-slate-300 transition-colors hover:text-cyan-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-300 sm:text-sm">
+                            {label} <ArrowUpRight className="size-3 text-slate-500" aria-hidden="true" />
+                        </a>
+                    ))}
+                </nav>
             )}
 
-            {/* Top Roster Section */}
-            <div>
-                <div className="flex items-center gap-2 mb-4">
-                    <div className="h-6 w-1 bg-purple-500 rounded-full" />
-                    <h2 className="text-sm font-black text-purple-400 uppercase tracking-[0.2em]">Top Champions</h2>
-                    {roster.length > 0 && (
-                        <span className="text-[10px] font-black text-slate-600 uppercase tracking-widest">Top {roster.length}</span>
+            <div className={cn("grid items-start gap-6", recentFights.length > 0 && "lg:grid-cols-[minmax(0,1.62fr)_minmax(21rem,1fr)] lg:gap-7")}>
+                <section aria-labelledby="top-champions" className="min-w-0">
+                    <PlayerProfileSectionHeading title="Top champions" id="top-champions" />
+                    {roster.length > 0 ? (
+                        <TopChampionsGallery count={roster.length} className={!recentFights.length ? "lg:grid-cols-10" : undefined}>
+                            {roster.map(r => {
+                                const prestige = projectMcocPrestige({
+                                    prestigeData: r.champion.prestigeData,
+                                    stat: { rarity: r.stars, rank: r.rank, prestige: null },
+                                    sigLevel: r.sigLevel,
+                                    ascensionLevel: normalizeRosterAscensionState(r).ascensionLevel,
+                                });
+                                return (
+                                    <li key={r.id} className="flex min-w-0 flex-col gap-1.5">
+                                        <ChampionAvatar
+                                            name={r.champion.name}
+                                            images={r.champion.images as unknown as ChampionImages}
+                                            championClass={r.champion.class}
+                                            stars={r.stars}
+                                            rank={r.rank}
+                                            isAwakened={r.isAwakened}
+                                            isAscended={r.isAscended}
+                                            ascensionLevel={r.ascensionLevel || undefined}
+                                            sigLevel={r.sigLevel}
+                                            size="lg"
+                                            className="aspect-square h-auto w-full rounded-lg border-white/15 shadow-none"
+                                        />
+                                        <div className="w-full px-0.5 pb-0.5 text-center">
+                                            <p title={r.champion.name} className="line-clamp-2 break-words text-xs font-semibold leading-tight text-slate-100">{r.champion.name}</p>
+                                            {prestige && (
+                                                <p className="mt-1 text-xs font-medium tabular-nums text-cyan-100">{prestige.toLocaleString("en-US")}</p>
+                                            )}
+                                        </div>
+                                    </li>
+                                );
+                            })}
+                        </TopChampionsGallery>
+                    ) : (
+                        <div className="flex items-center gap-3 rounded-2xl border border-dashed border-slate-800 bg-slate-900/40 p-5">
+                            <Layers className="size-5 text-indigo-300" aria-hidden="true" />
+                            <p className="text-sm text-slate-400">No champions have been added to this roster yet.</p>
+                        </div>
                     )}
-                    <Link
-                        href={`/player/${id}/roster`}
-                        className="ml-auto flex items-center gap-1.5 text-xs bg-purple-950/40 border border-purple-800/40 hover:border-purple-600/60 hover:bg-purple-950/60 text-purple-300 hover:text-purple-200 px-3 py-1.5 rounded-lg transition-all font-black uppercase tracking-wide"
-                    >
-                        Full Roster
-                        <ChevronRight className="w-3.5 h-3.5" />
-                    </Link>
-                </div>
-                {roster.length > 0 ? (
-                    <div className="grid grid-cols-5 lg:grid-cols-10 gap-2">
-                        {roster.map(r => {
-                            const prestige = projectMcocPrestige({
-                                prestigeData: r.champion.prestigeData,
-                                stat: { rarity: r.stars, rank: r.rank, prestige: null },
-                                sigLevel: r.sigLevel,
-                                ascensionLevel: normalizeRosterAscensionState(r).ascensionLevel,
-                            });
-                            return (
-                                <div key={r.id} className="flex flex-col items-center gap-1.5">
-                                    <ChampionAvatar
-                                        name={r.champion.name}
-                                        images={r.champion.images as unknown as ChampionImages}
-                                        championClass={r.champion.class}
-                                        stars={r.stars}
-                                        rank={r.rank}
-                                        isAwakened={r.isAwakened}
-                                        isAscended={r.isAscended}
-                                        ascensionLevel={r.ascensionLevel || undefined}
-                                        sigLevel={r.sigLevel}
-                                        size="lg"
-                                        className="w-full h-auto aspect-square"
-                                    />
-                                    <div className="text-center w-full px-0.5">
-                                        <p className="text-[9px] text-slate-400 font-semibold truncate leading-tight">{r.champion.name}</p>
-                                        {prestige && (
-                                            <p className="text-[10px] font-black font-mono text-amber-400 leading-tight">{prestige.toLocaleString()}</p>
-                                        )}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                ) : (
-                    <div className="flex flex-col items-center justify-center p-8 bg-purple-950/10 border border-purple-900/20 rounded-2xl">
-                        <Layers className="w-8 h-8 text-purple-500/30 mb-2" />
-                        <p className="text-sm font-black text-slate-500 uppercase tracking-widest">No Roster Available</p>
-                    </div>
-                )}
-            </div>
+                </section>
 
-            {/* Recent War Fights — most active content, shown first */}
-            {recentFights.length > 0 && (() => {
-                const warGroups: { war: typeof recentFights[0]['war']; fights: typeof recentFights }[] = [];
-                const warIndexMap: Record<string, number> = {};
-                for (const fight of recentFights) {
-                    if (warIndexMap[fight.war.id] === undefined) {
-                        warIndexMap[fight.war.id] = warGroups.length;
-                        warGroups.push({ war: fight.war, fights: [] });
+                {recentFights.length > 0 && (() => {
+                    const fightsByWar = new Map<string, typeof recentFights>();
+                    for (const fight of recentFights) {
+                        const warFights = fightsByWar.get(fight.war.id) ?? [];
+                        warFights.push(fight);
+                        fightsByWar.set(fight.war.id, warFights);
                     }
-                    warGroups[warIndexMap[fight.war.id]].fights.push(fight);
-                }
-                return (
-                    <div>
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="h-6 w-1 bg-amber-500 rounded-full" />
-                            <h2 className="text-sm font-black text-amber-400 uppercase tracking-[0.2em]">Recent War Fights</h2>
-                            <Link href={`/war-videos?player=${encodeURIComponent(player.ingameName)}`} className="text-xs text-slate-500 hover:text-sky-400 ml-auto transition-colors">View All in Archive</Link>
-                        </div>
-                        <div className="space-y-3">
-                            {warGroups.map(({ war, fights: warFights }) => {
-                                const warDeaths = warFights.reduce((s, f) => s + f.death, 0);
-                                return (
-                                    <Card key={war.id} className="bg-slate-950/40 border-slate-800/60 overflow-hidden">
-                                        <div className="py-3 px-4 border-b border-slate-800/40 bg-slate-900/40 flex items-center justify-between gap-4">
-                                            <div className="flex items-center gap-3 min-w-0">
-                                                <div className="w-10 h-10 rounded bg-slate-950 border border-slate-800 flex items-center justify-center font-mono font-black text-sm text-amber-500 shrink-0">
-                                                    {war.warNumber || '-'}
-                                                </div>
-                                                <div className="flex flex-col min-w-0">
-                                                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none mb-0.5">S{war.season} · T{war.warTier}</span>
-                                                    <span className="text-sm font-black uppercase italic text-slate-200 tracking-tight truncate">{war.alliance.name}</span>
-                                                </div>
-                                            </div>
-                                            <div className="flex items-center gap-4 shrink-0">
-                                                <div className="flex flex-col items-end">
-                                                    <span className="text-[10px] font-black text-slate-500 uppercase leading-none mb-0.5">Fights</span>
-                                                    <span className="text-sm font-mono font-black text-slate-300">{warFights.length}</span>
-                                                </div>
-                                                {warDeaths > 0 ? (
-                                                    <div className="flex items-center gap-1.5 text-red-400 text-xs font-black uppercase italic">
-                                                        <Skull className="w-3.5 h-3.5" />
-                                                        {warDeaths} Death{warDeaths > 1 ? 's' : ''}
+
+                    return (
+                        <section aria-labelledby="recent-war-fights" className="min-w-0">
+                            <PlayerProfileSectionHeading
+                                title="Recent war fights"
+                                id="recent-war-fights"
+                                action={<Link href={archiveHref} className={cn(profileActionClass, "min-h-9 px-2.5 text-xs")}>War archive <ArrowUpRight className="size-3" aria-hidden="true" /></Link>}
+                            />
+                            <div className="space-y-2.5">
+                                {[...fightsByWar.values()].map(warFights => {
+                                    const { war } = warFights[0];
+                                    const deaths = warFights.reduce((count, fight) => count + fight.death, 0);
+                                    return (
+                                        <section key={war.id}>
+                                            <div className="flex items-center justify-between gap-2 border-b border-slate-800 pb-2 pt-1">
+                                                <div className="flex min-w-0 items-center gap-2.5">
+                                                    <Shield className="ml-1.5 size-4 shrink-0 text-cyan-200/80" aria-hidden="true" />
+                                                    <div className="min-w-0">
+                                                        <h3 className="break-words text-sm font-semibold leading-snug text-slate-100">{war.alliance.name}</h3>
+                                                        <p className="text-[11px] text-slate-400">Season {war.season}{war.warNumber ? " · War " + war.warNumber : ""} · Tier {war.warTier}</p>
                                                     </div>
-                                                ) : (
-                                                    <div className="flex items-center gap-1.5 text-emerald-400 text-xs font-black uppercase italic">
-                                                        <Trophy className="w-3.5 h-3.5" />
-                                                        Solo
-                                                    </div>
-                                                )}
+                                                </div>
+                                                <p className="flex shrink-0 flex-wrap justify-end gap-x-2 text-right text-[11px] text-slate-400">
+                                                    <span>{warFights.length} {warFights.length === 1 ? "fight" : "fights"}</span>
+                                                    {deaths > 0 && <span className="text-amber-300">{deaths} {deaths === 1 ? "death" : "deaths"}</span>}
+                                                </p>
                                             </div>
-                                        </div>
-                                        <div className="divide-y divide-slate-800/30">
-                                            {warFights.map(fight => {
-                                                const isDeath = fight.death > 0;
-                                                const attackerImages = fight.attacker?.images as unknown as ChampionImages | undefined;
-                                                const defenderImages = fight.defender?.images as unknown as ChampionImages | undefined;
-                                                const attackerColors = getChampionClassColors(fight.attacker?.class as ChampionClass);
-                                                const defenderColors = getChampionClassColors(fight.defender?.class as ChampionClass);
-                                                return (
-                                                    <div key={fight.id} className="flex items-center justify-between gap-3 py-2.5 px-4 hover:bg-slate-800/20 transition-colors">
-                                                        <div className="flex items-center gap-3 min-w-0">
-                                                            <div className="w-10 h-10 rounded-lg bg-slate-950 border border-slate-800 flex items-center justify-center font-mono font-black text-sm text-slate-500 shrink-0">
-                                                                {fight.node.nodeNumber}
-                                                            </div>
-                                                            <div className="flex items-center bg-slate-900/80 rounded-full pl-1.5 pr-4 py-1.5 border border-slate-800 shadow-inner min-w-0">
-                                                                <div className="relative shrink-0">
-                                                                    <div className={cn("absolute inset-0 rounded-full blur-sm opacity-40", attackerColors.bg)} />
-                                                                    <Avatar className={cn("h-9 w-9 border-none bg-slate-950 shadow-md relative", attackerColors.border)}>
-                                                                        {attackerImages && <AvatarImage src={getChampionImageUrlOrPlaceholder(attackerImages, "64")} />}
-                                                                        <AvatarFallback className="text-xs font-black">{fight.attacker?.name.substring(0, 2).toUpperCase() ?? '?'}</AvatarFallback>
+                                            <ul className="divide-y divide-slate-800/75">
+                                                {warFights.map(fight => (
+                                                    <li key={fight.id} className="grid min-h-12 grid-cols-[1.875rem_minmax(0,1fr)_3.5rem] items-center gap-2 py-1.5 transition-colors hover:bg-slate-800/30">
+                                                        <div className="grid justify-items-center text-slate-400">
+                                                            <span className="text-[9px] uppercase tracking-wide">Node</span>
+                                                            <span className="text-sm font-semibold tabular-nums text-slate-200">{fight.node.nodeNumber}</span>
+                                                        </div>
+                                                        <div className="grid min-w-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-center gap-1 sm:gap-1.5">
+                                                            <ArrowRight className="col-start-2 row-start-1 size-3 text-slate-500" aria-hidden="true" />
+                                                            {([["Attacker", fight.attacker], ["Defender", fight.defender]] as const).map(([side, champion]) => (
+                                                                <div key={side} className={cn(
+                                                                    "row-start-1 flex min-w-0 items-center gap-1 sm:gap-1.5",
+                                                                    side === "Attacker" ? "col-start-1 font-semibold text-slate-100" : "col-start-3 font-medium text-slate-300"
+                                                                )}>
+                                                                    <Avatar className="size-5 shrink-0 rounded-md border border-slate-700 max-[359px]:size-4 sm:size-6">
+                                                                        {champion && <AvatarImage src={getChampionImageUrlOrPlaceholder(champion.images, "64")} alt="" />}
+                                                                        <AvatarFallback className="rounded-md text-[9px]">{champion?.name.slice(0, 2).toUpperCase() ?? "?"}</AvatarFallback>
                                                                     </Avatar>
-                                                                </div>
-                                                                <span className="text-[9px] font-black text-slate-600 uppercase mx-3 shrink-0">VS</span>
-                                                                <div className="flex items-center gap-2.5 overflow-hidden">
-                                                                    <div className="relative shrink-0">
-                                                                        <div className={cn("absolute inset-0 rounded-full blur-sm opacity-40", defenderColors.bg)} />
-                                                                        <Avatar className={cn("h-9 w-9 border-none bg-slate-950 shadow-md relative", defenderColors.border)}>
-                                                                            {defenderImages && <AvatarImage src={getChampionImageUrlOrPlaceholder(defenderImages, "64")} />}
-                                                                            <AvatarFallback className="text-xs font-black">{fight.defender?.name.substring(0, 2).toUpperCase() ?? '?'}</AvatarFallback>
-                                                                        </Avatar>
-                                                                    </div>
-                                                                    <span className={cn("text-sm font-black uppercase italic tracking-tighter whitespace-nowrap pr-2", defenderColors.text)}>
-                                                                        {fight.defender?.name || '?'}
+                                                                    <span title={champion?.name} className="min-w-0 text-[11px] leading-tight [overflow-wrap:anywhere]">
+                                                                        <span className="sr-only">{side}: </span>{champion?.name || "Unknown"}
                                                                     </span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex items-center gap-2.5 shrink-0">
-                                                            {isDeath ? (
-                                                                <div className="flex items-center gap-1 text-red-400 text-xs font-black uppercase italic">
-                                                                    <Skull className="w-3 h-3" /> Death
-                                                                </div>
-                                                            ) : (
-                                                                <div className="flex items-center gap-1 text-emerald-400 text-xs font-black uppercase italic">
-                                                                    <Trophy className="w-3 h-3" /> Solo
-                                                                </div>
-                                                            )}
-                                                            {fight.video && (
-                                                                <Link
-                                                                    href={`/war-videos/${fight.video.id}`}
-                                                                    className="p-1.5 bg-sky-600/20 border border-sky-600/50 rounded-full hover:bg-sky-600 text-sky-300 hover:text-white transition-all shadow-md"
-                                                                    title="Watch Video"
-                                                                >
-                                                                    <Video className="w-3.5 h-3.5" />
-                                                                </Link>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    </Card>
-                                );
-                            })}
-                        </div>
-                    </div>
-                );
-            })()}
-
-            {/* Videos + Quest Plans */}
-            {(recentVideos.length > 0 || questPlans.length > 0) && (
-            <div className={cn("grid grid-cols-1 gap-8", recentVideos.length > 0 && questPlans.length > 0 ? "lg:grid-cols-2" : "")}>
-                {/* Recent War Videos */}
-                {recentVideos.length > 0 && (
-                    <div>
-                        <div className="flex items-center gap-2 mb-4">
-                            <div className="h-6 w-1 bg-red-500 rounded-full" />
-                            <h2 className="text-sm font-black text-red-400 uppercase tracking-[0.2em]">Recent Videos</h2>
-                            <Link href={`/war-videos?player=${encodeURIComponent(player.ingameName)}`} className="text-xs text-slate-500 hover:text-sky-400 ml-auto transition-colors">View All</Link>
-                        </div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            {recentVideos.map(video => {
-                                const war = video.fights[0]?.war;
-                                const fighters = video.fights.map(f => f.attacker).filter(Boolean);
-                                const defenders = video.fights.map(f => f.defender).filter(Boolean);
-                                
-                                const uniqueFighters = Array.from(new Map(fighters.map(f => [f!.id, f])).values());
-                                const uniqueDefenders = Array.from(new Map(defenders.map(f => [f!.id, f])).values());
-                                
-                                const maxVisible = 4;
-                                const visibleFighters = uniqueFighters.slice(0, maxVisible);
-                                const extraFighters = uniqueFighters.length - maxVisible;
-                                
-                                const visibleDefenders = uniqueDefenders.slice(0, maxVisible);
-                                const extraDefenders = uniqueDefenders.length - maxVisible;
-
-                                const youtubeId = getYoutubeVideoId(video.url);
-                                return (
-                                    <Link key={video.id} href={`/war-videos/${video.id}`} className="block h-full">
-                                        <Card className="bg-gradient-to-b from-slate-900 to-[#05090f] transition-all cursor-pointer group overflow-hidden flex flex-col h-full relative before:absolute before:inset-0 before:bg-gradient-to-b before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity border-slate-800 hover:border-red-700/50 hover:shadow-[0_0_30px_rgba(220,38,38,0.1)] before:from-red-500/5">
-                                            {/* Video Thumbnail Area */}
-                                            <div className="relative h-32 w-full overflow-hidden bg-slate-950 border-b border-slate-800 shrink-0">
-                                                {youtubeId ? (
-                                                    <img 
-                                                        src={`https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`}
-                                                        alt="Thumbnail"
-                                                        className="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500 group-hover:scale-105"
-                                                    />
-                                                ) : (
-                                                    <div className="absolute inset-0 flex items-center justify-center opacity-20">
-                                                        <Video className="w-16 h-16 text-red-500" />
-                                                    </div>
-                                                )}
-                                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
-                                                
-                                                {/* Play Button Overlay */}
-                                                <div className="absolute inset-0 flex items-center justify-center">
-                                                    <div className="w-12 h-12 rounded-full bg-red-600/80 backdrop-blur-sm border border-red-500 flex items-center justify-center shadow-[0_0_20px_rgba(220,38,38,0.5)] group-hover:scale-110 transition-transform duration-300">
-                                                        <Play className="w-5 h-5 text-white ml-1" fill="currentColor" />
-                                                    </div>
-                                                </div>
-
-                                                {/* War Badge Top Left */}
-                                                {war && (
-                                                    <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-full border border-red-500/30 shadow-xl">
-                                                        <Shield className="w-3 h-3 text-red-400" />
-                                                        <span className="text-[9px] font-black text-red-100 uppercase tracking-widest">
-                                                            S{war.season} • {war.warNumber ? `W${war.warNumber}` : 'O'} • T{war.warTier}
-                                                        </span>
-                                                    </div>
-                                                )}
-                                                
-                                                {/* Fights Badge Bottom Right */}
-                                                <div className="absolute bottom-2 right-2 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-2 py-1 rounded-full border border-white/10 shadow-xl">
-                                                    <Swords className="w-3 h-3 text-slate-300" />
-                                                    <span className="text-[10px] font-black text-slate-200 uppercase tracking-tight">{video.fights.length} {video.fights.length === 1 ? 'Fight' : 'Fights'}</span>
-                                                </div>
-                                            </div>
-
-                                            {/* Content */}
-                                            <CardContent className="p-4 flex flex-col flex-1 gap-3">
-                                                {war && (
-                                                    <h3 className="text-sm font-black group-hover:text-red-400 transition-colors line-clamp-1 uppercase tracking-tight leading-tight text-slate-200 mb-1">
-                                                        {war.alliance.name}
-                                                    </h3>
-                                                )}
-
-                                                {(uniqueFighters.length > 0 || uniqueDefenders.length > 0) && (
-                                                    <div className="flex items-center justify-between gap-2 bg-slate-950/50 rounded-lg p-1.5 border border-slate-800/50 shadow-inner">
-                                                        {uniqueFighters.length > 0 && (
-                                                            <div className="flex gap-1.5 items-center flex-wrap">
-                                                                {visibleFighters.map((fighter, i) => (
-                                                                    <div key={`a-${i}`} className="relative shrink-0">
-                                                                        <Avatar className="h-7 w-7 border border-slate-700 bg-slate-900 shadow-md hover:scale-110 transition-transform z-10 hover:z-20">
-                                                                            {fighter!.images && <AvatarImage src={getChampionImageUrlOrPlaceholder(fighter!.images as unknown as ChampionImages, "64")} />}
-                                                                            <AvatarFallback className="text-[9px] font-black">{fighter!.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                                                                        </Avatar>
-                                                                    </div>
-                                                                ))}
-                                                                {extraFighters > 0 && (
-                                                                    <div className="h-7 w-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center shadow-md z-10 shrink-0">
-                                                                        <span className="text-[9px] font-black text-slate-300">+{extraFighters}</span>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                        
-                                                        {uniqueFighters.length > 0 && uniqueDefenders.length > 0 && (
-                                                            <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest px-1 shrink-0">VS</span>
-                                                        )}
-
-                                                        {uniqueDefenders.length > 0 && (
-                                                            <div className="flex gap-1.5 items-center flex-wrap justify-end">
-                                                                {visibleDefenders.map((defender, i) => (
-                                                                    <div key={`d-${i}`} className="relative shrink-0">
-                                                                        <Avatar className="h-7 w-7 border border-slate-700 bg-slate-900 shadow-md hover:scale-110 transition-transform z-10 hover:z-20">
-                                                                            {defender!.images && <AvatarImage src={getChampionImageUrlOrPlaceholder(defender!.images as unknown as ChampionImages, "64")} />}
-                                                                            <AvatarFallback className="text-[9px] font-black">{defender!.name.substring(0, 2).toUpperCase()}</AvatarFallback>
-                                                                        </Avatar>
-                                                                    </div>
-                                                                ))}
-                                                                {extraDefenders > 0 && (
-                                                                    <div className="h-7 w-7 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center shadow-md z-10 shrink-0">
-                                                                        <span className="text-[9px] font-black text-slate-300">+{extraDefenders}</span>
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                )}
-
-                                                {/* Footer */}
-                                                <div className="mt-auto pt-3 border-t border-slate-900/50 flex items-center justify-between">
-                                                    <div className="flex items-center gap-1.5 text-slate-500 group-hover:text-red-500 transition-colors">
-                                                        <Clock className="w-3 h-3" />
-                                                        <span className="text-[9px] font-bold uppercase tracking-wider">{new Date(video.createdAt).toLocaleDateString()}</span>
-                                                    </div>
-                                                    <div className="h-7 w-7 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center group-hover:bg-red-600 group-hover:border-red-500 group-hover:scale-110 transition-all shadow-inner group-hover:shadow-[0_0_15px_rgba(220,38,38,0.5)]">
-                                                        <ArrowRight className="h-3 w-3 text-slate-400 group-hover:text-white" />
-                                                    </div>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-                                    </Link>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
-
-                {/* Quest Plans Section */}
-                {questPlans.length > 0 && (
-                <div>
-                    <div className="flex items-center gap-2 mb-4">
-                        <div className="h-6 w-1 bg-sky-500 rounded-full" />
-                        <h2 className="text-sm font-black text-sky-400 uppercase tracking-[0.2em]">Quest Plans</h2>
-                        <Badge variant="secondary" className="text-[10px] h-4 ml-1">{questPlans.length}</Badge>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {questPlans.slice(0, 4).map(plan => {
-                            const isCompleted = plan.encounters.length >= plan.questPlan.encounters.length && plan.questPlan.encounters.length > 0;
-                            return (
-                            <Link key={plan.id} href={`/player/${id}/quests/${plan.questPlan.id}`} className="block h-full">
-                                <Card className={cn(
-                                    "bg-gradient-to-b from-slate-900 to-[#05090f] transition-all cursor-pointer group overflow-hidden flex flex-col h-full relative before:absolute before:inset-0 before:bg-gradient-to-b before:to-transparent before:opacity-0 hover:before:opacity-100 before:transition-opacity",
-                                    isCompleted
-                                        ? "border-emerald-800/50 hover:border-emerald-700/50 hover:shadow-[0_0_30px_rgba(52,211,153,0.08)] before:from-emerald-500/5"
-                                        : "border-slate-800 hover:border-sky-700/50 hover:shadow-[0_0_30px_rgba(2,132,199,0.1)] before:from-sky-500/5"
-                                )}>
-                                    {/* Banner */}
-                                    <div className="relative h-32 w-full overflow-hidden bg-slate-900 border-b border-slate-800 shrink-0">
-                                        {plan.questPlan.bannerUrl ? (
-                                            <Image
-                                                src={plan.questPlan.bannerUrl.replace(/#/g, '%23')}
-                                                alt={plan.questPlan.title}
-                                                fill
-                                                sizes="(max-width: 768px) 100vw, 33vw"
-                                                className={cn(
-                                                    "transition-transform duration-700 group-hover:scale-105",
-                                                    plan.questPlan.bannerFit === "contain" ? "object-contain" : "object-cover",
-                                                    plan.questPlan.bannerPosition === "top" ? "object-top" : plan.questPlan.bannerPosition === "bottom" ? "object-bottom" : "object-center"
-                                                )}
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-slate-900 to-slate-950">
-                                                <ImageIcon className="w-12 h-12 text-slate-800 opacity-30" />
-                                            </div>
-                                        )}
-                                        <div className="absolute inset-x-0 bottom-0 h-14 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-90" />
-
-                                        {/* Completion badge */}
-                                        {isCompleted && (
-                                            <div className="absolute top-2 left-2 z-10 flex items-center gap-1.5 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-full border border-emerald-500/60 shadow-xl">
-                                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                                                <span className="text-[10px] font-black text-emerald-400 uppercase tracking-tight">Completed</span>
-                                            </div>
-                                        )}
-
-                                        <div className="absolute bottom-2.5 right-3 flex items-center gap-2 z-10">
-                                            {plan.questPlan.teamLimit !== null ? (
-                                                <div className="flex items-center gap-1.5 text-white bg-black/40 backdrop-blur-md px-2 py-1 rounded-full border border-white/10 shadow-xl">
-                                                    <Users className="w-3 h-3 text-sky-400" />
-                                                    <span className="text-[10px] font-black uppercase tracking-tight">Team of {plan.questPlan.teamLimit}</span>
-                                                </div>
-                                            ) : (
-                                                <div className="flex items-center gap-1.5 text-white bg-black/40 backdrop-blur-md px-2 py-1 rounded-full border border-white/10 shadow-xl">
-                                                    <Repeat2 className="w-3 h-3 text-sky-400" />
-                                                    <span className="text-[10px] font-black uppercase tracking-tight">Swap</span>
-                                                </div>
-                                            )}
-                                            <div className="flex items-center gap-1.5 text-white bg-black/40 backdrop-blur-md px-2 py-1 rounded-full border border-white/10 shadow-xl">
-                                                <Swords className="w-3 h-3 text-red-500 drop-shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
-                                                <span className="text-[10px] font-black uppercase tracking-tight">{plan.questPlan.encounters.length} Fights</span>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    {/* Content */}
-                                    <CardContent className="p-4 flex flex-col flex-1 gap-3">
-                                        <div className="space-y-1.5">
-                                            {plan.questPlan.category && (
-                                                <Badge variant="outline" className="text-[9px] uppercase font-bold border-slate-700 text-slate-400">
-                                                    {plan.questPlan.category.name}
-                                                </Badge>
-                                            )}
-                                            <h3 className="text-base font-black group-hover:text-sky-400 transition-colors line-clamp-2 uppercase tracking-tight leading-tight">
-                                                {plan.questPlan.title}
-                                            </h3>
-                                        </div>
-
-                                        {/* Restrictions */}
-                                        {(plan.questPlan.minStarLevel || plan.questPlan.maxStarLevel || (plan.questPlan.requiredClasses && plan.questPlan.requiredClasses.length > 0)) && (
-                                            <div className="space-y-1">
-                                                <div className="flex flex-wrap gap-1 items-center">
-                                                    {(plan.questPlan.minStarLevel || plan.questPlan.maxStarLevel) && (
-                                                        <div className="flex items-center gap-1 bg-amber-500/10 border border-amber-500/20 rounded-full px-2 py-0.5">
-                                                            <Star className="w-2.5 h-2.5 text-amber-400 fill-amber-400" />
-                                                            <span className="text-[9px] font-black text-amber-400 leading-none">
-                                                                {plan.questPlan.minStarLevel && plan.questPlan.maxStarLevel ? `${plan.questPlan.minStarLevel}–${plan.questPlan.maxStarLevel}★` : plan.questPlan.minStarLevel ? `${plan.questPlan.minStarLevel}★+` : `Up to ${plan.questPlan.maxStarLevel}★`}
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                    {plan.questPlan.requiredClasses && plan.questPlan.requiredClasses.length > 0 && (
-                                                        <div className="flex items-center gap-1 bg-sky-500/10 border border-sky-500/20 rounded-full px-2 py-0.5">
-                                                            {plan.questPlan.requiredClasses.map(cls => (
-                                                                <div key={cls} className="relative w-3 h-3 shrink-0">
-                                                                    <Image
-                                                                        src={`/assets/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`}
-                                                                        alt={cls}
-                                                                        fill
-                                                                        className="object-contain"
-                                                                    />
                                                                 </div>
                                                             ))}
                                                         </div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* Footer */}
-                                        <div className="mt-auto pt-3 border-t border-slate-900/50 flex items-center justify-between">
-                                            <div className="flex items-center gap-2">
-                                                <div className="flex items-center gap-1.5 text-slate-500 group-hover:text-sky-500 group-hover:translate-x-1 transition-all">
-                                                    <MapIcon className="w-3 h-3" />
-                                                    <span className="text-[9px] font-black uppercase tracking-[0.2em]">Open Plan</span>
-                                                </div>
-                                                {plan.encounters.length > 0 && (
-                                                    isCompleted ? (
-                                                        <Badge className="text-[9px] h-4 bg-emerald-950/30 border border-emerald-500/30 text-emerald-400 font-black uppercase tracking-wider px-1.5">
-                                                            ✓ Completed
-                                                        </Badge>
-                                                    ) : (
-                                                        <Badge variant="secondary" className="text-[9px] h-4 bg-sky-950/30 border border-sky-900/50 text-sky-400 font-bold px-1.5">
-                                                            {plan.encounters.length} / {plan.questPlan.encounters.length} picked
-                                                        </Badge>
-                                                    )
-                                                )}
-                                            </div>
-                                            <div className="h-7 w-7 rounded-full bg-slate-900 border border-slate-800 flex items-center justify-center group-hover:bg-sky-600 group-hover:border-sky-500 group-hover:scale-110 transition-all shadow-inner group-hover:shadow-[0_0_15px_rgba(2,132,199,0.5)]">
-                                                <ArrowRight className="h-3 w-3 text-slate-400 group-hover:text-white" />
-                                            </div>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </Link>
-                            );
-                        })}
-                    </div>
-                </div>
-                )}
+                                                        <div className="flex flex-col items-end gap-1">
+                                                            <span className={cn("inline-flex items-center justify-end gap-1 text-right text-[11px] font-medium leading-none", fight.death > 0 ? "text-amber-300" : "text-emerald-300")}>
+                                                                {fight.death > 0 ? <Skull className="size-3 shrink-0" aria-hidden="true" /> : <Trophy className="size-3 shrink-0" aria-hidden="true" />}
+                                                                {fight.death > 0 ? fight.death + (fight.death === 1 ? " death" : " deaths") : "Solo"}
+                                                            </span>
+                                                            {fight.video ? (
+                                                                <Link href={"/war-videos/" + fight.video.id} aria-label={"Watch fight on node " + fight.node.nodeNumber} className="grid size-8 place-items-center rounded-md bg-indigo-400/10 text-indigo-200 transition-colors hover:bg-indigo-400/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300">
+                                                                    <Play className="size-3.5" aria-hidden="true" />
+                                                                </Link>
+                                                            ) : null}
+                                                        </div>
+                                                    </li>
+                                                ))}
+                                            </ul>
+                                        </section>
+                                    );
+                                })}
+                            </div>
+                        </section>
+                    );
+                })()}
             </div>
-            )}
 
+            {warInsights && <PlayerWarInsightsSection playerName={player.ingameName} insights={warInsights} />}
+
+            {(recentVideos.length > 0 || questPlans.length > 0) && (
+                <div className={cn("grid items-start gap-8", recentVideos.length > 0 && questPlans.length > 0 && "lg:grid-cols-2")}>
+                    {recentVideos.length > 0 && (
+                        <section aria-labelledby="recent-war-videos" className="min-w-0">
+                            <PlayerProfileSectionHeading title="Recent war videos" id="recent-war-videos" action={!recentFights.length && (
+                                <Link href={archiveHref} className={profileActionClass}>War archive <ArrowUpRight className="size-3.5" aria-hidden="true" /></Link>
+                            )} />
+                            <ul className="divide-y divide-slate-800/90">
+                                {recentVideos.map(video => {
+                                    const war = video.fights[0]?.war;
+                                    const fightCount = video.fights.length;
+                                    const youtubeId = getYoutubeVideoId(video.url);
+                                    const [attackers, defenders] = (["attacker", "defender"] as const).map(side =>
+                                        [...new Map(video.fights.flatMap(fight => {
+                                            const champion = fight[side];
+                                            return champion ? [[champion.id, champion.name] as const] : [];
+                                        })).values()]
+                                    );
+                                    const matchup = [attackers, defenders]
+                                        .filter(names => names.length > 0)
+                                        .map(names => names[0] + (names.length > 1 ? " +" + (names.length - 1) : ""))
+                                        .join(" → ");
+                                    const fullMatchup = [
+                                        attackers.length > 0 && "Attackers: " + attackers.join(", "),
+                                        defenders.length > 0 && "Defenders: " + defenders.join(", "),
+                                    ].filter(Boolean).join(". ");
+                                    const videoDetails = [
+                                        war && `S${war.season} · ${war.warNumber ? "W" + war.warNumber : "Off-season"} · T${war.warTier}`,
+                                        fightCount + (fightCount === 1 ? " fight" : " fights"),
+                                    ].filter(Boolean).join(" · ");
+
+                                    return (
+                                        <li key={video.id}>
+                                            <Link href={`/war-videos/${video.id}`} className={profileCollectionRowClass}>
+                                                <span className={profileCollectionThumbnailClass} aria-hidden="true">
+                                                    {youtubeId && (
+                                                        <Image
+                                                            src={`https://img.youtube.com/vi/${youtubeId}/mqdefault.jpg`}
+                                                            alt=""
+                                                            fill
+                                                            unoptimized
+                                                            className="object-cover opacity-85 transition-opacity group-hover:opacity-100"
+                                                        />
+                                                    )}
+                                                    <span className="relative grid size-7 place-items-center rounded-full bg-slate-950/80 text-white">
+                                                        <Play className="ml-0.5 size-3.5 fill-current" />
+                                                    </span>
+                                                </span>
+                                                <div className="min-w-0 space-y-0.5">
+                                                    <h3 className={profileCollectionTitleClass}>{war?.alliance.name ?? "War recording"}</h3>
+                                                    {matchup && (
+                                                        <p className="break-words text-xs leading-snug text-slate-300" title={fullMatchup}>
+                                                            <span aria-hidden="true">{matchup}</span>
+                                                            <span className="sr-only">{fullMatchup}</span>
+                                                        </p>
+                                                    )}
+                                                    <p className="break-words text-[11px] leading-snug text-slate-400 sm:text-xs">
+                                                        {videoDetails} · <time dateTime={video.createdAt.toISOString()}>{video.createdAt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</time>
+                                                    </p>
+                                                </div>
+                                            </Link>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </section>
+                    )}
+
+                    {questPlans.length > 0 && (
+                        <section aria-labelledby="shared-quest-plans" className="min-w-0">
+                            <PlayerProfileSectionHeading title="Quest plans" id="shared-quest-plans" detail={questPlans.length > 4 ? "4 of " + questPlans.length : undefined} />
+                            <ul className="divide-y divide-slate-800/90">
+                                {questPlans.slice(0, 4).map(plan => {
+                                    const quest = plan.questPlan;
+                                    const fightCount = quest.encounters.length;
+                                    const picked = plan.encounters.length;
+                                    const isCompleted = fightCount > 0 && picked >= fightCount;
+                                    const minStars = quest.minStarLevel;
+                                    const maxStars = quest.maxStarLevel;
+                                    const stars = minStars && maxStars ? `${minStars}–${maxStars}★` :
+                                        minStars ? `${minStars}★+` : maxStars ? `Up to ${maxStars}★` : null;
+                                    const details = [
+                                        fightCount + (fightCount === 1 ? " fight" : " fights"),
+                                        quest.teamLimit === null ? "Swap" : "Team of " + quest.teamLimit,
+                                        stars,
+                                    ].filter(Boolean).join(" · ");
+
+                                    return (
+                                        <li key={plan.id}>
+                                            <Link href={`/player/${id}/quests/${quest.id}`} className={profileCollectionRowClass}>
+                                                <span className={profileCollectionThumbnailClass} aria-hidden="true">
+                                                    {quest.bannerUrl ? (
+                                                        <Image
+                                                            src={quest.bannerUrl.replace(/#/g, "%23")}
+                                                            alt=""
+                                                            fill
+                                                            sizes="(min-width: 640px) 96px, 78px"
+                                                            className={cn(
+                                                                quest.bannerFit === "contain" ? "object-contain" : "object-cover",
+                                                                quest.bannerPosition === "top" ? "object-top" : quest.bannerPosition === "bottom" ? "object-bottom" : "object-center"
+                                                            )}
+                                                        />
+                                                    ) : <MapIcon className="size-5" />}
+                                                </span>
+                                                <div className="flex min-w-0 items-center gap-2">
+                                                    <div className="flex min-w-0 flex-1 flex-col gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                                                        <div className="min-w-0 space-y-0.5">
+                                                            <h3 className={profileCollectionTitleClass}>{quest.title}</h3>
+                                                            {quest.category && <p className="break-words text-xs leading-snug text-slate-400">{quest.category.name}</p>}
+                                                            <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1 text-[11px] leading-snug text-slate-400 sm:text-xs">
+                                                                <span>{details}</span>
+                                                                {quest.requiredClasses?.map(cls => (
+                                                                    <Image key={cls} src={`/assets/icons/${cls.charAt(0).toUpperCase() + cls.slice(1).toLowerCase()}.png`} alt={cls} width={12} height={12} title={cls} />
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                        {picked > 0 && (
+                                                            <span className={cn("shrink-0 whitespace-nowrap text-xs font-medium tabular-nums", isCompleted ? "text-emerald-300" : "text-cyan-200")}>
+                                                                {isCompleted ? "Completed" : `${picked} / ${fightCount} picked`}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <ChevronRight className="size-3.5 shrink-0 text-slate-500 group-hover:text-cyan-200" aria-hidden="true" />
+                                                </div>
+                                            </Link>
+                                        </li>
+                                    );
+                                })}
+                            </ul>
+                        </section>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
-

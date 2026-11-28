@@ -12,7 +12,7 @@ import {
 } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Gem, LibraryBig, Loader2, LogIn, ShieldCheck } from "lucide-react";
+import { ArrowRight, Gem, LibraryBig, Loader2, LogIn, ShieldCheck } from "lucide-react";
 import {
   collectionHref,
   collectionPreferenceCookie,
@@ -34,7 +34,8 @@ type ScreenConfig = {
   signedIn: boolean;
   canUsePersonal: boolean;
 };
-const Screen = createContext<(ScreenConfig & { preserveScroll: () => void }) | null>(null);
+type CollectionScreenContext = ScreenConfig & { preserveScroll: () => void };
+const Screen = createContext<CollectionScreenContext | null>(null);
 
 export function useIsCollectionScreen() {
   return useContext(Screen) !== null;
@@ -140,23 +141,20 @@ function remember(section: CollectionSection, view: CollectionView) {
   document.cookie = `${collectionPreferenceCookie(section)}=${view}; Path=/; Max-Age=31536000; SameSite=Lax${location.protocol === "https:" ? "; Secure" : ""}`;
 }
 
-/** The active view is the page heading. Shared rosters keep their own title. */
-export function CollectionHeading({ fallback }: { fallback?: ReactNode }) {
+export function CollectionHeading() {
   const screen = useContext(Screen);
-  return screen ? <CollectionViewSwitch /> : fallback;
+  return screen ? <CollectionPageHeader screen={screen} /> : null;
 }
 
-function CollectionViewSwitch() {
-  const screen = useContext(Screen);
+function CollectionPageHeader({ screen }: { screen: CollectionScreenContext }) {
   const memory = useContext(Memory);
   const router = useRouter();
   const params = useSearchParams();
   const [pending, startTransition] = useTransition();
   const [prompt, setPrompt] = useState(false);
-  const [pendingView, setPendingView] = useState<CollectionView | null>(null);
-  if (!screen) return null; // Shared player rosters retain their existing, explicit context.
   const { section, view, profileId, canUsePersonal, signedIn } = screen;
-  const gateContext = section === "champions" && params.get("questGate") === "1";
+  const champions = section === "champions";
+  const gateContext = champions && params.get("questGate") === "1";
   const incomingPersonal = gateContext && params.get("view") === "personal" && !canUsePersonal;
   const gateSearch = (target: CollectionView) => {
     const query = new URLSearchParams(params.toString());
@@ -164,26 +162,23 @@ function CollectionViewSwitch() {
     return query.toString();
   };
   const personalHref = collectionHref(section, "personal", gateContext ? gateSearch("personal") : "");
-  const labels = section === "champions"
+  const labels = champions
     ? { catalog: "All Champions", personal: "My Roster" }
     : { catalog: "All Relics", personal: "My Relics" };
+  const target = view === "catalog" ? "personal" : "catalog";
+  const Icon = target === "catalog" ? LibraryBig : champions ? ShieldCheck : Gem;
   return (
-    <div className={styles.wrapper} data-section={section}>
-      <nav
-        className={styles.switcher}
-        aria-label={`${section === "champions" ? "Champion" : "Relic"} view`}
-        aria-busy={pending}
-      >
-        {(["catalog", "personal"] as const).map((target) => {
-          const Icon = target === "catalog" ? LibraryBig : section === "relics" ? Gem : ShieldCheck;
-          const isPending = pending && pendingView === target;
-          return (
+    <div>
+      <header>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h1 className="text-[22px] font-bold leading-tight tracking-tight text-white min-[375px]:text-[28px] sm:text-4xl">{labels[view]}</h1>
+          <nav aria-label={champions ? "Champion pages" : "Relic pages"} aria-busy={pending}>
             <Link
-              key={target}
+              className={styles.destination}
               href={collectionHref(section, target, gateContext ? gateSearch(target) : "")}
               prefetch={false}
-              aria-current={target === view ? "page" : undefined}
-              data-pending={isPending ? "true" : undefined}
+              data-destination={target}
+              data-pending={pending || undefined}
               onClick={(event) => {
                 if (
                   event.metaKey ||
@@ -198,18 +193,16 @@ function CollectionViewSwitch() {
                   setPrompt(true);
                   return;
                 }
-                if (target === view || pending) return;
+                if (pending) return;
                 screen.preserveScroll();
                 memory?.set(
                   collectionStateKey(section, profileId, view, "url"),
                   window.location.search,
                 );
-                const search = gateContext ? gateSearch(target) : memory?.get(
-                    collectionStateKey(section, profileId, target, "url"),
-                    "",
-                  ) ?? "";
+                const search = gateContext
+                  ? gateSearch(target)
+                  : memory?.get(collectionStateKey(section, profileId, target, "url"), "") ?? "";
                 remember(section, target);
-                setPendingView(target);
                 startTransition(() =>
                   router.push(collectionHref(section, target, search), {
                     scroll: gateContext,
@@ -217,19 +210,20 @@ function CollectionViewSwitch() {
                 );
               }}
             >
-              <span className={styles.icon} aria-hidden="true">
-                {isPending ? <Loader2 className={styles.loading} /> : <Icon />}
+              <span className={styles.destinationIcon} aria-hidden="true">
+                {pending ? <Loader2 className={styles.loading} /> : <Icon />}
               </span>
-              {target === view ? (
-                <h1 className={styles.label}>{labels[target]}</h1>
-              ) : (
-                <span className={styles.label}>{labels[target]}</span>
-              )}
-              <span className={styles.activeDot} aria-hidden="true" />
+              <span>{labels[target]}</span>
+              <ArrowRight className={styles.destinationArrow} aria-hidden="true" />
             </Link>
-          );
-        })}
-      </nav>
+          </nav>
+        </div>
+        {view === "catalog" && (
+          <p className="mt-1.5 text-sm text-slate-400">
+            {champions ? "Browse by class, tags, abilities, or immunities." : "Browse Battlecasts and Statcasts by class or attribute."}
+          </p>
+        )}
+      </header>
       {(prompt || incomingPersonal) && (
         <div className={styles.signin} role="status">
           <span>

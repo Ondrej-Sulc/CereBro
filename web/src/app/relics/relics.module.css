@@ -2,48 +2,11 @@
   --relic-color: #a78bfa;
   --relic-muted: #96a7bc;
   width: 100%;
-  padding: 42px 32px 72px;
+  padding: 32px 32px 72px;
   color: #dbe4ef;
 }
 .catalogHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 24px;
-  margin-bottom: 24px;
-}
-.catalogHeader p {
-  font-size: 15px;
-  color: #9baac0;
-  line-height: 1.7;
-  margin: 12px 0 0;
-}
-.catalogNumbers {
-  display: flex;
-  gap: 30px;
-  flex-shrink: 0;
-  margin: 0;
-}
-.catalogNumbers > div {
-  display: flex;
-  flex-direction: column-reverse;
-  gap: 4px;
-}
-.catalogNumbers > div + div {
-  padding-left: 30px;
-  border-left: 1px solid #283343;
-}
-.catalogNumbers dt {
-  color: #99a8bd;
-  font-size: 12px;
-}
-.catalogNumbers dd {
-  color: #e7edf7;
-  font-size: 30px;
-  letter-spacing: -1px;
-  font-weight: 600;
-  line-height: 1.15;
-  margin: 0;
+  margin-bottom: 16px;
 }
 .page :where(a, button):focus-visible {
   outline: 2px solid #b69aee;
@@ -91,32 +54,14 @@
   margin-top: 20px;
   background: #a78bfa0b;
 }
-@media (max-width: 1100px) {
-  .catalogNumbers {
-    gap: 20px;
-  }
-  .catalogNumbers > div + div {
-    padding-left: 20px;
-  }
-}
 @media (max-width: 800px) {
   .page {
-    padding: 30px 22px 56px;
-  }
-  .catalogNumbers {
-    display: none;
+    padding: 24px 22px 56px;
   }
 }
 @media (max-width: 480px) {
   .page {
-    padding: 26px 16px 44px;
-  }
-  .catalogHeader {
-    margin-bottom: 24px;
-  }
-  .catalogHeader p {
-    font-size: 14px;
-    line-height: 1.7;
+    padding: 16px 16px 44px;
   }
   .sourceNote {
     font-size: 11px;

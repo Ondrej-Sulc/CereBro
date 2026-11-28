@@ -163,10 +163,10 @@ export function ProfileManager({ profiles, activeProfileId }: ProfileManagerProp
   };
 
   return (
-    <div className="space-y-4 bg-slate-900/50 p-4 rounded-lg border border-slate-800">
-      <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-2">
-          <h3 className="text-lg font-semibold text-slate-200">Manage Profiles</h3>
+    <section id="game-profiles" aria-labelledby="game-profiles-heading" className="scroll-mt-24 overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/45">
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 px-3.5 py-3.5 sm:px-4">
+        <div className="flex min-w-0 items-center gap-1">
+          <h2 id="game-profiles-heading" className="text-base font-semibold text-white">Game profiles</h2>
           <Popover>
             <PopoverTrigger asChild>
               <button type="button" className="cursor-pointer focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full p-1">
@@ -181,9 +181,9 @@ export function ProfileManager({ profiles, activeProfileId }: ProfileManagerProp
         </div>
         <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm" className="gap-2">
-              <Plus className="w-4 h-4" />
-              New Profile
+            <Button variant="outline" size="sm" className="gap-1.5 rounded-lg border-slate-700 bg-slate-950/60 text-slate-200 hover:bg-slate-800">
+              <Plus className="size-3.5" aria-hidden="true" />
+              New profile
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -211,54 +211,54 @@ export function ProfileManager({ profiles, activeProfileId }: ProfileManagerProp
         </Dialog>
       </div>
 
-      <div className="space-y-2">
+      <ul className="divide-y divide-slate-800">
         {profiles.map((profile) => {
           const isActive = profile.id === activeProfileId;
           return (
-            <div
+            <li
               key={profile.id}
-              className={`flex items-center justify-between p-3 rounded-md border transition-colors ${
+              className={`flex flex-wrap items-center justify-between gap-2 px-3.5 py-3 transition-colors sm:px-4 ${
                 isActive
-                  ? "bg-indigo-500/10 border-indigo-500/50"
-                  : "bg-slate-950/50 border-slate-800 hover:border-slate-700"
+                  ? "bg-indigo-400/[0.07]"
+                  : "hover:bg-slate-800/40"
               }`}
             >
-              <div className="flex items-center gap-3">
+              <div className="flex min-w-0 flex-1 items-center gap-2.5">
                 <Link href={`/player/${profile.id}`}>
-                  <Avatar className="h-8 w-8 border border-slate-700 hover:ring-2 hover:ring-indigo-500 transition-all">
+                  <Avatar className="size-8 shrink-0 rounded-lg border border-slate-700 transition-shadow hover:ring-2 hover:ring-indigo-500">
                     <AvatarImage src={profile.avatar || undefined} alt={profile.ingameName} />
-                    <AvatarFallback className="text-xs bg-slate-800 font-bold">
+                    <AvatarFallback className="rounded-lg bg-slate-800 text-xs font-semibold">
                       {profile.ingameName.substring(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                 </Link>
-                <div className="flex-1 flex flex-col gap-1">
-                  <div className="flex items-center gap-3">
+                <div className="flex min-w-0 flex-1 flex-col gap-1">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
                     <Link 
                       href={`/player/${profile.id}`}
-                      className="font-medium text-slate-200 hover:text-indigo-400 hover:underline transition-colors"
+                      className="break-words text-sm font-medium text-slate-100 transition-colors hover:text-indigo-200 hover:underline [overflow-wrap:anywhere]"
                     >
                       {profile.ingameName}
                     </Link>
                     {isActive && (
-                      <Badge variant="secondary" className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30 gap-1 h-5 text-[10px]">
-                        <CheckCircle2 className="w-3 h-3" /> Active
+                      <Badge variant="secondary" className="h-5 gap-1 border-indigo-400/20 bg-indigo-400/15 px-1.5 text-[10px] text-indigo-200">
+                        <CheckCircle2 className="size-3" aria-hidden="true" /> Active
                       </Badge>
                     )}
                   </div>
-                  <div className="flex flex-wrap gap-x-4 gap-y-1">
+                  <div className="flex flex-wrap gap-x-3 gap-y-1">
                     {profile.alliance && (
                       <Link 
                           href={`/alliance/${profile.alliance.id}`}
                           className="flex items-center gap-1.5 text-[11px] text-slate-400 hover:text-sky-400 transition-colors"
                       >
-                          <MapPin className="w-3 h-3" />
-                          <span>{profile.alliance.name}</span>
+                          <MapPin className="size-3 shrink-0" aria-hidden="true" />
+                          <span className="break-words">{profile.alliance.name}</span>
                       </Link>
                     )}
                     {profile.roster?.[0] && (
-                      <div className="flex items-center gap-1.5 text-[11px] text-slate-500">
-                        <Clock className="w-3 h-3" />
+                      <div className="flex items-center gap-1.5 text-[11px] text-slate-400">
+                        <Clock className="size-3 shrink-0" aria-hidden="true" />
                         <span>Updated <LocalDate value={profile.roster[0].updatedAt} /></span>
                       </div>
                     )}
@@ -266,11 +266,13 @@ export function ProfileManager({ profiles, activeProfileId }: ProfileManagerProp
                 </div>
               </div>
 
-              <div className="flex items-center gap-2">
+              <div className="ml-auto flex shrink-0 items-center gap-0.5">
                 {!isActive && (
                   <Button
                     variant="ghost"
                     size="sm"
+                    aria-label={"Switch to " + profile.ingameName}
+                    className="rounded-lg px-2 text-xs text-indigo-200 hover:bg-indigo-400/10 hover:text-white"
                     onClick={() => handleSwitch(profile.id)}
                     disabled={isPending}
                   >
@@ -286,7 +288,8 @@ export function ProfileManager({ profiles, activeProfileId }: ProfileManagerProp
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-slate-400 hover:text-white"
+                      aria-label={"Rename " + profile.ingameName}
+                      className="size-8 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white"
                       onClick={() => {
                         setEditingProfile({ id: profile.id, name: profile.ingameName });
                         setIsEditOpen(true);
@@ -324,7 +327,8 @@ export function ProfileManager({ profiles, activeProfileId }: ProfileManagerProp
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-8 w-8 text-slate-400 hover:text-red-400"
+                      aria-label={"Delete " + profile.ingameName}
+                      className="size-8 rounded-lg text-slate-400 hover:bg-red-400/10 hover:text-red-300"
                       disabled={profiles.length <= 1}
                     >
                       <Trash2 className="w-4 h-4" />
@@ -349,10 +353,10 @@ export function ProfileManager({ profiles, activeProfileId }: ProfileManagerProp
                   </AlertDialogContent>
                 </AlertDialog>
               </div>
-            </div>
+            </li>
           );
         })}
-      </div>
-    </div>
+      </ul>
+    </section>
   );
 }

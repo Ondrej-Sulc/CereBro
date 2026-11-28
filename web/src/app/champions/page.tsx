@@ -214,7 +214,7 @@ export default async function RosterPage(props: {
 
   return (
     <CollectionScreen key={`personal:${screen.profileId}`} {...screen}>
-      <div className="w-full p-4 sm:p-8">
+      <div className="mx-auto max-w-[1440px] px-4 pb-12 pt-5 sm:px-6 sm:pt-7 lg:px-8">
         <RosterView
           key={player.id}
           initialRoster={typedRosterEntries}

@@ -80,8 +80,10 @@ it("opens exact reward links and sources in details, but never offers entry cost
   expect(document.querySelector('[role="dialog"] a[href="/crystals/mythic_shard_crystal"]')).not.toBeNull();
   expect(document.querySelector('[role="dialog"] a[href^="/rewards?"]')).not.toBeNull();
   await act(async () => document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true })));
-  await vi.waitFor(() => expect(document.querySelector('[role="dialog"]')).toBeNull());
-  expect(document.activeElement).toBe(trigger);
+  await vi.waitFor(() => {
+    expect(document.querySelector('[role="dialog"]')).toBeNull();
+    expect(document.activeElement).toBe(trigger);
+  });
   await act(async () => root!.render(<TowerRewards rewards={[reward({ scope: "Entry cost" })]}/>));
   await act(async () => host.querySelector<HTMLButtonElement>("[data-quest-reward] button")!.click());
   expect(document.querySelector('[role="dialog"]')?.textContent).toContain("Entry cost");

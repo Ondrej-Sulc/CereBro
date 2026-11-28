@@ -27,6 +27,7 @@ import {
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
@@ -58,12 +59,24 @@ const explore: Destination[] = [
   { label: "Quest explorer", href: "/quests", icon: Map },
   { label: "Effect glossary", href: "/glossary", icon: BookOpen },
 ];
-const alliance: Destination[] = [
-  { label: "Attack Planning", href: "/planning", icon: Swords },
-  { label: "Defense Strategy", href: "/planning/defense", icon: Shield },
-  { label: "Roster Overview", href: "/alliance/roster", icon: LayoutGrid },
-  { label: "Alliance Overview", href: "/alliance", icon: Users },
-  { label: "Season Stats", href: "/analysis/season-overview", icon: Trophy },
+const allianceGroups: { id: string; label: string; items: Destination[] }[] = [
+  {
+    id: "alliance",
+    label: "Alliance",
+    items: [
+      { label: "Overview", href: "/alliance", icon: Users },
+      { label: "Roster", href: "/alliance/roster", icon: LayoutGrid },
+    ],
+  },
+  {
+    id: "alliance-wars",
+    label: "Alliance Wars",
+    items: [
+      { label: "Attack Planning", href: "/planning", icon: Swords },
+      { label: "Defense Planning", href: "/planning/defense", icon: Shield },
+      { label: "Season Stats", href: "/analysis/season-overview", icon: Trophy },
+    ],
+  },
 ];
 const onboarding: Destination = {
   label: "Join / Create Alliance",
@@ -176,9 +189,11 @@ export default function Header({
       </div>
     );
   };
-  const allianceDestinations = isInAlliance ? alliance : [onboarding];
-  const allianceActive = allianceDestinations.some((item) =>
-    isCurrent(pathname, item),
+  const visibleAllianceGroups = isInAlliance
+    ? allianceGroups
+    : [{ ...allianceGroups[0], items: [onboarding] }];
+  const allianceActive = visibleAllianceGroups.some(({ items }) =>
+    items.some((item) => isCurrent(pathname, item)),
   );
   const dropdown = (
     name: "alliance" | "explore" | "more",
@@ -236,11 +251,23 @@ export default function Header({
               "alliance",
               "Alliance",
               allianceActive,
-              <>
-                {allianceDestinations.map((item) =>
-                  destination(item, true),
-                )}
-              </>,
+              isInAlliance
+                ? visibleAllianceGroups.map(({ id, label, items }) => (
+                    <DropdownMenuGroup
+                      key={id}
+                      aria-labelledby={`site-header-${id}-group`}
+                      className={styles.allianceGroup}
+                    >
+                      <DropdownMenuLabel
+                        id={`site-header-${id}-group`}
+                        className={styles.groupLabel}
+                      >
+                        {label}
+                      </DropdownMenuLabel>
+                      {items.map((item) => destination(item, true))}
+                    </DropdownMenuGroup>
+                  ))
+                : destination(onboarding, true),
             )}
             {dropdown(
               "explore",
@@ -304,15 +331,16 @@ export default function Header({
                     <div className={styles.catalogs}>
                       {destination(champions)}
                     </div>
-                    <section
-                      className={styles.panelGroup}
-                      aria-label="Alliance"
-                    >
-                      <h2>Alliance</h2>
-                      {allianceDestinations.map((item) =>
-                        destination(item),
-                      )}
-                    </section>
+                    {visibleAllianceGroups.map(({ id, label, items }) => (
+                      <section
+                        key={id}
+                        className={styles.panelGroup}
+                        aria-label={label}
+                      >
+                        <h2>{label}</h2>
+                        {items.map((item) => destination(item))}
+                      </section>
+                    ))}
                     <section className={styles.panelGroup} aria-label="Explore">
                       <h2>Explore</h2>
                       {explore.map((item) => destination(item))}

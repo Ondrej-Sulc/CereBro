@@ -30,6 +30,7 @@ interface PrestigeLogData {
 interface PrestigeHistoryChartProps {
   data: PrestigeLogData[];
   className?: string;
+  embedded?: boolean;
 }
 
 const chartConfig = {
@@ -43,7 +44,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
-export function PrestigeHistoryChart({ data, className }: PrestigeHistoryChartProps) {
+export function PrestigeHistoryChart({ data, className, embedded = false }: PrestigeHistoryChartProps) {
   const formattedData = React.useMemo(() => {
     return data.map((item) => ({
       ...item,
@@ -54,22 +55,20 @@ export function PrestigeHistoryChart({ data, className }: PrestigeHistoryChartPr
 
   return (
     <Card className={className}>
-      <CardHeader className="flex flex-col items-stretch space-y-0 border-b p-0 sm:flex-row">
-        <div className="flex flex-1 flex-col justify-center gap-1 px-6 py-5 sm:py-6">
-          <CardTitle>Prestige History</CardTitle>
-          <CardDescription>
-            Historical progression of champion and relic prestige
-          </CardDescription>
-        </div>
-      </CardHeader>
-      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-        <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full">
+      {!embedded && (
+        <CardHeader className="gap-1 space-y-0 border-b border-slate-800 bg-slate-900/70 p-4 sm:px-5">
+          <CardTitle className="text-base font-semibold text-white sm:text-lg">Prestige history</CardTitle>
+          <CardDescription className="text-xs text-slate-400">Champion and relic prestige over time</CardDescription>
+        </CardHeader>
+      )}
+      <CardContent className="px-1 pb-3 pt-4 sm:px-5 sm:pb-4">
+        <ChartContainer config={chartConfig} className="aspect-auto h-[218px] w-full sm:h-[248px]">
           <ComposedChart
             accessibilityLayer
             data={formattedData}
             margin={{
-              left: 12,
-              right: 12,
+              left: 3,
+              right: 3,
               top: 12,
               bottom: 12,
             }}
@@ -94,7 +93,7 @@ export function PrestigeHistoryChart({ data, className }: PrestigeHistoryChartPr
               tickCount={5}
               domain={['auto', 'auto']}
               tick={{ fontSize: 11, fill: "hsl(var(--chart-1))" }}
-              width={55}
+              width={46}
             />
 
             {/* Right Axis: Relic */}
@@ -107,7 +106,7 @@ export function PrestigeHistoryChart({ data, className }: PrestigeHistoryChartPr
               tickCount={5}
               domain={['auto', 'auto']}
               tick={{ fontSize: 11, fill: "hsl(var(--chart-3))" }}
-              width={45}
+              width={41}
             />
             
             <ChartTooltip
@@ -123,7 +122,7 @@ export function PrestigeHistoryChart({ data, className }: PrestigeHistoryChartPr
             <ChartLegend 
               verticalAlign="top" 
               align="center" 
-              content={<ChartLegendContent className="-mt-4 mb-4 justify-center gap-6" />} 
+              content={<ChartLegendContent className="-mt-2 mb-2 flex-wrap justify-center gap-x-4 gap-y-1" />}
             />
 
             {/* Champion Line (Left) */}

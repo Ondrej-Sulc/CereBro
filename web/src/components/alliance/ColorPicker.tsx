@@ -11,6 +11,7 @@ interface ColorPickerProps {
     color: string;
     onChange: (color: string) => void;
     className?: string;
+    ariaLabel?: string;
 }
 
 const PRESET_COLORS = [
@@ -36,12 +37,13 @@ const PRESET_COLORS = [
     "#64748b", "#475569", "#1e293b",
 ];
 
-export function ColorPicker({ color, onChange, className }: ColorPickerProps) {
+export function ColorPicker({ color, onChange, className, ariaLabel }: ColorPickerProps) {
     return (
         <Popover>
             <PopoverTrigger asChild>
                 <Button 
                     variant="outline" 
+                    aria-label={ariaLabel && `${ariaLabel}, ${color}`}
                     className={cn("w-full justify-start gap-3 px-3 h-10 border-slate-800 bg-slate-950 hover:bg-slate-900", className)}
                 >
                     <div 
@@ -59,6 +61,8 @@ export function ColorPicker({ color, onChange, className }: ColorPickerProps) {
                         {PRESET_COLORS.map((preset) => (
                             <button
                                 key={preset}
+                                type="button"
+                                aria-label={`Set color ${preset}`}
                                 onClick={() => onChange(preset)}
                                 className={cn(
                                     "w-8 h-8 rounded-md border border-white/10 transition-transform hover:scale-110 flex items-center justify-center relative",
@@ -81,6 +85,7 @@ export function ColorPicker({ color, onChange, className }: ColorPickerProps) {
                                 style={{ backgroundColor: color }} 
                             />
                             <Input 
+                                aria-label="Custom hex color"
                                 value={color}
                                 onChange={(e) => onChange(e.target.value)}
                                 className="h-10 bg-slate-900 border-slate-800 font-mono text-xs uppercase"

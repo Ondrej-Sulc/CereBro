@@ -1,21 +1,59 @@
-.panel { margin-bottom: 24px; border: 1px solid #35415a; border-radius: 15px; background: linear-gradient(115deg, #1c233b, #101b29 75%); overflow: hidden; }
-.metrics { display: flex; flex-wrap: wrap; align-items: center; gap: 24px 36px; padding: 22px 24px; }
-.primaryMetric, .secondaryMetric { display: grid; gap: 5px; }
-.primaryMetric > span, .secondaryMetric > span { display: flex; align-items: center; gap: 8px; color: #b9c8dd; font-size: 12px; }
-.primaryMetric > span { color: #d4baff; }
-.primaryMetric strong { font-size: 32px; font-weight: 650; letter-spacing: -.7px; font-variant-numeric: tabular-nums; }
-.secondaryMetric strong { font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
-.metrics small { color: #9bafca; font-size: 11px; }
-.statusArea { margin-left: auto; display: grid; justify-items: end; gap: 10px; }
-.status, .active { display: flex; gap: 6px; align-items: center; color: #a9bbd2; font-size: 12px; }
-.active { color: #8edbb7; }
-.footnote { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; border-top: 1px solid #29374d; padding: 12px 24px; font-size: 12px; line-height: 1.6; color: #a8bbd4; }
-.footnote small { font-size: 11px; color: #8fa4c0; }
-@media (max-width: 700px) {
-  .metrics { gap: 20px; padding: 18px; }
-  .primaryMetric { flex: 1 0 100%; }
-  .secondaryMetric { flex: 1; }
-  .statusArea { width: 100%; margin: 0; justify-items: start; }
-  .footnote { padding: 12px 18px; }
+.summary {
+  margin: 16px 0;
+  padding: 12px 0 10px;
+  border-block: 1px solid #253147;
 }
-.panel a:focus-visible { outline: 2px solid #c7a7ff; outline-offset: 3px; }
+.overview {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+}
+.identity { flex: 1; min-width: 0 }
+.actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center }
+.metrics { display: grid; grid-template-columns: repeat(3, minmax(0, max-content)); margin: 0 }
+.metrics > div {
+  display: flex;
+  flex-direction: column-reverse;
+  justify-content: flex-end;
+  gap: 4px;
+  padding: 0 12px;
+  border-left: 1px solid #29354a;
+}
+.metrics dt { color: #aebbd1; font-size: 11px }
+.metrics dt a { display: inline-flex; align-items: center; gap: 4px; border-radius: 2px }
+.metrics dt a:hover { color: white }
+.metrics dt svg { flex-shrink: 0 }
+.metrics dd {
+  margin: 0;
+  color: #eef2ff;
+  font-size: 21px;
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -.025em;
+  font-variant-numeric: tabular-nums;
+}
+.statusRow { display: flex; flex-wrap: wrap; align-items: center; gap: 5px 14px; margin-top: 10px; color: #a8b8cf; font-size: 12px }
+.status, .active { display: flex; gap: 6px; align-items: center; margin-left: auto }
+.status svg, .active svg { flex-shrink: 0 }
+.active { color: #99e4bf }
+.explanation[open] { flex-basis: 100% }
+.explanation summary { display: inline-flex; align-items: center; gap: 5px; min-height: 24px; border-radius: 3px; font-weight: 600; cursor: pointer; list-style: none; color: #bfcee3 }
+.explanation summary::-webkit-details-marker { display: none }
+.explanation[open] summary svg { transform: rotate(180deg) }
+.explanation summary:hover { color: white }
+.explanation summary:focus-visible { outline: 2px solid #a5b4fc; outline-offset: 3px }
+.explanation p { margin: 5px 0 4px; max-width: 78ch; line-height: 1.6 }
+.explanation small { color: #9aabc2; font-size: 11px }
+@media (max-width: 900px) {
+  .overview { align-items: flex-start; flex-direction: column }
+  .identity, .metrics { width: 100% }
+  .metrics { grid-template-columns: repeat(3, minmax(0, 1fr)) }
+  .metrics > div { padding: 0 8px }
+  .metrics > div:first-child { border: none; padding-left: 0 }
+}
+@media (max-width: 480px) {
+  .metrics dt { font-size: 10px }
+  .metrics dd { font-size: 19px }
+  .statusRow { font-size: 11px }
+}

@@ -2,7 +2,7 @@
 
 import { useId, useState, type ReactNode } from "react";
 import Image from "next/image";
-import { Check, ChevronDown, Shield, SlidersHorizontal, type LucideIcon } from "lucide-react";
+import { Check, ChevronDown, Layers, Shield, SlidersHorizontal, type LucideIcon } from "lucide-react";
 import type { ChampionClass } from "@prisma/client";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
@@ -16,11 +16,44 @@ import { CHAMPION_SCOPE_LABELS, normalizeChampionScope, type ChampionScope } fro
 
 export const filterControlClass = "border-transparent bg-transparent text-slate-400 shadow-none hover:bg-slate-800/60 hover:text-slate-100";
 
-export function ChampionScopeFilter({ value, onChange }: { value: ChampionScope; onChange: (value: ChampionScope) => void }) {
+const quickFilterClass = "h-11 w-auto gap-1.5 rounded-lg border-slate-700 bg-slate-900 px-2.5 text-xs font-semibold text-slate-200 shadow-none hover:border-slate-500 hover:bg-slate-800 sm:h-10";
+const activeQuickFilterClass = "border-indigo-400/55 bg-indigo-400/15 text-indigo-100 hover:border-indigo-400 hover:bg-indigo-400/20 hover:text-indigo-100";
+
+export function ChampionScopeFilter({ value, onChange, quick = false }: {
+  value: ChampionScope;
+  onChange: (value: ChampionScope) => void;
+  quick?: boolean;
+}) {
   return <Select value={value} onValueChange={value => onChange(normalizeChampionScope(value))}>
-    <SelectTrigger aria-label="Champion availability" className={cn("h-11 w-full min-w-0 gap-2 text-xs sm:h-9 sm:w-[144px]", filterControlClass, value !== "playable" && "bg-sky-400/10 text-sky-100")}><SelectValue /></SelectTrigger>
-    <SelectContent>{(Object.keys(CHAMPION_SCOPE_LABELS) as ChampionScope[]).map(scope => <SelectItem key={scope} value={scope} className="min-h-11 sm:min-h-8">{CHAMPION_SCOPE_LABELS[scope]}</SelectItem>)}</SelectContent>
+    <SelectTrigger aria-label="Champion availability" className={cn(
+      quick ? cn(quickFilterClass, "[&>svg]:size-3.5 [&>svg]:shrink-0") : cn("h-11 w-full min-w-0 gap-2 text-xs sm:h-9 sm:w-[144px]", filterControlClass),
+      value !== "playable" && (quick ? activeQuickFilterClass : "bg-sky-400/10 text-sky-100"),
+    )}>
+      {quick && <Layers className="text-indigo-200/80" aria-hidden="true" />}
+      <SelectValue />
+    </SelectTrigger>
+    <SelectContent align={quick ? "start" : undefined} className={quick ? "min-w-44" : undefined}>
+      {(Object.keys(CHAMPION_SCOPE_LABELS) as ChampionScope[]).map(scope => <SelectItem key={scope} value={scope} className="min-h-11 sm:min-h-8">{CHAMPION_SCOPE_LABELS[scope]}</SelectItem>)}
+    </SelectContent>
   </Select>;
+}
+
+export function OwnedOnlyFilter({ showUnowned, onChange }: { showUnowned: boolean; onChange: (value: boolean) => void }) {
+  const ownedOnly = !showUnowned;
+  return (
+    <Button
+      type="button"
+      variant="outline"
+      aria-pressed={ownedOnly}
+      onClick={() => onChange(!showUnowned)}
+      className={cn(quickFilterClass, "[&_svg]:size-3", ownedOnly && activeQuickFilterClass)}
+    >
+      <span aria-hidden="true" className={cn("grid size-4 shrink-0 place-items-center rounded border border-slate-500", ownedOnly && "border-indigo-400 bg-indigo-500 text-white")}>
+        {ownedOnly && <Check />}
+      </span>
+      Owned only
+    </Button>
+  );
 }
 
 /** Canonical seven-star eligibility, independent of the copy's current Ascension level. */

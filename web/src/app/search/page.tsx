@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
-import type React from "react";
+import type { ReactNode } from "react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { Search, Shield, Users, Trophy, LayoutGrid, Crown, ArrowRight, UserRound, Swords } from "lucide-react";
+import { Shield, Users, Trophy, LayoutGrid, Crown, ArrowRight, ChevronDown, ChevronRight, SlidersHorizontal, X, Check } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import {
   Pagination,
   PaginationContent,
@@ -23,7 +21,8 @@ import {
   buildPlayerSearchOrderBy,
   buildPlayerSearchWhere,
   normalizeAllianceSearch,
-  normalizeDirectoryTab,
+  directorySearchHref,
+  getDirectorySearchView,
   normalizePlayerSearch,
   paginate,
   rankAllianceDirectoryMatch,
@@ -49,7 +48,7 @@ type SearchPageProps = {
 
 type PlayerResult = Awaited<ReturnType<typeof getPlayerResults>>["players"][number];
 type AllianceResult = Awaited<ReturnType<typeof getAllianceResults>>["alliances"][number];
-type DiscoveryResult = Awaited<ReturnType<typeof getDefaultDiscovery>>;
+const directoryPreviewSize = 3;
 
 export default async function DirectorySearchPage({ searchParams }: SearchPageProps) {
   const currentUser = await getUserPlayerWithAlliance();
@@ -58,52 +57,90 @@ export default async function DirectorySearchPage({ searchParams }: SearchPagePr
   }
 
   const params = await searchParams;
-  const tab = normalizeDirectoryTab(params);
+  const view = getDirectorySearchView(params);
   const playerOptions = normalizePlayerSearch(params);
   const allianceOptions = normalizeAllianceSearch(params);
-  const showPlayerDiscovery = shouldShowPlayerDiscovery(playerOptions);
-  const showAllianceDiscovery = shouldShowAllianceDiscovery(allianceOptions);
+  const query = view === "alliances" ? allianceOptions.query : view === "landing" ? "" : playerOptions.query;
+  const isAll = view === "all";
   const [playerResults, allianceResults, discovery] = await Promise.all([
-    tab === "players" ? getPlayerResults(playerOptions) : Promise.resolve(null),
-    tab === "alliances" ? getAllianceResults(allianceOptions) : Promise.resolve(null),
-    (tab === "players" && showPlayerDiscovery) || (tab === "alliances" && showAllianceDiscovery)
-      ? getDefaultDiscovery()
-      : Promise.resolve(null),
+    isAll ? getPlayerResults({ ...normalizePlayerSearch({ q: query }), pageSize: directoryPreviewSize })
+      : view === "players" ? getPlayerResults(playerOptions) : null,
+    isAll ? getAllianceResults({ ...normalizeAllianceSearch({ q: query }), pageSize: directoryPreviewSize })
+      : view === "alliances" ? getAllianceResults(allianceOptions) : null,
+    view === "landing" ? getDefaultDiscovery() : null,
   ]);
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg border border-sky-500/25 bg-sky-500/10 text-sky-300">
-            <Search className="h-5 w-5" />
-          </div>
-          <div>
-            <h1 className="text-3xl font-bold tracking-tight text-white">Search</h1>
-            <p className="text-sm text-slate-400">Find player profiles and real alliances in CereBro.</p>
-          </div>
+    <div className="mx-auto max-w-6xl px-4 pb-12 sm:px-6 lg:px-8">
+      <header className={cn(
+        "relative isolate",
+        discovery ? "pb-6 pt-9 text-center sm:pb-10 sm:pt-14" : "pb-4 pt-6 sm:pb-5",
+      )}>
+        <div aria-hidden="true" className="pointer-events-none absolute inset-0 -z-10 bg-[radial-gradient(ellipse_at_50%_0%,rgba(99,102,241,0.18),transparent_72%)]" />
+        <h1 className={cn(
+          "font-bold leading-tight tracking-tight text-white",
+          discovery ? "mx-auto mb-4 max-w-[18rem] text-3xl sm:mb-5 sm:max-w-none sm:text-5xl" : "mb-3 text-2xl sm:text-3xl",
+        )}>
+          {discovery ? "Find players and alliances" : "Search"}
+        </h1>
+        <div className={discovery ? "mx-auto max-w-[43rem]" : "max-w-[43rem]"}>
+          <DirectorySearchBox key={query} initialValue={query} />
         </div>
-      </div>
+        {discovery && <DirectoryTotals players={discovery.playerCount} alliances={discovery.allianceCount} />}
+      </header>
 
-      <DirectorySearchBox
-        key={`${tab}:${tab === "players" ? playerOptions.query : allianceOptions.query}`}
-        activeTab={tab}
-        initialValue={tab === "players" ? playerOptions.query : allianceOptions.query}
-      />
-
-      <div className="grid grid-cols-2 gap-1 rounded-xl border border-slate-800 bg-slate-950/70 p-1 shadow-inner">
-        <TabLink tab="players" activeTab={tab} params={params} icon={<Users className="h-4 w-4" />}>
-          Players
-        </TabLink>
-        <TabLink tab="alliances" activeTab={tab} params={params} icon={<Shield className="h-4 w-4" />}>
-          Alliances
-        </TabLink>
-      </div>
-
-      {tab === "players" ? (
-        <PlayerSearchPanel params={params} options={playerOptions} result={playerResults!} discovery={showPlayerDiscovery ? discovery : null} />
-      ) : (
-        <AllianceSearchPanel params={params} options={allianceOptions} result={allianceResults!} discovery={showAllianceDiscovery ? discovery : null} />
+      {discovery ? (
+        <div className="grid gap-3 sm:gap-5 md:grid-cols-2">
+          <DirectoryGroup title="Top player profiles" href={directorySearchHref("", "players")} action="Browse players" icon={<Trophy className="size-4" aria-hidden="true" />} discovery>
+            {discovery.players.map(player => <PlayerRow key={player.id} player={player} compact />)}
+          </DirectoryGroup>
+          <DirectoryGroup title="Open alliances" href={directorySearchHref("", "alliances")} action="Browse alliances" icon={<Shield className="size-4" aria-hidden="true" />} discovery>
+            {discovery.alliances.map(alliance => <AllianceRow key={alliance.id} alliance={alliance} compact />)}
+          </DirectoryGroup>
+        </div>
+      ) : isAll && playerResults && allianceResults ? (
+        <>
+          <ResultToolbar tab="all" query={query} />
+          <ResultHeading count={playerResults.totalCount + allianceResults.totalCount} label="result" query={query} />
+          {playerResults.totalCount + allianceResults.totalCount > 0 ? (
+            <div className="grid gap-4 md:grid-cols-2 md:gap-7">
+              <DirectoryGroup title="Players" count={playerResults.totalCount} href={directorySearchHref(query, "players")} action={groupAction(playerResults.totalCount, "players")}>
+                {playerResults.players.map(player => <PlayerRow key={player.id} player={player} compact />)}
+              </DirectoryGroup>
+              <DirectoryGroup title="Alliances" count={allianceResults.totalCount} href={directorySearchHref(query, "alliances")} action={groupAction(allianceResults.totalCount, "alliances")}>
+                {allianceResults.alliances.map(alliance => <AllianceRow key={alliance.id} alliance={alliance} compact />)}
+              </DirectoryGroup>
+            </div>
+          ) : <EmptyState label="No matching players or alliances" />}
+        </>
+      ) : view === "players" && playerResults ? (
+        <>
+          <ResultToolbar tab="players" query={query}>
+            <PlayerControls options={playerOptions} params={params} />
+          </ResultToolbar>
+          <ResultHeading count={playerResults.totalCount} label="player" query={query} />
+          {playerResults.players.length ? (
+            <>
+              <ColumnLabels labels={["Player", "Prestige", "Roster", "Group"]} />
+              <ul className="divide-y divide-slate-800/80">{playerResults.players.map(player => <PlayerRow key={player.id} player={player} />)}</ul>
+            </>
+          ) : <EmptyState label="No matching players" />}
+          <DirectoryPagination params={params} pageParam="playerPage" page={playerOptions.page} pageSize={playerOptions.pageSize} totalCount={playerResults.totalCount} />
+        </>
+      ) : allianceResults && (
+        <>
+          <ResultToolbar tab="alliances" query={query}>
+            <AllianceControls options={allianceOptions} params={params} />
+          </ResultToolbar>
+          <ResultHeading count={allianceResults.totalCount} label="alliance" query={query} />
+          {allianceResults.alliances.length ? (
+            <>
+              <ColumnLabels labels={["Alliance", "Members", "Avg. prestige", "Access"]} />
+              <ul className="divide-y divide-slate-800/80">{allianceResults.alliances.map(alliance => <AllianceRow key={alliance.id} alliance={alliance} />)}</ul>
+            </>
+          ) : <EmptyState label="No matching alliances" />}
+          <DirectoryPagination params={params} pageParam="alliancePage" page={allianceOptions.page} pageSize={allianceOptions.pageSize} totalCount={allianceResults.totalCount} />
+        </>
       )}
     </div>
   );
@@ -112,7 +149,7 @@ export default async function DirectorySearchPage({ searchParams }: SearchPagePr
 async function getPlayerResults(options: NormalizedPlayerSearch) {
   const where = buildPlayerSearchWhere(options);
   const orderBy = buildPlayerSearchOrderBy(options);
-  const shouldRank = options.query.length > 0;
+  const shouldRank = options.sort === "match" && options.query.length > 0;
   const [players, totalCount] = await Promise.all([
     prisma.player.findMany({
       where,
@@ -190,37 +227,10 @@ async function getAllianceResults(options: NormalizedAllianceSearch) {
   });
 
   const alliances = rows
-    .map((alliance) => {
-      const prestigeValues = alliance.members
-        .map((member) => member.championPrestige)
-        .filter((value): value is number => value != null);
-      const bgCounts = alliance.members.reduce(
-        (counts, member) => {
-          if (member.battlegroup === 1) counts.bg1 += 1;
-          else if (member.battlegroup === 2) counts.bg2 += 1;
-          else if (member.battlegroup === 3) counts.bg3 += 1;
-          else counts.unassigned += 1;
-          return counts;
-        },
-        { bg1: 0, bg2: 0, bg3: 0, unassigned: 0 },
-      );
-
-      return {
-        id: alliance.id,
-        name: alliance.name,
-        tag: alliance.tag,
-        description: alliance.description,
-        inviteOnly: alliance.inviteOnly,
-        memberCount: alliance.members.length,
-        averageChampionPrestige: prestigeValues.length
-          ? Math.round(prestigeValues.reduce((sum, value) => sum + value, 0) / prestigeValues.length)
-          : null,
-        bgCounts,
-      };
-    })
+    .map(toAllianceResult)
     .filter((alliance) => allianceMemberFilterMatches(alliance.memberCount, options.members))
     .sort((a, b) => {
-      if (options.query) {
+      if (options.sort === "match" && options.query) {
         const aRank = rankAllianceDirectoryMatch({
           query: options.query,
           name: a.name,
@@ -251,7 +261,7 @@ async function getAllianceResults(options: NormalizedAllianceSearch) {
 }
 
 async function getDefaultDiscovery() {
-  const [players, allianceRows] = await Promise.all([
+  const [players, allianceRows, playerCount, allianceCount] = await Promise.all([
     prisma.player.findMany({
       where: {
         championPrestige: { not: null },
@@ -282,7 +292,7 @@ async function getDefaultDiscovery() {
           },
         },
       },
-      take: 4,
+      take: directoryPreviewSize,
     }),
     prisma.alliance.findMany({
       where: {
@@ -306,13 +316,17 @@ async function getDefaultDiscovery() {
           },
         },
       },
-      take: 4,
+      take: directoryPreviewSize,
     }),
+    prisma.player.count(),
+    prisma.alliance.count({ where: buildAllianceSearchBaseWhere(normalizeAllianceSearch({})) }),
   ]);
 
   return {
     players,
     alliances: allianceRows.map(toAllianceResult),
+    playerCount,
+    allianceCount,
   };
 }
 
@@ -352,471 +366,319 @@ function toAllianceResult(alliance: {
   };
 }
 
-function shouldShowPlayerDiscovery(options: NormalizedPlayerSearch) {
-  return !options.query && !options.allianceQuery && options.roster === "all" && options.battlegroup === "all" && options.page === 1;
-}
+const controlClass = "inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 px-2.5 text-xs font-medium text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300";
+const rowGrid = "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 md:grid-cols-[minmax(0,1fr)_7rem_6.5rem_5.5rem_1rem] md:gap-x-3";
+const rowMetrics = "col-span-2 col-start-1 row-start-2 ml-11 mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs md:contents";
+const rowIdentity = "flex min-w-0 items-center gap-2.5";
+const rowAction = "rounded-lg px-1.5 py-2 hover:bg-slate-900/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-300 sm:px-2";
 
-function shouldShowAllianceDiscovery(options: NormalizedAllianceSearch) {
-  return !options.query && options.members === "all" && options.access === "all" && options.page === 1;
-}
-
-function TabLink({
-  tab,
-  activeTab,
-  params,
-  icon,
-  children,
-}: {
-  tab: DirectorySearchTab;
-  activeTab: DirectorySearchTab;
-  params: DirectorySearchParams;
-  icon: React.ReactNode;
-  children: React.ReactNode;
-}) {
-  const active = tab === activeTab;
+function DirectoryTotals({ players, alliances }: { players: number; alliances: number }) {
   return (
-    <Link
-      href={buildSearchParams(params, { tab })}
-      className={cn(
-        "inline-flex min-h-12 items-center justify-center gap-2 rounded-lg border px-4 py-3 text-base font-bold transition-colors",
-        active
-          ? "border-sky-500/60 bg-sky-500/15 text-sky-100 shadow-[0_0_20px_rgba(14,165,233,0.10)]"
-          : "border-transparent text-slate-400 hover:bg-slate-900 hover:text-slate-100",
-      )}
-    >
-      {icon}
-      {children}
-    </Link>
-  );
-}
-
-function PlayerSearchPanel({
-  params,
-  options,
-  result,
-  discovery,
-}: {
-  params: DirectorySearchParams;
-  options: NormalizedPlayerSearch;
-  result: { players: PlayerResult[]; totalCount: number };
-  discovery: DiscoveryResult | null;
-}) {
-  return (
-    <div className="space-y-5">
-      <Card className="border-slate-800 bg-slate-900/50">
-        <CardContent className="p-4">
-          <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[minmax(160px,1fr)_minmax(130px,.7fr)_minmax(110px,.55fr)_minmax(120px,.6fr)_minmax(100px,.5fr)_minmax(110px,auto)]" action="/search">
-            <input type="hidden" name="tab" value="players" />
-            <input type="hidden" name="playerQuery" value={options.query} />
-            <FilterInput name="playerAllianceQuery" label="Alliance" placeholder="Name or tag" defaultValue={options.allianceQuery} />
-            <FilterSelect name="playerRoster" label="Roster" value={options.roster} options={[
-              ["all", "All rosters"],
-              ["with", "Has roster"],
-              ["without", "No roster"],
-            ]} />
-            <FilterSelect name="playerBattlegroup" label="BG" value={options.battlegroup} options={[
-              ["all", "All BGs"],
-              ["none", "No BG"],
-              ["1", "BG 1"],
-              ["2", "BG 2"],
-              ["3", "BG 3"],
-            ]} />
-            <FilterSelect name="playerSort" label="Sort" value={options.sort} options={[
-              ["name", "Name"],
-              ["prestige", "Prestige"],
-              ["roster", "Roster"],
-            ]} />
-            <FilterSelect name="playerOrder" label="Order" value={options.order} options={[
-              ["asc", "Asc"],
-              ["desc", "Desc"],
-            ]} />
-            <div className="flex flex-col justify-end">
-              <div className="h-[18px] hidden xl:block" />
-              <Button className="h-10 w-full gap-2" type="submit">
-                <Search className="h-4 w-4" />
-                Search
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      {discovery && (
-        <DefaultDiscovery discovery={discovery} activeTab="players" />
-      )}
-
-      <ResultHeader count={result.totalCount} label="player profile" />
-
-      {result.players.length > 0 ? (
-        <div className="grid gap-3 md:grid-cols-2">
-          {result.players.map((player) => (
-            <PlayerCard key={player.id} player={player} />
-          ))}
-        </div>
-      ) : (
-        <EmptyState label="No player profiles found." />
-      )}
-
-      <DirectoryPagination params={params} pageParam="playerPage" page={options.page} pageSize={options.pageSize} totalCount={result.totalCount} />
-    </div>
-  );
-}
-
-function AllianceSearchPanel({
-  params,
-  options,
-  result,
-  discovery,
-}: {
-  params: DirectorySearchParams;
-  options: NormalizedAllianceSearch;
-  result: { alliances: AllianceResult[]; totalCount: number };
-  discovery: DiscoveryResult | null;
-}) {
-  return (
-    <div className="space-y-5">
-      <Card className="border-slate-800 bg-slate-900/50">
-        <CardContent className="p-4">
-          <form className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-[minmax(170px,.8fr)_minmax(170px,.8fr)_minmax(150px,.7fr)_minmax(120px,.55fr)_minmax(110px,auto)]" action="/search">
-            <input type="hidden" name="tab" value="alliances" />
-            <input type="hidden" name="allianceQuery" value={options.query} />
-            <FilterSelect name="allianceMembers" label="Members" value={options.members} options={[
-              ["all", "All sizes"],
-              ["1-10", "1-10"],
-              ["11-30", "11-30"],
-              ["31-plus", "31+"],
-            ]} />
-            <FilterSelect name="allianceAccess" label="Access" value={options.access} options={[
-              ["all", "All access"],
-              ["open", "Open"],
-              ["invite-only", "Invite only"],
-            ]} />
-            <FilterSelect name="allianceSort" label="Sort" value={options.sort} options={[
-              ["name", "Name"],
-              ["members", "Members"],
-            ]} />
-            <FilterSelect name="allianceOrder" label="Order" value={options.order} options={[
-              ["asc", "Asc"],
-              ["desc", "Desc"],
-            ]} />
-            <div className="flex flex-col justify-end">
-              <div className="h-[18px] hidden xl:block" />
-              <Button className="h-10 w-full gap-2" type="submit">
-                <Search className="h-4 w-4" />
-                Search
-              </Button>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-
-      {discovery && (
-        <DefaultDiscovery discovery={discovery} activeTab="alliances" />
-      )}
-
-      <ResultHeader count={result.totalCount} label="alliance" />
-
-      {result.alliances.length > 0 ? (
-        <div className="grid gap-3 md:grid-cols-2">
-          {result.alliances.map((alliance) => (
-            <AllianceCard key={alliance.id} alliance={alliance} />
-          ))}
-        </div>
-      ) : (
-        <EmptyState label="No alliances found." />
-      )}
-
-      <DirectoryPagination params={params} pageParam="alliancePage" page={options.page} pageSize={options.pageSize} totalCount={result.totalCount} />
-    </div>
-  );
-}
-
-function DefaultDiscovery({
-  discovery,
-  activeTab,
-}: {
-  discovery: NonNullable<DiscoveryResult>;
-  activeTab: DirectorySearchTab;
-}) {
-  return (
-    <div className="space-y-4 rounded-2xl border border-slate-800 bg-slate-950/35 p-4">
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h2 className="text-lg font-black text-white">Discovery</h2>
-          <p className="text-sm text-slate-400">
-            Start with high-signal profiles and open alliances, or type above to search directly.
-          </p>
-        </div>
-        <Badge variant="outline" className="w-fit border-slate-700 text-slate-400">
-          {activeTab === "players" ? "Player focus" : "Alliance focus"}
-        </Badge>
+    <dl aria-label="Directory totals" className="mt-3 flex flex-wrap items-center justify-center gap-x-3 gap-y-1 text-xs text-slate-400 sm:text-sm">
+      <div className="flex items-baseline gap-1.5">
+        <dt>{players === 1 ? "player profile" : "player profiles"}</dt>
+        <dd className="order-first font-semibold text-slate-100 tabular-nums">{players.toLocaleString("en-US")}</dd>
       </div>
-
-      <div className="grid gap-4 xl:grid-cols-2">
-        <DiscoveryColumn
-          title="Top player profiles"
-          description="Roster-backed profiles ranked by champion prestige."
-          icon={<Trophy className="h-4 w-4 text-amber-300" />}
-        >
-          <div className="grid gap-3">
-            {discovery.players.map((player) => (
-              <PlayerCard key={player.id} player={player} />
-            ))}
-          </div>
-        </DiscoveryColumn>
-
-        <DiscoveryColumn
-          title="Open alliances"
-          description="Real alliances that currently accept join requests."
-          icon={<Shield className="h-4 w-4 text-emerald-300" />}
-        >
-          <div className="grid gap-3">
-            {discovery.alliances.map((alliance) => (
-              <AllianceCard key={alliance.id} alliance={alliance} />
-            ))}
-          </div>
-        </DiscoveryColumn>
+      <div className="flex items-baseline gap-1.5 before:order-first before:mr-1.5 before:text-slate-600 before:content-['·']">
+        <dt>{alliances === 1 ? "alliance" : "alliances"}</dt>
+        <dd className="-order-1 font-semibold text-slate-100 tabular-nums">{alliances.toLocaleString("en-US")}</dd>
       </div>
-    </div>
+    </dl>
   );
 }
 
-function DiscoveryColumn({
-  title,
-  description,
-  icon,
-  children,
-}: {
+function groupAction(count: number, target: "players" | "alliances") {
+  return count > directoryPreviewSize ? `See all ${count.toLocaleString("en-US")} ${target}` : `View ${target}`;
+}
+
+function DirectoryGroup({ title, href, action, count, icon, discovery, children }: {
   title: string;
-  description: string;
-  icon: React.ReactNode;
-  children: React.ReactNode;
+  href: string;
+  action: string;
+  count?: number;
+  icon?: ReactNode;
+  discovery?: boolean;
+  children: ReactNode[];
 }) {
   return (
-    <section className="space-y-3">
-      <div className="flex items-start gap-2">
-        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-800 bg-slate-900">
-          {icon}
-        </div>
-        <div>
-          <h3 className="text-sm font-black uppercase tracking-wide text-slate-200">{title}</h3>
-          <p className="text-xs text-slate-500">{description}</p>
-        </div>
+    <section aria-label={title} className={cn("min-w-0", discovery && "rounded-xl border border-slate-800 bg-slate-900/45 px-3 pb-1 pt-3 sm:px-4")}>
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b border-slate-800/80 pb-2">
+        <h2 className="flex items-center gap-1.5 text-base font-semibold text-slate-100">
+          {icon}{title} {count !== undefined && <span className="text-xs font-medium text-slate-400 tabular-nums">{count.toLocaleString("en-US")}</span>}
+        </h2>
+        {(count === undefined || count > 0) && (
+          <Link href={href} className="inline-flex min-h-8 items-center gap-1.5 rounded text-xs font-medium text-indigo-200 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300">
+            {action}<ArrowRight className="size-3.5" aria-hidden="true" />
+          </Link>
+        )}
       </div>
-      {children}
+      {children.length > 0 ? <ul className="divide-y divide-slate-800/80">{children}</ul> : <p className="py-4 text-sm text-slate-400">No {title.toLowerCase()} to show.</p>}
     </section>
   );
 }
 
-function PlayerCard({ player }: { player: PlayerResult }) {
-  const initials = player.ingameName.substring(0, 2).toUpperCase();
+function ResultToolbar({ tab, query, params, children }: {
+  tab: DirectorySearchTab;
+  query: string;
+  params?: DirectorySearchParams;
+  children?: ReactNode;
+}) {
+  const links = [
+    { tab: "all", label: "All results", icon: LayoutGrid },
+    { tab: "players", label: "Players", icon: Users },
+    { tab: "alliances", label: "Alliances", icon: Shield },
+  ] as const;
+
   return (
-    <Link href={`/player/${player.id}`} className="group block h-full">
-      <Card className="h-full overflow-hidden border-slate-800 bg-slate-900/55 transition-colors hover:border-sky-700/60">
-        <CardContent className="p-0">
-          <div className="relative border-b border-slate-800 bg-slate-950/55 p-4">
-            <div className="absolute inset-x-0 top-0 h-1 bg-sky-500/60 opacity-0 transition-opacity group-hover:opacity-100" />
-            <div className="flex items-start gap-4">
-              <Avatar className="h-14 w-14 shrink-0 border border-slate-700 ring-4 ring-slate-950">
-                <AvatarImage src={player.avatar ?? undefined} />
-                <AvatarFallback className="bg-slate-800 text-sm font-black">{initials}</AvatarFallback>
-              </Avatar>
-              <div className="min-w-0 flex-1">
-                <div className="flex min-w-0 items-center gap-2">
-                  <h2 className="truncate text-lg font-black leading-tight text-white group-hover:text-sky-200">
-                    {player.ingameName}
-                  </h2>
-                  {player.isOfficer && (
-                    <Badge className="shrink-0 border border-amber-600/40 bg-amber-500/10 px-1.5 py-0 text-[9px] font-black text-amber-300">
-                      <Crown className="mr-1 h-3 w-3" />
-                      Officer
-                    </Badge>
-                  )}
-                </div>
-                <div className="mt-1 flex min-w-0 items-center gap-2 text-xs text-slate-400">
-                  {player.alliance ? (
-                    <span className="truncate">
-                      {player.alliance.tag ? `[${player.alliance.tag}] ` : ""}
-                      {player.alliance.name}
-                    </span>
-                  ) : (
-                    <span className="text-slate-500">Unaffiliated</span>
-                  )}
-                </div>
-              </div>
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-slate-800 bg-slate-900 text-slate-500 transition-colors group-hover:border-sky-700/50 group-hover:text-sky-300">
-                <ArrowRight className="h-4 w-4" />
-              </div>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 gap-2 p-4 sm:grid-cols-3">
-            <Metric icon={<Trophy className="h-4 w-4" />} label="Prestige" value={player.championPrestige?.toLocaleString("en-US") ?? "N/A"} tone="amber" />
-            <Metric icon={<LayoutGrid className="h-4 w-4" />} label="Roster" value={player._count.roster.toLocaleString("en-US")} tone="sky" />
-            <Metric icon={<Swords className="h-4 w-4" />} label="Group" value={player.battlegroup ? `BG ${player.battlegroup}` : "No BG"} tone="slate" />
-          </div>
-
-          {player.alliance && (
-            <div className="flex items-center justify-between gap-3 border-t border-slate-800 px-4 py-3 text-xs">
-              <span className="min-w-0 truncate text-slate-500">Alliance page</span>
-              <span className="shrink-0 text-sky-300">Open profile</span>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </Link>
-  );
-}
-
-function AllianceCard({ alliance }: { alliance: AllianceResult }) {
-  const accessTone = alliance.inviteOnly ? "amber" : "emerald";
-  return (
-    <Link href={`/alliance/${alliance.id}`} className="group block h-full">
-      <Card className="h-full overflow-hidden border-slate-800 bg-slate-900/55 transition-colors hover:border-emerald-700/50">
-        <CardContent className="p-0">
-          <div className="relative border-b border-slate-800 bg-slate-950/55 p-4">
-            <div className="absolute inset-y-0 left-0 w-1 bg-emerald-500/50 opacity-70" />
-            <div className="flex items-start gap-4 pl-1">
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-slate-800 bg-slate-900 text-emerald-300 ring-4 ring-slate-950">
-                <Shield className="h-6 w-6" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="flex min-w-0 flex-wrap items-center gap-2">
-                  {alliance.tag && (
-                    <span className="rounded-md border border-slate-700 bg-slate-900 px-1.5 py-0.5 font-mono text-xs font-black text-slate-300">
-                      [{alliance.tag}]
-                    </span>
-                  )}
-                  <h2 className="truncate text-lg font-black leading-tight text-white group-hover:text-emerald-200">
-                    {alliance.name}
-                  </h2>
-                </div>
-                {alliance.description ? (
-                  <p className="mt-1 line-clamp-2 text-sm text-slate-400">{alliance.description}</p>
-                ) : (
-                  <p className="mt-1 text-sm text-slate-500">No public description</p>
-                )}
-              </div>
-              <AccessBadge inviteOnly={alliance.inviteOnly} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 p-4 sm:grid-cols-4">
-            <Metric icon={<Users className="h-4 w-4" />} label="Members" value={alliance.memberCount.toLocaleString("en-US")} tone="emerald" />
-            <Metric icon={<Trophy className="h-4 w-4" />} label="Avg prestige" value={alliance.averageChampionPrestige?.toLocaleString("en-US") ?? "N/A"} tone="amber" />
-            <Metric icon={<LayoutGrid className="h-4 w-4" />} label="BG split" value={`${alliance.bgCounts.bg1}/${alliance.bgCounts.bg2}/${alliance.bgCounts.bg3}`} tone="sky" />
-            <Metric icon={<UserRound className="h-4 w-4" />} label="No BG" value={alliance.bgCounts.unassigned.toLocaleString("en-US")} tone="slate" />
-          </div>
-
-          <div className="flex items-center justify-between gap-3 border-t border-slate-800 px-4 py-3 text-xs">
-            <span className={cn(
-              "font-semibold",
-              accessTone === "amber" ? "text-amber-300" : "text-emerald-300",
-            )}>
-              {alliance.inviteOnly ? "Officer invite required" : "Accepts join requests"}
-            </span>
-            <span className="flex items-center gap-1 text-emerald-300">
-              Open alliance
-              <ArrowRight className="h-3.5 w-3.5" />
-            </span>
-          </div>
-        </CardContent>
-      </Card>
-    </Link>
-  );
-}
-
-function AccessBadge({ inviteOnly }: { inviteOnly: boolean }) {
-  return (
-    <Badge
-      variant="outline"
-      className={cn(
-        "shrink-0 font-bold",
-        inviteOnly
-          ? "border-amber-700/70 bg-amber-500/10 text-amber-300"
-          : "border-emerald-700/70 bg-emerald-500/10 text-emerald-300",
-      )}
-    >
-      {inviteOnly ? "Invite only" : "Open"}
-    </Badge>
-  );
-}
-
-function FilterInput({ name, label, placeholder, defaultValue }: { name: string; label: string; placeholder: string; defaultValue: string }) {
-  return (
-    <label className="grid gap-1.5 text-xs font-medium text-slate-400">
-      {label}
-      <input
-        name={name}
-        defaultValue={defaultValue}
-        placeholder={placeholder}
-        className="h-10 rounded-md border border-slate-800 bg-slate-950 px-3 text-sm text-slate-100 outline-none transition-colors placeholder:text-slate-600 focus:border-sky-700"
-      />
-    </label>
-  );
-}
-
-function FilterSelect({ name, label, value, options }: { name: string; label: string; value: string; options: [string, string][] }) {
-  return (
-    <label className="grid gap-1.5 text-xs font-medium text-slate-400">
-      {label}
-      <select
-        name={name}
-        defaultValue={value}
-        className="h-10 rounded-md border border-slate-800 bg-slate-950 px-3 text-sm text-slate-100 outline-none transition-colors focus:border-sky-700"
-      >
-        {options.map(([optionValue, optionLabel]) => (
-          <option key={optionValue} value={optionValue}>{optionLabel}</option>
+    <div className="mb-4 flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3">
+      <nav aria-label="Result type" className="flex flex-wrap items-center gap-0.5 sm:gap-1">
+        {links.filter(link => query || link.tab !== "all").map(({ tab: target, label, icon: Icon }) => (
+          <Link
+            key={target}
+            href={target === tab && params ? "/search" + buildSearchParams(params) : directorySearchHref(query, target)}
+            aria-current={tab === target ? "page" : undefined}
+            className={cn(
+              "inline-flex min-h-9 items-center gap-1.5 rounded-lg border px-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300 sm:px-3 sm:text-sm",
+              tab === target ? "border-indigo-400/30 bg-indigo-400/15 text-indigo-100" : "border-transparent text-slate-300 hover:bg-slate-800 hover:text-white"
+            )}
+          >
+            <Icon aria-hidden="true" className="size-3.5" />{label}
+          </Link>
         ))}
+      </nav>
+      {children && <div className="ml-auto flex flex-wrap items-center justify-end gap-2">{children}</div>}
+    </div>
+  );
+}
+
+const fieldClass = "grid gap-1 text-xs font-medium text-slate-300";
+const inputClass = "h-9 min-w-0 rounded-md border border-slate-700 bg-slate-950 px-2 text-sm text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300";
+
+function FilterField({ label, name, value, items }: {
+  label: string;
+  name: string;
+  value: string;
+  items: readonly (readonly [string, string])[];
+}) {
+  return (
+    <label className={fieldClass}>
+      <span>{label}</span>
+      <select name={name} defaultValue={value} className={inputClass}>
+        {items.map(([key, text]) => <option key={key} value={key}>{text}</option>)}
       </select>
     </label>
   );
 }
 
-function ResultHeader({ count, label }: { count: number; label: string }) {
+function Filters({ options, tab, count, children }: {
+  options: Pick<NormalizedPlayerSearch | NormalizedAllianceSearch, "query" | "sort" | "order">;
+  tab: "players" | "alliances";
+  count: number;
+  children: ReactNode;
+}) {
+  const scope = tab === "players" ? "player" : "alliance";
   return (
-    <div className="flex items-center justify-between">
-      <p className="text-sm text-slate-400">
-        {count.toLocaleString("en-US")} {label}{count === 1 ? "" : "s"}
-      </p>
-    </div>
+    <details className="relative">
+      <summary className={cn(controlClass, "cursor-pointer list-none [&::-webkit-details-marker]:hidden")}>
+        <SlidersHorizontal className="size-3.5" aria-hidden="true" />Filters{count > 0 && <span>({count})</span>}
+      </summary>
+      <form action="/search" className="absolute right-0 top-full z-20 mt-2 grid w-[min(17rem,calc(100vw-2rem))] gap-3 rounded-xl border border-slate-700 bg-slate-900 p-3 shadow-xl shadow-black/35">
+        <input type="hidden" name="tab" value={tab} />
+        {options.query && <input type="hidden" name="q" value={options.query} />}
+        <input type="hidden" name={scope + "Sort"} value={options.sort} />
+        <input type="hidden" name={scope + "Order"} value={options.order} />
+        {children}
+        <button type="submit" className="w-fit rounded-md bg-indigo-500 px-3 py-2 text-xs font-semibold text-white hover:bg-indigo-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300">Apply filters</button>
+      </form>
+    </details>
+  );
+}
+
+function SortMenu({ options, params, tab }: {
+  options: Pick<NormalizedPlayerSearch | NormalizedAllianceSearch, "query" | "sort" | "order">;
+  params: DirectorySearchParams;
+  tab: "players" | "alliances";
+}) {
+  const player = tab === "players";
+  const scope = player ? "player" : "alliance";
+  const choices = [
+    ...(options.query ? [{ label: "Best match", sort: "match", order: "asc" }] : []),
+    { label: "Name A–Z", sort: "name", order: "asc" },
+    { label: "Name Z–A", sort: "name", order: "desc" },
+    ...(player ? [
+      { label: "Highest prestige", sort: "prestige", order: "desc" },
+      { label: "Lowest prestige", sort: "prestige", order: "asc" },
+      { label: "Largest roster", sort: "roster", order: "desc" },
+      { label: "Smallest roster", sort: "roster", order: "asc" },
+    ] : [
+      { label: "Most members", sort: "members", order: "desc" },
+      { label: "Fewest members", sort: "members", order: "asc" },
+    ]),
+  ];
+  const current = choices.find(choice => choice.sort === options.sort && (choice.sort === "match" || choice.order === options.order)) ?? choices[0];
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button type="button" className={controlClass} aria-label={"Sort results: " + current.label}>
+          {current.label}<ChevronDown className="size-3.5 text-slate-400" aria-hidden="true" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-40 border-slate-700 bg-slate-900 text-slate-100">
+        {choices.map(({ label, sort, order }) => (
+          <DropdownMenuItem key={label} asChild>
+            <Link href={"/search" + buildSearchParams(params, { tab, [scope + "Sort"]: sort, [scope + "Order"]: order, [scope + "Page"]: undefined })} aria-current={label === current.label ? "true" : undefined} className="justify-between">
+              {label}{label === current.label && <Check className="size-3.5 text-indigo-200" aria-hidden="true" />}
+            </Link>
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+function PlayerControls({ options, params }: { options: NormalizedPlayerSearch; params: DirectorySearchParams }) {
+  const count = Number(!!options.allianceQuery) + Number(options.roster !== "all") + Number(options.battlegroup !== "all");
+  return (
+    <>
+      {count > 0 && <ClearFilters href={"/search" + buildSearchParams(params, { tab: "players", playerAllianceQuery: undefined, playerRoster: undefined, playerBattlegroup: undefined, playerPage: undefined })} />}
+      <SortMenu tab="players" options={options} params={params} />
+      <Filters tab="players" options={options} count={count}>
+        <label className={fieldClass}>
+          <span>Alliance</span><input name="playerAllianceQuery" defaultValue={options.allianceQuery} placeholder="Name or tag" className={inputClass} />
+        </label>
+        <FilterField label="Roster" name="playerRoster" value={options.roster} items={[["all", "All rosters"], ["with", "Has roster"], ["without", "No roster"]]} />
+        <FilterField label="Battlegroup" name="playerBattlegroup" value={options.battlegroup} items={[["all", "All groups"], ["1", "BG 1"], ["2", "BG 2"], ["3", "BG 3"], ["none", "No BG"]]} />
+      </Filters>
+    </>
+  );
+}
+
+function AllianceControls({ options, params }: { options: NormalizedAllianceSearch; params: DirectorySearchParams }) {
+  const count = Number(options.members !== "all") + Number(options.access !== "all");
+  return (
+    <>
+      {count > 0 && <ClearFilters href={"/search" + buildSearchParams(params, { tab: "alliances", allianceMembers: undefined, allianceAccess: undefined, alliancePage: undefined })} />}
+      <SortMenu tab="alliances" options={options} params={params} />
+      <Filters tab="alliances" options={options} count={count}>
+        <FilterField label="Members" name="allianceMembers" value={options.members} items={[["all", "All sizes"], ["1-10", "1–10"], ["11-30", "11–30"], ["31-plus", "31+"]]} />
+        <FilterField label="Access" name="allianceAccess" value={options.access} items={[["all", "All access"], ["open", "Open"], ["invite-only", "Invite only"]]} />
+      </Filters>
+    </>
+  );
+}
+
+function ClearFilters({ href }: { href: string }) {
+  return <Link href={href} className={controlClass}>Clear filters <X className="size-3.5" aria-hidden="true" /></Link>;
+}
+
+function ResultHeading({ count, label, query }: { count: number; label: "player" | "alliance" | "result"; query: string }) {
+  return (
+    <h2 className="mb-3 text-lg font-semibold tracking-tight text-slate-100 sm:text-xl">
+      {count.toLocaleString("en-US")} {label}{count === 1 ? "" : "s"}{query && <> for <span className="break-all">“{query}”</span></>}
+    </h2>
   );
 }
 
 function EmptyState({ label }: { label: string }) {
   return (
-    <div className="rounded-lg border border-dashed border-slate-800 bg-slate-950/40 p-10 text-center text-sm text-slate-500">
-      {label}
+    <div className="border-t border-slate-800 py-7 text-sm text-slate-400">
+      <p className="font-medium text-slate-200">{label}</p>
+      <p className="mt-1">Try a different name or adjust your filters.</p>
     </div>
   );
 }
 
-function Metric({
-  icon,
-  label,
-  value,
-  tone = "slate",
-}: {
-  icon: React.ReactNode;
-  label: string;
-  value: string;
-  tone?: "slate" | "sky" | "amber" | "emerald";
-}) {
-  const toneClass = {
-    slate: "border-slate-800 bg-slate-950/55 text-slate-400",
-    sky: "border-sky-900/50 bg-sky-950/20 text-sky-300",
-    amber: "border-amber-900/50 bg-amber-950/20 text-amber-300",
-    emerald: "border-emerald-900/50 bg-emerald-950/20 text-emerald-300",
-  }[tone];
-
+function ColumnLabels({ labels }: { labels: string[] }) {
   return (
-    <div className={cn("min-w-0 rounded-lg border p-2.5", toneClass)}>
-      <div className="flex items-center gap-1.5 opacity-80">
-        {icon}
-        <span className="truncate text-[10px] font-black uppercase tracking-wide">{label}</span>
-      </div>
-      <div className="mt-1 truncate font-mono text-base font-black text-slate-100">{value}</div>
+    <div aria-hidden="true" className={cn(rowGrid, "hidden border-b border-slate-800 px-2 pb-2 text-xs text-slate-400 md:grid")}>
+      {labels.map(label => <span key={label}>{label}</span>)}<span />
     </div>
+  );
+}
+
+function RowMetric({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-baseline gap-1 md:block">
+      <dt className="order-last text-[11px] text-slate-400 md:sr-only">{label}</dt>
+      <dd className="font-medium tabular-nums text-slate-200 md:text-sm">{value}</dd>
+    </div>
+  );
+}
+
+function PlayerRow({ player, compact = false }: { player: PlayerResult; compact?: boolean }) {
+  const prestige = player.championPrestige?.toLocaleString("en-US") ?? "—";
+  const alliance = player.alliance;
+  return (
+    <li>
+      <Link href={`/player/${player.id}`} className={cn(rowAction, compact ? "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2" : rowGrid)}>
+        <div className={rowIdentity}>
+          <Avatar className="size-9 shrink-0 rounded-lg border border-slate-700 bg-slate-800">
+            <AvatarImage src={player.avatar ?? undefined} alt="" />
+            <AvatarFallback className="rounded-lg bg-slate-800 text-[11px] font-semibold text-indigo-100">{player.ingameName.slice(0, 2).toUpperCase()}</AvatarFallback>
+          </Avatar>
+          <div className="min-w-0">
+            <h3 className="flex min-w-0 items-center gap-1.5 text-sm font-semibold leading-snug text-slate-100">
+              <span className="break-words [overflow-wrap:anywhere]">{player.ingameName}</span>
+              {player.isOfficer && <span title="Officer"><Crown className="size-3 shrink-0 text-amber-300" aria-hidden="true" /><span className="sr-only">Officer</span></span>}
+            </h3>
+            <p className="mt-0.5 break-words text-xs leading-snug text-slate-400 [overflow-wrap:anywhere]">
+              {alliance ? (alliance.tag ? `[${alliance.tag}] ` : "") + alliance.name : "Unaffiliated"}
+            </p>
+          </div>
+        </div>
+        {compact ? (
+          <span className="text-right text-xs font-semibold tabular-nums text-slate-200">{prestige}<small className="block font-normal text-slate-400">prestige</small></span>
+        ) : (
+          <>
+            <dl className={rowMetrics}>
+              <RowMetric label="prestige" value={prestige} />
+              <RowMetric label="champs" value={player._count.roster.toLocaleString("en-US")} />
+              <RowMetric label="battlegroup" value={player.battlegroup ? "BG " + player.battlegroup : "No BG"} />
+            </dl>
+            <ChevronRight className="col-start-2 row-start-1 size-3.5 text-slate-500 md:col-start-5" aria-hidden="true" />
+          </>
+        )}
+      </Link>
+    </li>
+  );
+}
+
+function AllianceRow({ alliance, compact = false }: { alliance: AllianceResult; compact?: boolean }) {
+  const { bg1, bg2, bg3, unassigned } = alliance.bgCounts;
+  const access = <span className={cn("text-xs font-medium", alliance.inviteOnly ? "text-amber-300" : "text-emerald-300")}>{alliance.inviteOnly ? "Invite only" : "Open"}</span>;
+  return (
+    <li>
+      <Link href={`/alliance/${alliance.id}`} className={cn(rowAction, compact ? "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2" : rowGrid)}>
+        <div className={rowIdentity}>
+          <span className="grid size-9 shrink-0 place-items-center rounded-lg border border-emerald-400/20 bg-emerald-400/10 text-emerald-200"><Shield className="size-4" aria-hidden="true" /></span>
+          <div className="min-w-0">
+            <h3 className="break-words text-sm font-semibold leading-snug text-slate-100 [overflow-wrap:anywhere]">{alliance.name}</h3>
+            {(!compact || alliance.tag) && (
+              <p className="mt-0.5 break-words text-xs leading-snug text-slate-400 [overflow-wrap:anywhere]">
+                {alliance.tag && `[${alliance.tag}]`}
+                {!compact && `${alliance.tag ? " · " : ""}BG ${bg1} / ${bg2} / ${bg3}${unassigned ? ` · ${unassigned} unassigned` : ""}`}
+              </p>
+            )}
+            {!compact && alliance.description && <p className="mt-0.5 line-clamp-2 break-words text-xs leading-snug text-slate-300">{alliance.description}</p>}
+          </div>
+        </div>
+        {compact ? (
+          <span className="text-right text-xs tabular-nums text-slate-200">
+            <span className="block font-medium">{alliance.memberCount.toLocaleString("en-US")} {alliance.memberCount === 1 ? "member" : "members"}</span>{access}
+          </span>
+        ) : (
+          <>
+            <dl className={rowMetrics}>
+              <RowMetric label="members" value={alliance.memberCount.toLocaleString("en-US")} />
+              <RowMetric label="avg. prestige" value={alliance.averageChampionPrestige?.toLocaleString("en-US") ?? "—"} />
+              <div><dt className="sr-only">Access</dt><dd>{access}</dd></div>
+            </dl>
+            <ChevronRight className="col-start-2 row-start-1 size-3.5 text-slate-500 md:col-start-5" aria-hidden="true" />
+          </>
+        )}
+      </Link>
+    </li>
   );
 }
 

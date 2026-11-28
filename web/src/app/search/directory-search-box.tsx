@@ -1,23 +1,20 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
-import { Search, Shield, Users, X } from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent, type ReactNode } from "react";
+import { ArrowRight, Search, Shield, Users, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { useDebounce } from "@/hooks/use-debounce";
+import { directorySearchHref } from "@/lib/directory-search";
 import { cn } from "@/lib/utils";
-import type { DirectorySearchTab } from "@/lib/directory-search";
 
-type DirectorySuggestionResponse = {
+type Suggestions = {
   players: Array<{
     id: string;
     ingameName: string;
     avatar: string | null;
     championPrestige: number | null;
-    alliance: { id: string; name: string; tag: string | null } | null;
-    _count: { roster: number };
+    alliance: { name: string; tag: string | null } | null;
   }>;
   alliances: Array<{
     id: string;
@@ -27,306 +24,222 @@ type DirectorySuggestionResponse = {
     _count: { members: number };
   }>;
 };
+type SuggestionResponse = { query: string; data: Suggestions | null };
+type Suggestion = { key: string; href: string; name: string; detail: string; icon: ReactNode; metadata?: ReactNode };
 
-type DirectorySuggestionItem = {
-  key: string;
-  href: string;
-};
+const desktopSuggestions = "(min-width: 640px)";
 
-export function DirectorySearchBox({
-  activeTab,
-  initialValue,
-}: {
-  activeTab: DirectorySearchTab;
-  initialValue: string;
-}) {
+function subscribeToWidth(notify: () => void) {
+  const media = window.matchMedia(desktopSuggestions);
+  media.addEventListener("change", notify);
+  return () => media.removeEventListener("change", notify);
+}
+
+export function DirectorySearchBox({ initialValue }: { initialValue: string }) {
   const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const listId = useId();
+  const container = useRef<HTMLFormElement>(null);
   const [value, setValue] = useState(initialValue);
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
-  const [suggestions, setSuggestions] = useState<DirectorySuggestionResponse>({ players: [], alliances: [] });
-  const debouncedValue = useDebounce(value, 250);
-  const requestSeqRef = useRef(0);
-  const suppressedQueryRef = useRef(initialValue.trim());
-  const containerRef = useRef<HTMLDivElement>(null);
+  const [response, setResponse] = useState<SuggestionResponse | null>(null);
+  const wide = useSyncExternalStore(subscribeToWidth, () => window.matchMedia(desktopSuggestions).matches, () => false);
+  const term = value.trim();
+  const debouncedTerm = useDebounce(term, 250);
+  const showSuggestions = open && term.length >= 2;
+  const currentResponse = response?.query === term ? response : null;
+  const limit = wide ? 3 : 2;
 
-  useEffect(() => {
-    const nextValue = initialValue.trim();
-    suppressedQueryRef.current = nextValue;
-    requestSeqRef.current += 1;
-    setValue(initialValue);
-    setSuggestions({ players: [], alliances: [] });
+  function dismiss() {
     setOpen(false);
     setActiveIndex(-1);
-  }, [initialValue]);
+  }
 
   useEffect(() => {
-    const query = debouncedValue.trim();
-    if (query.length < 2 || query === suppressedQueryRef.current) {
-      return;
-    }
-
+    if (!open || debouncedTerm.length < 2) return;
     const controller = new AbortController();
-    const seq = ++requestSeqRef.current;
-
-    fetch(`/api/search/directory?q=${encodeURIComponent(query)}`, { signal: controller.signal })
-      .then(async (res) => {
+    fetch(`/api/search/directory?q=${encodeURIComponent(debouncedTerm)}`, { signal: controller.signal })
+      .then(async res => {
         if (!res.ok) throw new Error("Search failed");
-        return await res.json() as DirectorySuggestionResponse;
+        return await res.json() as Suggestions;
       })
-      .then((data) => {
-        if (seq === requestSeqRef.current && query !== suppressedQueryRef.current) {
-          const nextSuggestions = { players: data.players ?? [], alliances: data.alliances ?? [] };
-          setSuggestions(nextSuggestions);
-          setActiveIndex(-1);
-          setOpen(true);
-        }
+      .then(data => {
+        if (!controller.signal.aborted) setResponse({ query: debouncedTerm, data });
       })
-      .catch((error) => {
-        if (controller.signal.aborted) return;
-        console.error(error);
-        if (seq === requestSeqRef.current && query !== suppressedQueryRef.current) {
-          setSuggestions({ players: [], alliances: [] });
-          setActiveIndex(-1);
-          setOpen(true);
-        }
+      .catch(() => {
+        if (!controller.signal.aborted) setResponse({ query: debouncedTerm, data: null });
       });
-
     return () => controller.abort();
-  }, [debouncedValue]);
+  }, [debouncedTerm, open]);
 
   useEffect(() => {
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) {
-        suppressedQueryRef.current = value.trim();
+    if (!open) return;
+    const onPointerDown = (event: PointerEvent) => {
+      if (!container.current?.contains(event.target as Node)) {
         setOpen(false);
         setActiveIndex(-1);
       }
     };
+    document.addEventListener("pointerdown", onPointerDown);
+    return () => document.removeEventListener("pointerdown", onPointerDown);
+  }, [open]);
 
-    document.addEventListener("pointerdown", handlePointerDown);
-    return () => document.removeEventListener("pointerdown", handlePointerDown);
-  }, [value]);
+  const players: Suggestion[] = (currentResponse?.data?.players ?? []).slice(0, limit).map(player => ({
+    key: "player-" + player.id,
+    href: "/player/" + player.id,
+    name: player.ingameName,
+    detail: player.alliance ? (player.alliance.tag ? `[${player.alliance.tag}] ` : "") + player.alliance.name : "Unaffiliated",
+    icon: <Avatar className="size-8 shrink-0 rounded-lg border border-slate-700">
+      <AvatarImage src={player.avatar ?? undefined} alt="" />
+      <AvatarFallback className="rounded-lg bg-slate-800 text-[11px] font-semibold text-indigo-100">{player.ingameName.slice(0, 2).toUpperCase()}</AvatarFallback>
+    </Avatar>,
+    metadata: player.championPrestige != null && <span className="text-[11px] tabular-nums text-slate-300">
+      {player.championPrestige.toLocaleString("en-US")}<span className="sr-only"> prestige</span>
+    </span>,
+  }));
+  const alliances: Suggestion[] = (currentResponse?.data?.alliances ?? []).slice(0, limit).map(alliance => ({
+    key: "alliance-" + alliance.id,
+    href: "/alliance/" + alliance.id,
+    name: alliance.name,
+    detail: `${alliance.tag ? `[${alliance.tag}] · ` : ""}${alliance._count.members.toLocaleString("en-US")} ${alliance._count.members === 1 ? "member" : "members"}`,
+    icon: <span className="grid size-8 shrink-0 place-items-center rounded-lg border border-emerald-400/20 bg-emerald-400/10 text-emerald-200"><Shield className="size-4" /></span>,
+    metadata: <span className={cn("text-[11px]", alliance.inviteOnly ? "text-amber-300" : "text-emerald-300")}>{alliance.inviteOnly ? "Invite only" : "Open"}</span>,
+  }));
+  const choices = [...players, ...alliances];
+  const optionId = (item: Suggestion) => `${listId}-${item.key}`;
+  const active = showSuggestions ? choices[activeIndex] : undefined;
+  const activeId = active ? optionId(active) : undefined;
 
-  const suggestionItems = useMemo<DirectorySuggestionItem[]>(() => [
-    ...suggestions.players.map((player) => ({ key: `player:${player.id}`, href: `/player/${player.id}` })),
-    ...suggestions.alliances.map((alliance) => ({ key: `alliance:${alliance.id}`, href: `/alliance/${alliance.id}` })),
-  ], [suggestions.alliances, suggestions.players]);
-  const suggestionCount = suggestionItems.length;
-  const activeSuggestionKey = activeIndex >= 0 ? suggestionItems[activeIndex]?.key : undefined;
-  const hint = useMemo(() => activeTab === "players" ? "Search player profiles" : "Search alliances", [activeTab]);
+  useEffect(() => {
+    if (activeId) document.getElementById(activeId)?.scrollIntoView?.({ block: "nearest" });
+  }, [activeId]);
 
-  const closeSuggestions = (queryToSuppress = value.trim()) => {
-    suppressedQueryRef.current = queryToSuppress;
-    requestSeqRef.current += 1;
-    setSuggestions({ players: [], alliances: [] });
-    setOpen(false);
-    setActiveIndex(-1);
-  };
+  function navigate(href: string) {
+    dismiss();
+    router.push(href);
+  }
 
-  const navigateToSuggestion = (item: DirectorySuggestionItem) => {
-    closeSuggestions();
-    router.push(item.href);
-  };
-
-  const getSuggestionIndex = (key: string) => suggestionItems.findIndex((item) => item.key === key);
-
-  const submitSearch = (event: FormEvent<HTMLFormElement>) => {
+  function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    closeSuggestions();
-    const params = new URLSearchParams(searchParams.toString());
-    params.set("tab", activeTab);
-    if (activeTab === "players") {
-      setParam(params, "playerQuery", value.trim());
-      params.delete("playerPage");
-    } else {
-      setParam(params, "allianceQuery", value.trim());
-      params.delete("alliancePage");
-    }
-    router.push(`${pathname}?${params.toString()}`);
-  };
+    navigate(directorySearchHref(term));
+  }
 
-  const clearSearch = () => {
-    suppressedQueryRef.current = "";
-    setValue("");
-    setSuggestions({ players: [], alliances: [] });
-    setOpen(false);
-    setActiveIndex(-1);
-    const params = new URLSearchParams(searchParams.toString());
-    if (activeTab === "players") {
-      params.delete("playerQuery");
-      params.delete("playerPage");
-    } else {
-      params.delete("allianceQuery");
-      params.delete("alliancePage");
-    }
-    router.push(`${pathname}?${params.toString()}`);
-  };
+  function group(title: string, items: Suggestion[], icon: ReactNode, start: number) {
+    if (!items.length) return null;
+    return (
+      <div role="group" aria-label={title} className="min-w-0">
+        <p className="flex items-center gap-1.5 px-2 py-1 text-xs font-medium text-slate-400">{icon}{title}</p>
+        {items.map((item, index) => (
+          <button
+            type="button"
+            tabIndex={-1}
+            key={item.key}
+            id={optionId(item)}
+            role="option"
+            aria-selected={active?.key === item.key}
+            onMouseDown={event => event.preventDefault()}
+            onMouseEnter={() => setActiveIndex(start + index)}
+            onClick={() => navigate(item.href)}
+            className={cn(
+              "flex min-h-11 w-full items-center gap-2 rounded-lg px-2 py-1 text-left",
+              active?.key === item.key ? "bg-indigo-400/15" : "hover:bg-slate-800",
+            )}
+          >
+            <span aria-hidden="true">{item.icon}</span>
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-sm font-semibold text-slate-100" title={item.name}><Match name={item.name} term={term} /></span>
+              <span className="block truncate text-xs text-slate-400" title={item.detail}>{item.detail}</span>
+            </span>
+            {item.metadata && <span className="shrink-0 whitespace-nowrap">{item.metadata}</span>}
+          </button>
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <div ref={containerRef} className="relative">
-      <form onSubmit={submitSearch} className="rounded-2xl border border-slate-800 bg-slate-900/70 p-3 shadow-[0_20px_60px_rgba(0,0,0,0.20)]">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
-            <input
-              value={value}
-              onChange={(event) => {
-                const nextValue = event.target.value;
-                suppressedQueryRef.current = "";
-                setValue(nextValue);
-                setOpen(true);
-                setActiveIndex(-1);
-                if (nextValue.trim().length < 2) {
-                  setSuggestions({ players: [], alliances: [] });
-                  setActiveIndex(-1);
-                }
-              }}
-              onFocus={() => {
-                if (value.trim().length >= 2 && value.trim() !== suppressedQueryRef.current) setOpen(true);
-              }}
-              placeholder={hint}
-              className="h-12 w-full rounded-xl border border-slate-800 bg-slate-950 pl-12 pr-11 text-base font-semibold text-white outline-none transition-colors placeholder:text-slate-600 focus:border-sky-700"
-              onKeyDown={(event) => {
-                if (event.key === "ArrowDown" && suggestionCount > 0) {
-                  event.preventDefault();
-                  setOpen(true);
-                  setActiveIndex((current) => current < 0 ? 0 : (current + 1) % suggestionCount);
-                  return;
-                }
+    <form
+      ref={container}
+      role="search"
+      aria-label="Directory search"
+      onSubmit={submit}
+      onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) dismiss(); }}
+      className="relative flex items-center gap-1 rounded-xl border border-slate-600 bg-slate-900 p-1.5 text-left focus-within:border-indigo-400 sm:gap-2"
+    >
+      <div className="flex min-w-0 flex-1 items-center gap-2 pl-1.5 sm:pl-3">
+        <Search className="size-4 shrink-0 text-slate-400" aria-hidden="true" />
+        <input
+          type="search"
+          role="combobox"
+          aria-label="Search players and alliances"
+          aria-autocomplete="list"
+          aria-expanded={showSuggestions}
+          aria-controls={showSuggestions ? listId : undefined}
+          aria-activedescendant={activeId}
+          autoComplete="off"
+          placeholder="Player name, alliance name or tag"
+          value={value}
+          onChange={event => {
+            setValue(event.target.value);
+            setOpen(true);
+            setActiveIndex(-1);
+          }}
+          onFocus={() => { if (term !== initialValue || currentResponse) setOpen(true); }}
+          onKeyDown={event => {
+            if (event.nativeEvent.isComposing) return;
+            if (event.key === "Escape") {
+              dismiss();
+              return;
+            }
+            if ((event.key === "ArrowDown" || event.key === "ArrowUp") && choices.length > 0) {
+              event.preventDefault();
+              setOpen(true);
+              const step = event.key === "ArrowDown" ? 1 : -1;
+              setActiveIndex(index => index < 0 || index >= choices.length
+                ? step === 1 ? 0 : choices.length - 1
+                : (index + step + choices.length) % choices.length);
+            } else if (event.key === "Enter" && active) {
+              event.preventDefault();
+              navigate(active.href);
+            }
+          }}
+          className="min-h-11 w-full min-w-0 bg-transparent text-sm text-white outline-none placeholder:text-slate-400 [&::-webkit-search-cancel-button]:hidden sm:text-base"
+        />
+        {value && (
+          <button type="button" aria-label="Clear search" onClick={() => {
+            setValue("");
+            setResponse(null);
+            navigate(directorySearchHref());
+          }} className="grid size-8 shrink-0 place-items-center rounded-md text-slate-400 hover:bg-slate-800 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-300">
+            <X className="size-4" aria-hidden="true" />
+          </button>
+        )}
+      </div>
+      <button type="submit" className="min-h-11 rounded-lg bg-indigo-500 px-2.5 text-sm font-semibold text-white hover:bg-indigo-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white sm:px-4">Search</button>
 
-                if (event.key === "ArrowUp" && suggestionCount > 0) {
-                  event.preventDefault();
-                  setOpen(true);
-                  setActiveIndex((current) => current < 0 ? suggestionCount - 1 : (current - 1 + suggestionCount) % suggestionCount);
-                  return;
-                }
-
-                if (event.key === "Enter" && open && activeIndex >= 0 && suggestionItems[activeIndex]) {
-                  event.preventDefault();
-                  navigateToSuggestion(suggestionItems[activeIndex]);
-                  return;
-                }
-
-                if (event.key === "Escape") {
-                  closeSuggestions();
-                }
-              }}
-            />
-            {value ? (
-              <button
-                type="button"
-                onClick={clearSearch}
-                className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-md text-slate-500 transition-colors hover:bg-slate-800 hover:text-slate-200"
-                aria-label="Clear search"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            ) : null}
+      {showSuggestions && (
+        <div className="absolute inset-x-0 top-full z-30 mt-1.5 overflow-hidden rounded-xl border border-slate-700 bg-slate-900 shadow-2xl shadow-black/40">
+          <div id={listId} role="listbox" aria-label="Directory suggestions" className={cn(
+            "grid max-h-[min(17rem,44dvh)] gap-2 overflow-y-auto p-1.5",
+            players.length > 0 && alliances.length > 0 && "divide-y divide-slate-700/75 sm:grid-cols-2 sm:divide-x sm:divide-y-0 sm:[&>div+div]:pl-2",
+          )}>
+            {group("Players", players, <Users className="size-3.5" aria-hidden="true" />, 0)}
+            {group("Alliances", alliances, <Shield className="size-3.5" aria-hidden="true" />, players.length)}
           </div>
-          <Button type="submit" className="h-12 gap-2 rounded-xl px-5">
-            <Search className="h-4 w-4" />
-            Search
-          </Button>
-        </div>
-      </form>
-
-      {open && value.trim().length >= 2 && (
-        <div className="absolute inset-x-0 top-full z-40 mt-2 overflow-hidden rounded-xl border border-slate-800 bg-slate-950 shadow-2xl">
-          {suggestionCount > 0 ? (
-            <div className="max-h-[420px] overflow-y-auto p-2">
-              {suggestions.players.length > 0 && (
-                <SuggestionGroup icon={<Users className="h-3.5 w-3.5" />} label="Players">
-                  {suggestions.players.map((player) => (
-                    <button
-                      key={player.id}
-                      type="button"
-                      onClick={() => navigateToSuggestion({ key: `player:${player.id}`, href: `/player/${player.id}` })}
-                      onMouseEnter={() => setActiveIndex(getSuggestionIndex(`player:${player.id}`))}
-                      className={cn(
-                        "flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors",
-                        activeSuggestionKey === `player:${player.id}` ? "bg-slate-900" : "hover:bg-slate-900",
-                      )}
-                    >
-                      <Avatar className="h-9 w-9 border border-slate-800">
-                        <AvatarImage src={player.avatar ?? undefined} />
-                        <AvatarFallback>{player.ingameName.substring(0, 2).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-semibold text-slate-100">{player.ingameName}</div>
-                        <div className="truncate text-xs text-slate-500">
-                          {player.alliance ? `${player.alliance.tag ? `[${player.alliance.tag}] ` : ""}${player.alliance.name}` : "Unaffiliated"}
-                        </div>
-                      </div>
-                      <div className="hidden shrink-0 items-center gap-2 sm:flex">
-                        <Badge variant="outline" className="border-slate-800 text-slate-400">{player._count.roster} champs</Badge>
-                        <span className="font-mono text-xs text-amber-300">{player.championPrestige?.toLocaleString("en-US") ?? "N/A"}</span>
-                      </div>
-                    </button>
-                  ))}
-                </SuggestionGroup>
-              )}
-              {suggestions.alliances.length > 0 && (
-                <SuggestionGroup icon={<Shield className="h-3.5 w-3.5" />} label="Alliances">
-                  {suggestions.alliances.map((alliance) => (
-                    <button
-                      key={alliance.id}
-                      type="button"
-                      onClick={() => navigateToSuggestion({ key: `alliance:${alliance.id}`, href: `/alliance/${alliance.id}` })}
-                      onMouseEnter={() => setActiveIndex(getSuggestionIndex(`alliance:${alliance.id}`))}
-                      className={cn(
-                        "flex w-full items-center gap-3 rounded-lg p-2 text-left transition-colors",
-                        activeSuggestionKey === `alliance:${alliance.id}` ? "bg-slate-900" : "hover:bg-slate-900",
-                      )}
-                    >
-                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border border-slate-800 bg-slate-900 text-slate-400">
-                        <Shield className="h-4 w-4" />
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-sm font-semibold text-slate-100">
-                          {alliance.tag ? `[${alliance.tag}] ` : ""}{alliance.name}
-                        </div>
-                        <div className="truncate text-xs text-slate-500">
-                          {alliance._count.members.toLocaleString("en-US")} members
-                        </div>
-                      </div>
-                      <Badge
-                        variant="outline"
-                        className={cn("hidden shrink-0 sm:inline-flex", alliance.inviteOnly ? "border-amber-800 text-amber-300" : "border-emerald-800 text-emerald-300")}
-                      >
-                        {alliance.inviteOnly ? "Invite only" : "Open"}
-                      </Badge>
-                    </button>
-                  ))}
-                </SuggestionGroup>
-              )}
-            </div>
-          ) : (
-            <div className="p-5 text-center text-sm text-slate-500">
-              No suggestions found.
-            </div>
-          )}
+          {!choices.length && <p className="px-3 pb-2 text-xs text-slate-400" role="status">
+            {!currentResponse ? "Searching…" : currentResponse.data ? "No suggestions found." : "Couldn’t load suggestions."}
+          </p>}
+          <button type="submit" className="flex min-h-11 w-full items-center justify-between gap-2 border-t border-slate-700 bg-slate-800/65 px-3 text-left text-sm font-medium text-indigo-100 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-indigo-300">
+            <span className="min-w-0 break-all">See all results for “{term}”</span><ArrowRight className="size-4 shrink-0" aria-hidden="true" />
+          </button>
         </div>
       )}
-    </div>
+    </form>
   );
 }
 
-function SuggestionGroup({ icon, label, children }: { icon: React.ReactNode; label: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-1">
-      <div className="flex items-center gap-1.5 px-2 py-1 text-[10px] font-black uppercase tracking-widest text-slate-500">
-        {icon}
-        {label}
-      </div>
-      <div className="space-y-1">{children}</div>
-    </div>
-  );
-}
-
-function setParam(params: URLSearchParams, key: string, value: string) {
-  if (value) params.set(key, value);
-  else params.delete(key);
+function Match({ name, term }: { name: string; term: string }) {
+  const index = name.toLowerCase().indexOf(term.toLowerCase());
+  if (index < 0) return name;
+  return <>{name.slice(0, index)}<mark className="bg-transparent text-indigo-200">{name.slice(index, index + term.length)}</mark>{name.slice(index + term.length)}</>;
 }
