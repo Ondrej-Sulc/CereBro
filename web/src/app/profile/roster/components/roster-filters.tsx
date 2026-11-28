@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useRef, useState, type Ref, type ReactNode } from "react";
-import { Search, PenLine, Plus, Zap, Shield, Tag, X, Swords, ArrowUp, ArrowDown, ChevronDown, SlidersHorizontal, Layers } from "lucide-react";
+import { Search, PenLine, Plus, Zap, Shield, Tag, X, Swords, ArrowUp, ArrowDown, ArrowUpNarrowWide, ArrowDownWideNarrow, ChevronDown, SlidersHorizontal, Layers } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -248,20 +248,60 @@ function MoreFiltersButton({ expanded, panelId, count, onToggle, compact = false
   </Button>;
 }
 
+const sortFields = {
+  NAME: { label: "Name", ASC: "A to Z", DESC: "Z to A" },
+  RELEASE_DATE: { label: "Release date", ASC: "Oldest first", DESC: "Newest first" },
+  PRESTIGE: { label: "Prestige", ASC: "Lowest first", DESC: "Highest first" },
+} satisfies Record<RosterSortField, Record<"label" | SortDirection, string>>;
+
 function RosterSort({ p, compact = false }: { p: RosterFiltersProps; compact?: boolean }) {
-  return <div className={cn("flex items-center gap-1", compact && "min-w-0 gap-0", compact && p.flat && "ml-auto")}>
+  const ascending = p.sortDirection === "ASC";
+  const nextDirection = ascending ? "DESC" : "ASC";
+  const field = sortFields[p.sortBy];
+  const reverseLabel = p.flat ? `Reverse sort to ${field[nextDirection]}` : ascending ? "Sort descending" : "Sort ascending";
+  const DirectionIcon = p.flat
+    ? (ascending ? ArrowUpNarrowWide : ArrowDownWideNarrow)
+    : (ascending ? ArrowUp : ArrowDown);
+
+  return <div
+    role={p.flat ? "group" : undefined}
+    aria-label={p.flat ? "Champion sorting" : undefined}
+    className={cn("flex items-center", (p.flat || compact) ? "gap-0" : "gap-1", compact && "min-w-0", compact && p.flat && "ml-auto")}
+  >
     <Select value={p.sortBy} onValueChange={value => p.onSortByChange(value as RosterSortField)}>
-      <SelectTrigger aria-label="Sort champions by" className={cn("h-10 w-[112px] bg-transparent text-xs text-slate-400 shadow-none hover:bg-slate-800/40", p.flat ? "border-slate-800" : "border-0", compact && "h-11 min-w-0 flex-1 gap-1 px-2 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:shrink-0", compact && p.flat && "w-auto")}>
-        <SelectValue />
+      <SelectTrigger
+        aria-label={p.flat ? `Sort by ${field.label}, ${field[p.sortDirection]}` : "Sort champions by"}
+        className={cn(
+          "h-10 w-[112px] text-xs shadow-none",
+          p.flat
+            ? "rounded-l-lg rounded-r-none border-r-0 border-slate-700 bg-slate-900 font-semibold text-slate-200 hover:bg-slate-800 focus:z-10 focus:ring-indigo-300/60 focus:ring-offset-0"
+            : "border-0 bg-transparent text-slate-400 hover:bg-slate-800/40",
+          compact && "h-11 min-w-0 flex-1 gap-1 px-2 [&>svg]:size-3 [&>svg]:shrink-0",
+          compact && p.flat && "w-auto",
+        )}
+      >
+        <SelectValue>{p.flat ? field.label : undefined}</SelectValue>
       </SelectTrigger>
       <SelectContent>
-        <SelectItem value="NAME" className="min-h-11 sm:min-h-8">Name</SelectItem>
-        <SelectItem value="RELEASE_DATE" className="min-h-11 sm:min-h-8">Release date</SelectItem>
-        {p.showPrestigeSort !== false && <SelectItem value="PRESTIGE" className="min-h-11 sm:min-h-8">Prestige</SelectItem>}
+        <SelectItem value="NAME" className="min-h-11 sm:min-h-8">{sortFields.NAME.label}</SelectItem>
+        <SelectItem value="RELEASE_DATE" className="min-h-11 sm:min-h-8">{sortFields.RELEASE_DATE.label}</SelectItem>
+        {p.showPrestigeSort !== false && <SelectItem value="PRESTIGE" className="min-h-11 sm:min-h-8">{sortFields.PRESTIGE.label}</SelectItem>}
       </SelectContent>
     </Select>
-    <Button type="button" variant="ghost" size="icon" className={cn("h-10 w-8 text-slate-400", compact && "h-11 shrink-0")} aria-label={p.sortDirection === "ASC" ? "Sort descending" : "Sort ascending"} onClick={() => p.onSortDirectionChange(p.sortDirection === "ASC" ? "DESC" : "ASC")}>
-      {p.sortDirection === "ASC" ? <ArrowUp className="h-4 w-4" /> : <ArrowDown className="h-4 w-4" />}
+    <Button
+      type="button"
+      variant={p.flat ? "outline" : "ghost"}
+      size="icon"
+      className={cn(
+        "h-10",
+        p.flat ? "w-9 rounded-l-none rounded-r-lg border-slate-700 bg-slate-900 text-indigo-200 shadow-none hover:bg-slate-800 hover:text-indigo-100 focus-visible:z-10 focus-visible:ring-indigo-300" : "w-8 text-slate-400",
+        compact && "h-11 shrink-0",
+      )}
+      aria-label={reverseLabel}
+      title={p.flat ? reverseLabel : undefined}
+      onClick={() => p.onSortDirectionChange(nextDirection)}
+    >
+      <DirectionIcon className="size-4" aria-hidden="true" />
     </Button>
   </div>;
 }

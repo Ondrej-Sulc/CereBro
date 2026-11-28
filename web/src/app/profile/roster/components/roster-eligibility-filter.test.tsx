@@ -25,12 +25,14 @@ function Harness({ catalog = false, flat = false }: { catalog?: boolean; flat?: 
   const [classes, setClasses] = useState<RosterFiltersProps["filterClasses"]>([]);
   const [levels, setLevels] = useState<number[]>(catalog ? [] : [2]);
   const [showUnowned, setShowUnowned] = useState(true);
+  const [sortBy, setSortBy] = useState<RosterFiltersProps["sortBy"]>(flat && !catalog ? "PRESTIGE" : "NAME");
+  const [sortDirection, setSortDirection] = useState<RosterFiltersProps["sortDirection"]>(flat && !catalog ? "DESC" : "ASC");
   const p: RosterFiltersProps = {
     flat,
     championScope, onChampionScopeChange: setChampionScope,
     search: "", onSearchChange: noop, viewMode: "view", onViewModeChange: noop,
     showUnowned, onShowUnownedChange: setShowUnowned, onAddClick: noop,
-    sortBy: "NAME", onSortByChange: noop, sortDirection: "ASC", onSortDirectionChange: noop,
+    sortBy, onSortByChange: setSortBy, sortDirection, onSortDirectionChange: setSortDirection,
     canEdit: false, showOwnershipFilter: flat && !catalog, showRankFilter: !catalog, showAscensionFilter: !catalog,
     visibleChampionCount: 1, countLabel: "1 champion",
     filterStars: stars, onFilterStarsChange: setStars, filterClasses: classes, onFilterClassesChange: setClasses,
@@ -68,6 +70,23 @@ async function click(element: HTMLElement) { expect(element).toBeTruthy(); await
 const toggle = (scope: ParentNode = document) => scope.querySelector<HTMLButtonElement>('button[aria-label="7\u2605 Ascension"]')!;
 const remove = () => document.querySelector<HTMLButtonElement>('button[aria-label="Remove 7\u2605 Ascension eligible filter"]')!;
 async function render(catalog = true, flat = false) { await act(async () => root.render(<Harness catalog={catalog} flat={flat} />)); }
+
+it("keeps the sort field and one-click reversal in sync across the split controls", async () => {
+  await render(false, true);
+  const [desktop, mobileControl] = document.querySelectorAll('[role="group"][aria-label="Champion sorting"]');
+  const trigger = desktop.querySelector<HTMLElement>('[role="combobox"]')!;
+  expect(trigger.getAttribute("aria-label")).toBe("Sort by Prestige, Highest first");
+  expect(trigger.textContent).toBe("Prestige");
+  await act(async () => trigger.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })));
+  const date = [...document.querySelectorAll<HTMLElement>('[role="option"]')].find(option => option.textContent === "Release date")!;
+  await act(async () => { date.focus(); date.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true })); });
+  expect(trigger.getAttribute("aria-label")).toBe("Sort by Release date, Newest first");
+
+  await click(mobileControl.querySelector<HTMLButtonElement>('button[aria-label="Reverse sort to Oldest first"]')!);
+  expect(trigger.getAttribute("aria-label")).toBe("Sort by Release date, Oldest first");
+  expect(trigger.textContent).toBe("Release date");
+  expect(desktop.querySelector('button[aria-label="Reverse sort to Newest first"]')).toBeTruthy();
+});
 
 it("keeps the one-click ownership toggle in sync with the mobile filter sheet", async () => {
   mobile = true;
