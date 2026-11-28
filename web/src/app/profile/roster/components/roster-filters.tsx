@@ -10,7 +10,7 @@ import { cn } from "@/lib/utils";
 import type { ChampionClass } from "@prisma/client";
 import type { RosterSortField, SortDirection } from "../types";
 import type { EffectForm, EffectDirection } from "@cerebro/core/domain/ability-source";
-import { AscensionEligibilityFilter, ChampionScopeFilter, ChoiceGroup, ClassChoices, MobileClassFilter, OwnershipFilter, ProgressionFilter, SourceRefinement, ImmunityRefinement } from "./roster-filter-fields";
+import { AscensionEligibilityFilter, ChampionScopeFilter, ChoiceGroup, ClassChoices, MobileClassFilter, OwnedOnlyFilter, OwnershipFilter, ProgressionFilter, SourceRefinement, ImmunityRefinement } from "./roster-filter-fields";
 import { RosterFilterPicker } from "./roster-filter-picker";
 import { RosterFilterSheet, useMobileRosterFilters } from "./roster-filter-sheet";
 import { buildActiveFilterRules, type RosterFilterRule } from "./roster-filter-rules";
@@ -139,20 +139,28 @@ export function RosterFilters(props: SharedRosterFiltersProps) {
     + (p.showRankFilter !== false ? p.filterRanks.length : 0)
     + (p.showAscensionFilter !== false ? p.filterAscensionLevels.length : 0)
     + Number(p.championScope !== undefined && p.championScope !== "playable");
-  const allOwnershipLabel = p.flat ? "Any ownership" : undefined;
+  const showOwnership = p.showOwnershipFilter !== false;
+  const showSort = p.showSort !== false;
+  const showScope = Boolean(p.onChampionScopeChange);
+  const scopeFilter = p.onChampionScopeChange && <ChampionScopeFilter value={p.championScope ?? "playable"} onChange={p.onChampionScopeChange} quick={p.flat} />;
+  const ownedToggle = showOwnership && <OwnedOnlyFilter showUnowned={p.showUnowned} onChange={p.onShowUnownedChange} />;
 
   return <div className="space-y-3">
     <section aria-label="Champion filters" className={p.flat ? "space-y-2" : "space-y-2 rounded-xl bg-slate-900/40 p-3 sm:space-y-4 sm:p-4"}>
       <div className="flex items-center gap-2 sm:flex-wrap sm:gap-3">
-        <div className="relative min-w-0 flex-1 sm:min-w-[220px]">
+        <div className={cn("relative min-w-0 flex-1 sm:min-w-[220px]", p.flat && "sm:max-w-[320px]")}>
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
           <Input aria-label="Search champions" placeholder="Search champions…" value={p.search} onChange={event => p.onSearchChange(event.target.value)} className="h-11 border-slate-800/80 bg-slate-950/40 pl-10 pr-9 text-base shadow-none placeholder:text-slate-500 focus-visible:ring-sky-500 sm:text-sm" />
           {p.search && <Button type="button" variant="ghost" size="icon" onClick={() => p.onSearchChange("")} aria-label="Clear champion search" className="absolute right-1 top-1/2 h-8 w-8 -translate-y-1/2 text-slate-400 hover:text-white"><X className="h-3.5 w-3.5" /></Button>}
         </div>
+        {p.flat && (showScope || showOwnership) && <div className="hidden flex-wrap items-center gap-2 sm:flex">
+          {scopeFilter}
+          {ownedToggle}
+        </div>}
         {hasRosterActions && <div className="sm:hidden"><RosterActions p={p} compact /></div>}
         <div className="ml-auto hidden items-center gap-2 sm:flex">
           {p.contextControls && <div className="flex items-center gap-2 [&>div>p]:sr-only">{p.contextControls}</div>}
-          {p.showSort !== false && <RosterSort p={p} />}
+          {showSort && <RosterSort p={p} />}
           <MoreFiltersButton expanded={expanded} panelId={panelId} count={advancedCount} onToggle={() => setExpanded(!expanded)} buttonRef={desktopFilterButton} />
           <RosterActions p={p} />
         </div>
@@ -163,11 +171,18 @@ export function RosterFilters(props: SharedRosterFiltersProps) {
         <MobileClassFilter values={p.filterClasses} onChange={p.onFilterClassesChange} counts={p.facetCounts?.classes} />
         <MoreFiltersButton expanded={expanded} panelId={`${panelId}-mobile`} count={advancedCount} onToggle={() => setExpanded(!expanded)} compact buttonRef={mobileFilterButton} />
       </div>
-      {(p.onChampionScopeChange || p.catalogEligibility || p.showOwnershipFilter !== false || p.showSort !== false) && <div className={cn("grid items-center sm:hidden", p.flat ? "gap-2" : "gap-1 border-t border-slate-800/60 pt-1", (p.onChampionScopeChange || p.catalogEligibility || p.showOwnershipFilter !== false) && p.showSort !== false ? "grid-cols-2" : "grid-cols-[minmax(0,180px)]", !p.onChampionScopeChange && !p.catalogEligibility && p.showOwnershipFilter === false && "justify-end")}>
-        {p.onChampionScopeChange && <ChampionScopeFilter value={p.championScope ?? "playable"} onChange={p.onChampionScopeChange} />}
+      {(showScope || p.catalogEligibility || showOwnership || showSort) && <div className={cn(
+        "items-center sm:hidden",
+        p.flat ? "flex flex-wrap gap-x-1.5 gap-y-2" : cn(
+          "grid gap-1 border-t border-slate-800/60 pt-1",
+          (showScope || p.catalogEligibility || showOwnership) && showSort ? "grid-cols-2" : "grid-cols-[minmax(0,180px)]",
+          !showScope && !p.catalogEligibility && !showOwnership && "justify-end",
+        ),
+      )}>
+        {scopeFilter}
         {p.catalogEligibility && <div><AscensionEligibilityFilter value={p.ascensionEligible} onChange={p.onAscensionEligibleChange} /></div>}
-        {p.showOwnershipFilter !== false && <OwnershipFilter showUnowned={p.showUnowned} onChange={p.onShowUnownedChange} allLabel={allOwnershipLabel} compact />}
-        {p.showSort !== false && <RosterSort p={p} compact />}
+        {showOwnership && (p.flat ? ownedToggle : <OwnershipFilter showUnowned={p.showUnowned} onChange={p.onShowUnownedChange} compact />)}
+        {showSort && <RosterSort p={p} compact />}
       </div>}
       {p.contextControls && <div className="grid grid-cols-2 items-end gap-3 border-t border-slate-800/60 pt-3 sm:hidden">{p.contextControls}</div>}
       {(editing || reserving) && <div aria-label="Active roster modes" className="flex flex-wrap gap-1 border-t border-slate-800/60 pt-2">
@@ -180,8 +195,8 @@ export function RosterFilters(props: SharedRosterFiltersProps) {
           {p.catalogEligibility && <AscensionEligibilityFilter value={p.ascensionEligible} onChange={p.onAscensionEligibleChange} />}
         </div>
         <ClassChoices values={p.filterClasses} onChange={p.onFilterClassesChange} counts={p.facetCounts?.classes} inline />
-        {p.onChampionScopeChange && <ChampionScopeFilter value={p.championScope ?? "playable"} onChange={p.onChampionScopeChange} />}
-        {p.showOwnershipFilter !== false && <div className="ml-auto"><OwnershipFilter showUnowned={p.showUnowned} onChange={p.onShowUnownedChange} allLabel={allOwnershipLabel} inline /></div>}
+        {!p.flat && scopeFilter}
+        {!p.flat && showOwnership && <div className="ml-auto"><OwnershipFilter showUnowned={p.showUnowned} onChange={p.onShowUnownedChange} inline /></div>}
       </div>
 
       {rules.length > 0 && <div className="pt-1">
@@ -234,9 +249,9 @@ function MoreFiltersButton({ expanded, panelId, count, onToggle, compact = false
 }
 
 function RosterSort({ p, compact = false }: { p: RosterFiltersProps; compact?: boolean }) {
-  return <div className={cn("flex items-center gap-1", compact && "min-w-0 gap-0")}>
+  return <div className={cn("flex items-center gap-1", compact && "min-w-0 gap-0", compact && p.flat && "ml-auto")}>
     <Select value={p.sortBy} onValueChange={value => p.onSortByChange(value as RosterSortField)}>
-      <SelectTrigger aria-label="Sort champions by" className={cn("h-10 w-[112px] bg-transparent text-xs text-slate-400 shadow-none hover:bg-slate-800/40", p.flat ? "border-slate-800" : "border-0", compact && "h-11 min-w-0 flex-1 gap-1 px-2 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:shrink-0")}>
+      <SelectTrigger aria-label="Sort champions by" className={cn("h-10 w-[112px] bg-transparent text-xs text-slate-400 shadow-none hover:bg-slate-800/40", p.flat ? "border-slate-800" : "border-0", compact && "h-11 min-w-0 flex-1 gap-1 px-2 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:shrink-0", compact && p.flat && "w-auto")}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

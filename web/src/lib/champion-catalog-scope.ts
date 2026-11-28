@@ -3,7 +3,7 @@ export type ChampionScope = "playable" | "nonPlayable" | "all";
 export const CHAMPION_SCOPE_LABELS: Record<ChampionScope, string> = {
   playable: "Playable",
   nonPlayable: "NPC & legacy",
-  all: "All champions",
+  all: "Any availability",
 };
 
 export function normalizeChampionScope(value: unknown): ChampionScope {
